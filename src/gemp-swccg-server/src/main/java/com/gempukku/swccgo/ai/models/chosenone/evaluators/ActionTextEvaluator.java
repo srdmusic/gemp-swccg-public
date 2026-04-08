@@ -1184,6 +1184,50 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            // ========== V41.2: Dining Room — Deploy Lando (TDIGWATT) ==========
+            // Dining Room's game text deploys Lando from Reserve Deck automatically.
+            // HARD BLOCK if opponents are at Dining Room with no friendlies — Lando dies instantly.
+            else if ((textLower.contains("dining room") || textLower.contains("deploy lando"))
+                     && textLower.contains("reserve")) {
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer drLandoAnalyzer =
+                    context.getObjectiveAnalyzer();
+
+                boolean friendliesAtDR = false;
+                int friendlyCountAtDR = 0;
+                int opponentCountAtDR = 0;
+                try {
+                    GameState drGs = context.getGameState();
+                    String drPid = context.getPlayerId();
+                    if (drGs != null && drPid != null) {
+                        String drOpp = drGs.getOpponent(drPid);
+                        for (PhysicalCard loc : drGs.getTopLocations()) {
+                            if (loc != null && loc.getTitle() != null
+                                && loc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("dining room")) {
+                                for (PhysicalCard c : drGs.getCardsAtLocation(loc)) {
+                                    if (c != null && c.getBlueprint() != null
+                                        && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                        if (drPid.equals(c.getOwner())) friendlyCountAtDR++;
+                                        else if (drOpp != null && drOpp.equals(c.getOwner())) opponentCountAtDR++;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        friendliesAtDR = (friendlyCountAtDR > 0);
+                    }
+                } catch (Exception e) { /* ignore */ }
+
+                if (opponentCountAtDR > 0 && !friendliesAtDR) {
+                    action.addReasoning("V41.2 DINING ROOM DEATH TRAP: " + opponentCountAtDR
+                        + " opponents at DR — Lando dies instantly! Clear them first!", -9999.0f);
+                    logger.warn("V41.2 DINING ROOM: {} opponents, 0 friendlies — HARD BLOCK!", opponentCountAtDR);
+                } else if (friendliesAtDR) {
+                    action.addReasoning("V41.2 DINING ROOM: Deploy Lando with " + friendlyCountAtDR + " friendlies — safe!", 150.0f);
+                } else {
+                    action.addReasoning("V41.2 DINING ROOM: Lando would be alone — deploy a buddy first!", -30.0f);
+                }
+            }
+
             // ========== Deploy From Reserve (Risky) ==========
             else if (actionText.contains("Deploy") && actionText.contains("from")) {
                 action.addReasoning("Deploying from reserve - mild caution", -10.0f);

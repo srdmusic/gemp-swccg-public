@@ -3072,19 +3072,58 @@ public class DeployEvaluator extends ActionEvaluator {
                         action.addReasoning("Pilot character", 10.0f);
                     }
 
-                    // === V40.1: PIETT DEPLOY — ONLY ABOARD EXECUTOR ===
-                    // Piett is the matching pilot for Executor. He should NEVER deploy to a
-                    // Cloud City site — he belongs on the ship. If Executor isn't on table yet,
-                    // Piett should WAIT (deploy later when Executor arrives via AMSD).
-                    // Exception: if deploying aboard a ship (action text contains "aboard" or "pilot")
-                    // V40.1: Executor pilots (Piett, Gherant) — deploy aboard ship, not ground
+                    // === V40.1/V41.2: PIETT DEPLOY — HOLD FOR AMSD ===
+                    // Piett is the matching pilot for Executor. He should NEVER deploy to ground
+                    // when AMSD is on the table and Executor is still available — AMSD needs Piett
+                    // IN HAND to fire. Deploying Piett to ground wastes the AMSD + Executor combo.
+                    // V41.2: HARD BLOCK ground deploy when AMSD + Executor available.
                     if (cardTitleLower.contains("piett") || cardTitleLower.contains("gherant")) {
                         boolean deployingAboardShip = actionLower.contains("aboard") || actionLower.contains("pilot")
                             || actionLower.contains("executor") || actionLower.contains("simultaneously");
                         if (deployingAboardShip) {
                             action.addReasoning("V40.1 PILOT ABOARD: Deploy aboard ship!", 300.0f);
+                        } else if (cardTitleLower.contains("piett")) {
+                            // V41.2: Check if AMSD is on table and Executor is available
+                            // If so, Piett MUST stay in hand for AMSD — deploying to ground kills the combo
+                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer piettObjAnalyzer =
+                                context.getObjectiveAnalyzer();
+                            boolean isTdigwatt = piettObjAnalyzer != null && piettObjAnalyzer.isAnalyzed()
+                                && piettObjAnalyzer.needsBespinSystemPresence();
+                            if (isTdigwatt) {
+                                // Check if AMSD is on table
+                                boolean amsdOnTable = false;
+                                boolean executorOnTable = false;
+                                try {
+                                    for (com.gempukku.swccgo.game.PhysicalCard tableCard : gameState.getAllPermanentCards()) {
+                                        if (tableCard == null || !playerId.equals(tableCard.getOwner())) continue;
+                                        com.gempukku.swccgo.common.Zone tz = tableCard.getZone();
+                                        if (tz == null || !tz.isInPlay()) continue;
+                                        String tTitle = tableCard.getTitle() != null ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                                        if (tTitle.contains("alert my star destroyer")) amsdOnTable = true;
+                                        if (tTitle.contains("executor") && tableCard.getBlueprint() != null
+                                            && tableCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP) executorOnTable = true;
+                                    }
+                                } catch (Exception e) { /* ignore */ }
+
+                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle piettOracle = context.getDeckOracle();
+                                boolean executorAvailable = false;
+                                if (piettOracle != null && piettOracle.isAnalyzed()) {
+                                    executorAvailable = piettOracle.isCardInReserve("Executor")
+                                        || piettOracle.isCardInReserve("Flagship Executor")
+                                        || piettOracle.isCardInHand("Executor")
+                                        || piettOracle.isCardInHand("Flagship Executor");
+                                }
+
+                                if (amsdOnTable && !executorOnTable && executorAvailable) {
+                                    // AMSD is ready, Executor available, not deployed yet — Piett MUST stay in hand!
+                                    action.addReasoning("V41.2 PIETT HOLD FOR AMSD: AMSD on table + Executor available — keep Piett in hand for AMSD!", -9999.0f);
+                                    LOG.warn("V41.2 PIETT GROUND BLOCK: AMSD on table, Executor in reserve/hand — Piett MUST stay in hand!");
+                                } else if (!amsdOnTable && !executorOnTable) {
+                                    // No AMSD — Piett can deploy to ground but prefer ships
+                                    LOG.info("V41.2: No AMSD on table — Piett ground deploy OK");
+                                }
+                            }
                         }
-                        // No penalty for ground — positive scoring only
                     }
 
                     // === MATCHING PILOT CHECK ===

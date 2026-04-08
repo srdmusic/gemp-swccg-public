@@ -1827,13 +1827,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer drLandoAnalyzer =
                     context.getObjectiveAnalyzer();
 
-                // V29.6: Check if there are friendly characters at Dining Room
+                // V29.6/V41.2: Check friendly AND opponent characters at Dining Room
                 boolean friendliesAtDiningRoom = false;
                 int friendlyCountAtDR = 0;
+                int opponentCountAtDR = 0;
                 try {
                     GameState drGameState = context.getGameState();
                     String drPlayerId = context.getPlayerId();
                     if (drGameState != null && drPlayerId != null) {
+                        String drOpponentId = drGameState.getOpponent(drPlayerId);
                         // Find Dining Room on the table
                         java.util.List<PhysicalCard> allLocs = drGameState.getTopLocations();
                         PhysicalCard diningRoomCard = null;
@@ -1850,10 +1852,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             java.util.List<PhysicalCard> cardsAtDR = drGameState.getCardsAtLocation(diningRoomCard);
                             if (cardsAtDR != null) {
                                 for (PhysicalCard c : cardsAtDR) {
-                                    if (c != null && drPlayerId.equals(c.getOwner())
-                                        && c.getBlueprint() != null
+                                    if (c != null && c.getBlueprint() != null
                                         && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                        friendlyCountAtDR++;
+                                        if (drPlayerId.equals(c.getOwner())) {
+                                            friendlyCountAtDR++;
+                                        } else if (drOpponentId != null && drOpponentId.equals(c.getOwner())) {
+                                            opponentCountAtDR++;
+                                        }
                                     }
                                 }
                             }
@@ -1861,10 +1866,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         }
                     }
                 } catch (Exception e) {
-                    logger.debug("V29.6 DINING ROOM: Error checking friendlies at DR: {}", e.getMessage());
+                    logger.debug("V29.6 DINING ROOM: Error checking chars at DR: {}", e.getMessage());
                 }
 
-                if (drLandoAnalyzer != null && drLandoAnalyzer.isAnalyzed()
+                // V41.2: HARD BLOCK if opponents at Dining Room and no friendlies
+                // Dining Room pulls Lando automatically — no destination choice.
+                // If opponents are there, Lando dies instantly.
+                if (opponentCountAtDR > 0 && !friendliesAtDiningRoom) {
+                    action.addReasoning("V41.2 DINING ROOM DEATH TRAP: " + opponentCountAtDR
+                        + " opponents at DR — Lando dies instantly! Clear them first!", -9999.0f);
+                    logger.warn("V41.2 DINING ROOM: {} opponents, 0 friendlies — HARD BLOCK! Lando would die!", opponentCountAtDR);
+                } else if (drLandoAnalyzer != null && drLandoAnalyzer.isAnalyzed()
                     && drLandoAnalyzer.needsBespinSystemPresence()) {
                     if (friendliesAtDiningRoom) {
                         // Buddies present — safe to deploy Lando!
@@ -1872,7 +1884,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         logger.warn("V29.6 DINING ROOM: Lando deploy with {} friendlies at DR — +150", friendlyCountAtDR);
                     } else {
                         // Lando would be ALONE — defer until we have a buddy there.
-                        // Small positive so it's still considered but won't beat deploying a character first.
                         action.addReasoning("V29.6 DINING ROOM: Lando would be ALONE — deploy a buddy first!", -30.0f);
                         logger.warn("V29.6 DINING ROOM: Lando deploy DEFERRED — no friendlies at DR, penalty -30");
                     }
