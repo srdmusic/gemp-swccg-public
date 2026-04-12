@@ -1431,10 +1431,42 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             for (PhysicalCard bLoc : bGs.getTopLocations()) {
                                 String bLocTitle = bLoc.getTitle();
                                 if (bLocTitle != null && actionText.contains(bLocTitle)) {
-                                    float ourPower = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
+                                    float ourPowerRaw = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
                                         bGs, bLoc, bPlayerId, false, false);
-                                    float theirPower = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
+                                    float theirPowerRaw = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
                                         bGs, bLoc, bOpponentId, false, false);
+
+                                    // === V42: EXCLUSION-AWARE POWER — subtract barriered/excluded characters ===
+                                    float ourExcPower = 0;
+                                    float theirExcPower = 0;
+                                    try {
+                                        for (PhysicalCard excCard : bGs.getCardsAtLocation(bLoc)) {
+                                            if (excCard == null || excCard.getBlueprint() == null) continue;
+                                            com.gempukku.swccgo.common.CardCategory excCat = excCard.getBlueprint().getCardCategory();
+                                            if (excCat != com.gempukku.swccgo.common.CardCategory.CHARACTER &&
+                                                excCat != com.gempukku.swccgo.common.CardCategory.STARSHIP &&
+                                                excCat != com.gempukku.swccgo.common.CardCategory.VEHICLE) continue;
+                                            boolean excProhibited = battleGame.getModifiersQuerying()
+                                                .isProhibitedFromParticipatingInBattle(bGs, excCard, bPlayerId);
+                                            if (excProhibited) {
+                                                Float excPw = excCard.getBlueprint().getPower();
+                                                float excPower = excPw != null ? excPw : 0;
+                                                if (bPlayerId.equals(excCard.getOwner())) {
+                                                    ourExcPower += excPower;
+                                                } else {
+                                                    theirExcPower += excPower;
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception e) { /* ignore */ }
+                                    float ourPower = ourPowerRaw - ourExcPower;
+                                    float theirPower = theirPowerRaw - theirExcPower;
+                                    if (ourExcPower > 0 || theirExcPower > 0) {
+                                        logger.warn("V42 BARRIER AWARENESS (ActionText) at {}: excluded our={} their={}, adjusted {}->{} vs {}->{}",
+                                            bLocTitle, (int)ourExcPower, (int)theirExcPower,
+                                            (int)ourPowerRaw, (int)ourPower, (int)theirPowerRaw, (int)theirPower);
+                                    }
+
                                     float ourAbility = battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
                                         bGs, bPlayerId, bLoc);
                                     float theirAbility = battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
@@ -1596,14 +1628,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
         // ========== V24.15: NEVER force drain at 0! ==========
         // Draining for 0 does nothing but opens us up to Surprise Assault and other traps.
-        // Check the actual drain amount at the location before committing.
+        // V43: Also track drainAmount for Battle Order cost/benefit analysis below.
+        float drainAmount = -1;  // -1 = unknown
         if (gameState != null && locationCardId != null) {
             try {
                 PhysicalCard drainLocation = gameState.findCardById(Integer.parseInt(locationCardId));
                 if (drainLocation != null) {
                     SwccgGame drainGame = context.getGame();
                     if (drainGame != null) {
-                        float drainAmount = drainGame.getModifiersQuerying().getForceDrainAmount(
+                        drainAmount = drainGame.getModifiersQuerying().getForceDrainAmount(
                             gameState, drainLocation, playerId);
                         if (drainAmount <= 0) {
                             action.addReasoning("V24.15 DRAIN BLOCK: Force drain would be 0 — pointless and opens us to Surprise Assault!", -9999.0f);
@@ -1707,6 +1740,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Under Battle Order rules - force drains cost extra (+3)
             int battleOrderCost = 3;
 
+            // V43: Don't pay 3 Force to drain for only 1! Net loss of 2 Force.
+            if (drainAmount > 0 && drainAmount < 2) {
+                action.addReasoning(String.format(
+                    "V43 DRAIN TOO SMALL: Drain %.0f costs 3 Force under Battle Order — net loss of %.0f! Skip!",
+                    drainAmount, battleOrderCost - drainAmount), -200.0f);
+                logger.warn("V43 DRAIN TOO SMALL: Drain {} at cost {} — net loss {} — BLOCKING",
+                    (int)drainAmount, battleOrderCost, (int)(battleOrderCost - drainAmount));
+                return;
+            }
+
             // If we can't afford the drain (need 3+ force), skip it
             if (forceAvailable < battleOrderCost) {
                 action.addReasoning("Under Battle Order but can't afford drain (need " + battleOrderCost + ", have " + forceAvailable + ")", VERY_BAD_DELTA);
@@ -1776,6 +1819,28 @@ public class ActionTextEvaluator extends ActionEvaluator {
         String textLower = actionText.toLowerCase();
         boolean isDestinyBased = textLower.contains("draw destiny") || textLower.contains("if destiny");
 
+        // V43: NEVER cancel your OWN interrupts!
+        try {
+            Side ourSide = context.getSide();
+            if (ourSide != null) {
+                String cancelTarget = extractCancelTarget(textLower);
+                if (cancelTarget != null) {
+                    boolean isOurCard = isCardOnOurSide(cancelTarget, ourSide);
+                    if (isOurCard) {
+                        action.addReasoning("V43 SENSE SELF-CANCEL: NEVER cancel our OWN interrupt!", -9999.0f);
+                        logger.warn("V43 SENSE SELF-CANCEL: Target '{}' is our Side ({}) — HARD BLOCKED!", cancelTarget, ourSide);
+                        return;
+                    }
+                }
+            }
+            if (context.isMyTurn()) {
+                action.addReasoning("V43 SENSE ON OUR TURN: Likely targeting our own interrupt — risky!", -300.0f);
+                logger.warn("V43 SENSE ON OUR TURN: Cancel during our turn — likely self-cancel, penalty -300");
+            }
+        } catch (Exception e) {
+            logger.debug("V43: Error in Sense self-cancel check: {}", e.getMessage());
+        }
+
         // Check priority cards system for target value
         AiPriorityCards.SenseTargetResult senseResult = AiPriorityCards.getSenseTargetValue(actionText);
 
@@ -1800,13 +1865,125 @@ public class ActionTextEvaluator extends ActionEvaluator {
         }
     }
 
-    private void evaluateHoujixGhhhk(EvaluatedAction action, DecisionContext context) {
-        // These are CRITICAL survival cards
-        // For now, give moderate positive score - ideally we'd check damage remaining
-        action.addReasoning("Cancel battle damage - valuable survival card", GOOD_DELTA);
+    /**
+     * V43: Extract the target card name from a Sense/cancel action text.
+     */
+    private String extractCancelTarget(String textLower) {
+        int cancelIdx = textLower.indexOf("cancel ");
+        if (cancelIdx < 0) return null;
+        String afterCancel = textLower.substring(cancelIdx + 7).trim();
+        String[] suffixes = {" using ", " by ", " if destiny", " (by drawing"};
+        for (String suffix : suffixes) {
+            int suffIdx = afterCancel.indexOf(suffix);
+            if (suffIdx > 0) {
+                afterCancel = afterCancel.substring(0, suffIdx);
+            }
+        }
+        afterCancel = afterCancel.replaceAll("[.!?]+$", "").trim();
+        return afterCancel.isEmpty() ? null : afterCancel;
+    }
 
-        // TODO: Add proper damage analysis when we have access to battle state
-        // Check attrition/damage remaining and cards available to forfeit
+    /**
+     * V43: Check if a card name belongs to our side.
+     */
+    private boolean isCardOnOurSide(String cardNameLower, Side ourSide) {
+        try {
+            String[] darkInterrupts = {
+                "far more frightening", "force lightning", "force push",
+                "stunning leader", "i have you now", "sniper", "dark strike",
+                "we must accelerate", "ghhhk", "force field", "no escape",
+                "sense", "alter", "control", "dark maneuvers", "elis helrot",
+                "prepared defenses", "twi'lek advisor", "counter assault",
+                "imperial barrier", "short range fighters", "trample",
+                "dark jedi lightsaber", "vader's lightsaber", "masterful move",
+                "imbalance", "omni box", "cold feet", "the circle is now complete",
+                "all too easy", "you are beaten", "weapon levitation",
+                "force squeeze", "choke", "sonic bombardment", "dark hours",
+                "grimtaash", "collateral damage", "cease fire",
+                "bite my shiny metal ass", "end this destructive conflict",
+                "imperial command", "all power to weapons", "force lightning",
+                "overload", "trooper assault", "precise attack"
+            };
+            String[] lightInterrupts = {
+                "rebel barrier", "the bith shuffle", "hyper escape",
+                "it's a trap", "sorry about the mess", "don't get cocky",
+                "houjix", "out of nowhere", "a few maneuvers",
+                "on the edge", "clash of sabers", "gift of the mentor",
+                "uncontrollable fury", "jedi levitation", "moving to attack position",
+                "heading for the medical frigate", "it could be worse",
+                "under attack", "perimeter scan", "rebel leadership",
+                "wesa gotta grand army", "ancient lightsaber", "a jedi's resilience",
+                "blaster deflection", "escape pod", "run luke, run",
+                "organized attack", "surprise assault", "nabrun leids",
+                "free ride", "smoke screen"
+            };
+
+            if (ourSide == Side.DARK) {
+                for (String ds : darkInterrupts) {
+                    if (cardNameLower.contains(ds)) return true;
+                }
+            } else {
+                for (String ls : lightInterrupts) {
+                    if (cardNameLower.contains(ls)) return true;
+                }
+            }
+        } catch (Exception e) {
+            // Fall through
+        }
+        return false;
+    }
+
+    private void evaluateHoujixGhhhk(EvaluatedAction action, DecisionContext context) {
+        // V42: Smart Ghhhk usage — don't waste on small losses
+        // Rule: If total Force loss remaining < 4, DON'T use Ghhhk unless reserve is low (< 10 cards).
+        SwccgGame game = context.getGame();
+        String playerId = context.getPlayerId();
+
+        int totalDamageRemaining = 0;
+        int reserveSize = 0;
+        try {
+            if (game != null && playerId != null) {
+                float dmg = com.gempukku.swccgo.logic.timing.GuiUtils
+                    .getBattleDamageRemaining(game, playerId);
+                float att = com.gempukku.swccgo.logic.timing.GuiUtils
+                    .getBattleAttritionRemaining(game, playerId);
+                totalDamageRemaining = (int)(dmg + att);
+
+                GameState gs = game.getGameState();
+                if (gs != null) {
+                    java.util.List<PhysicalCard> reserve = gs.getCardPile(playerId,
+                        com.gempukku.swccgo.common.Zone.RESERVE_DECK, false);
+                    if (reserve != null) reserveSize = reserve.size();
+                }
+            }
+        } catch (Exception e) {
+            action.addReasoning("Cancel battle damage — can't read damage state, play safe", 200.0f);
+            return;
+        }
+
+        logger.warn("V42 GHHHK CHECK: damage+attrition remaining={}, reserve size={}",
+            totalDamageRemaining, reserveSize);
+
+        if (totalDamageRemaining >= 4) {
+            float urgency = 200.0f + (totalDamageRemaining * 20.0f);
+            action.addReasoning(String.format(
+                "V42 GHHHK: %d damage remaining — MUST cancel! Save %d+ cards!",
+                totalDamageRemaining, totalDamageRemaining), urgency);
+            logger.warn("V42 GHHHK PLAY: {} damage remaining — URGENT (+{})",
+                totalDamageRemaining, (int)urgency);
+        } else if (reserveSize <= 10 && totalDamageRemaining > 0) {
+            action.addReasoning(String.format(
+                "V42 GHHHK: Only %d reserve cards + %d damage — protect reserves!",
+                reserveSize, totalDamageRemaining), 150.0f);
+            logger.warn("V42 GHHHK PLAY: low reserve ({}) + {} damage — use it (+150)",
+                reserveSize, totalDamageRemaining);
+        } else {
+            action.addReasoning(String.format(
+                "V42 GHHHK SAVE: Only %d damage, reserve=%d — save for bigger battle!",
+                totalDamageRemaining, reserveSize), -200.0f);
+            logger.warn("V42 GHHHK SAVE: {} damage, {} reserve — don't waste it (-200)",
+                totalDamageRemaining, reserveSize);
+        }
     }
 
     private void evaluateTakeIntoHand(EvaluatedAction action, DecisionContext context, String actionText, String textLower) {
@@ -1974,15 +2151,36 @@ public class ActionTextEvaluator extends ActionEvaluator {
     }
 
     private void evaluateGrab(EvaluatedAction action, DecisionContext context, String actionText) {
-        // Grabbing opponent's card is good, our own is VERY bad
-        // CRITICAL: Grabbing own interrupts is a big player complaint - hard block it!
-        // Ported from Python action_text_evaluator.py lines 1169-1210
-
+        // V43: Grabbing opponent's card is good, our own is VERY bad.
+        // Use the V43 card name → side lookup for reliable detection.
         Side mySide = context.getSide();
-
-        // Determine side from card name patterns in action text
-        // Look for known Light/Dark side indicator patterns
         String textLower = actionText.toLowerCase();
+
+        // V43: Extract card name after "Grab" and check its side
+        String grabTarget = null;
+        int grabIdx = textLower.indexOf("grab");
+        if (grabIdx >= 0) {
+            grabTarget = textLower.substring(grabIdx + 4).replaceAll("^[' ]+", "").trim();
+        }
+
+        if (grabTarget != null && mySide != null) {
+            boolean isOurCard = isCardOnOurSide(grabTarget, mySide);
+            if (isOurCard) {
+                action.setScore(-9999.0f);
+                action.addReasoning("V43 GRAB BLOCK: NEVER grab our OWN card!", -9999.0f);
+                logger.warn("V43 GRAB BLOCK: '{}' is our side ({}) — HARD BLOCKED!", grabTarget, mySide);
+                return;
+            }
+            Side oppSide = (mySide == Side.DARK) ? Side.LIGHT : Side.DARK;
+            boolean isOpponentCard = isCardOnOurSide(grabTarget, oppSide);
+            if (isOpponentCard) {
+                action.addReasoning("V43 GRAB OPPONENT: Grabbing opponent's card — excellent!", VERY_GOOD_DELTA);
+                logger.warn("V43 GRAB OPPONENT: '{}' is opponent's ({}) — GRAB IT!", grabTarget, oppSide);
+                return;
+            }
+        }
+
+        // Fallback: keyword-based detection
         boolean looksLightSide = textLower.contains("rebel") || textLower.contains("jedi") ||
                                   textLower.contains("alliance") || textLower.contains("luke") ||
                                   textLower.contains("leia") || textLower.contains("han solo") ||
@@ -1999,19 +2197,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
         } else if (mySide == Side.LIGHT && looksDarkSide) {
             action.addReasoning("Grab Dark side card (we are Light)", GOOD_DELTA);
         } else if (mySide == Side.DARK && looksDarkSide) {
-            // Same side - likely our card! HARD BLOCK!
-            action.setScore(-500.0f);
-            action.addReasoning("🚫 BLOCKED: Likely grabbing own Dark card!", -500.0f);
-            logger.warn("🚫 BLOCKED GRAB of likely own Dark card: {}", actionText);
+            action.setScore(-9999.0f);
+            action.addReasoning("V43 GRAB BLOCK: Grabbing own Dark card!", -9999.0f);
+            logger.warn("V43 GRAB BLOCK: Dark side grabbing Dark card: {}", actionText);
         } else if (mySide == Side.LIGHT && looksLightSide) {
-            // Same side - likely our card! HARD BLOCK!
-            action.setScore(-500.0f);
-            action.addReasoning("🚫 BLOCKED: Likely grabbing own Light card!", -500.0f);
-            logger.warn("🚫 BLOCKED GRAB of likely own Light card: {}", actionText);
+            action.setScore(-9999.0f);
+            action.addReasoning("V43 GRAB BLOCK: Grabbing own Light card!", -9999.0f);
+            logger.warn("V43 GRAB BLOCK: Light side grabbing Light card: {}", actionText);
         } else {
-            // Truly unknown - be cautious, don't grab
-            action.addReasoning("Grab card (owner unknown - avoiding)", BAD_DELTA);
-            logger.info("⚠️ Grab owner unknown, avoiding: {}", actionText);
+            // V43: Unknown card — DON'T grab
+            action.addReasoning("V43 GRAB UNKNOWN: Can't identify card side — skipping grab to be safe", -200.0f);
+            logger.warn("V43 GRAB UNKNOWN: Can't identify side of '{}' — penalty -200", actionText);
         }
     }
 

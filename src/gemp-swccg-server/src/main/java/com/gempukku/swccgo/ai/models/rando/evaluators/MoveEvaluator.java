@@ -271,6 +271,32 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
             }
 
+            // === V42: FLEE FROM UNDERCOVER SPIES ===
+            // If there's an undercover spy at our current location, we should GET OUT.
+            // Spies will break cover and ambush us — every character at that location is in danger.
+            // This is DIFFERENT from the destination spy check (line ~1677) — this encourages LEAVING.
+            if (cardToMove != null && gameState != null) {
+                PhysicalCard spyCheckLoc = cardToMove.getAtLocation();
+                if (spyCheckLoc != null) {
+                    try {
+                        int spiesHere = 0;
+                        for (PhysicalCard c : gameState.getCardsAtLocation(spyCheckLoc)) {
+                            if (c != null && c.isUndercover()) {
+                                spiesHere++;
+                            }
+                        }
+                        if (spiesHere > 0) {
+                            float spyFleeBonus = 300.0f + (spiesHere * 100.0f);
+                            action.addReasoning(String.format(
+                                "V42 SPY FLEE: %d undercover spy(s) at %s — GET OUT before they break cover!",
+                                spiesHere, spyCheckLoc.getTitle()), spyFleeBonus);
+                            logger.warn("V42 SPY FLEE: {} should leave {} — {} spy(s) detected! (+{})",
+                                cardToMove.getTitle(), spyCheckLoc.getTitle(), spiesHere, (int)spyFleeBonus);
+                        }
+                    } catch (Exception e) { /* ignore */ }
+                }
+            }
+
             // === STRATEGIC ANALYSIS ===
             if (cardToMove != null && gameState != null && game != null) {
                 PhysicalCard currentLocation = cardToMove.getAtLocation();
@@ -1171,39 +1197,73 @@ public class MoveEvaluator extends ActionEvaluator {
             location.getTitle(), myPower, theirPower, powerDiff);
 
         // === THREAT LEVEL ANALYSIS ===
+        // V42: Redesigned — excess characters at a winning location should be FREE TO LEAVE
+        // and reinforce elsewhere. Old V37.1 hard-blocked ALL moves when we had power advantage,
+        // even with 6 characters piled up and opponents draining uncontested at other sites.
+        // New rule: Calculate power AFTER the moving character departs. If remaining force
+        // still holds the position (>= their power), the character is excess and can spread.
         if (theirPower > 0) {
             ThreatLevel threat = calculateThreatLevel(powerDiff);
+
+            // V42: Calculate what happens if this character leaves
+            float movingCharPower = 0;
+            if (cardToMove != null && cardToMove.getBlueprint() != null
+                && cardToMove.getBlueprint().hasPowerAttribute()) {
+                Float p = cardToMove.getBlueprint().getPower();
+                movingCharPower = p != null ? p : 0;
+            }
+            float powerAfterDeparture = myPower - movingCharPower;
+            float diffAfterDeparture = powerAfterDeparture - theirPower;
+            boolean excessCharacter = myCardCount >= 3 && diffAfterDeparture >= 0;
 
             switch (threat) {
                 case RETREAT:
                     action.addReasoning("Strategic retreat - badly outmatched (" + (int)powerDiff + ")",
                                        VERY_GOOD_DELTA);
                     logger.info("[MoveEvaluator] RETREAT recommended - outmatched by {}", -powerDiff);
-                    return;
+                    break; // V42: Don't return — let V34 CONTEST evaluate destination
 
                 case DANGEROUS:
                     action.addReasoning("Dangerous location - retreat recommended (" + (int)powerDiff + ")",
                                        GOOD_DELTA * 2);
-                    return;
+                    break; // V42: Don't return
 
                 case CRUSH:
-                    // V37.1: ABSOLUTE BLOCK — NEVER leave when crushing opponents!
-                    action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them! HARD BLOCK!",
-                                       -9999.0f);
-                    logger.warn("V37.1 STAY AND CRUSH at {}: power +{} — HARD BLOCK (-9999)",
-                        location.getTitle(), (int)powerDiff);
-                    return;
+                    if (excessCharacter) {
+                        // V42: Position stays STRONG even without this character — let them spread
+                        action.addReasoning(String.format(
+                            "V42 EXCESS CHAR: Power %.0f→%.0f after departure (still +%.0f vs opponent) — free to reinforce elsewhere!",
+                            myPower, powerAfterDeparture, diffAfterDeparture), 0.0f);
+                        logger.warn("V42 EXCESS at {}: {} can leave, power {}→{} (still +{} vs opponent)",
+                            location.getTitle(), cardToMove != null ? cardToMove.getTitle() : "?",
+                            (int)myPower, (int)powerAfterDeparture, (int)diffAfterDeparture);
+                    } else {
+                        action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them! HARD BLOCK!",
+                                           -9999.0f);
+                        logger.warn("V37.1 STAY AND CRUSH at {}: power +{} — HARD BLOCK (-9999)",
+                            location.getTitle(), (int)powerDiff);
+                    }
+                    break; // V42: Don't return — let V34 evaluate destination
 
                 case FAVORABLE:
-                    // V37.1: ABSOLUTE BLOCK — strong advantage, STAY AND FIGHT!
-                    action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — HARD BLOCK!",
-                                       -9999.0f);
-                    logger.warn("V37.1 STAY AND FIGHT at {}: power +{} — HARD BLOCK (-9999)",
-                        location.getTitle(), (int)powerDiff);
-                    return;
+                    if (excessCharacter) {
+                        // V42: Position stays FAVORABLE even without this character
+                        action.addReasoning(String.format(
+                            "V42 EXCESS CHAR: Power %.0f→%.0f after departure (still +%.0f) — can spread!",
+                            myPower, powerAfterDeparture, diffAfterDeparture), -50.0f);
+                        logger.warn("V42 EXCESS at {}: {} can leave (mild -50), power {}→{} (still +{})",
+                            location.getTitle(), cardToMove != null ? cardToMove.getTitle() : "?",
+                            (int)myPower, (int)powerAfterDeparture, (int)diffAfterDeparture);
+                    } else {
+                        action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — HARD BLOCK!",
+                                           -9999.0f);
+                        logger.warn("V37.1 STAY AND FIGHT at {}: power +{} — HARD BLOCK (-9999)",
+                            location.getTitle(), (int)powerDiff);
+                    }
+                    break; // V42: Don't return
 
                 case RISKY:
-                    // V37.1: Even fight — very strong discouragement to leave
+                    // Even fight — strong discouragement to leave
                     action.addReasoning("V37.1 CONTESTED: Even power (" + (int)powerDiff + ") — hold position!",
                                        -500.0f);
                     break;
@@ -1215,7 +1275,7 @@ public class MoveEvaluator extends ActionEvaluator {
             float disadvantage = theirPower - myPower;
             action.addReasoning("Outmatched by " + (int)disadvantage + " - should flee",
                                GOOD_DELTA * Math.min(disadvantage / 2, 5));
-            return;
+            // V42: Don't return — let V34 CONTEST evaluate the destination
         }
 
         // === OFFENSIVE ATTACK OPPORTUNITY ===
@@ -1230,14 +1290,13 @@ public class MoveEvaluator extends ActionEvaluator {
             // and we have a significant power advantage
             if (attack != null && attack.viable && attack.hasForcedrainPotential) {
                 action.addReasoning(attack.reason, attack.score);
-                logger.info("[MoveEvaluator] ⚔️ ATTACK opportunity: {}", attack.reason);
-                return;
+                logger.info("[MoveEvaluator] ATTACK opportunity: {}", attack.reason);
+                // V42: Don't return — let V34 CONTEST evaluate the destination
             } else if (attack != null && attack.viable) {
                 // Attack possible but no force drain - much smaller bonus
                 // Don't waste moves just to attack weak positions
                 action.addReasoning("Possible attack (no drain icons)", 15.0f);
                 logger.debug("[MoveEvaluator] Weak attack opportunity (no icons): {}", attack.reason);
-                return;
             }
         }
 
@@ -1419,8 +1478,8 @@ public class MoveEvaluator extends ActionEvaluator {
                                 charTitle, weaponName, bestTargetLoc, effectivePower);
                         }
                         action.addReasoning(reason, bestAttackScore);
-                        logger.info("[MoveEvaluator] ⚔️ {} — score {}", reason, bestAttackScore);
-                        return;
+                        logger.info("[MoveEvaluator] WEAPON HUNTER: {} — score {}", reason, bestAttackScore);
+                        // V42: Don't return — let V34 CONTEST evaluate the destination
                     }
                 }
             } catch (Exception e) {
@@ -1438,10 +1497,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                                            location, myPower, myCardCount, theirPower);
             if (spread != null && spread.viable) {
                 action.addReasoning(spread.reason, spread.score);
-                return;
+                // V42: Don't return — let V34 CONTEST evaluate the destination
             } else if (spread != null) {
                 action.addReasoning("Can't spread: " + spread.reason, BAD_DELTA);
-                return;
             }
         }
 
@@ -1608,14 +1666,37 @@ public class MoveEvaluator extends ActionEvaluator {
                     } catch (Exception e) { /* ignore */ }
 
                     if (opponentsUncontested) {
-                        // V38.3: HARD BLOCK moving to empty locations when opponents exist
-                        float wrongDirPenalty = -9999.0f; // V38.3: Raised from -400 — HARD BLOCK
-                        action.addReasoning(String.format(
-                            "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s — HARD BLOCK!",
-                            v34Dest.getTitle(), opUncontestedLoc), wrongDirPenalty);
-                        logger.warn("V38.3 WRONG DIRECTION: {} to empty {} — opponents at {} — HARD BLOCKED",
-                            cardToMove != null ? cardToMove.getTitle() : "?",
-                            v34Dest.getTitle(), opUncontestedLoc);
+                        // V42: Exception for Hunt Down Vader at non-battleground (Castle).
+                        // Vader MUST leave Castle to reach a battleground for the objective flip.
+                        // Moving to an empty battleground is the CORRECT play — not "wrong direction."
+                        boolean vaderEscapingCastle = false;
+                        if (cardToMove != null && cardToMove.getTitle() != null
+                            && cardToMove.getTitle().toLowerCase(Locale.ROOT).contains("vader")) {
+                            boolean currentIsNonBG = true;
+                            boolean destIsBG = false;
+                            try {
+                                currentIsNonBG = !game.getModifiersQuerying().isBattleground(gameState, location, null);
+                                destIsBG = game.getModifiersQuerying().isBattleground(gameState, v34Dest, null);
+                            } catch (Exception e) { /* ignore */ }
+                            if (currentIsNonBG && destIsBG) {
+                                vaderEscapingCastle = true;
+                                action.addReasoning(String.format(
+                                    "V42 VADER ESCAPE: Vader at non-BG %s — MUST reach battleground %s to flip objective!",
+                                    location.getTitle(), v34Dest.getTitle()), 500.0f);
+                                logger.warn("V42 VADER ESCAPE: Vader leaving {} for battleground {} — overriding WRONG DIRECTION",
+                                    location.getTitle(), v34Dest.getTitle());
+                            }
+                        }
+                        if (!vaderEscapingCastle) {
+                            // V38.3: HARD BLOCK moving to empty locations when opponents exist
+                            float wrongDirPenalty = -9999.0f; // V38.3: Raised from -400 — HARD BLOCK
+                            action.addReasoning(String.format(
+                                "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s — HARD BLOCK!",
+                                v34Dest.getTitle(), opUncontestedLoc), wrongDirPenalty);
+                            logger.warn("V38.3 WRONG DIRECTION: {} to empty {} — opponents at {} — HARD BLOCKED",
+                                cardToMove != null ? cardToMove.getTitle() : "?",
+                                v34Dest.getTitle(), opUncontestedLoc);
+                        }
                     }
 
                     // V38.3: CASTLE RETREAT BLOCK — NEVER move to Mustafar: Vader's Castle
@@ -1641,6 +1722,24 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
                 }
+
+                // V42: SPY AVOIDANCE — don't move to locations with undercover spies
+                try {
+                    int spiesAtDest = 0;
+                    for (PhysicalCard dc : gameState.getCardsAtLocation(v34Dest)) {
+                        if (dc != null && dc.isUndercover()) {
+                            spiesAtDest++;
+                        }
+                    }
+                    if (spiesAtDest > 0) {
+                        action.addReasoning(String.format(
+                            "V42 SPY AVOID: %d undercover spy(s) at %s — ambush trap! Move elsewhere!",
+                            spiesAtDest, v34Dest.getTitle()), -500.0f);
+                        logger.warn("V42 SPY AVOID MOVE: {} — {} spy(s) at {} — penalty -500",
+                            cardToMove != null ? cardToMove.getTitle() : "?",
+                            spiesAtDest, v34Dest.getTitle());
+                    }
+                } catch (Exception e) { /* ignore */ }
             }
         }
 

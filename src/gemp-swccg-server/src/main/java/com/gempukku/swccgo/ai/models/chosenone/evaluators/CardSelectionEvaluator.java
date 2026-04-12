@@ -312,6 +312,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluateCancelSelection(context);
         } else if (textLower.contains("choose target") ||
                    textLower.contains("click 'done' to cancel")) {
+            // === V42: SHIELD CHECK — must come before other routing in this branch ===
+            // K&D shield selection uses "Choose card, or click 'Done' to cancel" which
+            // matches this branch. Check if all choices are shields FIRST.
+            if (isShieldSelectionByContent(context)) {
+                logger.warn("V42 SHIELD ROUTING FIX: 'click done to cancel' text but content is shields → evaluateShieldSelection");
+                return evaluateShieldSelection(context);
+            }
             // === V24.11: AMSD ROUTING — CHECK BEFORE evaluateTargetSelection ===
             // "Choose card from hand, or click 'Done' to cancel" matches this branch,
             // but when AMSD is active and we're picking characters in deploy phase,
@@ -3419,6 +3426,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         }
                     }
 
+                    // === V42: ISB OPERATIONS — Imperial Square as starting location ===
+                    // ISB decks need Coruscant: Imperial Square to deploy Emperor quickly.
+                    if (startLocObjAnalyzer != null && startLocObjAnalyzer.isAnalyzed()) {
+                        String objTitle = startLocObjAnalyzer.getObjectiveTitle();
+                        if (objTitle != null && objTitle.toLowerCase(java.util.Locale.ROOT).contains("isb operations")) {
+                            if (locTitleLower.contains("imperial square")) {
+                                action.addReasoning("V42 ISB IMPERIAL SQUARE: Must start here to deploy Emperor quickly!", 1000.0f);
+                                logger.warn("V42 ISB STARTING LOC: Imperial Square — HARD PREFER (+1000)");
+                            }
+                        }
+                    }
+
                     // V22: Starting locations that pull cards from Reserve Deck
                     String locGameText = locBp.getGameText();
                     if (locGameText != null) {
@@ -4216,28 +4235,61 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return actions;
     }
 
+    // V42: Known shield blueprint IDs for fast detection without library dependency
+    private static final java.util.Set<String> KNOWN_SHIELD_BLUEPRINTS = new java.util.HashSet<>(java.util.Arrays.asList(
+        // Dark shields
+        "13_51", "13_52", "13_54", "13_61", "13_63", "13_66", "13_81", "13_84", "13_86", "13_90", "13_96",
+        "200_94", "200_95", "200_100", "223_7", "223_26", "225_3",
+        // Light shields
+        "13_1", "13_3", "13_4", "13_6", "13_8", "13_15", "13_22", "13_44", "13_47",
+        "200_28", "200_30", "200_32", "223_49"
+    ));
+
     /**
      * Check if this is a shield selection by examining the available cards.
-     * Similar to Python's approach of checking if majority of options are shields.
+     * V42: Uses KNOWN_SHIELD_BLUEPRINTS for fast detection without library dependency.
      */
     private boolean isShieldSelectionByContent(DecisionContext context) {
         GameState gameState = context.getGameState();
         List<String> cardIds = context.getCardIds();
+        List<String> blueprintIds = context.getBlueprints();
+        boolean isArbitrary = "ARBITRARY_CARDS".equals(context.getDecisionType());
 
-        if (gameState == null || cardIds == null || cardIds.isEmpty()) {
+        if (cardIds == null || cardIds.isEmpty()) {
             return false;
         }
 
         int shieldCount = 0;
-        for (String cardId : cardIds) {
+        int knownShieldCount = 0;
+
+        for (int idx = 0; idx < cardIds.size(); idx++) {
+            String cardId = cardIds.get(idx);
             try {
-                PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
-                if (card != null) {
-                    SwccgCardBlueprint blueprint = card.getBlueprint();
-                    if (blueprint != null &&
-                        blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
+                SwccgCardBlueprint blueprint = null;
+
+                if (isArbitrary && blueprintIds != null && idx < blueprintIds.size()) {
+                    // V29.5: ARBITRARY_CARDS — use blueprint ID lookup (temp IDs can't be parsed as ints)
+                    String bpId = blueprintIds.get(idx);
+
+                    // V42: Fast check — known shield blueprint IDs (no library needed)
+                    if (KNOWN_SHIELD_BLUEPRINTS.contains(bpId)) {
+                        knownShieldCount++;
                         shieldCount++;
+                        continue;
                     }
+
+                    blueprint = getBlueprintFromId(context, bpId);
+                } else if (gameState != null) {
+                    // Standard path — integer card ID
+                    PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
+                    if (card != null) {
+                        blueprint = card.getBlueprint();
+                    }
+                }
+
+                if (blueprint != null &&
+                    blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
+                    shieldCount++;
                 }
             } catch (NumberFormatException e) {
                 // Ignore
@@ -4245,7 +4297,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         // If majority are shields, treat as shield selection
-        return shieldCount > 0 && shieldCount >= cardIds.size() * 0.5;
+        boolean isShield = shieldCount > 0 && shieldCount >= cardIds.size() * 0.5;
+        if (isShield) {
+            logger.warn("V42 isShieldSelectionByContent: YES — {}/{} cards are shields ({} via known IDs, isArbitrary={})",
+                shieldCount, cardIds.size(), knownShieldCount, isArbitrary);
+        } else if (isArbitrary && blueprintIds != null && !blueprintIds.isEmpty()) {
+            logger.warn("V42 isShieldSelectionByContent: NO — only {}/{} shields found (knownIDs={}, first5bp={})",
+                shieldCount, cardIds.size(), knownShieldCount,
+                blueprintIds.subList(0, Math.min(5, blueprintIds.size())));
+        }
+        return isShield;
     }
 
     /**
@@ -4256,10 +4317,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         GameState gameState = context.getGameState();
         ShieldStrategy shieldStrategy = context.getShieldStrategy();
         int turnNumber = context.getTurnNumber();
+        List<String> blueprintIds = context.getBlueprints();
+        boolean isArbitrary = "ARBITRARY_CARDS".equals(context.getDecisionType());
 
-        logger.info("[CardSelectionEvaluator] Evaluating DEFENSIVE SHIELD selection");
+        logger.warn("[CardSelectionEvaluator] V29.5 Evaluating DEFENSIVE SHIELD selection (isArbitrary={}, shieldStrategy={}, turn={}, numChoices={})",
+            isArbitrary, shieldStrategy != null ? "SET" : "NULL", turnNumber,
+            context.getCardIds() != null ? context.getCardIds().size() : 0);
+        // V42: Log all shield options for diagnosis
+        if (blueprintIds != null) {
+            logger.warn("V42 SHIELD OPTIONS: blueprintIds={}", blueprintIds);
+        }
 
-        for (String cardId : context.getCardIds()) {
+        List<String> cardIds = context.getCardIds();
+        for (int idx = 0; idx < cardIds.size(); idx++) {
+            String cardId = cardIds.get(idx);
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
                 ActionType.DEPLOY,
@@ -4267,46 +4338,76 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 "Deploy shield"
             );
 
-            if (gameState != null) {
-                try {
+            try {
+                String title = null;
+                String blueprintId = null;
+                SwccgCardBlueprint blueprint = null;
+
+                if (isArbitrary && blueprintIds != null && idx < blueprintIds.size()) {
+                    // V29.5: ARBITRARY_CARDS path — use blueprint ID (temp IDs can't be parsed)
+                    blueprintId = blueprintIds.get(idx);
+                    blueprint = getBlueprintFromId(context, blueprintId);
+                    if (blueprint != null) {
+                        title = blueprint.getTitle();
+                        logger.warn("V29.5 SHIELD ARBITRARY: Resolved '{}' → '{}' (bp={})", cardId, title, blueprintId);
+                    }
+                } else if (gameState != null) {
+                    // Standard path — integer card ID
                     PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
                     if (card != null) {
-                        String title = card.getTitle();
-                        String blueprintId = card.getBlueprintId(true);
-                        SwccgCardBlueprint blueprint = card.getBlueprint();
-
-                        action.setDisplayText("Shield: " + (title != null ? title : cardId));
-
-                        // Verify it's actually a defensive shield
-                        if (blueprint != null &&
-                            blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
-
-                            // Use ShieldStrategy for scoring
-                            if (shieldStrategy != null && blueprintId != null && title != null) {
-                                float shieldScore = shieldStrategy.scoreShield(
-                                    blueprintId, title, turnNumber);
-
-                                // Set score directly (ShieldStrategy fully controls priority)
-                                action.setScore(shieldScore);
-                                String description = shieldStrategy.getShieldDescription(blueprintId, title);
-                                action.addReasoning("Shield: " + description, 0.0f);
-
-                                logger.info("[Shield] {}: score={} ({})", title, shieldScore, description);
-                            } else {
-                                // Fallback if no shield strategy
-                                action.addReasoning("Defensive shield (no strategy)", 50.0f);
-                            }
-                        } else {
-                            // Not a shield - low priority
-                            action.addReasoning("Not a defensive shield", -50.0f);
-                        }
+                        title = card.getTitle();
+                        blueprintId = card.getBlueprintId(true);
+                        blueprint = card.getBlueprint();
                     }
-                } catch (NumberFormatException e) {
-                    action.addReasoning("Invalid card ID", -100.0f);
                 }
+
+                if (title != null) {
+                    action.setDisplayText("Shield: " + title);
+                }
+
+                // Verify it's actually a defensive shield
+                if (blueprint != null &&
+                    blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
+
+                    // Use ShieldStrategy for scoring
+                    if (shieldStrategy != null && blueprintId != null && title != null) {
+                        float shieldScore = shieldStrategy.scoreShield(
+                            blueprintId, title, turnNumber);
+
+                        // Set score directly (ShieldStrategy fully controls priority)
+                        action.setScore(shieldScore);
+                        String description = shieldStrategy.getShieldDescription(blueprintId, title);
+                        action.addReasoning("Shield: " + description, 0.0f);
+
+                        logger.warn("V29.5 [Shield] {}: score={} ({})", title, shieldScore, description);
+                    } else {
+                        // Fallback if no shield strategy
+                        action.addReasoning("Defensive shield (no strategy)", 50.0f);
+                        logger.warn("V29.5 [Shield] {}: NO STRATEGY — fallback score 100", title);
+                    }
+                } else if (blueprint != null) {
+                    // Not a shield - low priority
+                    action.addReasoning("Not a defensive shield", -50.0f);
+                } else {
+                    logger.warn("V29.5 [Shield] Could not resolve card '{}' (bp={})", cardId, blueprintId);
+                    action.addReasoning("Unresolved shield card", 0.0f);
+                }
+            } catch (NumberFormatException e) {
+                // V29.5: This shouldn't happen anymore for ARBITRARY_CARDS
+                logger.warn("V29.5 [Shield] NumberFormatException for cardId '{}' — should use blueprint path", cardId);
+                action.addReasoning("Invalid card ID (should not happen with V29.5)", -100.0f);
             }
 
             actions.add(action);
+        }
+
+        // V42: Summary log — show all scored shields sorted by score for easy debugging
+        if (!actions.isEmpty()) {
+            StringBuilder summary = new StringBuilder("V42 SHIELD SCORING SUMMARY (turn " + turnNumber + "): ");
+            actions.stream()
+                .sorted((a, b) -> Float.compare(b.getScore(), a.getScore()))
+                .forEach(a -> summary.append(String.format("[%s=%.0f] ", a.getDisplayText(), a.getScore())));
+            logger.warn(summary.toString());
         }
 
         return actions;

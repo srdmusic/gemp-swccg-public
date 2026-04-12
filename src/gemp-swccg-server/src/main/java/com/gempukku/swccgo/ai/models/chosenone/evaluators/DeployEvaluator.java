@@ -390,21 +390,48 @@ public class DeployEvaluator extends ActionEvaluator {
                 actionText
             );
 
-            // V38.4: DEPLOY URGENCY — hand size + Force pile
+            // === V42: HAND PRESERVATION + DEPLOY URGENCY ===
+            // Two competing concerns:
+            // 1. Cards in hand do nothing — deploy them to generate value
+            // 2. An empty hand is CATASTROPHIC — you lose a full turn drawing up,
+            //    and battle damage/force drains eat directly into your reserve deck
+            //    (losing key cards you'll never see again).
+            // Rule: ALWAYS keep at least 4 cards in hand as a Force loss buffer.
+            // Exception: Locations always deploy (they don't reduce hand presence).
             {
                 int handSize = hand != null ? hand.size() : 0;
                 float urgencyBonus = 0;
-                if (handSize >= 12) {
-                    urgencyBonus = 200.0f + (handSize - 12) * 50.0f;
-                } else if (handSize >= 9) {
-                    urgencyBonus = 100.0f + (handSize - 9) * 30.0f;
+
+                // V42: HAND PRESERVATION — penalize deploys when hand is getting low
+                // Use actionText to detect locations (card object not yet resolved at this scope)
+                boolean isLocationDeploy = actionLower.contains("location") || actionLower.contains("site")
+                    || actionLower.contains("system") || actionLower.contains("sector");
+
+                if (!isLocationDeploy && handSize <= 3) {
+                    action.addReasoning(String.format(
+                        "V42 HAND CRITICAL: Only %d cards in hand — STOP deploying! Need buffer for Force loss!",
+                        handSize), -500.0f);
+                    LOG.warn("V42 HAND CRITICAL: hand size {} — blocked from deploying (-500) — '{}'",
+                        handSize, actionText);
+                } else if (!isLocationDeploy && handSize <= 5) {
+                    action.addReasoning(String.format(
+                        "V42 HAND LOW: %d cards in hand — conserve hand, deploy only high-value cards (-100)",
+                        handSize), -100.0f);
+                    LOG.warn("V42 HAND LOW: hand size {} — caution (-100) — '{}'",
+                        handSize, actionText);
+                }
+
+                if (handSize >= 10) {
+                    urgencyBonus = 30.0f + (handSize - 10) * 10.0f;
+                } else if (handSize >= 7) {
+                    urgencyBonus = 15.0f;
                 }
                 if (availableForce >= 10 && handSize >= 8) {
-                    urgencyBonus += 100.0f;
+                    urgencyBonus += 20.0f;
                 }
                 if (urgencyBonus > 0) {
                     action.addReasoning(String.format(
-                        "V38.4 DEPLOY URGENCY: hand=%d, force=%d (+%.0f)",
+                        "V42 DEPLOY URGENCY: hand=%d, force=%d (+%.0f base)",
                         handSize, availableForce, urgencyBonus), urgencyBonus);
                 }
             }
@@ -1473,9 +1500,14 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === V32: ABILITY >= 4 DEPLOYMENT RULE ===
-                    // SWCCG requires total ability >= 4 at a site to draw battle destiny.
-                    // NEVER leave total friendly ability < 4 at a site after deploying.
+                    // === V42: UNIFIED BUDDY SYSTEM (replaces V32 ability + V33 buddy) ===
+                    // CORE RULE: Never deploy a character alone. Always stack characters together.
+                    // A lone character gets picked off instantly — the opponent just walks over
+                    // and initiates battle with superior force. The buddy system ensures:
+                    // 1. STRONG bonus for deploying to sites WITH existing friendlies (+400)
+                    // 2. PENALTY for deploying alone when friendlies elsewhere need help (-400)
+                    // 3. Ability >= 4 awareness (need it for battle destiny)
+                    // 4. Opponent threat awareness (don't deploy alone where opponent can attack)
                     if (category == CardCategory.CHARACTER && card != null && card.getBlueprint() != null
                         && gameState != null && game != null) {
                         try {
@@ -1485,138 +1517,249 @@ public class DeployEvaluator extends ActionEvaluator {
                                 cardAbility = ab != null ? ab : 0;
                             }
 
-                            String v32PlayerId = context.getPlayerId();
+                            String v42PlayerId = context.getPlayerId();
+                            String v42OpponentId = gameState.getOpponent(v42PlayerId);
+
+                            // First pass: gather state of ALL sites
+                            PhysicalCard targetSite = null;
+                            float targetFriendlyAbility = 0;
+                            int targetFriendlyCount = 0;
+                            int targetOpponentCount = 0;
+                            float targetOpponentPower = 0;
+                            int targetSpyCount = 0;
+                            boolean hasFriendlyCharAnywhere = false;
+                            boolean hasUnderstaffedFriendlySite = false;
+
                             for (PhysicalCard loc : gameState.getTopLocations()) {
                                 if (loc == null || loc.getTitle() == null) continue;
                                 if (loc.getBlueprint() == null || loc.getBlueprint().getCardSubtype() == null) continue;
                                 if (loc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SITE) continue;
 
                                 String siteTitle = loc.getTitle().toLowerCase(Locale.ROOT);
-                                if (!actionLower.contains(siteTitle)) continue;
+                                boolean isTarget = actionLower.contains(siteTitle);
 
-                                float currentAbilityAtSite = 0;
-                                int friendlyCharCount = 0;
+                                // Count friendlies, opponents, and undercover spies at this site
+                                float friendlyAbilityHere = 0;
+                                int friendlyCountHere = 0;
+                                int opponentCountHere = 0;
+                                float opponentPowerHere = 0;
+                                int spyCountHere = 0;
                                 for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
-                                    if (c == null || !v32PlayerId.equals(c.getOwner())) continue;
-                                    if (c.getBlueprint() == null) continue;
+                                    if (c == null || c.getBlueprint() == null) continue;
                                     if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                    friendlyCharCount++;
-                                    if (c.getBlueprint().hasAbilityAttribute()) {
-                                        Float cAb = c.getBlueprint().getAbility();
-                                        currentAbilityAtSite += (cAb != null ? cAb : 0);
+                                    // V42: Detect undercover spies — they're enemy agents hiding at our locations
+                                    if (c.isUndercover()) {
+                                        spyCountHere++;
+                                        opponentCountHere++; // Count spy as opponent threat
+                                        continue; // Don't count spy as friendly even if owner matches
+                                    }
+                                    if (v42PlayerId.equals(c.getOwner())) {
+                                        friendlyCountHere++;
+                                        if (c.getBlueprint().hasAbilityAttribute()) {
+                                            Float cAb = c.getBlueprint().getAbility();
+                                            friendlyAbilityHere += (cAb != null ? cAb : 0);
+                                        }
+                                    } else if (v42OpponentId.equals(c.getOwner())) {
+                                        opponentCountHere++;
+                                        if (c.getBlueprint().hasPowerAttribute()) {
+                                            Float cPow = c.getBlueprint().getPower();
+                                            opponentPowerHere += (cPow != null ? cPow : 0);
+                                        }
                                     }
                                 }
 
-                                float totalAfterDeploy = currentAbilityAtSite + cardAbility;
-
-                                if (totalAfterDeploy >= 4.0f) {
-                                    if (friendlyCharCount > 0 && currentAbilityAtSite < 4.0f) {
-                                        action.addReasoning(String.format(
-                                            "V32 ABILITY FIX: Deploy brings ability from %.0f to %.0f (>= 4) at %s!",
-                                            currentAbilityAtSite, totalAfterDeploy, loc.getTitle()), 150.0f);
-                                        LOG.warn("V32 ABILITY FIX: {} fixes deficit at {} (was {}, now {})",
-                                            card.getTitle(), loc.getTitle(), currentAbilityAtSite, totalAfterDeploy);
+                                if (friendlyCountHere > 0) {
+                                    hasFriendlyCharAnywhere = true;
+                                    if (friendlyAbilityHere < ChosenOneConfig.ABILITY_BUDDY_THRESHOLD) {
+                                        hasUnderstaffedFriendlySite = true;
                                     }
-                                } else if (friendlyCharCount == 0) {
-                                    boolean canFollowUp = false;
-                                    java.util.List<PhysicalCard> handCards = gameState.getHand(v32PlayerId);
-                                    if (handCards != null) {
-                                        for (PhysicalCard hc : handCards) {
-                                            if (hc == null || hc == card) continue;
-                                            if (hc.getBlueprint() == null) continue;
-                                            if (hc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                            float hcAbility = 0;
-                                            if (hc.getBlueprint().hasAbilityAttribute()) {
-                                                Float hcAb = hc.getBlueprint().getAbility();
-                                                hcAbility = hcAb != null ? hcAb : 0;
-                                            }
-                                            if (cardAbility + hcAbility >= 4.0f) {
-                                                canFollowUp = true;
-                                                break;
+                                }
+
+                                if (isTarget) {
+                                    targetSite = loc;
+                                    targetFriendlyAbility = friendlyAbilityHere;
+                                    targetSpyCount = spyCountHere;
+                                    targetFriendlyCount = friendlyCountHere;
+                                    targetOpponentCount = opponentCountHere;
+                                    targetOpponentPower = opponentPowerHere;
+                                }
+                            }
+
+                            // Also check if opponent has characters ANYWHERE on board
+                            boolean opponentHasCharsOnBoard = false;
+                            for (PhysicalCard loc : gameState.getTopLocations()) {
+                                if (loc == null) continue;
+                                for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
+                                    if (c != null && c.getBlueprint() != null
+                                        && v42OpponentId.equals(c.getOwner())
+                                        && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                        opponentHasCharsOnBoard = true;
+                                        break;
+                                    }
+                                }
+                                if (opponentHasCharsOnBoard) break;
+                            }
+
+                            if (targetSite != null) {
+                                float totalAfterDeploy = targetFriendlyAbility + cardAbility;
+                                String siteName = targetSite.getTitle();
+
+                                if (targetFriendlyCount > 0) {
+                                    // === DEPLOYING TO SITE WITH FRIENDLIES — ALWAYS GOOD ===
+                                    if (targetFriendlyAbility < 4.0f && totalAfterDeploy >= 4.0f) {
+                                        // Fixes ability deficit — critical!
+                                        action.addReasoning(String.format(
+                                            "V42 BUDDY ABILITY FIX: Brings ability from %.0f to %.0f (>= 4) at %s!",
+                                            targetFriendlyAbility, totalAfterDeploy, siteName), 500.0f);
+                                        LOG.warn("V42 BUDDY ABILITY FIX: {} (ability {}) fixes deficit at {} (was {}, now {})",
+                                            card.getTitle(), cardAbility, siteName, targetFriendlyAbility, totalAfterDeploy);
+                                    } else if (targetFriendlyAbility < ChosenOneConfig.ABILITY_BUDDY_THRESHOLD) {
+                                        // Reinforcing an understaffed site
+                                        float buddyBonus = 400.0f;
+                                        if (totalAfterDeploy >= ChosenOneConfig.ABILITY_BUDDY_THRESHOLD) {
+                                            buddyBonus = 450.0f; // Reaches full buddy threshold
+                                        }
+                                        action.addReasoning(String.format(
+                                            "V42 BUDDY REINFORCE: Join friendlies at %s (ability %.0f → %.0f, target %d)",
+                                            siteName, targetFriendlyAbility, totalAfterDeploy,
+                                            ChosenOneConfig.ABILITY_BUDDY_THRESHOLD), buddyBonus);
+                                        LOG.warn("V42 BUDDY REINFORCE: {} joining {} — ability {} → {} (+{})",
+                                            card.getTitle(), siteName, targetFriendlyAbility, totalAfterDeploy, buddyBonus);
+                                    } else {
+                                        // Site already well-staffed — still good to join
+                                        action.addReasoning(String.format(
+                                            "V42 BUDDY STACK: Joining well-staffed site %s (ability %.0f)",
+                                            siteName, targetFriendlyAbility), 200.0f);
+                                    }
+                                } else {
+                                    // === DEPLOYING ALONE TO EMPTY SITE ===
+                                    // Before penalizing, check if we can afford a buddy follow-up
+                                    // this same turn. If another character in hand can deploy here
+                                    // and we have enough Force for both, the solo deploy is temporary.
+                                    boolean canAffordBuddy = false;
+                                    float bestBuddyAbility = 0;
+                                    String buddyName = "";
+                                    int currentDeployCost = card.getBlueprint().getDeployCost() != null
+                                        ? card.getBlueprint().getDeployCost().intValue() : 0;
+                                    int forceAvailable = context.getForcePileSize();
+                                    int forceAfterThis = forceAvailable - currentDeployCost;
+
+                                    if (forceAfterThis > 0) {
+                                        java.util.List<PhysicalCard> handCards = gameState.getHand(v42PlayerId);
+                                        if (handCards != null) {
+                                            for (PhysicalCard hc : handCards) {
+                                                if (hc == null || hc == card) continue;
+                                                if (hc.getBlueprint() == null) continue;
+                                                if (hc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                                int hcCost = hc.getBlueprint().getDeployCost() != null
+                                                    ? hc.getBlueprint().getDeployCost().intValue() : 0;
+                                                if (hcCost <= forceAfterThis) {
+                                                    float hcAbility = 0;
+                                                    if (hc.getBlueprint().hasAbilityAttribute()) {
+                                                        Float hcAb = hc.getBlueprint().getAbility();
+                                                        hcAbility = hcAb != null ? hcAb : 0;
+                                                    }
+                                                    if (hcAbility > bestBuddyAbility) {
+                                                        bestBuddyAbility = hcAbility;
+                                                        buddyName = hc.getTitle() != null ? hc.getTitle() : "unknown";
+                                                        canAffordBuddy = true;
+                                                    }
+                                                }
                                             }
                                         }
                                     }
 
-                                    if (!canFollowUp) {
+                                    float combinedAbility = cardAbility + bestBuddyAbility;
+
+                                    if (targetOpponentCount > 0) {
+                                        // Opponents AT this site — evaluate based on our strength
+                                        Float cardPower = card.getBlueprint().hasPowerAttribute()
+                                            ? card.getBlueprint().getPower() : null;
+                                        float myPower = cardPower != null ? cardPower : 0;
+
+                                        if (cardAbility >= 4.0f && myPower >= targetOpponentPower) {
+                                            // V43: Strong character (ability 4+) vs weaker opponent — GO!
+                                            float engageAloneBonus = 300.0f;
+                                            if (myPower >= targetOpponentPower * 1.5f) engageAloneBonus = 400.0f;
+                                            action.addReasoning(String.format(
+                                                "V43 STRONG SOLO ENGAGE: %s (ability %.0f, power %.0f) vs %d opponents (power %.0f) at %s — we dominate!",
+                                                card.getTitle(), cardAbility, myPower, targetOpponentCount, targetOpponentPower, siteName), engageAloneBonus);
+                                            LOG.warn("V43 STRONG SOLO ENGAGE: {} (a{}/p{}) vs {} opponents (p{}) at {} — APPROVED (+{})",
+                                                card.getTitle(), (int)cardAbility, (int)myPower, targetOpponentCount, (int)targetOpponentPower, siteName, (int)engageAloneBonus);
+                                        } else if (cardAbility >= 4.0f) {
+                                            // V43: Ability 4+ but outpowered — risky but not suicide
+                                            action.addReasoning(String.format(
+                                                "V43 STRONG SOLO RISKY: %s (ability %.0f, power %.0f) vs opponents (power %.0f) at %s — outpowered but can draw destiny",
+                                                card.getTitle(), cardAbility, myPower, targetOpponentPower, siteName), -50.0f);
+                                            LOG.warn("V43 STRONG SOLO RISKY: {} (a{}/p{}) vs opponents (p{}) at {} — ability OK but outpowered (-50)",
+                                                card.getTitle(), (int)cardAbility, (int)myPower, (int)targetOpponentPower, siteName);
+                                        } else if (canAffordBuddy && combinedAbility >= 4.0f) {
+                                            action.addReasoning(String.format(
+                                                "V42 BUDDY PLANNED CONTEST: %s + %s (ability %.0f) can contest %d opponents at %s!",
+                                                card.getTitle(), buddyName, combinedAbility, targetOpponentCount, siteName), 100.0f);
+                                            LOG.warn("V42 BUDDY PLANNED CONTEST: {} + {} (ability {}) vs {} opponents at {} — affordable follow-up!",
+                                                card.getTitle(), buddyName, combinedAbility, targetOpponentCount, siteName);
+                                        } else {
+                                            // V43: Weak character alone into opponents — block, but not -9999
+                                            action.addReasoning(String.format(
+                                                "V43 BUDDY BLOCK: %s (ability %.0f) alone into %d opponents at %s — too weak!",
+                                                card.getTitle(), cardAbility, targetOpponentCount, siteName), -500.0f);
+                                            LOG.warn("V43 BUDDY BLOCK: {} (ability {}) alone into {} opponents at {} — BLOCKED (-500)",
+                                                card.getTitle(), (int)cardAbility, targetOpponentCount, siteName);
+                                        }
+                                    } else if (canAffordBuddy && combinedAbility >= 4.0f) {
+                                        // No opponents here, and we can afford a buddy — go for it!
                                         action.addReasoning(String.format(
-                                            "V32 ABILITY RISK: Solo deploy with ability %.0f < 4 at %s — NO battle destiny!",
-                                            cardAbility, loc.getTitle()), -200.0f);
-                                        LOG.warn("V32 ABILITY RISK: {} (ability {}) solo at {} — no follow-up",
-                                            card.getTitle(), cardAbility, loc.getTitle());
+                                            "V42 BUDDY PLANNED: %s (ability %.0f) + %s (ability %.0f) = %.0f — buddy incoming at %s!",
+                                            card.getTitle(), cardAbility, buddyName, bestBuddyAbility, combinedAbility, siteName), 100.0f);
+                                        LOG.warn("V42 BUDDY PLANNED: {} + {} = ability {} at {} — Force {}/{} covers both",
+                                            card.getTitle(), buddyName, combinedAbility, siteName, currentDeployCost, forceAvailable);
+                                    } else if (opponentHasCharsOnBoard && cardAbility < 4.0f
+                                               && hasUnderstaffedFriendlySite) {
+                                        // Can't afford buddy, opponent has chars, friendlies need help
+                                        action.addReasoning(String.format(
+                                            "V42 BUDDY SCATTER: Ability %.0f alone at %s, no affordable buddy — reinforce existing sites!",
+                                            cardAbility, siteName), -400.0f);
+                                        LOG.warn("V42 BUDDY SCATTER: {} (ability {}) alone at {} — no buddy affordable, friendlies need help! (-400)",
+                                            card.getTitle(), cardAbility, siteName);
+                                    } else if (opponentHasCharsOnBoard && cardAbility < 4.0f) {
+                                        // Can't afford buddy, opponent has chars, but no understaffed friendlies
+                                        action.addReasoning(String.format(
+                                            "V42 BUDDY CAUTION: Ability %.0f alone at %s, no affordable buddy — vulnerable (-200)",
+                                            cardAbility, siteName), -200.0f);
+                                        LOG.warn("V42 BUDDY CAUTION: {} (ability {}) solo at {} — no buddy, opponents on board (-200)",
+                                            card.getTitle(), cardAbility, siteName);
+                                    } else if (hasFriendlyCharAnywhere && hasUnderstaffedFriendlySite
+                                               && !canAffordBuddy) {
+                                        // No buddy affordable, friendlies elsewhere need help
+                                        action.addReasoning(String.format(
+                                            "V42 BUDDY REGROUP: No affordable buddy — reinforce existing sites, don't spread to %s (-200)",
+                                            siteName), -200.0f);
+                                        LOG.warn("V42 BUDDY REGROUP: {} to empty {} — no buddy, understaffed sites need help (-200)",
+                                            card.getTitle(), siteName);
+                                    } else if (!hasFriendlyCharAnywhere) {
+                                        // First character on the board — fine, has to go somewhere
+                                        action.addReasoning(String.format(
+                                            "V42 BUDDY PIONEER: First character on board — %s is fine",
+                                            siteName), 0.0f);
                                     } else {
+                                        // All friendly sites are well-staffed, or buddy is affordable — OK to expand
                                         action.addReasoning(String.format(
-                                            "V32 ABILITY CAUTION: Solo ability %.0f < 4 at %s but follow-up in hand",
-                                            cardAbility, loc.getTitle()), -30.0f);
+                                            "V42 BUDDY EXPAND: Existing sites secured — expanding to %s",
+                                            siteName), 0.0f);
                                     }
-                                } else {
-                                    action.addReasoning(String.format(
-                                        "V32 ABILITY WARNING: Total ability %.0f still < 4 at %s after deploy!",
-                                        totalAfterDeploy, loc.getTitle()), -100.0f);
-                                    LOG.warn("V32 ABILITY WARNING: {} to {} — total ability {} still < 4!",
-                                        card.getTitle(), loc.getTitle(), totalAfterDeploy);
                                 }
-                                break;
+                            }
+                            // V42: SPY AVOIDANCE — deploy away from undercover spies
+                            if (targetSite != null && targetSpyCount > 0) {
+                                action.addReasoning(String.format(
+                                    "V42 SPY AVOID: %d undercover spy(s) at %s — deploy elsewhere! Spy will break cover and ambush!",
+                                    targetSpyCount, targetSite.getTitle()), -500.0f);
+                                LOG.warn("V42 SPY AVOID: {} — {} spy(s) at {} — penalty -500",
+                                    card.getTitle(), targetSpyCount, targetSite.getTitle());
                             }
                         } catch (Exception e) {
-                            LOG.debug("V32 ABILITY CHECK: Error: {}", e.getMessage());
-                        }
-                    }
-
-                    // === V33: ABILITY 7 BUDDY SYSTEM ===
-                    // Encourage stacking ability at sites to reach 7+.
-                    if (category == CardCategory.CHARACTER && card != null && card.getBlueprint() != null
-                        && gameState != null && game != null) {
-                        try {
-                            float v33CardAbility = 0;
-                            if (card.getBlueprint().hasAbilityAttribute()) {
-                                Float v33Ab = card.getBlueprint().getAbility();
-                                v33CardAbility = v33Ab != null ? v33Ab : 0;
-                            }
-
-                            String v33PlayerId = context.getPlayerId();
-                            for (PhysicalCard loc : gameState.getTopLocations()) {
-                                if (loc == null || loc.getTitle() == null) continue;
-                                if (loc.getBlueprint() == null || loc.getBlueprint().getCardSubtype() == null) continue;
-                                if (loc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SITE) continue;
-
-                                String v33SiteTitle = loc.getTitle().toLowerCase(Locale.ROOT);
-                                if (!actionLower.contains(v33SiteTitle)) continue;
-
-                                float v33CurrentAbility = 0;
-                                for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
-                                    if (c == null || !v33PlayerId.equals(c.getOwner())) continue;
-                                    if (c.getBlueprint() == null) continue;
-                                    if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                    if (c.getBlueprint().hasAbilityAttribute()) {
-                                        Float cAb = c.getBlueprint().getAbility();
-                                        v33CurrentAbility += (cAb != null ? cAb : 0);
-                                    }
-                                }
-
-                                float v33TotalAfter = v33CurrentAbility + v33CardAbility;
-
-                                if (v33CurrentAbility < ChosenOneConfig.ABILITY_BUDDY_THRESHOLD) {
-                                    if (v33TotalAfter >= ChosenOneConfig.ABILITY_BUDDY_THRESHOLD) {
-                                        action.addReasoning(String.format(
-                                            "V33 BUDDY FIX: Deploy brings ability from %.0f to %.0f (>= %d) at %s!",
-                                            v33CurrentAbility, v33TotalAfter, ChosenOneConfig.ABILITY_BUDDY_THRESHOLD,
-                                            loc.getTitle()), 150.0f);
-                                        LOG.warn("V33 BUDDY FIX: {} (ability {}) at {} — brings total from {} to {} (>= {})",
-                                            card.getTitle(), v33CardAbility, loc.getTitle(),
-                                            v33CurrentAbility, v33TotalAfter, ChosenOneConfig.ABILITY_BUDDY_THRESHOLD);
-                                    } else if (v33CurrentAbility > 0) {
-                                        action.addReasoning(String.format(
-                                            "V33 BUDDY BONUS: Reinforcing ability at %s (%.0f → %.0f, target %d)",
-                                            loc.getTitle(), v33CurrentAbility, v33TotalAfter,
-                                            ChosenOneConfig.ABILITY_BUDDY_THRESHOLD), 100.0f);
-                                        LOG.warn("V33 BUDDY BONUS: {} reinforcing {} — ability {} → {}",
-                                            card.getTitle(), loc.getTitle(), v33CurrentAbility, v33TotalAfter);
-                                    }
-                                }
-                                break;
-                            }
-                        } catch (Exception e) {
-                            LOG.debug("V33 BUDDY SYSTEM: Error: {}", e.getMessage());
+                            LOG.debug("V42 BUDDY SYSTEM: Error: {}", e.getMessage());
                         }
                     }
 

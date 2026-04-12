@@ -79,55 +79,13 @@ public class ForceActivationEvaluator extends ActionEvaluator {
             return actions;
         }
 
-        int amount;
-
-        // V38.2: Activate max, but if Reserve Deck would drop below 4 after
-        // activation, save cards for destiny draws (battle + weapon).
-        // Simple trigger: reserveDeck - maxVal < 4 means we'd be dangerously low.
-        int reserveDeck = context.getReserveDeckSize();
-        int reserveAfterActivation = reserveDeck - maxVal;
-
-        if (reserveAfterActivation < 4) {
-            // Activating max would leave Reserve < 4 — save some for destiny
-            int reserveNeeded = 2; // Default: save 2 for battle destiny
-
-            // If armed characters on table, save 4 (weapon destiny + battle destiny)
-            if (gameState != null) {
-                try {
-                    String actPid = context.getPlayerId();
-                    for (PhysicalCard tc : gameState.getAllPermanentCards()) {
-                        if (tc == null || !actPid.equals(tc.getOwner())) continue;
-                        if (tc.getBlueprint() == null) continue;
-                        if (tc.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                        com.gempukku.swccgo.common.Zone tz = tc.getZone();
-                        if (tz == null || !tz.isInPlay()) continue;
-                        java.util.List<PhysicalCard> atts = gameState.getAttachedCards(tc);
-                        if (atts != null) {
-                            for (PhysicalCard att : atts) {
-                                if (att != null && att.getBlueprint() != null
-                                    && att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
-                                    reserveNeeded = 4;
-                                    break;
-                                }
-                            }
-                        }
-                        if (reserveNeeded == 4) break;
-                    }
-                } catch (Exception e) { /* ignore */ }
-            }
-
-            // Activate enough to leave reserveNeeded in Reserve Deck
-            amount = Math.max(0, reserveDeck - reserveNeeded);
-            amount = Math.min(amount, maxVal);
-            if (amount <= 0) amount = Math.min(maxVal, 1); // Always activate at least 1
-            logger.warn("V38.2 SAVE RESERVE: reserve={}, would be {} after max, saving {}, activating {} of {}",
-                reserveDeck, reserveAfterActivation, reserveNeeded, amount, maxVal);
-        } else {
-            // Reserve stays >= 4 after activation — activate everything
-            amount = maxVal;
-            logger.info("V38 ACTIVATE MAX: {} of {} (turn {}, reserve={})",
-                amount, maxVal, context.getTurnNumber(), reserveDeck);
-        }
+        // V42: Use calculateActivationAmount which ALWAYS reserves cards for destiny draws.
+        // Old V38.2 logic only saved reserve when reserveDeck-maxVal < 4, which meant
+        // early game activated everything and depleted reserve before the threshold kicked in.
+        int amount = calculateActivationAmount(context, maxVal);
+        logger.warn("V42 FORCE ACTIVATION: activating {} of {} (reserve={}, forcePile={}, hand={}, lifeForce={})",
+            amount, maxVal, context.getReserveDeckSize(), context.getForcePileSize(),
+            context.getHandSize(), context.getLifeForce());
 
         // Ensure amount is within bounds
         amount = Math.max(minVal, Math.min(amount, maxVal));

@@ -176,6 +176,18 @@ public class DrawEvaluator extends ActionEvaluator {
         // Get force generation for forward planning
         int forceGeneration = calculateForceGeneration(context);
 
+        // === V42: EMERGENCY DRAW — empty hand is a death spiral ===
+        // If hand is 0-2, we MUST draw regardless of other considerations.
+        // An empty hand means no deploys, no interrupts, no responses — game over.
+        if (handSize <= 2 && forcePile >= 1 && reserveDeck >= 2) {
+            float emergencyBonus = (3 - handSize) * 200.0f; // 0 cards = +600, 1 = +400, 2 = +200
+            action.addReasoning(String.format(
+                "V42 EMERGENCY DRAW: Hand has only %d cards — MUST draw to stay in the game!", handSize),
+                emergencyBonus);
+            logger.warn("V42 EMERGENCY DRAW: hand={}, force={}, reserve={} — bonus +{}",
+                handSize, forcePile, reserveDeck, emergencyBonus);
+        }
+
         // === CRITICAL: LIFE FORCE BASED HAND LIMIT ===
         if (remainingLifeForce < CRITICAL_LIFE_FORCE) {
             float penalty = VERY_BAD_DELTA * 0.8f;

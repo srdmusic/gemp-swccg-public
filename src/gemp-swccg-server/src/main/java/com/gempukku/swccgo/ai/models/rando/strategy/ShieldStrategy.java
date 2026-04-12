@@ -58,11 +58,15 @@ public class ShieldStrategy {
         public final List<String> playIfOpponentObjective;
         public final int maxTurnToPlay;
         public final int minTurnToPlay;
+        // V42: When true, this shield scores NEGATIVE unless conditions are met.
+        // Used for shields that hurt both players (e.g. There Is No Try, Oppressive Enforcement)
+        // — playing them speculatively is net negative.
+        public final boolean requireConditions;
 
         public ShieldInfo(String name, List<String> blueprintIds, ShieldCategory category,
                          String description, List<String> playIfOpponentHas,
                          List<String> playIfWeHave, List<String> playIfOpponentObjective,
-                         int maxTurnToPlay, int minTurnToPlay) {
+                         int maxTurnToPlay, int minTurnToPlay, boolean requireConditions) {
             this.name = name;
             this.blueprintIds = blueprintIds;
             this.category = category;
@@ -72,13 +76,23 @@ public class ShieldStrategy {
             this.playIfOpponentObjective = playIfOpponentObjective != null ? playIfOpponentObjective : Collections.emptyList();
             this.maxTurnToPlay = maxTurnToPlay;
             this.minTurnToPlay = minTurnToPlay;
+            this.requireConditions = requireConditions;
+        }
+
+        // Standard constructor (requireConditions defaults to false)
+        public ShieldInfo(String name, List<String> blueprintIds, ShieldCategory category,
+                         String description, List<String> playIfOpponentHas,
+                         List<String> playIfWeHave, List<String> playIfOpponentObjective,
+                         int maxTurnToPlay, int minTurnToPlay) {
+            this(name, blueprintIds, category, description, playIfOpponentHas,
+                playIfWeHave, playIfOpponentObjective, maxTurnToPlay, minTurnToPlay, false);
         }
 
         // Convenience constructor for simpler shields
         public ShieldInfo(String name, String blueprintId, ShieldCategory category,
                          String description, int maxTurnToPlay) {
             this(name, Collections.singletonList(blueprintId), category, description,
-                null, null, null, maxTurnToPlay, 0);
+                null, null, null, maxTurnToPlay, 0, false);
         }
     }
 
@@ -105,14 +119,19 @@ public class ShieldStrategy {
             "Makes retrieval cost 1 force per card", 3));
 
         // === AUTO PLAY EARLY ===
+        // V42: Battle Order upgraded to IMMEDIATE — one of the most impactful shields.
+        // Forces opponent to pay 3 Force per drain without presence in both theaters.
+        // This shuts down most Light side drain strategies early game.
         DARK_SHIELDS.put("Battle Order", new ShieldInfo(
-            "Battle Order", "13_54", ShieldCategory.AUTO_PLAY_EARLY,
+            "Battle Order", "13_54", ShieldCategory.AUTO_PLAY_IMMEDIATE,
             "Opponent pays 3 to drain without both theaters", 4));
 
+        // V42: Downgraded to SITUATIONAL_HIGH — only useful when opponent has < 2 battlegrounds.
+        // Its non-BG drain cancel effect is wasted if opponent isn't draining at non-BG sites.
         DARK_SHIELDS.put("Come Here You Big Coward", new ShieldInfo(
             "Come Here You Big Coward", Arrays.asList("13_61", "225_3"),
-            ShieldCategory.AUTO_PLAY_EARLY,
-            "Punishes stacking at one battleground, stops retrieval",
+            ShieldCategory.SITUATIONAL_HIGH,
+            "Cancels non-BG drains + retrieval (only if opponent has < 2 BGs)",
             null, null, null, 5, 0));
 
         // === SITUATIONAL HIGH ===
@@ -152,21 +171,27 @@ public class ShieldStrategy {
             "Resistance", "13_84", ShieldCategory.SITUATIONAL_MEDIUM,
             "Limits force drains to 2 if we occupy 3 battlegrounds", 99));
 
+        // V42: Only play There Is No Try if opponent actually plays Sense/Alter.
+        // It punishes BOTH players, so playing it speculatively is net negative.
+        // requireConditions=true → scores NEGATIVE (-10) unless Sense/Alter seen.
         DARK_SHIELDS.put("There Is No Try", new ShieldInfo(
             "There Is No Try", Arrays.asList("13_90"),
-            ShieldCategory.SITUATIONAL_MEDIUM,
-            "Anti-Sense/Alter (punishes both players)",
-            Arrays.asList("sense", "alter"), null, null, 99, 0));
+            ShieldCategory.SITUATIONAL_HIGH,
+            "Anti-Sense/Alter (punishes both players — ONLY play if opponent uses Sense/Alter)",
+            Arrays.asList("sense", "alter"), null, null, 99, 0, true));
 
+        // V42: Only play Oppressive Enforcement if opponent actually plays Sense/Alter.
+        // Without Sense/Alter in the meta, this shield does nothing. requireConditions=true.
         DARK_SHIELDS.put("Oppressive Enforcement", new ShieldInfo(
             "Oppressive Enforcement", Arrays.asList("13_81"),
             ShieldCategory.SITUATIONAL_MEDIUM,
-            "Anti-Sense/Alter (only helps us)",
-            Arrays.asList("sense", "alter"), Arrays.asList("sense", "alter"), null, 99, 0));
+            "Anti-Sense/Alter (ONLY play if opponent uses Sense/Alter)",
+            Arrays.asList("sense", "alter"), Arrays.asList("sense", "alter"), null, 99, 0, true));
 
         // === LOW PRIORITY ===
+        // V42: Fixed blueprint ID — 223_7 is the combo card, 200_94 is standalone Death Star Sentry (V)
         DARK_SHIELDS.put("Death Star Sentry (V)", new ShieldInfo(
-            "Death Star Sentry (V)", "223_7", ShieldCategory.LOW_PRIORITY,
+            "Death Star Sentry (V)", "200_94", ShieldCategory.LOW_PRIORITY,
             "Stops non-unique swarms, cancels Colo Claw Fish", 99));
 
         // === NEVER PLAY ===
@@ -190,8 +215,9 @@ public class ShieldStrategy {
             "Makes retrieval cost 1 force per card", 3));
 
         // === AUTO PLAY EARLY ===
+        // V42: Battle Plan upgraded to IMMEDIATE — same as Dark's Battle Order
         LIGHT_SHIELDS.put("Battle Plan", new ShieldInfo(
-            "Battle Plan", "13_8", ShieldCategory.AUTO_PLAY_EARLY,
+            "Battle Plan", "13_8", ShieldCategory.AUTO_PLAY_IMMEDIATE,
             "Opponent pays 3 to drain without both theaters", 4));
 
         LIGHT_SHIELDS.put("Simple Tricks And Nonsense", new ShieldInfo(
@@ -222,17 +248,21 @@ public class ShieldStrategy {
             "Ultimatum", "13_44", ShieldCategory.SITUATIONAL_MEDIUM,
             "Limits force drains to 2 if we occupy 3 battlegrounds", 99));
 
+        // V42: Only play if opponent uses Sense/Alter — punishes both players.
+        // requireConditions=true → scores NEGATIVE (-10) unless Sense/Alter seen.
         LIGHT_SHIELDS.put("Do, Or Do Not", new ShieldInfo(
             "Do, Or Do Not", Arrays.asList("13_15"),
-            ShieldCategory.SITUATIONAL_MEDIUM,
-            "Anti-Sense/Alter (punishes both players)",
-            Arrays.asList("sense", "alter"), null, null, 99, 0));
+            ShieldCategory.SITUATIONAL_HIGH,
+            "Anti-Sense/Alter (punishes both players — ONLY play if opponent uses Sense/Alter)",
+            Arrays.asList("sense", "alter"), null, null, 99, 0, true));
 
+        // V42: Only play Wise Advice if opponent actually plays Sense/Alter.
+        // Without Sense/Alter in the meta, this shield does nothing. requireConditions=true.
         LIGHT_SHIELDS.put("Wise Advice", new ShieldInfo(
             "Wise Advice", Arrays.asList("13_47"),
             ShieldCategory.SITUATIONAL_MEDIUM,
-            "Anti-Sense/Alter (only helps us)",
-            Arrays.asList("sense", "alter"), null, null, 99, 0));
+            "Anti-Sense/Alter (ONLY play if opponent uses Sense/Alter)",
+            Arrays.asList("sense", "alter"), null, null, 99, 0, true));
 
         // === LOW PRIORITY ===
         LIGHT_SHIELDS.put("He Can Go About His Business", new ShieldInfo(
@@ -500,6 +530,13 @@ public class ShieldStrategy {
             LOG.info("V29 {}: Auto-play cap reached ({}/{}), reserving slot for situational shield",
                 cardTitle, autoPlayShieldsUsed, MAX_AUTO_PLAY_SHIELDS);
             return -30.0f;
+        }
+
+        // V42: If shield requires conditions and they're not met, hard reject.
+        // These shields hurt both players (Sense/Alter punishers) or do nothing without conditions.
+        if (shieldInfo.requireConditions && !conditionsMet) {
+            LOG.info("V42 {}: requireConditions=true but NO conditions met — score -10 (won't play)", cardTitle);
+            return -10.0f;
         }
 
         // Base score by category
