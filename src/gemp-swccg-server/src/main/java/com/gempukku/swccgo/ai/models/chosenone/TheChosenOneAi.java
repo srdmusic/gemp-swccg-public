@@ -489,12 +489,32 @@ public class TheChosenOneAi extends HeuristicAiBase {
                         int myLostPile = gameState.getLostPile(playerId).size();
                         int opponentLostPile = gameState.getLostPile(opponentId).size();
                         int lostPileDeficit = myLostPile - opponentLostPile;
+                        int turn = gameState.getPlayersLatestTurnNumber(playerId);
+
+                        // V25: Concede if losing by 20+ cards
                         if (lostPileDeficit >= 20) {
                             LOG.warn("V25 AUTO-CONCEDE: Lost Pile deficit is {} (mine={}, opponent={}). Conceding.",
                                 lostPileDeficit, myLostPile, opponentLostPile);
                             currentGame.playerLost(playerId,
                                 com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED);
-                            // Return any valid response to avoid NPE
+                            return super.decide(playerId, decision, gameState);
+                        }
+
+                        // V43 STALEMATE DETECTION: Prevent 178-turn games where both
+                        // bots pass turns endlessly with nothing happening.
+                        // Turn 15+: concede if losing (more life force lost)
+                        // Turn 25+: concede regardless — stalemate, loser concedes
+                        if (turn >= 25) {
+                            LOG.warn("V43 STALEMATE CONCEDE: Turn {} — game has gone too long. Conceding. (myLost={}, oppLost={})",
+                                turn, myLostPile, opponentLostPile);
+                            currentGame.playerLost(playerId,
+                                com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED);
+                            return super.decide(playerId, decision, gameState);
+                        } else if (turn >= 15 && lostPileDeficit > 5) {
+                            LOG.warn("V43 STALEMATE CONCEDE: Turn {} and losing by {} cards — conceding early.",
+                                turn, lostPileDeficit);
+                            currentGame.playerLost(playerId,
+                                com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED);
                             return super.decide(playerId, decision, gameState);
                         }
                     }
