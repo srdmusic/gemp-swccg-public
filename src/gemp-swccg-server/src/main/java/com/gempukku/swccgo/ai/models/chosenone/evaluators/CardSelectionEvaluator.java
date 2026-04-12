@@ -2527,10 +2527,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
 
                             // Lower deploy cost is better
-                            Float deployCost = blueprint.getDeployCost();
-                            if (deployCost != null) {
-                                float costScore = Math.max(0, 30 - deployCost * 5);
-                                action.addReasoning("Deploy cost " + deployCost.intValue(), costScore);
+                            // V43: Wrap in try-catch — some cards (Interrupts, Effects like
+                            // "Hidden Weapons") don't support getDeployCost() and throw
+                            // UnsupportedOperationException, crashing the cleanup thread.
+                            try {
+                                Float deployCost = blueprint.getDeployCost();
+                                if (deployCost != null) {
+                                    float costScore = Math.max(0, 30 - deployCost * 5);
+                                    action.addReasoning("Deploy cost " + deployCost.intValue(), costScore);
+                                }
+                            } catch (UnsupportedOperationException e) {
+                                // Card type doesn't support deployCost — skip
                             }
                         }
                     }
@@ -2629,10 +2636,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 // Score based on pilot quality
 
                                 // Lower deploy cost is better (we're paying extra for this)
-                                Float deployCost = blueprint.getDeployCost();
-                                if (deployCost != null) {
-                                    float costScore = Math.max(0, 30 - deployCost * 5);
-                                    action.addReasoning("Deploy cost " + deployCost.intValue(), costScore);
+                                // V43: try-catch for cards that don't support getDeployCost()
+                                try {
+                                    Float deployCost = blueprint.getDeployCost();
+                                    if (deployCost != null) {
+                                        float costScore = Math.max(0, 30 - deployCost * 5);
+                                        action.addReasoning("Deploy cost " + deployCost.intValue(), costScore);
+                                    }
+                                } catch (UnsupportedOperationException e) {
+                                    // Card type doesn't support deployCost — skip
                                 }
 
                                 // Higher ability is better for piloting
