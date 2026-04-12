@@ -2035,19 +2035,45 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === V24.2E: UNDERCOVER SPY DEPLOY PRIORITY (TDIGWATT) ===
-                    // U-3PO and Keder The Black are undercover spies that deploy on opponent's side.
-                    // They block opponent from controlling locations (preventing opponent force drains).
-                    // They should NEVER go to Cloud City — their job is blocking opponent elsewhere.
-                    if (category == CardCategory.CHARACTER) {
-                        if (cardTitleLower.contains("u-3po") || cardTitleLower.contains("keder")) {
-                            com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer spyObjAnalyzer =
-                                context.getObjectiveAnalyzer();
-                            if (spyObjAnalyzer != null && spyObjAnalyzer.isAnalyzed()
-                                && spyObjAnalyzer.needsBespinSystemPresence()) {
-                                action.addReasoning("V24.2 SPY: Deploy to block opponent force drains!", 100.0f);
-                                LOG.warn("V24.2 SPY: {} gets +100 — blocks opponent from controlling locations!", card.getTitle());
+                    // === V43: UNDERCOVER SPY DEPLOY — GO TO OPPONENT LOCATIONS ===
+                    // Spies block opponent force drains by providing "presence" at their locations.
+                    // A spy at a friendly location is WASTED — it doesn't block anything.
+                    if (actionLower.contains("undercover spy") || actionLower.contains("as a spy")
+                        || actionLower.contains("undercover")) {
+                        try {
+                            String spyPlayerId = context.getPlayerId();
+                            int spyFriendlyCount = 0;
+                            int spyOpponentCount = 0;
+                            String spyLocName = "?";
+
+                            // Find the target location by matching action text to locations on table
+                            for (PhysicalCard loc : gameState.getTopLocations()) {
+                                if (loc == null || loc.getTitle() == null) continue;
+                                if (!actionLower.contains(loc.getTitle().toLowerCase(Locale.ROOT))) continue;
+                                spyLocName = loc.getTitle();
+                                for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
+                                    if (c == null || c.getBlueprint() == null) continue;
+                                    if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                    if (c.isUndercover()) continue; // Don't count existing spies
+                                    if (spyPlayerId.equals(c.getOwner())) spyFriendlyCount++;
+                                    else spyOpponentCount++;
+                                }
+                                break;
                             }
+
+                            if (spyFriendlyCount > 0 && spyOpponentCount == 0) {
+                                action.addReasoning("V43 SPY WASTED: Deploying spy to FRIENDLY location — blocks nothing!", -800.0f);
+                                LOG.warn("V43 SPY WASTED: {} to {} — {} friendlies, spy does nothing!", card.getTitle(), spyLocName, spyFriendlyCount);
+                            } else if (spyOpponentCount > 0 && spyFriendlyCount == 0) {
+                                action.addReasoning("V43 SPY PERFECT: Opponent-only location — blocks their force drain!", 500.0f);
+                                LOG.warn("V43 SPY PERFECT: {} to {} — {} opponents, BLOCKS DRAIN!", card.getTitle(), spyLocName, spyOpponentCount);
+                            } else if (spyOpponentCount == 0 && spyFriendlyCount == 0) {
+                                action.addReasoning("V43 SPY EMPTY: Empty location — establishes presence", 100.0f);
+                            } else {
+                                action.addReasoning("V43 SPY CONTESTED: Both sides present", 50.0f);
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V43 SPY: Error checking location: {}", e.getMessage());
                         }
                     }
 
