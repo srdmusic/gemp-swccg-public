@@ -87,6 +87,14 @@ public class ForceActivationEvaluator extends ActionEvaluator {
             amount, maxVal, context.getReserveDeckSize(), context.getForcePileSize(),
             context.getHandSize(), context.getLifeForce());
 
+        // V43: ALWAYS activate at least 1 Force when asked. Activating 0
+        // causes the engine to re-ask the same question, creating an infinite loop.
+        // The game engine only asks this question when activation is possible.
+        if (amount <= 0 && maxVal > 0) {
+            amount = 1;
+            logger.warn("V43 FORCE ACTIVATION: Forced minimum 1 (was 0, reserve preservation too aggressive)");
+        }
+
         // Ensure amount is within bounds
         amount = Math.max(minVal, Math.min(amount, maxVal));
 
