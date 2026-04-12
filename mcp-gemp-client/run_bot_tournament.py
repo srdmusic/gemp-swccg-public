@@ -88,7 +88,10 @@ async def run_single_game(watcher: BotGameWatcher, game_num: int,
     poll_count = 0
     start_time = time.time()
     last_status_time = start_time
+    last_msg_time = start_time  # V43: Track when we last got new messages
+    last_msg_count = 0
     game_timeout = 600
+    stall_timeout = 60  # V43: Kill game if no new messages for 60 seconds
 
     while not watcher.game_over and poll_count < max_polls:
         poll_count += 1
@@ -98,10 +101,21 @@ async def run_single_game(watcher: BotGameWatcher, game_num: int,
             print(f"    TIMEOUT after {game_timeout}s")
             break
 
+        # V43: Kill stalled games — if no new messages for 60s, game is stuck
+        if len(watcher.messages) == last_msg_count:
+            stall_duration = time.time() - last_msg_time
+            if stall_duration > stall_timeout:
+                print(f"    STALL DETECTED: No new messages for {stall_duration:.0f}s — killing game (partial data saved)")
+                break
+        else:
+            last_msg_time = time.time()
+            last_msg_count = len(watcher.messages)
+
         # Status heartbeat every 30s
         now = time.time()
         if now - last_status_time > 30:
-            print(f"    ... {elapsed:.0f}s elapsed, {len(watcher.messages)} msgs, {watcher.decision_count} decisions")
+            stall_s = now - last_msg_time
+            print(f"    ... {elapsed:.0f}s elapsed, {len(watcher.messages)} msgs, stall={stall_s:.0f}s")
             last_status_time = now
 
         update = await watcher.poll()
@@ -109,8 +123,8 @@ async def run_single_game(watcher: BotGameWatcher, game_num: int,
         if "messages" in update:
             for msg in update["messages"]:
                 lower = msg.lower()
-                if any(kw in lower for kw in ["deploys", "wins", "loses",
-                                                "concedes", "force drain", "forfeits"]):
+                if any(kw in lower for kw in ["deploys", "is the winner", "lost due",
+                                                "conceded", "force drain", "forfeits"]):
                     elapsed = time.time() - start_time
                     clean = strip_html(msg)
                     print(f"    [{elapsed:5.1f}s] {clean[:120]}")

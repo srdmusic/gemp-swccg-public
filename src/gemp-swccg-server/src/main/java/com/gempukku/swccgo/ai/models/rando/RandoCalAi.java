@@ -767,6 +767,24 @@ public class RandoCalAi extends HeuristicAiBase {
                 evalContext.setActionTexts(textList);
             }
 
+            // V43: MULTIPLE_CHOICE decisions use "results" param, not "actionText"/"actionId".
+            // Without this, MULTIPLE_CHOICE evaluators (saga Epic Event, etc.) get empty lists
+            // and the evaluate() loop never runs, so the saga choice code is dead code.
+            String[] mcResults = params.get("results");
+            if (mcResults != null && mcResults.length > 0
+                && (evalContext.getActionTexts() == null || evalContext.getActionTexts().isEmpty())) {
+                List<String> textList = new java.util.ArrayList<>();
+                List<String> idList = new java.util.ArrayList<>();
+                for (int ri = 0; ri < mcResults.length; ri++) {
+                    textList.add(mcResults[ri] != null ? mcResults[ri] : "");
+                    idList.add(String.valueOf(ri));
+                }
+                evalContext.setActionTexts(textList);
+                evalContext.setActionIds(idList);
+                LOG.warn("V43 MULTIPLE_CHOICE: Parsed {} results: {}", mcResults.length,
+                    java.util.Arrays.asList(mcResults));
+            }
+
             // For CARD_ACTION_CHOICE: parse per-action cardId and blueprintId arrays
             // These tell us which card each action is associated with
             if ("CARD_ACTION_CHOICE".equals(decisionType.name())) {

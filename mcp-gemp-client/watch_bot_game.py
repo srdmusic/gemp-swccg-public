@@ -238,7 +238,7 @@ class BotGameWatcher:
         # Check for game over
         for msg in new_messages:
             lower = msg.lower()
-            if "wins" in lower or "loses" in lower or "concedes" in lower:
+            if "is the winner" in lower or "lost due to" in lower or "conceded" in lower:
                 self.game_over = True
                 result["game_over"] = True
                 result["result"] = msg

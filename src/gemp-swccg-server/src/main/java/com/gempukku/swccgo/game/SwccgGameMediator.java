@@ -1367,7 +1367,21 @@ public class SwccgGameMediator {
                 } else {
                     // Normal path: let AI evaluate and decide
                     ai.setGame(_swccgoGame);
+                    long decisionStart = System.currentTimeMillis();
                     String answer = ai.decide(aiPlayerId, decision, _swccgoGame.getGameState());
+                    long decisionMs = System.currentTimeMillis() - decisionStart;
+
+                    // V43 CHAOS FALLBACK: If AI decision took > 5 seconds, pick a random
+                    // valid action instead. This prevents games from stalling when the AI
+                    // gets stuck in complex evaluations or indecision loops.
+                    if (decisionMs > 5000) {
+                        LOG.warn("V43 CHAOS: AI decision took {}ms, applying random fallback", decisionMs);
+                        String chaosAnswer = getChaosRandomAction(decision);
+                        if (chaosAnswer != null) {
+                            answer = chaosAnswer;
+                            LOG.warn("V43 CHAOS: Random action selected: '{}'", answer);
+                        }
+                    }
 
                     _userFeedback.participantDecided(aiPlayerId);
                     decision.decisionMade(answer);
@@ -1400,6 +1414,44 @@ public class SwccgGameMediator {
                 break; // AI gave invalid answer — don't retry in a tight loop
             }
         }
+    }
+
+    /**
+     * V43 CHAOS FALLBACK: Pick a random valid action from the decision's available choices.
+     * Used when the AI takes too long (>5s) on a single decision.
+     */
+    private String getChaosRandomAction(AwaitingDecision decision) {
+        Map<String, String[]> params = decision.getDecisionParameters();
+        if (params == null) return null;
+
+        // For CARD_ACTION_CHOICE: pick random actionId
+        String[] actionIds = params.get("actionId");
+        if (actionIds != null && actionIds.length > 0) {
+            int idx = new java.util.Random().nextInt(actionIds.length);
+            return actionIds[idx];
+        }
+
+        // For MULTIPLE_CHOICE: pick random index from results
+        String[] results = params.get("results");
+        if (results != null && results.length > 0) {
+            int idx = new java.util.Random().nextInt(results.length);
+            return String.valueOf(idx);
+        }
+
+        // For INTEGER: pick the max value
+        String[] maxVals = params.get("max");
+        if (maxVals != null && maxVals.length > 0) {
+            return maxVals[0];
+        }
+
+        // For CARD_SELECTION: pick first card
+        String[] cardIds = params.get("cardId");
+        if (cardIds != null && cardIds.length > 0) {
+            return cardIds[0];
+        }
+
+        // Default: pass
+        return "";
     }
 
     private int getCurrentUserPendingTime(String participantId) {
