@@ -360,6 +360,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } else if (textLower.contains("transit") || textLower.contains("transport")) {
             // Transit/transport destination selection
             return evaluateMoveDestination(context);
+        } else if (textLower.contains("starting interrupt")) {
+            // V43: Route starting interrupt selection to evaluateStartingInterrupt
+            return evaluateStartingInterrupt(context);
         } else if (textLower.contains("starting location")) {
             return evaluateStartingLocation(context);
         } else if (textLower.contains("choose") && textLower.contains("location")) {
@@ -3354,6 +3357,62 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
     /**
      * Starting location selection.
+     * V43: Starting interrupt selection.
+     * Prefer interrupts that deploy the Epic Event ("Force Is Strong In My Family")
+     * over generic starting interrupts like "The Signal".
+     */
+    private List<EvaluatedAction> evaluateStartingInterrupt(DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        List<String> cardIds = context.getCardIds();
+        List<String> blueprintIds = context.getBlueprints();
+        boolean isArbitrary = "ARBITRARY_CARDS".equals(context.getDecisionType());
+        GameState gameState = context.getGameState();
+
+        logger.warn("V43 STARTING INTERRUPT: Evaluating {} choices", cardIds != null ? cardIds.size() : 0);
+
+        if (cardIds == null) return actions;
+
+        for (int idx = 0; idx < cardIds.size(); idx++) {
+            String cardId = cardIds.get(idx);
+            EvaluatedAction action = new EvaluatedAction(cardId, ActionType.UNKNOWN, 50.0f, "Starting interrupt candidate");
+
+            try {
+                SwccgCardBlueprint blueprint = null;
+                String title = "?";
+
+                if (isArbitrary && blueprintIds != null && idx < blueprintIds.size()) {
+                    blueprint = getBlueprintFromId(context, blueprintIds.get(idx));
+                } else if (gameState != null) {
+                    PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
+                    if (card != null) blueprint = card.getBlueprint();
+                }
+
+                if (blueprint != null) {
+                    title = blueprint.getTitle() != null ? blueprint.getTitle() : "?";
+                    String gameText = blueprint.getGameText() != null ? blueprint.getGameText().toLowerCase(java.util.Locale.ROOT) : "";
+
+                    // HARD PREFER: interrupts that deploy or reference the Epic Event
+                    if (gameText.contains("force is strong in my family")
+                        || gameText.contains("force is strong")
+                        || gameText.contains("epic")) {
+                        action.addReasoning("V43 EPIC EVENT: Deploys saga Epic Event — MUST USE THIS!", 1500.0f);
+                        logger.warn("V43 STARTING INTERRUPT: {} references Epic Event — HARD PREFER (+1500)", title);
+                    } else {
+                        action.addReasoning("V43: Generic starting interrupt — no Epic Event", 0.0f);
+                        logger.warn("V43 STARTING INTERRUPT: {} is generic (no Epic Event reference)", title);
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug("V43 STARTING INTERRUPT: Error evaluating card {}: {}", cardId, e.getMessage());
+            }
+
+            actions.add(action);
+        }
+
+        return actions;
+    }
+
+    /**
      * V22: Objective-aware + bonus for locations that pull from reserve deck.
      * Base +50 only if the location is mentioned in the starting interrupt's text.
      */
@@ -3954,11 +4013,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                         // === V29.15: EPIC EVENT STARTING EFFECT/INTERRUPT ===
                         // Starting effects or interrupts whose game text mentions "epic"
-                        // are critical for decks built around Epic Events or Objectives.
-                        // e.g. "Rise Of Skywalker" references the Skywalker Epic Event.
-                        if (effectTextLower.contains("epic")) {
-                            action.addReasoning("V29.15 EPIC: starting card references Epic Event — critical for deck strategy!", 1000.0f);
-                            logger.warn("V29.15 EPIC START: {} mentions 'epic' in game text — HARD PREFER (+1000)", cardTitle);
+                        // or deploys a key card like "Force Is Strong In My Family"
+                        // are critical for decks built around Epic Events.
+                        // e.g. "Rise Of Skywalker" deploys the Skywalker Epic Event.
+                        if (effectTextLower.contains("epic")
+                            || effectTextLower.contains("force is strong in my family")
+                            || effectTextLower.contains("force is strong")) {
+                            action.addReasoning("V43 EPIC: starting card deploys Epic Event — critical for deck strategy!", 1500.0f);
+                            logger.warn("V43 EPIC START: {} references Epic Event in game text — HARD PREFER (+1500)", cardTitle);
                         }
                     }
                 }
