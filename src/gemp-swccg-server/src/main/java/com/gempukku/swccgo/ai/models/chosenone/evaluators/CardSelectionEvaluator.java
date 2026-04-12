@@ -3700,13 +3700,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 action.addReasoning("High ability (" + ability + ") - draws battle destiny", 25.0f);
             }
 
-            // Locations are often good early game
-            if (category == CardCategory.LOCATION) {
+            // V43: Turn-based pull priority — locations first 2 turns, then characters
+            // Locations establish force generation and drain sites. Characters fill them.
+            // Without locations on table first, characters have nowhere to go.
+            {
                 int turnNumber = context.getTurnNumber();
-                if (turnNumber <= 3) {
-                    action.addReasoning("Location (good early game)", 20.0f);
-                } else {
-                    action.addReasoning("Location", 5.0f);
+                if (category == CardCategory.LOCATION) {
+                    if (turnNumber <= 2) {
+                        action.addReasoning("V43 LOCATION FIRST: Turns 1-2, pull locations to establish board", 200.0f);
+                        logger.warn("V43 PULL PRIORITY: {} is a LOCATION on turn {} — +200", cardTitle, turnNumber);
+                    } else {
+                        action.addReasoning("Location (mid-game)", 30.0f);
+                    }
+                } else if (category == CardCategory.CHARACTER) {
+                    if (turnNumber <= 2) {
+                        action.addReasoning("V43 CHARACTER WAIT: Turns 1-2, locations first", -50.0f);
+                    } else {
+                        action.addReasoning("V43 CHARACTER TIME: Turn 3+, characters to fill locations", 100.0f);
+                        logger.warn("V43 PULL PRIORITY: {} is a CHARACTER on turn {} — +100", cardTitle, turnNumber);
+                    }
                 }
             }
 

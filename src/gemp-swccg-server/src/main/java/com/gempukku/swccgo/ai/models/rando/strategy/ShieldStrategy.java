@@ -408,7 +408,8 @@ public class ShieldStrategy {
      */
     public void recordOpponentShield(String blueprintId, String cardTitle) {
         opponentShields.add(blueprintId);
-        LOG.debug("Opponent shield: {}", cardTitle);
+        if (cardTitle != null) opponentShields.add(cardTitle.toLowerCase(Locale.ROOT));
+        LOG.debug("Opponent shield: {} ({})", cardTitle, blueprintId);
     }
 
     /**
@@ -514,6 +515,19 @@ public class ShieldStrategy {
         // Never play obsolete shields
         if (shieldInfo.category == ShieldCategory.NEVER) {
             return -100.0f;
+        }
+
+        // V43: Don't play Battle Order/Battle Plan if opponent already has the equivalent.
+        // Only one of these shields takes effect — playing both wastes a shield slot.
+        String titleLower = cardTitle.toLowerCase(Locale.ROOT);
+        if (titleLower.contains("battle order") || titleLower.contains("battle plan")) {
+            for (String oppShield : opponentShields) {
+                String oppLower = oppShield.toLowerCase(Locale.ROOT);
+                if (oppLower.contains("battle") || oppLower.contains("13_54") || oppLower.contains("13_8")) {
+                    LOG.warn("V43 REDUNDANT SHIELD: {} skipped — opponent already has equivalent Battle Order/Plan", cardTitle);
+                    return -100.0f;
+                }
+            }
         }
 
         // Check if conditions are met (opponent cards, objective, timing)
