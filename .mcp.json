@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "gemp-swccg": {
+      "command": "/Library/Frameworks/Python.framework/Versions/3.14/bin/python3",
+      "args": ["/Users/steve/gemp-swccg-public/mcp-gemp-client/gemp_mcp.py"],
+      "cwd": "/Users/steve/gemp-swccg-public/mcp-gemp-client",
+      "env": {
+        "GEMP_BASE_URL": "http://localhost:17001"
+      }
+    }
+  }
+}

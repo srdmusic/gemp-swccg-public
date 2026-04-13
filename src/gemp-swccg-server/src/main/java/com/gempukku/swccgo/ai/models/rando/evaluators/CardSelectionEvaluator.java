@@ -2081,8 +2081,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             if (opponentAtThisSite && !hasProtection) {
                                                 // V41: HARD BLOCK — opponent characters AT THIS SITE and no friendlies!
                                                 // Lando deployed alone into Luke+Rey = instant death.
-                                                // This happened in testing: Lando got killed Turn 1 AND Turn 2
-                                                // because he was redeployed into the same occupied site.
                                                 action.addReasoning("V41 LANDO INTO ENEMY: " + opponentCharsAtThisSite
                                                     + " opponents at " + title + " — Lando dies instantly! BLOCKED!", -9999.0f);
                                                 logger.warn("V41 LANDO INTO ENEMY: {} opponents at {} — HARD BLOCK! Lando would die!",
@@ -2091,16 +2089,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 // Friendlies at site — Lando is safe
                                                 logger.info("V25 LANDO: {} — {} friendlies here — safe to deploy", title, friendlyCharsAtSite);
                                             } else if (!canDeployProtector) {
-                                                // Lando would be ALONE and we have NO characters in hand to protect him.
-                                                action.addReasoning("V25 LANDO ALONE BLOCK: No protection at " + title
-                                                    + " and no characters in hand to deploy alongside — wait for backup!", -500.0f);
-                                                logger.warn("V25 LANDO ALONE: {} — no friendlies, no hand chars — BLOCKED (-500)!", title);
+                                                action.addReasoning("V47 LANDO ALONE BLOCK: No protection at " + title
+                                                    + " and no characters in hand — Lando dies alone!", -9999.0f);
+                                                logger.warn("V47 LANDO ALONE: {} — no friendlies, no hand chars — HARD BLOCK!", title);
                                             } else if (opponentThreatens) {
-                                                // Lando alone but we DO have chars in hand AND opponent at other CC site
-                                                // Stronger penalty — opponent is nearby and can easily kill Lando
+                                                // V41: Stronger penalty — opponent nearby can easily kill Lando
                                                 action.addReasoning("V41 LANDO CAUTION: Alone at " + title
                                                     + " — opponent at CC sites! Deploy protector first!", -400.0f);
-                                                logger.warn("V41 LANDO: {} — alone + opponent at CC, {} chars in hand (-400)",
+                                                logger.warn("V25 LANDO: {} — alone + opponent at CC, but {} chars in hand (-100)",
                                                     title, charsInHand);
                                             } else {
                                                 // Lando alone, no opponent at CC, but we have chars in hand
@@ -2715,7 +2711,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
                             if (hasCharacterAboard) {
-                                action.addReasoning("Ship has passengers - forfeit them first!", -100.0f);
+                                // V48: NEVER forfeit a ship with crew aboard — you lose the ship
+                                // AND all its pilots/passengers. Forfeit individual crew instead.
+                                // Executor + Piett + Gherant = 3 cards lost for 1 forfeit. Catastrophic.
+                                int crewCount = 0;
+                                for (PhysicalCard att : attachedCards) {
+                                    if (att.getBlueprint() != null &&
+                                        att.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                        crewCount++;
+                                    }
+                                }
+                                action.addReasoning(String.format(
+                                    "V48 SHIP WITH CREW: %s has %d crew aboard — forfeit crew first, not the ship!",
+                                    title, crewCount), -9999.0f);
+                                logger.warn("V48 SHIP FORFEIT BLOCK: {} has {} crew — NEVER forfeit ship with crew aboard!",
+                                    title, crewCount);
                             }
                         }
 
@@ -3155,31 +3165,42 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (blueprint != null) {
                             action.setDisplayText("Select pilot " + (title != null ? title : cardId));
 
-                            // === V40.1: AMSD PILOT SELECTION — BOOST PIETT ===
-                            // Positive-only: Piett gets massive bonus for AMSD.
-                            // Other pilots get no bonus (natural scoring handles them).
+                            // === V24.10: AMSD PILOT GUARD — PIETT ONLY ===
+                            // AMSD should ONLY be used with Piett + Executor.
+                            // Block ALL other pilots regardless of matching ships.
                             if (isAmsdPilotChoice) {
                                 String pilotLower = (title != null) ? title.toLowerCase(java.util.Locale.ROOT) : "";
 
-                                if (pilotLower.contains("piett")) {
-                                    // Piett is THE pilot for AMSD + Executor
-                                    com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle = context.getDeckOracle();
-                                    boolean executorAvailable = true; // default allow
-                                    if (oracle != null && oracle.isAnalyzed()) {
-                                        executorAvailable = oracle.isCardInReserve("Executor")
-                                            || oracle.isCardInReserve("Flagship Executor")
-                                            || oracle.isCardInHand("Executor")
-                                            || oracle.isCardInHand("Flagship Executor");
-                                    }
-                                    if (executorAvailable) {
-                                        action.addReasoning("V40.1 AMSD: Piett + Executor available — BEST choice!", 500.0f);
-                                        logger.warn("V40.1 AMSD: Piett selected + Executor available (+500)");
-                                    } else {
-                                        action.addReasoning("V40.1 AMSD: Piett but Executor not found — still best pilot", 100.0f);
-                                        logger.warn("V40.1 AMSD: Piett but Executor not available (+100)");
-                                    }
+                                if (!pilotLower.contains("piett")) {
+                                    // NOT Piett — hard block, no exceptions
+                                    action.setScore(-9999.0f);
+                                    action.addReasoning("V24.10 AMSD BLOCKED: Only Piett may use AMSD — " +
+                                        title + " is not allowed!", -9999.0f);
+                                    logger.warn("V24.10 AMSD HARD BLOCK: {} is NOT Piett — only Piett + Executor for AMSD!", title);
+                                    actions.add(action);
+                                    continue;
                                 }
-                                // Non-Piett pilots: no bonus, no penalty — natural scoring applies
+
+                                // It's Piett — verify Executor is in reserve
+                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle = context.getDeckOracle();
+                                if (oracle != null && oracle.isAnalyzed()) {
+                                    boolean executorInReserve = oracle.isCardInReserve("Executor") ||
+                                        oracle.isCardInReserve("Flagship Executor");
+                                    if (!executorInReserve) {
+                                        action.setScore(-9999.0f);
+                                        action.addReasoning("V24.10 AMSD: Piett selected but Executor NOT in reserve!", -9999.0f);
+                                        logger.warn("V24.10 AMSD: Piett but Executor not in reserve — HARD BLOCK");
+                                        actions.add(action);
+                                        continue;
+                                    }
+                                    // Piett + Executor in reserve — approved!
+                                    action.addReasoning("V24.10 AMSD: Piett + Executor in reserve — APPROVED!", 300.0f);
+                                    logger.warn("V24.10 AMSD: Piett + Executor in reserve — APPROVED (+300)");
+                                } else {
+                                    // Oracle unavailable but it's Piett — allow (best guess)
+                                    action.addReasoning("V24.10 AMSD: Piett selected (oracle unavailable — allowing)", 200.0f);
+                                    logger.warn("V24.10 AMSD: Piett selected, oracle unavailable — allowing (+200)");
+                                }
                             }
 
                             // Prefer high-ability pilots
@@ -3571,38 +3592,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             } catch (Exception e) { /* ignore */ }
                         }
 
-                        // === V24.2D LANDO MOVEMENT STRATEGY ===
-                        // Lando can move to any CC site at start of control phase.
-                        // Prefer UNOCCUPIED CC sites — Lando creates a 3rd drain site,
-                        // enabling 3-site force drain + Dark Deal + CC Occupation damage.
+                        // === V47: LANDO MOVEMENT — STAY AT DINING ROOM ===
+                        // Lando should NOT move from Dining Room. He establishes occupation there
+                        // and moving wastes force / loses presence. Only move if we have 3+ friendlies
+                        // at his current location (he's redundant) and destination is unoccupied CC site.
                         String moveDecisionText = context.getDecisionText() != null
                             ? context.getDecisionText().toLowerCase() : "";
                         if (moveDecisionText.contains("lando")) {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer moveObjAnalyzer =
                                 context.getObjectiveAnalyzer();
                             if (moveObjAnalyzer != null && moveObjAnalyzer.needsBespinSystemPresence()) {
-                                String locTitle = title != null ? title.toLowerCase() : "";
-                                boolean isObjRelevant = moveObjAnalyzer.isObjectiveRelevantLocation(
-                                    title != null ? title : "");
-                                if (isObjRelevant) {
-                                    // CC site — check if we already have presence
-                                    if (ourPower == 0) {
-                                        // UNOCCUPIED CC site — Lando creates new drain + occupation!
-                                        action.addReasoning(
-                                            "V24.2 LANDO MOVE: Unoccupied CC site — creates 3rd drain + occupation damage!",
-                                            250.0f);
-                                    } else {
-                                        // Already have presence — less urgent but still good
-                                        action.addReasoning(
-                                            "V24.2 LANDO MOVE: CC site with existing presence — reinforcement",
-                                            50.0f);
-                                    }
-                                } else {
-                                    // Non-CC location — Lando should NOT go here
-                                    action.addReasoning(
-                                        "V24.2 LANDO MOVE: Non-CC location — Lando needs to be at Cloud City!",
-                                        -200.0f);
-                                }
+                                // V47: Block most Lando moves — he stays where he is
+                                action.addReasoning("V47 LANDO STAY: Lando should stay put — moving wastes force and loses occupation!", -9999.0f);
+                                logger.warn("V47 LANDO STAY: Blocking Lando move to {} — stay at current location!", title);
                             }
                         }
 
@@ -4045,7 +4047,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     }
 
     /**
-     * Starting location selection.
      * V43: Starting interrupt selection.
      * Prefer interrupts that deploy the Epic Event ("Force Is Strong In My Family")
      * over generic starting interrupts like "The Signal".
@@ -4102,6 +4103,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     }
 
     /**
+     * Starting location selection.
      * V22: Objective-aware + bonus for locations that pull from reserve deck.
      * Base +50 only if the location is mentioned in the starting interrupt's text.
      */
@@ -4183,18 +4185,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         } else if (isInterior) {
                             action.addReasoning("V24.10 INTERIOR CC: Slip Sliding or I'm Sorry will pull this — save starting slot for exterior!", -500.0f);
                             logger.warn("V24.10 STARTING LOC: {} is INTERIOR — HARD BLOCK as starting location (-500)", locTitle);
-                        }
-                    }
-
-                    // === V42: ISB OPERATIONS — Imperial Square as starting location ===
-                    // ISB decks need Coruscant: Imperial Square to deploy Emperor quickly.
-                    if (startLocObjAnalyzer != null && startLocObjAnalyzer.isAnalyzed()) {
-                        String objTitle = startLocObjAnalyzer.getObjectiveTitle();
-                        if (objTitle != null && objTitle.toLowerCase(java.util.Locale.ROOT).contains("isb operations")) {
-                            if (locTitleLower.contains("imperial square")) {
-                                action.addReasoning("V42 ISB IMPERIAL SQUARE: Must start here to deploy Emperor quickly!", 1000.0f);
-                                logger.warn("V42 ISB STARTING LOC: Imperial Square — HARD PREFER (+1000)");
-                            }
                         }
                     }
 
@@ -4389,25 +4379,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 action.addReasoning("High ability (" + ability + ") - draws battle destiny", 25.0f);
             }
 
-            // V43: Turn-based pull priority — locations first 2 turns, then characters
-            // Locations establish force generation and drain sites. Characters fill them.
-            // Without locations on table first, characters have nowhere to go.
-            {
+            // Locations are often good early game
+            if (category == CardCategory.LOCATION) {
                 int turnNumber = context.getTurnNumber();
-                if (category == CardCategory.LOCATION) {
-                    if (turnNumber <= 2) {
-                        action.addReasoning("V43 LOCATION FIRST: Turns 1-2, pull locations to establish board", 200.0f);
-                        logger.warn("V43 PULL PRIORITY: {} is a LOCATION on turn {} — +200", cardTitle, turnNumber);
-                    } else {
-                        action.addReasoning("Location (mid-game)", 30.0f);
-                    }
-                } else if (category == CardCategory.CHARACTER) {
-                    if (turnNumber <= 2) {
-                        action.addReasoning("V43 CHARACTER WAIT: Turns 1-2, locations first", -50.0f);
-                    } else {
-                        action.addReasoning("V43 CHARACTER TIME: Turn 3+, characters to fill locations", 100.0f);
-                        logger.warn("V43 PULL PRIORITY: {} is a CHARACTER on turn {} — +100", cardTitle, turnNumber);
-                    }
+                if (turnNumber <= 3) {
+                    action.addReasoning("Location (good early game)", 20.0f);
+                } else {
+                    action.addReasoning("Location", 5.0f);
                 }
             }
 
@@ -4487,13 +4465,74 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // Lando and Lobot are key to flipping the TDIGWATT objective.
             // Lando can move to unoccupied CC sites at start of control phase = 3-site drains.
             // Both deploy cheap. Prioritize pulling them from reserve when available.
+            // V47: BUT don't pull Lando if he'd be alone at CC — he gets clobbered!
             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer pullObjAnalyzer =
                 context.getObjectiveAnalyzer();
             if (pullObjAnalyzer != null && pullObjAnalyzer.isAnalyzed()
                 && pullObjAnalyzer.needsBespinSystemPresence()) {
                 if (cardTitleLower.contains("lando")) {
-                    action.addReasoning("V24.2 TDIGWATT: Lando is KEY — moves to 3rd CC site for extra drains + occupation!", 250.0f);
-                    logger.warn("V24.2 PULL: Lando gets +250 — critical for 3-site drain strategy!");
+                    // V47: Check if we have ANY friendly characters at Cloud City sites
+                    boolean friendlyAtCC = false;
+                    String pullPlayerId = context.getPlayerId();
+                    if (game != null && gameState != null && pullPlayerId != null) {
+                        try {
+                            for (PhysicalCard checkLoc : gameState.getLocationsInOrder()) {
+                                if (checkLoc == null || checkLoc.getTitle() == null) continue;
+                                String checkLocLower = checkLoc.getTitle().toLowerCase(java.util.Locale.ROOT);
+                                boolean isCCsite = checkLocLower.contains("cloud city") || checkLocLower.contains("upper walkway")
+                                    || checkLocLower.contains("carbonite") || checkLocLower.contains("security tower")
+                                    || checkLocLower.contains("dining room") || checkLocLower.contains("platform")
+                                    || checkLocLower.contains("lower corridor");
+                                if (!isCCsite) continue;
+                                java.util.List<PhysicalCard> siteCards = gameState.getCardsAtLocation(checkLoc);
+                                if (siteCards != null) {
+                                    for (PhysicalCard sc : siteCards) {
+                                        if (sc != null && pullPlayerId.equals(sc.getOwner()) && sc.getBlueprint() != null
+                                            && sc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                            friendlyAtCC = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (friendlyAtCC) break;
+                            }
+                        } catch (Exception e) {
+                            logger.debug("V47: Error checking CC friendlies: {}", e.getMessage());
+                        }
+                    }
+
+                    // V47: Also check if we have chars in hand + enough force to deploy both
+                    boolean hasHandBuddy = false;
+                    int forceAvailable = 0;
+                    if (!friendlyAtCC && game != null && gameState != null) {
+                        try {
+                            forceAvailable = context.getForcePileSize();
+                            java.util.List<PhysicalCard> hand = gameState.getHand(pullPlayerId);
+                            if (hand != null) {
+                                for (PhysicalCard hc : hand) {
+                                    if (hc != null && hc.getBlueprint() != null
+                                        && hc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                        hasHandBuddy = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            logger.debug("V47: Error checking hand chars: {}", e.getMessage());
+                        }
+                    }
+
+                    if (friendlyAtCC) {
+                        action.addReasoning("V24.2 TDIGWATT: Lando is KEY — moves to 3rd CC site for extra drains + occupation!", 250.0f);
+                        logger.warn("V24.2 PULL: Lando gets +250 — friendlies at CC, safe to pull!");
+                    } else if (hasHandBuddy && forceAvailable >= 5) {
+                        // Have a buddy in hand and enough force to deploy Lando (~2) + buddy (~3)
+                        action.addReasoning("V47 LANDO PULL OK: No CC friendlies but have char in hand + force to deploy both!", 250.0f);
+                        logger.warn("V47 LANDO PULL: {} force available + char in hand — OK to pull Lando with buddy!", forceAvailable);
+                    } else {
+                        action.addReasoning("V47 LANDO PULL BLOCK: No friendlies at CC, no buddy in hand or not enough force — Lando would die alone!", -9999.0f);
+                        logger.warn("V47 LANDO PULL BLOCK: No CC friendlies, handBuddy={}, force={} — don't pull Lando!", hasHandBuddy, forceAvailable);
+                    }
                 } else if (cardTitleLower.contains("lobot")) {
                     action.addReasoning("V24.2 TDIGWATT: Lobot deploys cheap — helps flip objective!", 200.0f);
                     logger.warn("V24.2 PULL: Lobot gets +200 — cheap deploy, helps flip!");
@@ -4881,21 +4920,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     }
 
                     if (!hasFriendlyBuddyAtCC) {
-                        // Character would be deployed ALONE at a CC location
-                        float soloPenalty = -100.0f;
-                        if (hasEnemyAtCC) soloPenalty = -250.0f; // Enemy present = very dangerous
-
-                        // High-value characters get extra penalty for solo deploy
-                        Float charPower = blueprint.hasPowerAttribute() ? blueprint.getPower() : null;
-                        if (charPower != null && charPower >= 4) {
-                            soloPenalty -= 100.0f; // Don't risk high-power chars alone
-                        }
-
+                        // V47: Character would be deployed ALONE at a CC location — HARD BLOCK
+                        // Don't deploy anyone solo from reserve — they get clobbered every time.
                         action.addReasoning(String.format(
-                            "V28 RESERVE SOLO PROTECT: %s would be ALONE at Cloud City!%s Deploy a buddy first or deploy expendable chars!",
-                            cardTitle, hasEnemyAtCC ? " ENEMY PRESENT!" : ""), soloPenalty);
-                        logger.warn("V28 RESERVE SOLO: {} alone at CC, enemy={} — penalty {}",
-                            cardTitle, hasEnemyAtCC, soloPenalty);
+                            "V47 RESERVE SOLO BLOCK: %s would be ALONE at Cloud City!%s Nobody to protect them!",
+                            cardTitle, hasEnemyAtCC ? " ENEMY PRESENT!" : ""), -9999.0f);
+                        logger.warn("V47 RESERVE SOLO BLOCK: {} alone at CC, enemy={} — HARD BLOCK!",
+                            cardTitle, hasEnemyAtCC);
                     }
                 } catch (Exception e) {
                     logger.debug("V28 RESERVE SOLO: Error checking buddy status: {}", e.getMessage());
@@ -5096,17 +5127,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      * V29.5: Also handles ARBITRARY_CARDS decisions with temp IDs (e.g., K&D shield plays)
      * by looking up cards via blueprint IDs instead of integer card IDs.
      */
-    // V42: Known defensive shield blueprint ID prefixes.
-    // Defensive shields are primarily from sets 13 (Reflections III), 200 (Set 0), 223 (Set 23), 225 (Set 25).
-    private static final java.util.Set<String> KNOWN_SHIELD_BLUEPRINTS = new java.util.HashSet<>(java.util.Arrays.asList(
-        // Dark shields
-        "13_51", "13_52", "13_54", "13_61", "13_63", "13_66", "13_81", "13_84", "13_86", "13_90", "13_96",
-        "200_94", "200_95", "200_100", "223_7", "223_26", "225_3",
-        // Light shields
-        "13_1", "13_3", "13_4", "13_6", "13_8", "13_15", "13_22", "13_44", "13_47",
-        "200_28", "200_30", "200_32", "223_49"
-    ));
-
     private boolean isShieldSelectionByContent(DecisionContext context) {
         GameState gameState = context.getGameState();
         List<String> cardIds = context.getCardIds();
@@ -5118,8 +5138,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         int shieldCount = 0;
-        int knownShieldCount = 0;
-
         for (int idx = 0; idx < cardIds.size(); idx++) {
             String cardId = cardIds.get(idx);
             try {
@@ -5128,14 +5146,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 if (isArbitrary && blueprintIds != null && idx < blueprintIds.size()) {
                     // V29.5: ARBITRARY_CARDS — use blueprint ID lookup (temp IDs can't be parsed as ints)
                     String bpId = blueprintIds.get(idx);
-
-                    // V42: Fast check — known shield blueprint IDs (no library needed)
-                    if (KNOWN_SHIELD_BLUEPRINTS.contains(bpId)) {
-                        knownShieldCount++;
-                        shieldCount++;
-                        continue;
-                    }
-
                     blueprint = getBlueprintFromId(context, bpId);
                 } else if (gameState != null) {
                     // Standard path — integer card ID
@@ -5157,13 +5167,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         // If majority are shields, treat as shield selection
         boolean isShield = shieldCount > 0 && shieldCount >= cardIds.size() * 0.5;
         if (isShield) {
-            logger.warn("V42 isShieldSelectionByContent: YES — {}/{} cards are shields ({} via known IDs, isArbitrary={})",
-                shieldCount, cardIds.size(), knownShieldCount, isArbitrary);
-        } else if (isArbitrary && blueprintIds != null && !blueprintIds.isEmpty()) {
-            // V42: Debug log when detection FAILS for ARBITRARY_CARDS — helps diagnose shield routing
-            logger.warn("V42 isShieldSelectionByContent: NO — only {}/{} shields found (knownIDs={}, first5bp={})",
-                shieldCount, cardIds.size(), knownShieldCount,
-                blueprintIds.subList(0, Math.min(5, blueprintIds.size())));
+            logger.warn("V29.5 isShieldSelectionByContent: YES — {}/{} cards are shields (isArbitrary={})",
+                shieldCount, cardIds.size(), isArbitrary);
         }
         return isShield;
     }
@@ -5179,13 +5184,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         List<String> blueprintIds = context.getBlueprints();
         boolean isArbitrary = "ARBITRARY_CARDS".equals(context.getDecisionType());
 
-        logger.warn("[CardSelectionEvaluator] V29.5 Evaluating DEFENSIVE SHIELD selection (isArbitrary={}, shieldStrategy={}, turn={}, numChoices={})",
-            isArbitrary, shieldStrategy != null ? "SET" : "NULL", turnNumber,
-            context.getCardIds() != null ? context.getCardIds().size() : 0);
-        // V42: Log all shield options for diagnosis
-        if (blueprintIds != null) {
-            logger.warn("V42 SHIELD OPTIONS: blueprintIds={}", blueprintIds);
-        }
+        logger.warn("[CardSelectionEvaluator] V29.5 Evaluating DEFENSIVE SHIELD selection (isArbitrary={}, shieldStrategy={})",
+            isArbitrary, shieldStrategy != null ? "SET" : "NULL");
 
         List<String> cardIds = context.getCardIds();
         for (int idx = 0; idx < cardIds.size(); idx++) {
@@ -5258,15 +5258,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             }
 
             actions.add(action);
-        }
-
-        // V42: Summary log — show all scored shields sorted by score for easy debugging
-        if (!actions.isEmpty()) {
-            StringBuilder summary = new StringBuilder("V42 SHIELD SCORING SUMMARY (turn " + turnNumber + "): ");
-            actions.stream()
-                .sorted((a, b) -> Float.compare(b.getScore(), a.getScore()))
-                .forEach(a -> summary.append(String.format("[%s=%.0f] ", a.getDisplayText(), a.getScore())));
-            logger.warn(summary.toString());
         }
 
         return actions;

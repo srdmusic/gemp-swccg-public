@@ -489,32 +489,12 @@ public class RandoCalAi extends HeuristicAiBase {
                         int myLostPile = gameState.getLostPile(playerId).size();
                         int opponentLostPile = gameState.getLostPile(opponentId).size();
                         int lostPileDeficit = myLostPile - opponentLostPile;
-                        int turn = gameState.getPlayersLatestTurnNumber(playerId);
-
-                        // V29: Concede if losing by 30+ cards
                         if (lostPileDeficit >= 30) {
                             LOG.warn("V29 AUTO-CONCEDE: Lost Pile deficit is {} (mine={}, opponent={}). Conceding.",
                                 lostPileDeficit, myLostPile, opponentLostPile);
                             currentGame.playerLost(playerId,
                                 com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED);
-                            return super.decide(playerId, decision, gameState);
-                        }
-
-                        // V43 STALEMATE DETECTION: Prevent 178-turn games where both
-                        // bots pass turns endlessly with nothing happening.
-                        // Turn 15+: concede if losing (more life force lost)
-                        // Turn 25+: concede regardless — stalemate, loser concedes
-                        if (turn >= 25) {
-                            LOG.warn("V43 STALEMATE CONCEDE: Turn {} — game has gone too long. Conceding. (myLost={}, oppLost={})",
-                                turn, myLostPile, opponentLostPile);
-                            currentGame.playerLost(playerId,
-                                com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED);
-                            return super.decide(playerId, decision, gameState);
-                        } else if (turn >= 15 && lostPileDeficit > 5) {
-                            LOG.warn("V43 STALEMATE CONCEDE: Turn {} and losing by {} cards — conceding early.",
-                                turn, lostPileDeficit);
-                            currentGame.playerLost(playerId,
-                                com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED);
+                            // Return any valid response to avoid NPE
                             return super.decide(playerId, decision, gameState);
                         }
                     }
@@ -543,6 +523,22 @@ public class RandoCalAi extends HeuristicAiBase {
             Map<String, String[]> params = decision.getDecisionParameters();
             String[] actionIds = params != null ? params.get("actionId") : null;
             String[] cardIds = params != null ? params.get("cardId") : null;
+
+            // V45: NEVER forfeit when all cards are immune to attrition
+            {
+                String dtLower = decisionText.toLowerCase(java.util.Locale.ROOT);
+                if (dtLower.contains("forfeit") && dtLower.contains("if desired")) {
+                    LOG.warn("V45 IMMUNE FORFEIT: All cards immune — PASSING on optional forfeit! Text: '{}'", decisionText);
+                    return "";  // Empty = select nothing = pass
+                }
+            }
+
+            // V44: ALWAYS accept revert requests — never block the opponent from reverting
+            if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
+                    && decisionText.toLowerCase(java.util.Locale.ROOT).contains("revert")) {
+                LOG.info("V44 REVERT: Always accepting revert request. Text: '{}'", decisionText);
+                return "0";  // 0 = Yes/Accept
+            }
 
             // Maybe apply chaos (random action)
             // CRITICAL: Never use chaos mode during DEPLOY phase - deploy decisions are strategic
@@ -785,24 +781,6 @@ public class RandoCalAi extends HeuristicAiBase {
                     textList.add(txt != null ? txt : "");
                 }
                 evalContext.setActionTexts(textList);
-            }
-
-            // V43: MULTIPLE_CHOICE decisions use "results" param, not "actionText"/"actionId".
-            // Without this, MULTIPLE_CHOICE evaluators (saga Epic Event, etc.) get empty lists
-            // and the evaluate() loop never runs, so the saga choice code is dead code.
-            String[] mcResults = params.get("results");
-            if (mcResults != null && mcResults.length > 0
-                && (evalContext.getActionTexts() == null || evalContext.getActionTexts().isEmpty())) {
-                List<String> textList = new java.util.ArrayList<>();
-                List<String> idList = new java.util.ArrayList<>();
-                for (int ri = 0; ri < mcResults.length; ri++) {
-                    textList.add(mcResults[ri] != null ? mcResults[ri] : "");
-                    idList.add(String.valueOf(ri));
-                }
-                evalContext.setActionTexts(textList);
-                evalContext.setActionIds(idList);
-                LOG.warn("V43 MULTIPLE_CHOICE: Parsed {} results: {}", mcResults.length,
-                    java.util.Arrays.asList(mcResults));
             }
 
             // For CARD_ACTION_CHOICE: parse per-action cardId and blueprintId arrays

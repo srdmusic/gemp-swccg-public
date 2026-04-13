@@ -165,65 +165,10 @@ public class BattleEvaluator extends ActionEvaluator {
                             if (targetLocation != null) {
                                 // V22.4: Evaluate THIS SPECIFIC location only
                                 checkedSpecificLocation = true;
-                                float ourPowerRaw = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     gameState, targetLocation, playerId, false, false);
-                                float theirPowerRaw = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     gameState, targetLocation, opponentId, false, false);
-
-                                // === V42: EXCLUSION-AWARE POWER — subtract barriered/excluded characters ===
-                                // Rebel Barrier / Imperial Barrier add MayNotParticipateInBattle modifier.
-                                // getTotalPowerAtLocation(inBattle=false) counts ALL characters including
-                                // barriered ones, giving a false sense of strength. We must subtract them.
-                                float ourExcludedPower = 0;
-                                float theirExcludedPower = 0;
-                                java.util.List<String> ourExcludedNames = new java.util.ArrayList<>();
-                                java.util.List<String> theirExcludedNames = new java.util.ArrayList<>();
-                                try {
-                                    for (PhysicalCard locCard : gameState.getCardsAtLocation(targetLocation)) {
-                                        if (locCard == null || locCard.getBlueprint() == null) continue;
-                                        com.gempukku.swccgo.common.CardCategory cat = locCard.getBlueprint().getCardCategory();
-                                        if (cat != com.gempukku.swccgo.common.CardCategory.CHARACTER &&
-                                            cat != com.gempukku.swccgo.common.CardCategory.STARSHIP &&
-                                            cat != com.gempukku.swccgo.common.CardCategory.VEHICLE) continue;
-
-                                        boolean prohibited = game.getModifiersQuerying()
-                                            .isProhibitedFromParticipatingInBattle(gameState, locCard, playerId);
-                                        if (prohibited) {
-                                            Float pw = locCard.getBlueprint().getPower();
-                                            float cardPower = pw != null ? pw : 0;
-                                            String cardTitle = locCard.getTitle() != null ? locCard.getTitle() : "?";
-                                            if (playerId.equals(locCard.getOwner())) {
-                                                ourExcludedPower += cardPower;
-                                                ourExcludedNames.add(cardTitle);
-                                            } else {
-                                                theirExcludedPower += cardPower;
-                                                theirExcludedNames.add(cardTitle);
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    logger.debug("V42: Error checking exclusions: {}", e.getMessage());
-                                }
-
-                                float ourPower = ourPowerRaw - ourExcludedPower;
-                                float theirPower = theirPowerRaw - theirExcludedPower;
-
-                                if (ourExcludedPower > 0 || theirExcludedPower > 0) {
-                                    logger.warn("V42 BARRIER AWARENESS at {}: Our excluded={} ({}), Their excluded={} ({}). " +
-                                        "Adjusted power: {}->{} vs {}->{}",
-                                        targetLocation.getTitle(),
-                                        ourExcludedNames, (int)ourExcludedPower,
-                                        theirExcludedNames, (int)theirExcludedPower,
-                                        (int)ourPowerRaw, (int)ourPower,
-                                        (int)theirPowerRaw, (int)theirPower);
-                                }
-
-                                if (ourExcludedPower > 0) {
-                                    action.addReasoning(String.format(
-                                        "V42 BARRIERED: %s excluded from battle! Actual power %.0f (not %.0f)",
-                                        ourExcludedNames, ourPower, ourPowerRaw), 0.0f);
-                                }
-
                                 float ourAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
                                     gameState, playerId, targetLocation);
                                 float theirAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
@@ -305,11 +250,12 @@ public class BattleEvaluator extends ActionEvaluator {
 
                                 // === V29.9: REBEL BARRIER RISK ASSESSMENT ===
                                 // If opponent might have Rebel Barrier, they can EXCLUDE our strongest
-                                // character from battle. Only worry about this when opponent has
-                                // significant force — don't let barrier fear prevent attacking solo targets.
+                                // character from battle. If we initiate with Vader + Tarkin vs opponents,
+                                // and they Barrier Vader, suddenly Tarkin fights ALONE vs everyone.
+                                // When our strength is concentrated in one key character (Vader),
+                                // initiating battle is very risky because Barrier negates that character.
                                 float barrierRiskPenalty = 0;
-                                if (ourVaderHere && ourPower > 0 && theirPower > 0 && cardsHere != null
-                                    && theirPower >= 5) {  // V42: Only assess barrier risk vs real threats
+                                if (ourVaderHere && ourPower > 0 && theirPower > 0 && cardsHere != null) {
                                     // Calculate power WITHOUT Vader to see what happens if he's Barriered
                                     float powerWithoutVader = 0;
                                     int charCountWithoutVader = 0;
@@ -424,45 +370,15 @@ public class BattleEvaluator extends ActionEvaluator {
                                     }
                                 }
 
-                                // === V42: Count opponent characters for solo-target detection ===
-                                int theirCharCount = 0;
-                                if (cardsHere != null) {
-                                    for (PhysicalCard countCard : cardsHere) {
-                                        if (countCard == null || countCard.getBlueprint() == null) continue;
-                                        if (countCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                        if (opponentId != null && opponentId.equals(countCard.getOwner())) {
-                                            // Also skip if THEY are prohibited from battle
-                                            try {
-                                                if (!game.getModifiersQuerying().isProhibitedFromParticipatingInBattle(
-                                                        gameState, countCard, playerId)) {
-                                                    theirCharCount++;
-                                                }
-                                            } catch (Exception e) { theirCharCount++; }
-                                        }
-                                    }
-                                }
-
                                 if (ourPower > 0 && theirPower > 0) {
                                     foundAnyContestedLocation = true;
 
-                                    // === V42: SOLO TARGET BONUS ===
-                                    // Attacking a lone opponent is almost always good — they can't
-                                    // stack destiny draws, can't use combat tricks effectively.
-                                    // Vader vs a solo Rebel is an easy kill, DO IT.
-                                    if (theirCharCount <= 1 && ourPower >= theirPower) {
-                                        float soloBonus = 200.0f;
-                                        if (ourPower >= theirPower * 1.5f) soloBonus = 300.0f;
-                                        action.addReasoning(String.format(
-                                            "V42 EASY TARGET: Solo opponent (power %.0f) at %s — ATTACK!",
-                                            theirPower, targetLocation.getTitle()), soloBonus);
-                                        logger.warn("V42 EASY TARGET at {}: our {} vs solo {} — bonus +{}",
-                                            targetLocation.getTitle(), (int)ourPower, (int)theirPower, (int)soloBonus);
-                                        foundFavorableBattle = true;
-                                    }
-
                                     // V29.7: Use weapon-adjusted effective diff for battle decisions.
-                                    if (theirPower > ourPower && weaponBonus == 0 && effectiveDiff < MARGINAL_THRESHOLD) {
-                                        // No weapons, opponent has more power, AND ability doesn't save us
+                                    // A weapon-equipped character with base power equal or slightly
+                                    // less than opponent is actually FAVORED in battle.
+                                    // Only block if we're outgunned EVEN WITH weapons.
+                                    if (theirPower > ourPower && weaponBonus == 0) {
+                                        // No weapons and opponent has more power — NEVER initiate!
                                         float penalty = -300.0f;
                                         if (theirPower > ourPower * 2) penalty = -600.0f;
                                         action.addReasoning(String.format("V29 DON'T INITIATE: %.0f vs %.0f power — we're outgunned!",
@@ -500,17 +416,12 @@ public class BattleEvaluator extends ActionEvaluator {
                                             action.addReasoning(String.format("V34 ARMED MARGINAL at %s (power %.0f + weapons vs %.0f) — weapons help!",
                                                 targetLocation.getTitle(), ourPower, theirPower), 80.0f);
                                         } else {
-                                            // V42: Marginal without weapons — still worth trying if we have advantage
-                                            // Old V29: -50 penalty. New: +30 — marginal advantage means WE'RE STRONGER, fight!
-                                            action.addReasoning(String.format("V42 MARGINAL at %s (power %.0f vs %.0f, effective %.0f) — we have the edge",
-                                                targetLocation.getTitle(), ourPower, theirPower, effectiveDiff), 30.0f);
+                                            // Slight advantage but risky without weapons
+                                            action.addReasoning(String.format("V29 MARGINAL at %s (power %.0f vs %.0f) — risky with weapons",
+                                                targetLocation.getTitle(), ourPower, theirPower), -50.0f);
                                         }
-                                    } else if (effectiveDiff >= 0) {
-                                        // V42: Even fight — slight positive to encourage aggression
-                                        action.addReasoning(String.format("V42 EVEN FIGHT at %s (power %.0f vs %.0f) — coin flip",
-                                            targetLocation.getTitle(), ourPower, theirPower), 10.0f);
                                     } else {
-                                        // Unfavorable — don't initiate
+                                        // Even or worse — don't initiate
                                         float penalty = -100.0f;
                                         if (weaponEffectiveDiff < -8) penalty = -200.0f;
                                         if (weaponEffectiveDiff < -15) penalty = -400.0f;

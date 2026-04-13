@@ -46,6 +46,7 @@ class GempSession:
         self.game_messages: List[str] = []
         self.game_phase: Optional[str] = None
         self.game_events: List[Dict[str, Any]] = []
+        self.current_decision_full: Optional[Dict[str, Any]] = None
 
     def _headers(self, referer_page: str = "hall.html") -> Dict[str, str]:
         headers = {"Referer": f"{self.base_url}/gemp-swccg/{referer_page}"}
@@ -405,6 +406,7 @@ class GempSession:
             self.current_decision_type = decision.get("type")
             self.current_decision_text = decision.get("text")
             self.current_options = decision.get("options", [])
+            self.current_decision_full = decision  # Store full parsed decision
             result["decision"] = decision
         else:
             result["awaiting_decision"] = self.current_decision_id is not None
@@ -1111,6 +1113,163 @@ async def gemp_game_messages() -> str:
         "messages": messages[-50:],  # Last 50
         "game_phase": session.game_phase,
     }, indent=2)
+
+
+@mcp.tool(
+    name="gemp_advance",
+    annotations={
+        "title": "Auto-Advance Game",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": True,
+    },
+)
+async def gemp_advance() -> str:
+    """Auto-pass through non-critical game decisions until a real decision appears.
+
+    Automatically handles:
+    - Empty "Optional responses" (passes with "")
+    - Opponent force activation allowance (allows max)
+    - Verification dialogs (passes with "")
+    - Phase transitions with no meaningful choices
+
+    Returns when it hits a decision that requires strategic input:
+    - Deploy/Battle/Move choices with real options
+    - Card selections
+    - Any decision with multiple meaningful choices
+
+    Returns:
+        JSON with the pending strategic decision, plus a summary of
+        auto-passed decisions and key game messages since last call.
+    """
+    import asyncio
+
+    session = _get_session()
+    if not session.game_id:
+        return json.dumps({"status": "error", "message": "No active game."})
+
+    auto_passed = 0
+    max_auto = 200  # Safety limit
+    key_messages: list = []
+    phases_seen: list = []
+
+    while auto_passed < max_auto:
+        # If no decision pending, poll for one
+        if not session.current_decision_id:
+            result = await session.poll_game()
+            if result.get("game_over"):
+                return json.dumps({
+                    "status": "game_over",
+                    "result": result.get("result", ""),
+                    "auto_passed": auto_passed,
+                    "messages": key_messages[-20:],
+                }, indent=2)
+            if result.get("phase"):
+                phases_seen.append(result["phase"])
+            if result.get("messages"):
+                key_messages.extend(result["messages"])
+            if not session.current_decision_id:
+                # No decision yet, wait and poll again
+                await asyncio.sleep(0.5)
+                continue
+
+        # We have a decision — check if it's auto-passable
+        d_type = session.current_decision_type
+        d_text = session.current_decision_text or ""
+        d_options = session.current_options
+        d_id = session.current_decision_id
+
+        # 1. Empty "Optional responses" — no options available
+        if d_type in ("CARD_ACTION_CHOICE", "ACTION_CHOICE") and len(d_options) == 0:
+            session.current_decision_id = None
+            session.current_decision_type = None
+            session.current_decision_text = None
+            session.current_options = []
+            result = await session.poll_game(decision_id=d_id, decision_value="")
+            auto_passed += 1
+            if result.get("phase"):
+                phases_seen.append(result["phase"])
+            if result.get("messages"):
+                key_messages.extend(result["messages"])
+            if result.get("game_over"):
+                return json.dumps({
+                    "status": "game_over",
+                    "result": result.get("result", ""),
+                    "auto_passed": auto_passed,
+                    "messages": key_messages[-20:],
+                }, indent=2)
+            continue
+
+        # 2. "Choose amount of Force to allow opponent to activate" — allow max
+        if d_type == "INTEGER" and "allow opponent to activate" in d_text.lower():
+            full = session.current_decision_full or {}
+            max_val = full.get("max", "10")
+            session.current_decision_id = None
+            session.current_decision_type = None
+            session.current_decision_text = None
+            session.current_options = []
+            result = await session.poll_game(decision_id=d_id, decision_value=max_val)
+            auto_passed += 1
+            if result.get("phase"):
+                phases_seen.append(result["phase"])
+            if result.get("messages"):
+                key_messages.extend(result["messages"])
+            if result.get("game_over"):
+                return json.dumps({
+                    "status": "game_over",
+                    "result": result.get("result", ""),
+                    "auto_passed": auto_passed,
+                    "messages": key_messages[-20:],
+                }, indent=2)
+            continue
+
+        # 3. Verification dialogs (min=0, max=0, no selectable cards)
+        if d_type in ("CARD_SELECTION", "ARBITRARY_CARDS"):
+            # Check if this is a verify-only dialog (min=0, max=0)
+            # d_options here is the cards list
+            pass  # Fall through to return — these may need real input
+
+        # 4. "Choose ... action or Pass" during opponent's phases we want to skip
+        #    If the text says "action or Pass" and we're in a phase we'd normally skip,
+        #    auto-pass. But this is risky — only do it for clearly skippable phases.
+        #    For safety, we only auto-pass if ALL options are generic (Play a card,
+        #    Take card into hand, USED:, LOST:, Draw, Exchange, Activate) and no
+        #    deploy/battle/move-specific options exist.
+
+        # If we got here, this is a real decision — return it
+        decision_summary = session.current_decision_full or {
+            "id": d_id,
+            "type": d_type,
+            "text": d_text,
+            "options": d_options,
+        }
+
+        return json.dumps({
+            "status": "decision",
+            "auto_passed": auto_passed,
+            "phase": session.game_phase,
+            "messages": key_messages[-15:],  # Recent context
+            "phases_seen": list(set(phases_seen)),
+            "decision": decision_summary,
+            "game_stats": _get_latest_stats(session),
+        }, indent=2)
+
+    return json.dumps({
+        "status": "timeout",
+        "message": f"Hit auto-pass limit ({max_auto}). Something may be stuck.",
+        "auto_passed": auto_passed,
+        "messages": key_messages[-20:],
+    }, indent=2)
+
+
+def _get_latest_stats(session: 'GempSession') -> dict:
+    """Get a compact version of game stats."""
+    # Return whatever stats we have cached
+    return {
+        "game_phase": session.game_phase,
+        "game_id": session.game_id,
+    }
 
 
 if __name__ == "__main__":

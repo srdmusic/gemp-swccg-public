@@ -165,58 +165,10 @@ public class BattleEvaluator extends ActionEvaluator {
                             if (targetLocation != null) {
                                 // V22.4: Evaluate THIS SPECIFIC location only
                                 checkedSpecificLocation = true;
-                                float ourPowerRaw = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     gameState, targetLocation, playerId, false, false);
-                                float theirPowerRaw = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     gameState, targetLocation, opponentId, false, false);
-
-                                // === V42: EXCLUSION-AWARE POWER — subtract barriered/excluded characters ===
-                                float ourExcludedPower = 0;
-                                float theirExcludedPower = 0;
-                                java.util.List<String> ourExcludedNames = new java.util.ArrayList<>();
-                                java.util.List<String> theirExcludedNames = new java.util.ArrayList<>();
-                                try {
-                                    for (PhysicalCard locCard : gameState.getCardsAtLocation(targetLocation)) {
-                                        if (locCard == null || locCard.getBlueprint() == null) continue;
-                                        com.gempukku.swccgo.common.CardCategory cat = locCard.getBlueprint().getCardCategory();
-                                        if (cat != com.gempukku.swccgo.common.CardCategory.CHARACTER &&
-                                            cat != com.gempukku.swccgo.common.CardCategory.STARSHIP &&
-                                            cat != com.gempukku.swccgo.common.CardCategory.VEHICLE) continue;
-                                        boolean prohibited = game.getModifiersQuerying()
-                                            .isProhibitedFromParticipatingInBattle(gameState, locCard, playerId);
-                                        if (prohibited) {
-                                            Float pw = locCard.getBlueprint().getPower();
-                                            float cardPower = pw != null ? pw : 0;
-                                            String cardTitle = locCard.getTitle() != null ? locCard.getTitle() : "?";
-                                            if (playerId.equals(locCard.getOwner())) {
-                                                ourExcludedPower += cardPower;
-                                                ourExcludedNames.add(cardTitle);
-                                            } else {
-                                                theirExcludedPower += cardPower;
-                                                theirExcludedNames.add(cardTitle);
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    logger.debug("V42: Error checking exclusions: {}", e.getMessage());
-                                }
-                                float ourPower = ourPowerRaw - ourExcludedPower;
-                                float theirPower = theirPowerRaw - theirExcludedPower;
-                                if (ourExcludedPower > 0 || theirExcludedPower > 0) {
-                                    logger.warn("V42 BARRIER AWARENESS at {}: Our excluded={} ({}), Their excluded={} ({}). " +
-                                        "Adjusted power: {}->{} vs {}->{}",
-                                        targetLocation.getTitle(),
-                                        ourExcludedNames, (int)ourExcludedPower,
-                                        theirExcludedNames, (int)theirExcludedPower,
-                                        (int)ourPowerRaw, (int)ourPower,
-                                        (int)theirPowerRaw, (int)theirPower);
-                                }
-                                if (ourExcludedPower > 0) {
-                                    action.addReasoning(String.format(
-                                        "V42 BARRIERED: %s excluded from battle! Actual power %.0f (not %.0f)",
-                                        ourExcludedNames, ourPower, ourPowerRaw), 0.0f);
-                                }
-
                                 float ourAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
                                     gameState, playerId, targetLocation);
                                 float theirAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
@@ -228,260 +180,82 @@ public class BattleEvaluator extends ActionEvaluator {
                                 logger.info("V22.4 [BattleEvaluator] SPECIFIC location {}: power={}/{}, ability={}/{}, effectiveDiff={}",
                                     targetLocation.getTitle(), ourPower, theirPower, ourAbility, theirAbility, effectiveDiff);
 
-                                // === V29.7: WEAPON COMBAT AWARENESS ===
-                                float weaponBonus = 0;
-                                boolean ourVaderHere = false;
-                                boolean lukeHere = false;
-                                boolean hasIHYN = false;
-                                java.util.List<PhysicalCard> cardsHere = null;
-                                try {
-                                    cardsHere = gameState.getCardsAtLocation(targetLocation);
-                                    for (PhysicalCard locCard : cardsHere) {
-                                        if (locCard == null || locCard.getBlueprint() == null) continue;
-                                        if (locCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-
-                                        String cardOwner = locCard.getOwner();
-                                        String locCardTitle = locCard.getTitle() != null ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
-
-                                        if (playerId.equals(cardOwner)) {
-                                            if (locCardTitle.contains("vader")) ourVaderHere = true;
-                                            java.util.List<PhysicalCard> attachments = gameState.getAttachedCards(locCard);
-                                            if (attachments != null) {
-                                                for (PhysicalCard att : attachments) {
-                                                    if (att == null || att.getBlueprint() == null) continue;
-                                                    if (att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
-                                                        String wepTitle = att.getTitle() != null ? att.getTitle().toLowerCase(Locale.ROOT) : "";
-                                                        if (wepTitle.contains("lightsaber")) {
-                                                            weaponBonus += 5.0f;
-                                                        } else {
-                                                            weaponBonus += 3.0f;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        } else if (opponentId != null && opponentId.equals(cardOwner)) {
-                                            if (locCardTitle.contains("luke")) lukeHere = true;
-                                        }
-                                    }
-
-                                    // Check for IHYN in hand
-                                    if (ourVaderHere) {
-                                        java.util.List<PhysicalCard> hand = gameState.getHand(playerId);
-                                        if (hand != null) {
-                                            for (PhysicalCard hCard : hand) {
-                                                if (hCard != null && hCard.getTitle() != null
-                                                    && hCard.getTitle().toLowerCase(Locale.ROOT).contains("i have you now")) {
-                                                    hasIHYN = true;
-                                                    weaponBonus += 3.0f;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    logger.debug("V29.7: Error checking weapons for battle: {}", e.getMessage());
-                                }
-
-                                float weaponEffectiveDiff = effectiveDiff + weaponBonus;
-                                if (weaponBonus > 0) {
-                                    logger.info("V29.7 WEAPON AWARENESS at {}: base effectiveDiff={}, weaponBonus=+{}, adjusted={}{}{}",
-                                        targetLocation.getTitle(), effectiveDiff, weaponBonus, weaponEffectiveDiff,
-                                        ourVaderHere ? " [VADER]" : "", hasIHYN ? " [IHYN]" : "");
-                                }
-
-                                // === V29.9: REBEL BARRIER RISK ASSESSMENT ===
-                                float barrierRiskPenalty = 0;
-                                if (ourVaderHere && ourPower > 0 && theirPower > 0 && cardsHere != null
-                                    && theirPower >= 5) {  // V42: Only assess barrier risk vs real threats
-                                    float powerWithoutVader = 0;
-                                    int charCountWithoutVader = 0;
-                                    for (PhysicalCard locCard : cardsHere) {
-                                        if (locCard == null || locCard.getBlueprint() == null) continue;
-                                        if (locCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                        if (!playerId.equals(locCard.getOwner())) continue;
-                                        String lcTitle = locCard.getTitle() != null ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
-                                        if (lcTitle.contains("vader")) continue;
-                                        Float pw = locCard.getBlueprint().getPower();
-                                        powerWithoutVader += (pw != null ? pw : 0);
-                                        charCountWithoutVader++;
-                                    }
-
-                                    float powerDeficitWithoutVader = theirPower - powerWithoutVader;
-                                    if (powerDeficitWithoutVader > 5) {
-                                        barrierRiskPenalty = -150.0f;
-                                        if (charCountWithoutVader <= 1) barrierRiskPenalty = -250.0f;
-                                        if (powerDeficitWithoutVader > 10) barrierRiskPenalty -= 100.0f;
-
-                                        // V35: VADER EXPENDABILITY
-                                        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer expendAnalyzer =
-                                            context.getObjectiveAnalyzer();
-                                        if (expendAnalyzer != null && expendAnalyzer.isAnalyzed() && expendAnalyzer.isHuntDownV()) {
-                                            barrierRiskPenalty = barrierRiskPenalty * ChosenOneConfig.VADER_EXPENDABILITY_FACTOR;
-                                            logger.warn("V35 VADER EXPENDABLE: Barrier risk reduced to {} (Hunt Down — Vader is replaceable)",
-                                                (int)barrierRiskPenalty);
-                                        }
-
-                                        action.addReasoning(String.format(
-                                            "V29.9 BARRIER RISK: If opponent Barriers Vader, remaining power %.0f vs %.0f — %s!",
-                                            powerWithoutVader, theirPower,
-                                            charCountWithoutVader == 0 ? "NO ONE LEFT" : "crushed"),
-                                            barrierRiskPenalty);
-                                        logger.warn("V29.9 BARRIER RISK at {}: Without Vader: {} vs {} (deficit {}), penalty {}",
-                                            targetLocation.getTitle(), (int)powerWithoutVader, (int)theirPower,
-                                            (int)powerDeficitWithoutVader, (int)barrierRiskPenalty);
-                                    }
-                                }
-
-                                // === V29.9: HUNT DOWN VADER BATTLE AGGRESSIVENESS ===
-                                if (ourVaderHere && weaponBonus > 0) {
-                                    com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer battleObjAnalyzer =
-                                        context.getObjectiveAnalyzer();
-                                    if (battleObjAnalyzer != null && battleObjAnalyzer.isAnalyzed() && battleObjAnalyzer.isHuntDownV()) {
-                                        float huntBonus = 80.0f;
-                                        if (lukeHere) huntBonus = 200.0f;
-                                        action.addReasoning(String.format(
-                                            "V29.9 HUNT DOWN: Armed Vader should FIGHT! %s (+%.0f)",
-                                            lukeHere ? "LUKE IS HERE — THIS IS THE OBJECTIVE!" : "Vader hunts and destroys!",
-                                            huntBonus), huntBonus);
-                                        logger.warn("V29.9 HUNT DOWN: Armed Vader aggressiveness boost +{} (Luke: {})",
-                                            (int)huntBonus, lukeHere);
-                                    }
-                                }
-
-                                // === V35: INQUISITOR BATTLE DESTINY BONUS ===
-                                {
-                                    com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v35ObjAnalyzer =
-                                        context.getObjectiveAnalyzer();
-                                    if (v35ObjAnalyzer != null && v35ObjAnalyzer.isAnalyzed() && v35ObjAnalyzer.isHuntDownV()
-                                        && cardsHere != null) {
-                                        boolean inquisitorInBattle = false;
-                                        boolean hatredAtLocation = false;
-                                        boolean jediAtLocation = false;
-
-                                        for (PhysicalCard bCard : cardsHere) {
-                                            if (bCard == null || bCard.getBlueprint() == null) continue;
-                                            String bTitle = bCard.getTitle() != null ? bCard.getTitle().toLowerCase(Locale.ROOT) : "";
-
-                                            if (playerId.equals(bCard.getOwner())) {
-                                                if (isInquisitor(bTitle)) {
-                                                    inquisitorInBattle = true;
-                                                }
-                                            } else {
-                                                if (isJediOrPadawan(bTitle)) {
-                                                    jediAtLocation = true;
-                                                }
-                                                try {
-                                                    java.util.List<PhysicalCard> stacked = gameState.getStackedCards(bCard);
-                                                    if (stacked != null && !stacked.isEmpty()) {
-                                                        hatredAtLocation = true;
-                                                    }
-                                                } catch (Exception e) { /* ignore */ }
-                                            }
-                                        }
-
-                                        if (inquisitorInBattle) {
-                                            float destinyBonus = 120.0f;
-                                            if (hatredAtLocation) destinyBonus = 250.0f;
-                                            if (jediAtLocation) destinyBonus += 100.0f;
-                                            action.addReasoning(String.format(
-                                                "V35 HUNT DESTINY: Inquisitor in battle%s%s — +%d total battle destiny!",
-                                                hatredAtLocation ? " + HATRED" : "",
-                                                jediAtLocation ? " vs JEDI" : "",
-                                                hatredAtLocation ? 2 : 1), destinyBonus);
-                                            logger.warn("V35 HUNT DESTINY at {}: Inquisitor={}, hatred={}, jedi={} — bonus +{}",
-                                                targetLocation.getTitle(), inquisitorInBattle, hatredAtLocation,
-                                                jediAtLocation, (int)destinyBonus);
-                                        }
-                                    }
-                                }
-
-                                // === V42: Count opponent characters for solo-target detection ===
-                                int theirCharCount = 0;
-                                if (cardsHere != null) {
-                                    for (PhysicalCard countCard : cardsHere) {
-                                        if (countCard == null || countCard.getBlueprint() == null) continue;
-                                        if (countCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                        if (opponentId != null && opponentId.equals(countCard.getOwner())) {
-                                            try {
-                                                if (!game.getModifiersQuerying().isProhibitedFromParticipatingInBattle(
-                                                        gameState, countCard, playerId)) {
-                                                    theirCharCount++;
-                                                }
-                                            } catch (Exception e) { theirCharCount++; }
-                                        }
-                                    }
-                                }
-
                                 if (ourPower > 0 && theirPower > 0) {
                                     foundAnyContestedLocation = true;
 
-                                    // === V42: SOLO TARGET BONUS ===
-                                    if (theirCharCount <= 1 && ourPower >= theirPower) {
-                                        float soloBonus = 200.0f;
-                                        if (ourPower >= theirPower * 1.5f) soloBonus = 300.0f;
-                                        action.addReasoning(String.format(
-                                            "V42 EASY TARGET: Solo opponent (power %.0f) at %s — ATTACK!",
-                                            theirPower, targetLocation.getTitle()), soloBonus);
-                                        logger.warn("V42 EASY TARGET at {}: our {} vs solo {} — bonus +{}",
-                                            targetLocation.getTitle(), (int)ourPower, (int)theirPower, (int)soloBonus);
+                                    // V22.4: HARD BLOCK on suicidal battles
+                                    // If opponent power is more than 2x ours, this is suicide
+                                    if (theirPower > ourPower * 2 && theirPower > 6) {
+                                        action.addReasoning(String.format("V22.4 SUICIDE BLOCK: %.0f vs %.0f power - NEVER initiate!",
+                                            ourPower, theirPower), -500.0f);
+                                        logger.warn("V22.4 SUICIDE BLOCK at {}: our {} vs their {} - BLOCKED",
+                                            targetLocation.getTitle(), (int)ourPower, (int)theirPower);
+                                    } else if (effectiveDiff >= MARGINAL_THRESHOLD) {
                                         foundFavorableBattle = true;
-                                    }
-
-                                    // V29.7: Use weapon-adjusted effective diff for battle decisions.
-                                    if (theirPower > ourPower && weaponBonus == 0 && effectiveDiff < MARGINAL_THRESHOLD) {
-                                        float penalty = -300.0f;
-                                        if (theirPower > ourPower * 2) penalty = -600.0f;
-                                        action.addReasoning(String.format("V29 DON'T INITIATE: %.0f vs %.0f power — we're outgunned!",
-                                            ourPower, theirPower), penalty);
-                                        logger.warn("V29 BATTLE BLOCK at {}: our {} vs their {} — BLOCKED (penalty {})",
-                                            targetLocation.getTitle(), (int)ourPower, (int)theirPower, (int)penalty);
-                                    } else if (theirPower > ourPower && weaponBonus > 0 && weaponEffectiveDiff < MARGINAL_THRESHOLD) {
-                                        action.addReasoning(String.format("V29.7 WEAPONS NOT ENOUGH: power %.0f+weapons vs %.0f — still risky",
-                                            ourPower, theirPower), -150.0f);
-                                    } else if (weaponEffectiveDiff >= FAVORABLE_THRESHOLD) {
-                                        foundFavorableBattle = true;
-                                        float battleBonus = 150.0f;
-                                        String battleReason;
-                                        if (weaponBonus > 0) {
-                                            battleBonus += weaponBonus * 10.0f;
-                                            if (ourVaderHere && lukeHere) {
-                                                battleBonus += 100.0f;
-                                                battleReason = String.format("V29.7 VADER vs LUKE at %s! Power %.0f + weapons vs %.0f — CHALLENGE!",
-                                                    targetLocation.getTitle(), ourPower, theirPower);
-                                            } else {
-                                                battleReason = String.format("V29.7 ARMED BATTLE at %s (power %.0f + weapons vs %.0f, effective diff=%.0f)",
-                                                    targetLocation.getTitle(), ourPower, theirPower, weaponEffectiveDiff);
-                                            }
-                                            if (hasIHYN) battleReason += " + IHYN!";
-                                        } else {
-                                            battleReason = String.format("Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
-                                                targetLocation.getTitle(), ourPower, theirPower, ourAbility, theirAbility);
-                                        }
-                                        action.addReasoning(battleReason, battleBonus);
-                                    } else if (weaponEffectiveDiff >= MARGINAL_THRESHOLD) {
-                                        if (weaponBonus > 0) {
-                                            action.addReasoning(String.format("V34 ARMED MARGINAL at %s (power %.0f + weapons vs %.0f) — weapons help!",
-                                                targetLocation.getTitle(), ourPower, theirPower), 80.0f);
-                                        } else {
-                                            // V42: Marginal without weapons — still worth trying
-                                            action.addReasoning(String.format("V42 MARGINAL at %s (power %.0f vs %.0f, effective %.0f) — we have the edge",
-                                                targetLocation.getTitle(), ourPower, theirPower, effectiveDiff), 30.0f);
-                                        }
-                                    } else if (effectiveDiff >= 0) {
-                                        // V42: Even fight — slight positive to encourage aggression
-                                        action.addReasoning(String.format("V42 EVEN FIGHT at %s (power %.0f vs %.0f) — coin flip",
-                                            targetLocation.getTitle(), ourPower, theirPower), 10.0f);
+                                        action.addReasoning(String.format("V34 Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
+                                            targetLocation.getTitle(), ourPower, theirPower, ourAbility, theirAbility), 150.0f); // V34: Raised from 40
+                                    } else if (effectiveDiff >= -MARGINAL_THRESHOLD) {
+                                        // V34: Close to even — still worth trying if we have presence
+                                        action.addReasoning(String.format("V34 Even battle at %s (power %.0f vs %.0f) - marginal",
+                                            targetLocation.getTitle(), ourPower, theirPower), 30.0f); // V34: Changed from -30 to +30
                                     } else {
-                                        // Unfavorable — don't initiate
-                                        float penalty = -100.0f;
-                                        if (weaponEffectiveDiff < -8) penalty = -200.0f;
-                                        if (weaponEffectiveDiff < -15) penalty = -400.0f;
-                                        action.addReasoning(String.format("V29: UNFAVORABLE at %s (power %.0f vs %.0f) - don't initiate!",
+                                        // Unfavorable — strong discourage
+                                        float penalty = -60.0f;
+                                        if (effectiveDiff < -8) penalty = -120.0f;
+                                        if (effectiveDiff < -15) penalty = -250.0f;
+                                        action.addReasoning(String.format("V22.4: UNFAVORABLE at %s (power %.0f vs %.0f) - don't initiate!",
                                             targetLocation.getTitle(), ourPower, theirPower), penalty);
                                     }
                                 } else if (ourPower > 0 && theirPower == 0) {
                                     // We're alone here - no battle possible
                                     action.addReasoning("No opponent here", -20.0f);
+                                }
+
+                                // V35: INQUISITOR BATTLE DESTINY BONUS
+                                // Scan for our Inquisitors and opponent Jedi/hatred at this location
+                                // Inquisitors get extra battle destiny draws from Hunt Down V objective
+                                {
+                                    List<PhysicalCard> cardsHere = gameState.getCardsAtLocation(targetLocation);
+                                    boolean inquisitorInBattle = false;
+                                    boolean hatredAtLocation = false;
+                                    boolean jediAtLocation = false;
+
+                                    for (PhysicalCard bCard : cardsHere) {
+                                        if (bCard == null || bCard.getBlueprint() == null) continue;
+                                        String bTitle = bCard.getTitle() != null ? bCard.getTitle().toLowerCase(Locale.ROOT) : "";
+
+                                        if (playerId.equals(bCard.getOwner())) {
+                                            // Our characters — check for Inquisitors
+                                            if (isInquisitor(bTitle)) {
+                                                inquisitorInBattle = true;
+                                            }
+                                        } else {
+                                            // Opponent characters — check for Jedi/Padawan and stacked hatred
+                                            if (isJediOrPadawan(bTitle)) {
+                                                jediAtLocation = true;
+                                            }
+                                            try {
+                                                java.util.List<PhysicalCard> stacked = gameState.getStackedCards(bCard);
+                                                if (stacked != null && !stacked.isEmpty()) {
+                                                    hatredAtLocation = true;
+                                                }
+                                            } catch (Exception e) { /* ignore */ }
+                                        }
+                                    }
+
+                                    if (inquisitorInBattle) {
+                                        float destinyBonus = 120.0f; // +1 battle destiny from objective
+                                        if (hatredAtLocation) destinyBonus = 250.0f; // +2 battle destiny
+                                        if (jediAtLocation) destinyBonus += 100.0f; // FMFTD and Fifth Brother bonuses
+                                        action.addReasoning(String.format(
+                                            "V35 HUNT DESTINY: Inquisitor in battle%s%s — +%d total battle destiny!",
+                                            hatredAtLocation ? " + HATRED" : "",
+                                            jediAtLocation ? " vs JEDI" : "",
+                                            hatredAtLocation ? 2 : 1), destinyBonus);
+                                        logger.warn("V35 HUNT DESTINY at {}: Inquisitor={}, hatred={}, jedi={} — bonus +{}",
+                                            targetLocation.getTitle(), inquisitorInBattle, hatredAtLocation,
+                                            jediAtLocation, (int)destinyBonus);
+                                    }
                                 }
                             }
 

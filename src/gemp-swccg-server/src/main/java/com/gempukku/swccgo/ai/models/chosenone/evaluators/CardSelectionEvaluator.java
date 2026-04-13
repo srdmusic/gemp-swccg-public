@@ -361,7 +361,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // Transit/transport destination selection
             return evaluateMoveDestination(context);
         } else if (textLower.contains("starting interrupt")) {
-            // V43: Route starting interrupt selection to evaluateStartingInterrupt
+            // V43: Route starting interrupt selection
             return evaluateStartingInterrupt(context);
         } else if (textLower.contains("starting location")) {
             return evaluateStartingLocation(context);
@@ -1478,28 +1478,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                                             boolean hasProtection = friendlyCharsAtSite > 0;
                                             boolean canDeployProtector = charsInHand >= 1;
-                                            boolean opponentAtThisSite = opponentCharsAtThisSite > 0;
                                             boolean opponentThreatens = (opponentCharsAtAnyCCSite + opponentCharsAtThisSite) > 0;
 
-                                            if (opponentAtThisSite && !hasProtection) {
-                                                // V41: HARD BLOCK — opponent characters AT THIS SITE and no friendlies!
-                                                action.addReasoning("V41 LANDO INTO ENEMY: " + opponentCharsAtThisSite
-                                                    + " opponents at " + title + " — Lando dies instantly! BLOCKED!", -9999.0f);
-                                                logger.warn("V41 LANDO INTO ENEMY: {} opponents at {} — HARD BLOCK!",
-                                                    opponentCharsAtThisSite, title);
-                                            } else if (hasProtection) {
+                                            if (hasProtection) {
                                                 // Friendlies at site — Lando is safe
                                                 logger.info("V25 LANDO: {} — {} friendlies here — safe to deploy", title, friendlyCharsAtSite);
                                             } else if (!canDeployProtector) {
                                                 // Lando would be ALONE and we have NO characters in hand to protect him.
-                                                action.addReasoning("V25 LANDO ALONE BLOCK: No protection at " + title
-                                                    + " and no characters in hand to deploy alongside — wait for backup!", -500.0f);
-                                                logger.warn("V25 LANDO ALONE: {} — no friendlies, no hand chars — BLOCKED (-500)!", title);
+                                                // Even on Turn 1 this is dangerous — opponent deploys right after us.
+                                                action.addReasoning("V47 LANDO ALONE BLOCK: No protection at " + title
+                                                    + " and no characters in hand — Lando dies alone!", -9999.0f);
+                                                logger.warn("V47 LANDO ALONE: {} — no friendlies, no hand chars — HARD BLOCK!", title);
                                             } else if (opponentThreatens) {
-                                                // Lando alone but we DO have chars in hand AND opponent at other CC site
-                                                action.addReasoning("V41 LANDO CAUTION: Alone at " + title
-                                                    + " — opponent at CC sites! Deploy protector first!", -400.0f);
-                                                logger.warn("V41 LANDO: {} — alone + opponent at CC, {} chars in hand (-400)",
+                                                // Lando alone but we DO have chars in hand AND opponent at CC
+                                                // Mild penalty — we can deploy protectors but it's still risky
+                                                action.addReasoning("V25 LANDO CAUTION: Alone at " + title
+                                                    + " but " + charsInHand + " chars in hand — deploy protector ASAP!", -100.0f);
+                                                logger.warn("V25 LANDO: {} — alone + opponent at CC, but {} chars in hand (-100)",
                                                     title, charsInHand);
                                             } else {
                                                 // Lando alone, no opponent at CC, but we have chars in hand
@@ -2051,7 +2046,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
                             if (hasCharacterAboard) {
-                                action.addReasoning("Ship has passengers - forfeit them first!", -100.0f);
+                                // V48: NEVER forfeit a ship with crew aboard — you lose the ship
+                                // AND all its pilots/passengers. Forfeit individual crew instead.
+                                int crewCount = 0;
+                                for (PhysicalCard att : attachedCards) {
+                                    if (att.getBlueprint() != null &&
+                                        att.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                        crewCount++;
+                                    }
+                                }
+                                action.addReasoning(String.format(
+                                    "V48 SHIP WITH CREW: %s has %d crew aboard — forfeit crew first, not the ship!",
+                                    title, crewCount), -9999.0f);
+                                logger.warn("V48 SHIP FORFEIT BLOCK: {} has {} crew — NEVER forfeit ship with crew aboard!",
+                                    title, crewCount);
                             }
                         }
 
@@ -2886,38 +2894,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             } catch (Exception e) { /* ignore */ }
                         }
 
-                        // === V24.2D LANDO MOVEMENT STRATEGY ===
-                        // Lando can move to any CC site at start of control phase.
-                        // Prefer UNOCCUPIED CC sites — Lando creates a 3rd drain site,
-                        // enabling 3-site force drain + Dark Deal + CC Occupation damage.
+                        // === V47: LANDO MOVEMENT — STAY AT DINING ROOM ===
+                        // Lando should NOT move from Dining Room. He establishes occupation there
+                        // and moving wastes force / loses presence. Only move if we have 3+ friendlies
+                        // at his current location (he's redundant) and destination is unoccupied CC site.
                         String moveDecisionText = context.getDecisionText() != null
                             ? context.getDecisionText().toLowerCase() : "";
                         if (moveDecisionText.contains("lando")) {
                             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer moveObjAnalyzer =
                                 context.getObjectiveAnalyzer();
                             if (moveObjAnalyzer != null && moveObjAnalyzer.needsBespinSystemPresence()) {
-                                String locTitle = title != null ? title.toLowerCase() : "";
-                                boolean isObjRelevant = moveObjAnalyzer.isObjectiveRelevantLocation(
-                                    title != null ? title : "");
-                                if (isObjRelevant) {
-                                    // CC site — check if we already have presence
-                                    if (ourPower == 0) {
-                                        // UNOCCUPIED CC site — Lando creates new drain + occupation!
-                                        action.addReasoning(
-                                            "V24.2 LANDO MOVE: Unoccupied CC site — creates 3rd drain + occupation damage!",
-                                            250.0f);
-                                    } else {
-                                        // Already have presence — less urgent but still good
-                                        action.addReasoning(
-                                            "V24.2 LANDO MOVE: CC site with existing presence — reinforcement",
-                                            50.0f);
-                                    }
-                                } else {
-                                    // Non-CC location — Lando should NOT go here
-                                    action.addReasoning(
-                                        "V24.2 LANDO MOVE: Non-CC location — Lando needs to be at Cloud City!",
-                                        -200.0f);
-                                }
+                                // V47: Block most Lando moves — he stays where he is
+                                action.addReasoning("V47 LANDO STAY: Lando should stay put — moving wastes force and loses occupation!", -9999.0f);
+                                logger.warn("V47 LANDO STAY: Blocking Lando move to {} — stay at current location!", title);
                             }
                         }
 
@@ -2970,45 +2959,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         }
 
                         // === V41: HUNT DOWN — MOVE DESTINATION AWARENESS ===
-                        // When choosing a move destination (e.g., Vader's Castle ability),
-                        // STRONGLY prefer locations with opponents, especially Jedi.
-                        // This fixes Vader going to empty Mapuzo Safehouse instead of
-                        // Malachor Entrance where Obi-Wan was draining 4 per turn.
                         if (game != null && playerId != null) {
                             try {
                                 String opponentId = gameState.getOpponent(playerId);
-
-                                // Check if opponents are at this destination
                                 if (theirPower > 0) {
-                                    // Opponents here — GREAT move destination!
                                     float contestBonus = 300.0f;
-
-                                    // Extra bonus if uncontested (we have no presence)
                                     if (ourPower == 0) {
                                         contestBonus += 200.0f;
-                                        logger.warn("V41 MOVE DEST CONTEST: {} is UNCONTESTED by us — urgent! (+500)", title);
+                                        logger.warn("V41 MOVE DEST CONTEST: {} is UNCONTESTED — urgent! (+500)", title);
                                     }
-
-                                    // Check for Jedi/Padawan at destination (Hunt Down priority)
                                     boolean jediAtDest = false;
                                     for (PhysicalCard c : gameState.getCardsAtLocation(location)) {
                                         if (c == null || playerId.equals(c.getOwner())) continue;
                                         String cTitle = c.getTitle() != null ? c.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                                        if (ActionEvaluator.isJediOrPadawan(cTitle)) {
-                                            jediAtDest = true;
-                                            break;
-                                        }
+                                        if (ActionEvaluator.isJediOrPadawan(cTitle)) { jediAtDest = true; break; }
                                     }
                                     if (jediAtDest) {
                                         contestBonus += 200.0f;
-                                        logger.warn("V41 HUNT JEDI DEST: Jedi at {} — Vader must go here! (+{})", title, (int)contestBonus);
+                                        logger.warn("V41 HUNT JEDI DEST: Jedi at {} — must go here! (+{})", title, (int)contestBonus);
                                     }
-
                                     action.addReasoning(String.format(
                                         "V41 CONTEST DEST: Opponents (power %.0f) at %s%s — go fight!",
                                         theirPower, title, jediAtDest ? " [JEDI!]" : ""), contestBonus);
                                 } else {
-                                    // No opponents here — check if opponents are draining uncontested ELSEWHERE
                                     boolean opponentsElsewhere = false;
                                     String worstDrainLoc = null;
                                     float worstDrainPower = 0;
@@ -3020,22 +2993,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             gameState, otherLoc, playerId, false, false);
                                         if (oppPower > 0 && ourPowerThere == 0) {
                                             opponentsElsewhere = true;
-                                            if (oppPower > worstDrainPower) {
-                                                worstDrainPower = oppPower;
-                                                worstDrainLoc = otherLoc.getTitle();
-                                            }
+                                            if (oppPower > worstDrainPower) { worstDrainPower = oppPower; worstDrainLoc = otherLoc.getTitle(); }
                                         }
                                     }
                                     if (opponentsElsewhere) {
-                                        // V41: WRONG DIRECTION — moving to empty site while opponents drain elsewhere
                                         action.addReasoning(String.format(
-                                            "V41 WRONG DIRECTION: %s is empty — opponents draining at %s! Go there instead!",
+                                            "V41 WRONG DIRECTION: %s is empty — opponents draining at %s!",
                                             title, worstDrainLoc), -9999.0f);
-                                        logger.warn("V41 WRONG DIRECTION: {} is empty, opponents at {} — BLOCKED", title, worstDrainLoc);
+                                        logger.warn("V41 WRONG DIRECTION: {} empty, opponents at {} — BLOCKED", title, worstDrainLoc);
                                     }
                                 }
-
-                                // V41: CASTLE RETREAT BLOCK — never move back to Castle when opponents exist
                                 String destTitleLower = title != null ? title.toLowerCase(java.util.Locale.ROOT) : "";
                                 if (destTitleLower.contains("mustafar") && destTitleLower.contains("castle")) {
                                     boolean anyOpponents = false;
@@ -3046,13 +3013,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         if (op > 0) { anyOpponents = true; break; }
                                     }
                                     if (anyOpponents) {
-                                        action.addReasoning("V41 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!", -9999.0f);
+                                        action.addReasoning("V41 CASTLE RETREAT: NEVER retreat to Castle!", -9999.0f);
                                         logger.warn("V41 CASTLE RETREAT BLOCKED in move destination selection");
                                     }
                                 }
-                            } catch (Exception e) {
-                                logger.debug("V41 MOVE DEST: Error: {}", e.getMessage());
-                            }
+                            } catch (Exception e) { logger.debug("V41 MOVE DEST error: {}", e.getMessage()); }
                         }
 
                         // === V24.3C: DR. EVAZAN WEAPON COMBO — MOVEMENT PREFERENCE ===
@@ -3356,7 +3321,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     }
 
     /**
-     * Starting location selection.
      * V43: Starting interrupt selection.
      * Prefer interrupts that deploy the Epic Event ("Force Is Strong In My Family")
      * over generic starting interrupts like "The Signal".
@@ -3413,6 +3377,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     }
 
     /**
+     * Starting location selection.
      * V22: Objective-aware + bonus for locations that pull from reserve deck.
      * Base +50 only if the location is mentioned in the starting interrupt's text.
      */
@@ -3494,18 +3459,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         } else if (isInterior) {
                             action.addReasoning("V24.10 INTERIOR CC: Slip Sliding or I'm Sorry will pull this — save starting slot for exterior!", -500.0f);
                             logger.warn("V24.10 STARTING LOC: {} is INTERIOR — HARD BLOCK as starting location (-500)", locTitle);
-                        }
-                    }
-
-                    // === V42: ISB OPERATIONS — Imperial Square as starting location ===
-                    // ISB decks need Coruscant: Imperial Square to deploy Emperor quickly.
-                    if (startLocObjAnalyzer != null && startLocObjAnalyzer.isAnalyzed()) {
-                        String objTitle = startLocObjAnalyzer.getObjectiveTitle();
-                        if (objTitle != null && objTitle.toLowerCase(java.util.Locale.ROOT).contains("isb operations")) {
-                            if (locTitleLower.contains("imperial square")) {
-                                action.addReasoning("V42 ISB IMPERIAL SQUARE: Must start here to deploy Emperor quickly!", 1000.0f);
-                                logger.warn("V42 ISB STARTING LOC: Imperial Square — HARD PREFER (+1000)");
-                            }
                         }
                     }
 
@@ -3700,25 +3653,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 action.addReasoning("High ability (" + ability + ") - draws battle destiny", 25.0f);
             }
 
-            // V43: Turn-based pull priority — locations first 2 turns, then characters
-            // Locations establish force generation and drain sites. Characters fill them.
-            // Without locations on table first, characters have nowhere to go.
-            {
+            // Locations are often good early game
+            if (category == CardCategory.LOCATION) {
                 int turnNumber = context.getTurnNumber();
-                if (category == CardCategory.LOCATION) {
-                    if (turnNumber <= 2) {
-                        action.addReasoning("V43 LOCATION FIRST: Turns 1-2, pull locations to establish board", 200.0f);
-                        logger.warn("V43 PULL PRIORITY: {} is a LOCATION on turn {} — +200", cardTitle, turnNumber);
-                    } else {
-                        action.addReasoning("Location (mid-game)", 30.0f);
-                    }
-                } else if (category == CardCategory.CHARACTER) {
-                    if (turnNumber <= 2) {
-                        action.addReasoning("V43 CHARACTER WAIT: Turns 1-2, locations first", -50.0f);
-                    } else {
-                        action.addReasoning("V43 CHARACTER TIME: Turn 3+, characters to fill locations", 100.0f);
-                        logger.warn("V43 PULL PRIORITY: {} is a CHARACTER on turn {} — +100", cardTitle, turnNumber);
-                    }
+                if (turnNumber <= 3) {
+                    action.addReasoning("Location (good early game)", 20.0f);
+                } else {
+                    action.addReasoning("Location", 5.0f);
                 }
             }
 
@@ -3798,13 +3739,73 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // Lando and Lobot are key to flipping the TDIGWATT objective.
             // Lando can move to unoccupied CC sites at start of control phase = 3-site drains.
             // Both deploy cheap. Prioritize pulling them from reserve when available.
+            // V47: BUT don't pull Lando if he'd be alone at CC — he gets clobbered!
             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer pullObjAnalyzer =
                 context.getObjectiveAnalyzer();
             if (pullObjAnalyzer != null && pullObjAnalyzer.isAnalyzed()
                 && pullObjAnalyzer.needsBespinSystemPresence()) {
                 if (cardTitleLower.contains("lando")) {
-                    action.addReasoning("V24.2 TDIGWATT: Lando is KEY — moves to 3rd CC site for extra drains + occupation!", 250.0f);
-                    logger.warn("V24.2 PULL: Lando gets +250 — critical for 3-site drain strategy!");
+                    // V47: Check if we have ANY friendly characters at Cloud City sites
+                    boolean friendlyAtCC = false;
+                    String pullPlayerId = context.getPlayerId();
+                    if (game != null && gameState != null && pullPlayerId != null) {
+                        try {
+                            for (PhysicalCard checkLoc : gameState.getLocationsInOrder()) {
+                                if (checkLoc == null || checkLoc.getTitle() == null) continue;
+                                String checkLocLower = checkLoc.getTitle().toLowerCase(java.util.Locale.ROOT);
+                                boolean isCCsite = checkLocLower.contains("cloud city") || checkLocLower.contains("upper walkway")
+                                    || checkLocLower.contains("carbonite") || checkLocLower.contains("security tower")
+                                    || checkLocLower.contains("dining room") || checkLocLower.contains("platform")
+                                    || checkLocLower.contains("lower corridor");
+                                if (!isCCsite) continue;
+                                java.util.List<PhysicalCard> siteCards = gameState.getCardsAtLocation(checkLoc);
+                                if (siteCards != null) {
+                                    for (PhysicalCard sc : siteCards) {
+                                        if (sc != null && pullPlayerId.equals(sc.getOwner()) && sc.getBlueprint() != null
+                                            && sc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                            friendlyAtCC = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (friendlyAtCC) break;
+                            }
+                        } catch (Exception e) {
+                            logger.debug("V47: Error checking CC friendlies: {}", e.getMessage());
+                        }
+                    }
+
+                    // V47: Also check if we have chars in hand + enough force to deploy both
+                    boolean hasHandBuddy = false;
+                    int forceAvailable = 0;
+                    if (!friendlyAtCC && game != null && gameState != null) {
+                        try {
+                            forceAvailable = context.getForcePileSize();
+                            java.util.List<PhysicalCard> hand = gameState.getHand(pullPlayerId);
+                            if (hand != null) {
+                                for (PhysicalCard hc : hand) {
+                                    if (hc != null && hc.getBlueprint() != null
+                                        && hc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                        hasHandBuddy = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            logger.debug("V47: Error checking hand chars: {}", e.getMessage());
+                        }
+                    }
+
+                    if (friendlyAtCC) {
+                        action.addReasoning("V24.2 TDIGWATT: Lando is KEY — moves to 3rd CC site for extra drains + occupation!", 250.0f);
+                        logger.warn("V24.2 PULL: Lando gets +250 — friendlies at CC, safe to pull!");
+                    } else if (hasHandBuddy && forceAvailable >= 5) {
+                        action.addReasoning("V47 LANDO PULL OK: No CC friendlies but have char in hand + force to deploy both!", 250.0f);
+                        logger.warn("V47 LANDO PULL: {} force available + char in hand — OK to pull Lando with buddy!", forceAvailable);
+                    } else {
+                        action.addReasoning("V47 LANDO PULL BLOCK: No friendlies at CC, no buddy in hand or not enough force — Lando would die alone!", -9999.0f);
+                        logger.warn("V47 LANDO PULL BLOCK: No CC friendlies, handBuddy={}, force={} — don't pull Lando!", hasHandBuddy, forceAvailable);
+                    }
                 } else if (cardTitleLower.contains("lobot")) {
                     action.addReasoning("V24.2 TDIGWATT: Lobot deploys cheap — helps flip objective!", 200.0f);
                     logger.warn("V24.2 PULL: Lobot gets +200 — cheap deploy, helps flip!");
@@ -4027,7 +4028,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // Starting effects or interrupts whose game text mentions "epic"
                         // or deploys a key card like "Force Is Strong In My Family"
                         // are critical for decks built around Epic Events.
-                        // e.g. "Rise Of Skywalker" deploys the Skywalker Epic Event.
                         if (effectTextLower.contains("epic")
                             || effectTextLower.contains("force is strong in my family")
                             || effectTextLower.contains("force is strong")) {
@@ -4321,61 +4321,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return actions;
     }
 
-    // V42: Known shield blueprint IDs for fast detection without library dependency
-    private static final java.util.Set<String> KNOWN_SHIELD_BLUEPRINTS = new java.util.HashSet<>(java.util.Arrays.asList(
-        // Dark shields
-        "13_51", "13_52", "13_54", "13_61", "13_63", "13_66", "13_81", "13_84", "13_86", "13_90", "13_96",
-        "200_94", "200_95", "200_100", "223_7", "223_26", "225_3",
-        // Light shields
-        "13_1", "13_3", "13_4", "13_6", "13_8", "13_15", "13_22", "13_44", "13_47",
-        "200_28", "200_30", "200_32", "223_49"
-    ));
-
     /**
      * Check if this is a shield selection by examining the available cards.
-     * V42: Uses KNOWN_SHIELD_BLUEPRINTS for fast detection without library dependency.
+     * Similar to Python's approach of checking if majority of options are shields.
      */
     private boolean isShieldSelectionByContent(DecisionContext context) {
         GameState gameState = context.getGameState();
         List<String> cardIds = context.getCardIds();
-        List<String> blueprintIds = context.getBlueprints();
-        boolean isArbitrary = "ARBITRARY_CARDS".equals(context.getDecisionType());
 
-        if (cardIds == null || cardIds.isEmpty()) {
+        if (gameState == null || cardIds == null || cardIds.isEmpty()) {
             return false;
         }
 
         int shieldCount = 0;
-        int knownShieldCount = 0;
-
-        for (int idx = 0; idx < cardIds.size(); idx++) {
-            String cardId = cardIds.get(idx);
+        for (String cardId : cardIds) {
             try {
-                SwccgCardBlueprint blueprint = null;
-
-                if (isArbitrary && blueprintIds != null && idx < blueprintIds.size()) {
-                    // V29.5: ARBITRARY_CARDS — use blueprint ID lookup (temp IDs can't be parsed as ints)
-                    String bpId = blueprintIds.get(idx);
-
-                    // V42: Fast check — known shield blueprint IDs (no library needed)
-                    if (KNOWN_SHIELD_BLUEPRINTS.contains(bpId)) {
-                        knownShieldCount++;
+                PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
+                if (card != null) {
+                    SwccgCardBlueprint blueprint = card.getBlueprint();
+                    if (blueprint != null &&
+                        blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
                         shieldCount++;
-                        continue;
                     }
-
-                    blueprint = getBlueprintFromId(context, bpId);
-                } else if (gameState != null) {
-                    // Standard path — integer card ID
-                    PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
-                    if (card != null) {
-                        blueprint = card.getBlueprint();
-                    }
-                }
-
-                if (blueprint != null &&
-                    blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
-                    shieldCount++;
                 }
             } catch (NumberFormatException e) {
                 // Ignore
@@ -4383,16 +4350,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         // If majority are shields, treat as shield selection
-        boolean isShield = shieldCount > 0 && shieldCount >= cardIds.size() * 0.5;
-        if (isShield) {
-            logger.warn("V42 isShieldSelectionByContent: YES — {}/{} cards are shields ({} via known IDs, isArbitrary={})",
-                shieldCount, cardIds.size(), knownShieldCount, isArbitrary);
-        } else if (isArbitrary && blueprintIds != null && !blueprintIds.isEmpty()) {
-            logger.warn("V42 isShieldSelectionByContent: NO — only {}/{} shields found (knownIDs={}, first5bp={})",
-                shieldCount, cardIds.size(), knownShieldCount,
-                blueprintIds.subList(0, Math.min(5, blueprintIds.size())));
-        }
-        return isShield;
+        return shieldCount > 0 && shieldCount >= cardIds.size() * 0.5;
     }
 
     /**
@@ -4403,20 +4361,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         GameState gameState = context.getGameState();
         ShieldStrategy shieldStrategy = context.getShieldStrategy();
         int turnNumber = context.getTurnNumber();
-        List<String> blueprintIds = context.getBlueprints();
-        boolean isArbitrary = "ARBITRARY_CARDS".equals(context.getDecisionType());
 
-        logger.warn("[CardSelectionEvaluator] V29.5 Evaluating DEFENSIVE SHIELD selection (isArbitrary={}, shieldStrategy={}, turn={}, numChoices={})",
-            isArbitrary, shieldStrategy != null ? "SET" : "NULL", turnNumber,
-            context.getCardIds() != null ? context.getCardIds().size() : 0);
-        // V42: Log all shield options for diagnosis
-        if (blueprintIds != null) {
-            logger.warn("V42 SHIELD OPTIONS: blueprintIds={}", blueprintIds);
-        }
+        logger.info("[CardSelectionEvaluator] Evaluating DEFENSIVE SHIELD selection");
 
-        List<String> cardIds = context.getCardIds();
-        for (int idx = 0; idx < cardIds.size(); idx++) {
-            String cardId = cardIds.get(idx);
+        for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
                 ActionType.DEPLOY,
@@ -4424,76 +4372,46 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 "Deploy shield"
             );
 
-            try {
-                String title = null;
-                String blueprintId = null;
-                SwccgCardBlueprint blueprint = null;
-
-                if (isArbitrary && blueprintIds != null && idx < blueprintIds.size()) {
-                    // V29.5: ARBITRARY_CARDS path — use blueprint ID (temp IDs can't be parsed)
-                    blueprintId = blueprintIds.get(idx);
-                    blueprint = getBlueprintFromId(context, blueprintId);
-                    if (blueprint != null) {
-                        title = blueprint.getTitle();
-                        logger.warn("V29.5 SHIELD ARBITRARY: Resolved '{}' → '{}' (bp={})", cardId, title, blueprintId);
-                    }
-                } else if (gameState != null) {
-                    // Standard path — integer card ID
+            if (gameState != null) {
+                try {
                     PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
                     if (card != null) {
-                        title = card.getTitle();
-                        blueprintId = card.getBlueprintId(true);
-                        blueprint = card.getBlueprint();
+                        String title = card.getTitle();
+                        String blueprintId = card.getBlueprintId(true);
+                        SwccgCardBlueprint blueprint = card.getBlueprint();
+
+                        action.setDisplayText("Shield: " + (title != null ? title : cardId));
+
+                        // Verify it's actually a defensive shield
+                        if (blueprint != null &&
+                            blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
+
+                            // Use ShieldStrategy for scoring
+                            if (shieldStrategy != null && blueprintId != null && title != null) {
+                                float shieldScore = shieldStrategy.scoreShield(
+                                    blueprintId, title, turnNumber);
+
+                                // Set score directly (ShieldStrategy fully controls priority)
+                                action.setScore(shieldScore);
+                                String description = shieldStrategy.getShieldDescription(blueprintId, title);
+                                action.addReasoning("Shield: " + description, 0.0f);
+
+                                logger.info("[Shield] {}: score={} ({})", title, shieldScore, description);
+                            } else {
+                                // Fallback if no shield strategy
+                                action.addReasoning("Defensive shield (no strategy)", 50.0f);
+                            }
+                        } else {
+                            // Not a shield - low priority
+                            action.addReasoning("Not a defensive shield", -50.0f);
+                        }
                     }
+                } catch (NumberFormatException e) {
+                    action.addReasoning("Invalid card ID", -100.0f);
                 }
-
-                if (title != null) {
-                    action.setDisplayText("Shield: " + title);
-                }
-
-                // Verify it's actually a defensive shield
-                if (blueprint != null &&
-                    blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
-
-                    // Use ShieldStrategy for scoring
-                    if (shieldStrategy != null && blueprintId != null && title != null) {
-                        float shieldScore = shieldStrategy.scoreShield(
-                            blueprintId, title, turnNumber);
-
-                        // Set score directly (ShieldStrategy fully controls priority)
-                        action.setScore(shieldScore);
-                        String description = shieldStrategy.getShieldDescription(blueprintId, title);
-                        action.addReasoning("Shield: " + description, 0.0f);
-
-                        logger.warn("V29.5 [Shield] {}: score={} ({})", title, shieldScore, description);
-                    } else {
-                        // Fallback if no shield strategy
-                        action.addReasoning("Defensive shield (no strategy)", 50.0f);
-                        logger.warn("V29.5 [Shield] {}: NO STRATEGY — fallback score 100", title);
-                    }
-                } else if (blueprint != null) {
-                    // Not a shield - low priority
-                    action.addReasoning("Not a defensive shield", -50.0f);
-                } else {
-                    logger.warn("V29.5 [Shield] Could not resolve card '{}' (bp={})", cardId, blueprintId);
-                    action.addReasoning("Unresolved shield card", 0.0f);
-                }
-            } catch (NumberFormatException e) {
-                // V29.5: This shouldn't happen anymore for ARBITRARY_CARDS
-                logger.warn("V29.5 [Shield] NumberFormatException for cardId '{}' — should use blueprint path", cardId);
-                action.addReasoning("Invalid card ID (should not happen with V29.5)", -100.0f);
             }
 
             actions.add(action);
-        }
-
-        // V42: Summary log — show all scored shields sorted by score for easy debugging
-        if (!actions.isEmpty()) {
-            StringBuilder summary = new StringBuilder("V42 SHIELD SCORING SUMMARY (turn " + turnNumber + "): ");
-            actions.stream()
-                .sorted((a, b) -> Float.compare(b.getScore(), a.getScore()))
-                .forEach(a -> summary.append(String.format("[%s=%.0f] ", a.getDisplayText(), a.getScore())));
-            logger.warn(summary.toString());
         }
 
         return actions;
