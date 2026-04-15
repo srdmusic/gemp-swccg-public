@@ -4697,7 +4697,7 @@ public class GameConditions {
     }
 
     /**
-     * Determines if the player can performing docking bay transit from the location.
+     * Determines if the player can perform docking bay transit from the location.
      * @param playerId the player
      * @param game the game
      * @param location the filter for card to move
@@ -4719,7 +4719,9 @@ public class GameConditions {
         }
 
         // Get cards at docking bay
-        Filter cardFilter = Filters.and(Filters.your(playerId), Filters.hasNotPerformedRegularMove, Filters.or(Filters.character, Filters.vehicle, Filters.weapon), Filters.atLocation(location));
+        Filter atFilter = Filters.and(Filters.your(playerId), Filters.hasNotPerformedRegularMove, Filters.or(Filters.character, Filters.vehicle, Filters.movesLikeCharacter), Filters.atLocation(location));
+        Filter attachedToFilter = Filters.and(Filters.your(playerId), Filters.hasNotPerformedRegularMove, Filters.artillery_weapon_that_may_use_db_transit, Filters.attachedTo(location)); //deployed on location (attached)
+        Filter cardFilter = Filters.or(atFilter, attachedToFilter);
         if (gameState.getCurrentPlayerId().equals(playerId)) {
             cardFilter = Filters.and(cardFilter, Filters.not(Filters.or(Filters.undercover_spy, Filters.deploysAndMovesLikeUndercoverSpy)));
         }

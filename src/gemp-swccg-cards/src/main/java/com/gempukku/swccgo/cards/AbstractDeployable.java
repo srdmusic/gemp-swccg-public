@@ -302,7 +302,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
     @Override
     public Filter getValidTransferDeviceOrWeaponTargetFilter(String playerId, SwccgGame game, PhysicalCard self, PlayCardOption playCardOption, boolean forFree, Filter transferTargetFilter) {
         return Filters.and(Filters.your(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle), Filters.not(Filters.hasAttached(self)),
-                Filters.not(Filters.attachedToWithRecursiveChecking(self)), Filters.presentWith(self), transferTargetFilter, getValidTransferTargetFilter(playerId, game, self, playCardOption, forFree));
+                Filters.not(Filters.attachedToWithRecursiveChecking(self)), Filters.presentWith(self, SpotOverride.INCLUDE_UNDERCOVER, Filters.hasAttached(self)), transferTargetFilter, getValidTransferTargetFilter(playerId, game, self, playCardOption, forFree));
     }
 
     /**
@@ -640,6 +640,13 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         if (shuttleAction != null) {
             regularMoveActions.add(shuttleAction);
         }
+
+        // TODO: add other types of regular moves
+        // see https://github.com/PlayersCommittee/gemp-swccg-public/issues/954
+        // Docking bay transit
+        // using the movement text on a location
+        // moving a Death Star
+        // a Light side starfighter moving into the Death Star: Trench to start an Attack Run
 
         if (regularMoveActions.isEmpty())
             return null;
