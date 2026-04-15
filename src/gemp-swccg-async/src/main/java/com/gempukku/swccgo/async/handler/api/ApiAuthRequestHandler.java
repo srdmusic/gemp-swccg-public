@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.gempukku.swccgo.async.HttpProcessingException;
 import com.gempukku.swccgo.async.ResponseWriter;
-import com.gempukku.swccgo.async.auth.JwtService;
+import com.gempukku.swccgo.auth.JwtService;
 import com.gempukku.swccgo.common.ApplicationConfiguration;
 import com.gempukku.swccgo.db.LoginInvalidException;
 import com.gempukku.swccgo.db.RegisterNotAllowedException;

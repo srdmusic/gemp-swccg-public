@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.async;
 
-import com.gempukku.swccgo.async.auth.JwtService;
+import com.gempukku.swccgo.auth.JwtService;
 import com.gempukku.swccgo.async.handler.UriRequestHandler;
 import com.gempukku.swccgo.async.ws.ChatWebSocketSession;
 import com.gempukku.swccgo.async.ws.GameWebSocketSession;
@@ -65,12 +65,15 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
     private final UriRequestHandler _uriRequestHandler;
 
     private final IpBanDAO _ipBanDAO;
-    private final JwtService _jwtService = JwtService.getInstance();
+    private final JwtService _jwtService;
 
     public SwccgoHttpRequestHandler(Map<Type, Object> objects, UriRequestHandler uriRequestHandler) {
         _objects = objects;
         _uriRequestHandler = uriRequestHandler;
         _ipBanDAO = (IpBanDAO) _objects.get(IpBanDAO.class);
+        _jwtService = (JwtService) _objects.get(JwtService.class);
+        if (_jwtService == null)
+            throw new IllegalStateException("JwtService not registered in server context");
     }
 
 

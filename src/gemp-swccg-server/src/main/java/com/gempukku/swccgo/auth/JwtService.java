@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.async.auth;
+package com.gempukku.swccgo.auth;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -15,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class JwtService {
-    private static final JwtService INSTANCE = new JwtService();
     public static final String JWT_COOKIE_NAME = "gemp.jwt";
 
     private final String _issuer;
@@ -23,7 +22,7 @@ public class JwtService {
     private final long _ttlSeconds;
     private final long _clockSkewSeconds;
 
-    private JwtService() {
+    public JwtService() {
         _issuer = ApplicationConfiguration.getProperty("jwt.issuer");
         String secretValue = ApplicationConfiguration.getProperty("jwt.secret");
         if (secretValue == null || secretValue.isEmpty())
@@ -51,10 +50,6 @@ public class JwtService {
         }
         _ttlSeconds = ttlSeconds;
         _clockSkewSeconds = parseLong(ApplicationConfiguration.getProperty("jwt.clockSkew.seconds"), 30L);
-    }
-
-    public static JwtService getInstance() {
-        return INSTANCE;
     }
 
     public long getTtlSeconds() {

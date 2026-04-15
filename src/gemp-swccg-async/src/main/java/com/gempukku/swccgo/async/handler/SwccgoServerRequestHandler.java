@@ -3,7 +3,7 @@ package com.gempukku.swccgo.async.handler;
 import com.gempukku.swccgo.DateUtils;
 import com.gempukku.swccgo.PlayerLock;
 import com.gempukku.swccgo.async.HttpProcessingException;
-import com.gempukku.swccgo.async.auth.JwtService;
+import com.gempukku.swccgo.auth.JwtService;
 import com.gempukku.swccgo.collection.CollectionsManager;
 import com.gempukku.swccgo.collection.TransferDAO;
 import com.gempukku.swccgo.common.ApplicationConfiguration;
@@ -39,7 +39,7 @@ public class SwccgoServerRequestHandler {
     private final CollectionsManager _collectionManager;
     protected DeckDAO _deckDao;
     protected GempSettingDAO _gempSettingDAO;
-    protected final JwtService _jwtService = JwtService.getInstance();
+    protected final JwtService _jwtService;
 
     public SwccgoServerRequestHandler(Map<Type, Object> context) {
         _playerDao = extractObject(context, PlayerDAO.class);
@@ -48,6 +48,7 @@ public class SwccgoServerRequestHandler {
         _collectionManager = extractObject(context, CollectionsManager.class);
         _deckDao = extractObject(context, DeckDAO.class);
         _gempSettingDAO = extractObject(context, GempSettingDAO.class);
+        _jwtService = extractObject(context, JwtService.class);
     }
 
     private boolean isTest() {

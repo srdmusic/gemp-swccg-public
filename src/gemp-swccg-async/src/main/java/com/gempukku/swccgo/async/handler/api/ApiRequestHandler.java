@@ -3,7 +3,7 @@ package com.gempukku.swccgo.async.handler.api;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.gempukku.swccgo.async.HttpProcessingException;
-import com.gempukku.swccgo.async.auth.JwtService;
+import com.gempukku.swccgo.auth.JwtService;
 import com.gempukku.swccgo.async.handler.SwccgoServerRequestHandler;
 import com.gempukku.swccgo.game.Player;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -19,8 +19,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class ApiRequestHandler extends SwccgoServerRequestHandler {
-    protected final JwtService _jwtService = JwtService.getInstance();
-
     public ApiRequestHandler(Map<Type, Object> context) {
         super(context);
     }
