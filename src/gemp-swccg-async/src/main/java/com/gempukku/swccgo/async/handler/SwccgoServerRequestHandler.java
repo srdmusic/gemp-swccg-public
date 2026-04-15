@@ -127,14 +127,19 @@ public class SwccgoServerRequestHandler {
             return authHeader.substring("Bearer ".length()).trim();
         }
 
-        // WS handshakes often pass token in query string.
+        String cookieToken = getJwtTokenFromCookies(request);
+        if (cookieToken != null && !cookieToken.isEmpty()) {
+            return cookieToken;
+        }
+
+        // Keep query-string JWTs only as a compatibility fallback for non-cookie clients.
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
         String queryToken = getQueryParameterSafely(decoder, "token");
         if (queryToken != null && !queryToken.isEmpty()) {
             return queryToken;
         }
 
-        return getJwtTokenFromCookies(request);
+        return null;
     }
 
     private String getJwtTokenFromCookies(HttpRequest request) {

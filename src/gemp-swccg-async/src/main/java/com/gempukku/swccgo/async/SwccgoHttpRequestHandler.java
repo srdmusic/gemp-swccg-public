@@ -171,9 +171,9 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
 
         normalizeWebSocketHandshakeHeaders(request);
 
-        String token = getQueryParameter(decoder, "token");
+        String token = getTokenFromCookies(request);
         if (token == null || token.isEmpty())
-            token = getTokenFromCookies(request);
+            token = getQueryParameter(decoder, "token");
         if (token == null || token.isEmpty()) {
             return respondWithError(responseSender, 401);
         }

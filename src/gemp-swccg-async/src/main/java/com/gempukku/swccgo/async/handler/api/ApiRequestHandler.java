@@ -46,14 +46,14 @@ public class ApiRequestHandler extends SwccgoServerRequestHandler {
         if (authHeader != null && authHeader.startsWith("Bearer "))
             return authHeader.substring("Bearer ".length()).trim();
 
+        String cookieToken = getTokenFromCookies(request);
+        if (cookieToken != null && !cookieToken.isEmpty())
+            return cookieToken;
+
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
         String queryToken = getQueryParameterSafely(decoder, "token");
         if (queryToken != null && !queryToken.isEmpty())
             return queryToken;
-
-        String cookieToken = getTokenFromCookies(request);
-        if (cookieToken != null && !cookieToken.isEmpty())
-            return cookieToken;
 
         return null;
     }

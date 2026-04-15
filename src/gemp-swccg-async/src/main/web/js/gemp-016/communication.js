@@ -854,9 +854,6 @@ var GempSwccgCommunication = Class.extend({
             return;
 
         var wsUrl = this.buildWsBase() + "?channel=game&gameId=" + encodeURIComponent(gameId);
-        var token = this.getAuthToken();
-        if (token != null && token !== "")
-            wsUrl += "&token=" + encodeURIComponent(token);
 
         var participantId = getUrlParam("participantId");
         if (participantId != null && participantId !== "")
@@ -1077,9 +1074,6 @@ var GempSwccgCommunication = Class.extend({
             return;
 
         var wsUrl = this.buildWsBase() + "?channel=chat&room=" + encodeURIComponent(room);
-        var token = this.getAuthToken();
-        if (token != null && token != "")
-            wsUrl += "&token=" + encodeURIComponent(token);
 
         var that = this;
         var socket = new WebSocket(wsUrl);
@@ -1334,9 +1328,6 @@ var GempSwccgCommunication = Class.extend({
             return;
 
         var wsUrl = this.buildWsBase() + "?channel=hall";
-        var token = this.getAuthToken();
-        if (token != null && token !== "")
-            wsUrl += "&token=" + encodeURIComponent(token);
 
         var that = this;
         this._hallSocket = new WebSocket(wsUrl);
