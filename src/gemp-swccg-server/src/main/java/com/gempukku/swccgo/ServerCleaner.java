@@ -3,14 +3,22 @@ package com.gempukku.swccgo;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class ServerCleaner {
     private static final Logger LOG = LogManager.getLogger(ServerCleaner.class);
     private final Set<AbstractServer> _servers = Collections.synchronizedSet(new HashSet<AbstractServer>());
     private CleaningThread _thr;
+    private final ExecutorService _cleanupPool = Executors.newFixedThreadPool(
+            Math.max(2, Runtime.getRuntime().availableProcessors()));
 
     public synchronized void addServer(AbstractServer server) {
         LOG.debug("Adding server: " + server.getClass());
@@ -35,16 +43,32 @@ public class ServerCleaner {
         public void run() {
             try {
                 while (!_stopped) {
+                    // Snapshot the server list, then clean up in parallel
+                    List<AbstractServer> snapshot;
                     synchronized (ServerCleaner.this) {
-                        for (AbstractServer server : _servers) {
+                        snapshot = new ArrayList<>(_servers);
+                    }
+
+                    List<Future<?>> futures = new ArrayList<>();
+                    for (AbstractServer server : snapshot) {
+                        futures.add(_cleanupPool.submit(() -> {
                             try {
                                 server.cleanup();
                             } catch (Exception exp) {
-                                // We can't do much about it
                                 LOG.error("Error while cleaning up a server", exp);
                             }
+                        }));
+                    }
+
+                    // Wait for all cleanup tasks to complete (with timeout)
+                    for (Future<?> f : futures) {
+                        try {
+                            f.get(2, TimeUnit.SECONDS);
+                        } catch (Exception e) {
+                            LOG.warn("Cleanup task timed out or failed", e);
                         }
                     }
+
                     Thread.sleep(1000);
                 }
             } catch (InterruptedException exp) {

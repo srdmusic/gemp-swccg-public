@@ -25,6 +25,27 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
+# Local card cache — avoids API/file lookups during gameplay
+# ---------------------------------------------------------------------------
+_CARD_CACHE: Dict[str, Dict[str, str]] = {}
+
+def _load_card_cache():
+    """Load the local card blueprint cache from card_cache.json."""
+    global _CARD_CACHE
+    cache_path = os.path.join(os.path.dirname(__file__), "card_cache.json")
+    if os.path.exists(cache_path):
+        with open(cache_path, "r") as f:
+            _CARD_CACHE = json.load(f)
+
+def card_title(blueprint_id: str) -> str:
+    """Look up a card title from its blueprint ID (e.g. '222_29' -> 'Young Skywalker')."""
+    if not _CARD_CACHE:
+        _load_card_cache()
+    info = _CARD_CACHE.get(blueprint_id, {})
+    return info.get("title", f"Unknown({blueprint_id})")
+
+
+# ---------------------------------------------------------------------------
 # GEMP API Client (persistent session with cookie management)
 # ---------------------------------------------------------------------------
 
@@ -47,6 +68,7 @@ class GempSession:
         self.game_phase: Optional[str] = None
         self.game_events: List[Dict[str, Any]] = []
         self.current_decision_full: Optional[Dict[str, Any]] = None
+        self.is_my_turn: bool = False  # Track whose turn it is
 
     def _headers(self, referer_page: str = "hall.html") -> Dict[str, str]:
         headers = {"Referer": f"{self.base_url}/gemp-swccg/{referer_page}"}
@@ -259,7 +281,27 @@ class GempSession:
                 # Subscription expired — re-signup
                 return await self.signup_for_game(self.game_id)
             if resp.status_code == 409:
-                return {"status": "error", "message": "Subscription conflict — another client connected"}
+                # Auto-retry: re-signup to get a fresh channel, then retry the operation
+                import asyncio
+                await asyncio.sleep(0.5)
+                signup_result = await self.signup_for_game(self.game_id)
+                if signup_result.get("status") != "ok":
+                    return {"status": "error", "message": "Subscription conflict — re-signup failed"}
+                # If we had a decision to submit, retry with new channel
+                if decision_id is not None and decision_value is not None:
+                    data["channelNumber"] = str(self.channel_number or 0)
+                    try:
+                        resp = await client.post(
+                            f"{self.base_url}/gemp-swccg-server/game/{self.game_id}",
+                            data=data,
+                            headers=self._headers("game.html"),
+                        )
+                        if resp.is_success:
+                            return self._parse_game_update(resp.text)
+                    except httpx.TimeoutException:
+                        pass
+                    return {"status": "error", "message": "Subscription conflict — retry after re-signup failed"}
+                return signup_result
             if not resp.is_success:
                 return {"status": "error", "message": f"HTTP {resp.status_code}: {resp.text[:500]}"}
 
@@ -347,6 +389,12 @@ class GempSession:
             if event_type == "M":  # Message
                 msg = ge.attrib.get("message", "")
                 if msg:
+                    # Track whose turn it is
+                    if "Start of " in msg and "'s turn" in msg:
+                        if self.username and self.username in msg:
+                            self.is_my_turn = True
+                        else:
+                            self.is_my_turn = False
                     messages.append(msg)
                     self.game_messages.append(msg)
 
@@ -382,8 +430,14 @@ class GempSession:
                 pass  # Could track removals
 
             # Check for game over conditions in messages
+            # IMPORTANT: "loses a Force" is a force drain, NOT game over.
+            # Only trigger on actual win/concede messages.
             for msg in messages:
-                if "wins" in msg.lower() or "loses" in msg.lower() or "concedes" in msg.lower():
+                msg_lower = msg.lower()
+                if "concedes" in msg_lower:
+                    game_over = True
+                    winner = msg
+                elif "wins" in msg_lower and ("wins the game" in msg_lower or "has won" in msg_lower):
                     game_over = True
                     winner = msg
 
@@ -424,6 +478,22 @@ class GempSession:
             "type": decision_type,
             "text": decision_text,
         }
+
+        # Extract turn/revert metadata from decision parameters
+        raw_params = {}
+        for param in ge.findall("parameter"):
+            name = param.attrib.get("name", "")
+            value = param.attrib.get("value", "")
+            if name in ("yourTurn", "revertEligible", "autoPassEligible"):
+                raw_params[name] = value
+
+        if raw_params.get("yourTurn") == "true":
+            self.is_my_turn = True
+        elif raw_params.get("yourTurn") == "false":
+            self.is_my_turn = False
+
+        if raw_params.get("revertEligible") == "true":
+            decision["revert_eligible"] = True
 
         # Collect parameters
         params: Dict[str, List[str]] = {}
@@ -482,8 +552,10 @@ class GempSession:
                 card: Dict[str, Any] = {"cardId": card_ids[i]}
                 if i < len(blueprint_ids):
                     card["blueprintId"] = blueprint_ids[i]
-                if i < len(testing_texts):
-                    card["title"] = testing_texts[i]
+                    # Enrich with local card cache title
+                    card["title"] = card_title(blueprint_ids[i])
+                if i < len(testing_texts) and testing_texts[i] and testing_texts[i] != "null":
+                    card["title"] = testing_texts[i]  # Server title overrides cache
                 if i < len(selectables):
                     card["selectable"] = selectables[i] == "true"
                 cards.append(card)
@@ -1226,16 +1298,119 @@ async def gemp_advance() -> str:
 
         # 3. Verification dialogs (min=0, max=0, no selectable cards)
         if d_type in ("CARD_SELECTION", "ARBITRARY_CARDS"):
-            # Check if this is a verify-only dialog (min=0, max=0)
-            # d_options here is the cards list
-            pass  # Fall through to return — these may need real input
+            full = session.current_decision_full or {}
+            min_val = full.get("min", "1")
+            max_val = full.get("max", "1")
+            if str(min_val) == "0" and str(max_val) == "0":
+                session.current_decision_id = None
+                session.current_decision_type = None
+                session.current_decision_text = None
+                session.current_options = []
+                result = await session.poll_game(decision_id=d_id, decision_value="")
+                auto_passed += 1
+                if result.get("phase"):
+                    phases_seen.append(result["phase"])
+                if result.get("messages"):
+                    key_messages.extend(result["messages"])
+                if result.get("game_over"):
+                    return json.dumps({
+                        "status": "game_over",
+                        "result": result.get("result", ""),
+                        "auto_passed": auto_passed,
+                        "messages": key_messages[-20:],
+                    }, indent=2)
+                continue
 
-        # 4. "Choose ... action or Pass" during opponent's phases we want to skip
-        #    If the text says "action or Pass" and we're in a phase we'd normally skip,
-        #    auto-pass. But this is risky — only do it for clearly skippable phases.
-        #    For safety, we only auto-pass if ALL options are generic (Play a card,
-        #    Take card into hand, USED:, LOST:, Draw, Exchange, Activate) and no
-        #    deploy/battle/move-specific options exist.
+        # 4. Phase-aware auto-pass.
+        #    OPPONENT'S TURN: Auto-pass Activate, Control, Move, Draw, End of turn
+        #    OPPONENT'S TURN: STOP during Deploy and Battle (so we can play interrupts!)
+        #    MY TURN: Auto-pass Activate, Move, Draw, End of turn
+        #    MY TURN Control: DO NOT auto-pass (need to force drain!)
+        #    MY TURN Deploy/Battle: DO NOT auto-pass (need to deploy/battle!)
+        current_phase = (session.game_phase or "").lower()
+        if session.is_my_turn:
+            auto_pass_phases = ["activate", "move", "draw", "end of turn"]
+        else:
+            auto_pass_phases = ["activate", "control", "move", "draw", "end of turn"]
+            # During opponent's Deploy and Battle, do NOT auto-pass generic options
+            # so we can respond with interrupts (Sense, Barrier, battle cards)
+        in_auto_pass_phase = any(p in current_phase for p in auto_pass_phases)
+
+        # During opponent's Deploy/Battle, only stop for real interrupt opportunities
+        # (decisions with non-empty options that contain deploy/battle-specific responses)
+        # For training efficiency, auto-pass generic decisions during opponent's phases
+        opponent_action_phase = not session.is_my_turn and any(p in current_phase for p in ["deploy", "battle"])
+        # opponent_action_phase flag is available but we don't block auto-pass for generic options
+        # TODO: Add smarter interrupt detection that checks for Sense, Barrier, etc. in hand
+
+        if in_auto_pass_phase and d_type in ("CARD_ACTION_CHOICE", "ACTION_CHOICE") and len(d_options) >= 0:
+            session.current_decision_id = None
+            session.current_decision_type = None
+            session.current_decision_text = None
+            session.current_options = []
+            result = await session.poll_game(decision_id=d_id, decision_value="")
+            auto_passed += 1
+            if result.get("phase"):
+                phases_seen.append(result["phase"])
+            if result.get("messages"):
+                key_messages.extend(result["messages"])
+            if result.get("game_over"):
+                return json.dumps({
+                    "status": "game_over",
+                    "result": result.get("result", ""),
+                    "auto_passed": auto_passed,
+                    "messages": key_messages[-20:],
+                }, indent=2)
+            continue
+
+        # 5. "Choose ... action or Pass" — auto-pass UNLESS a real action is present.
+        #    Uses a blocklist approach: if ANY option is a real strategic action, stop.
+        if d_type in ("CARD_ACTION_CHOICE", "ACTION_CHOICE") and len(d_options) > 0:
+            real_action_patterns = [
+                "force drain", "initiate a battle", "move using",
+            ]
+            has_real_action = False
+            for opt in d_options:
+                opt_text = (opt.get("text") or opt.get("actionText") or "").lower()
+                # Bare "Deploy" with no other context = real deploy action
+                if opt_text.strip() == "deploy":
+                    has_real_action = True
+                    break
+                # Check for strategic actions
+                if any(pat in opt_text for pat in real_action_patterns):
+                    has_real_action = True
+                    break
+                # "Deploy Luke's Lightsaber from Reserve Deck" = real puller action
+                if "deploy" in opt_text and "from reserve deck" in opt_text:
+                    has_real_action = True
+                    break
+                # "Deploy card from Reserve Deck" = real Yarna-type pull
+                if "deploy card from reserve deck" in opt_text:
+                    has_real_action = True
+                    break
+                # "Deploy a farm from Reserve Deck" = real location pull
+                if "deploy a farm" in opt_text:
+                    has_real_action = True
+                    break
+            if not has_real_action:
+                session.current_decision_id = None
+                session.current_decision_type = None
+                session.current_decision_text = None
+                session.current_options = []
+                result = await session.poll_game(decision_id=d_id, decision_value="")
+                auto_passed += 1
+                if result.get("phase"):
+                    phases_seen.append(result["phase"])
+                if result.get("messages"):
+                    key_messages.extend(result["messages"])
+                if result.get("game_over"):
+                    return json.dumps({
+                        "status": "game_over",
+                        "result": result.get("result", ""),
+                        "auto_passed": auto_passed,
+                        "messages": key_messages[-20:],
+                    }, indent=2)
+                continue
 
         # If we got here, this is a real decision — return it
         decision_summary = session.current_decision_full or {
@@ -1244,6 +1419,16 @@ async def gemp_advance() -> str:
             "text": d_text,
             "options": d_options,
         }
+
+        # Compact ARBITRARY_CARDS: only return selectable cards to save tokens
+        if decision_summary.get("type") in ("ARBITRARY_CARDS", "CARD_SELECTION"):
+            cards = decision_summary.get("cards", [])
+            selectable = [c for c in cards if c.get("selectable", True)]
+            non_selectable_count = len(cards) - len(selectable)
+            if selectable or decision_summary.get("min") == "0":
+                decision_summary["cards"] = selectable
+                if non_selectable_count > 0:
+                    decision_summary["hidden_cards"] = non_selectable_count
 
         return json.dumps({
             "status": "decision",

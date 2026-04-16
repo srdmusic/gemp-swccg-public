@@ -132,92 +132,23 @@ public class ForceActivationEvaluator extends ActionEvaluator {
     /**
      * Calculate optimal force activation amount.
      *
-     * Rules (in priority order):
-     * 1. Reserve cards for destiny draws (more if contested locations)
-     * 2. Cap force pile at MAX_FORCE_PILE
-     * 3. Late-game preservation when life force is critical
+     * V57 FIX 19 (2026-04-16): Removed throttling rules entirely. See the
+     * matching Rando ForceActivationEvaluator for the full rationale. In
+     * short: Rules 1 and 3 were collapsing activation to 0 (then V43 forced
+     * 1) whenever reserve or life force got low, causing Rando to activate
+     * 1 of 14 Force generation on Turn 9 of the 2026-04-16 replay. Steve's
+     * philosophy is to activate all force every turn, so we now just return
+     * the max.
      */
     private int calculateActivationAmount(DecisionContext context, int maxAvailable) {
-        int amount = maxAvailable;
         int currentForce = context.getForcePileSize();
         int reserveDeck = context.getReserveDeckSize();
         int lifeForce = context.getLifeForce();
         int handSize = context.getHandSize();
 
-        // === RULE 1: RESERVE CARDS FOR DESTINY DRAWS ===
-        // Conservative approach: always reserve as if we might have contested locations
-        // This ensures we have cards for destiny draws when battles occur
-        int reserveNeeded = RESERVE_FOR_DESTINY_CONTESTED;
-        logger.debug("Reserving {} cards for potential destiny draws", reserveNeeded);
+        logger.warn("V57 ACTIVATE FULL: activating {} (reserve={}, forcePile={}, hand={}, lifeForce={})",
+            maxAvailable, reserveDeck, currentForce, handSize, lifeForce);
 
-        // Calculate max we can activate while keeping reserve
-        int maxFromReserve = Math.max(0, reserveDeck - reserveNeeded);
-        if (maxFromReserve < amount) {
-            logger.info("Reserving {} cards for destiny. Reserve deck: {}, limiting activation from {} to {}",
-                       reserveNeeded, reserveDeck, amount, maxFromReserve);
-            amount = maxFromReserve;
-        }
-
-        // === RULE 2: CAP FORCE PILE AT MAX ===
-        int forceRoom = MAX_FORCE_PILE - currentForce;
-        if (forceRoom < amount) {
-            logger.info("Capping force pile at {}. Current: {}, limiting activation from {} to {}",
-                       MAX_FORCE_PILE, currentForce, amount, Math.max(0, forceRoom));
-            amount = Math.max(0, forceRoom);
-        }
-
-        // === RULE 3: LATE GAME PRESERVATION ===
-        if (lifeForce < CRITICAL_LIFE_FORCE) {
-            // Only activate enough to do ONE action, preserve rest for destiny
-            int emergencyAmount = Math.min(amount, Math.max(1, 6 - currentForce));
-            if (emergencyAmount < amount) {
-                logger.info("CRITICAL life force ({}), limiting activation to {}", lifeForce, emergencyAmount);
-                amount = emergencyAmount;
-            }
-            return amount;
-        }
-
-        // === CONSIDER HAND CONTENTS ===
-        // Check if we have expensive cards that need saving for
-        int maxDeployCost = 0;
-        for (PhysicalCard card : context.getHand()) {
-            // Not all cards have deployCost (e.g., Interrupts)
-            try {
-                Float deployCost = card.getBlueprint().getDeployCost();
-                if (deployCost != null && deployCost > maxDeployCost) {
-                    maxDeployCost = deployCost.intValue();
-                }
-            } catch (UnsupportedOperationException e) {
-                // Card type doesn't support deployCost - skip
-            }
-        }
-
-        // If we have expensive cards and need more force, note it
-        if (maxDeployCost > currentForce && maxDeployCost <= lifeForce) {
-            int forceNeeded = maxDeployCost - currentForce;
-            if (forceNeeded > amount) {
-                logger.debug("Expensive card (cost {}), need {} but limited to {}", maxDeployCost, forceNeeded, amount);
-            }
-        }
-
-        // If we already have plenty of force, only activate a little more
-        if (currentForce > 12) {
-            int conservativeAmount = Math.max(0, 2);
-            if (conservativeAmount < amount) {
-                logger.debug("Force > 12 ({}), limiting to {} more", currentForce, conservativeAmount);
-                amount = conservativeAmount;
-            }
-        }
-
-        // === HAND SIZE CONSIDERATION ===
-        // If hand is small and we have plenty of force, don't over-activate
-        if (handSize <= 4 && currentForce >= 8) {
-            if (amount > 2) {
-                logger.debug("Small hand ({}), enough force ({}), limiting to 2", handSize, currentForce);
-                amount = 2;
-            }
-        }
-
-        return amount;
+        return maxAvailable;
     }
 }

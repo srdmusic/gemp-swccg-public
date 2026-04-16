@@ -54,7 +54,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SwccgGameMediator {
     private static final Logger LOG = LogManager.getLogger(SwccgGameMediator.class);
-    // AI decision loop is now iterative — see driveAiDecisions()
+    private static final int MAX_AI_CHAIN = 50;
+    private int aiChainCounter = 0;
 
     private Map<String, GameCommunicationChannel> _communicationChannels = Collections.synchronizedMap(new HashMap<String, GameCommunicationChannel>());
     private DefaultUserFeedback _userFeedback;
@@ -85,12 +86,7 @@ public class SwccgGameMediator {
     public SwccgGameMediator(String gameId, SwccgFormat swccgFormat, League league, SwccgGameParticipant[] participants, SwccgCardBlueprintLibrary library, int maxSecondsForGamePerPlayer,
                              boolean allowSpectators, boolean cancelIfNoActions, boolean cancellable, boolean allowExtendGameTimer, int decisionTimeoutSeconds, boolean isPrivate, boolean useBonusAbilities) {
         _gameId = gameId;
-        
-        // MODIFICATION: Set game timer to effectively infinite for local play
-        // Original: _maxSecondsForGamePerPlayer = maxSecondsForGamePerPlayer;
-        // This prevents games from timing out based on total time
-        _maxSecondsForGamePerPlayer = Integer.MAX_VALUE / 2; // ~68 years
-        
+        _maxSecondsForGamePerPlayer = maxSecondsForGamePerPlayer;
         _allowSpectators = allowSpectators;
         _cancelIfNoActions = cancelIfNoActions;
         _cancellable = cancellable;
@@ -98,11 +94,6 @@ public class SwccgGameMediator {
         _playerDecisionTimeoutPeriod = decisionTimeoutSeconds * 1000;
         _league = league;
         _isPrivate = isPrivate;
-        
-        // MODIFICATION: Disable decision timer for local play
-        // This prevents games from timing out when you step away
-        _disablePlayerDecisionTimer = true;
-        
         if (participants.length < 1)
             throw new IllegalArgumentException("Game can't have less than one participant");
 
@@ -1054,12 +1045,6 @@ public class SwccgGameMediator {
                         _swccgoGame.playerLost(player, GameEndReason.LOSS__GAME_TIMEOUT);
                     }
                 }
-
-                // Drive bot-vs-bot games forward: if there are pending AI decisions,
-                // run the iterative AI loop to keep the game advancing.
-                if (!_swccgoGame.isFinished()) {
-                    driveAiDecisions();
-                }
             }
         } finally {
             _writeLock.unlock();
@@ -1277,9 +1262,8 @@ public class SwccgGameMediator {
         Set<String> users = new HashSet<String>(_userFeedback.getUsersPendingDecision());
         for (String user : users) {
             _decisionQuerySentTimes.put(user, currentTime);
+            maybeLetAiPlay(user);
         }
-        // Drive AI decisions iteratively (no recursion, no stack overflow risk)
-        driveAiDecisions();
     }
 
     private void addTimeSpentOnDecisionToUserClock(String participantId) {
@@ -1291,167 +1275,58 @@ public class SwccgGameMediator {
         }
     }
 
-    /**
-     * Iteratively process AI decisions until no AI has a pending decision,
-     * the game ends, or a time limit is reached. This replaces the old
-     * recursive maybeLetAiPlay approach to avoid stack overflow and allow
-     * bot-vs-bot games to run at full speed.
-     *
-     * Uses a short time-based limit (500ms) rather than a large iteration count.
-     * SWCCG generates many "Optional responses" windows between actual game
-     * actions, so the loop must process many decisions per call. However, this
-     * method runs inside cleanup() while holding _writeLock, which blocks all
-     * spectator/player read operations (processVisitor, signupUserForGame, etc.).
-     * Keeping the time limit short (500ms) ensures the lock is released frequently
-     * so spectators can poll game state updates. cleanup() runs every ~1 second,
-     * so AI gets ~500ms of processing per second — enough for hundreds of decisions.
-     * Real infinite-loop protection is handled by each AI's DecisionTracker.
-     */
-    private void driveAiDecisions() {
-        final long TIME_LIMIT_MS = 5000; // 5 seconds max — most decisions are fast-pathed now
-        long startTime = System.currentTimeMillis();
+    // Let registered AI users answer pending decisions; guards against runawayloops.
+    private void maybeLetAiPlay(String playerId) {
+        if (!AiRegistry.isAi(_gameId, playerId)) {
+            aiChainCounter = 0; // Reset for human player
+            return;
+        }
 
-        while ((System.currentTimeMillis() - startTime) < TIME_LIMIT_MS && !_swccgoGame.isFinished()) {
-            // Find an AI player with a pending decision
-            String aiPlayerId = null;
-            Set<String> pendingUsers = _userFeedback.getUsersPendingDecision();
-            for (String user : pendingUsers) {
-                if (AiRegistry.isAi(_gameId, user)) {
-                    aiPlayerId = user;
-                    break;
-                }
-            }
+        if (++aiChainCounter > MAX_AI_CHAIN) { // simple guard if AI keeps triggering itself
+            return;
+        }
 
-            if (aiPlayerId == null) {
-                break; // No AI has a pending decision — waiting on human or game is idle
-            }
+        AwaitingDecision decision = _userFeedback.getAwaitingDecision(playerId);
+        if (decision == null) {
+            return;
+        }
 
-            AwaitingDecision decision = _userFeedback.getAwaitingDecision(aiPlayerId);
-            if (decision == null) {
-                break;
-            }
+        SwccgAiController ai = AiRegistry.get(_gameId, playerId);
+        if (ai == null) {
+            return;
+        }
 
-            SwccgAiController ai = AiRegistry.get(_gameId, aiPlayerId);
-            if (ai == null) {
-                break;
-            }
+        try {
+            // Provide the full game reference for advanced AI features (e.g., deploy planning)
+            ai.setGame(_swccgoGame);
+            String answer = ai.decide(playerId, decision, _swccgoGame.getGameState());
 
-            try {
-                // Fast-path: if the decision has 0 available actions and passing is
-                // allowed, auto-pass instantly without invoking the AI at all. This
-                // eliminates the massive overhead of AI evaluator checks + logging
-                // for the many "Optional responses" windows that SWCCG generates
-                // after every single game action.
-                boolean fastPassEligible = false;
-                Map<String, String[]> params = decision.getDecisionParameters();
-                // IMPORTANT: Only CARD_ACTION_CHOICE decisions have "actionId" in params.
-                // Other decision types (MULTIPLE_CHOICE, INTEGER, ARBITRARY_CARDS) do NOT
-                // have this key, so we must check containsKey() first. Without this check,
-                // non-action decisions get auto-passed with "" which either throws
-                // DecisionResultInvalidException or silently skips critical game phases
-                // like starting card selection.
-                if (params != null && params.containsKey("actionId")) {
-                    String[] actionIds = params.get("actionId");
-                    String[] noPassParam = params.get("noPass");
-                    boolean noPass = (noPassParam != null && noPassParam.length > 0
-                                      && "true".equals(noPassParam[0]));
-                    if ((actionIds == null || actionIds.length == 0) && !noPass) {
-                        fastPassEligible = true;
+            _userFeedback.participantDecided(playerId);
+            decision.decisionMade(answer);
+
+            // Check if AI has any chat messages to send
+            String chatMessage = ai.getChatMessage();
+            if (chatMessage != null && !chatMessage.isEmpty()) {
+                // Prefer chat room for proper player message styling (blue messages)
+                if (_chatRoom != null) {
+                    try {
+                        _chatRoom.sendMessage(playerId, chatMessage, true);
+                    } catch (PrivateInformationException | ChatCommandErrorException e) {
+                        // Fallback to game state message
+                        _swccgoGame.getGameState().sendMessage(playerId + ": " + chatMessage);
                     }
-                }
-
-                if (fastPassEligible) {
-                    // Auto-pass: no actions available, skip AI entirely
-                    _userFeedback.participantDecided(aiPlayerId);
-                    decision.decisionMade("");
                 } else {
-                    // Normal path: let AI evaluate and decide
-                    ai.setGame(_swccgoGame);
-                    long decisionStart = System.currentTimeMillis();
-                    String answer = ai.decide(aiPlayerId, decision, _swccgoGame.getGameState());
-                    long decisionMs = System.currentTimeMillis() - decisionStart;
-
-                    // V43 CHAOS FALLBACK: If AI decision took > 5 seconds, pick a random
-                    // valid action instead. This prevents games from stalling when the AI
-                    // gets stuck in complex evaluations or indecision loops.
-                    if (decisionMs > 5000) {
-                        LOG.warn("V43 CHAOS: AI decision took {}ms, applying random fallback", decisionMs);
-                        String chaosAnswer = getChaosRandomAction(decision);
-                        if (chaosAnswer != null) {
-                            answer = chaosAnswer;
-                            LOG.warn("V43 CHAOS: Random action selected: '{}'", answer);
-                        }
-                    }
-
-                    _userFeedback.participantDecided(aiPlayerId);
-                    decision.decisionMade(answer);
-
-                    // Check if AI has any chat messages to send
-                    String chatMessage = ai.getChatMessage();
-                    if (chatMessage != null && !chatMessage.isEmpty()) {
-                        if (_chatRoom != null) {
-                            try {
-                                _chatRoom.sendMessage(aiPlayerId, chatMessage, true);
-                            } catch (PrivateInformationException | ChatCommandErrorException e) {
-                                _swccgoGame.getGameState().sendMessage(aiPlayerId + ": " + chatMessage);
-                            }
-                        } else {
-                            _swccgoGame.getGameState().sendMessage(aiPlayerId + ": " + chatMessage);
-                        }
-                    }
+                    // Fallback to game state (appears as system message)
+                    _swccgoGame.getGameState().sendMessage(playerId + ": " + chatMessage);
                 }
-
-                _swccgoGame.carryOutPendingActionsUntilDecisionNeeded();
-
-                // Update clocks for newly pending users
-                long currentTime = System.currentTimeMillis();
-                for (String user : _userFeedback.getUsersPendingDecision()) {
-                    _decisionQuerySentTimes.put(user, currentTime);
-                }
-
-            } catch (DecisionResultInvalidException e) {
-                _userFeedback.sendAwaitingDecision(aiPlayerId, decision);
-                break; // AI gave invalid answer — don't retry in a tight loop
             }
+
+            _swccgoGame.carryOutPendingActionsUntilDecisionNeeded();
+            startClocksForUsersPendingDecision();
+
+        } catch (DecisionResultInvalidException e) {
+            _userFeedback.sendAwaitingDecision(playerId, decision);
         }
-    }
-
-    /**
-     * V43 CHAOS FALLBACK: Pick a random valid action from the decision's available choices.
-     * Used when the AI takes too long (>5s) on a single decision.
-     */
-    private String getChaosRandomAction(AwaitingDecision decision) {
-        Map<String, String[]> params = decision.getDecisionParameters();
-        if (params == null) return null;
-
-        // For CARD_ACTION_CHOICE: pick random actionId
-        String[] actionIds = params.get("actionId");
-        if (actionIds != null && actionIds.length > 0) {
-            int idx = new java.util.Random().nextInt(actionIds.length);
-            return actionIds[idx];
-        }
-
-        // For MULTIPLE_CHOICE: pick random index from results
-        String[] results = params.get("results");
-        if (results != null && results.length > 0) {
-            int idx = new java.util.Random().nextInt(results.length);
-            return String.valueOf(idx);
-        }
-
-        // For INTEGER: pick the max value
-        String[] maxVals = params.get("max");
-        if (maxVals != null && maxVals.length > 0) {
-            return maxVals[0];
-        }
-
-        // For CARD_SELECTION: pick first card
-        String[] cardIds = params.get("cardId");
-        if (cardIds != null && cardIds.length > 0) {
-            return cardIds[0];
-        }
-
-        // Default: pass
-        return "";
     }
 
     private int getCurrentUserPendingTime(String participantId) {

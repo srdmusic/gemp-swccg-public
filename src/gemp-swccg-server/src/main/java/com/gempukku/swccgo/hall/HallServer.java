@@ -1049,7 +1049,7 @@ public class HallServer extends AbstractServer {
             };
         }
 
-        int decisionTimeoutSeconds = 300; // 5 minutes;
+        int decisionTimeoutSeconds = 999999; // Permanently disabled for bot/MCP games
         boolean allowSpectators = !awaitingTable.isPrivate();
         boolean allowTimerExtensions = true;
         int timePerPlayerMinutes = 60;
@@ -1433,7 +1433,7 @@ public class HallServer extends AbstractServer {
 
     private class HallTournamentCallback implements TournamentCallback {
         private Tournament _tournament;
-        private int _decisionTimeoutSeconds = 300; // 5 minutes
+        private int _decisionTimeoutSeconds = 999999; // Permanently disabled for bot/MCP games
         private int _timePerPlayerMinutes = 50;
 
         private HallTournamentCallback(Tournament tournament) {

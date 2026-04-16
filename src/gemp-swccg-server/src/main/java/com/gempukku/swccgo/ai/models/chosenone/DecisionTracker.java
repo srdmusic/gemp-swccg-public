@@ -45,6 +45,14 @@ public class DecisionTracker {
     // Blocked choices: decision_key -> set of responses to avoid
     private final Map<String, Set<String>> blockedResponses = new HashMap<>();
 
+    // State-independent action-text loop detection.
+    // Unlike `sequence`, this is NOT reset by state changes in updateState().
+    // This catches loops where each action changes game state (e.g., stack/deploy cycles
+    // that oscillate cardsInPlay) but no real progress is made.
+    private final List<String[]> actionTextSequence = new ArrayList<>();  // [decisionKey, response]
+    private int actionTextRepeatCount = 0;
+    private int actionTextLoopLength = 0;
+
     // Track current game phase for reset
     private String lastPhase = "";
 
@@ -161,6 +169,13 @@ public class DecisionTracker {
 
             // Check for sequence repeat
             checkSequenceLoop();
+
+            // Also track in state-independent action-text sequence
+            actionTextSequence.add(new String[]{key, response});
+            while (actionTextSequence.size() > MAX_SEQUENCE) {
+                actionTextSequence.remove(0);
+            }
+            checkActionTextLoop();
         } else {
             // Pass response - clear any detected loop since we're not looping
             if (sequenceRepeatCount > 0) {
@@ -253,13 +268,93 @@ public class DecisionTracker {
     }
 
     /**
+     * Check for loops using action text only (state-independent).
+     *
+     * Same algorithm as checkSequenceLoop() but operates on actionTextSequence
+     * which is NOT reset by state changes. This catches loops like Blaster Rack
+     * stack/deploy cycles where each action changes cardsInPlay but no real
+     * progress is made.
+     */
+    private void checkActionTextLoop() {
+        if (actionTextSequence.size() < 4) {
+            actionTextRepeatCount = 0;
+            actionTextLoopLength = 0;
+            return;
+        }
+
+        for (int loopLen : new int[]{2, 3, 4}) {
+            if (actionTextSequence.size() < loopLen * 2) {
+                continue;
+            }
+
+            List<String[]> recent = new ArrayList<>();
+            for (int i = actionTextSequence.size() - loopLen; i < actionTextSequence.size(); i++) {
+                recent.add(actionTextSequence.get(i));
+            }
+
+            int repeatCount = 1;
+            int pos = actionTextSequence.size() - loopLen * 2;
+
+            while (pos >= 0) {
+                boolean matches = true;
+                for (int i = 0; i < loopLen && matches; i++) {
+                    String[] seg = actionTextSequence.get(pos + i);
+                    String[] rec = recent.get(i);
+                    if (!Arrays.equals(seg, rec)) {
+                        matches = false;
+                    }
+                }
+
+                if (matches) {
+                    repeatCount++;
+                    pos -= loopLen;
+                } else {
+                    break;
+                }
+            }
+
+            if (repeatCount >= 2) {
+                if (repeatCount > actionTextRepeatCount || loopLen < actionTextLoopLength) {
+                    actionTextRepeatCount = repeatCount;
+                    actionTextLoopLength = loopLen;
+
+                    if (repeatCount >= LOOP_RANDOMIZE_THRESHOLD) {
+                        ChosenOneLogger.loopDetected(
+                            "STATE-INDEPENDENT: {}-action text sequence repeated {}x (state changes hiding loop)", loopLen, repeatCount);
+
+                        for (int i = 0; i < recent.size(); i++) {
+                            String[] e = recent.get(i);
+                            String k = e[0].length() > 50 ? e[0].substring(0, 50) : e[0];
+                            LOG.warn("   Step {}: {} -> '{}'", i + 1, k, e[1]);
+                        }
+
+                        // Block the responses that are causing the loop
+                        for (String[] e : recent) {
+                            blockedResponses.computeIfAbsent(e[0], x -> new HashSet<>()).add(e[1]);
+                            turnBlockedActions.computeIfAbsent(e[0], x -> new HashSet<>()).add(e[1]);
+                        }
+                    }
+                }
+                return;
+            }
+        }
+
+        if (actionTextRepeatCount > 0) {
+            LOG.info("State-independent loop broken after {} repeats", actionTextRepeatCount);
+            actionTextRepeatCount = 0;
+            actionTextLoopLength = 0;
+        }
+    }
+
+    /**
      * Check if we're in a potential infinite loop.
      *
      * @return array of [isLoop, repeatCount]
      */
     public int[] checkForLoop(String decisionType, String decisionText, int threshold) {
-        boolean isLoop = sequenceRepeatCount >= threshold;
-        return new int[]{isLoop ? 1 : 0, sequenceRepeatCount};
+        int effectiveCount = Math.max(sequenceRepeatCount, actionTextRepeatCount);
+        boolean isLoop = effectiveCount >= threshold;
+        return new int[]{isLoop ? 1 : 0, effectiveCount};
     }
 
     /**
@@ -293,11 +388,12 @@ public class DecisionTracker {
      * @return "none", "mild", "moderate", "severe", or "critical"
      */
     public String getLoopSeverity() {
-        if (sequenceRepeatCount < LOOP_RANDOMIZE_THRESHOLD) {
+        int effectiveCount = Math.max(sequenceRepeatCount, actionTextRepeatCount);
+        if (effectiveCount < LOOP_RANDOMIZE_THRESHOLD) {
             return "none";
-        } else if (sequenceRepeatCount < LOOP_FORCE_DIFFERENT) {
+        } else if (effectiveCount < LOOP_FORCE_DIFFERENT) {
             return "mild";  // Add randomness
-        } else if (sequenceRepeatCount < LOOP_CRITICAL) {
+        } else if (effectiveCount < LOOP_CRITICAL) {
             return "severe";  // Force different choice
         } else {
             return "critical";  // Consider conceding
@@ -308,14 +404,14 @@ public class DecisionTracker {
      * Check if we should force a different choice to break loop.
      */
     public boolean shouldForceDifferentChoice() {
-        return sequenceRepeatCount >= LOOP_FORCE_DIFFERENT;
+        return Math.max(sequenceRepeatCount, actionTextRepeatCount) >= LOOP_FORCE_DIFFERENT;
     }
 
     /**
      * Check if loop is so severe we should consider conceding.
      */
     public boolean shouldConsiderConcede() {
-        return sequenceRepeatCount >= LOOP_CRITICAL;
+        return Math.max(sequenceRepeatCount, actionTextRepeatCount) >= LOOP_CRITICAL;
     }
 
     /**
@@ -329,6 +425,9 @@ public class DecisionTracker {
             detectedLoopLength = 0;
             blockedResponses.clear();
             sequence.clear();
+            actionTextSequence.clear();
+            actionTextRepeatCount = 0;
+            actionTextLoopLength = 0;
             LOG.debug("Loop tracker reset on phase change to: {}", newPhase);
         }
     }
@@ -403,8 +502,11 @@ public class DecisionTracker {
     public void clear() {
         history.clear();
         sequence.clear();
+        actionTextSequence.clear();
         sequenceRepeatCount = 0;
         detectedLoopLength = 0;
+        actionTextRepeatCount = 0;
+        actionTextLoopLength = 0;
         blockedResponses.clear();
         turnBlockedActions.clear();
         lastPhase = "";
@@ -418,6 +520,6 @@ public class DecisionTracker {
      * Get the current loop repeat count.
      */
     public int getSequenceRepeatCount() {
-        return sequenceRepeatCount;
+        return Math.max(sequenceRepeatCount, actionTextRepeatCount);
     }
 }

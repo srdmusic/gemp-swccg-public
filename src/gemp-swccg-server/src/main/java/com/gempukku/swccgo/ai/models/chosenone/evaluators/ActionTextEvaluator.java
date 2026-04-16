@@ -105,6 +105,32 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Skip ALL Deploy Actions ==========
             // Deploy actions should be handled EXCLUSIVELY by DeployEvaluator.
+            // ========== V53c: BLOCK WOKLING EFFECT SEARCH (EARLY CHECK) ==========
+            if (textLower.contains("effect") && textLower.contains("reserve deck")
+                && textLower.contains("take")) {
+                boolean isWoklingSource = false;
+                if (cardId != null && gameState != null) {
+                    try {
+                        PhysicalCard wokSrc = gameState.findCardById(Integer.parseInt(cardId));
+                        if (wokSrc != null && wokSrc.getTitle() != null
+                            && wokSrc.getTitle().toLowerCase().contains("wokling")) {
+                            isWoklingSource = true;
+                        }
+                        if (wokSrc != null && wokSrc.getBlueprintId(true) != null
+                            && wokSrc.getBlueprintId(true).equals("200_47")) {
+                            isWoklingSource = true;
+                        }
+                    } catch (Exception e) { /* ignore */ }
+                }
+                if (isWoklingSource && context.getTurnNumber() <= 3) {
+                    action.setScore(-9999.0f);
+                    action.addReasoning("V53c BLOCK WOKLING: Turns 1-3 — save force for deploys!", -9999.0f);
+                    logger.warn("V53c WOKLING BLOCKED: Turn {} — HARD BLOCK!", context.getTurnNumber());
+                    actions.add(action);
+                    continue;
+                }
+            }
+
             if (actionText.equals("Deploy") ||
                 (actionText.startsWith("Deploy ") && !textLower.contains("from"))) {
                 // Skip this action - let DeployEvaluator handle it
@@ -876,6 +902,46 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 evaluateActivateForce(action, context);
             }
 
+            // ========== V53b: STACK JEDI HERE — Save Jedi Survivors ==========
+            // Fallen Order lets you lose 1 force to stack a Jedi Survivor back on it,
+            // saving them from being lost. ALWAYS do this — losing 1 force to save a
+            // Jedi is the best trade in the game. They can redeploy next turn.
+            else if (textLower.contains("stack") && textLower.contains("here")
+                     && (textLower.contains("jedi") || textLower.contains("obi-wan")
+                         || textLower.contains("quinlan") || textLower.contains("kelleran")
+                         || textLower.contains("cal kestis") || textLower.contains("ezra")
+                         || textLower.contains("ahsoka") || textLower.contains("cere")
+                         || textLower.contains("sabine") || textLower.contains("luke"))) {
+                action.addReasoning("V53b SAVE JEDI: Stack Jedi on Fallen Order — lose 1 force to save them!", 500.0f);
+                logger.warn("V53b SAVE JEDI: '{}' — +500, always save Jedi Survivors!", actionText);
+            }
+
+            // ========== V53: BLOCK WOKLING EFFECT SEARCH ==========
+            // Wokling (V) costs 3 Force to search for an Effect from Reserve Deck.
+            // This wastes force — the search often fails (no valid targets) and even
+            // when it succeeds, 3 force is better spent deploying characters.
+            // Block Wokling from searching for effects entirely.
+            else if (textLower.contains("effect") && textLower.contains("reserve deck")
+                     && textLower.contains("deploy cost")) {
+                // Check if source card is Wokling
+                boolean isWokling = textLower.contains("wokling");
+                if (!isWokling && cardId != null && gameState != null) {
+                    try {
+                        PhysicalCard wokSrc = gameState.findCardById(Integer.parseInt(cardId));
+                        if (wokSrc != null && wokSrc.getTitle() != null
+                            && wokSrc.getTitle().toLowerCase().contains("wokling")) {
+                            isWokling = true;
+                        }
+                    } catch (Exception e) { /* ignore */ }
+                }
+                if (isWokling) {
+                    action.addReasoning("V53 BLOCK WOKLING: Don't waste 3 force searching for effects!", -9999.0f);
+                    logger.warn("V53 WOKLING BLOCKED: Wokling Effect search — 3 force wasted, HARD BLOCK!");
+                } else {
+                    action.addReasoning("Search for Effect from Reserve Deck", GOOD_DELTA);
+                }
+            }
+
             // ========== Force Drain ==========
             else if (actionText.equals("Force drain")) {
                 action.setActionType(ActionType.FORCE_DRAIN);
@@ -1302,7 +1368,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Force Drain Cancellation ==========
             else if (actionText.contains("Cancel Force drain")) {
                 if (context.isMyTurn()) {
-                    action.addReasoning("Don't cancel own force drain", VERY_BAD_DELTA);
+                    action.addReasoning("V52 NEVER SELF-CANCEL: Don't cancel own force drain!", -9999.0f);
+                    logger.warn("V52 SELF-CANCEL BLOCKED: Cancel Force drain on own turn — HARD BLOCKED!");
                 } else {
                     action.addReasoning("Cancel opponent's force drain", GOOD_DELTA);
                 }
@@ -1707,10 +1774,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 return;
             }
 
-            // We can afford drain and have some force left - moderate score
-            // V48: Paying 3 force to drain 1-2 is a net force loss — bad trade.
-            action.addReasoning("V48 BATTLE ORDER BAD TRADE: Paying 3 force to drain 1-2 — net force loss!", VERY_BAD_DELTA);
-            logger.warn("V48 BATTLE ORDER DRAIN BLOCK: Paying 3 extra to drain — bad trade!");
+            // V52: After Turn 3, ALWAYS drain even under Battle Order.
+            // Paying 3 force to drain 1 feels like a bad trade, but doing 0 damage is worse.
+            // Over 5 turns, drain-1 every turn = 5 cards from opponent's life force.
+            // Doing nothing = 0 damage = you lose. 1 damage > 0 damage. Always.
+            int drainTurn = context.getTurnNumber();
+            if (drainTurn >= 3) {
+                action.addReasoning("V52 DRAIN ANYWAY: Turn " + drainTurn + " — any drain is damage, pay the Battle Order cost!", VERY_GOOD_DELTA);
+                logger.warn("V52 DRAIN ANYWAY: Turn {} under Battle Order — draining anyway! 1 damage > 0 damage!", drainTurn);
+            } else {
+                // Turns 1-2: save force for deploys, Battle Order drain is too expensive early
+                action.addReasoning("V48 BATTLE ORDER EARLY: Turn " + drainTurn + " — save force for deploys", VERY_BAD_DELTA);
+                logger.warn("V48 BATTLE ORDER EARLY: Turn {} — skipping drain to save for deploys", drainTurn);
+            }
 
         } else {
             // Not under Battle Order - drain is generally good
@@ -1720,6 +1796,53 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 logger.info("🔥 FORCE DRAIN BOOST: No deployable cards");
             } else {
                 action.addReasoning("Force drain is good", VERY_GOOD_DELTA);
+            }
+        }
+
+        // === V52 FIX 14: MULTI-SITE DRAIN — Prioritize draining at multiple sites ===
+        if (gameState != null && locationCardId != null) {
+            try {
+                SwccgGame drainGame14 = context.getGame();
+                if (drainGame14 != null) {
+                    int drainCapableSites = 0;
+                    float thisDrainAmount = 0;
+                    PhysicalCard thisDrainLoc = gameState.findCardById(Integer.parseInt(locationCardId));
+
+                    for (PhysicalCard loc14 : gameState.getTopLocations()) {
+                        if (loc14 == null) continue;
+                        try {
+                            float ourPower14 = drainGame14.getModifiersQuerying().getTotalPowerAtLocation(
+                                gameState, loc14, playerId, false, false);
+                            if (ourPower14 > 0) {
+                                float drainAmt14 = drainGame14.getModifiersQuerying().getForceDrainAmount(
+                                    gameState, loc14, playerId);
+                                if (drainAmt14 > 0) {
+                                    drainCapableSites++;
+                                }
+                            }
+                        } catch (Exception e) { /* ignore */ }
+                    }
+
+                    if (thisDrainLoc != null) {
+                        try {
+                            thisDrainAmount = drainGame14.getModifiersQuerying().getForceDrainAmount(
+                                gameState, thisDrainLoc, playerId);
+                        } catch (Exception e) { /* ignore */ }
+                    }
+
+                    if (thisDrainAmount >= 3) {
+                        action.addReasoning("V52 MULTI-DRAIN: Drain " + (int)thisDrainAmount + " — top priority!", 300.0f);
+                        logger.warn("V52 MULTI-DRAIN: {} drains {} — +300", thisDrainLoc != null ? thisDrainLoc.getTitle() : "?", (int)thisDrainAmount);
+                    } else if (thisDrainAmount >= 2) {
+                        action.addReasoning("V52 MULTI-DRAIN: Drain " + (int)thisDrainAmount + " — high value!", 200.0f);
+                        logger.warn("V52 MULTI-DRAIN: {} drains {} — +200", thisDrainLoc != null ? thisDrainLoc.getTitle() : "?", (int)thisDrainAmount);
+                    } else if (drainCapableSites >= 2) {
+                        action.addReasoning("V52 MULTI-DRAIN: " + drainCapableSites + " drain sites!", 100.0f);
+                        logger.warn("V52 MULTI-DRAIN: {} — {} drain sites +100", thisDrainLoc != null ? thisDrainLoc.getTitle() : "?", drainCapableSites);
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug("V52 MULTI-DRAIN: Error: {}", e.getMessage());
             }
         }
     }
@@ -1772,7 +1895,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
         } else if (senseResult.isHighValue) {
             action.addReasoning("Cancel valuable target: " + senseResult.matchedPattern, GOOD_DELTA + 15.0f);
         } else if (textLower.contains("force drain")) {
-            action.addReasoning("Cancel force drain", GOOD_DELTA + 5.0f);
+            // V52: NEVER cancel your OWN force drain! Surprise Assault on own drain = self-sabotage.
+            if (context.isMyTurn()) {
+                action.addReasoning("V52 NEVER SELF-CANCEL DRAIN: Canceling own force drain is suicide!", -9999.0f);
+                logger.warn("V52 SELF-CANCEL BLOCKED: Tried to cancel OWN force drain — HARD BLOCKED!");
+            } else {
+                action.addReasoning("Cancel opponent's force drain", GOOD_DELTA + 5.0f);
+            }
         } else if (!context.isMyTurn()) {
             action.addReasoning("Cancel opponent interrupt (their turn)", GOOD_DELTA);
         } else {
@@ -1961,15 +2090,44 @@ public class ActionTextEvaluator extends ActionEvaluator {
     }
 
     private void evaluateGrab(EvaluatedAction action, DecisionContext context, String actionText) {
-        // Grabbing opponent's card is good, our own is VERY bad
-        // CRITICAL: Grabbing own interrupts is a big player complaint - hard block it!
-        // Ported from Python action_text_evaluator.py lines 1169-1210
+        // V53: Grabber shields (Allegations / A Tragedy) must ONLY grab OPPONENT's interrupts.
+        // NEVER grab your own interrupts — that's self-sabotage.
+        // Use game state to check card ownership when possible, fall back to name matching.
 
         Side mySide = context.getSide();
-
-        // Determine side from card name patterns in action text
-        // Look for known Light/Dark side indicator patterns
+        GameState grabGs = context.getGameState();
         String textLower = actionText.toLowerCase();
+
+        // V53: Try to determine ownership from game state (most reliable)
+        boolean confirmedOwnCard = false;
+        boolean confirmedOpponentCard = false;
+        if (grabGs != null && context.getPlayerId() != null) {
+            try {
+                // Check if any card IDs in context belong to us
+                String pid = context.getPlayerId();
+                String oid = grabGs.getOpponent(pid);
+                for (String cardId : context.getCardIds()) {
+                    PhysicalCard grabCard = grabGs.findCardById(Integer.parseInt(cardId));
+                    if (grabCard != null) {
+                        if (pid.equals(grabCard.getOwner())) confirmedOwnCard = true;
+                        if (oid != null && oid.equals(grabCard.getOwner())) confirmedOpponentCard = true;
+                    }
+                }
+            } catch (Exception e) { /* fall through to name matching */ }
+        }
+
+        if (confirmedOwnCard && !confirmedOpponentCard) {
+            action.setScore(-9999.0f);
+            action.addReasoning("V53 NEVER GRAB OWN: Grabbing own interrupt is suicide!", -9999.0f);
+            logger.warn("V53 GRAB BLOCKED: Confirmed own card — HARD BLOCKED! {}", actionText);
+            return;
+        } else if (confirmedOpponentCard) {
+            action.addReasoning("V53 GRAB OPPONENT: Confirmed opponent's interrupt — grab it!", GOOD_DELTA);
+            logger.warn("V53 GRAB: Confirmed opponent card — grabbing! {}", actionText);
+            return;
+        }
+
+        // Fallback: name-based side detection
         boolean looksLightSide = textLower.contains("rebel") || textLower.contains("jedi") ||
                                   textLower.contains("alliance") || textLower.contains("luke") ||
                                   textLower.contains("leia") || textLower.contains("han solo") ||
@@ -1986,28 +2144,34 @@ public class ActionTextEvaluator extends ActionEvaluator {
         } else if (mySide == Side.LIGHT && looksDarkSide) {
             action.addReasoning("Grab Dark side card (we are Light)", GOOD_DELTA);
         } else if (mySide == Side.DARK && looksDarkSide) {
-            // Same side - likely our card! HARD BLOCK!
-            action.setScore(-500.0f);
-            action.addReasoning("🚫 BLOCKED: Likely grabbing own Dark card!", -500.0f);
-            logger.warn("🚫 BLOCKED GRAB of likely own Dark card: {}", actionText);
+            action.setScore(-9999.0f);
+            action.addReasoning("V53 NEVER GRAB OWN: Grabbing own Dark card!", -9999.0f);
+            logger.warn("V53 GRAB BLOCKED: Likely own Dark card — {}", actionText);
         } else if (mySide == Side.LIGHT && looksLightSide) {
-            // Same side - likely our card! HARD BLOCK!
-            action.setScore(-500.0f);
-            action.addReasoning("🚫 BLOCKED: Likely grabbing own Light card!", -500.0f);
-            logger.warn("🚫 BLOCKED GRAB of likely own Light card: {}", actionText);
+            action.setScore(-9999.0f);
+            action.addReasoning("V53 NEVER GRAB OWN: Grabbing own Light card!", -9999.0f);
+            logger.warn("V53 GRAB BLOCKED: Likely own Light card — {}", actionText);
         } else {
-            // Truly unknown - be cautious, don't grab
-            action.addReasoning("Grab card (owner unknown - avoiding)", BAD_DELTA);
-            logger.info("⚠️ Grab owner unknown, avoiding: {}", actionText);
+            // Unknown owner — only grab if it's opponent's turn (their interrupt just played)
+            if (!context.isMyTurn()) {
+                action.addReasoning("Grab unknown card (opponent's turn — likely theirs)", GOOD_DELTA);
+            } else {
+                action.addReasoning("V53 GRAB CAUTION: Unknown owner on our turn — avoid!", -200.0f);
+                logger.info("V53 GRAB CAUTION: Unknown owner on our turn, avoiding: {}", actionText);
+            }
         }
     }
 
     private void evaluateBreakCover(EvaluatedAction action, DecisionContext context, String actionText) {
-        // Breaking opponent's spy is good, our own is VERY bad
-        // CRITICAL: Breaking own spy cover is a big player complaint - hard block it!
-        // Ported from Python action_text_evaluator.py lines 1212-1246
+        // V53: Breaking spy cover depends on context:
+        // - Break OPPONENT's spy: always good (expose their spy)
+        // - Break OWN spy when we have a friendly character at that location: +500
+        //   (flip the spy to protect our deployed character — instant buddy system)
+        // - Break OWN spy when we have NO friendly character there: -500
+        //   (don't blow cover for nothing)
 
         Side mySide = context.getSide();
+        GameState gameState = context.getGameState();
 
         // Determine side from card name patterns in action text
         String textLower = actionText.toLowerCase();
@@ -2018,24 +2182,51 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                  textLower.contains("empire") || textLower.contains("probe droid") ||
                                  textLower.contains("mara jade");
 
-        if (mySide == Side.DARK && looksLightSide) {
-            action.addReasoning("Break Light side spy cover (we are Dark)", GOOD_DELTA);
-        } else if (mySide == Side.LIGHT && looksDarkSide) {
-            action.addReasoning("Break Dark side spy cover (we are Light)", GOOD_DELTA);
-        } else if (mySide == Side.DARK && looksDarkSide) {
-            // Same side - our spy! HARD BLOCK!
-            action.setScore(-500.0f);
-            action.addReasoning("🚫 BLOCKED: Likely breaking own Dark spy cover!", -500.0f);
-            logger.warn("🚫 BLOCKED break cover of likely own Dark spy: {}", actionText);
-        } else if (mySide == Side.LIGHT && looksLightSide) {
-            // Same side - our spy! HARD BLOCK!
-            action.setScore(-500.0f);
-            action.addReasoning("🚫 BLOCKED: Likely breaking own Light spy cover!", -500.0f);
-            logger.warn("🚫 BLOCKED break cover of likely own Light spy: {}", actionText);
+        boolean isOwnSpy = (mySide == Side.DARK && looksDarkSide) || (mySide == Side.LIGHT && looksLightSide);
+        boolean isOpponentSpy = (mySide == Side.DARK && looksLightSide) || (mySide == Side.LIGHT && looksDarkSide);
+
+        if (isOpponentSpy) {
+            action.addReasoning("Break opponent's spy cover — expose them!", GOOD_DELTA);
+        } else if (isOwnSpy) {
+            // V53: Check if we have a non-spy friendly character at the spy's location.
+            // If yes, flip the spy to fight alongside them (+500).
+            // If no, don't blow cover for nothing (-500).
+            boolean friendlyCharAtSpyLocation = false;
+            if (gameState != null) {
+                try {
+                    String pid = context.getPlayerId();
+                    for (PhysicalCard loc : gameState.getTopLocations()) {
+                        if (loc == null) continue;
+                        boolean hasOurSpy = false;
+                        boolean hasOurCharacter = false;
+                        for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
+                            if (c == null || !pid.equals(c.getOwner())) continue;
+                            if (c.isUndercover()) {
+                                hasOurSpy = true;
+                            } else if (c.getBlueprint() != null
+                                && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                hasOurCharacter = true;
+                            }
+                        }
+                        if (hasOurSpy && hasOurCharacter) {
+                            friendlyCharAtSpyLocation = true;
+                            break;
+                        }
+                    }
+                } catch (Exception e) { /* ignore */ }
+            }
+
+            if (friendlyCharAtSpyLocation) {
+                action.addReasoning("V53 FLIP SPY: We have a character at spy's location — flip spy to protect them!", 500.0f);
+                logger.warn("V53 FLIP SPY: Breaking own spy cover — friendly character present, +500!");
+            } else {
+                action.addReasoning("V53 KEEP COVER: No friendly character at spy location — don't blow cover!", -500.0f);
+                logger.warn("V53 KEEP COVER: No friendly at spy location — blocking break cover, -500");
+            }
         } else {
-            // Unknown spy - be cautious, default to not doing it
+            // Unknown spy - check for friendly presence as tiebreaker
             action.addReasoning("Break cover (spy owner unknown - cautious)", BAD_DELTA);
-            logger.info("⚠️ Break cover owner unknown, avoiding: {}", actionText);
+            logger.info("Break cover owner unknown, avoiding: {}", actionText);
         }
     }
 

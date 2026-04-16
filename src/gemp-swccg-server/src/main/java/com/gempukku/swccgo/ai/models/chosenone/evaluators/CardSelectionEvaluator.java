@@ -3217,6 +3217,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             if (!isOurCard) {
                                 action.addReasoning("Target opponent's card", 50.0f);
 
+                                // V51: Don't waste weapons on already-hit characters
+                                if (card.isHit()) {
+                                    action.addReasoning("V51 ALREADY HIT: Target already hit — don't waste weapon!", -500.0f);
+                                    logger.warn("V51 ALREADY HIT: Weapon targeting {} but already hit — -500", card.getTitle());
+                                }
+
+                                // V51: Force Lightning / Trample — prioritize opponent spies
+                                if (card.isUndercover()) {
+                                    action.addReasoning("V51 KILL SPY: Target is an undercover spy — eliminate it!", 500.0f);
+                                    logger.warn("V51 KILL SPY: Targeting spy {} — +500!", card.getTitle());
+                                }
+
                                 if (blueprint != null) {
                                     // === V36: DESTINY-BASED WEAPON TARGETING ===
                                     // Calculate hit probability: avgDestiny * numDraws vs defense value
@@ -4313,6 +4325,55 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     String description = shieldStrategy.getShieldDescription(blueprintId, blueprintId);
                     logger.info("[ReserveDeck] Shield {}: score={} ({})", blueprintId, shieldScore, description);
                 }
+
+                // === V51: BATTLE ORDER GATE ===
+                // Battle Order requires occupying BOTH a battleground site AND a battleground system.
+                // If we don't occupy both, deploying Battle Order is a waste — it does nothing.
+                if (cardTitleLower.contains("battle order")) {
+                    boolean hasBGSite = false;
+                    boolean hasBGSystem = false;
+                    try {
+                        GameState gsBO = (game != null) ? game.getGameState() : null;
+                        if (game != null && gsBO != null && playerId != null) {
+                            for (PhysicalCard loc : gsBO.getAllPermanentCards()) {
+                                if (loc == null || loc.getBlueprint() == null) continue;
+                                com.gempukku.swccgo.common.Zone locZone = loc.getZone();
+                                if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
+                                SwccgCardBlueprint locBp = loc.getBlueprint();
+                                boolean isBattleground = false;
+                                try {
+                                    com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = game.getModifiersQuerying();
+                                    if (mq != null) isBattleground = mq.isBattleground(gsBO, loc, null);
+                                } catch (Exception bgEx) { /* fallback: not battleground */ }
+                                if (!isBattleground) continue;
+                                // Check if we occupy it (have a character/starship present)
+                                boolean weOccupy = false;
+                                for (PhysicalCard atLoc : gsBO.getCardsAtLocation(loc)) {
+                                    if (atLoc != null && playerId.equals(atLoc.getOwner())) {
+                                        weOccupy = true;
+                                        break;
+                                    }
+                                }
+                                if (weOccupy) {
+                                    if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) {
+                                        hasBGSystem = true;
+                                    } else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) {
+                                        hasBGSite = true;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage());
+                    }
+                    if (!hasBGSite || !hasBGSystem) {
+                        action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
+                        logger.warn("V51 BATTLE ORDER GATE: hasBGSite={}, hasBGSystem={} — BLOCKED!", hasBGSite, hasBGSystem);
+                    } else {
+                        action.addReasoning("V51 BATTLE ORDER: Occupy BG site + BG system — ready!", 50.0f);
+                        logger.warn("V51 BATTLE ORDER: Requirements met — deploying!");
+                    }
+                }
             }
 
             actions.add(action);
@@ -4397,6 +4458,51 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 action.addReasoning("Shield: " + description, 0.0f);
 
                                 logger.info("[Shield] {}: score={} ({})", title, shieldScore, description);
+
+                                // === V51: BATTLE ORDER GATE (shield selection path) ===
+                                if (title.toLowerCase(java.util.Locale.ROOT).contains("battle order")) {
+                                    boolean hasBGSite = false;
+                                    boolean hasBGSystem = false;
+                                    try {
+                                        GameState gs = context.getGameState();
+                                        SwccgGame g = context.getGame();
+                                        String pid = context.getPlayerId();
+                                        if (g != null && gs != null && pid != null) {
+                                            for (PhysicalCard loc : gs.getAllPermanentCards()) {
+                                                if (loc == null || loc.getBlueprint() == null) continue;
+                                                com.gempukku.swccgo.common.Zone locZone = loc.getZone();
+                                                if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
+                                                SwccgCardBlueprint locBp = loc.getBlueprint();
+                                                boolean isBattleground = false;
+                                                try {
+                                                    com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = g.getModifiersQuerying();
+                                                    if (mq != null) isBattleground = mq.isBattleground(gs, loc, null);
+                                                } catch (Exception bgEx) { /* fallback */ }
+                                                if (!isBattleground) continue;
+                                                boolean weOccupy = false;
+                                                for (PhysicalCard atLoc : gs.getCardsAtLocation(loc)) {
+                                                    if (atLoc != null && pid.equals(atLoc.getOwner())) {
+                                                        weOccupy = true;
+                                                        break;
+                                                    }
+                                                }
+                                                if (weOccupy) {
+                                                    if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) {
+                                                        hasBGSystem = true;
+                                                    } else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) {
+                                                        hasBGSite = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage());
+                                    }
+                                    if (!hasBGSite || !hasBGSystem) {
+                                        action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
+                                        logger.warn("V51 BATTLE ORDER GATE (shield): hasBGSite={}, hasBGSystem={} — BLOCKED!", hasBGSite, hasBGSystem);
+                                    }
+                                }
                             } else {
                                 // Fallback if no shield strategy
                                 action.addReasoning("Defensive shield (no strategy)", 50.0f);

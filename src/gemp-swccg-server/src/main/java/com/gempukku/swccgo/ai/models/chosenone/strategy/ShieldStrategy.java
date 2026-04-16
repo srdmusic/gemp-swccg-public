@@ -118,19 +118,18 @@ public class ShieldStrategy {
             "Secret Plans", "13_86", ShieldCategory.AUTO_PLAY_IMMEDIATE,
             "Makes retrieval cost 1 force per card", 3));
 
-        // V42: Battle Order upgraded to IMMEDIATE — one of the most impactful shields.
-        // Forces opponent to pay 3 Force per drain without presence in both theaters.
+        // V53: Battle Order downgraded from IMMEDIATE to SITUATIONAL_HIGH (mirrors Battle Plan).
         DARK_SHIELDS.put("Battle Order", new ShieldInfo(
-            "Battle Order", "13_54", ShieldCategory.AUTO_PLAY_IMMEDIATE,
-            "Opponent pays 3 to drain without both theaters", 4));
+            "Battle Order", Collections.singletonList("13_54"), ShieldCategory.SITUATIONAL_HIGH,
+            "Opponent pays 3 to drain — only if they lack both theaters",
+            null, null, null, 10, 2));
 
-        // V42: Downgraded to SITUATIONAL_HIGH — only useful when opponent has < 2 battlegrounds.
-        // Its non-BG drain cancel effect is wasted if opponent isn't draining at non-BG sites.
+        // V53: Come Here You Big Coward — deploy when opponent drains at non-battleground.
         DARK_SHIELDS.put("Come Here You Big Coward", new ShieldInfo(
             "Come Here You Big Coward", Arrays.asList("13_61", "225_3"),
             ShieldCategory.SITUATIONAL_HIGH,
-            "Cancels non-BG drains + retrieval (only if opponent has < 2 BGs)",
-            null, null, null, 5, 0));
+            "Cancels non-BG drains — deploy when opponent drains at non-battleground",
+            null, null, null, 10, 2));
 
         // === SITUATIONAL HIGH ===
         DARK_SHIELDS.put("A Useless Gesture (V)", new ShieldInfo(
@@ -204,22 +203,27 @@ public class ShieldStrategy {
 
     private static void initializeLightShields() {
         // === AUTO PLAY IMMEDIATELY ===
+        // V53: Priority order — A Tragedy first (grabber is #1 priority), then Aim High.
         LIGHT_SHIELDS.put("A Tragedy Has Occurred", new ShieldInfo(
             "A Tragedy Has Occurred", "13_3", ShieldCategory.AUTO_PLAY_IMMEDIATE,
-            "Grabber - grab opponent's key Used Interrupt", 2));
+            "Grabber - grab opponent's key Used Interrupt — ALWAYS FIRST", 2));
 
         LIGHT_SHIELDS.put("Aim High", new ShieldInfo(
             "Aim High", "13_4", ShieldCategory.AUTO_PLAY_IMMEDIATE,
-            "Makes retrieval cost 1 force per card", 3));
+            "Makes retrieval cost 1 force per card — ALWAYS SECOND", 3));
 
-        // V42: Battle Plan upgraded to IMMEDIATE — same as Dark's Battle Order
+        // V53: Battle Plan downgraded from IMMEDIATE to SITUATIONAL_HIGH.
+        // Only deploy if opponent occupies a drain 2+ location but lacks both theaters.
         LIGHT_SHIELDS.put("Battle Plan", new ShieldInfo(
-            "Battle Plan", "13_8", ShieldCategory.AUTO_PLAY_IMMEDIATE,
-            "Opponent pays 3 to drain without both theaters", 4));
+            "Battle Plan", Collections.singletonList("13_8"), ShieldCategory.SITUATIONAL_HIGH,
+            "Opponent pays 3 to drain — only if they lack both theaters",
+            null, null, null, 10, 2));
 
+        // V53: Simple Tricks — Light mirror of Come Here You Big Coward.
         LIGHT_SHIELDS.put("Simple Tricks And Nonsense", new ShieldInfo(
-            "Simple Tricks And Nonsense", "200_28", ShieldCategory.AUTO_PLAY_EARLY,
-            "Punishes stacking, stops drains at non-BGs if < 2 BGs", 5));
+            "Simple Tricks And Nonsense", Collections.singletonList("200_28"), ShieldCategory.SITUATIONAL_HIGH,
+            "Cancels non-BG drains — deploy when opponent drains at non-battleground",
+            null, null, null, 10, 2));
 
         LIGHT_SHIELDS.put("Goldenrod", new ShieldInfo(
             "Goldenrod", Arrays.asList("223_49"),
@@ -580,6 +584,26 @@ public class ShieldStrategy {
         // Early game bonus for auto-play shields
         if (shieldInfo.category == ShieldCategory.AUTO_PLAY_IMMEDIATE && turnNumber <= 2) {
             score += 25.0f;
+        }
+
+        // V53: SHIELD PRIORITY ORDER — Grabber first, retrieval tax second.
+        String shieldNameLower = shieldInfo.name.toLowerCase(Locale.ROOT);
+        if (mySide == Side.LIGHT) {
+            if (shieldNameLower.contains("tragedy")) {
+                score += 100.0f;
+                LOG.info("V53 SHIELD PRIORITY: A Tragedy Has Occurred +100 — ALWAYS FIRST");
+            } else if (shieldNameLower.contains("aim high")) {
+                score += 50.0f;
+                LOG.info("V53 SHIELD PRIORITY: Aim High +50 — ALWAYS SECOND");
+            }
+        } else if (mySide == Side.DARK) {
+            if (shieldNameLower.contains("allegations")) {
+                score += 100.0f;
+                LOG.info("V53 SHIELD PRIORITY: Allegations Of Corruption +100 — ALWAYS FIRST");
+            } else if (shieldNameLower.contains("secret plans")) {
+                score += 50.0f;
+                LOG.info("V53 SHIELD PRIORITY: Secret Plans +50 — ALWAYS SECOND");
+            }
         }
 
         // V29: Last shield slot — prefer situational with conditions met

@@ -594,6 +594,96 @@ public class MoveEvaluator extends ActionEvaluator {
                 action.addReasoning("Move phase", 0.0f);
             }
 
+            // === V53: SPY FOLLOW — Undercover spy follows opponent when they move away ===
+            // If our undercover spy is at a location where the opponent just left (no opponent
+            // presence remaining), move the spy to follow them. The spy is a leech — it sticks
+            // to the opponent's army to keep reducing their drain wherever they go.
+            if (cardToMove != null && cardToMove.isUndercover() && gameState != null && game != null) {
+                try {
+                    String spyPid = context.getPlayerId();
+                    String spyOid = game.getOpponent(spyPid);
+                    PhysicalCard spySrcLoc = cardToMove.getAtLocation();
+
+                    float oppPowerHere = 0;
+                    if (spySrcLoc != null) {
+                        oppPowerHere = game.getModifiersQuerying().getTotalPowerAtLocation(
+                            gameState, spySrcLoc, spyOid, false, false);
+                    }
+
+                    boolean destHasOpponent = false;
+                    for (PhysicalCard destLoc : gameState.getTopLocations()) {
+                        if (destLoc == null || destLoc.getTitle() == null) continue;
+                        String destTitle = destLoc.getTitle().toLowerCase(Locale.ROOT);
+                        if (!actionLower.contains(destTitle)) continue;
+                        float oppPowerDest = game.getModifiersQuerying().getTotalPowerAtLocation(
+                            gameState, destLoc, spyOid, false, false);
+                        if (oppPowerDest > 0) destHasOpponent = true;
+                        break;
+                    }
+
+                    if (oppPowerHere == 0 && destHasOpponent) {
+                        action.addReasoning("V53 SPY FOLLOW: Opponent moved away — follow them to keep reducing drain!", 500.0f);
+                        logger.warn("V53 SPY FOLLOW: {} following opponent — +500!", cardToMove.getTitle());
+                    } else if (oppPowerHere > 0 && !destHasOpponent) {
+                        action.addReasoning("V53 SPY STAY: Opponent is HERE — don't leave, keep reducing their drain!", -300.0f);
+                        logger.warn("V53 SPY STAY: {} trying to leave opponent — -300!", cardToMove.getTitle());
+                    } else if (destHasOpponent && oppPowerHere == 0) {
+                        action.addReasoning("V53 SPY REPOSITION: Move spy to opponent location — start reducing drain!", 400.0f);
+                        logger.warn("V53 SPY REPOSITION: {} moving to opponent — +400!", cardToMove.getTitle());
+                    }
+                } catch (Exception e) {
+                    logger.debug("V53 SPY FOLLOW: Error: {}", e.getMessage());
+                }
+            }
+
+            // === V53b: HIDDEN PATH MANDATORY JEDI TRANSIT ===
+            // HARD RULE: If playing Hidden Path, characters at Safehouse MUST move to
+            // Underground Corridor. Characters at Corridor MUST move OFF Mapuzo.
+            // Jedi Survivors move FREE on Mapuzo — there is ZERO cost. No force reserve
+            // excuses. The objective REQUIRES Jedi outside Mapuzo to flip.
+            // This overrides ALL other move scoring with +9999.
+            {
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer hpMoveAnalyzer =
+                    context.getObjectiveAnalyzer();
+                if (hpMoveAnalyzer != null && hpMoveAnalyzer.isAnalyzed()) {
+                    String hpMoveObjTitle = hpMoveAnalyzer.getObjectiveTitle();
+                    boolean isHiddenPathObj = hpMoveObjTitle != null
+                        && hpMoveObjTitle.toLowerCase(Locale.ROOT).contains("hidden path");
+                    if (isHiddenPathObj && cardToMove != null) {
+                        PhysicalCard srcLoc = cardToMove.getAtLocation();
+                        String srcName = (srcLoc != null && srcLoc.getTitle() != null) ?
+                            srcLoc.getTitle().toLowerCase(Locale.ROOT) : "";
+                        String destLower = actionLower;
+                        String charName = cardToMove.getTitle() != null ? cardToMove.getTitle() : "character";
+
+                        // ANY character at Safehouse → MUST move to Corridor
+                        if (srcName.contains("safehouse") &&
+                            (destLower.contains("underground") || destLower.contains("corridor"))) {
+                            action.setScore(9999.0f);
+                            action.addReasoning("V53b HIDDEN PATH MANDATORY: Move from Safehouse to Corridor — FREE move, MUST flip objective!", 9999.0f);
+                            logger.warn("V53b HIDDEN PATH: {} MUST move Safehouse → Corridor (+9999)!", charName);
+                        }
+                        // ANY character at Corridor → MUST move OFF Mapuzo (not back to Safehouse)
+                        else if (srcName.contains("underground corridor") || srcName.contains("underground")) {
+                            if (destLower.contains("safehouse")) {
+                                action.setScore(-9999.0f);
+                                action.addReasoning("V53b HIDDEN PATH BLOCKED: NEVER go back to Safehouse from Corridor!", -9999.0f);
+                                logger.warn("V53b HIDDEN PATH: {} BLOCKED Corridor → Safehouse (-9999)!", charName);
+                            } else {
+                                action.setScore(9999.0f);
+                                action.addReasoning("V53b HIDDEN PATH MANDATORY: Leave Corridor to battleground — FLIPS OBJECTIVE!", 9999.0f);
+                                logger.warn("V53b HIDDEN PATH: {} MUST leave Corridor → outward (+9999)!", charName);
+                            }
+                        }
+                        // Moving OFF any Mapuzo location to non-Mapuzo
+                        else if (srcName.contains("mapuzo") && !destLower.contains("mapuzo")) {
+                            action.addReasoning("V53b HIDDEN PATH: Leaving Mapuzo — objective progress!", 800.0f);
+                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo — +800!", charName);
+                        }
+                    }
+                }
+            }
+
             logger.debug("[MoveEvaluator] Scored '{}' -> {}",
                 actionText.length() > 40 ? actionText.substring(0, 40) + "..." : actionText,
                 String.format("%.1f", action.getScore()));
@@ -1076,29 +1166,66 @@ public class MoveEvaluator extends ActionEvaluator {
      */
     private void handleLandAction(EvaluatedAction action, String actionLower, PhysicalCard card) {
         boolean isStarfighter = false;
+        boolean isStarship = false;
+        boolean hasPassengers = false;
         String cardName = "unknown";
 
         if (card != null) {
             cardName = card.getTitle();
-            CardSubtype subtype = card.getBlueprint().getCardSubtype();
+            SwccgCardBlueprint bp = card.getBlueprint();
+            CardSubtype subtype = bp != null ? bp.getCardSubtype() : null;
             if (subtype == CardSubtype.STARFIGHTER) {
                 isStarfighter = true;
+                isStarship = true;
+            } else if (subtype == CardSubtype.CAPITAL || subtype == CardSubtype.TRANSPORT) {
+                isStarship = true;
+            }
+
+            // V49: Capital ships and transports typically carry passengers
+            if (isStarship && !isStarfighter) {
+                hasPassengers = true;
+                logger.info("[MoveEvaluator] V49: {} is capital/transport — assuming passengers aboard", cardName);
             }
         }
 
-        // Fallback to name-based detection
-        if (!isStarfighter) {
+        // Fallback to name-based detection for starfighters
+        if (!isStarfighter && !isStarship) {
             isStarfighter = actionLower.contains("x-wing") ||
                 actionLower.contains("y-wing") ||
                 actionLower.contains("a-wing") ||
                 actionLower.contains("b-wing") ||
                 actionLower.contains("tie") ||
                 actionLower.contains("starfighter");
+            if (isStarfighter) isStarship = true;
+
+            // Name-based detection for capital/transport ships
+            if (!isStarship) {
+                isStarship = actionLower.contains("karrde") ||
+                    actionLower.contains("falcon") ||
+                    actionLower.contains("executor") ||
+                    actionLower.contains("dreadnaught") ||
+                    actionLower.contains("frigate") ||
+                    actionLower.contains("cruiser") ||
+                    actionLower.contains("corvette") ||
+                    actionLower.contains("destroyer");
+            }
         }
 
-        if (isStarfighter) {
+        // V49: NEVER land a starship at a site without characters to protect it.
+        // A starship at a site has power 0 — anyone can attack for catastrophic overflow damage.
+        // Only allow landing if the ship has passengers who can disembark and provide power.
+        if (isStarship && !hasPassengers) {
+            action.addReasoning(String.format(
+                "V49 BLOCKED: Landing %s at a site with NO passengers = power 0 = instant death from overflow! NEVER land unprotected!",
+                cardName), -9999.0f);
+            logger.warn("[MoveEvaluator] V49 HARD BLOCK: {} landing at site with no passengers — power 0 death trap!", cardName);
+        } else if (isStarfighter) {
             action.addReasoning("AVOID: Landing starfighter (" + cardName + ") wastes combat power!", -100.0f);
             logger.info("[MoveEvaluator] BLOCKED: Landing starfighter {}", cardName);
+        } else if (isStarship && hasPassengers) {
+            action.addReasoning(String.format(
+                "V49: Landing %s with %s passengers aboard — can disembark to protect", cardName, ""), 10.0f);
+            logger.info("[MoveEvaluator] V49: {} landing with passengers — allowed", cardName);
         } else {
             action.addReasoning("Land (ground deployment)", 10.0f);
         }
