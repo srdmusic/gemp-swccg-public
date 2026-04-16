@@ -27,6 +27,7 @@ var GempSwccgHallUI = Class.extend({
     pocketDiv:null,
     pocketValue:null,
     hallChannelId: null,
+    authConflictShown:false,
 
     init:function (div, url, chat) {
         this.div = div;
@@ -46,6 +47,7 @@ var GempSwccgHallUI = Class.extend({
                 chat.appendMessage("Reload the browser page (press F5) to resume the game hall functionality.", "warningMessage");
             }
         });
+        this.bindAuthConflictGuard();
         this.chat = chat;
 
         var width = $(div).width();
@@ -469,6 +471,26 @@ var GempSwccgHallUI = Class.extend({
                 that.showErrorDialog("Inactivity error", "You were inactive for too long and have been removed from the Game Hall. If you wish to re-enter, click \"Refresh page\".", true, false);
             }
         };
+    },
+    bindAuthConflictGuard:function () {
+        var that = this;
+        this.comm.watchAuthTokenChanges(function (oldToken, currentToken, oldSubject, currentSubject) {
+            if (that.authConflictShown)
+                return;
+            if (oldSubject != null && currentSubject != null && oldSubject === currentSubject)
+                return;
+
+            that.authConflictShown = true;
+            that.comm.closeRealtimeConnections();
+            if (that.chat != null && that.chat.communication != null)
+                that.chat.communication.closeRealtimeConnections();
+
+            if (currentToken == null || currentToken === "") {
+                location.href = "/gemp-swccg/";
+                return;
+            }
+            location.reload(true);
+        });
     },
 
     showErrorDialog:function(title, text, reloadButton, mainPageButton) {

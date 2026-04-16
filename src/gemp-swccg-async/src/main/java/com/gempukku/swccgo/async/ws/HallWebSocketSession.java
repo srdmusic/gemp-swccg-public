@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.async.ws;
 
+import com.gempukku.swccgo.DateUtils;
 import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.hall.HallChannelVisitor;
 import com.gempukku.swccgo.hall.HallCommunicationChannel;
@@ -22,6 +23,7 @@ public class HallWebSocketSession extends AbstractWebSocketSession implements Ha
     private final long _tokenExpiresAtMs;
     private ScheduledFuture<?> _expiryTimer;
     private ScheduledFuture<?> _keepAliveTimer;
+    private ScheduledFuture<?> _serverTimeTimer;
 
     public HallWebSocketSession(ChannelHandlerContext ctx, HallServer hallServer, Player player, long tokenExpiresAt) {
         super(ctx);
@@ -35,6 +37,7 @@ public class HallWebSocketSession extends AbstractWebSocketSession implements Ha
     public void onOpen() {
         _hallServer.addHallUpdateListener(this);
         sendHallUpdate();
+        startServerTimeTicker();
         startKeepAlive();
         scheduleTokenExpiry();
     }
@@ -44,6 +47,7 @@ public class HallWebSocketSession extends AbstractWebSocketSession implements Ha
         if (_closed.compareAndSet(false, true)) {
             stopExpiryTimer();
             stopKeepAlive();
+            stopServerTimeTicker();
             _hallServer.removeHallUpdateListener(this);
         }
     }
@@ -105,6 +109,23 @@ public class HallWebSocketSession extends AbstractWebSocketSession implements Ha
         if (_keepAliveTimer != null) {
             _keepAliveTimer.cancel(false);
             _keepAliveTimer = null;
+        }
+    }
+
+    private void startServerTimeTicker() {
+        stopServerTimeTicker();
+        _serverTimeTimer = _ctx.executor().scheduleAtFixedRate(() -> {
+            if (_closed.get()) {
+                return;
+            }
+            serverTime(DateUtils.getStringDateWithHour());
+        }, 1, 1, TimeUnit.SECONDS);
+    }
+
+    private void stopServerTimeTicker() {
+        if (_serverTimeTimer != null) {
+            _serverTimeTimer.cancel(false);
+            _serverTimeTimer = null;
         }
     }
 

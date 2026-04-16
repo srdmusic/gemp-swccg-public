@@ -40,6 +40,8 @@ var GempSwccgCommunication = Class.extend({
         this._hallKnownQueues = {};
         this._hallKnownTournaments = {};
         this._hallKnownTables = {};
+        this._authTokenSnapshot = null;
+        this._authTokenChangeHandler = null;
     },
 
     errorCheck:function (errorMap) {
@@ -771,6 +773,39 @@ var GempSwccgCommunication = Class.extend({
         } catch (e) {
         }
     },
+    closeRealtimeConnections:function () {
+        this._gameWsEnabled = false;
+        this._gameUpdateCallback = null;
+        this.closeSocketSafely(this._gameWs);
+        this._gameWs = null;
+        if (this._gameWsReconnectTimer != null) {
+            clearTimeout(this._gameWsReconnectTimer);
+            this._gameWsReconnectTimer = null;
+        }
+
+        this._hallWsEnabled = false;
+        this._hallCallback = null;
+        this.closeSocketSafely(this._hallSocket);
+        this._hallSocket = null;
+        if (this._hallReconnectTimer != null) {
+            clearTimeout(this._hallReconnectTimer);
+            this._hallReconnectTimer = null;
+        }
+
+        for (var room in this._chatSockets) {
+            if (this._chatSockets.hasOwnProperty(room)) {
+                this._chatWsEnabled[room] = false;
+                this.closeSocketSafely(this._chatSockets[room]);
+                this._chatSockets[room] = null;
+            }
+        }
+        for (var timerRoom in this._chatReconnectTimers) {
+            if (this._chatReconnectTimers.hasOwnProperty(timerRoom) && this._chatReconnectTimers[timerRoom] != null) {
+                clearTimeout(this._chatReconnectTimers[timerRoom]);
+                this._chatReconnectTimers[timerRoom] = null;
+            }
+        }
+    },
     getAuthToken:function () {
         if (typeof localStorage == "undefined")
             return null;
@@ -795,6 +830,65 @@ var GempSwccgCommunication = Class.extend({
             localStorage.removeItem("gemp.jwt");
         } catch (e) {
         }
+    },
+    getAuthSubjectFromToken:function (token) {
+        if (token == null || token === "")
+            return null;
+
+        var parts = token.split(".");
+        if (parts.length !== 3)
+            return null;
+
+        try {
+            var payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+            while (payload.length % 4 !== 0) {
+                payload += "=";
+            }
+            var decoded = JSON.parse(atob(payload));
+            return decoded != null ? decoded.sub : null;
+        } catch (e) {
+            return null;
+        }
+    },
+    watchAuthTokenChanges:function (onChanged) {
+        this.unwatchAuthTokenChanges();
+
+        if (typeof window == "undefined" || typeof window.addEventListener != "function")
+            return;
+        if (typeof localStorage == "undefined")
+            return;
+
+        var that = this;
+        this._authTokenSnapshot = this.getAuthToken();
+        if (this._authTokenSnapshot == null || this._authTokenSnapshot === "")
+            return;
+
+        this._authTokenChangeHandler = function (event) {
+            if (event == null || event.storageArea !== localStorage)
+                return;
+            if (event.key !== "gemp.jwt")
+                return;
+
+            var currentToken = that.getAuthToken();
+            if (currentToken === that._authTokenSnapshot)
+                return;
+
+            if (onChanged != null)
+                onChanged(
+                    that._authTokenSnapshot,
+                    currentToken,
+                    that.getAuthSubjectFromToken(that._authTokenSnapshot),
+                    that.getAuthSubjectFromToken(currentToken)
+                );
+            that._authTokenSnapshot = currentToken;
+        };
+        window.addEventListener("storage", this._authTokenChangeHandler);
+    },
+    unwatchAuthTokenChanges:function () {
+        if (this._authTokenChangeHandler != null && typeof window != "undefined" && typeof window.removeEventListener == "function")
+            window.removeEventListener("storage", this._authTokenChangeHandler);
+        this._authTokenChangeHandler = null;
+        this._authTokenSnapshot = null;
     },
     buildAuthHeaders:function () {
         var token = this.getAuthToken();

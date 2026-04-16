@@ -131,6 +131,7 @@ var GempSwccgGameUI = Class.extend({
     replayPlay: false,
     
     awaitActionSound: "awaitAction",
+    authConflictShown: false,
 
     init: function (url, replayMode) {
         this.replayMode = replayMode;
@@ -157,6 +158,7 @@ var GempSwccgGameUI = Class.extend({
                     that.chatBox.appendMessage("Refresh the page (press F5) to resume the game, or press back on your browser to get back to the Game Hall.", "warningMessage");
                 }
             });
+        this.bindAuthConflictGuard();
 
         $.expr[':'].cardId = function (obj, index, meta, stack) {
             var cardIds = meta[3].split(",");
@@ -2209,10 +2211,34 @@ var GempSwccgGameUI = Class.extend({
                 this.animations.updateGameState(animate);
             } else {
                 this.startAnimatingTitle();
+                this.animations.updateGameState(animate);
             }
         } catch (e) {
             this.showErrorDialog("Game error", "There was an error while processing game events in your browser. Reload the game to continue", true, false, false);
         }
+    },
+    bindAuthConflictGuard: function () {
+        var that = this;
+        if (this.replayMode)
+            return;
+
+        this.communication.watchAuthTokenChanges(function (oldToken, currentToken, oldSubject, currentSubject) {
+            if (that.authConflictShown)
+                return;
+            if (oldSubject != null && currentSubject != null && oldSubject === currentSubject)
+                return;
+
+            that.authConflictShown = true;
+            that.communication.closeRealtimeConnections();
+            if (that.chatBox != null && that.chatBox.communication != null)
+                that.chatBox.communication.closeRealtimeConnections();
+
+            if (currentToken == null || currentToken === "") {
+                location.href = "/gemp-swccg/";
+                return;
+            }
+            location.reload(true);
+        });
     },
 
     keepAnimating: false,
@@ -3484,5 +3510,3 @@ function gameBackgroundSettingChange () {
     }).appendTo("head");
 
 }
-
-
