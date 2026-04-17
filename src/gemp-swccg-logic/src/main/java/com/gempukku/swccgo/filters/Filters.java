@@ -7774,7 +7774,9 @@ public class Filters {
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
                 PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
 
-                PhysicalCard currentDockingBay = cardToMove.getAtLocation();
+                PhysicalCard currentDockingBay;
+                if(cardToMove.getBlueprint().hasKeyword(Keyword.ARTILLERY_WEAPON_MAY_USE_DB_TRANSIT)) currentDockingBay = cardToMove.getAttachedTo();
+                else currentDockingBay = cardToMove.getAtLocation();
                 if (currentDockingBay == null || !Filters.docking_bay.accepts(gameState, modifiersQuerying, currentDockingBay)) {
                     return false;
                 }
@@ -10598,7 +10600,8 @@ public class Filters {
                 if (cardCategory == CardCategory.CHARACTER || cardCategory == CardCategory.VEHICLE || cardCategory == CardCategory.STARSHIP
                         || (!checkingOnly && (cardCategory == CardCategory.DEVICE || cardCategory == CardCategory.WEAPON || cardCategory == CardCategory.EFFECT))) {
 
-                    if (!Filters.presentWith(creature).accepts(gameState, modifiersQuerying, physicalCard))
+                    if (!Filters.presentWith(creature).accepts(gameState, modifiersQuerying, physicalCard)
+                            && !Filters.aboardOrAboardCargoOf(Filters.presentWith(creature)).accepts(gameState, modifiersQuerying, physicalCard))
                         return false;
 
                     if (modifiersQuerying.isProhibitedFromAttackingTarget(gameState, physicalCard, creature))
@@ -13186,7 +13189,7 @@ public class Filters {
      * Wrapper method to allow other static filters to access the wrapped filter.
      */
     private static Filter movesLikeStarfighter() {
-        return deploysLikeStarfighter;
+        return movesLikeStarfighter;
     }
 
     /**
@@ -14685,6 +14688,16 @@ public class Filters {
             }
         };
     }
+
+    /**
+     * Filter that accepts cards that can move Medium Repeating Blaster Cannon alone (for free)
+     */
+    public static final Filter canMoveMediumRepeatingBlasterCannonAloneForFree = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.mayMoveMediumRepeatingBlasterCannonAloneForFree(gameState, physicalCard);
+        }
+    };
 
     /**
      * Gets a filter representing cards that a card may deploy to only based on presence and Force icons.
@@ -17731,6 +17744,7 @@ public class Filters {
     public static final Filter A_Dangerous_Time = Filters.title(Title.A_Dangerous_Time);
     public static final Filter A_Gift = Filters.title(Title.A_Gift);
     public static final Filter A_Good_Blaster_At_Your_Side = Filters.title(Title.A_Good_Blaster_At_Your_Side);
+    public static final Filter A_Jedis_Resilience = Filters.title(Title.A_Jedis_Resilience);
     public static final Filter A_Power_Loss = Filters.title(Title.A_Power_Loss);
     public static final Filter A_Sith_Legend = Filters.title(Title.A_Sith_Legend);
     public static final Filter A_Stunning_Move = Filters.title(Title.A_Stunning_Move);
@@ -17766,6 +17780,7 @@ public class Filters {
     public static final Filter All_Too_Easy = Filters.title(Title.All_Too_Easy);
     public static final Filter All_Wings_Report_In = Filters.title(Title.All_Wings_Report_In);
     public static final Filter All_Wrapped_Up = Filters.title(Title.All_Wrapped_Up);
+    public static final Filter Allegations_Of_Corruption = Filters.title(Title.Allegations_Of_Corruption);
     public static final Filter Alter = Filters.title(Title.Alter);
     public static final Filter Alternatives_To_Fighting = Filters.title(Title.Alternatives_To_Fighting);
     public static final Filter always_immune_to_Alter = Filters.alwaysImmuneToCardTitle(Title.Alter);
@@ -17780,6 +17795,7 @@ public class Filters {
     public static final Filter Anakins_Lightsaber = Filters.persona(Persona.ANAKINS_LIGHTSABER);
     public static final Filter Anakins_Podracer = Filters.title(Title.Anakins_Podracer);
     public static final Filter Anchorhead = Filters.title(Title.Anchorhead);
+    public static final Filter Ancient_Watering_Hole = Filters.title(Title.Ancient_Watering_Hole);
     public static final Filter And_Now_Youll_Give_It_To_Me = Filters.title(Title.And_Now_Youll_Give_It_To_Me);
     public static final Filter Anger_Fear_Aggression = Filters.title(Title.Anger_Fear_Aggression);
     public static final Filter Anoat_site = Filters.and(Filters.partOfSystem(Title.Anoat), CardSubtype.SITE);
@@ -17793,6 +17809,7 @@ public class Filters {
     public static final Filter Armorer = Filters.persona(Persona.ARMORER);
     public static final Filter Arnet = Filters.title(Title.Arnet);
     public static final Filter artillery_weapon = Filters.and(CardType.WEAPON, CardSubtype.ARTILLERY);
+    public static final Filter artillery_weapon_that_may_use_db_transit = Filters.keyword(Keyword.ARTILLERY_WEAPON_MAY_USE_DB_TRANSIT);
     public static final Filter Arven = Filters.title(Title.Arven);
     public static final Filter Ascension_Guns = Filters.title(Title.Ascension_Guns);
     public static final Filter As_Good_As_Gone = Filters.title(Title.As_Good_As_Gone);
@@ -18300,6 +18317,7 @@ public class Filters {
     public static final Filter Fel = Filters.title(Title.Fel);
     public static final Filter Feltipern_Trevagg = Filters.title(Title.Feltipern_Trevagg);
     public static final Filter Fennec_Shand = Filters.persona(Persona.FENNEC_SHAND);
+    public static final Filter Fenson = Filters.persona(Persona.FENSON);
     public static final Filter Fett = Filters.or(Filters.persona(Persona.BOBA_FETT), Filters.persona(Persona.JANGO_FETT));
     public static final Filter female = Filters.and(CardCategory.CHARACTER, Keyword.FEMALE);
     public static final Filter Free_Ride = Filters.title(Title.Free_Ride);
@@ -18458,6 +18476,7 @@ public class Filters {
     public static final Filter Human_Shield = Filters.title(Title.Human_Shield);
     public static final Filter Hunt_Down_And_Destroy_The_Jedi = Filters.title(Title.Hunt_Down_And_Destroy_The_Jedi);
     public static final Filter Hunt_For_The_Droid_General = Filters.title(Title.Hunt_For_The_Droid_General);
+    public static final Filter hut = Filters.and(CardSubtype.SITE, Filters.titleContains("Hut"));
     public static final Filter Hutt = Filters.species(Species.HUTT);
     public static final Filter Hutt_Bounty = Filters.title(Title.Hutt_Bounty);
     public static final Filter Hutt_Influence = Filters.title(Title.Hutt_Influence);
@@ -18648,6 +18667,7 @@ public class Filters {
     public static final Filter Keep_Your_Eyes_Open = Filters.title(Title.Keep_Your_Eyes_Open);
     public static final Filter Keeping_The_Empire_Out_Forever = Filters.title(Title.Keeping_The_Empire_Out_Forever);
     public static final Filter Kef_Bir_site = Filters.and(Filters.partOfSystem(Title.Kef_Bir), CardSubtype.SITE);
+    public static final Filter Kensaric = Filters.persona(Persona.KENSARIC);
     public static final Filter Kessel_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Kessel));
     public static final Filter Kessel_Run = Filters.title(Title.Kessel_Run);
     public static final Filter Kessel_site = Filters.and(Filters.partOfSystem(Title.Kessel), CardSubtype.SITE);
