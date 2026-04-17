@@ -9,6 +9,40 @@ where is the code, and why did it change*.
 
 ---
 
+## V58 — Draw-down: empty force pile into hand (2026-04-16)
+
+**File:** `DrawEvaluator.java` — both bots
+
+Codifies Steve's force-management philosophy: after activating and deploying,
+draw the remaining force pile **into hand**. Force in pile does nothing —
+force in hand is a card ready to deploy next turn.
+
+### New `calculateForceToReserve()` rules
+
+| Condition | Reserve bonus |
+|---|---|
+| Opponent has Draw Their Fire on table | +1 |
+| Opponent has First Strike on table | +1 |
+| Any contested location | +1 (battle-interrupt buffer) |
+| Turn ≥ 4 | +1 (mid/late-game interrupt buffer) |
+| Our Lando Scoundrel on table (or similar maintenance) | +1 per maintenance cost |
+| Hard cap | 4 |
+
+### New draw-down bonus
+
+```
+drawableSurplus = max(0, forcePile - forceToReserve)
+surplusBonus    = min(400, 80 * drawableSurplus)
+```
+
+Logged as `V58 DRAW-DOWN: pile=N, reserve=M, surplus=K → +BONUS`. Big
+enough to beat most penalties, so Rando actively burns surplus force
+into hand every draw phase.
+
+Memory reference: `feedback_force_management.md`.
+
+---
+
 ## V57 — Remove force activation throttling (2026-04-16)
 
 **File:** `ForceActivationEvaluator.java` — both bots

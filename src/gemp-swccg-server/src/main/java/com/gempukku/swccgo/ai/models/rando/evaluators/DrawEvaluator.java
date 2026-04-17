@@ -286,13 +286,24 @@ public class DrawEvaluator extends ActionEvaluator {
         }
 
         // === FORCE RESERVATION FOR OPPONENT'S TURN ===
-        // Enhanced: Reserve more force if we have presence at contested locations
+        // V58: Reserve is now accurate (DTF, First Strike, maintenance,
+        // contested count). If force pile is ABOVE reserve, we should
+        // aggressively DRAW the surplus into hand — hoarding does nothing.
         int forceToReserve = calculateForceToReserve(context, handSize);
-        if (turnNumber >= 4) {
-            if (forcePile <= forceToReserve) {
-                action.addReasoning("Turn " + turnNumber + ": reserve " + forceToReserve + " force for reactions/battles",
-                                   BAD_DELTA * 1.5f);
-            }
+        int drawableSurplus = Math.max(0, forcePile - forceToReserve);
+        if (drawableSurplus > 0 && handSize < effectiveMaxHand && reserveDeck > 2) {
+            // +80 per card of surplus, capped at +400. Beats most penalties.
+            float surplusBonus = Math.min(400.0f, 80.0f * drawableSurplus);
+            action.addReasoning(String.format(
+                "V58 DRAW-DOWN: force pile %d > reserve %d — draw %d surplus into hand!",
+                forcePile, forceToReserve, drawableSurplus), surplusBonus);
+            logger.warn("V58 DRAW-DOWN: pile={}, reserve={}, surplus={} → +{}",
+                forcePile, forceToReserve, drawableSurplus, (int)surplusBonus);
+        }
+        if (forcePile <= forceToReserve && turnNumber >= 4) {
+            action.addReasoning("V58 HOLD RESERVE: force pile " + forcePile +
+                " at/below reserve target " + forceToReserve + " — keep it",
+                BAD_DELTA * 1.5f);
         }
 
         // Don't draw if low reserve (avoid decking)
@@ -384,49 +395,87 @@ public class DrawEvaluator extends ActionEvaluator {
 
     /**
      * Calculate force to reserve for opponent's turn.
-     * Enhanced: Reserve more if we have contested locations.
+     *
+     * V58 FIX 20 (2026-04-16): Match Steve's actual reservation rules.
+     * After activating and deploying, draw MOST force into hand. Reserve
+     * only for specific threats:
+     *   +1 if opponent has Draw Their Fire (taxes our deploys/moves)
+     *   +1 if opponent has First Strike (weapon destiny trigger)
+     *   +1 mid/late game for battle interrupts during opponent's turn
+     *   +N for total maintenance cost of our on-table characters
+     *   +1 per contested location (battle interrupt headroom)
+     * Hard cap at 4 — hoarding more than 4 force in pile is wasted.
      */
     private int calculateForceToReserve(DecisionContext context, int handSize) {
-        int forceToReserve = handSize < 6 ? 1 : 2;
-
+        int forceToReserve = 0;
         SwccgGame game = context.getGame();
         if (game == null) {
-            return forceToReserve;
+            return 1;  // safe default
         }
 
         GameState gameState = context.getGameState();
         String playerId = context.getPlayerId();
+        int turnNumber = context.getTurnNumber();
 
         try {
-            // Count contested locations (both players have presence)
             int contestedCount = 0;
+            int maintenanceCost = 0;
+            boolean opponentHasDTF = false;
+            boolean opponentHasFirstStrike = false;
+
             Collection<PhysicalCard> locations = gameState.getLocationsInOrder();
             for (PhysicalCard loc : locations) {
                 if (loc == null) continue;
-
-                // Check if both players have cards at this location
                 Collection<PhysicalCard> cardsAtLoc = gameState.getCardsAtLocation(loc);
                 boolean weHavePresence = false;
                 boolean theyHavePresence = false;
-
                 for (PhysicalCard card : cardsAtLoc) {
-                    if (card.getOwner().equals(playerId)) {
+                    if (card.getOwner() != null && card.getOwner().equals(playerId)) {
                         weHavePresence = true;
                     } else {
                         theyHavePresence = true;
                     }
                 }
+                if (weHavePresence && theyHavePresence) contestedCount++;
+            }
 
-                if (weHavePresence && theyHavePresence) {
-                    contestedCount++;
+            // Scan ALL permanent cards for opponent's DTF / First Strike and
+            // our maintenance costs. Title-based detection keeps this robust
+            // across V-sets and variants.
+            for (PhysicalCard pc : gameState.getAllPermanentCards()) {
+                if (pc == null) continue;
+                String title = pc.getTitle();
+                if (title == null) continue;
+                String titleLower = title.toLowerCase(java.util.Locale.ROOT);
+                boolean isOurs = pc.getOwner() != null && pc.getOwner().equals(playerId);
+
+                if (!isOurs) {
+                    if (titleLower.contains("draw their fire"))  opponentHasDTF = true;
+                    if (titleLower.contains("first strike"))     opponentHasFirstStrike = true;
+                } else {
+                    // Maintenance cost: SWCCG doesn't expose this as a blueprint
+                    // method — it lives in game text. Detect common high-value
+                    // maintenance characters by name. Extend this list as needed.
+                    if (titleLower.contains("lando calrissian, scoundrel")) {
+                        maintenanceCost += 1;
+                    }
                 }
             }
 
-            if (contestedCount > 0) {
-                forceToReserve = Math.max(forceToReserve, 2 + contestedCount);
-            }
+            if (opponentHasDTF)        forceToReserve += 1;
+            if (opponentHasFirstStrike) forceToReserve += 1;
+            if (contestedCount > 0)     forceToReserve += 1;  // one battle-interrupt buffer
+            if (turnNumber >= 4)        forceToReserve += 1;  // mid/late-game interrupt buffer
+            forceToReserve += maintenanceCost;
+
+            // Cap at 4 — anything beyond that is hoarding, not strategy
+            forceToReserve = Math.min(4, forceToReserve);
+
+            logger.debug("V58 RESERVE: DTF={}, FirstStrike={}, contested={}, maint={}, turn={}, total={}",
+                opponentHasDTF, opponentHasFirstStrike, contestedCount, maintenanceCost, turnNumber, forceToReserve);
         } catch (Exception e) {
-            logger.trace("Error calculating contested locations: {}", e.getMessage());
+            logger.trace("V58 RESERVE: error calculating, using default 1: {}", e.getMessage());
+            return 1;
         }
 
         return forceToReserve;

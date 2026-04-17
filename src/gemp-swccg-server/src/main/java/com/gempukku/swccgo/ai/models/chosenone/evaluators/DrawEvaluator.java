@@ -286,13 +286,22 @@ public class DrawEvaluator extends ActionEvaluator {
         }
 
         // === FORCE RESERVATION FOR OPPONENT'S TURN ===
-        // Enhanced: Reserve more force if we have presence at contested locations
+        // V58: Reserve accurate to Steve's rules (DTF, First Strike,
+        // maintenance, contested). Aggressively draw the surplus.
         int forceToReserve = calculateForceToReserve(context, handSize);
-        if (turnNumber >= 4) {
-            if (forcePile <= forceToReserve) {
-                action.addReasoning("Turn " + turnNumber + ": reserve " + forceToReserve + " force for reactions/battles",
-                                   BAD_DELTA * 1.5f);
-            }
+        int drawableSurplus = Math.max(0, forcePile - forceToReserve);
+        if (drawableSurplus > 0 && handSize < effectiveMaxHand && reserveDeck > 2) {
+            float surplusBonus = Math.min(400.0f, 80.0f * drawableSurplus);
+            action.addReasoning(String.format(
+                "V58 DRAW-DOWN: force pile %d > reserve %d — draw %d surplus into hand!",
+                forcePile, forceToReserve, drawableSurplus), surplusBonus);
+            logger.warn("V58 DRAW-DOWN: pile={}, reserve={}, surplus={} → +{}",
+                forcePile, forceToReserve, drawableSurplus, (int)surplusBonus);
+        }
+        if (forcePile <= forceToReserve && turnNumber >= 4) {
+            action.addReasoning("V58 HOLD RESERVE: force pile " + forcePile +
+                " at/below reserve target " + forceToReserve + " — keep it",
+                BAD_DELTA * 1.5f);
         }
 
         // Don't draw if low reserve (avoid decking)
@@ -384,49 +393,75 @@ public class DrawEvaluator extends ActionEvaluator {
 
     /**
      * Calculate force to reserve for opponent's turn.
-     * Enhanced: Reserve more if we have contested locations.
+     *
+     * V58 FIX 20 (2026-04-16): Match Steve's actual reservation rules.
+     *   +1 if opponent has Draw Their Fire on table
+     *   +1 if opponent has First Strike on table
+     *   +1 mid/late game for battle interrupts
+     *   +N for total maintenance cost of our on-table characters
+     *   +1 per contested location (at least one)
+     *   Hard cap at 4.
      */
     private int calculateForceToReserve(DecisionContext context, int handSize) {
-        int forceToReserve = handSize < 6 ? 1 : 2;
-
+        int forceToReserve = 0;
         SwccgGame game = context.getGame();
-        if (game == null) {
-            return forceToReserve;
-        }
+        if (game == null) return 1;
 
         GameState gameState = context.getGameState();
         String playerId = context.getPlayerId();
+        int turnNumber = context.getTurnNumber();
 
         try {
-            // Count contested locations (both players have presence)
             int contestedCount = 0;
+            int maintenanceCost = 0;
+            boolean opponentHasDTF = false;
+            boolean opponentHasFirstStrike = false;
+
             Collection<PhysicalCard> locations = gameState.getLocationsInOrder();
             for (PhysicalCard loc : locations) {
                 if (loc == null) continue;
-
-                // Check if both players have cards at this location
                 Collection<PhysicalCard> cardsAtLoc = gameState.getCardsAtLocation(loc);
                 boolean weHavePresence = false;
                 boolean theyHavePresence = false;
-
                 for (PhysicalCard card : cardsAtLoc) {
-                    if (card.getOwner().equals(playerId)) {
+                    if (card.getOwner() != null && card.getOwner().equals(playerId)) {
                         weHavePresence = true;
                     } else {
                         theyHavePresence = true;
                     }
                 }
+                if (weHavePresence && theyHavePresence) contestedCount++;
+            }
 
-                if (weHavePresence && theyHavePresence) {
-                    contestedCount++;
+            for (PhysicalCard pc : gameState.getAllPermanentCards()) {
+                if (pc == null) continue;
+                String title = pc.getTitle();
+                if (title == null) continue;
+                String titleLower = title.toLowerCase(java.util.Locale.ROOT);
+                boolean isOurs = pc.getOwner() != null && pc.getOwner().equals(playerId);
+                if (!isOurs) {
+                    if (titleLower.contains("draw their fire"))   opponentHasDTF = true;
+                    if (titleLower.contains("first strike"))      opponentHasFirstStrike = true;
+                } else {
+                    // Maintenance: detect known high-value maintenance chars by name
+                    if (titleLower.contains("lando calrissian, scoundrel")) {
+                        maintenanceCost += 1;
+                    }
                 }
             }
 
-            if (contestedCount > 0) {
-                forceToReserve = Math.max(forceToReserve, 2 + contestedCount);
-            }
+            if (opponentHasDTF)         forceToReserve += 1;
+            if (opponentHasFirstStrike) forceToReserve += 1;
+            if (contestedCount > 0)     forceToReserve += 1;
+            if (turnNumber >= 4)        forceToReserve += 1;
+            forceToReserve += maintenanceCost;
+            forceToReserve = Math.min(4, forceToReserve);
+
+            logger.debug("V58 RESERVE: DTF={}, FirstStrike={}, contested={}, maint={}, turn={}, total={}",
+                opponentHasDTF, opponentHasFirstStrike, contestedCount, maintenanceCost, turnNumber, forceToReserve);
         } catch (Exception e) {
-            logger.trace("Error calculating contested locations: {}", e.getMessage());
+            logger.trace("V58 RESERVE error: {}", e.getMessage());
+            return 1;
         }
 
         return forceToReserve;
