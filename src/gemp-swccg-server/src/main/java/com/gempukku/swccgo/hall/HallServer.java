@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.SwccgAiController;
 import com.gempukku.swccgo.ai.models.AdvancedAi;
 import com.gempukku.swccgo.ai.models.BeginnerAi;
 import com.gempukku.swccgo.ai.models.rando.RandoCalAi;
+import com.gempukku.swccgo.ai.models.chosenone.TheChosenOneAi;
 import com.gempukku.swccgo.bot.BotStatsGameResultListener;
 import com.gempukku.swccgo.chat.ChatCommandCallback;
 import com.gempukku.swccgo.chat.ChatCommandErrorException;
@@ -44,6 +45,7 @@ public class HallServer extends AbstractServer {
     private static final String AI_BEGINNER_ID = "~OzzelBot";
     private static final String AI_ADVANCED_ID = "~YodaBot";
     private static final String AI_ELITE_ID = "~Rando_Cal";
+    private static final String AI_CHOSEN_ONE_ID = "~The_Chosen_One";
 
     private final int _playerInactivityPeriod = 1000 * 60; // 60 seconds
     private final long _scheduledTournamentLoadTime = 1000 * 60 * 60 * 24 * 7; // Week
@@ -68,7 +70,8 @@ public class HallServer extends AbstractServer {
 
     private String _motd;
 
-    private boolean _operational;
+    // V22.4: Default to operational=true so server auto-starts services after rebuild
+    private boolean _operational = true;
     private boolean _shutdown;
     private boolean _privateGamesEnabled;
     private boolean _inGameStatisticsEnabled;
@@ -372,6 +375,9 @@ public class HallServer extends AbstractServer {
         if ("RANDO".equals(normalized)) {
             return AI_ELITE_ID;
         }
+        if ("CHOSENONE".equals(normalized)) {
+            return AI_CHOSEN_ONE_ID;
+        }
         return AI_BEGINNER_ID;
     }
 
@@ -387,6 +393,13 @@ public class HallServer extends AbstractServer {
                 rando.setBotStatsDAO(_botStatsDAO);
             }
             return rando;
+        }
+        if ("CHOSENONE".equals(normalized)) {
+            TheChosenOneAi chosenOne = new TheChosenOneAi();
+            if (_botStatsDAO != null) {
+                chosenOne.setBotStatsDAO(_botStatsDAO);
+            }
+            return chosenOne;
         }
         return new BeginnerAi();
     }
@@ -1036,7 +1049,7 @@ public class HallServer extends AbstractServer {
             };
         }
 
-        int decisionTimeoutSeconds = 300; // 5 minutes;
+        int decisionTimeoutSeconds = 999999; // Permanently disabled for bot/MCP games
         boolean allowSpectators = !awaitingTable.isPrivate();
         boolean allowTimerExtensions = true;
         int timePerPlayerMinutes = 60;
@@ -1098,7 +1111,15 @@ public class HallServer extends AbstractServer {
             swccgGameMediator.addGameResultListener(listener);
         }
         if (aiPlayerId != null) {
-            AiRegistry.register(swccgGameMediator.getGameId(), aiPlayerId, createAiForSkill(aiSkill));
+            SwccgAiController aiController = createAiForSkill(aiSkill);
+            // V29.15: Pass deck name so AI can make saga-aware Epic Event choices
+            for (SwccgGameParticipant p : participants) {
+                if (p.getPlayerId().equals(aiPlayerId) && p.getDeck() != null) {
+                    aiController.setDeckName(p.getDeck().getDeckName());
+                    break;
+                }
+            }
+            AiRegistry.register(swccgGameMediator.getGameId(), aiPlayerId, aiController);
             // Add bot stats tracking for AI games (both result listener and real-time state listener)
             if (_botStatsDAO != null) {
                 BotStatsGameResultListener botStatsListener = new BotStatsGameResultListener(
@@ -1126,6 +1147,127 @@ public class HallServer extends AbstractServer {
         swccgGameMediator.addGameResultListener(_notifyHallListeners);
         _runningTables.put(tableId, new RunningTable(swccgGameMediator, swccgFormat.getName(), tournamentName,
                 tableDesc, league, leagueSerie));
+    }
+
+    /**
+     * Creates a bot-vs-bot game where two AI players play against each other.
+     * Both AIs are registered in AiRegistry so the game engine can delegate decisions to them.
+     *
+     * @param formatCode     the game format code (e.g. "open", "classic")
+     * @param lightSkill     AI skill level for the Light Side bot (e.g. "RANDO", "CHOSENONE")
+     * @param lightDeckName  deck name for the Light Side bot
+     * @param darkSkill      AI skill level for the Dark Side bot
+     * @param darkDeckName   deck name for the Dark Side bot
+     * @param deckOwner      the player who owns the decks (e.g. Librarian for sample decks, or test1 for user decks)
+     * @return the game ID of the newly created game
+     * @throws HallException if the server is not operational, decks are invalid, or sides don't match
+     */
+    public String createBotVsBotGame(String formatCode, String lightSkill, String lightDeckName,
+            String darkSkill, String darkDeckName, Player deckOwner) throws HallException {
+
+        if (_shutdown)
+            throw new HallException("Server is in shutdown mode. No games may be started.");
+        if (!_operational)
+            throw new HallException("Server is not yet in operational mode.");
+
+        _hallDataAccessLock.writeLock().lock();
+        try {
+            SwccgFormat format = _formatLibrary.getHallFormats().get(formatCode);
+            if (format == null)
+                throw new HallException("Unsupported format: " + formatCode);
+
+            CollectionType collectionType = _allCardsCollectionType;
+
+            // Load and validate Light Side deck
+            SwccgDeck lightDeck = _swccgoServer.getParticipantDeck(deckOwner, lightDeckName);
+            if (lightDeck == null)
+                throw new HallException("Light side deck not found: " + lightDeckName);
+
+            Side lightSide = lightDeck.getSide(_library);
+            if (lightSide != Side.LIGHT)
+                throw new HallException("Light deck '" + lightDeckName + "' is not a Light Side deck");
+
+            // Load and validate Dark Side deck
+            SwccgDeck darkDeck = _swccgoServer.getParticipantDeck(deckOwner, darkDeckName);
+            if (darkDeck == null)
+                throw new HallException("Dark side deck not found: " + darkDeckName);
+
+            Side darkSide = darkDeck.getSide(_library);
+            if (darkSide != Side.DARK)
+                throw new HallException("Dark deck '" + darkDeckName + "' is not a Dark Side deck");
+
+            // Resolve AI player IDs
+            String lightPlayerId = getAiPlayerIdForSkill(lightSkill);
+            String darkPlayerId = getAiPlayerIdForSkill(darkSkill);
+
+            // Create participants
+            SwccgGameParticipant[] participants = new SwccgGameParticipant[2];
+            participants[0] = new SwccgGameParticipant(lightPlayerId, lightDeck);
+            participants[1] = new SwccgGameParticipant(darkPlayerId, darkDeck);
+
+            // Create the game using a new table ID
+            String tableId = new SwccgUuid().generateNewTableId();
+            String tableDesc = lightSkill + " (Light) vs " + darkSkill + " (Dark)";
+
+            SwccgGameMediator swccgGameMediator = _swccgoServer.createNewGame(format, null, null,
+                    participants, true, true, true, true, true, false,
+                    300, 60, false, _inGameStatisticsEnabled, _bonusAbilitiesEnabled);
+
+            // Register BOTH AIs in AiRegistry
+            String gameId = swccgGameMediator.getGameId();
+            SwccgAiController lightAi = createAiForSkill(lightSkill);
+            lightAi.setDeckName(lightDeckName);  // V29.15: Pass deck name for saga-aware choices
+            AiRegistry.register(gameId, lightPlayerId, lightAi);
+            SwccgAiController darkAi = createAiForSkill(darkSkill);
+            darkAi.setDeckName(darkDeckName);  // V29.15: Pass deck name for saga-aware choices
+            AiRegistry.register(gameId, darkPlayerId, darkAi);
+
+            // Set up chat room for both bots
+            ChatRoomMediator gameChatRoom = _swccgoServer.getGameChatRoom(gameId);
+            if (gameChatRoom != null) {
+                swccgGameMediator.setChatRoom(gameChatRoom);
+            }
+
+            // Add bot stats tracking for both AIs
+            if (_botStatsDAO != null) {
+                // Light side bot stats
+                BotStatsGameResultListener lightBotStats = new BotStatsGameResultListener(
+                    _botStatsDAO, _playerDAO, swccgGameMediator, lightPlayerId);
+                if (gameChatRoom != null) {
+                    lightBotStats.setChatRoom(gameChatRoom);
+                }
+                swccgGameMediator.addGameResultListener(lightBotStats);
+                if (lightBotStats.isInitialized()) {
+                    swccgGameMediator.addGameStateListener(
+                        lightBotStats.getGameStateListener().getPlayerId(),
+                        lightBotStats.getGameStateListener());
+                }
+
+                // Dark side bot stats
+                BotStatsGameResultListener darkBotStats = new BotStatsGameResultListener(
+                    _botStatsDAO, _playerDAO, swccgGameMediator, darkPlayerId);
+                if (gameChatRoom != null) {
+                    darkBotStats.setChatRoom(gameChatRoom);
+                }
+                swccgGameMediator.addGameResultListener(darkBotStats);
+                if (darkBotStats.isInitialized()) {
+                    swccgGameMediator.addGameStateListener(
+                        darkBotStats.getGameStateListener().getPlayerId(),
+                        darkBotStats.getGameStateListener());
+                }
+            }
+
+            swccgGameMediator.startGame();
+            swccgGameMediator.addGameResultListener(_notifyHallListeners);
+            _runningTables.put(tableId, new RunningTable(swccgGameMediator, format.getName(), null,
+                    tableDesc, null, null));
+            hallChanged();
+
+            return gameId;
+
+        } finally {
+            _hallDataAccessLock.writeLock().unlock();
+        }
     }
 
     private class NotifyHallListenersGameResultListener implements GameResultListener {
@@ -1291,7 +1433,7 @@ public class HallServer extends AbstractServer {
 
     private class HallTournamentCallback implements TournamentCallback {
         private Tournament _tournament;
-        private int _decisionTimeoutSeconds = 300; // 5 minutes
+        private int _decisionTimeoutSeconds = 999999; // Permanently disabled for bot/MCP games
         private int _timePerPlayerMinutes = 50;
 
         private HallTournamentCallback(Tournament tournament) {

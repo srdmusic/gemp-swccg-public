@@ -131,9 +131,7 @@ var GempSwccgHallUI = Class.extend({
         this.opponentSelect.change(function () { that.updateAiDecksForSelection(); });
 
         this.aiSkillSelect = $("<select style='width: 120px'></select>");
-        this.aiSkillSelect.append("<option value='BEGINNER'>Beginner (OzzelBot)</option>");
-        this.aiSkillSelect.append("<option value='ADVANCED'>Advanced (YodaBot)</option>");
-        this.aiSkillSelect.append("<option value='RANDO'>Elite (Rando_Cal)</option>");
+        this.aiSkillSelect.append("<option value='RANDO'>Rando Cal</option>");
 
         this.aiDeckSelect = $("<select style='width: 250px'></select>");
 

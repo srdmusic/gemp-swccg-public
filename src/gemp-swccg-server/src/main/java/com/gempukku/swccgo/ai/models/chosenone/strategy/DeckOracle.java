@@ -1,0 +1,769 @@
+package com.gempukku.swccgo.ai.models.chosenone.strategy;
+
+import com.gempukku.swccgo.ai.models.chosenone.ChosenOneLogger;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgCardBlueprint;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
+
+import org.apache.logging.log4j.Logger;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * V22.6 DeckOracle — Full deck knowledge for Rando.
+ *
+ * Catalogs every card in Rando's deck at game start and tracks where each card
+ * is (hand, reserve, force pile, used pile, lost pile, in play) across every decision.
+ *
+ * This enables evaluators to make informed decisions:
+ * - "Is Executor still in my reserve deck?" before using Alert My Star Destroyer
+ * - "What's the average destiny remaining in reserve?" for battle planning
+ * - "Stop trying to pull a card that's been attempted 2+ times and failed"
+ *
+ * The oracle re-scans zones from GameState every decision (cheap and guaranteed accurate).
+ * It does NOT need to infer card movements — it reads the ground truth directly.
+ *
+ * Integration:
+ *   - Initialized in TheChosenOneAi constructor
+ *   - analyze() called on first decision of each game
+ *   - refresh() called every decision in buildEvaluatorContext()
+ *   - Injected into DecisionContext for evaluator access
+ */
+public class DeckOracle {
+    private static final Logger LOG = ChosenOneLogger.getStrategyLogger();
+
+    // =========================================================================
+    // Inner Class: DeckCard
+    // =========================================================================
+
+    /**
+     * Represents a single card instance in Rando's deck.
+     * Tracks its identity, current zone, and key properties for strategic queries.
+     */
+    public static class DeckCard {
+        private final String blueprintId;
+        private final String title;
+        private final float destiny;
+        private final float deployCost;
+        private final float power;
+        private final float forfeit;
+        private final float ability;
+        private final CardCategory category;
+        private final CardSubtype subtype;
+        private final String gameText;
+        private Zone currentZone;
+
+        public DeckCard(PhysicalCard card, Zone zone) {
+            this.blueprintId = card.getBlueprintId(true);
+            this.title = card.getTitle() != null ? card.getTitle() : "Unknown";
+            this.currentZone = zone;
+
+            SwccgCardBlueprint bp = card.getBlueprint();
+            float d = 0, cost = 0, pow = 0, forf = 0, abil = 0;
+            CardCategory cat = null;
+            CardSubtype sub = null;
+            String gt = null;
+
+            if (bp != null) {
+                try { d = bp.getDestiny() != null ? bp.getDestiny() : 0; } catch (Exception e) { /* no destiny */ }
+                try { cost = bp.getDeployCost() != null ? bp.getDeployCost() : 0; } catch (Exception e) { /* no cost */ }
+                if (bp.hasPowerAttribute()) {
+                    try { pow = bp.getPower() != null ? bp.getPower() : 0; } catch (Exception e) { /* no power */ }
+                }
+                try { forf = bp.getForfeit() != null ? bp.getForfeit() : 0; } catch (Exception e) { /* no forfeit */ }
+                if (bp.hasAbilityAttribute()) {
+                    try { abil = bp.getAbility() != null ? bp.getAbility() : 0; } catch (Exception e) { /* no ability */ }
+                }
+                cat = bp.getCardCategory();
+                try { sub = bp.getCardSubtype(); } catch (Exception e) { /* no subtype */ }
+                gt = bp.getGameText();
+            }
+
+            this.destiny = d;
+            this.deployCost = cost;
+            this.power = pow;
+            this.forfeit = forf;
+            this.ability = abil;
+            this.category = cat;
+            this.subtype = sub;
+            this.gameText = gt;
+        }
+
+        // Getters
+        public String getBlueprintId() { return blueprintId; }
+        public String getTitle() { return title; }
+        public Zone getCurrentZone() { return currentZone; }
+        public float getDestiny() { return destiny; }
+        public float getDeployCost() { return deployCost; }
+        public float getPower() { return power; }
+        public float getForfeit() { return forfeit; }
+        public float getAbility() { return ability; }
+        public CardCategory getCategory() { return category; }
+        public CardSubtype getSubtype() { return subtype; }
+        public String getGameText() { return gameText; }
+
+        // Zone update (called during refresh)
+        void setCurrentZone(Zone zone) { this.currentZone = zone; }
+
+        @Override
+        public String toString() {
+            return String.format("%s [%s] zone=%s dest=%.0f cost=%.0f",
+                title, blueprintId, currentZone, destiny, deployCost);
+        }
+    }
+
+    // =========================================================================
+    // Fields
+    // =========================================================================
+
+    /** All cards indexed by blueprintId. Multiple copies share the same key. */
+    private final Map<String, List<DeckCard>> catalogByBlueprint = new LinkedHashMap<>();
+
+    /** All cards indexed by lowercase title for fuzzy lookup. */
+    private final Map<String, List<DeckCard>> catalogByTitle = new LinkedHashMap<>();
+
+    /** Master list of all DeckCard instances (flat). */
+    private final List<DeckCard> allCards = new ArrayList<>();
+
+    /** Failed pull tracking: blueprintId → consecutive failure count. */
+    private final Map<String, Integer> failedPulls = new HashMap<>();
+
+    /** V24.10: AMSD failed attempt tracker — turn number of last failed AMSD attempt.
+     *  If AMSD fails on a turn, don't retry until the next turn (recirculation may fix it). */
+    private int amsdFailedOnTurn = -1;
+
+    /** Total cards in deck at game start (for reference). */
+    private int totalDeckSize = 0;
+
+    /** Whether analyze() has been called this game. */
+    private boolean analyzed = false;
+
+    // =========================================================================
+    // Lifecycle
+    // =========================================================================
+
+    /**
+     * Catalog the entire deck at game start.
+     * Enumerates all zones and builds the card database.
+     * Called once per game on the first decision.
+     */
+    public void analyze(SwccgGame game, String playerId, Side side) {
+        if (game == null || playerId == null) return;
+        GameState gs = game.getGameState();
+        if (gs == null) return;
+
+        LOG.warn("📚 [DeckOracle] analyze() — cataloging deck for {} ({})", playerId, side);
+
+        // Clear any stale data
+        catalogByBlueprint.clear();
+        catalogByTitle.clear();
+        allCards.clear();
+        failedPulls.clear();
+        totalDeckSize = 0;
+
+        // Catalog each zone
+        catalogZone(gs.getHand(playerId), Zone.HAND);
+        catalogZone(gs.getReserveDeck(playerId), Zone.RESERVE_DECK);
+        catalogZone(gs.getUsedPile(playerId), Zone.USED_PILE);
+        catalogZone(gs.getLostPile(playerId), Zone.LOST_PILE);
+
+        // Force pile — accessed through getAllPermanentCards filtered by zone
+        // (getForcePile may not return PhysicalCard list directly)
+        // Also catalog in-play cards and side-of-table (shields)
+        for (PhysicalCard card : gs.getAllPermanentCards()) {
+            if (card == null) continue;
+            if (!playerId.equals(card.getOwner())) continue;
+            Zone zone = card.getZone();
+            if (zone == null) continue;
+
+            // Only catalog zones we haven't already handled above
+            if (zone == Zone.HAND || zone == Zone.RESERVE_DECK ||
+                zone == Zone.USED_PILE || zone == Zone.LOST_PILE) {
+                continue;  // Already cataloged
+            }
+
+            catalogCard(card, zone);
+        }
+
+        totalDeckSize = allCards.size();
+        analyzed = true;
+
+        logCatalogSummary();
+    }
+
+    /**
+     * Refresh card zone positions from current game state.
+     * Called every decision — re-scans all zones to update each DeckCard's currentZone.
+     * This is cheap (single pass through zone lists) and guarantees accuracy.
+     */
+    public void refresh(GameState gameState, String playerId) {
+        if (!analyzed || gameState == null || playerId == null) return;
+
+        // Build a lookup: cardTitle+blueprintId → set of zones it's currently in
+        // We need to match DeckCards to their current physical positions
+        // Strategy: clear all zones, then re-assign based on current GameState
+
+        // Track which DeckCards we've matched (by index in allCards)
+        boolean[] matched = new boolean[allCards.size()];
+
+        // Reset all to null (unmatched)
+        for (DeckCard dc : allCards) {
+            dc.setCurrentZone(null);
+        }
+
+        // Scan each zone and match physical cards to DeckCards
+        matchCardsFromZone(gameState.getHand(playerId), Zone.HAND, matched);
+        matchCardsFromZone(gameState.getReserveDeck(playerId), Zone.RESERVE_DECK, matched);
+        matchCardsFromZone(gameState.getUsedPile(playerId), Zone.USED_PILE, matched);
+        matchCardsFromZone(gameState.getLostPile(playerId), Zone.LOST_PILE, matched);
+
+        // In-play and other zones via getAllPermanentCards
+        List<PhysicalCard> inPlayCards = new ArrayList<>();
+        for (PhysicalCard card : gameState.getAllPermanentCards()) {
+            if (card == null) continue;
+            if (!playerId.equals(card.getOwner())) continue;
+            Zone zone = card.getZone();
+            if (zone == null) continue;
+            if (zone == Zone.HAND || zone == Zone.RESERVE_DECK ||
+                zone == Zone.USED_PILE || zone == Zone.LOST_PILE) {
+                continue;
+            }
+            inPlayCards.add(card);
+        }
+        matchCardsFromZone(inPlayCards, null, matched);  // null = use card's own zone
+
+        // Any unmatched DeckCards may be new cards (pulled from outside deck)
+        // or cards that moved to a zone we don't track. Mark them as unknown.
+        for (int i = 0; i < allCards.size(); i++) {
+            if (!matched[i] && allCards.get(i).getCurrentZone() == null) {
+                // Card not found in any zone — might be stacked, out of play, etc.
+                // Leave as null (callers should handle gracefully)
+            }
+        }
+    }
+
+    /**
+     * Reset for a new game. Clears all catalog data.
+     */
+    public void reset() {
+        catalogByBlueprint.clear();
+        catalogByTitle.clear();
+        allCards.clear();
+        failedPulls.clear();
+        amsdFailedOnTurn = -1;
+        totalDeckSize = 0;
+        analyzed = false;
+        LOG.debug("📚 [DeckOracle] Reset for new game");
+    }
+
+    public boolean isAnalyzed() {
+        return analyzed;
+    }
+
+    // =========================================================================
+    // Zone Query Methods
+    // =========================================================================
+
+    /**
+     * Check if any copy of a card (by blueprintId or title) is in the specified zone.
+     */
+    public boolean isCardInZone(String blueprintIdOrTitle, Zone zone) {
+        if (blueprintIdOrTitle == null || zone == null) return false;
+
+        // Try blueprintId first (exact match)
+        List<DeckCard> byBp = catalogByBlueprint.get(blueprintIdOrTitle);
+        if (byBp != null) {
+            for (DeckCard dc : byBp) {
+                if (zone.equals(dc.getCurrentZone())) return true;
+            }
+        }
+
+        // Try title match (case-insensitive)
+        String titleKey = blueprintIdOrTitle.toLowerCase(Locale.ROOT);
+        List<DeckCard> byTitle = catalogByTitle.get(titleKey);
+        if (byTitle != null) {
+            for (DeckCard dc : byTitle) {
+                if (zone.equals(dc.getCurrentZone())) return true;
+            }
+        }
+
+        // Try partial title match (contains)
+        for (Map.Entry<String, List<DeckCard>> entry : catalogByTitle.entrySet()) {
+            if (entry.getKey().contains(titleKey) || titleKey.contains(entry.getKey())) {
+                for (DeckCard dc : entry.getValue()) {
+                    if (zone.equals(dc.getCurrentZone())) return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /** Is any copy of this card in the reserve deck? */
+    public boolean isCardInReserve(String blueprintIdOrTitle) {
+        return isCardInZone(blueprintIdOrTitle, Zone.RESERVE_DECK);
+    }
+
+    /** Is any copy of this card in hand? */
+    public boolean isCardInHand(String blueprintIdOrTitle) {
+        return isCardInZone(blueprintIdOrTitle, Zone.HAND);
+    }
+
+    /** Is any copy of this card deployed on the table? */
+    public boolean isCardInPlay(String blueprintIdOrTitle) {
+        if (blueprintIdOrTitle == null) return false;
+
+        // "In play" means any zone where isInPlay() returns true
+        List<DeckCard> cards = findCards(blueprintIdOrTitle);
+        for (DeckCard dc : cards) {
+            Zone z = dc.getCurrentZone();
+            if (z != null && z.isInPlay()) return true;
+        }
+        return false;
+    }
+
+    /** Is any copy of this card in the lost pile (gone for good)? */
+    public boolean isCardLost(String blueprintIdOrTitle) {
+        return isCardInZone(blueprintIdOrTitle, Zone.LOST_PILE);
+    }
+
+    /** Get all DeckCards currently in a specific zone. */
+    public List<DeckCard> getCardsInZone(Zone zone) {
+        if (zone == null) return Collections.emptyList();
+        return allCards.stream()
+            .filter(dc -> zone.equals(dc.getCurrentZone()))
+            .collect(Collectors.toList());
+    }
+
+    /** Count copies of a specific card (by blueprintId) in a zone. */
+    public int countCopiesInZone(String blueprintId, Zone zone) {
+        if (blueprintId == null || zone == null) return 0;
+        List<DeckCard> cards = catalogByBlueprint.get(blueprintId);
+        if (cards == null) return 0;
+        int count = 0;
+        for (DeckCard dc : cards) {
+            if (zone.equals(dc.getCurrentZone())) count++;
+        }
+        return count;
+    }
+
+    /** Count total copies of a card across all zones. */
+    public int countCopiesTotal(String blueprintId) {
+        if (blueprintId == null) return 0;
+        List<DeckCard> cards = catalogByBlueprint.get(blueprintId);
+        return cards != null ? cards.size() : 0;
+    }
+
+    /** Total number of cards in the deck at game start. */
+    public int getTotalDeckSize() {
+        return totalDeckSize;
+    }
+
+    // =========================================================================
+    // Analysis Methods
+    // =========================================================================
+
+    /** Get all cards of a specific category in a zone (e.g., all characters in reserve). */
+    public List<DeckCard> getCardsByCategory(CardCategory category, Zone zone) {
+        if (category == null || zone == null) return Collections.emptyList();
+        return allCards.stream()
+            .filter(dc -> category.equals(dc.getCategory()) && zone.equals(dc.getCurrentZone()))
+            .collect(Collectors.toList());
+    }
+
+    /** Get cards with destiny >= threshold in a zone. */
+    public List<DeckCard> getHighDestinyCards(Zone zone, float threshold) {
+        if (zone == null) return Collections.emptyList();
+        return allCards.stream()
+            .filter(dc -> zone.equals(dc.getCurrentZone()) && dc.getDestiny() >= threshold)
+            .sorted((a, b) -> Float.compare(b.getDestiny(), a.getDestiny()))
+            .collect(Collectors.toList());
+    }
+
+    /** Average destiny of cards remaining in reserve deck. */
+    public double getAverageDestinyInReserve() {
+        List<DeckCard> reserveCards = getCardsInZone(Zone.RESERVE_DECK);
+        if (reserveCards.isEmpty()) return 0.0;
+        double sum = 0;
+        for (DeckCard dc : reserveCards) {
+            sum += dc.getDestiny();
+        }
+        return sum / reserveCards.size();
+    }
+
+    /** Can we afford to deploy a card given current force? */
+    public boolean canAffordToDeploy(String blueprintId, int currentForce) {
+        if (blueprintId == null) return false;
+        List<DeckCard> cards = catalogByBlueprint.get(blueprintId);
+        if (cards == null || cards.isEmpty()) return false;
+        return cards.get(0).getDeployCost() <= currentForce;
+    }
+
+    /** Get a DeckCard's deploy cost (returns -1 if not found). */
+    public float getDeployCost(String blueprintId) {
+        if (blueprintId == null) return -1;
+        List<DeckCard> cards = catalogByBlueprint.get(blueprintId);
+        if (cards == null || cards.isEmpty()) return -1;
+        return cards.get(0).getDeployCost();
+    }
+
+    /** Get a DeckCard's destiny value (returns 0 if not found). */
+    public float getDestinyValue(String blueprintId) {
+        if (blueprintId == null) return 0;
+        List<DeckCard> cards = catalogByBlueprint.get(blueprintId);
+        if (cards == null || cards.isEmpty()) return 0;
+        return cards.get(0).getDestiny();
+    }
+
+    // =========================================================================
+    // Failed Pull Tracking
+    // =========================================================================
+
+    /**
+     * Record a failed attempt to pull a card from the reserve deck.
+     * After 2 failures, shouldAvoidPulling() returns true.
+     */
+    public void recordFailedPull(String blueprintId) {
+        if (blueprintId == null) return;
+        int count = failedPulls.getOrDefault(blueprintId, 0) + 1;
+        failedPulls.put(blueprintId, count);
+        LOG.warn("📚 [DeckOracle] Failed pull recorded for {} (attempt #{})", blueprintId, count);
+    }
+
+    /**
+     * Should we avoid trying to pull this card? True if 2+ consecutive failures.
+     */
+    public boolean shouldAvoidPulling(String blueprintId) {
+        if (blueprintId == null) return false;
+        return failedPulls.getOrDefault(blueprintId, 0) >= 2;
+    }
+
+    /**
+     * Also check by title (for cases where we only have the card name).
+     */
+    public boolean shouldAvoidPullingByTitle(String title) {
+        if (title == null) return false;
+        String titleLower = title.toLowerCase(Locale.ROOT);
+        // Check if any blueprintId with this title has failed pulls
+        List<DeckCard> cards = catalogByTitle.get(titleLower);
+        if (cards != null) {
+            for (DeckCard dc : cards) {
+                if (shouldAvoidPulling(dc.getBlueprintId())) return true;
+            }
+        }
+        return false;
+    }
+
+    /** Clear failed pull tracking (call on new turn or phase change). */
+    public void clearFailedPulls() {
+        if (!failedPulls.isEmpty()) {
+            LOG.debug("📚 [DeckOracle] Clearing {} failed pull records", failedPulls.size());
+            failedPulls.clear();
+        }
+    }
+
+    // =========================================================================
+    // V24.10: AMSD Per-Turn Failure Tracking
+    // =========================================================================
+
+    /**
+     * Record that AMSD failed on this turn.
+     * Prevents retrying AMSD on the same turn — Piett won't magically appear in reserve
+     * mid-turn. Wait for recirculation on the next turn.
+     */
+    public void recordAmsdFailedOnTurn(int turnNumber) {
+        amsdFailedOnTurn = turnNumber;
+        LOG.warn("📚 [DeckOracle] V24.10: AMSD failed on turn {} — blocking retries until next turn", turnNumber);
+    }
+
+    /**
+     * Should we skip AMSD this turn because it already failed?
+     * Returns true if AMSD failed on the given turn number.
+     */
+    public boolean hasAmsdFailedThisTurn(int turnNumber) {
+        return amsdFailedOnTurn == turnNumber;
+    }
+
+    // =========================================================================
+    // Internal Helpers
+    // =========================================================================
+
+    /** Find all DeckCards matching a blueprintId or title. */
+    private List<DeckCard> findCards(String blueprintIdOrTitle) {
+        if (blueprintIdOrTitle == null) return Collections.emptyList();
+
+        // Exact blueprintId match
+        List<DeckCard> byBp = catalogByBlueprint.get(blueprintIdOrTitle);
+        if (byBp != null && !byBp.isEmpty()) return byBp;
+
+        // Title match
+        String titleKey = blueprintIdOrTitle.toLowerCase(Locale.ROOT);
+        List<DeckCard> byTitle = catalogByTitle.get(titleKey);
+        if (byTitle != null && !byTitle.isEmpty()) return byTitle;
+
+        return Collections.emptyList();
+    }
+
+    /** Catalog a list of PhysicalCards from a specific zone. */
+    private void catalogZone(List<PhysicalCard> cards, Zone zone) {
+        if (cards == null) return;
+        for (PhysicalCard card : cards) {
+            if (card == null) continue;
+            catalogCard(card, zone);
+        }
+    }
+
+    /** Catalog a single card into the indexes. */
+    private void catalogCard(PhysicalCard card, Zone zone) {
+        DeckCard dc = new DeckCard(card, zone);
+
+        allCards.add(dc);
+
+        // Index by blueprintId
+        catalogByBlueprint.computeIfAbsent(dc.getBlueprintId(), k -> new ArrayList<>()).add(dc);
+
+        // Index by lowercase title
+        String titleKey = dc.getTitle().toLowerCase(Locale.ROOT);
+        catalogByTitle.computeIfAbsent(titleKey, k -> new ArrayList<>()).add(dc);
+    }
+
+    /**
+     * Match physical cards from a zone to existing DeckCard entries.
+     * Updates the currentZone of matched DeckCards.
+     *
+     * @param cards Physical cards from a zone
+     * @param zone  The zone these cards are in (null = use card's own zone)
+     * @param matched Tracking array for which DeckCards have been matched
+     */
+    private void matchCardsFromZone(List<PhysicalCard> cards, Zone zone, boolean[] matched) {
+        if (cards == null) return;
+
+        for (PhysicalCard card : cards) {
+            if (card == null) continue;
+            String bpId = card.getBlueprintId(true);
+            Zone actualZone = (zone != null) ? zone : card.getZone();
+
+            // Find an unmatched DeckCard with this blueprintId
+            List<DeckCard> candidates = catalogByBlueprint.get(bpId);
+            if (candidates != null) {
+                for (int i = 0; i < allCards.size(); i++) {
+                    if (matched[i]) continue;
+                    DeckCard dc = allCards.get(i);
+                    if (dc.getBlueprintId().equals(bpId)) {
+                        dc.setCurrentZone(actualZone);
+                        matched[i] = true;
+                        break;
+                    }
+                }
+            } else {
+                // Card not in catalog — new card acquired mid-game (rare but possible)
+                // Add it to the catalog dynamically
+                DeckCard dc = new DeckCard(card, actualZone);
+                allCards.add(dc);
+                catalogByBlueprint.computeIfAbsent(bpId, k -> new ArrayList<>()).add(dc);
+                String titleKey = dc.getTitle().toLowerCase(Locale.ROOT);
+                catalogByTitle.computeIfAbsent(titleKey, k -> new ArrayList<>()).add(dc);
+                // Expand matched array (we can't resize, but new cards are auto-matched)
+                LOG.debug("📚 [DeckOracle] New card discovered mid-game: {} [{}]", dc.getTitle(), bpId);
+            }
+        }
+    }
+
+    // =========================================================================
+    // Deck Manifest — full inventory for strategic planning
+    // =========================================================================
+
+    /**
+     * Get the full deck manifest: every unique card with copy count and zone breakdown.
+     * Returns a list of ManifestEntry sorted by category then title.
+     * Evaluators can use this to plan combos, check availability, etc.
+     */
+    public List<ManifestEntry> getDeckManifest() {
+        Map<String, ManifestEntry> manifest = new LinkedHashMap<>();
+
+        for (DeckCard dc : allCards) {
+            ManifestEntry entry = manifest.get(dc.getBlueprintId());
+            if (entry == null) {
+                entry = new ManifestEntry(dc.getBlueprintId(), dc.getTitle(),
+                    dc.getCategory(), dc.getSubtype(), dc.getDestiny(), dc.getDeployCost());
+                manifest.put(dc.getBlueprintId(), entry);
+            }
+            entry.addCopy(dc.getCurrentZone());
+        }
+
+        // Sort by category name, then by title
+        List<ManifestEntry> sorted = new ArrayList<>(manifest.values());
+        sorted.sort((a, b) -> {
+            String catA = a.category != null ? a.category.name() : "ZZZ";
+            String catB = b.category != null ? b.category.name() : "ZZZ";
+            int cmp = catA.compareTo(catB);
+            if (cmp != 0) return cmp;
+            return a.title.compareToIgnoreCase(b.title);
+        });
+
+        return sorted;
+    }
+
+    /**
+     * A single entry in the deck manifest — one unique card with zone breakdown.
+     */
+    public static class ManifestEntry {
+        public final String blueprintId;
+        public final String title;
+        public final CardCategory category;
+        public final CardSubtype subtype;
+        public final float destiny;
+        public final float deployCost;
+        public int totalCopies = 0;
+        public int inHand = 0;
+        public int inReserve = 0;
+        public int inPlay = 0;
+        public int inUsedPile = 0;
+        public int inLostPile = 0;
+        public int inForcePile = 0;
+        public int other = 0;
+
+        public ManifestEntry(String blueprintId, String title, CardCategory category,
+                             CardSubtype subtype, float destiny, float deployCost) {
+            this.blueprintId = blueprintId;
+            this.title = title;
+            this.category = category;
+            this.subtype = subtype;
+            this.destiny = destiny;
+            this.deployCost = deployCost;
+        }
+
+        void addCopy(Zone zone) {
+            totalCopies++;
+            if (zone == null) { other++; return; }
+            switch (zone) {
+                case HAND: inHand++; break;
+                case RESERVE_DECK: inReserve++; break;
+                case USED_PILE: inUsedPile++; break;
+                case LOST_PILE: inLostPile++; break;
+                case FORCE_PILE: inForcePile++; break;
+                default:
+                    if (zone.isInPlay()) inPlay++;
+                    else other++;
+                    break;
+            }
+        }
+
+        /** Short zone summary string, only showing non-zero zones. */
+        public String getZoneSummary() {
+            List<String> parts = new ArrayList<>();
+            if (inHand > 0)      parts.add(inHand + " hand");
+            if (inReserve > 0)   parts.add(inReserve + " reserve");
+            if (inPlay > 0)      parts.add(inPlay + " in-play");
+            if (inUsedPile > 0)  parts.add(inUsedPile + " used");
+            if (inLostPile > 0)  parts.add(inLostPile + " lost");
+            if (inForcePile > 0) parts.add(inForcePile + " force");
+            if (other > 0)       parts.add(other + " other");
+            return String.join(", ", parts);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s [%s] x%d (dest=%.0f cost=%.0f) — %s",
+                title, blueprintId, totalCopies, destiny, deployCost, getZoneSummary());
+        }
+    }
+
+    // =========================================================================
+    // Logging
+    // =========================================================================
+
+    /** Log the full deck manifest after analysis. */
+    private void logCatalogSummary() {
+        // Zone totals
+        int handCount = 0, reserveCount = 0, inPlayCount = 0, otherCount = 0;
+        float totalDestiny = 0;
+        int destinyCardCount = 0;
+
+        Map<CardCategory, Integer> categoryCount = new EnumMap<>(CardCategory.class);
+
+        for (DeckCard dc : allCards) {
+            Zone z = dc.getCurrentZone();
+            if (z == Zone.HAND) handCount++;
+            else if (z == Zone.RESERVE_DECK) reserveCount++;
+            else if (z != null && z.isInPlay()) inPlayCount++;
+            else otherCount++;
+
+            if (dc.getDestiny() > 0) {
+                totalDestiny += dc.getDestiny();
+                destinyCardCount++;
+            }
+
+            if (dc.getCategory() != null) {
+                categoryCount.merge(dc.getCategory(), 1, Integer::sum);
+            }
+        }
+
+        float avgDestiny = destinyCardCount > 0 ? totalDestiny / destinyCardCount : 0;
+
+        LOG.warn("📚 ===================================================================");
+        LOG.warn("📚 DECK ORACLE — FULL DECK MANIFEST");
+        LOG.warn("📚 ===================================================================");
+        LOG.warn("📚 Total cards: {} | Unique blueprints: {}", totalDeckSize, catalogByBlueprint.size());
+        LOG.warn("📚 Hand: {} | Reserve: {} | In play: {} | Other: {}",
+            handCount, reserveCount, inPlayCount, otherCount);
+        LOG.warn("📚 Average destiny: {} ({} cards with destiny)",
+            String.format("%.1f", avgDestiny), destinyCardCount);
+        LOG.warn("📚 Card categories: {}", categoryCount);
+        LOG.warn("📚 -------------------------------------------------------------------");
+
+        // Full manifest grouped by card category
+        List<ManifestEntry> manifest = getDeckManifest();
+        CardCategory lastCategory = null;
+
+        for (ManifestEntry entry : manifest) {
+            // Print category header when it changes
+            if (entry.category != lastCategory) {
+                lastCategory = entry.category;
+                String catName = lastCategory != null ? lastCategory.name() : "UNKNOWN";
+                int catCount = categoryCount.getOrDefault(lastCategory, 0);
+                LOG.warn("📚");
+                LOG.warn("📚 ── {} ({} cards) ──", catName, catCount);
+            }
+
+            // Print each card: count × title (destiny/cost) — zone breakdown
+            String copyLabel = entry.totalCopies > 1
+                ? entry.totalCopies + "× "
+                : "   ";
+            LOG.warn("📚   {}{} (dest={} cost={}) — {}",
+                copyLabel, entry.title,
+                String.format("%.0f", entry.destiny),
+                String.format("%.0f", entry.deployCost),
+                entry.getZoneSummary());
+        }
+
+        LOG.warn("📚 -------------------------------------------------------------------");
+
+        // Highlight high-destiny cards in reserve (destiny >= 5)
+        List<DeckCard> highDestiny = getHighDestinyCards(Zone.RESERVE_DECK, 5);
+        if (!highDestiny.isEmpty()) {
+            LOG.warn("📚 ⭐ High destiny in reserve (5+): {}", highDestiny.stream()
+                .map(dc -> dc.getTitle() + "(" + String.format("%.0f", dc.getDestiny()) + ")")
+                .collect(Collectors.joining(", ")));
+        }
+
+        // Highlight cards with multiple copies
+        long multiCopyCount = manifest.stream().filter(e -> e.totalCopies > 1).count();
+        if (multiCopyCount > 0) {
+            LOG.warn("📚 🔢 Cards with multiple copies:");
+            for (ManifestEntry entry : manifest) {
+                if (entry.totalCopies > 1) {
+                    LOG.warn("📚      {}× {} — {}", entry.totalCopies, entry.title, entry.getZoneSummary());
+                }
+            }
+        }
+
+        LOG.warn("📚 ===================================================================");
+    }
+}

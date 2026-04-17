@@ -23,6 +23,83 @@
     </div>
     <div id="unity-fullscreen-button" style="display: none;"></div>
     <script>
+      // =====================================================================
+      // CARD IMAGE INTERCEPTOR
+      // The Unity app requests card images via /gemp-swccg/i_{blueprintId}
+      // (e.g. /gemp-swccg/i_1_1).  No such file exists on the server; the
+      // real images live at https://res.starwarsccg.org/cards/...
+      // We pre-load StreamingAssets/cardImages.json (a merged copy of the
+      // fixedImages maps from jCards.js + CardImages.js) and intercept every
+      // fetch / XHR that Unity makes to /gemp-swccg/i_*, rewriting the URL
+      // to the correct CDN address before the request leaves the browser.
+      // =====================================================================
+      (function installCardImageInterceptor() {
+        var _cardImageMap = null;
+
+        // Start loading the map immediately so it is ready before Unity
+        // needs its first card image.
+        fetch('StreamingAssets/cardImages.json')
+          .then(function(r) { return r.json(); })
+          .then(function(map) {
+            _cardImageMap = map;
+            console.log('[GEMP] Card image map loaded: ' +
+                        Object.keys(map).length + ' entries');
+          })
+          .catch(function(e) {
+            console.error('[GEMP] Failed to load card image map:', e);
+          });
+
+        // Helper: given a URL string, return the local-proxy replacement or null.
+        // Two cases are handled:
+        //   1. Direct CDN URLs (https://res.starwarsccg.org/...) that Unity fetches
+        //      after reading them from the GitHub card-JSON files.
+        //   2. Legacy /gemp-swccg/i_{blueprintId} URLs that older Unity builds may use.
+        // Both are routed through /gemp-swccg/imageproxy so the request goes
+        // server-to-server (no Origin header → CDN doesn't block it).
+        function remap(url) {
+          if (typeof url !== 'string') return null;
+          // Case 1: direct CDN fetch — route through local proxy
+          if (url.indexOf('res.starwarsccg.org/') >= 0) {
+            return '/gemp-swccg/imageproxy?url=' + encodeURIComponent(url);
+          }
+          // Case 2: legacy /gemp-swccg/i_{id} pattern
+          if (_cardImageMap) {
+            var m = url.match(/\/gemp-swccg\/i_(.+?)(?:\?.*)?$/);
+            if (m) {
+              var cdnUrl = _cardImageMap[m[1]];
+              if (cdnUrl) {
+                return '/gemp-swccg/imageproxy?url=' + encodeURIComponent(cdnUrl);
+              }
+            }
+          }
+          return null;
+        }
+
+        // Intercept window.fetch (Unity WebGL uses this for UnityWebRequest)
+        var _origFetch = window.fetch;
+        window.fetch = function(input, init) {
+          var url = (typeof input === 'string') ? input
+                  : (input && input.url) ? input.url : '';
+          var cdnUrl = remap(url);
+          if (cdnUrl) {
+            return _origFetch.call(this, cdnUrl, init);
+          }
+          return _origFetch.apply(this, arguments);
+        };
+
+        // Intercept XMLHttpRequest as a belt-and-braces fallback
+        var _origOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url) {
+          var cdnUrl = remap(url);
+          if (cdnUrl) {
+            return _origOpen.apply(this,
+              [method, cdnUrl].concat(Array.prototype.slice.call(arguments, 2)));
+          }
+          return _origOpen.apply(this, arguments);
+        };
+      })();
+      // =====================================================================
+
       const hideFullScreenButton = "1";
       const buildUrl = "Build";
       const loaderUrl = buildUrl + "/9e2cd8213a14debe431d5b6d5ab73726.loader.js";

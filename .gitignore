@@ -71,3 +71,13 @@ database/*
 /.vs
 .local/*
 .vscode/*
+
+# Local Docker config with machine-specific paths
+src/docker/docker-compose-windows.yml
+src/db-scripts/import_decks.sql
+PC_SETUP_CONTEXT.md
+context.md
+database/
+logs/
+.claude/
+src/.claude/

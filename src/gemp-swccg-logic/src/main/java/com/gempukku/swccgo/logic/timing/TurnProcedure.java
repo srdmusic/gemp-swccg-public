@@ -76,6 +76,12 @@ public class TurnProcedure implements Snapshotable<TurnProcedure> {
      */
     public void carryOutPendingActionsUntilDecisionNeeded() {
         int numSinceDecision = 0;
+        // V43: Wall-clock timeout — if this method runs for > 30 seconds without
+        // producing a decision, the game engine is stuck. The iteration counter
+        // alone isn't enough because each iteration can be expensive (card queries,
+        // modifier checks, filter evaluations).
+        long wallClockStart = System.currentTimeMillis();
+        final long WALL_CLOCK_TIMEOUT_MS = 30000; // 30 seconds
 
         if (_gameProcess == null) {
             // Take game snapshot for start of game
@@ -132,16 +138,23 @@ public class TurnProcedure implements Snapshotable<TurnProcedure> {
             // Check if a winner of the game can be declared.
             _game.checkLifeForceDepleted();
 
-            // Check if an unusually large number loops since user decision, which means game is probably in a loop
-            if (numSinceDecision >= 5000) {
-                _game.getGameState().sendMessage("There's been " + numSinceDecision + " actions/effects since last user decision. Game is probably looping, so ending game.");
+            // Check if an unusually large number loops since user decision, which means game is probably in a loop.
+            // V43: Lowered from 500000 to 50000. 50K catches iteration-based loops.
+            // Also check wall-clock time — catches expensive-per-iteration loops that
+            // don't hit the iteration count but still eat 800% CPU for minutes.
+            long elapsed = System.currentTimeMillis() - wallClockStart;
+            if (numSinceDecision >= 50000 || elapsed > WALL_CLOCK_TIMEOUT_MS) {
+                String reason = (elapsed > WALL_CLOCK_TIMEOUT_MS)
+                    ? "Wall-clock timeout: " + elapsed + "ms (>" + WALL_CLOCK_TIMEOUT_MS + "ms) with " + numSinceDecision + " iterations"
+                    : "Iteration limit: " + numSinceDecision + " actions/effects in " + elapsed + "ms";
+                _game.getGameState().sendMessage("Game engine loop detected! " + reason + ". Ending game.");
                 _actionStack.dumpStack(_game);
                 effectResults = _game.getActionsEnvironment().consumeEffectResults();
                 int numEffectResult = 1;
                 for (EffectResult effectResult : effectResults) {
                     _game.getGameState().sendMessage("EffectResult " + (numEffectResult++) + ": " + effectResult.getType().name() + " Text: " + effectResult.getText(_game));
                 }
-                throw new UnsupportedOperationException("There's been " + numSinceDecision + " actions/effects since last user decision. Game is probably looping, so ending game.");
+                throw new UnsupportedOperationException("Game engine loop detected! " + reason);
             }
         }
     }

@@ -17,6 +17,7 @@ import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.game.state.SortPlayerByName;
+import com.gempukku.swccgo.hall.HallException;
 import com.gempukku.swccgo.hall.HallServer;
 import com.gempukku.swccgo.league.*;
 import com.gempukku.swccgo.service.AdminService;
@@ -136,6 +137,8 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             purgeInGameStatisticListeners(request, responseWriter);
 		} else if (uri.equals("/league/deckcheck") && request.method() == HttpMethod.POST) {
             deckCheck(request, responseWriter);
+        } else if (uri.equals("/botgame") && request.method() == HttpMethod.POST) {
+            createBotVsBotGame(request, responseWriter);
         } else {
             responseWriter.writeError(404);
         }
@@ -1317,6 +1320,62 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             default:
                 validateAdmin(request);
                 break;
+        }
+    }
+
+    /**
+     * Creates a bot-vs-bot game where two AI players play against each other.
+     * POST /admin/botgame
+     * Parameters:
+     *   format       - game format code (e.g. "open", "classic")
+     *   lightSkill   - AI skill for Light Side (e.g. "RANDO", "CHOSENONE", "BEGINNER", "ADVANCED")
+     *   lightDeck    - deck name for Light Side bot (from Librarian decks)
+     *   darkSkill    - AI skill for Dark Side
+     *   darkDeck     - deck name for Dark Side bot (from Librarian decks)
+     *
+     * Returns: HTML response with the game ID on success.
+     */
+    private void createBotVsBotGame(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        validateAdmin(request);
+
+        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
+        try {
+            String format = getFormParameterSafely(postDecoder, "format");
+            String lightSkill = getFormParameterSafely(postDecoder, "lightSkill");
+            String lightDeck = getFormParameterSafely(postDecoder, "lightDeck");
+            String darkSkill = getFormParameterSafely(postDecoder, "darkSkill");
+            String darkDeck = getFormParameterSafely(postDecoder, "darkDeck");
+
+            if (format == null || format.isEmpty())
+                format = "open";
+            if (lightSkill == null || lightSkill.isEmpty())
+                throw new HttpProcessingException(400);
+            if (lightDeck == null || lightDeck.isEmpty())
+                throw new HttpProcessingException(400);
+            if (darkSkill == null || darkSkill.isEmpty())
+                throw new HttpProcessingException(400);
+            if (darkDeck == null || darkDeck.isEmpty())
+                throw new HttpProcessingException(400);
+
+            // Optional: specify which account owns the decks (default: Librarian)
+            String deckOwnerName = getFormParameterSafely(postDecoder, "deckOwner");
+            Player deckOwner;
+            if (deckOwnerName != null && !deckOwnerName.isEmpty()) {
+                deckOwner = _playerDAO.getPlayer(deckOwnerName);
+                if (deckOwner == null)
+                    throw new HallException("Deck owner player not found: " + deckOwnerName);
+            } else {
+                deckOwner = getLibrarian();
+            }
+
+            String gameId = _hallServer.createBotVsBotGame(format, lightSkill, lightDeck,
+                    darkSkill, darkDeck, deckOwner);
+
+            responseWriter.writeHtmlResponse("OK gameId=" + gameId);
+        } catch (HallException e) {
+            responseWriter.writeHtmlResponse("ERROR: " + e.getMessage());
+        } finally {
+            postDecoder.destroy();
         }
     }
 }
