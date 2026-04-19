@@ -28,7 +28,7 @@ public class Card217_015 extends AbstractSite {
     public Card217_015() {
         super(Side.DARK, "Malachor: Sith Temple Gateway", Title.Malachor, Uniqueness.UNIQUE, ExpansionSet.SET_17, Rarity.V);
         setLocationDarkSideGameText("[Set 13] Maul ignores [Set 13] objective deployment restrictions here.");
-        setLocationLightSideGameText("Opponent may not target Ezra with weapons here.");
+        setLocationLightSideGameText("Opponent's weapons here may not target Ezra.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
     }
