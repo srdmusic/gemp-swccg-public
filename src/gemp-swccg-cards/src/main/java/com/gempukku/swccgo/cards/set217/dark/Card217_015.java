@@ -12,7 +12,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.modifiers.IgnoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedBySpecificWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -43,7 +43,7 @@ public class Card217_015 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.Ezra, Filters.and(Filters.weapon, Filters.here(self))));
+        modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.Ezra, Filters.and(Filters.opponents(playerOnLightSideOfLocation), Filters.here(self))));
         return modifiers;
     }
 }
