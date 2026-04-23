@@ -109,7 +109,9 @@ public class Card8_044 extends AbstractUsedOrStartingInterrupt {
                                 protected void performActionResults(Action targetingAction) {
                                     // Perform result(s)
                                     action.appendEffect(
-                                            new DeployCardToSystemFromReserveDeckEffect(action, Filters.site, systemName, Filters.battleground, true, false) {
+//                                            new DeployCardToSystemFromReserveDeckEffect(action, Filters.site, systemName, false,true) {
+                                            new DeployCardToSystemFromReserveDeckEffect(action, Filters.site, systemName, Filters.exterior_Tatooine_site, true, false) {
+//                                            new DeployCardToSystemFromReserveDeckEffect(action, Filters.site, systemName, Filters.battleground, true, false) {
                                                 @Override
                                                 protected void cardDeployed(PhysicalCard card) {
                                                     Filter genericSite = Filters.and(Filters.generic, Filters.site);
