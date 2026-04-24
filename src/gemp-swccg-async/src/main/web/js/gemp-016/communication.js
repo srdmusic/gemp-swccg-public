@@ -984,6 +984,10 @@ var GempSwccgCommunication = Class.extend({
                 that.handleGameError("401");
                 return;
             }
+            if (that.isConcurrentClose(event)) {
+                that.handleGameError("409");
+                return;
+            }
             that.scheduleGameReconnect();
         };
     },
@@ -1195,7 +1199,11 @@ var GempSwccgCommunication = Class.extend({
                 return;
 
             if (that.isAuthClose(event)) {
-                that.enableChatPollingFallback(room);
+                that.enableChatPollingFallback(room, "401");
+                return;
+            }
+            if (that.isConcurrentClose(event)) {
+                that.enableChatPollingFallback(room, "409");
                 return;
             }
             that.scheduleChatReconnect(room);
@@ -1222,7 +1230,7 @@ var GempSwccgCommunication = Class.extend({
             that.ensureChatSocket(room);
         }, delay);
     },
-    enableChatPollingFallback:function (room) {
+    enableChatPollingFallback:function (room, status) {
         if (this._chatWsDisabled[room])
             return;
 
@@ -1239,7 +1247,7 @@ var GempSwccgCommunication = Class.extend({
         }
 
         // In WS-only mode we surface an error instead of switching back to HTTP polling.
-        this.handleChatError(room, "0");
+        this.handleChatError(room, status || "0");
     },
     isAuthClose:function (event) {
         if (event == null)
@@ -1250,6 +1258,15 @@ var GempSwccgCommunication = Class.extend({
 
         var reason = (event.reason || "").toLowerCase();
         return reason.indexOf("auth") > -1 || reason.indexOf("token") > -1 || reason.indexOf("jwt") > -1;
+    },
+    isConcurrentClose:function (event) {
+        if (event == null)
+            return false;
+        if (event.code === 4409)
+            return true;
+
+        var reason = (event.reason || "").toLowerCase();
+        return reason.indexOf("concurrent") > -1 || reason.indexOf("replaced") > -1;
     },
     handleChatMessage:function (room, data) {
         var payload = null;
@@ -1449,6 +1466,10 @@ var GempSwccgCommunication = Class.extend({
 
             if (that.isAuthClose(event)) {
                 that.handleHallError("401");
+                return;
+            }
+            if (that.isConcurrentClose(event)) {
+                that.handleHallError("409");
                 return;
             }
             that.scheduleHallReconnect();

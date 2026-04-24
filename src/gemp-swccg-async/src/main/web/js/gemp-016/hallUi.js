@@ -486,10 +486,10 @@ var GempSwccgHallUI = Class.extend({
                 that.chat.communication.closeRealtimeConnections();
 
             if (currentToken == null || currentToken === "") {
-                location.href = "/gemp-swccg/";
+                that.showErrorDialog("Authentication error", "You are not logged in", false, true);
                 return;
             }
-            location.reload(true);
+            that.showErrorDialog("Concurrent access error", "You are accessing Game Hall from another browser or window. Close this window or if you wish to access Game Hall from here, click \"Refresh page\".", true, false);
         });
     },
 

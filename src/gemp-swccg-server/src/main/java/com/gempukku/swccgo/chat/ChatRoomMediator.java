@@ -52,8 +52,11 @@ public class ChatRoomMediator {
             if(_allowedPlayers != null && !_allowedPlayers.contains(playerId) && _playtesting && !admin && !playtester)
                 throw new PrivateInformationException();
 
-            _listeners.put(playerId, listener);
+            ChatCommunicationChannel replacedListener = _listeners.put(playerId, listener);
             _chatRoom.joinChatRoom(playerId, _allowedPlayers != null && !_allowedPlayers.contains(playerId) && !_allowSpectatorsToChat, listener);
+            if (replacedListener != null && replacedListener != listener) {
+                replacedListener.replacedByAnotherConnection();
+            }
             return listener.consumeMessages(0);
         } finally {
             _lock.writeLock().unlock();
@@ -73,8 +76,14 @@ public class ChatRoomMediator {
     }
 
     public void partUser(String playerId) {
+        partUser(playerId, null);
+    }
+
+    public void partUser(String playerId, ChatCommunicationChannel listener) {
         _lock.writeLock().lock();
         try {
+            if (listener != null && _listeners.get(playerId) != listener)
+                return;
             _chatRoom.partChatRoom(playerId);
             _listeners.remove(playerId);
         } finally {

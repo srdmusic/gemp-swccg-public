@@ -63,7 +63,7 @@ public class ChatWebSocketSession extends AbstractWebSocketSession {
         if (_closed.compareAndSet(false, true)) {
             stopKeepAlive();
             stopExpiryTimer();
-            _chatRoom.partUser(_player.getName());
+            _chatRoom.partUser(_player.getName(), _channel);
         }
     }
 
@@ -230,6 +230,13 @@ public class ChatWebSocketSession extends AbstractWebSocketSession {
         void touch() {
             if (forward) {
                 consumeMessages(null);
+            }
+        }
+
+        @Override
+        public void replacedByAnotherConnection() {
+            if (!_closed.get()) {
+                closeWithReason(4409, "chat connection replaced");
             }
         }
 

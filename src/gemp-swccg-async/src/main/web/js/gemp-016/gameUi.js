@@ -2234,10 +2234,10 @@ var GempSwccgGameUI = Class.extend({
                 that.chatBox.communication.closeRealtimeConnections();
 
             if (currentToken == null || currentToken === "") {
-                location.href = "/gemp-swccg/";
+                that.showErrorDialog("Authentication error", "You are not logged in", false, true, false);
                 return;
             }
-            location.reload(true);
+            that.showErrorDialog("Concurrent access error", "You are observing this Game Hall from another browser or window. Close this window or if you wish to observe it here, click \"Refresh page\".", true, false, false);
         });
     },
 
