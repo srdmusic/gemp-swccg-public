@@ -1096,9 +1096,41 @@ public class DeployPhasePlanner {
                             }
                             establishCount++;
                         } else {
-                            LOG.info("📋 SOLO GUARD: No valid group for {} — skipping location to avoid lone deployment",
-                                loc.location.getTitle());
-                            // Skip — deploying solo here is too risky
+                            // V59 SOLO GUARD FALLBACK: Before giving up on this weak character,
+                            // try to route them to an OWN location where we already have a friendly.
+                            // Deploying alongside an existing friendly converts a "solo deploy"
+                            // into a reinforcement — the weak character arrives with backup.
+                            // FIXES Issue #5 from peaceful-pike replay: Obi-Wan (power 5) stayed
+                            // in hand all game because Mustafar was the only establish target
+                            // and no group could deploy there.
+                            PhysicalCard reinforcementSite = findFriendlyReinforcementSite(
+                                best.card, loc.location);
+                            if (reinforcementSite != null) {
+                                AiBoardAnalyzer.LocationAnalysis reinLoc = null;
+                                try {
+                                    String oppId = currentGame.getOpponent(currentPlayerId);
+                                    reinLoc = AiBoardAnalyzer.analyzeLocation(
+                                        currentGame, currentPlayerId, oppId,
+                                        reinforcementSite, currentSide);
+                                } catch (Exception e) { /* ignore */ }
+                                if (reinLoc != null) {
+                                    addCardToPlan(plan, best.card, reinLoc, 2,
+                                        String.format("V59 REINFORCE: %s joining friendlies at %s",
+                                            best.name, reinforcementSite.getTitle()));
+                                    remaining -= best.cost;
+                                    available.remove(best);
+                                    establishCount++;
+                                    LOG.warn("📋 V59 SOLO GUARD REROUTE: {} (power {}) → {} (own site with friendlies)",
+                                        best.name, best.power, reinforcementSite.getTitle());
+                                } else {
+                                    LOG.info("📋 SOLO GUARD: No valid group for {} — skipping location to avoid lone deployment",
+                                        loc.location.getTitle());
+                                }
+                            } else {
+                                LOG.info("📋 SOLO GUARD: No valid group for {} — skipping location to avoid lone deployment",
+                                    loc.location.getTitle());
+                                // Skip — deploying solo here is too risky
+                            }
                         }
                     }
                 }
@@ -1106,6 +1138,79 @@ public class DeployPhasePlanner {
         }
 
         return plan;
+    }
+
+    /**
+     * V59: Find an own location where we already have a friendly character,
+     * where `card` can legally deploy. Used as a fallback when SOLO GUARD
+     * fails at an establish target — reroute the weak character to where
+     * it auto-joins an existing group.
+     *
+     * @param card the card we want to deploy
+     * @param skipLocation skip this location (it's the failed establish target)
+     * @return an own location with friendly presence, or null
+     */
+    private PhysicalCard findFriendlyReinforcementSite(PhysicalCard card, PhysicalCard skipLocation) {
+        if (card == null || currentGame == null) return null;
+        try {
+            GameState gs = currentGame.getGameState();
+            List<PhysicalCard> tops = gs.getTopLocations();
+            if (tops == null) return null;
+            PhysicalCard best = null;
+            float bestOurPower = -1;
+            for (PhysicalCard loc : tops) {
+                if (loc == null || loc == skipLocation) continue;
+                // Only sites (not systems) make sense for character reinforcement
+                if (loc.getBlueprint() == null) continue;
+                if (loc.getBlueprint().getCardSubtype() == null) continue;
+                if (loc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SITE) continue;
+                // Must have own friendly character here
+                float ourPower = 0;
+                boolean hasFriendly = false;
+                List<PhysicalCard> atLoc = gs.getCardsAtLocation(loc);
+                if (atLoc != null) {
+                    for (PhysicalCard c : atLoc) {
+                        if (c != null && currentPlayerId.equals(c.getOwner())
+                            && c.getBlueprint() != null
+                            && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                            hasFriendly = true;
+                            if (c.getBlueprint().hasPowerAttribute()) {
+                                Float p = c.getBlueprint().getPower();
+                                if (p != null) ourPower += p;
+                            }
+                        }
+                    }
+                }
+                if (!hasFriendly) continue;
+                // Verify the deploying card can actually reach this location
+                if (!canCardDeployHere(card, loc)) continue;
+                // Prefer site with highest own power (most-consolidated group)
+                if (ourPower > bestOurPower) {
+                    bestOurPower = ourPower;
+                    best = loc;
+                }
+            }
+            return best;
+        } catch (Exception e) {
+            LOG.debug("V59 findFriendlyReinforcementSite error: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * V59 helper: best-effort check that `card` can deploy to `location`.
+     * Uses the same filter logic as filterDeployableCards but for a single card.
+     */
+    private boolean canCardDeployHere(PhysicalCard card, PhysicalCard location) {
+        try {
+            if (card == null || card.getBlueprint() == null) return false;
+            List<CardInfo> single = new ArrayList<>();
+            single.add(new CardInfo(card));
+            List<CardInfo> deployable = filterDeployableCards(single, location);
+            return !deployable.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

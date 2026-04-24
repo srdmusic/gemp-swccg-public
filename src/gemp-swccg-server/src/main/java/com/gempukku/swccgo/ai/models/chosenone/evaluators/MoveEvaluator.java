@@ -467,13 +467,39 @@ public class MoveEvaluator extends ActionEvaluator {
 
                             if (v33FriendlyChars > 1 && v33TotalAbility >= ChosenOneConfig.ABILITY_BUDDY_THRESHOLD
                                 && v33AbilityAfterMove < ChosenOneConfig.ABILITY_BUDDY_THRESHOLD && v33AbilityAfterMove >= 4.0f) {
-                                action.addReasoning(String.format(
-                                    "V33 BUDDY BREAK: Moving %s drops ability from %.0f to %.0f (< %d) at %s",
-                                    cardToMove.getTitle(), v33TotalAbility, v33AbilityAfterMove,
-                                    ChosenOneConfig.ABILITY_BUDDY_THRESHOLD, currentLocation.getTitle()), -150.0f);
-                                logger.warn("V33 BUDDY BREAK: {} from {} would drop ability {} → {} (< {})",
-                                    cardToMove.getTitle(), currentLocation.getTitle(),
-                                    v33TotalAbility, v33AbilityAfterMove, ChosenOneConfig.ABILITY_BUDDY_THRESHOLD);
+                                // V59 DOOMED LOCATION: when the location is already lost
+                                // (enemy power >= 2x ours OR diff >= +10), protecting the
+                                // buddy means losing both to overflow. Allow retreat of the
+                                // valuable character. Parity with Rando's V59 fix.
+                                float v59OurPwr = 0, v59TheirPwr = 0;
+                                try {
+                                    v59OurPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, currentLocation, playerId, false, false);
+                                    String v59Opp = game.getOpponent(playerId);
+                                    v59TheirPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, currentLocation, v59Opp, false, false);
+                                } catch (Exception e) { /* ignore */ }
+                                boolean v59Doomed = v59TheirPwr > 0
+                                    && (v59TheirPwr >= v59OurPwr * 2.0f
+                                        || (v59TheirPwr - v59OurPwr) >= 10.0f);
+
+                                if (v59Doomed) {
+                                    action.addReasoning(String.format(
+                                        "V59 DOOMED: %s is a lost position (us %d vs enemy %d) — ESCAPE the valuable character!",
+                                        currentLocation.getTitle(), (int)v59OurPwr, (int)v59TheirPwr),
+                                        200.0f);
+                                    logger.warn("V59 DOOMED: {} at {} is lost ({} vs {}) — V33 buddy-ability DISABLED, flee!",
+                                        cardToMove.getTitle(), currentLocation.getTitle(),
+                                        (int)v59OurPwr, (int)v59TheirPwr);
+                                } else {
+                                    action.addReasoning(String.format(
+                                        "V33 BUDDY BREAK: Moving %s drops ability from %.0f to %.0f (< %d) at %s",
+                                        cardToMove.getTitle(), v33TotalAbility, v33AbilityAfterMove,
+                                        ChosenOneConfig.ABILITY_BUDDY_THRESHOLD, currentLocation.getTitle()), -150.0f);
+                                    logger.warn("V33 BUDDY BREAK: {} from {} would drop ability {} → {} (< {})",
+                                        cardToMove.getTitle(), currentLocation.getTitle(),
+                                        v33TotalAbility, v33AbilityAfterMove, ChosenOneConfig.ABILITY_BUDDY_THRESHOLD);
+                                }
                             }
                         }
                     }
@@ -653,32 +679,43 @@ public class MoveEvaluator extends ActionEvaluator {
                         PhysicalCard srcLoc = cardToMove.getAtLocation();
                         String srcName = (srcLoc != null && srcLoc.getTitle() != null) ?
                             srcLoc.getTitle().toLowerCase(Locale.ROOT) : "";
-                        String destLower = actionLower;
                         String charName = cardToMove.getTitle() != null ? cardToMove.getTitle() : "character";
 
-                        // ANY character at Safehouse → MUST move to Corridor
-                        if (srcName.contains("safehouse") &&
-                            (destLower.contains("underground") || destLower.contains("corridor"))) {
+                        // V60 FIX: The MoveEvaluator scores 'Move using landspeed' and 'Land'
+                        // actions — but landspeed from Corridor only goes to ADJACENT Mapuzo
+                        // sites (Safehouse/Mining Village), NOT outward. The CORRECT action
+                        // for Corridor→Jabiim/opponent-BG is the location's game text
+                        // "Move Jedi Survivor here to a site" — scored in ActionTextEvaluator,
+                        // not here. So at Corridor, we BLOCK landspeed entirely (-9999).
+                        // The transit action is positively scored in ActionTextEvaluator V60.
+                        // FIXES Issue #C from 8d9jxayxqtp293l7 replay: Turn 2 all 3 Jedi moved
+                        // Corridor → Safehouse via landspeed because V53b gave +9999 to ANY
+                        // landspeed move from Corridor regardless of destination.
+                        boolean isLandspeed = actionLower.contains("move using landspeed")
+                            || actionLower.equals("move");
+
+                        // ANY character at Safehouse → MUST move to Corridor (landspeed OK,
+                        // only 1 adjacent battleground anyway)
+                        if (srcName.contains("safehouse") && isLandspeed) {
                             action.setScore(9999.0f);
-                            action.addReasoning("V53b HIDDEN PATH MANDATORY: Move from Safehouse to Corridor — FREE move, MUST flip objective!", 9999.0f);
-                            logger.warn("V53b HIDDEN PATH: {} MUST move Safehouse → Corridor (+9999)!", charName);
+                            action.addReasoning("V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!", 9999.0f);
+                            logger.warn("V53b HIDDEN PATH: {} MUST landspeed Safehouse → Corridor (+9999)!", charName);
                         }
-                        // ANY character at Corridor → MUST move OFF Mapuzo (not back to Safehouse)
+                        // ANY character at Corridor:
+                        //   - Landspeed = BLOCKED (only adjacent is Mapuzo = going backwards)
+                        //   - Transit action scored in ActionTextEvaluator
                         else if (srcName.contains("underground corridor") || srcName.contains("underground")) {
-                            if (destLower.contains("safehouse")) {
+                            if (isLandspeed) {
                                 action.setScore(-9999.0f);
-                                action.addReasoning("V53b HIDDEN PATH BLOCKED: NEVER go back to Safehouse from Corridor!", -9999.0f);
-                                logger.warn("V53b HIDDEN PATH: {} BLOCKED Corridor → Safehouse (-9999)!", charName);
-                            } else {
-                                action.setScore(9999.0f);
-                                action.addReasoning("V53b HIDDEN PATH MANDATORY: Leave Corridor to battleground — FLIPS OBJECTIVE!", 9999.0f);
-                                logger.warn("V53b HIDDEN PATH: {} MUST leave Corridor → outward (+9999)!", charName);
+                                action.addReasoning("V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!", -9999.0f);
+                                logger.warn("V60 HIDDEN PATH: {} BLOCKED landspeed from Corridor (-9999) — must use 'Move Jedi Survivor here to a site'!", charName);
                             }
                         }
-                        // Moving OFF any Mapuzo location to non-Mapuzo
-                        else if (srcName.contains("mapuzo") && !destLower.contains("mapuzo")) {
-                            action.addReasoning("V53b HIDDEN PATH: Leaving Mapuzo — objective progress!", 800.0f);
-                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo — +800!", charName);
+                        // Moving OFF any Mapuzo location to non-Mapuzo via landspeed
+                        // (e.g., Jabiim Path Operations Center has interior path to Mapuzo)
+                        else if (srcName.contains("mapuzo") && isLandspeed) {
+                            action.addReasoning("V53b HIDDEN PATH: Leaving Mapuzo via landspeed — objective progress!", 800.0f);
+                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo via landspeed — +800!", charName);
                         }
                     }
                 }

@@ -468,6 +468,31 @@ public class DeckOracle {
         }
     }
 
+    /**
+     * V60: Check if any card in Reserve Deck has a title containing ANY of the given keywords.
+     * Used to validate pulls before scoring them — don't waste Force pulling from Reserve
+     * when no valid targets remain there.
+     *
+     * Example: hasTargetInReserve("admiral") checks if any card with "Admiral" in its title
+     * is currently in the Reserve Deck zone.
+     *
+     * @param keywords One or more keywords to match against card titles (case-insensitive)
+     * @return true if at least one card in Reserve matches any keyword
+     */
+    public boolean hasTargetInReserve(String... keywords) {
+        if (keywords == null || keywords.length == 0) return false;
+        for (DeckCard dc : allCards) {
+            if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
+            String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
+            for (String kw : keywords) {
+                if (kw != null && titleLower.contains(kw.toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // =========================================================================
     // V24.10: AMSD Per-Turn Failure Tracking
     // =========================================================================

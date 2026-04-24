@@ -95,7 +95,45 @@ public class DeployEvaluator extends ActionEvaluator {
         if (hasDeployAction) {
             LOG.info("[DeployEvaluator] canEvaluate=TRUE - will evaluate deploy decision");
         } else {
-            LOG.debug("[DeployEvaluator] canEvaluate=false: no deploy actions found in {} action texts", actionTexts.size());
+            LOG.warn("[DeployEvaluator] canEvaluate=false: no deploy actions found in {} action texts", actionTexts.size());
+
+            // V59 DIAGNOSTIC for Issue #2: when Deploy phase presents 0 deploy-from-hand
+            // actions despite having hand cards + force, dump state so we can diagnose.
+            // FIXES visibility of Turn 5 peaceful-pike bug where Rando had Obi-Wan, YS,
+            // Luke's Lightsaber in hand, 13F in pile, but only 'Break cover' was offered.
+            try {
+                int force = context.getForcePileSize();
+                List<PhysicalCard> h = context.getHand();
+                int handSize = h != null ? h.size() : 0;
+                // Count potentially deployable cards in hand
+                int potentialDeploys = 0;
+                StringBuilder handDetail = new StringBuilder();
+                if (h != null) {
+                    for (PhysicalCard hc : h) {
+                        if (hc == null || hc.getBlueprint() == null) continue;
+                        CardCategory cat = hc.getBlueprint().getCardCategory();
+                        if (cat == null) continue;
+                        int cost = 0;
+                        try { Float c = hc.getBlueprint().getDeployCost(); if (c != null) cost = c.intValue(); }
+                        catch (UnsupportedOperationException uoe) { /* not deployable */ }
+                        boolean deployable = (cat == CardCategory.CHARACTER || cat == CardCategory.STARSHIP
+                            || cat == CardCategory.VEHICLE || cat == CardCategory.WEAPON
+                            || cat == CardCategory.DEVICE || cat == CardCategory.LOCATION
+                            || cat == CardCategory.EFFECT);
+                        if (deployable && cost <= force) potentialDeploys++;
+                        handDetail.append(hc.getTitle()).append("(").append(cat).append(",c=").append(cost).append(") ");
+                    }
+                }
+                LOG.warn("V59 DIAGNOSTIC NO-DEPLOYS: phase={} force={} handSize={} affordable={} | offered: {} | hand: [{}]",
+                    context.getPhase(), force, handSize, potentialDeploys,
+                    actionTexts, handDetail.toString().trim());
+                if (potentialDeploys > 0) {
+                    LOG.warn("V59 DIAGNOSTIC: {} affordable deploys in hand but GEMP offered NONE — engine-side restriction?",
+                        potentialDeploys);
+                }
+            } catch (Exception e) {
+                LOG.debug("V59 DIAGNOSTIC: Error dumping state: {}", e.getMessage());
+            }
         }
 
         return hasDeployAction;
@@ -433,6 +471,96 @@ public class DeployEvaluator extends ActionEvaluator {
                 50.0f,  // Base score
                 actionText
             );
+
+            // === V60 RESERVE DECK PULL GUARDS ===
+            // FIXES Issue #B from peaceful-pike replay: Rando invoked "Deploy Tala Durith
+            // from Reserve Deck" and "Deploy a Padawan" at force=0, search failed, opponent
+            // saw Rando's entire Reserve Deck. NEVER invoke a Reserve pull unless:
+            //   1. We can afford the deploy cost (tricky: unknown cost for "a Padawan")
+            //   2. DeckOracle confirms a valid target exists (prevents reveal)
+            //   3. This specific action hasn't failed 2x this game (shouldAvoidPulling)
+            // For generic-target actions ("Deploy a Padawan"), guards #1-2 are best-effort.
+            String v60ActionLower = actionText != null ? actionText.toLowerCase(Locale.ROOT) : "";
+            boolean v60IsReservePull = v60ActionLower.contains("from reserve deck")
+                || v60ActionLower.contains("[download]");
+            if (v60IsReservePull) {
+                // Guard: failed 2x — stop trying
+                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v60Oracle = context.getDeckOracle();
+                if (v60Oracle != null) {
+                    String failKey = "action:" + actionText;
+                    if (v60Oracle.shouldAvoidPulling(failKey)) {
+                        action.addReasoning("V60 RESERVE FAIL-STOP: '" + actionText
+                            + "' failed 2x — stop trying!", -9999.0f);
+                        LOG.warn("V60 RESERVE FAIL-STOP: {} hard-blocked after 2+ failures", actionText);
+                        actions.add(action);
+                        continue;
+                    }
+                }
+                // Guard: reserve deck critically small (reveal risk)
+                GameState v60Gs = context.getGameState();
+                if (v60Gs != null) {
+                    try {
+                        int v60ReserveSize = v60Gs.getReserveDeckSize(context.getPlayerId());
+                        if (v60ReserveSize <= 2) {
+                            action.addReasoning("V60 RESERVE RISK: " + v60ReserveSize
+                                + " cards in Reserve — reveal almost the whole deck!", -9999.0f);
+                            LOG.warn("V60 RESERVE RISK: {} blocked — only {} cards in reserve",
+                                actionText, v60ReserveSize);
+                            actions.add(action);
+                            continue;
+                        }
+                    } catch (Exception e) { /* ignore */ }
+                }
+                // Guard: named target check — "Deploy [Name] from Reserve Deck"
+                // Only blocks SPECIFIC MULTI-WORD proper-noun targets (e.g. "Tala Durith",
+                // "Admiral Piett", "Padme Naberrie"). Generic placeholders like "card",
+                // "a farm", "a Padawan" are NOT blocked — the game engine picks the actual
+                // target from the card's filter list, and pulling for "any matching"
+                // categories is still valuable even if our DeckOracle can't verify.
+                // FIXES Issue from lft7u9prpd6q6r9v replay: Yarna's "Deploy card from
+                // Reserve Deck" was hard-blocked every turn because regex extracted "card"
+                // as a target name and DeckOracle couldn't find a card titled "card".
+                // Case-sensitive regex — proper-noun targets start with uppercase.
+                if (v60Oracle != null) {
+                    java.util.regex.Matcher namedMatch = java.util.regex.Pattern.compile(
+                        "Deploy ([A-Z][A-Za-z']+ [A-Z][A-Za-z' -]+?) from Reserve Deck")
+                        .matcher(actionText);
+                    if (namedMatch.find()) {
+                        String v60Target = namedMatch.group(1).trim();
+                        if (!v60Oracle.hasTargetInReserve(v60Target.split(" "))) {
+                            action.addReasoning("V60 RESERVE MISS: '" + v60Target
+                                + "' not in Reserve — pull fails + reveals deck!", -9999.0f);
+                            LOG.warn("V60 RESERVE MISS: {} not in reserve — hard-blocked", v60Target);
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                }
+
+                // Guard: generic category pull — "Deploy a farm from Reserve Deck",
+                // "Deploy a Padawan from Reserve Deck". Regex: lowercase 'a'/'an' + noun.
+                // If DeckOracle shows 0 cards match the keyword in Reserve, block.
+                // FIXES Issue from lft7u9prpd6q6r9v replay: Rando fired IMBATS "Deploy a
+                // farm from Reserve Deck" when LMF(V) was already in hand and no other
+                // farms were in the deck. Search failed, revealed reserve to opponent.
+                if (v60Oracle != null) {
+                    java.util.regex.Matcher genMatch = java.util.regex.Pattern.compile(
+                        "Deploy an? ([a-z]+) from Reserve Deck").matcher(actionText);
+                    if (genMatch.find()) {
+                        String v60Kw = genMatch.group(1).trim();
+                        if (v60Kw.length() >= 3 && !v60Oracle.hasTargetInReserve(v60Kw)) {
+                            action.addReasoning("V60 RESERVE MISS (generic): no '" + v60Kw
+                                + "' in Reserve — pull fails + reveals deck!", -9999.0f);
+                            LOG.warn("V60 RESERVE MISS (generic): keyword '{}' not in reserve — hard-blocked", v60Kw);
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                }
+                // Passed all guards — positive signal (final score combines with plan bonuses)
+                action.addReasoning("V60 RESERVE PULL: try every turn — free value", 100.0f);
+                LOG.warn("V60 RESERVE PULL: '{}' passed guards — +100 baseline", actionText);
+            }
 
             // === V38.4 + V56 FIX 18: AGGRESSIVE DEPLOY — HAND SIZE + FORCE PILE URGENCY ===
             // Cards in hand do NOTHING. Cards on table drain/battle/occupy.
@@ -934,21 +1062,71 @@ public class DeployEvaluator extends ActionEvaluator {
                             int forceAfterDeploy = totalForce - cost;
                             // Maintenance cost = deploy cost (SWCCG rule)
                             int maintenanceCost = cost;
+
+                            // V59 HOLISTIC MAINTENANCE: Account for other planned deploys AND
+                            // battle reserve. FIXES Issue #4 from peaceful-pike replay: Lando
+                            // deployed with 8F "post-deploy", but Rando then spent 4F on Jyn +
+                            // 1F on battle = only 3F left for 5F maintenance → Lando sacrificed.
+                            // Look at all pending deploys this turn from the plan and subtract
+                            // their cost. Also reserve 2F for battle interrupts/draws.
+                            int pendingDeployCost = 0;
+                            int battleReserve = 2;
+                            try {
+                                DeployPhasePlanner maintPlanner = context.getDeployPhasePlanner();
+                                if (maintPlanner != null) {
+                                    DeploymentPlan maintPlan = maintPlanner.getCurrentPlan();
+                                    if (maintPlan != null && blueprintId != null) {
+                                        for (DeploymentInstruction ins : maintPlan.getInstructions()) {
+                                            if (ins == null) continue;
+                                            // Skip the card we're currently evaluating (its cost already subtracted)
+                                            if (blueprintId.equals(ins.getCardBlueprintId())) continue;
+                                            pendingDeployCost += ins.getDeployCost();
+                                        }
+                                    }
+                                }
+                            } catch (Exception e) {
+                                LOG.debug("V59 MAINTENANCE: Error reading plan: {}", e.getMessage());
+                            }
+                            int forceAfterAllDeploys = forceAfterDeploy - pendingDeployCost - battleReserve;
+
+                            // V64 TIGHTER MAINTENANCE: drains by opponent, Visage losses, and
+                            // force losses to effects will further reduce our pile between deploy
+                            // and end-of-turn. Require a DRAIN BUFFER on top of maintenance.
+                            // Steve's feedback: "Rando deployed Lando (maintenance card) and did
+                            // not save enough force for him. Lost at the end of his turn."
+                            // Previous -500/-600 weren't enough to override +300 V52 SPEND FORCE.
+                            // Now -2000 hard block guarantees maintenance cards only deploy with
+                            // comfortable headroom.
+                            int drainBuffer = 2;  // opponent likely drains ~2/turn
+                            int safeBuffer = maintenanceCost + drainBuffer;
+
                             if (forceAfterDeploy < maintenanceCost) {
-                                // CANNOT pay maintenance — card WILL be lost at end of turn
-                                action.addReasoning("V40 MAINTENANCE: need " + maintenanceCost +
-                                    " Force for upkeep but only " + forceAfterDeploy + " left after deploy (mild caution)", -50.0f);
-                                LOG.warn("V22.3 MAINTENANCE BLOCKED: {} costs {} to deploy, {} Force available, {} left but needs {} for upkeep!",
+                                // CANNOT pay maintenance even as first deploy — HARD BLOCK
+                                action.addReasoning("V59 MAINTENANCE HARD: " + blueprint.getTitle() +
+                                    " needs " + maintenanceCost + "F upkeep but only " +
+                                    forceAfterDeploy + "F left — WILL die at end of turn!", -2000.0f);
+                                LOG.warn("V59 MAINTENANCE HARD: {} costs {}, {}F available, {}F after deploy but needs {} for upkeep — HARD BLOCKED!",
                                     blueprint.getTitle(), cost, totalForce, forceAfterDeploy, maintenanceCost);
-                            } else if (forceAfterDeploy < maintenanceCost + 2) {
-                                // Can barely pay maintenance — risky
-                                action.addReasoning("V40 Maintenance card - tight on Force for upkeep (" +
-                                    forceAfterDeploy + " left, need " + maintenanceCost + ") (mild caution)", -50.0f);
-                                LOG.warn("V22.3 MAINTENANCE WARNING: {} only {} Force left after deploy, upkeep needs {}",
-                                    blueprint.getTitle(), forceAfterDeploy, maintenanceCost);
+                            } else if (forceAfterAllDeploys < maintenanceCost) {
+                                // Can pay if alone, but planned deploys + battle will consume too much
+                                action.addReasoning("V59 MAINTENANCE HOLISTIC: " + blueprint.getTitle() +
+                                    " needs " + maintenanceCost + "F but only " + forceAfterAllDeploys +
+                                    "F after all planned deploys + battle reserve — WILL be sacrificed!", -1500.0f);
+                                LOG.warn("V59 MAINTENANCE HOLISTIC: {} needs {}, only {}F after deploys({}) + reserve({}) = {}F — HARD BLOCKING!",
+                                    blueprint.getTitle(), maintenanceCost, forceAfterAllDeploys,
+                                    pendingDeployCost, battleReserve, forceAfterAllDeploys);
+                            } else if (forceAfterAllDeploys < safeBuffer) {
+                                // V64: Tight — opponent drain could push us below maintenance.
+                                // Raised from -80 to -400 to clearly beat +300 V52 SPEND FORCE.
+                                action.addReasoning("V64 MAINTENANCE TIGHT: " + blueprint.getTitle() +
+                                    " — " + forceAfterAllDeploys + "F post-deploys, need "
+                                    + maintenanceCost + "+" + drainBuffer + " drain buffer — likely sacrifice!",
+                                    -400.0f);
+                                LOG.warn("V64 MAINTENANCE TIGHT: {} — {}F post-deploys, need {} (maint) + {} (drain buffer)",
+                                    blueprint.getTitle(), forceAfterAllDeploys, maintenanceCost, drainBuffer);
                             } else {
-                                LOG.info("V22.3 MAINTENANCE OK: {} has {} Force after deploy, upkeep needs {}",
-                                    blueprint.getTitle(), forceAfterDeploy, maintenanceCost);
+                                LOG.info("V59 MAINTENANCE OK: {} has {}F post-all-deploys, upkeep needs {} (+{}F drain buffer)",
+                                    blueprint.getTitle(), forceAfterAllDeploys, maintenanceCost, drainBuffer);
                             }
                         }
                     } catch (UnsupportedOperationException e) {
@@ -2084,7 +2262,20 @@ public class DeployEvaluator extends ActionEvaluator {
                     // === V24: MEGA LOCATION PRIORITY ===
                     // Locations are the foundation of EVERYTHING — force generation, deploy targets, drain sites.
                     // In the first 3 turns, deploying locations should dominate all other actions.
-                    if (category == CardCategory.LOCATION) {
+                    // V60 FIX: Only apply when the ACTION is actually deploying the location
+                    // (source is a LOCATION card and actionText is a bare "Deploy" / "Deploy [location]"
+                    // — NOT when the action invokes a location's game-text to pull a character
+                    // like "Deploy a Padawan" or "Deploy Tala Durith from Reserve Deck".
+                    // FIXES Issue #A from peaceful-pike replay: Rando invoked Malachor STE's
+                    // "Deploy a Padawan" at force=0 because V24 thought it was a location deploy.
+                    String v24ActionLower = actionText != null ? actionText.toLowerCase(Locale.ROOT) : "";
+                    boolean isActualLocationDeploy = category == CardCategory.LOCATION
+                        && (v24ActionLower.equals("deploy")
+                            || v24ActionLower.startsWith("deploy ") && !v24ActionLower.contains("from reserve")
+                            && !v24ActionLower.contains("padawan")
+                            && !v24ActionLower.contains("jedi survivor")
+                            && !v24ActionLower.contains("tala durith"));
+                    if (isActualLocationDeploy) {
                         int locTurn = context.getTurnNumber();
                         if (locTurn <= 3) {
                             action.addReasoning("V24 LOCATION PRIORITY: Locations first — force generation is everything!", 200.0f);
@@ -2092,6 +2283,10 @@ public class DeployEvaluator extends ActionEvaluator {
                         } else {
                             action.addReasoning("V24: Location deployment — extra force generation", 50.0f);
                         }
+                    } else if (category == CardCategory.LOCATION) {
+                        // Source is a location but action is a game-text pull — don't give +200
+                        LOG.info("V60 V24 SKIP: '{}' on {} is a game-text pull, not a location deploy — no +200 bonus",
+                            actionText, card.getTitle());
                     }
 
                     // === V51: CLOUD CITY ARMY PRE-FLIP — Stack characters at CC sites ===

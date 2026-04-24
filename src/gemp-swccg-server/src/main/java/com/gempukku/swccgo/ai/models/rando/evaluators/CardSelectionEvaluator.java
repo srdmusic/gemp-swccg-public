@@ -406,6 +406,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluatePilotSelection(context);
         } else if (textLower.contains("choose card to cancel")) {
             return evaluateCancelSelection(context);
+        } else if (textLower.contains("move to,")
+                   || (textLower.contains("move") && textLower.contains("to")
+                       && !textLower.contains("choose target")
+                       && !textLower.contains("cardhint"))) {
+            // V63 ROUTING FIX: "Choose card to move to, or click 'Done' to cancel"
+            // is the DESTINATION-selection decision. It must route to
+            // evaluateMoveDestination BEFORE the generic "click 'done' to cancel"
+            // branch — otherwise move-destination decisions fall through to
+            // evaluateTargetSelection (which scores them as "target opponent's
+            // card" +50), bypassing V62 SPLIT SITE and V62 SPY DILUTION logic.
+            // The "move to," comma distinguishes destination selection from
+            // character selection ("Choose card to move to <Malachor...>" has no comma).
+            // FIXES djme704a2jn60z5c replay: Rando moved all 3 Jedi to same site
+            // because V62 never fired.
+            return evaluateMoveDestination(context);
         } else if (textLower.contains("choose target") ||
                    textLower.contains("click 'done' to cancel")) {
             // === V42: SHIELD CHECK — must come before other routing in this branch ===
@@ -774,6 +789,70 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         String title = location.getTitle();
                         String titleLower = title != null ? title.toLowerCase() : "";
                         action.setDisplayText("Deploy to " + (title != null ? title : "location"));
+
+                        // === V64 MAPUZO JEDI-ONLY RULE ===
+                        // On Hidden Path, only Jedi Survivors can transit off Mapuzo via the
+                        // Underground Corridor game text. Non-Jedi characters deployed to any
+                        // Mapuzo location get STUCK there — they can't follow the Jedi out to
+                        // support them at battleground sites. Block non-Jedi character deploys
+                        // to Mapuzo UNLESS the opponent is actively threatening Mapuzo with a
+                        // drain or presence (in which case we need defenders).
+                        // Steve's feedback: "The jedi are the only ones that can move off of
+                        // Mapuzo, so deploying any other character except the fallen order
+                        // jedi will result in trapping those characters on Mapuzo."
+                        if (isCharacter && titleLower.contains("mapuzo")
+                            && game != null && playerId != null) {
+                            // Check if opponent is present at Mapuzo — defenders needed
+                            String v64Opp = gameState.getOpponent(playerId);
+                            float oppPowerAtMapuzo = 0;
+                            try {
+                                oppPowerAtMapuzo = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, location, v64Opp, false, false);
+                            } catch (Exception e) { /* ignore */ }
+
+                            // Check if the deploying card is a Jedi Survivor
+                            boolean isJediSurvivor = false;
+                            if (deployingBlueprintId != null) {
+                                try {
+                                    SwccgCardBlueprint deployBp = getBlueprintFromId(context, deployingBlueprintId);
+                                    if (deployBp != null) {
+                                        String gt = deployBp.getGameText();
+                                        if (gt != null && gt.toLowerCase(java.util.Locale.ROOT).contains("jedi survivor")) {
+                                            isJediSurvivor = true;
+                                        }
+                                        // Known Jedi Survivor personae
+                                        String bpTitle = deployBp.getTitle() != null
+                                            ? deployBp.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                        if (bpTitle.contains("obi-wan") || bpTitle.contains("kelleran")
+                                            || bpTitle.contains("quinlan") || bpTitle.contains("ahsoka")
+                                            || bpTitle.contains("cal kestis") || bpTitle.contains("cere")
+                                            || bpTitle.contains("ezra bridger")) {
+                                            isJediSurvivor = true;
+                                        }
+                                    }
+                                } catch (Exception e) { /* ignore */ }
+                            }
+
+                            if (!isJediSurvivor) {
+                                if (oppPowerAtMapuzo > 0) {
+                                    // Opponent is attacking/draining Mapuzo — defenders welcome
+                                    action.addReasoning(
+                                        "V64 MAPUZO DEFENSE: Opponent at " + title
+                                            + " (power " + (int)oppPowerAtMapuzo
+                                            + ") — non-Jedi defender OK here",
+                                        30.0f);
+                                    logger.info("V64 MAPUZO DEFENSE: {} needs defender vs opponent power {} (+30)",
+                                        title, (int)oppPowerAtMapuzo);
+                                } else {
+                                    // Non-Jedi to empty Mapuzo = trapped forever. Hard block.
+                                    action.addReasoning(
+                                        "V64 MAPUZO TRAP: Non-Jedi character at " + title
+                                            + " will be STUCK — only Jedi Survivors transit off Mapuzo!",
+                                        -1500.0f);
+                                    logger.warn("V64 MAPUZO TRAP: Non-Jedi deploy to empty {} BLOCKED (-1500)", title);
+                                }
+                            }
+                        }
 
                         // =====================================================
                         // FOLLOW THE DEPLOY PLAN!
@@ -1644,6 +1723,55 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         }
 
                         // =====================================================
+                        // V59 UNIVERSAL SPY SCORING — runs regardless of ObjectiveAnalyzer state.
+                        // FIXES Issue #1 from peaceful-pike replay: Jyn Erso deployed to empty
+                        // Upper Chamber (+165) instead of Entrance where opponent drains 2/turn,
+                        // because the spy-aware scoring at line ~2201 was trapped inside
+                        // `if (deployObjAnalyzer.isAnalyzed())`. When Rando's deck doesn't have
+                        // an analyzed objective (e.g., "Like My Father Before Me" variants),
+                        // spy placement fell back to generic icon-count scoring which ties every BG.
+                        // This block scores spies BEFORE the objective-gated block and sets a flag
+                        // to prevent double-counting downstream.
+                        // =====================================================
+                        boolean spyScoringApplied = false;
+                        if (earlySpyDetected && game != null && location != null) {
+                            try {
+                                float ourPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    game.getGameState(), location, playerId, false, false);
+                                String opp = game.getOpponent(playerId);
+                                float oppPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    game.getGameState(), location, opp, false, false);
+
+                                if (oppPwr > 0 && ourPwr == 0) {
+                                    // BEST: Opponent actively draining/occupying — block them!
+                                    action.addReasoning("V59 SPY UNIVERSAL: Opp has power " + (int)oppPwr
+                                        + ", we have 0 — IDEAL spy site, blocks their drain!", 600.0f);
+                                    logger.warn("V59 SPY UNIVERSAL: {} — opp {}, us 0 — IDEAL! (+600)", title, (int)oppPwr);
+                                } else if (oppPwr > 0 && ourPwr > 0) {
+                                    // Both sides — spy would block our own drain while undercover
+                                    action.addReasoning("V59 SPY UNIVERSAL: Both sides present at " + title
+                                        + " — spy blocks OWN drain while undercover", -200.0f);
+                                    logger.warn("V59 SPY UNIVERSAL: {} — opp {}, us {} — hurts us (-200)",
+                                        title, (int)oppPwr, (int)ourPwr);
+                                } else if (oppPwr == 0 && ourPwr > 0) {
+                                    // Only us — spy blocks OUR drain, catastrophic
+                                    action.addReasoning("V59 SPY UNIVERSAL: Only we have presence at " + title
+                                        + " — spy would block OWN drain!", -2000.0f);
+                                    logger.warn("V59 SPY UNIVERSAL: {} — only us {} — BLOCKED (-2000)",
+                                        title, (int)ourPwr);
+                                } else {
+                                    // Empty — no drain to block
+                                    action.addReasoning("V59 SPY UNIVERSAL: " + title
+                                        + " is empty — no drain to block", -300.0f);
+                                    logger.warn("V59 SPY UNIVERSAL: {} — empty, wasted spy (-300)", title);
+                                }
+                                spyScoringApplied = true;
+                            } catch (Exception e) {
+                                logger.debug("V59 SPY UNIVERSAL: Error: {}", e.getMessage());
+                            }
+                        }
+
+                        // =====================================================
                         // CRITICAL: Check power at location
                         // Don't deploy characters to contested locations we're losing!
                         // V22: Prefer own objective locations over opponent locations
@@ -2198,12 +2326,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
 
-                                    if (isUndercoverSpy) {
+                                    if (isUndercoverSpy && !spyScoringApplied) {
                                         // V24.14B: SPY LOCATION SCORING — check WHO has presence.
                                         // Spy blocks force drains for BOTH sides at a location.
                                         // GOOD: Deploy spy where opponent has presence and we DON'T → blocks their drain.
                                         // BAD: Deploy spy where only WE have presence → blocks OUR drain.
                                         // CC/objective locations need same logic — opponent CAN deploy to our CC sites!
+                                        // V59: Skipped when spyScoringApplied=true (universal scoring already ran).
                                         float oppPowerHere = 0;
                                         try {
                                             oppPowerHere = game.getModifiersQuerying().getTotalPowerAtLocation(
@@ -3564,6 +3693,176 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
+                        // === V64 POWER-AWARE MOVE DESTINATION — don't send Jedi to their death ===
+                        // When transiting Jedi off Mapuzo, avoid sites where the opponent's
+                        // total power exceeds what our available Jedi can match. Rando
+                        // previously sent Kelleran (power 5) to Jabiim: Starship Hangar
+                        // where Grand Inquisitor + Emperor Palpatine sat (combined 13+
+                        // power) — instant kill. Hidden Path Jedi are ~6-7 power flipped,
+                        // so destinations with opponent power ≥ 8 without our own support
+                        // are suicide moves.
+                        // FIXES z7qk4ap0b72e4uvm replay (msg 324): Kelleran moved into
+                        // Grand Inquisitor + Emperor → Steve won battle at msg 451.
+                        // Steve's preferred strategy: drain pressure via split-sites, not
+                        // battle initiation into stronger enemies.
+                        {
+                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v64Obj =
+                                context.getObjectiveAnalyzer();
+                            boolean v64HiddenPath = v64Obj != null && v64Obj.isAnalyzed()
+                                && v64Obj.getObjectiveTitle() != null
+                                && v64Obj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path");
+                            if (v64HiddenPath && game != null && gameState != null
+                                && title != null
+                                && !title.toLowerCase(java.util.Locale.ROOT).contains("mapuzo")) {
+                                // V65: Tightened threshold from 8 to 7 — Lord Vader at printed
+                                // power 7 with DVL slipped through. A lone Jedi vs Vader on
+                                // opponent's next-turn deploy+battle phase is a guaranteed loss.
+                                // Steve: "moving solo obiwan against vader when it's my turn
+                                // next to deploy and battle is a very bad idea."
+                                // Assume our Jedi move-in adds ~6 power (typical Jedi Survivor
+                                // when flipped).
+                                float assumedJediPower = 6.0f;
+                                float projectedOurPower = ourPower + assumedJediPower;
+                                if (theirPower >= 7 && projectedOurPower < theirPower + 2) {
+                                    // Solo Jedi move: opponent will out-deploy and battle NEXT turn.
+                                    // Require our projected power to exceed theirs by 2+ to call it safe.
+                                    float deathPenalty = -1500.0f;
+                                    if (theirPower >= 9) deathPenalty = -1800.0f;
+                                    if (theirPower >= 12) deathPenalty = -2500.0f;
+                                    action.addReasoning(
+                                        "V64 SUICIDE MOVE: " + title + " has enemy power "
+                                            + (int)theirPower + " — solo Jedi will DIE on their next turn!",
+                                        deathPenalty);
+                                    logger.warn("V64 SUICIDE MOVE: {} enemy={} our projected={} — HARD BLOCKED ({})",
+                                        title, (int)theirPower, (int)projectedOurPower, (int)deathPenalty);
+                                } else if (theirPower == 0) {
+                                    // Empty site — excellent drain target
+                                    action.addReasoning(
+                                        "V64 SAFE DRAIN: " + title + " is empty — Jedi can drain without opposition!",
+                                        150.0f);
+                                    logger.info("V64 SAFE DRAIN: {} empty — ideal drain destination (+150)", title);
+                                } else if (projectedOurPower >= theirPower + 3) {
+                                    // We'll have clear power advantage
+                                    action.addReasoning(
+                                        "V64 FAVORABLE: " + title + " — Jedi arrival gives us power advantage",
+                                        80.0f);
+                                }
+                            }
+                        }
+
+                        // === V62 HIDDEN PATH SPLIT-SITE ===
+                        // Hidden Path flips when we have 2 Jedi Survivors at 2 DIFFERENT
+                        // battleground/opponent sites outside Mapuzo. If we've already
+                        // placed a Jedi at one non-Mapuzo battleground, the 2nd Jedi must
+                        // go to a DIFFERENT battleground to trigger the flip. Moving both
+                        // to the same site wastes a turn (no flip progress).
+                        // FIXES fmz03bjz79k61img replay: Rando moved Kelleran + Quinlan
+                        // from Corridor to the same Malachor: Sith Temple Upper Chamber,
+                        // delaying the objective flip.
+                        {
+                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v62Obj =
+                                context.getObjectiveAnalyzer();
+                            boolean onHiddenPath = v62Obj != null && v62Obj.isAnalyzed()
+                                && v62Obj.getObjectiveTitle() != null
+                                && v62Obj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path")
+                                && !v62Obj.isFlipped();
+                            if (onHiddenPath && game != null && gameState != null && title != null
+                                && !title.toLowerCase(java.util.Locale.ROOT).contains("mapuzo")) {
+                                try {
+                                    boolean isBGDest = game.getModifiersQuerying().isBattleground(gameState, location, null);
+                                    if (isBGDest) {
+                                        // Count our OWN Jedi Survivors already at this destination
+                                        int ourJediHere = 0;
+                                        java.util.List<PhysicalCard> hereCards = gameState.getCardsAtLocation(location);
+                                        if (hereCards != null) {
+                                            for (PhysicalCard hc : hereCards) {
+                                                if (hc != null && playerId.equals(hc.getOwner())
+                                                    && hc.getBlueprint() != null
+                                                    && hc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                                    String hcText = hc.getBlueprint().getGameText();
+                                                    String hcTitle = hc.getTitle() != null
+                                                        ? hc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                                    boolean isJediSurv = (hcText != null
+                                                            && hcText.toLowerCase(java.util.Locale.ROOT).contains("jedi survivor"))
+                                                        || hcTitle.contains("obi-wan") || hcTitle.contains("kelleran")
+                                                        || hcTitle.contains("quinlan") || hcTitle.contains("ahsoka")
+                                                        || hcTitle.contains("cal kestis") || hcTitle.contains("cere");
+                                                    if (isJediSurv) ourJediHere++;
+                                                }
+                                            }
+                                        }
+                                        if (ourJediHere >= 1) {
+                                            action.addReasoning(
+                                                "V62 SPLIT SITE: Already have " + ourJediHere
+                                                    + " Jedi at " + title
+                                                    + " — move 2nd Jedi to a DIFFERENT battleground to flip Hidden Path!",
+                                                -500.0f);
+                                            logger.warn("V62 SPLIT SITE: {} has {} friendly Jedi — penalize duplicate dest (-500)",
+                                                title, ourJediHere);
+                                        } else {
+                                            // Empty BG outside Mapuzo — ideal split-site destination
+                                            action.addReasoning(
+                                                "V62 SPLIT SITE: No friendly Jedi at " + title
+                                                    + " yet — great split-site target for Hidden Path flip!",
+                                                200.0f);
+                                            logger.info("V62 SPLIT SITE: {} is ideal split-site for Hidden Path (+200)",
+                                                title);
+                                        }
+                                    }
+                                } catch (Exception e) { /* ignore */ }
+                            }
+                        }
+
+                        // === V62 DON'T DILUTE OUR OWN UNDERCOVER SPY ===
+                        // Undercover spies block force drains at their location WHILE they
+                        // stay undercover. If we move non-spy characters to the same site,
+                        // the spy's purpose is wasted — we now occupy openly and can drain
+                        // ourselves (if opponent has 0 power), OR if opponent still has
+                        // power, the spy is redundant. Better to keep Jedi at safe sites
+                        // and let the spy do its solo blocking job.
+                        // FIXES fmz03bjz79k61img replay: Rando deployed Boushh as spy at
+                        // Sith Temple Entrance (Emperor's location), then moved BOTH Jedi
+                        // to the SAME site — making the spy useless.
+                        if (game != null && gameState != null && location != null) {
+                            try {
+                                java.util.List<PhysicalCard> siteCards = gameState.getCardsAtLocation(location);
+                                boolean ourSpyHere = false;
+                                if (siteCards != null) {
+                                    for (PhysicalCard sc : siteCards) {
+                                        if (sc != null && playerId.equals(sc.getOwner())
+                                            && sc.isUndercover()) {
+                                            ourSpyHere = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                // Only penalize if the card being moved is NOT itself a spy
+                                // (spies moving to other spies is fine; non-spy joining a spy is bad)
+                                boolean movingCardIsSpy = false;
+                                // The card being moved isn't directly in context at this point,
+                                // but since this is a destination-selection decision, it's a move
+                                // of a SPECIFIC character chosen in a prior step. We approximate:
+                                // check if the decision text mentions a known spy name.
+                                String dt = context.getDecisionText() != null
+                                    ? context.getDecisionText().toLowerCase(java.util.Locale.ROOT) : "";
+                                if (dt.contains("jyn erso") || dt.contains("boushh")
+                                    || dt.contains("orrimaarko")) {
+                                    movingCardIsSpy = true;
+                                }
+                                if (ourSpyHere && !movingCardIsSpy) {
+                                    // V65: Strengthened from -400 to -1500. Previous -400 was
+                                    // getting overridden by +300 V41 CONTEST DEST + +300 contest
+                                    // bonus from the spy's enemy presence. -1500 ensures spy
+                                    // dilution is a near-hard block when safer alternatives exist.
+                                    action.addReasoning(
+                                        "V62 SPY DILUTION: Our undercover spy is at " + title
+                                            + " — moving a non-spy here wastes the spy's drain-blocking!",
+                                        -1500.0f);
+                                    logger.warn("V62 SPY DILUTION: {} has our spy — don't dilute (-1500)", title);
+                                }
+                            } catch (Exception e) { /* ignore */ }
+                        }
+
                         // === V24.13: LANDO ALONE DETECTION — MOVE TO SUPPORT ===
                         // If Lando is the only friendly character at this CC site, big bonus
                         // to move here and protect him. Lando alone = easy kill for opponent.
@@ -3696,6 +3995,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         theirPower, title, jediAtDest ? " [JEDI!]" : ""), contestBonus);
                                 } else {
                                     // No opponents here — check if opponents are draining uncontested ELSEWHERE
+                                    // V65 SMART WRONG-DIRECTION: Skip the hard-block when:
+                                    //   (a) Our own undercover spy is at the "draining" site
+                                    //       (spy neutralizes their drain — it's not actually a threat)
+                                    //   (b) The "draining" site is suicide to enter
+                                    //       (opponent power too high for our Jedi)
+                                    // FIXES qi99bkot034gso86 replay: Obi-Wan forced to join Boushh
+                                    // at Jabiim: Starship Hangar vs Lord Vader + DVL — spy was
+                                    // already blocking the drain, other BGs were safer drain targets.
                                     boolean opponentsElsewhere = false;
                                     String worstDrainLoc = null;
                                     float worstDrainPower = 0;
@@ -3706,6 +4013,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         float ourPowerThere = game.getModifiersQuerying().getTotalPowerAtLocation(
                                             gameState, otherLoc, playerId, false, false);
                                         if (oppPower > 0 && ourPowerThere == 0) {
+                                            // V65a: Our spy at the drain location blocks it. Skip.
+                                            boolean ourSpyBlocksIt = false;
+                                            try {
+                                                java.util.List<PhysicalCard> cardsAtOther = gameState.getCardsAtLocation(otherLoc);
+                                                if (cardsAtOther != null) {
+                                                    for (PhysicalCard osc : cardsAtOther) {
+                                                        if (osc != null && playerId.equals(osc.getOwner())
+                                                            && osc.isUndercover()) {
+                                                            ourSpyBlocksIt = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            } catch (Exception e) { /* ignore */ }
+                                            if (ourSpyBlocksIt) {
+                                                logger.info("V65a SPY-NEUTRALIZED: Not marking {} as wrong-direction — our spy blocks {} drain",
+                                                    title, otherLoc.getTitle());
+                                                continue;  // don't count this as a drain threat
+                                            }
+                                            // V65b: Suicide destination — opponent too strong for single Jedi.
+                                            // Treat Hidden Path flipped Jedi as ~6 power baseline.
+                                            if (oppPower >= 7) {
+                                                logger.info("V65b SUICIDE-WRONG-DIR: Not marking {} as wrong-direction — {} has enemy power {} (suicide for Jedi)",
+                                                    title, otherLoc.getTitle(), (int)oppPower);
+                                                continue;  // don't count this as a drain threat
+                                            }
                                             opponentsElsewhere = true;
                                             if (oppPower > worstDrainPower) {
                                                 worstDrainPower = oppPower;

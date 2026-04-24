@@ -166,11 +166,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             textLower.contains("amsd") ||
                             (textLower.contains("reveal") && textLower.contains("pilot") && textLower.contains("star destroyer")) ||
                             (textLower.contains("star destroyer") && textLower.contains("deploy both"));
-                        if (!isLocationSearch && !isAmsdAction) {
+                        // V60 RESERVE PULL EXEMPTION: NEVER penalize Reserve Deck pulls.
+                        // Steve's rule (feedback_reserve_deck_pulls.md): "[Download]" and
+                        // "from Reserve Deck" actions are free value — thin the deck, bring
+                        // key cards into play. Fire them every turn. They complement location
+                        // deploys, they don't replace them. FIXES Issue #D from peaceful-pike
+                        // replay: Sai'torr Kal Fas never fired Obi-Wan's Lightsaber because
+                        // V24.4 blocked `[Download] a matching weapon` at -800.
+                        boolean isReservePull = textLower.contains("[download]")
+                            || textLower.contains("from reserve deck")
+                            || textLower.contains("take an effect into hand")
+                            || textLower.contains("take a character into hand");
+                        if (!isLocationSearch && !isAmsdAction && !isReservePull) {
                             action.addReasoning("V24.4 LOCATIONS FIRST: Deploy locations in hand before activating effects!", -800.0f);
                             logger.warn("V24.4 LOCATIONS FIRST: Penalizing '{}' — location in hand needs deploying first! (-800)", actionText);
                         } else if (isAmsdAction) {
                             logger.warn("V24.15 AMSD EXEMPT: Not penalizing AMSD with LOCATIONS FIRST — AMSD deploys a Star Destroyer!");
+                        } else if (isReservePull) {
+                            logger.warn("V60 RESERVE PULL EXEMPT: '{}' is a Reserve Deck pull — NEVER penalize, always fire!", actionText);
                         }
                     }
                 }
@@ -1613,6 +1626,103 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            // ========== V60 HIDDEN PATH TRANSIT — Underground Corridor game text ==========
+            // "Move Jedi Survivor here to a site" is Underground Corridor's game-text action
+            // that transits Jedi Survivors from Corridor to a Jabiim site or opponent's
+            // battleground. This is THE action that flips the Hidden Path objective.
+            // Previously scored 0.0 ("Unknown action type") while landspeed (which goes
+            // backward to Safehouse) got +9999 from V53b. FIXES Issue #C from peaceful-pike.
+            else if (textLower.contains("move jedi survivor here to a site")
+                     || (textLower.contains("move jedi") && textLower.contains("to a site"))) {
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer hpTransit =
+                    context.getObjectiveAnalyzer();
+                boolean onHiddenPath = hpTransit != null && hpTransit.isAnalyzed()
+                    && hpTransit.getObjectiveTitle() != null
+                    && hpTransit.getObjectiveTitle().toLowerCase(Locale.ROOT).contains("hidden path");
+                if (onHiddenPath) {
+                    action.addReasoning("V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective!", 9999.0f);
+                    logger.warn("V60 HIDDEN PATH TRANSIT: '{}' — +9999 (CORRECT outward move, unlike landspeed)", actionText);
+                } else {
+                    action.addReasoning("Move Jedi transit action — tactical mobility", 200.0f);
+                }
+            }
+
+            // ========== V60 RESERVE DECK PULLS — always positive, always fire ==========
+            // Steve's rule (feedback_reserve_deck_pulls.md): Reserve Deck pull effects
+            // are FREE VALUE — thin the deck, bring key cards into play. Always try them.
+            // Covers [Download] actions (Sai'torr Kal Fas → matching weapon, Visage of
+            // Emperor → lightsaber) and generic "X from Reserve Deck" / "Take X into hand"
+            // actions (Mining Village → Tala Durith, Malachor STE → Padawan, IMBATS, etc.)
+            // that weren't caught by earlier specific handlers.
+            // Hard-block only when:
+            //   1. DeckOracle confirms target NOT in Reserve (avoids deck reveal)
+            //   2. Force can't cover the action cost (defer to next turn)
+            //   3. This action has failed 2x in a row (shouldAvoidPulling)
+            else if (textLower.contains("[download]")
+                     || (textLower.contains("from reserve deck") && !textLower.contains("shuffle"))
+                     || textLower.contains("take an effect into hand")
+                     || textLower.contains("take a character into hand")) {
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle pullOracle = context.getDeckOracle();
+                GameState pullGs = context.getGameState();
+                boolean hardBlocked = false;
+
+                // Guard 1: Reserve deck nearly empty (< 3 cards) — reveal risk
+                if (pullGs != null && !hardBlocked) {
+                    try {
+                        int reserveSize = pullGs.getReserveDeckSize(context.getPlayerId());
+                        if (reserveSize <= 2) {
+                            action.addReasoning("V60 RESERVE RISK: Reserve deck has " + reserveSize
+                                + " cards — pull would reveal almost everything!", -400.0f);
+                            logger.warn("V60 RESERVE RISK: '{}' — reserve {} cards — too risky (-400)",
+                                actionText, reserveSize);
+                            hardBlocked = true;
+                        }
+                    } catch (Exception e) { /* ignore */ }
+                }
+
+                // Guard 2: Failed 2x in a row — stop pulling this specific action
+                if (pullOracle != null && !hardBlocked) {
+                    String failKey = "action:" + actionText;
+                    if (pullOracle.shouldAvoidPulling(failKey)) {
+                        action.addReasoning("V60 RESERVE FAIL-STOP: '" + actionText
+                            + "' failed 2x — stop trying this game!", -9999.0f);
+                        logger.warn("V60 RESERVE FAIL-STOP: '{}' has failed 2+ times — hard-blocked",
+                            actionText);
+                        hardBlocked = true;
+                    }
+                }
+
+                // Guard 3: Named-target downloads (e.g., "Deploy Tala Durith from Reserve Deck")
+                // — if DeckOracle shows the specific target is NOT in reserve, hard-block.
+                // Only blocks MULTI-WORD proper-noun targets (case-sensitive match).
+                // FIXES Yarna "Deploy card from Reserve Deck" false positive.
+                if (!hardBlocked && pullOracle != null) {
+                    java.util.regex.Matcher nameMatch = java.util.regex.Pattern.compile(
+                        "(?:Deploy|Take) ([A-Z][A-Za-z']+ [A-Z][A-Za-z' -]+?) (?:from Reserve|into hand from Reserve)")
+                        .matcher(actionText);
+                    if (nameMatch.find()) {
+                        String targetName = nameMatch.group(1).trim();
+                        if (!pullOracle.hasTargetInReserve(targetName.split(" "))) {
+                            action.addReasoning("V60 RESERVE MISS: '" + targetName
+                                + "' is NOT in Reserve Deck — pull will fail and reveal deck!", -9999.0f);
+                            logger.warn("V60 RESERVE MISS: Target '{}' not in reserve — hard-blocked (reveal risk)",
+                                targetName);
+                            hardBlocked = true;
+                        }
+                    }
+                }
+
+                if (!hardBlocked) {
+                    // Free download actions get higher baseline than force-cost pulls
+                    boolean isFreeDownload = textLower.contains("[download]");
+                    float baseline = isFreeDownload ? 250.0f : 150.0f;
+                    action.addReasoning("V60 RESERVE PULL: '" + actionText
+                        + "' — thin deck, bring value into play!", baseline);
+                    logger.warn("V60 RESERVE PULL: '{}' scored +{} — pull every turn!",
+                        actionText, (int)baseline);
+                }
+            }
+
             // ========== Default/Unknown ==========
             else {
                 action.addReasoning("Unknown action type", 0.0f);
@@ -1921,14 +2031,49 @@ public class ActionTextEvaluator extends ActionEvaluator {
     private void evaluateTakeIntoHand(EvaluatedAction action, DecisionContext context, String actionText, String textLower) {
         if (textLower.contains("palpatine")) {
             action.addReasoning("Avoid taking Palpatine", BAD_DELTA);
-        } else {
-            String blueprintId = extractBlueprintFromText(actionText);
-            if (blueprintId != null) {
-                // Could look up card metadata here if needed
-                action.addReasoning("Take card into hand", GOOD_DELTA);
-            } else {
-                action.addReasoning("Taking card into hand", GOOD_DELTA);
+            return;
+        }
+
+        // V63 LOST PILE GUARD: "take a character into hand from Lost Pile"
+        // (Jedi Levitation etc.) needs a matching card in Lost Pile. If there
+        // isn't one, the search FAILS and opponent sees our entire Lost Pile.
+        if (textLower.contains("from lost pile")) {
+            GameState lpGs = context.getGameState();
+            String lpPid = context.getPlayerId();
+            if (lpGs != null && lpPid != null) {
+                int matchingInLostPile = 0;
+                try {
+                    java.util.List<PhysicalCard> lp = lpGs.getLostPile(lpPid);
+                    if (lp != null) {
+                        boolean wantsCharacter = textLower.contains("character");
+                        for (PhysicalCard c : lp) {
+                            if (c == null || c.getBlueprint() == null) continue;
+                            CardCategory cat = c.getBlueprint().getCardCategory();
+                            if (wantsCharacter && cat != CardCategory.CHARACTER) continue;
+                            matchingInLostPile++;
+                        }
+                    }
+                } catch (Exception e) { /* ignore */ }
+                if (matchingInLostPile == 0) {
+                    action.addReasoning(
+                        "V63 LOST PILE EMPTY: no matching target in Lost Pile — search will FAIL and reveal our pile!",
+                        -9999.0f);
+                    logger.warn("V63 LOST PILE EMPTY: '{}' has 0 matching targets — hard-blocked", actionText);
+                    return;
+                }
+                logger.info("V63 LOST PILE OK: '{}' — {} matching targets in Lost Pile",
+                    actionText, matchingInLostPile);
             }
+            action.addReasoning("Take card into hand from Lost Pile", GOOD_DELTA);
+            return;
+        }
+
+        String blueprintId = extractBlueprintFromText(actionText);
+        if (blueprintId != null) {
+            // Could look up card metadata here if needed
+            action.addReasoning("Take card into hand", GOOD_DELTA);
+        } else {
+            action.addReasoning("Taking card into hand", GOOD_DELTA);
         }
     }
 
@@ -2173,7 +2318,27 @@ public class ActionTextEvaluator extends ActionEvaluator {
         Side mySide = context.getSide();
         GameState gameState = context.getGameState();
 
-        // Determine side from card name patterns in action text
+        // V59 OWNER RESOLUTION: Look up the spy's actual owner via cardId first.
+        // FIXES Issue #6 from peaceful-pike replay: actionText was just "Break cover"
+        // with no card name, so regex matching failed and we fell through to
+        // the "unknown owner" -30 branch. Now we resolve via PhysicalCard.
+        Boolean ownerIsUs = null;  // null = unknown, true = our spy, false = opponent's
+        try {
+            List<String> ctxCardIds = context.getCardIds();
+            if (ctxCardIds != null && !ctxCardIds.isEmpty() && gameState != null) {
+                String cardIdStr = ctxCardIds.get(0);
+                PhysicalCard spyCard = gameState.findCardById(Integer.parseInt(cardIdStr));
+                if (spyCard != null && spyCard.getOwner() != null) {
+                    ownerIsUs = spyCard.getOwner().equals(context.getPlayerId());
+                    logger.info("V59 BREAK COVER OWNER: spy {} owner={} (we are {})",
+                        spyCard.getTitle(), spyCard.getOwner(), context.getPlayerId());
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("V59 BREAK COVER: Error resolving owner: {}", e.getMessage());
+        }
+
+        // Fallback: Determine side from card name patterns in action text
         String textLower = actionText.toLowerCase();
         boolean looksLightSide = textLower.contains("rebel") || textLower.contains("bothan") ||
                                   textLower.contains("alliance") || textLower.contains("leia") ||
@@ -2182,8 +2347,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                  textLower.contains("empire") || textLower.contains("probe droid") ||
                                  textLower.contains("mara jade");
 
-        boolean isOwnSpy = (mySide == Side.DARK && looksDarkSide) || (mySide == Side.LIGHT && looksLightSide);
-        boolean isOpponentSpy = (mySide == Side.DARK && looksLightSide) || (mySide == Side.LIGHT && looksDarkSide);
+        boolean isOwnSpy = (ownerIsUs != null && ownerIsUs)
+            || (ownerIsUs == null && ((mySide == Side.DARK && looksDarkSide) || (mySide == Side.LIGHT && looksLightSide)));
+        boolean isOpponentSpy = (ownerIsUs != null && !ownerIsUs)
+            || (ownerIsUs == null && ((mySide == Side.DARK && looksLightSide) || (mySide == Side.LIGHT && looksDarkSide)));
 
         if (isOpponentSpy) {
             action.addReasoning("Break opponent's spy cover — expose them!", GOOD_DELTA);

@@ -540,6 +540,57 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 return "0";  // 0 = Yes/Accept
             }
 
+            // V61 EPIC EVENT SAGA CHOICE — "The Force Is Strong In My Family"
+            // The TFISMF decision surfaces as type=MULTIPLE_CHOICE with prompt text
+            // 'Choose an option' and the actual choices in the `results` param.
+            // Match deck name to correct saga choice.
+            //   Luke deck  → "I Have It"
+            //   Anakin deck → "My Father Has It"
+            //   Rey deck    → "You Have That Power, Too"
+            if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE) {
+                String[] results = params != null ? params.get("results") : null;
+                if (results != null && results.length > 0) {
+                    boolean isTfismfChoice = false;
+                    for (String r : results) {
+                        if (r == null) continue;
+                        String rLower = r.toLowerCase(java.util.Locale.ROOT);
+                        if (rLower.contains("i have it") || rLower.contains("my father has it")
+                            || rLower.contains("you have that power")) {
+                            isTfismfChoice = true;
+                            break;
+                        }
+                    }
+                    if (isTfismfChoice) {
+                        String deckLower = deckName != null
+                            ? deckName.toLowerCase(java.util.Locale.ROOT) : "";
+                        int luke = -1, anakin = -1, rey = -1;
+                        for (int i = 0; i < results.length; i++) {
+                            String rLower = results[i] != null
+                                ? results[i].toLowerCase(java.util.Locale.ROOT) : "";
+                            if (rLower.contains("my father has it")) anakin = i;
+                            else if (rLower.contains("you have that power")) rey = i;
+                            else if (rLower.contains("i have it")) luke = i;
+                        }
+                        int pick = -1;
+                        String why = "";
+                        if (deckLower.contains("luke") && luke >= 0) {
+                            pick = luke; why = "Luke deck → 'I Have It'";
+                        } else if (deckLower.contains("anakin") && anakin >= 0) {
+                            pick = anakin; why = "Anakin deck → 'My Father Has It'";
+                        } else if (deckLower.contains("rey") && rey >= 0) {
+                            pick = rey; why = "Rey deck → 'You Have That Power, Too'";
+                        } else if (luke >= 0) {
+                            pick = luke; why = "Default (no deck match) → 'I Have It'";
+                        }
+                        if (pick >= 0) {
+                            LOG.warn("V61 EPIC EVENT SAGA: deck='{}' choices={} → {} (index {})",
+                                deckName, java.util.Arrays.asList(results), why, pick);
+                            return String.valueOf(pick);
+                        }
+                    }
+                }
+            }
+
             // Maybe apply chaos (random action)
             // CRITICAL: Never use chaos mode during DEPLOY phase - deploy decisions are strategic
             // and random deploys can waste resources or violate the deployment plan

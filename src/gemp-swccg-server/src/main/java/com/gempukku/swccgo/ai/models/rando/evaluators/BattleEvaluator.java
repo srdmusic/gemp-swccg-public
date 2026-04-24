@@ -535,12 +535,29 @@ public class BattleEvaluator extends ActionEvaluator {
                     }
                 }
 
-                // Check if we have enough reserve for destiny draws
-                if (reserveDeck < MIN_RESERVE_FOR_BATTLE) {
+                // V61 RESERVE DECK GUARD — battle destiny needs Reserve Deck cards!
+                // FIXES is9j46shx6t0swby replay: Rando initiated battle with Reserve=0
+                // (log: "No cards in Reserve Deck. Rando can't draw battle destiny")
+                // auto-losing every destiny draw. This is a hard auto-lose trap.
+                // Scale penalty to severity — 0 cards = hard block, 1-2 = heavy penalty.
+                if (reserveDeck == 0) {
+                    action.addReasoning(
+                        "V61 RESERVE EMPTY: 0 cards in Reserve — CANNOT draw battle destiny, auto-lose!",
+                        -800.0f);
+                    logger.warn("V61 RESERVE EMPTY: Blocking battle initiation — Reserve=0!");
+                } else if (reserveDeck == 1) {
+                    action.addReasoning(
+                        "V61 RESERVE CRITICAL: 1 card in Reserve — can draw 1 destiny max, very risky!",
+                        -400.0f);
+                    logger.warn("V61 RESERVE CRITICAL: 1 card in reserve — heavy penalty -400");
+                } else if (reserveDeck == 2) {
+                    action.addReasoning(
+                        "V61 RESERVE LOW: 2 cards in Reserve — weapon destiny + 1 battle destiny only",
+                        -200.0f);
+                } else if (reserveDeck < MIN_RESERVE_FOR_BATTLE) {
                     action.addReasoning(
                         String.format("Low reserve deck (%d) - risky destiny draws", reserveDeck),
-                        -50.0f
-                    );
+                        -80.0f);
                 }
 
                 // === V27: BATTLE INTERRUPT FORCE RESERVATION ===
