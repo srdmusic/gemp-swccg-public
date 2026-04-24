@@ -564,6 +564,57 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
                 }
+
+                // V66 MEMORY AUDIT: Unified pull validation via DeckOracle.
+                // Catches pulls that the named-target/generic regexes miss,
+                // AND catches "WASTEFUL" pulls (target already in hand/play).
+                // Steve's feedback: "Rando doesn't seem to remember what's in
+                // his hand, force pile, reserve, used or lost pile."
+                // This runs AFTER the older named/generic guards so those more
+                // specific penalties still fire first.
+                if (v60Oracle != null && v60Oracle.isAnalyzed()) {
+                    com.gempukku.swccgo.common.Zone v66Zone =
+                        com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.parseSourceZone(actionText);
+                    if (v66Zone != null) {
+                        // Extract candidate target keyword(s) from action text.
+                        // Prefer multi-word proper noun, fall back to generic "a X".
+                        String[] v66Keywords = null;
+                        java.util.regex.Matcher v66Named = java.util.regex.Pattern.compile(
+                            "(?:Deploy|Take) ([A-Z][A-Za-z']+ [A-Z][A-Za-z' -]+?) "
+                                + "(?:from Reserve|from Lost|from Used|from Force|into hand from)")
+                            .matcher(actionText);
+                        if (v66Named.find()) {
+                            v66Keywords = v66Named.group(1).trim().split(" ");
+                        } else {
+                            java.util.regex.Matcher v66Gen = java.util.regex.Pattern.compile(
+                                "(?:Deploy|Take) an? ([a-z]+) (?:from|into hand from)")
+                                .matcher(actionText);
+                            if (v66Gen.find()) {
+                                String kw = v66Gen.group(1).trim();
+                                if (kw.length() >= 3) v66Keywords = new String[] { kw };
+                            }
+                        }
+                        if (v66Keywords != null && v66Keywords.length > 0) {
+                            com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullValidation v66Result =
+                                v60Oracle.validatePull(v66Zone, v66Keywords);
+                            if (v66Result.outcome ==
+                                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_FAIL) {
+                                action.addReasoning("V66 MEMORY: " + v66Result.reason, -9999.0f);
+                                LOG.warn("V66 MEMORY WILL_FAIL: '{}' — {}", actionText, v66Result.reason);
+                                actions.add(action);
+                                continue;
+                            } else if (v66Result.outcome ==
+                                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WASTEFUL) {
+                                action.addReasoning("V66 MEMORY: " + v66Result.reason, -800.0f);
+                                LOG.warn("V66 MEMORY WASTEFUL: '{}' — {} (-800)", actionText, v66Result.reason);
+                            } else if (v66Result.outcome ==
+                                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
+                                LOG.info("V66 MEMORY OK: {} — {}", actionText, v66Result.reason);
+                            }
+                        }
+                    }
+                }
+
                 // Passed all guards — positive signal (final score combines with plan bonuses)
                 action.addReasoning("V60 RESERVE PULL: try every turn — free value", 100.0f);
                 LOG.warn("V60 RESERVE PULL: '{}' passed guards — +100 baseline", actionText);

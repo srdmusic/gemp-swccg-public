@@ -1712,6 +1712,48 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                 }
 
+                // V66 MEMORY AUDIT: Unified hand/in-play check for [Download] and pull actions.
+                // Catches the common "already deployed" case that Guards 1-3 miss.
+                // Example: Sai'torr Kal Fas "[Download] a matching weapon" when the matching
+                // weapon (Obi-Wan's Lightsaber) is already attached to Obi-Wan — search fails
+                // and reveals reserve.
+                if (!hardBlocked && pullOracle != null && pullOracle.isAnalyzed()) {
+                    com.gempukku.swccgo.common.Zone v66Zone =
+                        com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.parseSourceZone(actionText);
+                    if (v66Zone != null) {
+                        String[] v66Keywords = null;
+                        java.util.regex.Matcher v66Named = java.util.regex.Pattern.compile(
+                            "(?:Deploy|Take) ([A-Z][A-Za-z']+ [A-Z][A-Za-z' -]+?) "
+                                + "(?:from Reserve|from Lost|from Used|from Force|into hand from)")
+                            .matcher(actionText);
+                        if (v66Named.find()) {
+                            v66Keywords = v66Named.group(1).trim().split(" ");
+                        } else {
+                            java.util.regex.Matcher v66Gen = java.util.regex.Pattern.compile(
+                                "(?:Deploy|Take|\\[Download\\]) an? ([a-z]+) ?")
+                                .matcher(actionText);
+                            if (v66Gen.find()) {
+                                String kw = v66Gen.group(1).trim();
+                                if (kw.length() >= 3) v66Keywords = new String[] { kw };
+                            }
+                        }
+                        if (v66Keywords != null && v66Keywords.length > 0) {
+                            com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullValidation v66Result =
+                                pullOracle.validatePull(v66Zone, v66Keywords);
+                            if (v66Result.outcome ==
+                                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_FAIL) {
+                                action.addReasoning("V66 MEMORY: " + v66Result.reason, -9999.0f);
+                                logger.warn("V66 MEMORY WILL_FAIL: '{}' — {}", actionText, v66Result.reason);
+                                hardBlocked = true;
+                            } else if (v66Result.outcome ==
+                                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WASTEFUL) {
+                                action.addReasoning("V66 MEMORY: " + v66Result.reason, -800.0f);
+                                logger.warn("V66 MEMORY WASTEFUL: '{}' — {} (-800)", actionText, v66Result.reason);
+                            }
+                        }
+                    }
+                }
+
                 if (!hardBlocked) {
                     // Free download actions get higher baseline than force-cost pulls
                     boolean isFreeDownload = textLower.contains("[download]");

@@ -496,6 +496,181 @@ public class DeckOracle {
     }
 
     // =========================================================================
+    // V66 MEMORY AUDIT: Zone-aware target checks for ALL piles
+    // =========================================================================
+    // Steve's feedback: "Rando doesn't seem to remember what's in his hand,
+    // force pile, reserve, used or lost pile."
+    // These helpers let every evaluator verify a pull/search target exists in
+    // the right zone BEFORE firing. Previously we only checked Reserve Deck;
+    // now we check all 5 piles + in-play state.
+    // =========================================================================
+
+    /**
+     * V66: Check if any card matching the keywords is in the given zone.
+     * Generic version of hasTargetInReserve — parameterized by zone.
+     */
+    public boolean hasTargetInZone(Zone zone, String... keywords) {
+        if (zone == null || keywords == null || keywords.length == 0) return false;
+        for (DeckCard dc : allCards) {
+            if (!zone.equals(dc.getCurrentZone())) continue;
+            String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
+            for (String kw : keywords) {
+                if (kw != null && titleLower.contains(kw.toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * V66: Check if any matching card is in our HAND.
+     * Used to block redundant pulls — "Deploy LMF(V) from Reserve" when LMF(V)
+     * is already in hand will fail and reveal the reserve to opponent.
+     */
+    public boolean hasTargetInHand(String... keywords) {
+        return hasTargetInZone(Zone.HAND, keywords);
+    }
+
+    /**
+     * V66: Check if any matching card is in our LOST PILE.
+     * Used to block Jedi Levitation / Retrieval-style actions when source is empty.
+     */
+    public boolean hasTargetInLostPile(String... keywords) {
+        return hasTargetInZone(Zone.LOST_PILE, keywords);
+    }
+
+    /**
+     * V66: Check if any matching card is in our USED PILE.
+     */
+    public boolean hasTargetInUsedPile(String... keywords) {
+        return hasTargetInZone(Zone.USED_PILE, keywords);
+    }
+
+    /**
+     * V66: Check if any matching card is in our FORCE PILE.
+     */
+    public boolean hasTargetInForcePile(String... keywords) {
+        return hasTargetInZone(Zone.FORCE_PILE, keywords);
+    }
+
+    /**
+     * V66: Check if any matching card is currently IN PLAY (deployed on table).
+     * Used to block "pull a UNIQUE card" when the unique is already deployed.
+     * Example: Sai'torr Kal Fas "[Download] matching weapon" when Obi-Wan's
+     * Lightsaber is already attached to Obi-Wan → search will fail.
+     */
+    public boolean hasTargetInPlay(String... keywords) {
+        if (keywords == null || keywords.length == 0) return false;
+        for (DeckCard dc : allCards) {
+            Zone z = dc.getCurrentZone();
+            if (z == null) continue;
+            // "In play" = any table zone: AT_LOCATION, ATTACHED, STACKED (wait — stacked
+            // is typically not "deployed"). Use isInPlay() if available; otherwise
+            // check for the main play zones.
+            boolean inPlay = z.isInPlay();
+            if (!inPlay) continue;
+            String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
+            for (String kw : keywords) {
+                if (kw != null && titleLower.contains(kw.toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * V66: Classify an action's source zone from its text.
+     * Returns null if the action doesn't involve a zone pull.
+     */
+    public static Zone parseSourceZone(String actionText) {
+        if (actionText == null) return null;
+        String lower = actionText.toLowerCase(Locale.ROOT);
+        if (lower.contains("from reserve deck") || lower.contains("[download]")) return Zone.RESERVE_DECK;
+        if (lower.contains("from lost pile")) return Zone.LOST_PILE;
+        if (lower.contains("from used pile")) return Zone.USED_PILE;
+        if (lower.contains("from force pile")) return Zone.FORCE_PILE;
+        if (lower.contains("from hand")) return Zone.HAND;
+        return null;
+    }
+
+    /**
+     * V66: Comprehensive pull-validity check.
+     *
+     * Given an action text that performs a zone pull, determine if the pull
+     * is likely to succeed based on what we know about each pile.
+     *
+     * Returns a PullOutcome:
+     *   - WILL_SUCCEED: at least one target exists in source zone AND target
+     *     isn't already satisfied elsewhere (e.g., unique in play)
+     *   - WILL_FAIL: no target in source zone — search will fail and reveal pile
+     *   - WASTEFUL: target in source but ALSO already in hand/play — search
+     *     wastes tempo even if it "succeeds"
+     *   - UNKNOWN: can't parse target from action text — let existing weights handle
+     */
+    public enum PullOutcome { WILL_SUCCEED, WILL_FAIL, WASTEFUL, UNKNOWN }
+
+    public static class PullValidation {
+        public final PullOutcome outcome;
+        public final String reason;
+        public PullValidation(PullOutcome outcome, String reason) {
+            this.outcome = outcome;
+            this.reason = reason;
+        }
+    }
+
+    /**
+     * V66: Validate a pull action. sourceZone comes from parseSourceZone,
+     * targetKeywords are the card names/categories the action is looking for.
+     */
+    public PullValidation validatePull(Zone sourceZone, String... targetKeywords) {
+        if (sourceZone == null || targetKeywords == null || targetKeywords.length == 0) {
+            return new PullValidation(PullOutcome.UNKNOWN, "Cannot parse zone or target");
+        }
+        // 1. Does source zone have the target?
+        if (!hasTargetInZone(sourceZone, targetKeywords)) {
+            return new PullValidation(PullOutcome.WILL_FAIL,
+                "No match for '" + String.join("/", targetKeywords)
+                    + "' in " + sourceZone + " — search will FAIL and reveal zone");
+        }
+        // 2. Is the target (if unique) already in play? Skip check for generic
+        //    categories like "character"/"weapon" — those are multi-copy.
+        boolean isGenericCategory = targetKeywords.length == 1
+            && targetKeywords[0] != null
+            && (targetKeywords[0].equalsIgnoreCase("character")
+                || targetKeywords[0].equalsIgnoreCase("weapon")
+                || targetKeywords[0].equalsIgnoreCase("starship")
+                || targetKeywords[0].equalsIgnoreCase("location")
+                || targetKeywords[0].equalsIgnoreCase("alien")
+                || targetKeywords[0].equalsIgnoreCase("interrupt")
+                || targetKeywords[0].equalsIgnoreCase("effect")
+                || targetKeywords[0].equalsIgnoreCase("device")
+                || targetKeywords[0].equalsIgnoreCase("vehicle")
+                || targetKeywords[0].equalsIgnoreCase("holocron")
+                || targetKeywords[0].equalsIgnoreCase("farm")
+                || targetKeywords[0].equalsIgnoreCase("padawan")
+                || targetKeywords[0].equalsIgnoreCase("jedi")
+                || targetKeywords[0].equalsIgnoreCase("droid"));
+        if (!isGenericCategory && sourceZone == Zone.RESERVE_DECK) {
+            // For specifically-named pulls, check if already in play (duplicate)
+            if (hasTargetInPlay(targetKeywords)) {
+                return new PullValidation(PullOutcome.WASTEFUL,
+                    "'" + String.join("/", targetKeywords)
+                        + "' already in play — pull would be redundant");
+            }
+            // Or already in hand (no point pulling a second copy usually)
+            if (hasTargetInHand(targetKeywords)) {
+                return new PullValidation(PullOutcome.WASTEFUL,
+                    "'" + String.join("/", targetKeywords)
+                        + "' already in hand — don't pull a duplicate");
+            }
+        }
+        return new PullValidation(PullOutcome.WILL_SUCCEED,
+            "'" + String.join("/", targetKeywords) + "' is available in " + sourceZone);
+    }
+
+    // =========================================================================
     // Failed Pull Tracking
     // =========================================================================
 
