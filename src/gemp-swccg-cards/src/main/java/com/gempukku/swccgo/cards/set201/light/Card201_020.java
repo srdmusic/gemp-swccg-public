@@ -52,7 +52,7 @@ public class Card201_020 extends AbstractCombatVehicle {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        final Filter otherT47s = Filters.and(Filters.your(self), Filters.other(self), Filters.T_47, Filters.here(self));
+        final Filter otherT47s = Filters.and(Filters.other(self), Filters.T_47, Filters.here(self));
         Condition unlessHit = new UnlessCondition(new HitCondition(self));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
