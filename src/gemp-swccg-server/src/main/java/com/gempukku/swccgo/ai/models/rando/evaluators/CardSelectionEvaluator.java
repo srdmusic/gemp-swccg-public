@@ -3996,12 +3996,40 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // STRONGLY prefer locations with opponents, especially Jedi.
                         // This fixes Vader going to empty Mapuzo Safehouse instead of
                         // Malachor Entrance where Obi-Wan was draining 4 per turn.
+                        // V67f2: Exclude UNDERCOVER SPIES from "go fight" bonus — a spy
+                        // doesn't actively threaten us; moving Jedi to an opp-spy site
+                        // wastes drain potential. FIXES uarc0hmiai1i594y replay: Ezra
+                        // and Young Skywalker piled into Tatooine: Mos Eisley because
+                        // V41 saw "+300 go fight" on Steve's U-3PO spy (power 1).
                         if (game != null && playerId != null) {
                             try {
                                 String opponentId = gameState.getOpponent(playerId);
 
-                                // Check if opponents are at this destination
-                                if (theirPower > 0) {
+                                // V67f2: Recompute opponent power EXCLUDING undercover spies.
+                                float v67fNonSpyOpponentPower = 0;
+                                int v67fSpiesHere = 0;
+                                try {
+                                    java.util.List<PhysicalCard> hereCards =
+                                        gameState.getCardsAtLocation(location);
+                                    if (hereCards != null) {
+                                        for (PhysicalCard hc : hereCards) {
+                                            if (hc == null) continue;
+                                            if (!opponentId.equals(hc.getOwner())) continue;
+                                            if (hc.isUndercover()) {
+                                                v67fSpiesHere++;
+                                                continue;
+                                            }
+                                            SwccgCardBlueprint hcBp = hc.getBlueprint();
+                                            if (hcBp != null && hcBp.hasPowerAttribute()) {
+                                                Float p = hcBp.getPower();
+                                                if (p != null) v67fNonSpyOpponentPower += p;
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) { /* ignore */ }
+
+                                // Check if non-spy opponents are at this destination
+                                if (v67fNonSpyOpponentPower > 0) {
                                     // Opponents here — GREAT move destination!
                                     float contestBonus = 300.0f;
 
@@ -4028,7 +4056,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                                     action.addReasoning(String.format(
                                         "V41 CONTEST DEST: Opponents (power %.0f) at %s%s — go fight!",
-                                        theirPower, title, jediAtDest ? " [JEDI!]" : ""), contestBonus);
+                                        v67fNonSpyOpponentPower, title, jediAtDest ? " [JEDI!]" : ""), contestBonus);
+                                } else if (v67fSpiesHere > 0) {
+                                    // V67f2: Opponent's spy here but no real characters.
+                                    // Don't dilute drain potential by piling characters into a spy site.
+                                    action.addReasoning(
+                                        "V67f SPY-ONLY: " + title + " has only opponent spy ("
+                                            + v67fSpiesHere + ") — drain blocked, prefer draining elsewhere",
+                                        -100.0f);
+                                    logger.warn("V67f SPY-ONLY: {} has only opp spies (no real characters) — penalize move-in (-100)", title);
                                 } else {
                                     // No opponents here — check if opponents are draining uncontested ELSEWHERE
                                     // V65 SMART WRONG-DIRECTION: Skip the hard-block when:

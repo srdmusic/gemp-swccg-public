@@ -610,7 +610,7 @@ public class MoveEvaluator extends ActionEvaluator {
 
             // Land - penalize starfighters
             if (actionLower.contains("land")) {
-                handleLandAction(action, actionLower, cardToMove);
+                handleLandAction(action, actionLower, cardToMove, game);
             }
 
             // Move phase - no automatic bonus, moves should be strategic
@@ -1044,6 +1044,11 @@ public class MoveEvaluator extends ActionEvaluator {
                 if (power == null) power = 0f;
 
                 if (opponentId != null && opponentId.equals(owner)) {
+                    // V67f3: Exclude opponent's undercover spies from "attack power" —
+                    // a spy doesn't actively threaten us; piling characters into a spy
+                    // site wastes drain potential. Spy stays undercover and keeps
+                    // blocking our drain regardless of our character count.
+                    if (card.isUndercover()) continue;
                     theirPower += power;
                     theirCount++;
                 } else if (playerId.equals(owner)) {
@@ -1201,7 +1206,7 @@ public class MoveEvaluator extends ActionEvaluator {
     /**
      * Handle Land action - penalize starfighters.
      */
-    private void handleLandAction(EvaluatedAction action, String actionLower, PhysicalCard card) {
+    private void handleLandAction(EvaluatedAction action, String actionLower, PhysicalCard card, SwccgGame game) {
         boolean isStarfighter = false;
         boolean isStarship = false;
         boolean hasPassengers = false;
@@ -1218,10 +1223,30 @@ public class MoveEvaluator extends ActionEvaluator {
                 isStarship = true;
             }
 
-            // V49: Capital ships and transports typically carry passengers
+            // V67f1: ACTUAL passenger check. The previous V49 logic ASSUMED any
+            // capital/transport ship has passengers, which let Wild Karrde land
+            // alone at sites with high enemy power → instant overflow death.
+            // Fix: scan game state for any character "aboard" this ship via the
+            // Filters.aboard filter — only "has passengers" if at least one is.
+            // FIXES uarc0hmiai1i594y replay: Wild Karrde landed at Cloud City: Upper
+            // Walkway (Steve's stack) with power 0 → overflow.
             if (isStarship && !isStarfighter) {
-                hasPassengers = true;
-                logger.info("[MoveEvaluator] V49: {} is capital/transport — assuming passengers aboard", cardName);
+                int actualOnboard = 0;
+                try {
+                    if (game != null && card != null) {
+                        java.util.Collection<PhysicalCard> aboard =
+                            com.gempukku.swccgo.filters.Filters.filter(
+                                game.getGameState().getAllPermanentCards(),
+                                game,
+                                com.gempukku.swccgo.filters.Filters.and(
+                                    com.gempukku.swccgo.filters.Filters.character,
+                                    com.gempukku.swccgo.filters.Filters.aboard(card)));
+                        if (aboard != null) actualOnboard = aboard.size();
+                    }
+                } catch (Exception e) { /* ignore — fall through to no-passengers */ }
+                hasPassengers = actualOnboard > 0;
+                logger.info("[MoveEvaluator] V67f1: {} actual passengers aboard = {} (capital/transport)",
+                    cardName, actualOnboard);
             }
         }
 
