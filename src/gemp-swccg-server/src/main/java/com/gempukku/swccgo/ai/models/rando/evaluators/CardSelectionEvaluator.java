@@ -407,6 +407,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } else if (textLower.contains("choose card to cancel")) {
             return evaluateCancelSelection(context);
         } else if (textLower.contains("move to,")
+                   || textLower.contains("where to move")
                    || (textLower.contains("move") && textLower.contains("to")
                        && !textLower.contains("choose target")
                        && !textLower.contains("cardhint"))) {
@@ -416,10 +417,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // branch — otherwise move-destination decisions fall through to
             // evaluateTargetSelection (which scores them as "target opponent's
             // card" +50), bypassing V62 SPLIT SITE and V62 SPY DILUTION logic.
-            // The "move to," comma distinguishes destination selection from
-            // character selection ("Choose card to move to <Malachor...>" has no comma).
-            // FIXES djme704a2jn60z5c replay: Rando moved all 3 Jedi to same site
-            // because V62 never fired.
+            //
+            // V67d ADDITION: "Choose where to move <Luke> using landspeed" is
+            // ALSO destination selection — the cardHint here is the CHARACTER
+            // being moved, not the destination. The "where to move" prefix
+            // distinguishes it from character-selection text "card to move to <X>".
+            // FIXES awjc89tacm7cxvtv replay: Rando moved Luke STU↔STG repeatedly
+            // because both options scored +120 (generic target +50 +20) instead
+            // of running through evaluateMoveDestination's drain/BG-aware scoring.
             return evaluateMoveDestination(context);
         } else if (textLower.contains("choose target") ||
                    textLower.contains("click 'done' to cancel")) {

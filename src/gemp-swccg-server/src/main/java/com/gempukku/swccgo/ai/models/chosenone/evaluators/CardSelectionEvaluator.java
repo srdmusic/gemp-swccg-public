@@ -311,11 +311,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } else if (textLower.contains("choose card to cancel")) {
             return evaluateCancelSelection(context);
         } else if (textLower.contains("move to,")
+                   || textLower.contains("where to move")
                    || (textLower.contains("move") && textLower.contains("to")
                        && !textLower.contains("choose target")
                        && !textLower.contains("cardhint"))) {
             // V63 ROUTING FIX: Route destination-selection decisions to
             // evaluateMoveDestination BEFORE the "click 'done' to cancel" branch.
+            // V67d: "Choose where to move <X>" is destination selection (cardHint
+            // is the character, not the destination).
             return evaluateMoveDestination(context);
         } else if (textLower.contains("choose target") ||
                    textLower.contains("click 'done' to cancel")) {
