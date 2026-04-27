@@ -23,20 +23,22 @@ public class HallWebSocketSession extends AbstractWebSocketSession implements Ha
     private final long _tokenExpiresAtMs;
     private ScheduledFuture<?> _expiryTimer;
     private ScheduledFuture<?> _keepAliveTimer;
+    private ScheduledFuture<?> _refreshTimer;
     private ScheduledFuture<?> _serverTimeTimer;
 
     public HallWebSocketSession(ChannelHandlerContext ctx, HallServer hallServer, Player player, long tokenExpiresAt) {
         super(ctx);
         _hallServer = hallServer;
         _player = player;
-        _hallChannel = new HallCommunicationChannel(0);
+        _hallChannel = new WebSocketHallCommunicationChannel();
         _tokenExpiresAtMs = tokenExpiresAt > 0 ? tokenExpiresAt * 1000L : 0L;
     }
 
     @Override
     public void onOpen() {
+        _hallServer.signupUserForHall(_player, _hallChannel, this);
         _hallServer.addHallUpdateListener(this);
-        sendHallUpdate();
+        startPeriodicRefresh();
         startServerTimeTicker();
         startKeepAlive();
         scheduleTokenExpiry();
@@ -47,6 +49,7 @@ public class HallWebSocketSession extends AbstractWebSocketSession implements Ha
         if (_closed.compareAndSet(false, true)) {
             stopExpiryTimer();
             stopKeepAlive();
+            stopPeriodicRefresh();
             stopServerTimeTicker();
             _hallServer.removeHallUpdateListener(this);
         }
@@ -105,10 +108,27 @@ public class HallWebSocketSession extends AbstractWebSocketSession implements Ha
         }, 25, 25, TimeUnit.SECONDS);
     }
 
+    private void startPeriodicRefresh() {
+        stopPeriodicRefresh();
+        _refreshTimer = _ctx.executor().scheduleAtFixedRate(() -> {
+            if (_closed.get()) {
+                return;
+            }
+            sendHallUpdate();
+        }, 5, 5, TimeUnit.SECONDS);
+    }
+
     private void stopKeepAlive() {
         if (_keepAliveTimer != null) {
             _keepAliveTimer.cancel(false);
             _keepAliveTimer = null;
+        }
+    }
+
+    private void stopPeriodicRefresh() {
+        if (_refreshTimer != null) {
+            _refreshTimer.cancel(false);
+            _refreshTimer = null;
         }
     }
 
@@ -228,5 +248,14 @@ public class HallWebSocketSession extends AbstractWebSocketSession implements Ha
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put("id", tableId);
         sendEvent("removeTable", payload);
+    }
+
+    private class WebSocketHallCommunicationChannel extends HallCommunicationChannel {
+        @Override
+        public void replacedByAnotherConnection() {
+            if (!_closed.get()) {
+                closeWithReason(4409, "hall connection replaced");
+            }
+        }
     }
 }

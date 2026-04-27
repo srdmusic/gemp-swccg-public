@@ -726,13 +726,20 @@ public class HallServer extends AbstractServer {
     }
 
     public void signupUserForHall(Player player, HallChannelVisitor hallChannelVisitor) {
-        _hallDataAccessLock.readLock().lock();
+        signupUserForHall(player, new HallCommunicationChannel(), hallChannelVisitor);
+    }
+
+    public void signupUserForHall(Player player, HallCommunicationChannel channel, HallChannelVisitor hallChannelVisitor) {
+        _hallDataAccessLock.writeLock().lock();
         try {
-            HallCommunicationChannel channel = new HallCommunicationChannel(_nextChannelNumber++);
+            channel.setChannelNumber(_nextChannelNumber++);
             channel.processCommunicationChannel(this, player, hallChannelVisitor);
-            _playerChannelCommunication.put(player, channel);
+            HallCommunicationChannel previousChannel = _playerChannelCommunication.put(player, channel);
+            if (previousChannel != null && previousChannel != channel) {
+                previousChannel.replacedByAnotherConnection();
+            }
         } finally {
-            _hallDataAccessLock.readLock().unlock();
+            _hallDataAccessLock.writeLock().unlock();
         }
     }
 
