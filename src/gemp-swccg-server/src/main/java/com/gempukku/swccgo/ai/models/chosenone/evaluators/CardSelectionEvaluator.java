@@ -2940,6 +2940,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             if (totalIcons == 0) {
                                 action.addReasoning("No icons at location - low value", -10.0f);
                             }
+
+                            // === V67e EXPECTED FORCE LOSS — TIE-BREAKER ===
+                            // Tie-breaker bonus that scales with drain potential. When two
+                            // destinations have similar weight scores, prefer the one that
+                            // makes the opponent lose more force.
+                            float v67eExpectedDrain = theirIcons;
+                            try {
+                                if (game.getModifiersQuerying().isBattleground(gameState, location, null)) {
+                                    v67eExpectedDrain *= 1.25f;
+                                }
+                            } catch (Exception e) { /* ignore */ }
+                            if (v67eExpectedDrain > 0) {
+                                float v67eBonus = v67eExpectedDrain * 12.0f;
+                                action.addReasoning(String.format(
+                                    "V67e DRAIN POTENTIAL: drain %.1f at %s = +%.0f opponent force loss",
+                                    v67eExpectedDrain, title, v67eBonus), v67eBonus);
+                                logger.info("V67e DRAIN POTENTIAL: {} drain={} → +{} (tiebreaker)",
+                                    title, v67eExpectedDrain, (int)v67eBonus);
+                            } else {
+                                action.addReasoning("V67e ZERO DRAIN: no opponent force loss from here — bad move",
+                                    -25.0f);
+                            }
                         }
 
                         // === POWER-BASED SCORING ===

@@ -3633,6 +3633,37 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             if (totalIcons == 0) {
                                 action.addReasoning("No icons at location - low value", -10.0f);
                             }
+
+                            // === V67e EXPECTED FORCE LOSS — TIE-BREAKER ===
+                            // Steve's rule: "When there is a tie for points the default scoring
+                            // should re-look at whether the decision will make opponent lose more
+                            // or less force. Less force drain should be considered a bad move."
+                            // This bonus scales linearly with drain potential (icons + lightsaber
+                            // bonus + battleground multiplier) and is small enough not to
+                            // override domain weights, but large enough to break generic ties.
+                            // FIXES awjc89tacm7cxvtv replay (Steve's near-win): Luke moved STU→STG
+                            // dropping from drain 3 to drain 2.
+                            float v67eExpectedDrain = theirIcons;
+                            // Battleground multiplier — BG sites are protected from non-BG-restricted
+                            // drain cancels and tend to drain more reliably.
+                            try {
+                                if (game.getModifiersQuerying().isBattleground(gameState, location, null)) {
+                                    v67eExpectedDrain *= 1.25f;
+                                }
+                            } catch (Exception e) { /* ignore */ }
+                            if (v67eExpectedDrain > 0) {
+                                float v67eBonus = v67eExpectedDrain * 12.0f;
+                                action.addReasoning(String.format(
+                                    "V67e DRAIN POTENTIAL: drain %.1f at %s = +%.0f opponent force loss",
+                                    v67eExpectedDrain, title, v67eBonus), v67eBonus);
+                                logger.info("V67e DRAIN POTENTIAL: {} drain={} → +{} (tiebreaker: prefer max drain)",
+                                    title, v67eExpectedDrain, (int)v67eBonus);
+                            } else {
+                                // Zero-drain destination — actively penalize when alternatives exist
+                                action.addReasoning("V67e ZERO DRAIN: no opponent force loss from here — bad move",
+                                    -25.0f);
+                                logger.info("V67e ZERO DRAIN: {} no drain — penalize relative to drain sites", title);
+                            }
                         }
 
                         // === POWER-BASED SCORING ===
