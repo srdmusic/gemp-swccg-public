@@ -1532,6 +1532,68 @@ public class DeployEvaluator extends ActionEvaluator {
                             actionText, card.getTitle());
                     }
 
+                    // === V67i GLOBAL LOCATION-FIRST PRIORITY ===
+                    // Boost any action that adds a location to the table (including
+                    // [download]/Reserve-pull actions) over character deploys. Each new
+                    // location expands future deploy options + force generation.
+                    boolean v67iAddsLocation = false;
+                    String v67iReason = null;
+                    try {
+                        String v67iLower = v24ActionLower;
+                        if (v67iLower.contains("from reserve deck") || v67iLower.contains("[download]")) {
+                            String[] v67iLocationKeywords = new String[] {
+                                "site", "battleground", "location", "system", "farm",
+                                "cantina", "mos eisley", "tatooine", "endor", "hoth",
+                                "dagobah", "naboo", "yavin", "bespin", "cloud city",
+                                "mustafar", "malachor", "mapuzo", "jabiim", "coruscant",
+                                "kashyyyk", "kessel", "kamino", "geonosis", "alderaan",
+                                "docking bay", "spaceport", "city", "palace", "temple",
+                                "safehouse", "corridor", "village", "outpost"
+                            };
+                            for (String kw : v67iLocationKeywords) {
+                                if (v67iLower.contains(kw)) {
+                                    v67iAddsLocation = true;
+                                    v67iReason = "actionText contains location keyword '" + kw + "'";
+                                    break;
+                                }
+                            }
+                            if (!v67iAddsLocation) {
+                                List<String> v67iCardIds2 = context.getCardIds();
+                                String v67iCardIdStr = (v67iCardIds2 != null && i < v67iCardIds2.size())
+                                    ? v67iCardIds2.get(i) : null;
+                                if (v67iCardIdStr != null && !v67iCardIdStr.isEmpty() && gameState != null) {
+                                    PhysicalCard v67iSrc =
+                                        gameState.findCardById(Integer.parseInt(v67iCardIdStr));
+                                    if (v67iSrc != null && v67iSrc.getBlueprint() != null) {
+                                        String gt = v67iSrc.getBlueprint().getGameText();
+                                        if (gt != null) {
+                                            List<String> targets = com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                                .parseSourceCardPullTargets(gt);
+                                            for (String t : targets) {
+                                                for (String kw : v67iLocationKeywords) {
+                                                    if (t.contains(kw)) {
+                                                        v67iAddsLocation = true;
+                                                        v67iReason = "source card '" + v67iSrc.getTitle()
+                                                            + "' game text targets location-like '" + t + "'";
+                                                        break;
+                                                    }
+                                                }
+                                                if (v67iAddsLocation) break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) { LOG.debug("V67i error: {}", e.getMessage()); }
+
+                    if (v67iAddsLocation) {
+                        action.addReasoning("V67i LOCATION FIRST: this action adds a location — "
+                            + v67iReason + " — deploy locations BEFORE characters every turn!",
+                            500.0f);
+                        LOG.warn("V67i LOCATION FIRST: '{}' adds location ({}) → +500", actionText, v67iReason);
+                    }
+
                     // === V51: CLOUD CITY ARMY PRE-FLIP — Stack characters at CC sites ===
                     // For TDIGWATT/Dark Deal: before objective flips, build your Cloud City army.
                     // +500 for deploying characters to Cloud City sites pre-flip.

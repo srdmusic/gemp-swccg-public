@@ -590,7 +590,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     gameState, location, v64Opp, false, false);
                             } catch (Exception e) { /* ignore */ }
 
-                            // Check if the deploying card is a Jedi Survivor
+                            // V67b: Authoritative Jedi Survivor test — game text contains
+                            // literal "Jedi Survivor" keyword. Drops the persona-name fallback
+                            // that misclassified Ahsoka Tano With Lightsabers, Obi-Wan With
+                            // Lightsaber, etc. — they're Jedi but NOT Jedi Survivors and can't
+                            // transit off Mapuzo via Underground Corridor.
                             boolean isJediSurvivor = false;
                             if (deployingBlueprintId != null) {
                                 try {
@@ -598,15 +602,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     if (deployBp != null) {
                                         String gt = deployBp.getGameText();
                                         if (gt != null && gt.toLowerCase(java.util.Locale.ROOT).contains("jedi survivor")) {
-                                            isJediSurvivor = true;
-                                        }
-                                        // Known Jedi Survivor personae
-                                        String bpTitle = deployBp.getTitle() != null
-                                            ? deployBp.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                                        if (bpTitle.contains("obi-wan") || bpTitle.contains("kelleran")
-                                            || bpTitle.contains("quinlan") || bpTitle.contains("ahsoka")
-                                            || bpTitle.contains("cal kestis") || bpTitle.contains("cere")
-                                            || bpTitle.contains("ezra bridger")) {
                                             isJediSurvivor = true;
                                         }
                                     }

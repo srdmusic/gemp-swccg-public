@@ -815,7 +815,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     gameState, location, v64Opp, false, false);
                             } catch (Exception e) { /* ignore */ }
 
-                            // Check if the deploying card is a Jedi Survivor
+                            // V67b: Check if the deploying card is a TRUE Jedi Survivor.
+                            // Drop the previous persona-name fallback (which incorrectly
+                            // matched "Ahsoka Tano With Lightsabers", "Obi-Wan With Lightsaber",
+                            // "Luke With Lightsaber", etc. — those are Jedi but NOT Jedi
+                            // Survivors and CAN'T transit off Mapuzo via Underground Corridor).
+                            // Authoritative test: game text contains the literal phrase
+                            // "Jedi Survivor" (the keyword that lets Underground Corridor's
+                            // transit action target the card).
+                            // FIXES xxhj3qwhxzmhrdym replay: Ahsoka Tano With Lightsabers
+                            // deployed to Mapuzo: Mining Village and got stuck.
                             boolean isJediSurvivor = false;
                             if (deployingBlueprintId != null) {
                                 try {
@@ -823,15 +832,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     if (deployBp != null) {
                                         String gt = deployBp.getGameText();
                                         if (gt != null && gt.toLowerCase(java.util.Locale.ROOT).contains("jedi survivor")) {
-                                            isJediSurvivor = true;
-                                        }
-                                        // Known Jedi Survivor personae
-                                        String bpTitle = deployBp.getTitle() != null
-                                            ? deployBp.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                                        if (bpTitle.contains("obi-wan") || bpTitle.contains("kelleran")
-                                            || bpTitle.contains("quinlan") || bpTitle.contains("ahsoka")
-                                            || bpTitle.contains("cal kestis") || bpTitle.contains("cere")
-                                            || bpTitle.contains("ezra bridger")) {
                                             isJediSurvivor = true;
                                         }
                                     }
