@@ -671,6 +671,98 @@ public class DeckOracle {
     }
 
     // =========================================================================
+    // V67h SOURCE-CARD GAME-TEXT PARSER
+    //
+    // Generic action texts like "Choose card to deploy from Reserve Deck" or
+    // "[Download] a matching weapon" don't carry the target list. We parse the
+    // source card's game text to extract what categories or names the action
+    // pulls. Steve's expectation: "Rando is already aware of what's in his deck
+    // at the start of game and would know when he would have a successful search."
+    // This makes that true for any card whose game text describes its filter.
+    // =========================================================================
+
+    /**
+     * Parse a source card's game text to extract the list of pull targets.
+     * Returns keyword groups suitable for hasTargetInZone(...).
+     *
+     * Recognizes patterns like:
+     *   "[download] Arleil, Doallyn, Tessek, Wild Karrde, or a Tatooine battleground"
+     *   "deploy Tala Durith from Reserve Deck"
+     *   "take Sabine, Under Attack, or a blaster into hand from Reserve Deck"
+     *
+     * Each returned String is a keyword to match against card titles.
+     */
+    public static List<String> parseSourceCardPullTargets(String gameText) {
+        List<String> targets = new ArrayList<>();
+        if (gameText == null || gameText.isEmpty()) return targets;
+
+        // Patterns that introduce a list of targets:
+        //   [download] X, Y, Z, or W
+        //   deploy X, Y, ... from Reserve Deck
+        //   take X, Y, ... into hand from Reserve Deck
+        java.util.regex.Pattern[] patterns = new java.util.regex.Pattern[] {
+            java.util.regex.Pattern.compile(
+                "\\[download\\]\\s+([^.;]+?)(?=\\.|;|$)",
+                java.util.regex.Pattern.CASE_INSENSITIVE),
+            java.util.regex.Pattern.compile(
+                "deploy\\s+([^.;]+?)\\s+from\\s+reserve\\s+deck",
+                java.util.regex.Pattern.CASE_INSENSITIVE),
+            java.util.regex.Pattern.compile(
+                "take\\s+([^.;]+?)\\s+into\\s+hand\\s+from\\s+reserve\\s+deck",
+                java.util.regex.Pattern.CASE_INSENSITIVE),
+        };
+
+        for (java.util.regex.Pattern p : patterns) {
+            java.util.regex.Matcher m = p.matcher(gameText);
+            while (m.find()) {
+                String list = m.group(1);
+                if (list == null) continue;
+                // Normalize OR → comma, then split.
+                String norm = list.replaceAll("(?i)\\bor\\b", ",")
+                                  .replaceAll(",\\s*,", ",")
+                                  .replaceAll("\\s+", " ");
+                for (String part : norm.split(",")) {
+                    String t = part.trim().toLowerCase(Locale.ROOT);
+                    if (t.isEmpty()) continue;
+                    // Strip leading "a "/"an "/"the "
+                    t = t.replaceFirst("^(a|an|the)\\s+", "");
+                    // Drop trailing modifiers we don't want as keywords
+                    t = t.replaceFirst("\\s+(card|cards)$", "");
+                    if (t.length() < 3) continue;
+                    if (!targets.contains(t)) targets.add(t);
+                }
+            }
+        }
+        return targets;
+    }
+
+    /**
+     * Validate a pull where the actionText is generic ("Choose card to deploy
+     * from Reserve Deck") but the source card's game text describes the filter.
+     * Returns WILL_FAIL if NO parsed target is in the source zone.
+     * Returns UNKNOWN if game text didn't yield any parsable targets.
+     */
+    public PullValidation validatePullFromSourceCard(Zone sourceZone, String sourceCardGameText) {
+        if (sourceZone == null) {
+            return new PullValidation(PullOutcome.UNKNOWN, "no source zone");
+        }
+        List<String> targets = parseSourceCardPullTargets(sourceCardGameText);
+        if (targets.isEmpty()) {
+            return new PullValidation(PullOutcome.UNKNOWN, "could not parse targets from game text");
+        }
+        // If ANY target keyword is in the source zone, the pull can succeed.
+        for (String t : targets) {
+            if (hasTargetInZone(sourceZone, t)) {
+                return new PullValidation(PullOutcome.WILL_SUCCEED,
+                    "found '" + t + "' in " + sourceZone + " (parsed from source game text)");
+            }
+        }
+        return new PullValidation(PullOutcome.WILL_FAIL,
+            "no parsed target [" + String.join(", ", targets)
+                + "] in " + sourceZone + " — search will FAIL and reveal zone");
+    }
+
+    // =========================================================================
     // Failed Pull Tracking
     // =========================================================================
 

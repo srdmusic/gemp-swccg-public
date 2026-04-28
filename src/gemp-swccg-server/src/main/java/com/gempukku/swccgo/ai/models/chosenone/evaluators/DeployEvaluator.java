@@ -612,6 +612,45 @@ public class DeployEvaluator extends ActionEvaluator {
                                 LOG.info("V66 MEMORY OK: {} — {}", actionText, v66Result.reason);
                             }
                         }
+
+                        // V67h: When the action text is generic ("Choose card to deploy from
+                        // Reserve Deck", "[Download] a matching weapon"), use the SOURCE CARD's
+                        // game text to identify what filter the action targets. This catches
+                        // the failures the regex-based V66 misses — e.g., Yarna's "[download]
+                        // Arleil, Doallyn, Tessek, Wild Karrde, or a Tatooine battleground"
+                        // when none of those is in Reserve.
+                        // Steve's expectation: "Rando is already aware of what's in his deck
+                        // at the start of game and would know when he would have a successful
+                        // search."
+                        try {
+                            List<String> v67hCardIds = context.getCardIds();
+                            String v67hCardIdStr = (v67hCardIds != null && i < v67hCardIds.size())
+                                ? v67hCardIds.get(i) : null;
+                            if (v67hCardIdStr != null && !v67hCardIdStr.isEmpty() && gameState != null) {
+                                PhysicalCard v67hSrcCard =
+                                    gameState.findCardById(Integer.parseInt(v67hCardIdStr));
+                                if (v67hSrcCard != null && v67hSrcCard.getBlueprint() != null) {
+                                    String v67hGT = v67hSrcCard.getBlueprint().getGameText();
+                                    if (v67hGT != null) {
+                                        com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullValidation v67hResult =
+                                            v60Oracle.validatePullFromSourceCard(v66Zone, v67hGT);
+                                        if (v67hResult.outcome ==
+                                            com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_FAIL) {
+                                            action.addReasoning("V67h MEMORY (game-text): " + v67hResult.reason, -9999.0f);
+                                            LOG.warn("V67h MEMORY WILL_FAIL: source={} — {}",
+                                                v67hSrcCard.getTitle(), v67hResult.reason);
+                                            actions.add(action);
+                                            continue;
+                                        } else if (v67hResult.outcome ==
+                                            com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
+                                            LOG.info("V67h MEMORY OK: source={} — {}",
+                                                v67hSrcCard.getTitle(), v67hResult.reason);
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (NumberFormatException nfe) { /* ignore */ }
+                        catch (Exception e) { LOG.debug("V67h: error: {}", e.getMessage()); }
                     }
                 }
 

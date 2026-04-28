@@ -1752,6 +1752,38 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             }
                         }
                     }
+
+                    // V67h: When the action is generic, use the SOURCE CARD's game text
+                    // to determine what the filter targets. Catches cases where the regex
+                    // can't extract a useful keyword from the displayed action text.
+                    if (!hardBlocked && cardId != null && pullGs != null) {
+                        try {
+                            PhysicalCard sourceCard = pullGs.findCardById(Integer.parseInt(cardId));
+                            if (sourceCard != null && sourceCard.getBlueprint() != null) {
+                                String v67hGT = sourceCard.getBlueprint().getGameText();
+                                if (v67hGT != null) {
+                                    com.gempukku.swccgo.common.Zone v67hZone =
+                                        com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.parseSourceZone(actionText);
+                                    if (v67hZone != null) {
+                                        com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullValidation v67hRes =
+                                            pullOracle.validatePullFromSourceCard(v67hZone, v67hGT);
+                                        if (v67hRes.outcome ==
+                                            com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_FAIL) {
+                                            action.addReasoning("V67h MEMORY (game-text): " + v67hRes.reason, -9999.0f);
+                                            logger.warn("V67h MEMORY WILL_FAIL: source={} — {}",
+                                                sourceCard.getTitle(), v67hRes.reason);
+                                            hardBlocked = true;
+                                        } else if (v67hRes.outcome ==
+                                            com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
+                                            logger.info("V67h MEMORY OK: source={} — {}",
+                                                sourceCard.getTitle(), v67hRes.reason);
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (NumberFormatException nfe) { /* ignore */ }
+                        catch (Exception e) { logger.debug("V67h: error: {}", e.getMessage()); }
+                    }
                 }
 
                 if (!hardBlocked) {

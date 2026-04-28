@@ -3634,18 +3634,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 action.addReasoning("No icons at location - low value", -10.0f);
                             }
 
-                            // === V67e EXPECTED FORCE LOSS — TIE-BREAKER ===
+                            // === V67e/V67g EXPECTED FORCE LOSS — TIE-BREAKER + DRAIN-AWARE PENALTY ===
                             // Steve's rule: "When there is a tie for points the default scoring
                             // should re-look at whether the decision will make opponent lose more
                             // or less force. Less force drain should be considered a bad move."
-                            // This bonus scales linearly with drain potential (icons + lightsaber
-                            // bonus + battleground multiplier) and is small enough not to
-                            // override domain weights, but large enough to break generic ties.
-                            // FIXES awjc89tacm7cxvtv replay (Steve's near-win): Luke moved STU→STG
-                            // dropping from drain 3 to drain 2.
+                            // V67g STRENGTHENED: −25 zero-drain wasn't enough to dominate tactical
+                            // bonuses — Luke + Leia moved Guest Quarters (drain) → Upper Plaza
+                            // Corridor (no drain) then back. Now penalty is much stronger AND a
+                            // new MOVE-FROM-DRAIN penalty fires when we're abandoning a draining
+                            // site for a non-draining one.
                             float v67eExpectedDrain = theirIcons;
-                            // Battleground multiplier — BG sites are protected from non-BG-restricted
-                            // drain cancels and tend to drain more reliably.
                             try {
                                 if (game.getModifiersQuerying().isBattleground(gameState, location, null)) {
                                     v67eExpectedDrain *= 1.25f;
@@ -3659,11 +3657,58 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 logger.info("V67e DRAIN POTENTIAL: {} drain={} → +{} (tiebreaker: prefer max drain)",
                                     title, v67eExpectedDrain, (int)v67eBonus);
                             } else {
-                                // Zero-drain destination — actively penalize when alternatives exist
-                                action.addReasoning("V67e ZERO DRAIN: no opponent force loss from here — bad move",
-                                    -25.0f);
-                                logger.info("V67e ZERO DRAIN: {} no drain — penalize relative to drain sites", title);
+                                // V67g: Zero-drain destination — STRONG penalty (was -25, now -200).
+                                // Interior corridors / non-icon sites have no drain potential and
+                                // characters parked there contribute nothing.
+                                action.addReasoning("V67g ZERO DRAIN: " + title
+                                    + " has no opponent force icons — wasted move!", -200.0f);
+                                logger.warn("V67g ZERO DRAIN: {} no drain — strong penalty (-200)", title);
                             }
+
+                            // V67g MOVE-FROM-DRAIN — additional penalty when this is a MOVE
+                            // (not deploy) and we're leaving a draining site for a worse one.
+                            // The decision text "Choose where to move <X>" tells us this is a move.
+                            try {
+                                String dt = context.getDecisionText() != null
+                                    ? context.getDecisionText().toLowerCase(java.util.Locale.ROOT) : "";
+                                boolean isMoveDecision = dt.contains("where to move") || dt.contains("move to,");
+                                if (isMoveDecision && playerId != null) {
+                                    // Find the moving character's current location and that
+                                    // location's drain potential — if higher than the destination,
+                                    // penalize abandoning it.
+                                    String dtForName = context.getDecisionText() != null
+                                        ? context.getDecisionText() : "";
+                                    java.util.regex.Matcher mvNameMatch = java.util.regex.Pattern.compile(
+                                        "value='([^']+)'>").matcher(dtForName);
+                                    if (mvNameMatch.find()) {
+                                        String mvBp = mvNameMatch.group(1);
+                                        // Find this character on the table
+                                        for (PhysicalCard cur : gameState.getAllPermanentCards()) {
+                                            if (cur == null || cur.getBlueprintId(true) == null) continue;
+                                            if (!playerId.equals(cur.getOwner())) continue;
+                                            if (!mvBp.equals(cur.getBlueprintId(true))) continue;
+                                            PhysicalCard fromLoc = cur.getAtLocation();
+                                            if (fromLoc == null || fromLoc == location) break;
+                                            SwccgCardBlueprint fromBp = fromLoc.getBlueprint();
+                                            if (fromBp == null) break;
+                                            int fromTheirIcons = (mySide == Side.LIGHT)
+                                                ? fromBp.getIconCount(Icon.DARK_FORCE)
+                                                : fromBp.getIconCount(Icon.LIGHT_FORCE);
+                                            if (fromTheirIcons > theirIcons) {
+                                                int dropAmt = fromTheirIcons - theirIcons;
+                                                float v67gPenalty = -250.0f * dropAmt;
+                                                action.addReasoning(String.format(
+                                                    "V67g MOVE-FROM-DRAIN: leaving %s (drain %d) for %s (drain %d) — losing %d drain!",
+                                                    fromLoc.getTitle(), fromTheirIcons, title, theirIcons, dropAmt),
+                                                    v67gPenalty);
+                                                logger.warn("V67g MOVE-FROM-DRAIN: leaving {} drain {} for {} drain {} → {}",
+                                                    fromLoc.getTitle(), fromTheirIcons, title, theirIcons, (int)v67gPenalty);
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (Exception e) { /* ignore */ }
                         }
 
                         // === POWER-BASED SCORING ===
