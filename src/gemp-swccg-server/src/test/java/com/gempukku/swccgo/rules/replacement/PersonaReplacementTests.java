@@ -207,7 +207,7 @@ public class PersonaReplacementTests {
 	}
 
 	@Test
-	public void PersonaReplacePreventedPermWeaponAlreadyInPlay() {
+	public void PersonaReplacePreventedByPermWeaponAlreadyInPlay() {
 		//persona with a permanent weapon persona cannot persona replace if the built-in weapon is on table
 		var scn = GetScenario();
 
