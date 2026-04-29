@@ -2000,6 +2000,9 @@ var GempSwccgGameUI = Class.extend({
             "403": function () {
                 that.showErrorDialog("Game access forbidden", "This game is private and does not allow spectators.", false, false, true);
             },
+            "404": function () {
+                that.showErrorDialog("Game removed", "This game has finished and has been removed. Go to the Game Hall to continue.", false, false, true);
+            },
             "409": function () {
                 that.showErrorDialog("Concurrent access error", "You are observing this Game Hall from another browser or window. Close this window or if you wish to observe it here, click \"Refresh page\".", true, false, false);
             },

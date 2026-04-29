@@ -74,7 +74,7 @@ public class GameWebSocketSession extends AbstractWebSocketSession {
     @Override
     public void onOpen() {
         _gameMediator = _swccgoServer.getGameById(_gameId);
-        if (_gameMediator == null) {
+        if (_gameMediator == null || _gameMediator.isDestroyed()) {
             sendError("Game not found.", 404);
             _ctx.close();
             return;
@@ -265,6 +265,10 @@ public class GameWebSocketSession extends AbstractWebSocketSession {
         if (_closed.get() || _gameMediator == null || _gameChannel == null) {
             return;
         }
+        if (_gameMediator.isDestroyed()) {
+            closeForRemovedGame();
+            return;
+        }
         if (!_sending.compareAndSet(false, true)) {
             return;
         }
@@ -336,6 +340,14 @@ public class GameWebSocketSession extends AbstractWebSocketSession {
         }
         onClose();
         closeWithReason(4401, "token expired");
+    }
+
+    private void closeForRemovedGame() {
+        if (_closed.get()) {
+            return;
+        }
+        onClose();
+        closeWithReason(4404, "game removed");
     }
 
     private Document createGameDocument(String rootName) throws Exception {

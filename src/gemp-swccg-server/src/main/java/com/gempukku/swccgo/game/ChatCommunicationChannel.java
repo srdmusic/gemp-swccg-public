@@ -72,4 +72,7 @@ public class ChatCommunicationChannel implements ChatRoomListener, LongPollableR
 
     public void replacedByAnotherConnection() {
     }
+
+    public void closedByServer() {
+    }
 }

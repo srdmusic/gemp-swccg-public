@@ -988,6 +988,10 @@ var GempSwccgCommunication = Class.extend({
                 that.handleGameError("409");
                 return;
             }
+            if (that.isGoneClose(event)) {
+                that.handleGameError("404");
+                return;
+            }
             that.scheduleGameReconnect();
         };
     },
@@ -1206,6 +1210,10 @@ var GempSwccgCommunication = Class.extend({
                 that.enableChatPollingFallback(room, "409");
                 return;
             }
+            if (that.isGoneClose(event)) {
+                that.enableChatPollingFallback(room, "404");
+                return;
+            }
             that.scheduleChatReconnect(room);
         };
     },
@@ -1267,6 +1275,15 @@ var GempSwccgCommunication = Class.extend({
 
         var reason = (event.reason || "").toLowerCase();
         return reason.indexOf("concurrent") > -1 || reason.indexOf("replaced") > -1;
+    },
+    isGoneClose:function (event) {
+        if (event == null)
+            return false;
+        if (event.code === 4404)
+            return true;
+
+        var reason = (event.reason || "").toLowerCase();
+        return reason.indexOf("not found") > -1 || reason.indexOf("closed") > -1 || reason.indexOf("removed") > -1;
     },
     handleChatMessage:function (room, data) {
         var payload = null;

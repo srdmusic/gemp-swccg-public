@@ -241,6 +241,13 @@ public class ChatWebSocketSession extends AbstractWebSocketSession {
         }
 
         @Override
+        public void closedByServer() {
+            if (!_closed.get()) {
+                closeWithReason(4404, "chat room closed");
+            }
+        }
+
+        @Override
         public synchronized void messageReceived(ChatMessage message) {
             super.messageReceived(message);
             if (!forward) {
