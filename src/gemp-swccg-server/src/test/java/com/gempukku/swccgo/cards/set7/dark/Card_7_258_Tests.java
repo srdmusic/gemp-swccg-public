@@ -52,7 +52,7 @@ public class Card_7_258_Tests {
 	}
 
 	@Test
-	public void TransmissionTerminatedVStatsAndKeywordsAreCorrect() {
+	public void OverwhelmedStatsAndKeywordsAreCorrect() {
 		/**
 		 * Title: Overwhelmed
 		 * Uniqueness: Unrestricted
