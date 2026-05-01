@@ -533,11 +533,32 @@ public class RandoCalAi extends HeuristicAiBase {
                 }
             }
 
-            // V44: ALWAYS accept revert requests — never block the opponent from reverting
+            // V44/V67j: ALWAYS accept revert requests — never block the opponent
+            // from reverting. Steve's rule: "Rando must always allow a revert. If
+            // the gemp game has an error, I need to be able to always revert."
+            // V67j: Don't assume index 0 = Yes. Inspect the `results` param and
+            // find the actual "Yes/Allow/Accept" choice's index. Fallback to 0
+            // if the array isn't available or no clear positive option found.
             if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
                     && decisionText.toLowerCase(java.util.Locale.ROOT).contains("revert")) {
-                LOG.info("V44 REVERT: Always accepting revert request. Text: '{}'", decisionText);
-                return "0";  // 0 = Yes/Accept
+                int yesIndex = 0;
+                String yesText = "(default index 0)";
+                String[] revertResults = params != null ? params.get("results") : null;
+                if (revertResults != null && revertResults.length > 0) {
+                    for (int ri = 0; ri < revertResults.length; ri++) {
+                        String r = revertResults[ri] != null
+                            ? revertResults[ri].toLowerCase(java.util.Locale.ROOT) : "";
+                        if (r.equals("yes") || r.contains("allow") || r.contains("accept")
+                            || r.contains("ok") || r.equals("revert")) {
+                            yesIndex = ri;
+                            yesText = revertResults[ri];
+                            break;
+                        }
+                    }
+                }
+                LOG.warn("V44/V67j REVERT: Accepting revert request (index={} = '{}') text: '{}'",
+                    yesIndex, yesText, decisionText);
+                return String.valueOf(yesIndex);
             }
 
             // V61 EPIC EVENT SAGA CHOICE — "The Force Is Strong In My Family"

@@ -3649,6 +3649,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     v67eExpectedDrain *= 1.25f;
                                 }
                             } catch (Exception e) { /* ignore */ }
+                            // V67k: Some sites have 0 drain by design but are STRATEGIC
+                            // staging sites — penalizing them blocks key plays. Currently
+                            // recognized: Mapuzo: Underground Corridor (Hidden Path transit
+                            // staging — Jedi MUST go here to fire "Move Jedi Survivor here
+                            // to a site" and flip the objective).
+                            // FIXES "Rando still moving from higher-drain to lower-drain":
+                            // V67g was blocking Safehouse → Underground Corridor at −432
+                            // and Rando went Safehouse → Spaceport Docking Bay instead,
+                            // never reaching the transit hub.
+                            String v67kTitleLower = title != null
+                                ? title.toLowerCase(java.util.Locale.ROOT) : "";
+                            boolean v67kIsTransitStagingSite =
+                                v67kTitleLower.contains("underground corridor");
+
                             if (v67eExpectedDrain > 0) {
                                 float v67eBonus = v67eExpectedDrain * 12.0f;
                                 action.addReasoning(String.format(
@@ -3656,6 +3670,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     v67eExpectedDrain, title, v67eBonus), v67eBonus);
                                 logger.info("V67e DRAIN POTENTIAL: {} drain={} → +{} (tiebreaker: prefer max drain)",
                                     title, v67eExpectedDrain, (int)v67eBonus);
+                            } else if (v67kIsTransitStagingSite) {
+                                // No drain bonus, no penalty. Transit staging gets bonus
+                                // separately from V53b (and is mandatory for Hidden Path flip).
+                                action.addReasoning("V67k TRANSIT STAGING: " + title
+                                    + " is a transit hub — exempt from drain penalty", 0.0f);
+                                logger.info("V67k TRANSIT STAGING: {} exempt from V67g penalties", title);
                             } else {
                                 // V67g: Zero-drain destination — STRONG penalty (was -25, now -200).
                                 // Interior corridors / non-icon sites have no drain potential and
@@ -3668,7 +3688,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             // V67g MOVE-FROM-DRAIN — additional penalty when this is a MOVE
                             // (not deploy) and we're leaving a draining site for a worse one.
                             // The decision text "Choose where to move <X>" tells us this is a move.
+                            // V67k EXEMPTION: skip when destination is a transit staging site.
                             try {
+                                if (v67kIsTransitStagingSite) {
+                                    logger.info("V67k MOVE-FROM-DRAIN exempt: {} is transit staging site", title);
+                                } else {
                                 String dt = context.getDecisionText() != null
                                     ? context.getDecisionText().toLowerCase(java.util.Locale.ROOT) : "";
                                 boolean isMoveDecision = dt.contains("where to move") || dt.contains("move to,");
@@ -3708,6 +3732,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                 }
+                                }  // close else (v67kIsTransitStagingSite exemption)
                             } catch (Exception e) { /* ignore */ }
                         }
 
