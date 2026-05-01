@@ -2464,6 +2464,71 @@ public class DeployEvaluator extends ActionEvaluator {
                         LOG.warn("V67l LOCATION FIRST: '{}' adds location ({}) → +1500", actionText, v67iReason);
                     }
 
+                    // === V67m UNIVERSAL WEAPON-PULL PRIORITY ===
+                    // Steve's rule: "There are other cards that pull weapons from reserve,
+                    // after location pulls and character deploys, we should use those
+                    // effects to deploy weapons from reserve with positive points."
+                    //
+                    // Score +200 — positive enough to fire over passing/idle, but well
+                    // below character deploy peaks (+300-500) so chars deploy first.
+                    // Mirrors V67l's dual-source detection (action text + game text fallback).
+                    boolean v67mAddsWeapon = false;
+                    String v67mReason = null;
+                    try {
+                        String v67mLower = v24ActionLower;
+                        if (v67mLower.contains("from reserve deck") || v67mLower.contains("[download]")) {
+                            String[] v67mWeaponKeywords = new String[] {
+                                "weapon", "lightsaber", "saber", "blaster",
+                                "rifle", "pistol", "cannon", "bowcaster",
+                                "thermal detonator", "vibroblade", "vibro-",
+                                "force pike", "electrostaff"
+                            };
+                            for (String kw : v67mWeaponKeywords) {
+                                if (v67mLower.contains(kw)) {
+                                    v67mAddsWeapon = true;
+                                    v67mReason = "actionText contains weapon keyword '" + kw + "'";
+                                    break;
+                                }
+                            }
+                            // Fallback: source card game text
+                            if (!v67mAddsWeapon) {
+                                List<String> v67mCardIds = context.getCardIds();
+                                String v67mCardIdStr = (v67mCardIds != null && i < v67mCardIds.size())
+                                    ? v67mCardIds.get(i) : null;
+                                if (v67mCardIdStr != null && !v67mCardIdStr.isEmpty() && gameState != null) {
+                                    PhysicalCard v67mSrc =
+                                        gameState.findCardById(Integer.parseInt(v67mCardIdStr));
+                                    if (v67mSrc != null && v67mSrc.getBlueprint() != null) {
+                                        String gt = v67mSrc.getBlueprint().getGameText();
+                                        if (gt != null) {
+                                            List<String> targets = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                                .parseSourceCardPullTargets(gt);
+                                            for (String t : targets) {
+                                                for (String kw : v67mWeaponKeywords) {
+                                                    if (t.contains(kw)) {
+                                                        v67mAddsWeapon = true;
+                                                        v67mReason = "source card '" + v67mSrc.getTitle()
+                                                            + "' game text targets weapon-like '" + t + "'";
+                                                        break;
+                                                    }
+                                                }
+                                                if (v67mAddsWeapon) break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) { LOG.debug("V67m error: {}", e.getMessage()); }
+
+                    // Don't double-bonus location pulls (V67l already gave +1500)
+                    if (v67mAddsWeapon && !v67iAddsLocation) {
+                        action.addReasoning("V67m WEAPON PULL (universal): this action adds a weapon — "
+                            + v67mReason + " — pull weapons every turn, fires after chars deploy.",
+                            200.0f);
+                        LOG.warn("V67m WEAPON PULL: '{}' adds weapon ({}) → +200", actionText, v67mReason);
+                    }
+
                     // === V51: CLOUD CITY ARMY PRE-FLIP — Stack characters at CC sites ===
                     // For TDIGWATT/Dark Deal: before objective flips, build your Cloud City army.
                     // +500 for deploying characters to Cloud City sites pre-flip.

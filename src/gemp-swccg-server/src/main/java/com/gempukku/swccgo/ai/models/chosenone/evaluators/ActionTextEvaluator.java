@@ -1851,6 +1851,61 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         logger.warn("V67l LOCATION FIRST: '{}' adds location ({}) → +1500",
                             actionText, v67lReason);
                     }
+
+                    // === V67m UNIVERSAL WEAPON-PULL PRIORITY ===
+                    // Steve's rule: "There are other cards that pull weapons from reserve,
+                    // after location pulls and character deploys, we should use those
+                    // effects to deploy weapons from reserve with positive points."
+                    //
+                    // Score +200 — positive but below character deploy peaks (+300-500)
+                    // so chars deploy first. Same dual-source detection as V67l.
+                    boolean v67mAddsWeapon = false;
+                    String v67mReason = null;
+                    String[] v67mWeaponKeywords = new String[] {
+                        "weapon", "lightsaber", "saber", "blaster",
+                        "rifle", "pistol", "cannon", "bowcaster",
+                        "thermal detonator", "vibroblade", "vibro-",
+                        "force pike", "electrostaff"
+                    };
+                    for (String kw : v67mWeaponKeywords) {
+                        if (textLower.contains(kw)) {
+                            v67mAddsWeapon = true;
+                            v67mReason = "actionText contains weapon keyword '" + kw + "'";
+                            break;
+                        }
+                    }
+                    // Fallback: source card game text
+                    if (!v67mAddsWeapon && cardId != null && pullGs != null) {
+                        try {
+                            PhysicalCard sc = pullGs.findCardById(Integer.parseInt(cardId));
+                            if (sc != null && sc.getBlueprint() != null) {
+                                String gt = sc.getBlueprint().getGameText();
+                                if (gt != null) {
+                                    java.util.List<String> tgts = com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                        .parseSourceCardPullTargets(gt);
+                                    for (String t : tgts) {
+                                        for (String kw : v67mWeaponKeywords) {
+                                            if (t.contains(kw)) {
+                                                v67mAddsWeapon = true;
+                                                v67mReason = "source card '" + sc.getTitle()
+                                                    + "' game text targets weapon-like '" + t + "'";
+                                                break;
+                                            }
+                                        }
+                                        if (v67mAddsWeapon) break;
+                                    }
+                                }
+                            }
+                        } catch (Exception e) { /* ignore */ }
+                    }
+                    // Don't double-bonus location pulls (V67l already gave +1500)
+                    if (v67mAddsWeapon && !v67lAddsLocation) {
+                        action.addReasoning("V67m WEAPON PULL (universal): this action adds a weapon — "
+                            + v67mReason + " — pull weapons every turn, fires after chars deploy.",
+                            200.0f);
+                        logger.warn("V67m WEAPON PULL: '{}' adds weapon ({}) → +200",
+                            actionText, v67mReason);
+                    }
                 }
             }
 

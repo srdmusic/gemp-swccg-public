@@ -2966,9 +2966,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 logger.info("V67e DRAIN POTENTIAL: {} drain={} → +{} (tiebreaker: prefer max drain)",
                                     title, v67eExpectedDrain, (int)v67eBonus);
                             } else if (v67kIsTransitStagingSite) {
-                                action.addReasoning("V67k TRANSIT STAGING: " + title
-                                    + " is a transit hub — exempt from drain penalty", 0.0f);
-                                logger.info("V67k TRANSIT STAGING: {} exempt from V67g penalties", title);
+                                // V67n: Corridor needs to OUTSCORE other Mapuzo destinations,
+                                // not just be exempt from penalty. Other Mapuzo sites have
+                                // Dark icons (drain potential), giving them V67e + ICON_BONUS
+                                // (~+30) — Corridor with 0 score loses to them. Then Rando
+                                // ping-pongs Mining Village ↔ Safehouse and never reaches
+                                // Corridor to flip Hidden Path / Fallen Order.
+                                // +1500 dominates V67e/ICON_BONUS on other Mapuzo sites and
+                                // matches V67l location-pull priority. Only fires when destination
+                                // matches "underground corridor" — narrowly scoped.
+                                action.addReasoning("V67n TRANSIT STAGING DEST: " + title
+                                    + " is the Hidden Path transit hub — Jedi MUST channel through here!",
+                                    1500.0f);
+                                logger.warn("V67n TRANSIT STAGING DEST: {} → +1500 (dominates other Mapuzo destinations)", title);
                             } else {
                                 action.addReasoning("V67g ZERO DRAIN: " + title
                                     + " has no opponent force icons — wasted move!", -200.0f);
