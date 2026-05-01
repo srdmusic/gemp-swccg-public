@@ -1588,10 +1588,16 @@ public class DeployEvaluator extends ActionEvaluator {
                     } catch (Exception e) { LOG.debug("V67i error: {}", e.getMessage()); }
 
                     if (v67iAddsLocation) {
-                        action.addReasoning("V67i LOCATION FIRST: this action adds a location — "
-                            + v67iReason + " — deploy locations BEFORE characters every turn!",
-                            500.0f);
-                        LOG.warn("V67i LOCATION FIRST: '{}' adds location ({}) → +500", actionText, v67iReason);
+                        // V67l: Bumped from +500 to +1500. Steve's universal rule:
+                        // "If an effect lets rando pull a location from his deck that
+                        // should be a universal positive points move. He should do this
+                        // as the first part of his deploy phase."
+                        // +1500 dominates all tactical scoring (urgency +300, V52 spend
+                        // +300, etc.) so location pulls always fire before character deploys.
+                        action.addReasoning("V67l LOCATION FIRST (universal): this action adds a location — "
+                            + v67iReason + " — ALWAYS pull locations BEFORE deploying characters!",
+                            1500.0f);
+                        LOG.warn("V67l LOCATION FIRST: '{}' adds location ({}) → +1500", actionText, v67iReason);
                     }
 
                     // === V51: CLOUD CITY ARMY PRE-FLIP — Stack characters at CC sites ===

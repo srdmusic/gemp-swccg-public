@@ -1794,6 +1794,63 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         + "' — thin deck, bring value into play!", baseline);
                     logger.warn("V60 RESERVE PULL: '{}' scored +{} — pull every turn!",
                         actionText, (int)baseline);
+
+                    // V67l UNIVERSAL LOCATION-PULL PRIORITY (mirrors DeployEvaluator V67i)
+                    // Steve's rule: "If an effect lets rando pull a location from his deck
+                    // that should be a universal positive points move. He should do this
+                    // as the first part of his deploy phase."
+                    // Detection: action text or source-card game text contains a location
+                    // keyword in its target list. Bonus is +1500 — dominates all other
+                    // scoring so Rando ALWAYS fires location pulls before other deploys.
+                    boolean v67lAddsLocation = false;
+                    String v67lReason = null;
+                    String[] v67lLocationKeywords = new String[] {
+                        "site", "battleground", "location", "system", "farm",
+                        "cantina", "mos eisley", "tatooine", "endor", "hoth",
+                        "dagobah", "naboo", "yavin", "bespin", "cloud city",
+                        "mustafar", "malachor", "mapuzo", "jabiim", "coruscant",
+                        "kashyyyk", "kessel", "kamino", "geonosis", "alderaan",
+                        "docking bay", "spaceport", "city", "palace", "temple",
+                        "safehouse", "corridor", "village", "outpost"
+                    };
+                    for (String kw : v67lLocationKeywords) {
+                        if (textLower.contains(kw)) {
+                            v67lAddsLocation = true;
+                            v67lReason = "actionText contains location keyword '" + kw + "'";
+                            break;
+                        }
+                    }
+                    // Fallback: parse source card game text
+                    if (!v67lAddsLocation && cardId != null && pullGs != null) {
+                        try {
+                            PhysicalCard sc = pullGs.findCardById(Integer.parseInt(cardId));
+                            if (sc != null && sc.getBlueprint() != null) {
+                                String gt = sc.getBlueprint().getGameText();
+                                if (gt != null) {
+                                    java.util.List<String> tgts = com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                        .parseSourceCardPullTargets(gt);
+                                    for (String t : tgts) {
+                                        for (String kw : v67lLocationKeywords) {
+                                            if (t.contains(kw)) {
+                                                v67lAddsLocation = true;
+                                                v67lReason = "source card '" + sc.getTitle()
+                                                    + "' game text targets location-like '" + t + "'";
+                                                break;
+                                            }
+                                        }
+                                        if (v67lAddsLocation) break;
+                                    }
+                                }
+                            }
+                        } catch (Exception e) { /* ignore */ }
+                    }
+                    if (v67lAddsLocation) {
+                        action.addReasoning("V67l LOCATION FIRST (universal): this action adds a location — "
+                            + v67lReason + " — ALWAYS pull locations BEFORE deploying characters!",
+                            1500.0f);
+                        logger.warn("V67l LOCATION FIRST: '{}' adds location ({}) → +1500",
+                            actionText, v67lReason);
+                    }
                 }
             }
 
