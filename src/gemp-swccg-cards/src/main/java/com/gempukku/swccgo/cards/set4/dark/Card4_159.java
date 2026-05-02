@@ -14,7 +14,6 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayMoveOtherCardsAsReactToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MayMoveOtherCardsAwayAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -49,7 +48,7 @@ public class Card4_159 extends AbstractUniqueStarshipSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayMoveOtherCardsAwayAsReactToLocationModifier(self, "Move starship away as a 'react'", new ControlsCondition(playerOnLightSideOfLocation, self), playerOnLightSideOfLocation, Filters.and(Filters.starship, Filters.your(playerOnLightSideOfLocation), Filters.sameSystemAs(self, Filters.Executor)), Filters.any));
+        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move starship as a 'react'", new ControlsCondition(playerOnLightSideOfLocation, self), playerOnLightSideOfLocation, Filters.and(Filters.starship, Filters.your(playerOnLightSideOfLocation), Filters.sameSystemAs(self, Filters.Executor)), Filters.any));
         return modifiers;
     }
 }
