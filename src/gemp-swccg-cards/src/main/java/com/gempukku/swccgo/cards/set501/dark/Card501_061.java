@@ -49,6 +49,7 @@ public class Card501_061 extends AbstractEpicEventDeployable {
         super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.Tracked_Fleet, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on D'Qar system (only at start of game). Tied To The End Of A String: You may not deploy starships here. Supremacy moves to here for free. There Will Be No Surrender: Three times per game, at start of opponent's move phase, opponent may stack a card from hand (or from top of Lost Pile) face down on this card to relocate it to an [Episode VII] system within 3 parsecs. Fire At Will!: At the start of your turn, if you control this system, Tracked Fleet is 'annihilated' (placed out of play).");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
+        setTestingText("Tracked Fleet");
     }
 
     @Override
