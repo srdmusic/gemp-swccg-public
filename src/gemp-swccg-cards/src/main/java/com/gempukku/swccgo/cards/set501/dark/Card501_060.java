@@ -38,7 +38,7 @@ public class Card501_060 extends AbstractObjective {
     public Card501_060() {
         super(Side.DARK, 0, "The First Order Reigns", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Crait and D'Qar systems, a Crait (or Supremacy) battleground site, and Tracked Fleet. For remainder of game, you may not deploy cards with ability except [Episode VII] cards. Supremacy is deploy = 7 to [Episode VII] systems. Once per turn, may [download] a card with 'Supremacy' in title or an [Episode VII] battleground. While this side up, neither player loses more than 1 Force to Force drains at systems (unless Tracked Fleet there). Flip this card if Tracked Fleet is 'annihilated.'");
+        setGameText("Deploy Crait and D'Qar systems, Salt Plateau, and Tracked Fleet. For remainder of game, you may not deploy Bow To The First Order or cards with ability except [Episode VII] cards. Once per turn, may [download] a card with 'Supremacy' in title or an [Episode VII] battleground. While this side up, opponent loses no more than 1 Force to your Force drains at systems. Supremacy is deploy = 7 to [Episode VII] systems. Flip this card if Tracked Fleet is 'annihilated.'");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
     }
 
