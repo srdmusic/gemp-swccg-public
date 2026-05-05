@@ -41,14 +41,14 @@ public class Card4_159 extends AbstractUniqueStarshipSite {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy starship as a 'react'", occupyWithTarkinPiettOrAnyAdmiral, playerOnDarkSideOfLocation, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.starship), Filters.sameSystemAs(self, Filters.Executor)));
-        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move a starship as a 'react'", occupyWithTarkinPiettOrAnyAdmiral, playerOnDarkSideOfLocation, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.starship), Filters.sameSystemAs(self, Filters.Executor)));
+        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move starship as a 'react'", occupyWithTarkinPiettOrAnyAdmiral, playerOnDarkSideOfLocation, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.starship), Filters.sameSystemAs(self, Filters.Executor)));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move starship as a 'react'", new ControlsCondition(playerOnLightSideOfLocation, self), playerOnLightSideOfLocation, Filters.and(Filters.starship, Filters.your(playerOnLightSideOfLocation), Filters.sameSystemAs(self, Filters.Executor)), Filters.any));
+        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move starship as a 'react'", new ControlsCondition(playerOnLightSideOfLocation, self), playerOnLightSideOfLocation, Filters.and(Filters.starship, Filters.your(playerOnLightSideOfLocation), Filters.at(Filters.system), Filters.with(self, Filters.Executor)), Filters.any));
         return modifiers;
     }
 }
