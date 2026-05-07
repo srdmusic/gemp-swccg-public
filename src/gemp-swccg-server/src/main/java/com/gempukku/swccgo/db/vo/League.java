@@ -3,6 +3,7 @@ package com.gempukku.swccgo.db.vo;
 import com.gempukku.swccgo.draft2.SoloDraftDefinitions;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.league.LeagueData;
+import com.gempukku.swccgo.league.LockedDeckType;
 
 import java.lang.reflect.Constructor;
 
@@ -22,10 +23,10 @@ public class League {
     private LeagueData _leagueData;
     private boolean _invitationOnly;
     private String _registrationInfo;
-    private boolean _lockDecks;
+    private LockedDeckType _lockedDeckType;
 
 
-    public League(SwccgCardBlueprintLibrary library, int cost, String name, String type, String clazz, String parameters, int status, boolean allowSpectators, boolean allowTimeExtensions, boolean showPlayerNames, boolean invitationOnly, String registrationInfo, int decisionTimeoutSeconds, int timePerPlayerMinutes, boolean lockDecks) {
+    public League(SwccgCardBlueprintLibrary library, int cost, String name, String type, String clazz, String parameters, int status, boolean allowSpectators, boolean allowTimeExtensions, boolean showPlayerNames, boolean invitationOnly, String registrationInfo, int decisionTimeoutSeconds, int timePerPlayerMinutes, LockedDeckType lockedDeckType) {
         _library = library;
         _cost = cost;
         _name = name;
@@ -40,7 +41,7 @@ public class League {
         _timePerPlayerMinutes = timePerPlayerMinutes;
         _invitationOnly = invitationOnly;
         _registrationInfo = registrationInfo;
-        _lockDecks = lockDecks;
+        _lockedDeckType = lockedDeckType;
     }
 
     public int getCost() {
@@ -73,7 +74,7 @@ public class League {
 
     public int getTimePerPlayerMinutes() { return _timePerPlayerMinutes; }
 
-    public boolean getLockDecks() { return _lockDecks; }
+    public LockedDeckType getLockedDeckType() { return _lockedDeckType; }
 
     public synchronized LeagueData getLeagueData(SoloDraftDefinitions soloDraftDefinitions) {
         if (_leagueData == null) {

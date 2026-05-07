@@ -132,7 +132,7 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
         leagueElem.setAttribute("showPlayerNames", String.valueOf(league.getShowPlayerNames()));
         leagueElem.setAttribute("decisionTimeoutSeconds", String.valueOf(league.getDecisionTimeoutSeconds()));
         leagueElem.setAttribute("timePerPlayerMinutes", String.valueOf(league.getTimePerPlayerMinutes()));
-        leagueElem.setAttribute("isLockedDecks", String.valueOf(league.getLockDecks()));
+        leagueElem.setAttribute("lockedDeckType", league.getLockedDeckType() == null ? "" : league.getLockedDeckType().getCode());
 
         for (LeagueSeriesData serie : series) {
             Element serieElem = doc.createElement("serie");

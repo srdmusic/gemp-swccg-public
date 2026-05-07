@@ -1030,7 +1030,7 @@ public class HallServer extends AbstractServer {
      * don't already have one locked for that side.
      */
     private void snapshotDecksForLockIn(League league, Set<SwccgGameParticipant> participants) {
-        if (league == null || !league.getLockDecks())
+        if (league == null || league.getLockedDeckType() == null)
             return;
 
         for (SwccgGameParticipant participant : participants) {
@@ -1175,7 +1175,7 @@ public class HallServer extends AbstractServer {
      * deck for the given side, return the locked deck. Otherwise return the original.
      */
     private SwccgDeck applyDeckLockIn(League league, String playerName, SwccgDeck originalDeck) {
-        if (league == null || !league.getLockDecks())
+        if (league == null || league.getLockedDeckType() == null)
             return originalDeck;
 
         Side side = originalDeck.getSide(_library);

@@ -289,7 +289,7 @@ public class LeagueService {
      * or null if no deck has been locked yet.
      */
     public synchronized SwccgDeck getLockedDeck(League league, String playerName, Side side) {
-        if (!league.getLockDecks())
+        if (league.getLockedDeckType() == null)
             return null;
 
         String[] locked = _leagueParticipationDAO.getLockedDeck(league.getType(), playerName, side);
@@ -304,7 +304,7 @@ public class LeagueService {
      * a locked deck for the given side, snapshot and store the deck.
      */
     public synchronized boolean lockDeckIfNeeded(League league, String playerName, Side side, SwccgDeck deck) {
-        if (!league.getLockDecks())
+        if (league.getLockedDeckType() == null)
             return false;
 
         String[] existing = _leagueParticipationDAO.getLockedDeck(league.getType(), playerName, side);

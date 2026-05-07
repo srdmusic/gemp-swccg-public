@@ -346,7 +346,7 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
                 // A: they haven't locked in so that they can be aware that this will lock in, or
                 // B: their deck has been overwritten by a previously-locked-in deck
                 var league = _leagueService.getLeagueByType(format);
-                if(league != null && league.getLockDecks()) {
+                if(league != null && league.getLockedDeckType() != null) {
                     String message = "";
                     //We just created this empty league table so we know there's only 1 participant, this player
                     var player = table.getPlayers().stream().findFirst().get();
