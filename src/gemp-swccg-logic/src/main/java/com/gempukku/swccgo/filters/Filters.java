@@ -7774,7 +7774,9 @@ public class Filters {
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
                 PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
 
-                PhysicalCard currentDockingBay = cardToMove.getAtLocation();
+                PhysicalCard currentDockingBay;
+                if(cardToMove.getBlueprint().hasKeyword(Keyword.ARTILLERY_WEAPON_MAY_USE_DB_TRANSIT)) currentDockingBay = cardToMove.getAttachedTo();
+                else currentDockingBay = cardToMove.getAtLocation();
                 if (currentDockingBay == null || !Filters.docking_bay.accepts(gameState, modifiersQuerying, currentDockingBay)) {
                     return false;
                 }
@@ -10598,7 +10600,8 @@ public class Filters {
                 if (cardCategory == CardCategory.CHARACTER || cardCategory == CardCategory.VEHICLE || cardCategory == CardCategory.STARSHIP
                         || (!checkingOnly && (cardCategory == CardCategory.DEVICE || cardCategory == CardCategory.WEAPON || cardCategory == CardCategory.EFFECT))) {
 
-                    if (!Filters.presentWith(creature).accepts(gameState, modifiersQuerying, physicalCard))
+                    if (!Filters.presentWith(creature).accepts(gameState, modifiersQuerying, physicalCard)
+                            && !Filters.aboardOrAboardCargoOf(Filters.presentWith(creature)).accepts(gameState, modifiersQuerying, physicalCard))
                         return false;
 
                     if (modifiersQuerying.isProhibitedFromAttackingTarget(gameState, physicalCard, creature))
@@ -13186,7 +13189,7 @@ public class Filters {
      * Wrapper method to allow other static filters to access the wrapped filter.
      */
     private static Filter movesLikeStarfighter() {
-        return deploysLikeStarfighter;
+        return movesLikeStarfighter;
     }
 
     /**
@@ -14685,6 +14688,16 @@ public class Filters {
             }
         };
     }
+
+    /**
+     * Filter that accepts cards that can move Medium Repeating Blaster Cannon alone (for free)
+     */
+    public static final Filter canMoveMediumRepeatingBlasterCannonAloneForFree = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.mayMoveMediumRepeatingBlasterCannonAloneForFree(gameState, physicalCard);
+        }
+    };
 
     /**
      * Gets a filter representing cards that a card may deploy to only based on presence and Force icons.
@@ -17796,6 +17809,7 @@ public class Filters {
     public static final Filter Armorer = Filters.persona(Persona.ARMORER);
     public static final Filter Arnet = Filters.title(Title.Arnet);
     public static final Filter artillery_weapon = Filters.and(CardType.WEAPON, CardSubtype.ARTILLERY);
+    public static final Filter artillery_weapon_that_may_use_db_transit = Filters.keyword(Keyword.ARTILLERY_WEAPON_MAY_USE_DB_TRANSIT);
     public static final Filter Arven = Filters.title(Title.Arven);
     public static final Filter Ascension_Guns = Filters.title(Title.Ascension_Guns);
     public static final Filter As_Good_As_Gone = Filters.title(Title.As_Good_As_Gone);

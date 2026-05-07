@@ -2081,6 +2081,7 @@ public class GameState implements Snapshotable<GameState> {
             for (PhysicalCard cardAtLocation : atLocationCardList) {
                 cardAtLocation.atLocation(otherCard);
             }
+            startAffecting(_game, otherCard);
         }
 
         return retVal;
@@ -3627,7 +3628,9 @@ public class GameState implements Snapshotable<GameState> {
         else if (_attackState.isCreatureAttackingNonCreature()) {
             Collection<PhysicalCard> allCardsAttacking = _attackState.getCardsAttacking();
             for (PhysicalCard cardAttacking : allCardsAttacking) {
-                _game.getModifiersQuerying().participatedInAttackOnNonCreature(cardAttacking);
+                if(_game.getGameState().getCurrentPhase() == Phase.BATTLE) {
+                    _game.getModifiersQuerying().participatedInBattlePhaseAttackOnNonCreature(cardAttacking);
+                }
             }
         }
 
