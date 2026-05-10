@@ -72,7 +72,7 @@ public class Card1_322 extends AbstractAutomatedWeapon {
                                     if (!characters.isEmpty()) {
                                         numCharacters = Math.min(characters.size(), numCharacters);
                                         action.appendEffect(
-                                                new ChooseCardsToLoseFromTableEffect(action, opponent, numCharacters, numCharacters, true, Filters.in(characters)));
+                                                new ChooseCardsToLoseFromTableEffect(action, opponent, numCharacters, numCharacters, false, Filters.in(characters)));
                                     }
                                 }
                             }

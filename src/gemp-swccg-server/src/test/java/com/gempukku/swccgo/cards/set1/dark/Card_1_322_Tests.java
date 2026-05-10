@@ -234,7 +234,8 @@ public class Card_1_322_Tests {
         assertEquals(2,scn.LSGetChoiceMin()); //test2
         assertTrue(scn.LSHasCardChoicesAvailable(trooper1, trooper2, trooper3));
         scn.LSChooseCards(trooper2, trooper3);
-        //choose order
+        scn.PassAllResponses(); //null - Optional responses
+
         assertTrue(scn.LSDecisionAvailable("Choose card to be lost"));
         scn.LSChooseCard(trooper3);
         scn.PassAllResponses();
@@ -289,7 +290,8 @@ public class Card_1_322_Tests {
         assertEquals(2,scn.LSGetChoiceMin());
         assertTrue(scn.LSHasCardChoiceAvailable(boushh)); //test1
         scn.LSChooseCards(trooper2, boushh);
-        //choose order
+        scn.PassAllResponses(); //null - Optional responses
+
         assertTrue(scn.LSDecisionAvailable("Choose card to be lost"));
         scn.LSChooseCard(boushh);
         scn.PassAllResponses();
@@ -339,7 +341,8 @@ public class Card_1_322_Tests {
         assertTrue(scn.LSHasCardChoicesAvailable(trooper1, trooper2, trooper3));
         assertFalse(scn.LSHasCardChoiceAvailable(trooper4)); //test1
         scn.LSChooseCards(trooper2, trooper3);
-        //choose order
+        scn.PassAllResponses(); //null - Optional responses
+
         assertTrue(scn.LSDecisionAvailable("Choose card to be lost"));
         scn.LSChooseCard(trooper3);
         scn.PassAllResponses();
