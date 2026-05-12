@@ -3,13 +3,11 @@ package com.gempukku.swccgo.rules.game_end;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class GameEndTests {
@@ -259,10 +257,10 @@ public class GameEndTests {
         assertTrue(scn.LSWonGame()); //test1
     }
 
-    @Test @Ignore
+    @Test
     public void LSLosesIfLSLifeForceDepletedDuringStartOfTurn() {
         //test1: LS losing final life force during start of DS turn results in game end, LS loss
-        //demonstrates:
+        //shows fixed:
         // https://github.com/PlayersCommittee/gemp-swccg-public/issues/328
         // https://github.com/PlayersCommittee/gemp-swccg-public/issues/842
 
@@ -299,7 +297,6 @@ public class GameEndTests {
 
         scn.LSChooseCard(scn.GetTopOfLSReserveDeck()); //first force loss
         assertEquals(0,scn.GetLSLifeForceRemaining());
-        ///FAILS HERE - optional responses allowed, followed by giving "Choose Force to lose" option to LS instead of ending
         assertTrue(scn.GameIsFinished());
         assertTrue(scn.DSWonGame()); //test1
     }
