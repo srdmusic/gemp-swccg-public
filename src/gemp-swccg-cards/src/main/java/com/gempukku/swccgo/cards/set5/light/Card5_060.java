@@ -57,7 +57,7 @@ public class Card5_060 extends AbstractLostInterrupt {
                             action.appendEffect(
                                     new AddUntilEndOfBattleModifierEffect(action,
                                             new SpecialFlagModifier(self, ModifierFlag.BATTLE_DAMAGE_NOT_PAYABLE_FROM_LIFE_FORCE_UNLESS_HAND_EMPTY),
-                                            "Prevents battle loser from satisfying battle damage with cards from Life Force while cards in hand"));
+                                            "Prevents the eventual loser from losing cards from Life Force to satisfy battle damage while the loser has cards in hand."));
                         }
                     }
             );
