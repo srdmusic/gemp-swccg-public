@@ -50,6 +50,9 @@ public class DrawAsteroidDestinyEffect extends AbstractSubActionEffect {
         subAction.appendEffect(
                 new RecordDrawAsteroidDestinyEffect(subAction, _starship, location));
 
+        final boolean alsoLosesForceIfLost = game.getModifiersQuerying().loseForceIfLostToAsteroidDestiny(gameState, _starship);
+        final float forceToLose = game.getModifiersQuerying().getForfeit(gameState, _starship);
+
         // 2) Draw the asteroid destiny and carry out the results
         subAction.appendEffect(
                 new PassthruEffect(subAction) {
@@ -99,7 +102,22 @@ public class DrawAsteroidDestinyEffect extends AbstractSubActionEffect {
                     }
                 });
 
-        // 3) End of asteroid destiny draw
+        // 3) Check if additional force must be lost
+        if (alsoLosesForceIfLost && !Filters.present(location).accepts(game, _starship)) { //(not present = lost to asteroid destiny draw above)
+            subAction.appendEffect(
+                    new PassthruEffect(subAction) {
+                        @Override
+                        protected void doPlayEffect(SwccgGame game) {
+
+                            gameState.sendMessage("Also lose Force equal to starship's forfeit value: " + forceToLose);
+                            subAction.appendEffect(
+                                    new LoseForceEffect(subAction, _starship.getOwner(), forceToLose));
+                        }
+                    }
+            );
+        }
+
+        // 4) End of asteroid destiny draw
         subAction.appendEffect(
                 new PassthruEffect(subAction) {
                     @Override
