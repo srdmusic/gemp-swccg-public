@@ -50,7 +50,7 @@ public class Card5_060 extends AbstractLostInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Battle damage from hand before Life Force");
             // Allow response(s)
-            action.allowResponses("Eventual loser may not lose Life Force to satisfy battle damage while cards in hand",
+            action.allowResponses("Prevent the eventual loser from losing cards from Life Force to satisfy battle damage while the loser has cards in hand.",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
