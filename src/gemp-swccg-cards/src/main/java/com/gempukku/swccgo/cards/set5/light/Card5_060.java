@@ -34,7 +34,7 @@ import java.util.List;
 public class Card5_060 extends AbstractLostInterrupt {
     public Card5_060() {
         super(Side.LIGHT, 5, Title.Old_Pirates, Uniqueness.UNIQUE, ExpansionSet.CLOUD_CITY, Rarity.R);
-        setLore("'How you doing, you old pirate? So good to see you.'");
+        setLore("'How you doing, you old pirate? So good to see you!'");
         setGameText("If a battle was just initiated involving Han and any Lando, the eventual loser of the battle may not lose cards from Life Force to satisfy battle damage while that player has any cards in hand. OR Cancel Double-Crossing, No-Good Swindler.");
         addIcons(Icon.CLOUD_CITY);
     }
