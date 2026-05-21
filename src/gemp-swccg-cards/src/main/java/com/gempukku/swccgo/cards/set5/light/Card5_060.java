@@ -48,7 +48,7 @@ public class Card5_060 extends AbstractLostInterrupt {
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.Lando)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Loser pays battle damage from hand before Life Force");
+            action.setText("Battle damage from hand before Life Force");
             // Allow response(s)
             action.allowResponses("Eventual loser may not lose Life Force to satisfy battle damage while cards in hand",
                     new RespondablePlayCardEffect(action) {
