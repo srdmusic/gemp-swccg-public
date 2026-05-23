@@ -53,7 +53,7 @@ public class Card4_056 extends AbstractUsedInterrupt {
                         protected void cardTargeted(final int targetGroupId, PhysicalCard starfighter) {
                             action.addAnimationGroup(starfighter);
                             // Allow response(s)
-                            action.allowResponses("Also lose force if " + GameUtils.getCardLink(starfighter) + " lost due to asteroid destiny this turn",
+                            action.allowResponses("cause force loss equal to " + GameUtils.getCardLink(starfighter) + "'s forfeit if lost due to asteroid destiny this turn",
                                     new RespondablePlayCardEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
