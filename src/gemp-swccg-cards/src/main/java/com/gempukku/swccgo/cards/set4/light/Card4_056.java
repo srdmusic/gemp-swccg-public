@@ -39,7 +39,7 @@ public class Card4_056 extends AbstractUsedInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        final Filter targetFilter = Filters.and(Filters.opponents(self), Filters.starfighter/*, Filters.canBeTargetedBy(self) */, Filters.presentWith(self, Filters.and(Filters.your(self), Filters.starship /*, Filters.canBeTargetedBy(self) */)), Filters.at(Filters.asteroid_sector));
+        final Filter targetFilter = Filters.and(Filters.opponents(self), Filters.starfighter, Filters.canBeTargetedBy(self), Filters.presentWith(self, Filters.and(Filters.your(self), Filters.starship, Filters.canBeTargetedBy(self))), Filters.at(Filters.asteroid_sector));
 
         if (!GameConditions.wasAsteroidDestinyDrawnThisTurn(game)
                 && GameConditions.canTarget(game, self, targetFilter)) {
