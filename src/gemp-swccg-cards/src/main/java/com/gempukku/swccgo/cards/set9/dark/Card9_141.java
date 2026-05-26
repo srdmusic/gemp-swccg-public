@@ -7,6 +7,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -42,7 +43,7 @@ import java.util.List;
  */
 public class Card9_141 extends AbstractLostInterrupt {
     public Card9_141() {
-        super(Side.DARK, 6, "Young Fool", Uniqueness.UNIQUE, ExpansionSet.DEATH_STAR_II, Rarity.R);
+        super(Side.DARK, 6, Title.Young_Fool, Uniqueness.UNIQUE, ExpansionSet.DEATH_STAR_II, Rarity.R);
         setLore("'Now, young Skywalker ... you will die.'");
         setGameText("If opponent's character present with Emperor was just lost, lose 1 Force to place that character out of play. OR Release frozen Luke at your Throne Room (Luke may not be battled until end of your next turn) OR Cancel NOOOOOOOOOOOO!");
         addIcons(Icon.DEATH_STAR_II);
@@ -54,23 +55,25 @@ public class Card9_141 extends AbstractLostInterrupt {
         if (TriggerConditions.justLostWasPresentWith(game, effectResult, Filters.and(Filters.opponents(self), Filters.character), Filters.Emperor)) {
             final PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Place " + GameUtils.getFullName(justLostCard) + " out of play");
-            // Pay cost(s)
-            action.appendCost(
-                    new LoseForceEffect(action, playerId, 1, true));
-            // Allow response(s)
-            action.allowResponses("Place " + GameUtils.getCardLink(justLostCard) + " out of play",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new PlaceCardOutOfPlayFromOffTableEffect(action, justLostCard));
+            if(Filters.canBeTargetedBy(self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY).accepts(game, justLostCard)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                action.setText("Place " + GameUtils.getFullName(justLostCard) + " out of play");
+                // Pay cost(s)
+                action.appendCost(
+                        new LoseForceEffect(action, playerId, 1, true));
+                // Allow response(s)
+                action.allowResponses("Place " + GameUtils.getCardLink(justLostCard) + " out of play",
+                        new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                // Perform result(s)
+                                action.appendEffect(
+                                        new PlaceCardOutOfPlayFromOffTableEffect(action, justLostCard));
+                            }
                         }
-                    }
-            );
-            return Collections.singletonList(action);
+                );
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }

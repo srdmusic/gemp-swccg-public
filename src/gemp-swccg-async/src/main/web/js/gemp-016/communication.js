@@ -192,7 +192,7 @@ var GempSwccgCommunication = Class.extend({
                 participantId:getUrlParam("participantId") },
             success:this.deliveryCheck(callback),
             error:this.errorCheck(errorMap),
-            dataType:"xml"
+            dataType:"html"
         });
     },
     getReplay:function (replayId, callback, errorMap) {
@@ -692,7 +692,7 @@ var GempSwccgCommunication = Class.extend({
             dataType:"xml"
         });
     },
-    createTable:function (format, deckName, sampleDeck, tableDesc, isPrivate, callback, errorMap) {
+    createTable:function (format, deckName, sampleDeck, tableDesc, isPrivate, playVsAi, aiSkill, aiDeckName, aiDeckSample, callback, errorMap) {
         $.ajax({
             type:"POST",
             url:this.url + "/hall",
@@ -703,6 +703,10 @@ var GempSwccgCommunication = Class.extend({
                 sampleDeck:sampleDeck,
                 tableDesc:tableDesc,
                 isPrivate:isPrivate,
+                playVsAi:playVsAi,
+                aiSkill:aiSkill,
+                aiDeckName:aiDeckName,
+                aiDeckSample:aiDeckSample,
                 participantId:getUrlParam("participantId")},
             success:this.deliveryCheck(callback),
             error:this.errorCheck(errorMap),
@@ -738,6 +742,20 @@ var GempSwccgCommunication = Class.extend({
         $.ajax({
             type:"POST",
             url:this.url + "/admin/settings/privategames",
+            cache:false,
+            data:{
+                enabled:enabled
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+
+    setAiTablesEnabled:function (enabled, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/settings/aitables",
             cache:false,
             data:{
                 enabled:enabled
@@ -1122,12 +1140,73 @@ var GempSwccgCommunication = Class.extend({
             dataType:"html"
         });
     },
-    
-    
-    previewConstructedLeague:function (name, cost, start, collectionType,  
-                              allowTimeExtensions, allowSpectators, showPlayerNames, 
-                              invitationOnly, registrationInfo, decisionTimeoutSeconds, 
-                              timePerPlayerMinutes, formats, serieDurations, maxMatches,
+
+
+    previewSoloDraftLeague:function (name, cost, start, format, serieDuration, maxMatches,
+                              allowTimeExtensions, allowSpectators, showPlayerNames,
+                              invitationOnly, registrationInfo, decisionTimeoutSeconds,
+                              timePerPlayerMinutes,
+                              callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/league/solodraft/preview",
+            cache:false,
+            data:{
+                name:name,
+                cost:cost,
+                start:start,
+                format:format,
+                serieDuration:serieDuration,
+                maxMatches:maxMatches,
+                allowTimeExtensions:allowTimeExtensions,
+                allowSpectators:allowSpectators,
+                showPlayerNames:showPlayerNames,
+                invitationOnly:invitationOnly,
+                registrationInfo:registrationInfo,
+                decisionTimeoutSeconds:decisionTimeoutSeconds,
+                timePerPlayerMinutes:timePerPlayerMinutes
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
+        });
+    },
+
+    addSoloDraftLeague:function (name, cost, start, format, serieDuration, maxMatches,
+                              allowTimeExtensions, allowSpectators, showPlayerNames,
+                              invitationOnly, registrationInfo, decisionTimeoutSeconds,
+                              timePerPlayerMinutes,
+                              callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/league/solodraft/create",
+            cache:false,
+            data:{
+                name:name,
+                cost:cost,
+                start:start,
+                format:format,
+                serieDuration:serieDuration,
+                maxMatches:maxMatches,
+                allowTimeExtensions:allowTimeExtensions,
+                allowSpectators:allowSpectators,
+                showPlayerNames:showPlayerNames,
+                invitationOnly:invitationOnly,
+                registrationInfo:registrationInfo,
+                decisionTimeoutSeconds:decisionTimeoutSeconds,
+                timePerPlayerMinutes:timePerPlayerMinutes
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+
+
+    previewConstructedLeague:function (name, cost, start, collectionType,
+                              allowTimeExtensions, allowSpectators, showPlayerNames,
+                              invitationOnly, registrationInfo, decisionTimeoutSeconds,
+                              timePerPlayerMinutes, lockedDeckType, formats, serieDurations, maxMatches,
                               callback, errorMap) {
         $.ajax({
             type:"POST",
@@ -1146,6 +1225,7 @@ var GempSwccgCommunication = Class.extend({
                 registrationInfo:registrationInfo,
                 decisionTimeoutSeconds:decisionTimeoutSeconds,
                 timePerPlayerMinutes:timePerPlayerMinutes,
+                lockedDeckType:lockedDeckType,
                 formats:formats,
                 serieDurations:serieDurations,
                 maxMatches:maxMatches
@@ -1155,11 +1235,11 @@ var GempSwccgCommunication = Class.extend({
             dataType:"xml"
         });
     },
-    
-    addConstructedLeague:function (name, cost, start, collectionType,  
-                              allowTimeExtensions, allowSpectators, showPlayerNames, 
-                              invitationOnly, registrationInfo, decisionTimeoutSeconds, 
-                              timePerPlayerMinutes, formats, serieDurations, maxMatches,
+
+    addConstructedLeague:function (name, cost, start, collectionType,
+                              allowTimeExtensions, allowSpectators, showPlayerNames,
+                              invitationOnly, registrationInfo, decisionTimeoutSeconds,
+                              timePerPlayerMinutes, lockedDeckType, formats, serieDurations, maxMatches,
                               callback, errorMap) {
         $.ajax({
             type:"POST",
@@ -1178,6 +1258,7 @@ var GempSwccgCommunication = Class.extend({
                 registrationInfo:registrationInfo,
                 decisionTimeoutSeconds:decisionTimeoutSeconds,
                 timePerPlayerMinutes:timePerPlayerMinutes,
+                lockedDeckType:lockedDeckType,
                 formats:formats,
                 serieDurations:serieDurations,
                 maxMatches:maxMatches
@@ -1320,6 +1401,31 @@ var GempSwccgCommunication = Class.extend({
             success:this.deliveryCheck(callback),
             error:this.errorCheck(errorMap),
             dataType:"html"
+        });
+    },
+    getDraft:function (leagueType, callback, errorMap) {
+        $.ajax({
+            type:"GET",
+            url:this.url + "/soloDraft/"+leagueType,
+            cache:false,
+            data:{
+                participantId:getUrlParam("participantId")},
+            success:callback,
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
+        });
+    },
+    makeDraftPick:function (leagueType, choiceId, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/soloDraft/"+leagueType,
+            cache:false,
+            data:{
+                choiceId:choiceId,
+                participantId:getUrlParam("participantId")},
+            success:callback,
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
         });
     }
 });

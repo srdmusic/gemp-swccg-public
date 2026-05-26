@@ -15,7 +15,7 @@ import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.*;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.*;
 
 import java.util.*;
@@ -144,6 +144,11 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
     @Override
     public String getTitle() {
         return _title;
+    }
+
+    @Override
+    public String getTitleAbbreviated() {
+        return getTitle();
     }
 
     @Override
@@ -1301,11 +1306,12 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
      * @param game the game
      * @param self the card
      * @param forFree true if moving for free, otherwise false
+     * @param ignoreDeployRestriction true if ignoring deployment restrictions that would normally prevent transferring
      * @param transferTargetFilter the filter for where the card can be transferred
      * @return the transfer device or weapon actions
      */
     @Override
-    public Action getTransferDeviceOrWeaponAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, Filter transferTargetFilter) {
+    public Action getTransferDeviceOrWeaponAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean ignoreDeployRestriction, Filter transferTargetFilter) {
         throw new UnsupportedOperationException("This method, getTransferDeviceOrWeaponAction(), should not be called on this card: " + _title);
     }
 

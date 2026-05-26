@@ -2,7 +2,9 @@ package com.gempukku.swccgo.game;
 
 import com.gempukku.swccgo.AbstractServer;
 import com.gempukku.swccgo.PrivateInformationException;
+import com.gempukku.swccgo.ai.AiRegistry;
 import com.gempukku.swccgo.chat.ChatCommandErrorException;
+import com.gempukku.swccgo.chat.ChatRoomMediator;
 import com.gempukku.swccgo.chat.ChatServer;
 import com.gempukku.swccgo.db.DeckDAO;
 import com.gempukku.swccgo.db.InGameStatisticsDAO;
@@ -68,6 +70,7 @@ public class SwccgoServer extends AbstractServer {
                 }
                 if (currentTime > finishedGame.getValue().getTime() + _timeToGameDeath) {
                     _runningGames.get(gameId).destroy();
+                    AiRegistry.unregisterGame(gameId);
                     _gameDeathWarningsSent.remove(gameId);
                     _runningGames.remove(gameId);
                     _chatServer.destroyChatRoom(getChatRoomName(gameId));
@@ -86,6 +89,16 @@ public class SwccgoServer extends AbstractServer {
 
     private String getChatRoomName(String gameId) {
         return "Game" + gameId;
+    }
+
+    /**
+     * Get the chat room mediator for a game.
+     *
+     * @param gameId the game ID
+     * @return the chat room mediator, or null if not found
+     */
+    public ChatRoomMediator getGameChatRoom(String gameId) {
+        return _chatServer.getChatRoom(getChatRoomName(gameId));
     }
 
     public SwccgGameMediator createNewGame(SwccgFormat swccgFormat, League league, String tournamentName, final SwccgGameParticipant[] participants, boolean allowSpectators, boolean cancelIfNoActions, boolean allowCancelling, boolean allowSpectatorsToViewChat, boolean allowSpectatorsToChat, boolean allowExtendGameTimer, int decisionTimeoutSeconds, int timePerPlayerMinutes, boolean isPrivate, boolean inGameStatisticsOn, boolean bonusAbilitiesEnabled) {
@@ -191,4 +204,3 @@ public class SwccgoServer extends AbstractServer {
         }
     }
 }
-

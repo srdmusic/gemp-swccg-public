@@ -17,7 +17,7 @@ DEFAULT CHARACTER SET = utf8
 COLLATE = utf8_bin;
 
 INSERT IGNORE INTO `gemp-swccg`.`gemp_settings` (settingName,settingValue) values ('privateGamesEnabled',0),
-('inGameStatistics',1),('bonusAbilitiesEnabled',0),('newAccountRegistrationEnabled',1);
+('inGameStatistics',1),('bonusAbilitiesEnabled',0),('newAccountRegistrationEnabled',1),('aiTablesEnabled',0);
 
 -- -----------------------------------------------------
 -- Table `gemp-swccg`.`collection`
@@ -128,6 +128,7 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`league` (
   `decisionTimeoutSeconds` INT(11) DEFAULT 300 ,
   `timePerPlayerMinutes` INT(11) DEFAULT 50 ,
   `invitationOnly` BIT DEFAULT 0,
+  `lockedDeckType` VARCHAR(50) CHARACTER SET 'utf8' COLLATE 'utf8_bin' DEFAULT NULL,
   `registrationInfo` TEXT,
   PRIMARY KEY (`id`) )
 ENGINE = InnoDB
@@ -162,6 +163,10 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`league_participation` (
   `league_type` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `player_name` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `join_ip` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
+  `locked_ls_deck_name` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
+  `locked_ls_deck` TEXT CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
+  `locked_ds_deck_name` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
+  `locked_ds_deck` TEXT CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
   PRIMARY KEY (`id`) ,
   INDEX `league_participation_league_type` (`league_type`) )
 ENGINE = InnoDB
@@ -331,6 +336,36 @@ CREATE TABLE IF NOT EXISTS `gemp-swccg`.`ip_ban` (
   `prefix` int(3) DEFAULT NULL ,
   PRIMARY KEY (`id`) ,
   UNIQUE KEY `ip_UNIQUE` (`ip`)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_bin;
+
+
+-- -----------------------------------------------------
+-- Table `gemp-swccg`.`bot_player_stats`
+-- Tracks player statistics when playing against the bot
+-- Achievements stored as 144-bit bitfield (18 bytes)
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `gemp-swccg`.`bot_player_stats` (
+  `player_id` INT(11) NOT NULL ,
+  `wins` INT(11) NOT NULL DEFAULT 0 ,
+  `losses` INT(11) NOT NULL DEFAULT 0 ,
+  `games_played` INT(11) NOT NULL DEFAULT 0 ,
+  `total_ast_score` INT(11) NOT NULL DEFAULT 0 ,
+  `best_route_score` INT(11) NOT NULL DEFAULT 0 ,
+  `best_damage` INT(11) NOT NULL DEFAULT 0 ,
+  `best_force_remaining` INT(11) NOT NULL DEFAULT 0 ,
+  `best_time_seconds` INT(11) DEFAULT NULL ,
+  `achievements` BINARY(18) NOT NULL DEFAULT 0 ,
+  `first_seen` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+  `last_seen` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
+  PRIMARY KEY (`player_id`) ,
+  CONSTRAINT `fk_bot_stats_player` FOREIGN KEY (`player_id`) REFERENCES `player` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE ,
+  INDEX `idx_bot_stats_wins` (`wins` DESC) ,
+  INDEX `idx_bot_stats_ast_score` (`total_ast_score` DESC) ,
+  INDEX `idx_bot_stats_games` (`games_played` DESC)
 )
 ENGINE=InnoDB
 DEFAULT CHARSET=utf8

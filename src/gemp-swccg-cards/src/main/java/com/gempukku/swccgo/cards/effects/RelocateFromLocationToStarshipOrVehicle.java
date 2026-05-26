@@ -5,7 +5,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.AbstractSuccessfulEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.results.RelocatingBetweenLocationsResult;
@@ -25,6 +25,7 @@ public class RelocateFromLocationToStarshipOrVehicle extends AbstractSuccessfulE
      * @param card the card to relocate to starship or vehicle
      * @param starshipOrVehicle the starship or vehicle
      * @param asPilot true if relocating to pilot capacity slot, otherwise false
+     * @param source the card to initiate the action
      */
     public RelocateFromLocationToStarshipOrVehicle(Action action, PhysicalCard card, PhysicalCard starshipOrVehicle, boolean asPilot, PhysicalCard source) {
         super(action);

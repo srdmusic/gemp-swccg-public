@@ -72,6 +72,13 @@ public interface SwccgCardBlueprint {
     String getTitle();
 
     /**
+     * Gets the abbreviated card title. Usually to work around action text truncation for long titles
+     * Individual cards can override this - otherwise, returns getTitle()
+     * @return the card title
+     */
+    String getTitleAbbreviated();
+
+    /**
      * Gets a list of the card's titles. Some combo cards have multiple card titles.
      * @return the card's titles
      */
@@ -814,10 +821,11 @@ public interface SwccgCardBlueprint {
      * @param game the game
      * @param self the card
      * @param forFree true if moving for free, otherwise false
+     * @param ignoreDeployRestriction true if ignoring deployment restrictions that would normally prevent transferring
      * @param transferTargetFilter the filter for where the card can be transferred
      * @return the transfer device or weapon actions
      */
-    Action getTransferDeviceOrWeaponAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, Filter transferTargetFilter);
+    Action getTransferDeviceOrWeaponAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean ignoreDeployRestriction, Filter transferTargetFilter);
 
     /**
      * Gets the target filter for where a device or weapon can be transferred by the specified player.

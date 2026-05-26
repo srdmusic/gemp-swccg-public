@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.actions;
 
 import com.gempukku.swccgo.cards.effects.PayDockingBayTransitCostEffect;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -12,7 +13,7 @@ import com.gempukku.swccgo.logic.actions.AbstractTopLevelRuleAction;
 import com.gempukku.swccgo.logic.effects.DockingBayTransitEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardsOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.TargetingEffect;
@@ -58,7 +59,9 @@ public class DockingBayTransitAction extends AbstractTopLevelRuleAction {
         final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
 
         // Get cards at docking bay
-        Filter cardFilter = Filters.and(Filters.your(playerId), Filters.hasNotPerformedRegularMove, Filters.or(Filters.character, Filters.vehicle, Filters.weapon), Filters.atLocation(location));
+        Filter atFilter = Filters.and(Filters.your(playerId), Filters.hasNotPerformedRegularMove, Filters.or(Filters.character, Filters.vehicle, Filters.movesLikeCharacter), Filters.atLocation(location));
+        Filter attachedToFilter = Filters.and(Filters.your(playerId), Filters.hasNotPerformedRegularMove, Filters.artillery_weapon_that_may_use_db_transit, Filters.attachedTo(location)); //deployed on location (attached)
+        Filter cardFilter = Filters.or(atFilter, attachedToFilter);
         if (gameState.getCurrentPlayerId().equals(playerId)) {
             cardFilter = Filters.and(cardFilter, Filters.not(Filters.or(Filters.undercover_spy, Filters.deploysAndMovesLikeUndercoverSpy)));
         }

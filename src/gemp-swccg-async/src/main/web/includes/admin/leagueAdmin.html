@@ -48,6 +48,7 @@
 			var registrationInfo = league.getAttribute("registrationInfo");
 			var decisionTimeoutSeconds = league.getAttribute("decisionTimeoutSeconds");
 			var timePerPlayerMinutes = league.getAttribute("timePerPlayerMinutes");
+			var lockedDeckType = league.getAttribute("lockedDeckType");
 
 			previewDialog.append("<div class='leagueName'>" + leagueName + "</div>");
 
@@ -87,6 +88,10 @@
 			}
 			else {
 				previewDialog.append("Anonymous tables. ");
+			}
+
+			if(lockedDeckType === "when_first_played") {
+				previewDialog.append("<b>Decks locked after first game.</b> ");
 			}
 			
 			previewDialog.append("</div>");
@@ -275,7 +280,62 @@
                 	$("#sealed-league-result").html("OK");
                 }, leagueErrorMap($("#sealed-league-result")));
 						});
-				
+
+				$("#previewSoloDraft").button().click(
+						function () {
+							var data = gatherData($("#addSoloDraftForm"));
+							$("#solo-draft-league-result").html("Processing...");
+
+							hall.comm.previewSoloDraftLeague(
+								data.name[0],
+                data.cost[0],
+                data.start[0],
+                data.format[0],
+                data.serieDuration[0],
+                data.maxMatches[0],
+                data.allowTimeExtensions[0],
+                data.allowSpectators[0],
+                data.showPlayerNames[0],
+                data.invitationOnly[0],
+                data.registrationInfo[0],
+                data.decisionTimeoutSeconds[0],
+                data.timePerPlayerMinutes[0],
+                function(xml) {
+                	previewDialog.html("");
+                	displayPreview(xml, previewDialog);
+                	$("#solo-draft-league-result").html("OK");
+                }, leagueErrorMap($("#solo-draft-league-result"), function() {
+                  	previewDialog.dialog("close");
+                  }));
+
+					previewDialog.html("Processing...");
+					previewDialog.dialog("open");
+				});
+
+				$("#submitSoloDraft").button().click(
+						function () {
+							var data = gatherData($("#addSoloDraftForm"));
+							$("#solo-draft-league-result").html("Processing...");
+
+							hall.comm.addSoloDraftLeague(
+								data.name[0],
+                data.cost[0],
+                data.start[0],
+                data.format[0],
+                data.serieDuration[0],
+                data.maxMatches[0],
+                data.allowTimeExtensions[0],
+                data.allowSpectators[0],
+                data.showPlayerNames[0],
+                data.invitationOnly[0],
+                data.registrationInfo[0],
+                data.decisionTimeoutSeconds[0],
+                data.timePerPlayerMinutes[0],
+                function() {
+                	$("#solo-draft-league-result").html("OK");
+                }, leagueErrorMap($("#solo-draft-league-result")));
+						});
+
 				$("#addConstructedSeries").button().click(
 						function () {
 							$(".seriesData").last().clone().appendTo(".series");
@@ -298,6 +358,7 @@
                 data.registrationInfo[0],
                 data.decisionTimeoutSeconds[0],
                 data.timePerPlayerMinutes[0],
+                data.lockedDeckType[0],
                 //Per-serie data sends the full array
                 data.format,
                 data.serieDuration,
@@ -331,6 +392,7 @@
                 data.registrationInfo[0],
                 data.decisionTimeoutSeconds[0],
                 data.timePerPlayerMinutes[0],
+                data.lockedDeckType[0],
                 //Per-serie data sends the full array
                 data.format,
                 data.serieDuration,
@@ -369,6 +431,7 @@
 				<option value="premiere_anh_sealed">Premiere - A New Hope; 'Sealed'</option>
 				<option value="jp_sealed">Jabba's Palace; 'Sealed'</option>
 				<option value="endor_dsII_sealed">Endor - Death Star II; 'Sealed'</option>
+				<option value="reflections_sealed">Reflections; 'Sealed'</option>
 				<option value="episode_i_sealed">Episode I; 'Sealed'</option>
 				<option value="all_of_the_jedi_sealed">All Of The Jedi; 'Sealed'</option>
 				<option value="novelty_sealed">Novelty - Space Sealed; 'Sealed'</option>
@@ -391,7 +454,38 @@
 	</div>
 
 	<br><br><hr><br>
-	
+
+	<div>
+		<h1>Add Solo Draft League</h1>
+
+		<div id="addSoloDraftForm">
+			Name: <input type="text" name="name"/><br/>
+			Cost (in silver): <input type="number" name="cost" value="500"/><br/>
+			Start (YYYYMMDD): <input type="number" name="start" required/><br/>
+			Format:
+			<select name="format">
+				<option value="basic_premds2_draft">Basic Prem-DS2 Draft</option>
+				<option value="basic_premv13_draft">Basic Prem-V13 Draft</option>
+				<option value="holocron_premv25_draft">Holocron Prem-V25 Draft</option>
+				<option value="c7obj_draft">Cube v7 Draft + Obj</option>
+			</select><br/>
+			Serie duration in days: <input type="number" name="serieDuration" value="7"/><br/>
+			Maximum matches per serie: <input type="number" name="maxMatches" value="10"/><br/>
+			Allow Time Extensions: <input type="checkbox" name="allowTimeExtensions"/><br/>
+			Allow Spectators <input type="checkbox" name="allowSpectators" checked/><br/>
+			Show Player Names in Hall <input type="checkbox" name="showPlayerNames"/><br/>
+			Invite only: <input type="checkbox" name="invitationOnly" value="on"/><br/>
+			Registration info link: <input type="text" name="registrationInfo"/><br/>
+			Decision Timeout (seconds) <input type="number" name="decisionTimeoutSeconds" min="1" value=300 style="min-width: 4em"><br/>
+			Time Per Player (minutes) <input type="number" name="timePerPlayerMinutes" min="1" value=50 style="min-width: 4em"><br/>
+			<button id="previewSoloDraft" class="admin-button">Preview solo draft league</button>
+			<button id="submitSoloDraft" class="admin-button">Add solo draft league</button>
+			<span id="solo-draft-league-result" style="display:inline-block;">Ready.</span>
+		</div>
+	</div>
+
+	<br><br><hr><br>
+
 	<div>
 		<h1>Add Constructed League</h1>
 
@@ -408,6 +502,11 @@
 			Allow Spectators <input type="checkbox" name="allowSpectators" checked><br/>
 			Show Player Names in Hall <input type="checkbox" name="showPlayerNames"><br/>
 			Invite only: <input type="checkbox" name="invitationOnly"><br/>
+			Deck lock-in:
+			<select name="lockedDeckType">
+				<option value="">No deck locking</option>
+				<option value="when_first_played">Lock decks after first game</option>
+			</select><br/>
 			Registration info link: <input type="text" name="registrationInfo"><br/>
 			Decision Timeout (seconds) <input type="number" name="decisionTimeoutSeconds" min="1" value=300 style="min-width: 4em"><br/>
 			Time Per Player (minutes) <input type="number" name="timePerPlayerMinutes" min="1" value=50 style="min-width: 4em"><br/>
@@ -430,11 +529,14 @@
 						<option value="premiere_ref2">Premiere - Reflections II</option>
 						<option value="premiere_ref2_m">Premiere - Reflections II (Modified)</option>
 						<option value="premiere_tatooine">Premiere - Tatooine</option>
+						<option value="premiere_set3">Premiere - Virtual Set 3</option>
 						<option value="classic_no_virtual">Classic (no v-cards)</option>
+						<option value="classic_no_virtual_m">Classic (no v-cards) (Modified)</option>
 						<option value="classic">Classic</option>
 						<option value="open_no_shields_no_virtual">Open (no shields / no v-cards)</option>
 						<option value="open_no_shields">Open (no shields)</option>
 						<option value="open_no_virtual">Open (no v-cards)</option>
+						<option value="open_no_virtual_m">Decipher Cards Only (modified)</option>
 						<option value="open40card">Open (40 cards)</option>
 						<option value="open_45_card">Open (45 cards)</option>
 						<option value="scavenger_premiere_ds2">Scavenger</option>

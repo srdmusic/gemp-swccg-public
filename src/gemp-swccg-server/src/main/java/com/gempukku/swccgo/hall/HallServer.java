@@ -1,6 +1,12 @@
 package com.gempukku.swccgo.hall;
 
 import com.gempukku.swccgo.*;
+import com.gempukku.swccgo.ai.AiRegistry;
+import com.gempukku.swccgo.ai.SwccgAiController;
+import com.gempukku.swccgo.ai.models.AdvancedAi;
+import com.gempukku.swccgo.ai.models.BeginnerAi;
+import com.gempukku.swccgo.ai.models.rando.RandoCalAi;
+import com.gempukku.swccgo.bot.BotStatsGameResultListener;
 import com.gempukku.swccgo.chat.ChatCommandCallback;
 import com.gempukku.swccgo.chat.ChatCommandErrorException;
 import com.gempukku.swccgo.chat.ChatRoomMediator;
@@ -8,6 +14,7 @@ import com.gempukku.swccgo.chat.ChatServer;
 import com.gempukku.swccgo.collection.CollectionsManager;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.ApplicationConfiguration;
+import com.gempukku.swccgo.db.BotStatsDAO;
 import com.gempukku.swccgo.db.GempSettingDAO;
 import com.gempukku.swccgo.db.IpBanDAO;
 import com.gempukku.swccgo.db.PlayerDAO;
@@ -34,6 +41,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class HallServer extends AbstractServer {
+    private static final String AI_BEGINNER_ID = "~OzzelBot";
+    private static final String AI_ADVANCED_ID = "~YodaBot";
+    private static final String AI_ELITE_ID = "~Rando_Cal";
+
     private final int _playerInactivityPeriod = 1000 * 60; // 60 seconds
     private final long _scheduledTournamentLoadTime = 1000 * 60 * 60 * 24 * 7; // Week
     private final long _repeatTournaments = 1000 * 60 * 60 * 24 * 2;
@@ -49,6 +60,7 @@ public class HallServer extends AbstractServer {
     private PlayerDAO _playerDAO;
     private IpBanDAO _ipBanDAO;
     private GempSettingDAO _gempSettingDAO;
+    private BotStatsDAO _botStatsDAO;
     private AdminService _adminService;
     private TournamentPrizeSchemeRegistry _tournamentPrizeSchemeRegistry;
 
@@ -61,6 +73,7 @@ public class HallServer extends AbstractServer {
     private boolean _privateGamesEnabled;
     private boolean _inGameStatisticsEnabled;
     private boolean _bonusAbilitiesEnabled;
+    private boolean _aiTablesEnabled;
 
     private ReadWriteLock _hallDataAccessLock = new ReentrantReadWriteLock(false);
 
@@ -76,12 +89,13 @@ public class HallServer extends AbstractServer {
     private final ChatRoomMediator _hallChat;
     private final GameResultListener _notifyHallListeners = new NotifyHallListenersGameResultListener();
 
-    public HallServer(SwccgoServer swccgoServer, ChatServer chatServer, LeagueService leagueService, TournamentService tournamentService, SwccgCardBlueprintLibrary library,
-                      SwccgoFormatLibrary formatLibrary, CollectionsManager collectionsManager,
-                      PlayerDAO playerDAO, IpBanDAO ipBanDAO, GempSettingDAO gempSettingDAO,
-                      AdminService adminService,
-                      TournamentPrizeSchemeRegistry tournamentPrizeSchemeRegistry,
-                      PairingMechanismRegistry pairingMechanismRegistry) {
+    public HallServer(SwccgoServer swccgoServer, ChatServer chatServer, LeagueService leagueService,
+            TournamentService tournamentService, SwccgCardBlueprintLibrary library,
+            SwccgoFormatLibrary formatLibrary, CollectionsManager collectionsManager,
+            PlayerDAO playerDAO, IpBanDAO ipBanDAO, GempSettingDAO gempSettingDAO,
+            BotStatsDAO botStatsDAO, AdminService adminService,
+            TournamentPrizeSchemeRegistry tournamentPrizeSchemeRegistry,
+            PairingMechanismRegistry pairingMechanismRegistry) {
         _swccgoServer = swccgoServer;
         _chatServer = chatServer;
         _leagueService = leagueService;
@@ -92,9 +106,11 @@ public class HallServer extends AbstractServer {
         _playerDAO = playerDAO;
         _ipBanDAO = ipBanDAO;
         _gempSettingDAO = gempSettingDAO;
+        _botStatsDAO = botStatsDAO;
         _privateGamesEnabled = _gempSettingDAO.privateGamesEnabled();
         _inGameStatisticsEnabled = _gempSettingDAO.inGameStatisticsEnabled();
         _bonusAbilitiesEnabled = _gempSettingDAO.bonusAbilitiesEnabled();
+        _aiTablesEnabled = _gempSettingDAO.aiTablesEnabled();
         _adminService = adminService;
         _tournamentPrizeSchemeRegistry = tournamentPrizeSchemeRegistry;
         _pairingMechanismRegistry = pairingMechanismRegistry;
@@ -102,7 +118,8 @@ public class HallServer extends AbstractServer {
         _hallChat.addChatCommandCallback("ban",
                 new ChatCommandCallback() {
                     @Override
-                    public void commandReceived(String from, String parameters, boolean admin) throws ChatCommandErrorException {
+                    public void commandReceived(String from, String parameters, boolean admin)
+                            throws ChatCommandErrorException {
                         if (admin) {
                             _adminService.banUser(parameters.trim());
                         } else {
@@ -113,7 +130,8 @@ public class HallServer extends AbstractServer {
         _hallChat.addChatCommandCallback("banIp",
                 new ChatCommandCallback() {
                     @Override
-                    public void commandReceived(String from, String parameters, boolean admin) throws ChatCommandErrorException {
+                    public void commandReceived(String from, String parameters, boolean admin)
+                            throws ChatCommandErrorException {
                         if (admin) {
                             _adminService.banIp(parameters.trim());
                         } else {
@@ -124,7 +142,8 @@ public class HallServer extends AbstractServer {
         _hallChat.addChatCommandCallback("banIpRange",
                 new ChatCommandCallback() {
                     @Override
-                    public void commandReceived(String from, String parameters, boolean admin) throws ChatCommandErrorException {
+                    public void commandReceived(String from, String parameters, boolean admin)
+                            throws ChatCommandErrorException {
                         if (admin) {
                             _adminService.banIpPrefix(parameters.trim());
                         } else {
@@ -156,7 +175,8 @@ public class HallServer extends AbstractServer {
                 _shutdown = false;
                 cancelWaitingTables();
                 cancelTournamentQueues();
-                _chatServer.sendSystemMessageToAllChatRooms("Server is in operational mode and games are now able to be started");
+                _chatServer.sendSystemMessageToAllChatRooms(
+                        "Server is in operational mode and games are now able to be started");
                 hallChanged();
             }
         } finally {
@@ -171,7 +191,8 @@ public class HallServer extends AbstractServer {
                 _shutdown = true;
                 cancelWaitingTables();
                 cancelTournamentQueues();
-                _chatServer.sendSystemMessageToAllChatRooms("Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished");
+                _chatServer.sendSystemMessageToAllChatRooms(
+                        "Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished");
                 hallChanged();
             }
         } finally {
@@ -201,7 +222,7 @@ public class HallServer extends AbstractServer {
     public int getTablesCount() {
         _hallDataAccessLock.readLock().lock();
         try {
-             return _runningTables.values().size();
+            return _runningTables.values().size();
         } finally {
             _hallDataAccessLock.readLock().unlock();
         }
@@ -216,14 +237,16 @@ public class HallServer extends AbstractServer {
             tournamentQueue.leaveAllPlayers(_collectionsManager);
     }
 
-
-
     /**
-     * @return If table created, otherwise <code>false</code> (if the user already is sitting at a table or playing).
+     * @return If table created, otherwise <code>false</code> (if the user already
+     *         is sitting at a table or playing).
      */
-    public void createNewTable(String type, Player player, String deckName, boolean sampleDeck, String tableDesc, boolean isPrivate, Player librarian) throws HallException {
+    public AwaitingTable createNewTable(String type, Player player, String deckName, boolean sampleDeck, String tableDesc,
+            boolean isPrivate, Player librarian, boolean playVsAi, String aiSkill, String aiDeckName, boolean aiDeckSample)
+            throws HallException {
         if (_shutdown)
-            throw new HallException("Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished.");
+            throw new HallException(
+                    "Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished.");
 
         if (!_operational)
             throw new HallException("Server is not yet in operational mode. Games may not be started yet.");
@@ -250,7 +273,7 @@ public class HallServer extends AbstractServer {
                         throw new HallException("You have already played max games in league");
                     format = _formatLibrary.getFormat(leagueSerie.getFormat());
                     collectionType = leagueSerie.getCollectionType();
-               }
+                }
             }
             // It's not a normal format and also not a league one
             if (format == null)
@@ -260,36 +283,119 @@ public class HallServer extends AbstractServer {
 
             SwccgDeck swccgDeck = validateUserAndDeck(format, player, deckName, collectionType, sampleDeck, librarian);
 
+            // Lock-in league: replace deck with locked version if one exists
+            if (league != null) {
+                swccgDeck = applyDeckLockIn(league, player.getName(), swccgDeck);
+            }
+
             Side side = swccgDeck.getSide(_library);
 
             if (league != null) {
                 verifyNotPlayingLeagueGame(player, side, league);
             }
 
-            if(isPrivate&&league!=null) {
+            if (isPrivate && league != null) {
                 throw new HallException("League games cannot be private");
             }
-            if(isPrivate&&format.isPlaytesting()) {
+            if (isPrivate && format.isPlaytesting()) {
                 throw new HallException("Playtesting games cannot be private");
             }
+            if (playVsAi && league != null) {
+                throw new HallException("League games cannot be played against the bot");
+            }
 
-            boolean isPrivateGame = isPrivate&&privateGamesAllowed();
+            boolean isPrivateGame = isPrivate && privateGamesAllowed();
 
+            SwccgDeck aiDeck = null;
+
+            // AI Logic
+            if (playVsAi) {
+                if (!aiTablesEnabled()) {
+                    throw new HallException("Bot tables are currently disabled");
+                }
+                if (aiDeckName == null || aiDeckName.isEmpty()) {
+                    throw new HallException("AI deck must be selected");
+                }
+
+                aiSkill = normalizeAiSkill(aiSkill);
+
+                Player aiDeckOwner = aiDeckSample ? librarian : player;
+                aiDeck = validateUserAndDeck(
+                        format,
+                        aiDeckOwner,
+                        aiDeckName,
+                        collectionType,
+                        aiDeckSample,
+                        librarian);
+
+                Side aiSide = aiDeck.getSide(_library);
+
+                if (aiSide == swccgDeck.getSide(_library)) {
+                    throw new HallException("AI deck must be the opposite side of the Force");
+                }
+            }
 
             /*
              * Generate a new table ID based on a UUID.
-             * Generating the table ID from a UUID means that the previous method of auto-incrememting the tableId
+             * Generating the table ID from a UUID means that the previous method of
+             * auto-incrememting the tableId
              * is removed from the internal memory of the gemp server.
              */
             String tableId = new SwccgUuid().generateNewTableId();
-            AwaitingTable table = new AwaitingTable(format, collectionType, league, leagueSerie, tableDesc, isPrivateGame);
+            AwaitingTable table = new AwaitingTable(format, collectionType, league, leagueSerie, tableDesc,
+                    isPrivateGame);
             _awaitingTables.put(tableId, table);
+
+            if (playVsAi) {
+                String aiPlayerId = getAiPlayerIdForSkill(aiSkill);
+                table.setAiPlayer(aiPlayerId, aiDeck, aiSkill);
+            }
 
             joinTableInternal(tableId, player.getName(), table, swccgDeck);
             hallChanged();
+
+            return table;
         } finally {
             _hallDataAccessLock.writeLock().unlock();
         }
+    }
+
+    private String normalizeAiSkill(String aiSkill) {
+        if (aiSkill == null) {
+            return "BEGINNER";
+        }
+        String normalized = aiSkill.trim().toUpperCase(Locale.ROOT);
+        if (normalized.isEmpty()) {
+            return "BEGINNER";
+        }
+        return normalized;
+    }
+
+    private String getAiPlayerIdForSkill(String aiSkill) {
+        String normalized = normalizeAiSkill(aiSkill);
+        if ("ADVANCED".equals(normalized)) {
+            return AI_ADVANCED_ID;
+        }
+        if ("RANDO".equals(normalized)) {
+            return AI_ELITE_ID;
+        }
+        return AI_BEGINNER_ID;
+    }
+
+    private SwccgAiController createAiForSkill(String aiSkill) {
+        String normalized = normalizeAiSkill(aiSkill);
+        if ("ADVANCED".equals(normalized)) {
+            return new AdvancedAi();
+        }
+        if ("RANDO".equals(normalized)) {
+            RandoCalAi rando = new RandoCalAi();
+            // Pass the BotStatsDAO for record lookups in welcome messages
+            if (_botStatsDAO != null) {
+                rando.setBotStatsDAO(_botStatsDAO);
+            }
+            return rando;
+        }
+        return new BeginnerAi();
     }
 
     public void setPrivateGames(boolean enabled) {
@@ -307,6 +413,11 @@ public class HallServer extends AbstractServer {
         _bonusAbilitiesEnabled = enabled;
     }
 
+    public void setAiTablesEnabled(boolean enabled) {
+        _gempSettingDAO.setAiTablesEnabled(enabled);
+        _aiTablesEnabled = enabled;
+    }
+
     public boolean privateGamesAllowed() {
         return _privateGamesEnabled;
     }
@@ -319,12 +430,16 @@ public class HallServer extends AbstractServer {
         return _bonusAbilitiesEnabled;
     }
 
+    public boolean aiTablesEnabled() {
+        return _aiTablesEnabled;
+    }
+
     public int removeInGameStatisticsListeners() {
         int tableCount = 0;
         for (RunningTable runningTable : _runningTables.values()) {
-                SwccgGameMediator game = runningTable.getSwccgoGameMediator();
-                game.removeAllInGameStatisticsListeners();
-                tableCount++;
+            SwccgGameMediator game = runningTable.getSwccgoGameMediator();
+            game.removeAllInGameStatisticsListeners();
+            tableCount++;
         }
 
         return tableCount;
@@ -342,7 +457,8 @@ public class HallServer extends AbstractServer {
                         Side awaitingTablePlayerSide = awaitingTablePlayer.getDeck().getSide(_library);
 
                         if (awaitingTablePlayerSide == side) {
-                            throw new HallException("You can't host multiple league games on the same side of the force");
+                            throw new HallException(
+                                    "You can't host multiple league games on the same side of the force");
                         }
                     }
                 }
@@ -380,19 +496,22 @@ public class HallServer extends AbstractServer {
 
         if (forCreatingTable) {
             if (numTables >= MAX_TABLES_PER_PLAYER_FOR_CREATE) {
-                throw new HallException("You can't create any more tables. You've reach the allowed limit of tables to have open at one time.");
+                throw new HallException(
+                        "You can't create any more tables. You've reach the allowed limit of tables to have open at one time.");
             }
-        }
-        else {
+        } else {
             if (numTables >= MAX_TABLES_PER_PLAYER_FOR_JOIN) {
-                throw new HallException("You can't join any more tables. You've reach the allowed limit to join at one time.");
+                throw new HallException(
+                        "You can't join any more tables. You've reach the allowed limit to join at one time.");
             }
         }
     }
 
-    public boolean joinQueue(String queueId, Player player, String deckName, boolean sampleDeck, Player librarian) throws HallException {
+    public boolean joinQueue(String queueId, Player player, String deckName, boolean sampleDeck, Player librarian)
+            throws HallException {
         if (_shutdown)
-            throw new HallException("Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished.");
+            throw new HallException(
+                    "Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished.");
 
         if (!_operational)
             throw new HallException("Server is not yet in operational mode. Games may not be started yet.");
@@ -401,13 +520,15 @@ public class HallServer extends AbstractServer {
         try {
             TournamentQueue tournamentQueue = _tournamentQueues.get(queueId);
             if (tournamentQueue == null)
-                throw new HallException("Tournament queue already finished accepting players, try again in a few seconds");
+                throw new HallException(
+                        "Tournament queue already finished accepting players, try again in a few seconds");
             if (tournamentQueue.isPlayerSignedUp(player.getName()))
                 throw new HallException("You have already joined that queue");
 
             SwccgDeck swccgDeck = null;
             if (tournamentQueue.isRequiresDeck())
-                swccgDeck = validateUserAndDeck(_formatLibrary.getFormat(tournamentQueue.getFormat()), player, deckName, tournamentQueue.getCollectionType(), sampleDeck, librarian);
+                swccgDeck = validateUserAndDeck(_formatLibrary.getFormat(tournamentQueue.getFormat()), player, deckName,
+                        tournamentQueue.getCollectionType(), sampleDeck, librarian);
 
             tournamentQueue.joinPlayer(_collectionsManager, player, swccgDeck);
 
@@ -420,11 +541,14 @@ public class HallServer extends AbstractServer {
     }
 
     /**
-     * @return If table joined, otherwise <code>false</code> (if the user already is sitting at a table or playing).
+     * @return If table joined, otherwise <code>false</code> (if the user already is
+     *         sitting at a table or playing).
      */
-    public boolean joinTableAsPlayer(String tableId, Player player, String deckName, boolean sampleDeck, Player librarian) throws HallException {
+    public boolean joinTableAsPlayer(String tableId, Player player, String deckName, boolean sampleDeck,
+            Player librarian) throws HallException {
         if (_shutdown)
-            throw new HallException("Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished.");
+            throw new HallException(
+                    "Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished.");
 
         if (!_operational)
             throw new HallException("Server is not yet in operational mode. Games may not be started yet.");
@@ -444,7 +568,8 @@ public class HallServer extends AbstractServer {
             if (awaitingTable.hasPlayer("LightTest1") && !"DarkTest1".equals(player.getName()))
                 throw new HallException("You are not allowed to play against LightTest1");
 
-            if (awaitingTable.getLeague() != null && !_leagueService.isPlayerInLeague(awaitingTable.getLeague(), player))
+            if (awaitingTable.getLeague() != null
+                    && !_leagueService.isPlayerInLeague(awaitingTable.getLeague(), player))
                 throw new HallException("You're not in that league");
 
             if (awaitingTable.isPrivate() && !awaitingTable.getTableDesc().equals(player.getName()))
@@ -452,7 +577,13 @@ public class HallServer extends AbstractServer {
 
             verifyNotExceedingMaxTables(player, false);
 
-            SwccgDeck swccgDeck = validateUserAndDeck(awaitingTable.getSwccgoFormat(), player, deckName, awaitingTable.getCollectionType(), sampleDeck, librarian);
+            SwccgDeck swccgDeck = validateUserAndDeck(awaitingTable.getSwccgoFormat(), player, deckName,
+                    awaitingTable.getCollectionType(), sampleDeck, librarian);
+
+            // Lock-in league: replace deck with locked version if one exists
+            if (awaitingTable.getLeague() != null) {
+                swccgDeck = applyDeckLockIn(awaitingTable.getLeague(), player.getName(), swccgDeck);
+            }
 
             joinTableInternal(tableId, player.getName(), awaitingTable, swccgDeck);
 
@@ -603,7 +734,8 @@ public class HallServer extends AbstractServer {
         }
     }
 
-    public HallCommunicationChannel getCommunicationChannel(Player player, int channelNumber) throws SubscriptionExpiredException, SubscriptionConflictException {
+    public HallCommunicationChannel getCommunicationChannel(Player player, int channelNumber)
+            throws SubscriptionExpiredException, SubscriptionConflictException {
         _hallDataAccessLock.readLock().lock();
         try {
             HallCommunicationChannel communicationChannel = _playerChannelCommunication.get(player);
@@ -626,15 +758,13 @@ public class HallServer extends AbstractServer {
         try {
             visitor.serverTime(DateUtils.getStringDateWithHour());
             if (_shutdown) {
-                visitor.motd("Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished.");
-            }
-            else if (!_operational) {
+                visitor.motd(
+                        "Server is in shutdown mode. No games may be started. Server will be restarted after all games have finished.");
+            } else if (!_operational) {
                 visitor.motd("Server is not yet in operational mode. Games may not be started yet.");
-            }
-            else if (_motd != null) {
+            } else if (_motd != null) {
                 visitor.motd(_motd);
-            }
-            else {
+            } else {
                 _motd = "Follow the PC on Twitter @swccg to stay informed of Star Wars CCG news and events.";
                 visitor.motd(_motd);
             }
@@ -649,7 +779,11 @@ public class HallServer extends AbstractServer {
                 List<SwccgGameParticipant> players = new LinkedList<SwccgGameParticipant>(table.getPlayers());
 
                 boolean hidePlayerId = table.getLeague() != null && !table.getLeague().getShowPlayerNames();
-                visitor.visitTable(tableInformation.getKey(), null, false, HallInfoVisitor.TableStatus.WAITING, "Waiting", table.getSwccgoFormat().getName(), getTournamentName(table), table.getLeague() != null ? null : table.getTableDesc(), players, null, table.getPlayerNames().contains(player.getName()), null, hidePlayerId, _library, table.getSwccgoFormat().isPlaytesting() && !playtestingVisible, true, true);
+                visitor.visitTable(tableInformation.getKey(), null, false, HallInfoVisitor.TableStatus.WAITING,
+                        "Waiting", table.getSwccgoFormat().getName(), getTournamentName(table),
+                        table.getLeague() != null ? null : table.getTableDesc(), players, null,
+                        table.getPlayerNames().contains(player.getName()), null, hidePlayerId, _library,
+                        table.getSwccgoFormat().isPlaytesting() && !playtestingVisible, true, true);
             }
 
             // Then non-finished
@@ -662,11 +796,23 @@ public class HallServer extends AbstractServer {
                     if (!swccgGameMediator.isFinished()) {
                         Map<String, String> deckArchetypeMap = new HashMap<String, String>();
                         for (SwccgGameParticipant participant : swccgGameMediator.getPlayersPlaying()) {
-                            deckArchetypeMap.put(participant.getPlayerId(), swccgGameMediator.getDeckArchetypeLabel(participant.getPlayerId()));
+                            deckArchetypeMap.put(participant.getPlayerId(),
+                                    swccgGameMediator.getDeckArchetypeLabel(participant.getPlayerId()));
                         }
-                        visitor.visitTable(runningGame.getKey(), swccgGameMediator.getGameId(), !swccgGameMediator.isPrivate()&&(player.hasType(Player.Type.ADMIN)|| (swccgGameMediator.isAllowSpectators() && (!swccgGameMediator.getFormat().isPlaytesting() || playtestingVisible)) || (!swccgGameMediator.getFormat().isPlaytesting()&& visibleToCommentator)), HallInfoVisitor.TableStatus.PLAYING, swccgGameMediator.getGameStatus(), runningTable.getFormatName(), runningTable.getTournamentName(), runningTable.getTableDesc(), swccgGameMediator.getPlayersPlaying(), deckArchetypeMap, swccgGameMediator.isPlayerPlaying(player.getName()), swccgGameMediator.getWinner(), false, _library, swccgGameMediator.getFormat().isPlaytesting() && !playtestingVisible, swccgGameMediator.isPrivate()||(swccgGameMediator.getFormat().isPlaytesting() && !playtestingVisible), swccgGameMediator.isPrivate());
-                    }
-                    else {
+                        visitor.visitTable(runningGame.getKey(), swccgGameMediator.getGameId(), !swccgGameMediator
+                                .isPrivate()
+                                && (player.hasType(Player.Type.ADMIN) || (swccgGameMediator.isAllowSpectators()
+                                        && (!swccgGameMediator.getFormat().isPlaytesting() || playtestingVisible))
+                                        || (!swccgGameMediator.getFormat().isPlaytesting() && visibleToCommentator)),
+                                HallInfoVisitor.TableStatus.PLAYING, swccgGameMediator.getGameStatus(),
+                                runningTable.getFormatName(), runningTable.getTournamentName(),
+                                runningTable.getTableDesc(), swccgGameMediator.getPlayersPlaying(), deckArchetypeMap,
+                                swccgGameMediator.isPlayerPlaying(player.getName()), swccgGameMediator.getWinner(),
+                                false, _library, swccgGameMediator.getFormat().isPlaytesting() && !playtestingVisible,
+                                swccgGameMediator.isPrivate()
+                                        || (swccgGameMediator.getFormat().isPlaytesting() && !playtestingVisible),
+                                swccgGameMediator.isPrivate());
+                    } else {
                         finishedTables.put(runningGame.getKey(), runningTable);
                     }
                     if (!swccgGameMediator.isFinished() && swccgGameMediator.isPlayerPlaying(player.getName()))
@@ -681,42 +827,58 @@ public class HallServer extends AbstractServer {
                 if (swccgGameMediator != null) {
                     Map<String, String> deckArchetypeMap = new HashMap<String, String>();
                     for (SwccgGameParticipant participant : swccgGameMediator.getPlayersPlaying()) {
-                        deckArchetypeMap.put(participant.getPlayerId(), swccgGameMediator.getDeckArchetypeLabel(participant.getPlayerId()));
+                        deckArchetypeMap.put(participant.getPlayerId(),
+                                swccgGameMediator.getDeckArchetypeLabel(participant.getPlayerId()));
                     }
-                    visitor.visitTable(nonPlayingGame.getKey(), swccgGameMediator.getGameId(), false, HallInfoVisitor.TableStatus.FINISHED, swccgGameMediator.getGameStatus(), runningTable.getFormatName(), runningTable.getTournamentName(), runningTable.getTableDesc(), swccgGameMediator.getPlayersPlaying(), deckArchetypeMap, swccgGameMediator.isPlayerPlaying(player.getName()), swccgGameMediator.getWinner(), false, _library, swccgGameMediator.getFormat().isPlaytesting() && !playtestingVisible, swccgGameMediator.isPrivate()||(swccgGameMediator.getFormat().isPlaytesting() && !playtestingVisible), swccgGameMediator.isPrivate());
+                    visitor.visitTable(nonPlayingGame.getKey(), swccgGameMediator.getGameId(), false,
+                            HallInfoVisitor.TableStatus.FINISHED, swccgGameMediator.getGameStatus(),
+                            runningTable.getFormatName(), runningTable.getTournamentName(), runningTable.getTableDesc(),
+                            swccgGameMediator.getPlayersPlaying(), deckArchetypeMap,
+                            swccgGameMediator.isPlayerPlaying(player.getName()), swccgGameMediator.getWinner(), false,
+                            _library, swccgGameMediator.getFormat().isPlaytesting() && !playtestingVisible,
+                            swccgGameMediator.isPrivate()
+                                    || (swccgGameMediator.getFormat().isPlaytesting() && !playtestingVisible),
+                            swccgGameMediator.isPrivate());
                 }
             }
 
             for (Map.Entry<String, TournamentQueue> tournamentQueueEntry : _tournamentQueues.entrySet()) {
                 String tournamentQueueKey = tournamentQueueEntry.getKey();
                 TournamentQueue tournamentQueue = tournamentQueueEntry.getValue();
-                visitor.visitTournamentQueue(tournamentQueueKey, tournamentQueue.getCost(), tournamentQueue.getCollectionType().getFullName(),
-                        _formatLibrary.getFormat(tournamentQueue.getFormat()).getName(), tournamentQueue.getTournamentQueueName(),
-                        tournamentQueue.getPrizesDescription(), tournamentQueue.getPairingDescription(), tournamentQueue.getStartCondition(),
-                        tournamentQueue.getPlayerCount(), tournamentQueue.isPlayerSignedUp(player.getName()), tournamentQueue.isJoinable());
+                visitor.visitTournamentQueue(tournamentQueueKey, tournamentQueue.getCost(),
+                        tournamentQueue.getCollectionType().getFullName(),
+                        _formatLibrary.getFormat(tournamentQueue.getFormat()).getName(),
+                        tournamentQueue.getTournamentQueueName(),
+                        tournamentQueue.getPrizesDescription(), tournamentQueue.getPairingDescription(),
+                        tournamentQueue.getStartCondition(),
+                        tournamentQueue.getPlayerCount(), tournamentQueue.isPlayerSignedUp(player.getName()),
+                        tournamentQueue.isJoinable());
             }
 
             for (Map.Entry<String, Tournament> tournamentEntry : _runningTournaments.entrySet()) {
                 String tournamentKey = tournamentEntry.getKey();
                 Tournament tournament = tournamentEntry.getValue();
                 visitor.visitTournament(tournamentKey, tournament.getCollectionType().getFullName(),
-                        _formatLibrary.getFormat(tournament.getFormat()).getName(), tournament.getTournamentName(), tournament.getPlayOffSystem(),
+                        _formatLibrary.getFormat(tournament.getFormat()).getName(), tournament.getTournamentName(),
+                        tournament.getPlayOffSystem(),
                         tournament.getTournamentStage().getHumanReadable(),
-                        tournament.getCurrentRound(), tournament.getPlayersInCompetitionCount(), tournament.isPlayerInCompetition(player.getName()));
+                        tournament.getCurrentRound(), tournament.getPlayersInCompetitionCount(),
+                        tournament.isPlayerInCompetition(player.getName()));
             }
         } finally {
             _hallDataAccessLock.readLock().unlock();
         }
     }
 
-    private SwccgDeck validateUserAndDeck(SwccgFormat format, Player player, String deckName, CollectionType collectionType, boolean sampleDeck, Player librarian) throws HallException {
+    private SwccgDeck validateUserAndDeck(SwccgFormat format, Player player, String deckName,
+            CollectionType collectionType, boolean sampleDeck, Player librarian) throws HallException {
 
         /*
          * Only show playtesting formats if player is a playtester or admin.
          */
         if (format.isPlaytesting()
                 && !(player.hasType(Player.Type.ADMIN)
-                || player.hasType(Player.Type.PLAYTESTER))) {
+                        || player.hasType(Player.Type.PLAYTESTER))) {
             throw new HallException("You are not allowed to participate in a playtesting format");
         }
 
@@ -737,10 +899,13 @@ public class HallServer extends AbstractServer {
 
         /*
          * Pull playtestingNoLimitDeckLength from properties file.
-         * The properties file will pull the value from the environment variable: playtesting_no_limit_deck_length
-         * Or it will use the default value set in the file for parameter: playtesting.noLimitDeckLength
+         * The properties file will pull the value from the environment variable:
+         * playtesting_no_limit_deck_length
+         * Or it will use the default value set in the file for parameter:
+         * playtesting.noLimitDeckLength
          */
-        Boolean playtestingNoLimitDeckLength = Boolean.parseBoolean(ApplicationConfiguration.getProperty("playtesting.noLimitDeckLength"));
+        Boolean playtestingNoLimitDeckLength = Boolean
+                .parseBoolean(ApplicationConfiguration.getProperty("playtesting.noLimitDeckLength"));
         if (playtestingNoLimitDeckLength) {
             System.out.println("Playtesting has no Deck Length Limit");
         } else {
@@ -749,12 +914,14 @@ public class HallServer extends AbstractServer {
 
         /*
          * If playtestingNoLimitDeckLength is true:
-         *   Allow playtesters and admins to have decks with no limit.
-         *   This feature allows Playtesters, and developers, to create decks composed exclusively of the cards they are testing.
+         * Allow playtesters and admins to have decks with no limit.
+         * This feature allows Playtesters, and developers, to create decks composed
+         * exclusively of the cards they are testing.
          * If the playtestingNoLimitDeckLength is false:
-         *   Then the deck length limit is respected.
+         * Then the deck length limit is respected.
          */
-        if (! (playtestingNoLimitDeckLength && (player.hasType(Player.Type.ADMIN) || player.hasType(Player.Type.PLAYTESTER))) ) {
+        if (!(playtestingNoLimitDeckLength
+                && (player.hasType(Player.Type.ADMIN) || player.hasType(Player.Type.PLAYTESTER)))) {
 
             try {
                 swccgDeck = validateUserAndDeck(format, player, collectionType, swccgDeck);
@@ -767,7 +934,8 @@ public class HallServer extends AbstractServer {
         return swccgDeck;
     }
 
-    private SwccgDeck validateUserAndDeck(SwccgFormat format, Player player, CollectionType collectionType, SwccgDeck swccgDeck) throws HallException, DeckInvalidException {
+    private SwccgDeck validateUserAndDeck(SwccgFormat format, Player player, CollectionType collectionType,
+            SwccgDeck swccgDeck) throws HallException, DeckInvalidException {
         format.validateDeck(swccgDeck);
 
         // Now check if player owns all the cards
@@ -779,7 +947,7 @@ public class HallServer extends AbstractServer {
             Map<String, Integer> cardCountSoFar = new HashMap<String, Integer>();
 
             // Look through the cards in order to keep the deck order the same
-            for (int i=0; i<swccgDeck.getCards().size(); ++i) {
+            for (int i = 0; i < swccgDeck.getCards().size(); ++i) {
                 String blueprintId = swccgDeck.getCards().get(i);
                 Integer countSoFar = cardCountSoFar.get(blueprintId);
                 if (countSoFar == null) {
@@ -799,7 +967,7 @@ public class HallServer extends AbstractServer {
                 filteredDeck.addCard(blueprintId);
             }
 
-            for (int i=0; i<swccgDeck.getCardsOutsideDeck().size(); ++i) {
+            for (int i = 0; i < swccgDeck.getCardsOutsideDeck().size(); ++i) {
                 String blueprintId = swccgDeck.getCardsOutsideDeck().get(i);
                 Integer countSoFar = cardCountSoFar.get(blueprintId);
                 if (countSoFar == null) {
@@ -831,7 +999,8 @@ public class HallServer extends AbstractServer {
                 final int collectionCount = collection.getItemCount(cardCount.getKey());
                 if (collectionCount < cardCount.getValue()) {
                     String cardName = GameUtils.getFullName(_library.getSwccgoCardBlueprint(cardCount.getKey()));
-                    throw new HallException("You don't have the required cards in collection: " + cardName + " required " + cardCount.getValue() + ", owned " + collectionCount);
+                    throw new HallException("You don't have the required cards in collection: " + cardName
+                            + " required " + cardCount.getValue() + ", owned " + collectionCount);
                 }
             }
         }
@@ -846,7 +1015,7 @@ public class HallServer extends AbstractServer {
 
     private String getTournamentName(AwaitingTable table) {
         String tournamentName = (table.getSwccgoFormat().isPlaytesting() ? "Playtesting" : "Casual");
-        if(table.isPrivate())
+        if (table.isPrivate())
             tournamentName += " (Private)";
 
         final League league = table.getLeague();
@@ -856,18 +1025,37 @@ public class HallServer extends AbstractServer {
         return tournamentName;
     }
 
+    /**
+     * For each participant in a lock-in league, snapshot their deck if they
+     * don't already have one locked for that side.
+     */
+    private void snapshotDecksForLockIn(League league, Set<SwccgGameParticipant> participants) {
+        if (league == null || league.getLockedDeckType() == null)
+            return;
+
+        for (SwccgGameParticipant participant : participants) {
+            SwccgDeck deck = participant.getDeck();
+            Side side = deck.getSide(_library);
+            _leagueService.lockDeckIfNeeded(league, participant.getPlayerId(), side, deck);
+        }
+    }
+
     private void createGameFromAwaitingTable(String tableId, AwaitingTable awaitingTable) {
         Set<SwccgGameParticipant> players = awaitingTable.getPlayers();
         SwccgGameParticipant[] participants = players.toArray(new SwccgGameParticipant[players.size()]);
         final League league = awaitingTable.getLeague();
+        // Lock-in league: snapshot decks for any player who hasn't been locked yet
+        snapshotDecksForLockIn(league, players);
         final LeagueSeriesData leagueSerie = awaitingTable.getLeagueSeries();
 
         GameResultListener listener = null;
         if (league != null) {
             listener = new GameResultListener() {
                 @Override
-                public void gameFinished(String winnerPlayerId, String winReason, Map<String, String> loserPlayerIdsWithReasons, String winnerSide, String loserSide) {
-                    _leagueService.reportLeagueGameResult(league, leagueSerie, winnerPlayerId, loserPlayerIdsWithReasons.keySet().iterator().next(), winnerSide, loserSide);
+                public void gameFinished(String winnerPlayerId, String winReason,
+                        Map<String, String> loserPlayerIdsWithReasons, String winnerSide, String loserSide) {
+                    _leagueService.reportLeagueGameResult(league, leagueSerie, winnerPlayerId,
+                            loserPlayerIdsWithReasons.keySet().iterator().next(), winnerSide, loserSide);
                 }
 
                 @Override
@@ -876,7 +1064,6 @@ public class HallServer extends AbstractServer {
                 }
             };
         }
-
 
         int decisionTimeoutSeconds = 300; // 5 minutes;
         boolean allowSpectators = !awaitingTable.isPrivate();
@@ -888,15 +1075,23 @@ public class HallServer extends AbstractServer {
             allowTimerExtensions = league.getAllowTimeExtensions();
             timePerPlayerMinutes = league.getTimePerPlayerMinutes();
         }
-        createGame(league, leagueSerie, tableId, participants, listener, awaitingTable.getSwccgoFormat(), getTournamentName(awaitingTable), league != null ? null : awaitingTable.getTableDesc(), allowSpectators, true, !awaitingTable.isPrivate(), (league == null)&&!awaitingTable.isPrivate(), allowTimerExtensions, decisionTimeoutSeconds, timePerPlayerMinutes, awaitingTable.isPrivate());
+        String aiPlayerId = awaitingTable.hasAi() ? awaitingTable.getAiPlayerId() : null;
+        String aiSkill = awaitingTable.hasAi() ? awaitingTable.getAiSkill() : null;
+        createGame(league, leagueSerie, tableId, participants, listener, awaitingTable.getSwccgoFormat(),
+                getTournamentName(awaitingTable), league != null ? null : awaitingTable.getTableDesc(), allowSpectators,
+                true, !awaitingTable.isPrivate(), (league == null) && !awaitingTable.isPrivate(), allowTimerExtensions,
+                decisionTimeoutSeconds, timePerPlayerMinutes, awaitingTable.isPrivate(), aiPlayerId, aiSkill);
         _awaitingTables.remove(tableId);
         removeWaitingTablesWithPlayers(players);
     }
 
     /**
-     * Removes all waiting tables with the specified players. This is to avoid having extra tables left around for when
-     * a player creates several tables in the hall, and then a game with the player starts. Players often forget to close
+     * Removes all waiting tables with the specified players. This is to avoid
+     * having extra tables left around for when
+     * a player creates several tables in the hall, and then a game with the player
+     * starts. Players often forget to close
      * the unused tables.
+     * 
      * @param participants the game participants
      */
     private void removeWaitingTablesWithPlayers(Set<SwccgGameParticipant> participants) {
@@ -918,14 +1113,48 @@ public class HallServer extends AbstractServer {
         }
     }
 
-    private void createGame(League league, LeagueSeriesData leagueSerie, String tableId, SwccgGameParticipant[] participants, GameResultListener listener, SwccgFormat swccgFormat, String tournamentName, String tableDesc, boolean allowSpectators, boolean allowCancelling, boolean allowSpectatorsToViewChat, boolean allowSpectatorsToChat, boolean allowExtendGameTimer, int decisionTimeoutSeconds, int timePerPlayerMinutes, boolean isPrivate) {
-        SwccgGameMediator swccgGameMediator = _swccgoServer.createNewGame(swccgFormat, league, tournamentName, participants, allowSpectators, league == null, allowCancelling, allowSpectatorsToViewChat, allowSpectatorsToChat, allowExtendGameTimer, decisionTimeoutSeconds, timePerPlayerMinutes, isPrivate, _inGameStatisticsEnabled, _bonusAbilitiesEnabled);
+    private void createGame(League league, LeagueSeriesData leagueSerie, String tableId,
+            SwccgGameParticipant[] participants, GameResultListener listener, SwccgFormat swccgFormat,
+            String tournamentName, String tableDesc, boolean allowSpectators, boolean allowCancelling,
+            boolean allowSpectatorsToViewChat, boolean allowSpectatorsToChat, boolean allowExtendGameTimer,
+            int decisionTimeoutSeconds, int timePerPlayerMinutes, boolean isPrivate, String aiPlayerId,
+            String aiSkill) {
+        SwccgGameMediator swccgGameMediator = _swccgoServer.createNewGame(swccgFormat, league, tournamentName,
+                participants, allowSpectators, league == null, allowCancelling, allowSpectatorsToViewChat,
+                allowSpectatorsToChat, allowExtendGameTimer, decisionTimeoutSeconds, timePerPlayerMinutes, isPrivate,
+                _inGameStatisticsEnabled, _bonusAbilitiesEnabled);
         if (listener != null) {
             swccgGameMediator.addGameResultListener(listener);
         }
+        if (aiPlayerId != null) {
+            AiRegistry.register(swccgGameMediator.getGameId(), aiPlayerId, createAiForSkill(aiSkill));
+            // Add bot stats tracking for AI games (both result listener and real-time state listener)
+            if (_botStatsDAO != null) {
+                BotStatsGameResultListener botStatsListener = new BotStatsGameResultListener(
+                    _botStatsDAO, _playerDAO, swccgGameMediator, aiPlayerId);
+
+                // Set the chat room so bot messages appear as player chat, not system messages
+                ChatRoomMediator gameChatRoom = _swccgoServer.getGameChatRoom(swccgGameMediator.getGameId());
+                if (gameChatRoom != null) {
+                    botStatsListener.setChatRoom(gameChatRoom);
+                    // Also set on game mediator for AI turn messages (welcome, commentary, etc.)
+                    swccgGameMediator.setChatRoom(gameChatRoom);
+                }
+
+                swccgGameMediator.addGameResultListener(botStatsListener);
+
+                // Register the game state listener for real-time achievement checking
+                if (botStatsListener.isInitialized()) {
+                    swccgGameMediator.addGameStateListener(
+                        botStatsListener.getGameStateListener().getPlayerId(),
+                        botStatsListener.getGameStateListener());
+                }
+            }
+        }
         swccgGameMediator.startGame();
         swccgGameMediator.addGameResultListener(_notifyHallListeners);
-        _runningTables.put(tableId, new RunningTable(swccgGameMediator, swccgFormat.getName(), tournamentName, tableDesc, league, leagueSerie));
+        _runningTables.put(tableId, new RunningTable(swccgGameMediator, swccgFormat.getName(), tournamentName,
+                tableDesc, league, leagueSerie));
     }
 
     private class NotifyHallListenersGameResultListener implements GameResultListener {
@@ -935,12 +1164,36 @@ public class HallServer extends AbstractServer {
         }
 
         @Override
-        public void gameFinished(String winnerPlayerId, String winReason, Map<String, String> loserPlayerIdsWithReasons, String winnerSide, String loserSide) {
+        public void gameFinished(String winnerPlayerId, String winReason, Map<String, String> loserPlayerIdsWithReasons,
+                String winnerSide, String loserSide) {
             hallChanged();
         }
     }
 
-    private void joinTableInternal(String tableId, String player, AwaitingTable awaitingTable, SwccgDeck swccgDeck) throws HallException {
+    /**
+     * If the league has deck lock-in enabled and the player already has a locked
+     * deck for the given side, return the locked deck. Otherwise return the original.
+     */
+    private SwccgDeck applyDeckLockIn(League league, String playerName, SwccgDeck originalDeck) {
+        if (league == null || league.getLockedDeckType() == null)
+            return originalDeck;
+
+        Side side = originalDeck.getSide(_library);
+        SwccgDeck lockedDeck = _leagueService.getLockedDeck(league, playerName, side);
+        if (lockedDeck != null) {
+            // TODO: Surface notification to player that their deck was replaced.
+            // Something like a hall message: "Your deck was replaced by locked deck: " + lockedDeck.getDeckName()
+            System.out.println("Lock-in league: Replacing " + playerName + "'s deck '"
+                    + originalDeck.getDeckName() + "' with locked deck '" + lockedDeck.getDeckName() + "'");
+            return lockedDeck;
+        }
+        return originalDeck;
+    }
+
+
+
+    private void joinTableInternal(String tableId, String player, AwaitingTable awaitingTable, SwccgDeck swccgDeck)
+            throws HallException {
         League league = awaitingTable.getLeague();
         Side side = swccgDeck.getSide(_library);
         if (league != null) {
@@ -948,38 +1201,51 @@ public class HallServer extends AbstractServer {
             if (!_leagueService.canPlayRankedGame(league, leagueSerie, player))
                 throw new HallException("You have already played max games in league");
             if (!_leagueService.canPlayRankedGameAsSide(league, leagueSerie, player, side)) {
-                Side otherSide = (side== Side.DARK) ? Side.LIGHT : Side.DARK;
-                throw new HallException("You have already played max games in league as " + side.getHumanReadable() + ", but you may still play as " + otherSide.getHumanReadable());
+                Side otherSide = (side == Side.DARK) ? Side.LIGHT : Side.DARK;
+                throw new HallException("You have already played max games in league as " + side.getHumanReadable()
+                        + ", but you may still play as " + otherSide.getHumanReadable());
             }
             if (!awaitingTable.getPlayerNames().isEmpty()) {
-                if (!_leagueService.canPlayRankedGameAgainst(league, leagueSerie, awaitingTable.getPlayerNames().iterator().next(), player, side)) {
+                if (!_leagueService.canPlayRankedGameAgainst(league, leagueSerie,
+                        awaitingTable.getPlayerNames().iterator().next(), player, side)) {
                     throw new HallException("You have already played multiple league games against this player");
                 }
                 Player curPlayer = _playerDAO.getPlayer(player);
                 Player awaitingPlayer = _playerDAO.getPlayer(awaitingTable.getPlayerNames().iterator().next());
-                //TODO: Add this back. Temporarily removed.
-                //See: https://github.com/PlayersCommittee/gemp-swccg/pull/87
-                //if (curPlayer != null && awaitingPlayer != null && curPlayer.getLastIp().equals(awaitingPlayer.getLastIp())) {
-                //    throw new HallException("You are not allowed to play league games against this player");
-                //}
+                // TODO: Add this back. Temporarily removed.
+                // See: https://github.com/PlayersCommittee/gemp-swccg/pull/87
+                // if (curPlayer != null && awaitingPlayer != null &&
+                // curPlayer.getLastIp().equals(awaitingPlayer.getLastIp())) {
+                // throw new HallException("You are not allowed to play league games against
+                // this player");
+                // }
             }
         }
 
         // Check that game will be Light side vs Dark side
         List<SwccgGameParticipant> participants = new LinkedList<SwccgGameParticipant>(awaitingTable.getPlayers());
         for (SwccgGameParticipant participant : participants) {
-            if (participant.getDeck().getSide(_library)==side) {
-                throw new HallException("You can't play against an opponent with a deck from the same side of the Force");
+            if (participant.getDeck().getSide(_library) == side) {
+                throw new HallException(
+                        "You can't play against an opponent with a deck from the same side of the Force");
             }
         }
 
         boolean tableFull = awaitingTable.addPlayer(new SwccgGameParticipant(player, swccgDeck));
+
+        if (!tableFull && awaitingTable.hasAi()) {
+            String aiPlayerId = awaitingTable.getAiPlayerId();
+            if (!awaitingTable.hasPlayer(aiPlayerId)) {
+                SwccgDeck aiDeck = awaitingTable.getAiDeck();
+                tableFull = awaitingTable.addPlayer(new SwccgGameParticipant(aiPlayerId, aiDeck));
+            }
+        }
+
         if (tableFull)
             createGameFromAwaitingTable(tableId, awaitingTable);
     }
 
     private int _tickCounter = 60;
-
 
     @Override
     public void cleanup() {
@@ -1000,7 +1266,8 @@ public class HallServer extends AbstractServer {
             }
 
             long currentTime = System.currentTimeMillis();
-            Map<Player, HallCommunicationChannel> visitCopy = new LinkedHashMap<Player, HallCommunicationChannel>(_playerChannelCommunication);
+            Map<Player, HallCommunicationChannel> visitCopy = new LinkedHashMap<Player, HallCommunicationChannel>(
+                    _playerChannelCommunication);
             for (Map.Entry<Player, HallCommunicationChannel> lastVisitedPlayer : visitCopy.entrySet()) {
                 if (currentTime > lastVisitedPlayer.getValue().getLastAccessed() + _playerInactivityPeriod) {
                     Player player = lastVisitedPlayer.getKey();
@@ -1012,7 +1279,8 @@ public class HallServer extends AbstractServer {
                 }
             }
 
-            for (Map.Entry<String, TournamentQueue> runningTournamentQueue : new HashMap<String, TournamentQueue>(_tournamentQueues).entrySet()) {
+            for (Map.Entry<String, TournamentQueue> runningTournamentQueue : new HashMap<String, TournamentQueue>(
+                    _tournamentQueues).entrySet()) {
                 String tournamentQueueKey = runningTournamentQueue.getKey();
                 TournamentQueue tournamentQueue = runningTournamentQueue.getValue();
                 HallTournamentQueueCallback queueCallback = new HallTournamentQueueCallback();
@@ -1023,9 +1291,11 @@ public class HallServer extends AbstractServer {
                 }
             }
 
-            for (Map.Entry<String, Tournament> tournamentEntry : new HashMap<String, Tournament>(_runningTournaments).entrySet()) {
+            for (Map.Entry<String, Tournament> tournamentEntry : new HashMap<String, Tournament>(_runningTournaments)
+                    .entrySet()) {
                 Tournament runningTournament = tournamentEntry.getValue();
-                boolean changed = runningTournament.advanceTournament(new HallTournamentCallback(runningTournament), _collectionsManager);
+                boolean changed = runningTournament.advanceTournament(new HallTournamentCallback(runningTournament),
+                        _collectionsManager);
                 if (runningTournament.getTournamentStage() == Tournament.Stage.FINISHED)
                     _runningTournaments.remove(tournamentEntry.getKey());
                 if (changed)
@@ -1034,16 +1304,23 @@ public class HallServer extends AbstractServer {
 
             if (_tickCounter == 60 || forceRefresh) {
                 _tickCounter = 0;
-                List<TournamentQueueInfo> unstartedTournamentQueues = _tournamentService.getUnstartedScheduledTournamentQueues(
-                        System.currentTimeMillis() + _scheduledTournamentLoadTime);
+                List<TournamentQueueInfo> unstartedTournamentQueues = _tournamentService
+                        .getUnstartedScheduledTournamentQueues(
+                                System.currentTimeMillis() + _scheduledTournamentLoadTime);
                 for (TournamentQueueInfo unstartedTournamentQueue : unstartedTournamentQueues) {
                     String scheduledTournamentId = unstartedTournamentQueue.getScheduledTournamentId();
                     if (!_tournamentQueues.containsKey(scheduledTournamentId)) {
-                        ScheduledTournamentQueue scheduledQueue = new ScheduledTournamentQueue(scheduledTournamentId, unstartedTournamentQueue.getCost(),
-                                true, _tournamentService, unstartedTournamentQueue.getStartTime(), unstartedTournamentQueue.getTournamentName(),
-                                unstartedTournamentQueue.getFormat(), CollectionType.ALL_CARDS, Tournament.Stage.PLAYING_GAMES,
-                                _pairingMechanismRegistry.getPairingMechanism(unstartedTournamentQueue.getPlayOffSystem()),
-                                _tournamentPrizeSchemeRegistry.getTournamentPrizes(unstartedTournamentQueue.getPrizeScheme()), unstartedTournamentQueue.getMinimumPlayers());
+                        ScheduledTournamentQueue scheduledQueue = new ScheduledTournamentQueue(scheduledTournamentId,
+                                unstartedTournamentQueue.getCost(),
+                                true, _tournamentService, unstartedTournamentQueue.getStartTime(),
+                                unstartedTournamentQueue.getTournamentName(),
+                                unstartedTournamentQueue.getFormat(), CollectionType.ALL_CARDS,
+                                Tournament.Stage.PLAYING_GAMES,
+                                _pairingMechanismRegistry
+                                        .getPairingMechanism(unstartedTournamentQueue.getPlayOffSystem()),
+                                _tournamentPrizeSchemeRegistry
+                                        .getTournamentPrizes(unstartedTournamentQueue.getPrizeScheme()),
+                                unstartedTournamentQueue.getMinimumPlayers());
                         _tournamentQueues.put(scheduledTournamentId, scheduledQueue);
                         hallChanged();
                     }
@@ -1073,7 +1350,8 @@ public class HallServer extends AbstractServer {
         }
 
         @Override
-        public void createGame(String playerOne, SwccgDeck deckOne, String playerTwo, SwccgDeck deckTwo, boolean allowSpectators) {
+        public void createGame(String playerOne, SwccgDeck deckOne, String playerTwo, SwccgDeck deckTwo,
+                boolean allowSpectators) {
             final SwccgGameParticipant[] participants = new SwccgGameParticipant[2];
             participants[0] = new SwccgGameParticipant(playerOne, deckOne);
             participants[1] = new SwccgGameParticipant(playerTwo, deckTwo);
@@ -1087,15 +1365,21 @@ public class HallServer extends AbstractServer {
                     HallServer.this.createGame(null, null, new SwccgUuid().generateNewTableId(), participants,
                             new GameResultListener() {
                                 @Override
-                                public void gameFinished(String winnerPlayerId, String winReason, Map<String, String> loserPlayerIdsWithReasons, String winnerSide, String loserSide) {
-                                    _tournament.reportGameFinished(winnerPlayerId, loserPlayerIdsWithReasons.keySet().iterator().next(), winnerSide, loserSide);
+                                public void gameFinished(String winnerPlayerId, String winReason,
+                                        Map<String, String> loserPlayerIdsWithReasons, String winnerSide,
+                                        String loserSide) {
+                                    _tournament.reportGameFinished(winnerPlayerId,
+                                            loserPlayerIdsWithReasons.keySet().iterator().next(), winnerSide,
+                                            loserSide);
                                 }
 
                                 @Override
                                 public void gameCancelled() {
                                     createGameInternal(participants, allowSpectators);
                                 }
-                            }, _formatLibrary.getFormat(_tournament.getFormat()), _tournament.getTournamentName(), null, allowSpectators, false, false, false, false, _decisionTimeoutSeconds, _timePerPlayerMinutes, false);
+                            }, _formatLibrary.getFormat(_tournament.getFormat()), _tournament.getTournamentName(), null,
+                            allowSpectators, false, false, false, false, _decisionTimeoutSeconds, _timePerPlayerMinutes,
+                            false, null, null);
                 }
             } finally {
                 _hallDataAccessLock.writeLock().unlock();

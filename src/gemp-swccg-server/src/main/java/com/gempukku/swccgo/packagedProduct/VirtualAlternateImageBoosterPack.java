@@ -39,6 +39,10 @@ public class VirtualAlternateImageBoosterPack extends BasePackagedCardProduct {
                 return ProductName.VIRTUAL_ALTERNATE_IMAGE_BOOSTER_PACK_SERIES_5;
             case 6:
                 return ProductName.VIRTUAL_ALTERNATE_IMAGE_BOOSTER_PACK_SERIES_6;
+            case 7:
+                return ProductName.VIRTUAL_ALTERNATE_IMAGE_BOOSTER_PACK_SERIES_7;
+            case 8:
+                return ProductName.VIRTUAL_ALTERNATE_IMAGE_BOOSTER_PACK_SERIES_8;
         }
 
         return ProductName.VIRTUAL_ALTERNATE_IMAGE_BOOSTER_PACK_SERIES_1;
@@ -161,7 +165,7 @@ public class VirtualAlternateImageBoosterPack extends BasePackagedCardProduct {
                 possibleCards.add("203_31^"); //Coruscant (V) (DS)
                 possibleCards.add("216_25^"); //Coruscant: Jedi Temple Meditation Room
                 possibleCards.add("216_4^"); //Coruscant: The Works (Borderless)
-                possibleCards.add("216_26^"); //Dagobah: Yoda’s Hut (V)
+                possibleCards.add("216_26^"); //Dagobah: Yoda's Hut (V)
                 possibleCards.add("202_9^"); //Daroe (V)
                 possibleCards.add("213_3^"); //Darth Tyranus (Hologram AI)
                 possibleCards.add("216_6^"); //Darth Vader, Betrayer Of The Jedi
@@ -172,7 +176,7 @@ public class VirtualAlternateImageBoosterPack extends BasePackagedCardProduct {
                 possibleCards.add("201_21^"); //Mace Windu's Lightsaber
                 possibleCards.add("210_23^"); //Plo Koon (V)
                 possibleCards.add("208_17^"); //Restore Freedom To The Galaxy
-                possibleCards.add("216_43^"); //Tatooine: Obi-Wan’s Hut (V) (Borderless)
+                possibleCards.add("216_43^"); //Tatooine: Obi-Wan's Hut (V) (Borderless)
                 break;
             case 6:
                 possibleCards.add("204_1^"); //BB-8 (Border Breaker)
@@ -193,6 +197,45 @@ public class VirtualAlternateImageBoosterPack extends BasePackagedCardProduct {
                 possibleCards.add("218_31^"); //Tydirum (V) (Border Breaker)
                 possibleCards.add("217_52^"); //Your Thoughts Dwell On Your Mother
                 possibleCards.add("204_46^"); //Zam Wesell (Semi Border Break)
+                break;
+            case 7:
+                possibleCards.add("224_9^"); //Balanced Attack & Darklighter Spin (Animated AI)    
+                possibleCards.add("200_109^"); //Coarse And Rough And Irritating (AI)
+                possibleCards.add("214_3^"); //Darksaber (AI)
+                possibleCards.add("214_18^"); //Din Djarin (AI)
+                possibleCards.add("200_39^"); //I Don't Like Sand (AI)
+                possibleCards.add("210_17^"); //Jedi Business (AI)
+                possibleCards.add("211_33^"); //Jedi Lightsaber (V) (AI)
+                possibleCards.add("208_35^"); //Lord Sidious (Hologram AI)
+                possibleCards.add("200_85^"); //Maarek Stele, The Emperor's Reach (AI)
+                possibleCards.add("218_4^"); //Master Windu (Hologram AI)
+                possibleCards.add("218_27^"); //Outrider (AI)
+                possibleCards.add("214_8^"); //Palpatine, Emperor Returned (AI)
+                possibleCards.add("214_21^"); //Plo Koon's Jedi Starfighter (AI)
+                possibleCards.add("200_88^"); //Probot (AI)
+                possibleCards.add("214_9^"); //Steadfast (AI)
+                possibleCards.add("219_27^"); //Vader's Lightsaber (V) (AI)
+                break;
+            case 8:
+                possibleCards.add("201_8^"); //A New Secret Base (V)
+                possibleCards.add("217_26^"); //Admiral Kilian (Hologram)
+                possibleCards.add("209_1^"); //Admiral Raddus
+                possibleCards.add("212_6^"); //Allegiant General Pryde (Hologram)
+                possibleCards.add("211_12^"); //Always Two There Are
+                possibleCards.add("221_47^"); //Anakin's Destiny
+                possibleCards.add("203_24^"); //Cad Bane
+                possibleCards.add("221_54^"); //Clone Command Center
+                possibleCards.add("213_55^"); //Corellia (V)
+                possibleCards.add("221_19^"); //First Light
+                possibleCards.add("213_31^"); //Hunt Down And Destroy The Jedi (V)
+                possibleCards.add("222_10^"); //Kylo, Master Of The Knights Of Ren
+                possibleCards.add("211_29^"); //Make Ten Men Feel Like A Hundred
+                possibleCards.add("222_25^"); //Nien Nunb, Sullustan Smuggler
+                possibleCards.add("221_71^"); //Resolute
+                possibleCards.add("221_33^"); //Tatooine: Cantina (DARK) (V)
+                possibleCards.add("203_15^"); //The Shield Is Down! (V)
+                possibleCards.add("219_26^"); //Vader (V)
+                possibleCards.add("206_6^"); //What Chance Do We Have?
                 break;
         }
 

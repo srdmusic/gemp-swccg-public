@@ -53,8 +53,11 @@ var LeagueResultsUI = Class.extend({
             var end = league.getAttribute("end");
             var member = league.getAttribute("member");
             var joinable = league.getAttribute("joinable");
+            var isSoloDraft = league.getAttribute("isSoloDraft");
+            var draftable = league.getAttribute("draftable");
             var invitationOnly = league.getAttribute("invitationOnly");
             var registrationInfo = league.getAttribute("registrationInfo");
+            var lockedDeckType = league.getAttribute("lockedDeckType");
 
             $(leagueExtraInfoCssId).append("<div class='leagueName'>" + leagueName + "</div>");
             $(leagueExtraInfoCssId).append("<div class='leagueID'>League ID: " + leagueType + "</div>");
@@ -70,8 +73,29 @@ var LeagueResultsUI = Class.extend({
                 $(leagueExtraInfoCssId).append("<div class='leagueCost'><b>Cost:</b> " + costStr + "</div>");
             };
 
-            if (member == "true")
-                $(leagueExtraInfoCssId).append("<div class='leagueMembership'>You are already a member of this league.</div>");
+            if (member == "true") {
+                var memberDiv = $("<div class='leagueMembership'>You are already a member of this league. </div>");
+                if(lockedDeckType === "when_first_played") {
+                    memberDiv.append($("<div>Decks are locked-in automatically after first use and cannot be replaced.</div>"));
+                    memberDiv.append($("<div><a target='_blank' href='/gemp-swccg-server/league/deck/html?leagueType="+leagueType+"'>View your locked-in decks here.</a></div>"));
+                }
+                if (draftable == "true") {
+                    var draftBut = $("<button>--> Go to draft <--</button>").button();
+                    var draftFunc = (function (leagueCode) {
+                        return function() {
+                            location.href = "/gemp-swccg/soloDraft.html?leagueType="+leagueCode;
+                        };
+                    })(leagueType);
+                    draftBut.click(draftFunc);
+                    memberDiv.append(draftBut);
+                } else if (isSoloDraft == "true") {
+                    // Solo draft league but not yet draftable (hasn't started yet)
+                    // Show grayed out button with availability date
+                    var grayedButton = $("<button disabled='disabled' class='draft-not-available'>Draft Available " + getDateString(start) + "</button>");
+                    memberDiv.append(grayedButton);
+                }
+                $(leagueExtraInfoCssId).append(memberDiv);
+            }
             else if (joinable == "true" && invitationOnly != "true") {
                 var joinBut = $("<button>Join league</button>").button();
 

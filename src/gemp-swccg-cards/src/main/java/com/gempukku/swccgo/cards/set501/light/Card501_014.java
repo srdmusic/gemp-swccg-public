@@ -38,7 +38,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 23
+ * Set: Playtesting
  * Type: Objective
  * Title: I Can Bring You In Warm / ...Or I Can Bring You In Cold
  */

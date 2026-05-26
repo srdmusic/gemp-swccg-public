@@ -4,6 +4,7 @@ import com.gempukku.swccgo.common.Filterable;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 
 /**
@@ -39,7 +40,7 @@ public class ResetDeployCostModifier extends AbstractModifier {
      * @param condition the condition that must be fulfilled for the modifier to be in effect
      * @param resetValue the reset value
      */
-    private ResetDeployCostModifier(PhysicalCard source, Filterable affectFilter, Condition condition, float resetValue) {
+    public ResetDeployCostModifier(PhysicalCard source, Filterable affectFilter, Condition condition, float resetValue) {
         super(source, null, affectFilter, condition, ModifierType.UNMODIFIABLE_DEPLOY_COST, true);
         _resetValue = resetValue;
     }

@@ -23,6 +23,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Set: Set 22
@@ -55,11 +56,11 @@ public class Card222_005 extends AbstractAlien {
     // Define "Boba Fett's Blaster Rifle" permanent weapon
     @Override
     protected AbstractPermanentWeapon getGameTextPermanentWeapon() {
-        AbstractPermanentWeapon permanentWeapon = new AbstractPermanentWeapon(Title.Boba_Fetts_Blaster_Rifle, Uniqueness.UNIQUE) {
+        AbstractPermanentWeapon permanentWeapon = new AbstractPermanentWeapon(Persona.BOBA_FETTS_BLASTER_RIFLE, Title.Boba_Fetts_Blaster_Rifle) {
             @Override
             public List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
                 FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, this, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
-                        .targetForFree(Filters.or(Filters.character, targetedAsCharacter), TargetingReason.TO_BE_CAPTURED).finishBuildPrep();
+                        .targetForFree(Filters.or(Filters.character, targetedAsCharacter), Set.of(TargetingReason.TO_BE_HIT,TargetingReason.TO_BE_CAPTURED)).finishBuildPrep();
                 if (actionBuilder != null) {
 
                     // Build action using common utility

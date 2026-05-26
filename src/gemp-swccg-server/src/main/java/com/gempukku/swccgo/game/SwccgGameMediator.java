@@ -3,6 +3,10 @@ package com.gempukku.swccgo.game;
 import com.gempukku.swccgo.PrivateInformationException;
 import com.gempukku.swccgo.SubscriptionConflictException;
 import com.gempukku.swccgo.SubscriptionExpiredException;
+import com.gempukku.swccgo.ai.AiRegistry;
+import com.gempukku.swccgo.chat.ChatCommandErrorException;
+import com.gempukku.swccgo.chat.ChatRoomMediator;
+import com.gempukku.swccgo.ai.SwccgAiController;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.CardType;
@@ -28,7 +32,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierCollector;
 import com.gempukku.swccgo.logic.modifiers.ModifierCollectorImpl;
 import com.gempukku.swccgo.logic.modifiers.ModifierType;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.DefaultSwccgGame;
 import com.gempukku.swccgo.logic.timing.DefaultUserFeedback;
 import com.gempukku.swccgo.logic.timing.GameResultListener;
@@ -50,6 +54,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SwccgGameMediator {
     private static final Logger LOG = LogManager.getLogger(SwccgGameMediator.class);
+    private static final int MAX_AI_CHAIN = 50;
+    private int aiChainCounter = 0;
 
     private Map<String, GameCommunicationChannel> _communicationChannels = Collections.synchronizedMap(new HashMap<String, GameCommunicationChannel>());
     private DefaultUserFeedback _userFeedback;
@@ -69,6 +75,7 @@ public class SwccgGameMediator {
     private int _secondsGameTimerExtended;
     private boolean _isPrivate;
     private League _league;
+    private ChatRoomMediator _chatRoom;  // For AI player messages
 
     private ReentrantReadWriteLock _lock = new ReentrantReadWriteLock(true);
     private ReentrantReadWriteLock.ReadLock _readLock = _lock.readLock();
@@ -116,6 +123,16 @@ public class SwccgGameMediator {
 
     public String getGameId() {
         return _gameId;
+    }
+
+    /**
+     * Set the chat room for AI player messages.
+     * When set, AI chat messages will appear as player messages (blue) instead of system messages.
+     *
+     * @param chatRoom the chat room mediator for this game
+     */
+    public void setChatRoom(ChatRoomMediator chatRoom) {
+        _chatRoom = chatRoom;
     }
 
     public boolean isAllowSpectators() {
@@ -167,6 +184,14 @@ public class SwccgGameMediator {
         return _swccgoGame.getSide(_swccgoGame.getWinner()).getHumanReadable();
     }
 
+    /**
+     * Get the game state for accessing game data.
+     * @return the game state, or null if game not started
+     */
+    public GameState getGameState() {
+        return _swccgoGame != null ? _swccgoGame.getGameState() : null;
+    }
+
     public List<SwccgGameParticipant> getPlayersPlaying() {
         return new LinkedList<SwccgGameParticipant>(_playersPlaying);
     }
@@ -181,6 +206,15 @@ public class SwccgGameMediator {
             }
         }
 
+        return false;
+    }
+
+    private boolean isBotGame() {
+        for (SwccgGameParticipant participant : _playersPlaying) {
+            if (AiRegistry.isAi(_gameId, participant.getPlayerId())) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -295,6 +329,9 @@ public class SwccgGameMediator {
             }
             if (card.isHatredCard()) {
                 sb.append("<div>").append("'Hatred' card").append("</div>");
+            }
+            if (card.isJamCard()) {
+                sb.append("<div>").append("'Jammed' card").append("</div>");
             }
             if (card.isEnslavedCard()) {
                 sb.append("<div>").append("'Enslaved' card").append("</div>");
@@ -1075,8 +1112,16 @@ public class SwccgGameMediator {
         String playerId = player.getName();
         _writeLock.lock();
         try {
-            if (isPlayerPlaying(playerId))
-                _swccgoGame.requestCancel(playerId);
+            if (isPlayerPlaying(playerId)) {
+                if (isBotGame()) {
+                    // Auto-cancel bot games on a single human request
+                    for (SwccgGameParticipant participant : _playersPlaying) {
+                        _swccgoGame.requestCancel(participant.getPlayerId());
+                    }
+                } else {
+                    _swccgoGame.requestCancel(playerId);
+                }
+            }
         } finally {
             _writeLock.unlock();
         }
@@ -1213,9 +1258,12 @@ public class SwccgGameMediator {
 
     private void startClocksForUsersPendingDecision() {
         long currentTime = System.currentTimeMillis();
-        Set<String> users = _userFeedback.getUsersPendingDecision();
-        for (String user : users)
+        // Copy to avoid ConcurrentModification when AI decisions resolve immediately
+        Set<String> users = new HashSet<String>(_userFeedback.getUsersPendingDecision());
+        for (String user : users) {
             _decisionQuerySentTimes.put(user, currentTime);
+            maybeLetAiPlay(user);
+        }
     }
 
     private void addTimeSpentOnDecisionToUserClock(String participantId) {
@@ -1224,6 +1272,60 @@ public class SwccgGameMediator {
             long currentTime = System.currentTimeMillis();
             long diffSec = (currentTime - queryTime) / 1000;
             _playerClocks.put(participantId, _playerClocks.get(participantId) + (int) diffSec);
+        }
+    }
+
+    // Let registered AI users answer pending decisions; guards against runawayloops.
+    private void maybeLetAiPlay(String playerId) {
+        if (!AiRegistry.isAi(_gameId, playerId)) {
+            aiChainCounter = 0; // Reset for human player
+            return;
+        }
+
+        if (++aiChainCounter > MAX_AI_CHAIN) { // simple guard if AI keeps triggering itself
+            return;
+        }
+
+        AwaitingDecision decision = _userFeedback.getAwaitingDecision(playerId);
+        if (decision == null) {
+            return;
+        }
+
+        SwccgAiController ai = AiRegistry.get(_gameId, playerId);
+        if (ai == null) {
+            return;
+        }
+
+        try {
+            // Provide the full game reference for advanced AI features (e.g., deploy planning)
+            ai.setGame(_swccgoGame);
+            String answer = ai.decide(playerId, decision, _swccgoGame.getGameState());
+
+            _userFeedback.participantDecided(playerId);
+            decision.decisionMade(answer);
+
+            // Check if AI has any chat messages to send
+            String chatMessage = ai.getChatMessage();
+            if (chatMessage != null && !chatMessage.isEmpty()) {
+                // Prefer chat room for proper player message styling (blue messages)
+                if (_chatRoom != null) {
+                    try {
+                        _chatRoom.sendMessage(playerId, chatMessage, true);
+                    } catch (PrivateInformationException | ChatCommandErrorException e) {
+                        // Fallback to game state message
+                        _swccgoGame.getGameState().sendMessage(playerId + ": " + chatMessage);
+                    }
+                } else {
+                    // Fallback to game state (appears as system message)
+                    _swccgoGame.getGameState().sendMessage(playerId + ": " + chatMessage);
+                }
+            }
+
+            _swccgoGame.carryOutPendingActionsUntilDecisionNeeded();
+            startClocksForUsersPendingDecision();
+
+        } catch (DecisionResultInvalidException e) {
+            _userFeedback.sendAwaitingDecision(playerId, decision);
         }
     }
 
@@ -1290,6 +1392,10 @@ public class SwccgGameMediator {
                         && startingLocation.getBlueprint().getTitle() != null){
                     // Slip Sliding Away (v)
                     return startingLocation.getBlueprint().getTitle() + " SSAv";
+                }
+                if(Filters.Something_About_This_Boy.accepts(_swccgoGame, startingInterrupt)) {
+                    // Something About This Boy
+                    return "Boy";
                 }
                 if(Filters.Let_The_Wookiee_Win.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().hasVirtualSuffix()
@@ -1413,6 +1519,10 @@ public class SwccgGameMediator {
             if (Filters.or(Filters.Hidden_Base, Filters.Systems_Will_Slip_Through_Your_Fingers).accepts(_swccgoGame, objective)) {
                 // Hidden Base
                 objectiveLabel = "Hidden Base";
+            }
+            if (Filters.or(Filters.The_Hidden_Path, Filters.Gather_Allies_And_Train).accepts(_swccgoGame, objective)) {
+                // The Hidden Path
+                objectiveLabel = "Hidden Path";
             }
             if (Filters.or(Filters.Hunt_Down_And_Destroy_The_Jedi, Filters.Their_Fire_Has_Gone_Out_Of_The_Universe).accepts(_swccgoGame, objective)) {
                 // Hunt Down

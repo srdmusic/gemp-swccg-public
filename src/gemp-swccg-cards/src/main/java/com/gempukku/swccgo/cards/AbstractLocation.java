@@ -41,7 +41,7 @@ import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -325,7 +325,7 @@ public abstract class AbstractLocation extends AbstractSwccgCardBlueprint {
 
         // Search party
         if (GameConditions.canFormSearchPartyAtLocation(game, playerId, self)) {
-            actions.add(new SearchPartyAction(playerId, self));
+            actions.add(new SearchPartyAction(playerId, self, false));
         }
 
         // Release unattended 'frozen' captive

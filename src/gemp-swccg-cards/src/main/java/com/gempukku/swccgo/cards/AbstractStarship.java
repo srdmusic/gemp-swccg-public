@@ -23,7 +23,7 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierType;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -444,7 +444,7 @@ public abstract class AbstractStarship extends AbstractDeployable {
                         && reactActionOption == null
                         && ((Filters.piloted.accepts(game, self) && Filters.hasAvailablePassengerCapacity(cardToDeployWith).accepts(game, self)) || (getValidPilotFilter(playerId, game, self, true).accepts(game, cardToDeployWith) && Filters.hasAvailablePilotCapacity(cardToDeployWith).accepts(game, self)))
                         && cardToDeployWith.getBlueprint().mayDeploySimultaneouslyAsAttachedRequirements(playerId, game, cardToDeployWith)
-                        && Filters.canSpot(game, self, Filters.and(deployTargetFilter, getValidDeployTargetWithPilotOrPassengerFilter(playerId, game, self, sourceCard, cardToDeployWithForFree, cardToDeployWithChangeInCost, cardToDeployWith, cardToDeployWithForFree, cardToDeployWithChangeInCost, deploymentRestrictionsOption, null)))) {
+                        && Filters.canSpot(game, self, Filters.and(deployTargetFilter, getValidDeployTargetWithPilotOrPassengerFilter(playerId, game, self, sourceCard, forFree, changeInCost, cardToDeployWith, cardToDeployWithForFree, cardToDeployWithChangeInCost, deploymentRestrictionsOption, null)))) {
 
                     // If they can be deployed simultaneously with starship, then include that filter.
                     deployWithSeparatePilotTargetFilter = getValidDeployTargetWithPilotOrPassengerFilter(playerId, game, self, sourceCard, forFree, changeInCost, cardToDeployWith, cardToDeployWithForFree, cardToDeployWithChangeInCost, deploymentRestrictionsOption, null);

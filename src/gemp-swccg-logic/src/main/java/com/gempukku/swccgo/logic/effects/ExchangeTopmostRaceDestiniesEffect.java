@@ -9,6 +9,7 @@ import com.gempukku.swccgo.logic.actions.SubAction;
 import com.gempukku.swccgo.logic.timing.AbstractSubActionEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.results.RaceDestinyStackedResult;
 
 import java.util.Collection;
 
@@ -57,6 +58,12 @@ public class ExchangeTopmostRaceDestiniesEffect extends AbstractSubActionEffect 
                         gameState.removeCardFromZone(topmostRaceDestiny2);
                         gameState.stackCard(topmostRaceDestiny1, _stackedOn2, false, false, false);
                         gameState.stackCard(topmostRaceDestiny2, _stackedOn1, false, false, false);
+                        topmostRaceDestiny1.setRaceDestinyForPlayer(_stackedOn2.getOwner());
+                        topmostRaceDestiny2.setRaceDestinyForPlayer(_stackedOn1.getOwner());
+                        game.getActionsEnvironment().emitEffectResult(
+                                new RaceDestinyStackedResult(subAction, topmostRaceDestiny1, _stackedOn2));
+                        game.getActionsEnvironment().emitEffectResult(
+                                new RaceDestinyStackedResult(subAction, topmostRaceDestiny2, _stackedOn1));
                     }
                 }
             }

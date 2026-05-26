@@ -51,6 +51,24 @@
 						$("#private-response").html(string);
 					});
 				});
+
+			$("#enable-bot-tables-button").button().click(
+				function () {
+					$("#bot-tables-response").html("Processing...");
+
+					hall.comm.setAiTablesEnabled(true, function (string) {
+						$("#bot-tables-response").html(string);
+					});
+				});
+
+			$("#disable-bot-tables-button").button().click(
+				function () {
+					$("#bot-tables-response").html("Processing...");
+
+					hall.comm.setAiTablesEnabled(false, function (string) {
+						$("#bot-tables-response").html(string);
+					});
+				});
 			
 			$("#enable-registration-button").button().click(
 				function () {
@@ -302,6 +320,24 @@
 				This setting persists between server restarts.
 			</td>
 		</tr>
+
+		<tr>
+			<td>
+				<button id="enable-bot-tables-button" class="" style="padding:4px;">
+					Enable bot tables
+				</button>
+
+				<button id="disable-bot-tables-button" class="" style="padding:4px;">
+					Disable bot tables
+				</button>
+			</td>
+			<td id="bot-tables-response">Ready.</td>
+			<td>
+				Controls whether players are allowed to create tables vs bots. The "vs Bot" option will be hidden if disabled.
+				<br><br>
+				This setting persists between server restarts.
+			</td>
+		</tr>
 		
 		<tr>
 			<td>
@@ -431,12 +467,12 @@
 							<pre>1x (S)selection</pre>
 							where "selection" is the name of the items to choose from.  For instance, "1x (S)Booster Choice -- Reflections" would grant that player a choice of booster pack from Reflections I, II, or III.
 							<br><br>
-							See <a href="https://github.com/PlayersCommittee/gemp-swccg-public/blob/master/gemp-swccg-server/src/main/resources/packs.txt">packs.txt</a> for a (hopefully?) complete list.<br><br>
+							See <a href="https://raw.githubusercontent.com/PlayersCommittee/gemp-swccg-public/refs/heads/master/src/gemp-swccg-server/src/main/resources/packs.txt">packs.txt</a> for a complete list.<br><br>
 						</li>
 						<li>
 							Card packs in the form
 							<pre>1x packname</pre>
-							where packname is one of various ids (with no underscores).  See <a href="https://github.com/PlayersCommittee/gemp-swccg-public/blob/master/gemp-swccg-server/src/main/resources/packs.txt">packs.txt</a> for a (hopefully?) complete list.<br>
+							where packname is one of various ids (with no underscores).  See <a href="https://raw.githubusercontent.com/PlayersCommittee/gemp-swccg-public/refs/heads/master/src/gemp-swccg-server/src/main/resources/packs.txt">packs.txt</a> for a complete list.<br>
 						</li>
 					</ul>
 				</td>
@@ -583,4 +619,3 @@
 	</div>
 
 </div>
-

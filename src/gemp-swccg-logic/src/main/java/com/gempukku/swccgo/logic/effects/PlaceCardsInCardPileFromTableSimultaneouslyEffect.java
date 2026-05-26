@@ -9,7 +9,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.SubAction;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.AbstractSubActionEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -286,13 +286,28 @@ class PlaceCardsInCardPileFromTableSimultaneouslyEffect extends AbstractSubActio
                         if (!_placedInCardPile.isEmpty() || !_attachedCardsToLeaveTable.isEmpty()) {
 
                             SubAction putInCardPileSubAction = new SubAction(subAction);
-                            if (!_placedInCardPile.isEmpty()) {
-                                putInCardPileSubAction.appendEffect(
-                                        new PutCardsInCardPileEffect(subAction, game, _placedInCardPile, _cardPile, _toBottomOfPile, _lostCardsDoNotCountAsJustLost));
+
+                            // if cards and attached cards are all going to same destination, combine as single Effect
+                            if (!_placedInCardPile.isEmpty() && !_attachedCardsToLeaveTable.isEmpty()) {
+                                if((_cardPile == _attachedCardsGoToZone) && !_toBottomOfPile && !_lostCardsDoNotCountAsJustLost) {
+                                    Collection<PhysicalCard> cardsAndAttachedCards = new ArrayList<PhysicalCard>();
+                                    cardsAndAttachedCards.addAll(_placedInCardPile);
+                                    cardsAndAttachedCards.addAll(_attachedCardsToLeaveTable);
+                                    putInCardPileSubAction.appendEffect(
+                                            new PutCardsInCardPileEffect(subAction, game, cardsAndAttachedCards, _attachedCardsGoToZone));
+                                }
                             }
-                            if (!_attachedCardsToLeaveTable.isEmpty()) {
-                                putInCardPileSubAction.appendEffect(
-                                        new PutCardsInCardPileEffect(subAction, game, _attachedCardsToLeaveTable, _attachedCardsGoToZone));
+
+                            // otherwise, handle as separate Effects
+                            else {
+                                if (!_placedInCardPile.isEmpty()) {
+                                    putInCardPileSubAction.appendEffect(
+                                            new PutCardsInCardPileEffect(subAction, game, _placedInCardPile, _cardPile, _toBottomOfPile, _lostCardsDoNotCountAsJustLost));
+                                }
+                                if (!_attachedCardsToLeaveTable.isEmpty()) {
+                                    putInCardPileSubAction.appendEffect(
+                                            new PutCardsInCardPileEffect(subAction, game, _attachedCardsToLeaveTable, _attachedCardsGoToZone));
+                                }
                             }
                             // Stack sub-action
                             subAction.stackSubAction(putInCardPileSubAction);

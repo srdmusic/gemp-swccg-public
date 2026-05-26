@@ -64,7 +64,7 @@ import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.BreakCoverEffect;
 import com.gempukku.swccgo.logic.effects.DrawAsteroidDestinyEffect;
 import com.gempukku.swccgo.logic.effects.StackActionEffect;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -226,10 +226,11 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
      * @param game the game
      * @param self the card
      * @param forFree true if moving for free, otherwise false
+     * @param ignoreDeployRestriction true if ignoring deployment restrictions that would normally prevent transferring
      * @param transferTargetFilter the filter for where the card can be transferred
      * @return the transfer device or weapon actions
      */
-    private List<Action> getTransferDeviceOrWeaponActions(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, Filter transferTargetFilter) {
+    private List<Action> getTransferDeviceOrWeaponActions(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean ignoreDeployRestriction, Filter transferTargetFilter) {
         List<Action> transferCardActions = new ArrayList<Action>();
 
         if ((self.getBlueprint().getCardCategory() == CardCategory.DEVICE || self.getBlueprint().getCardCategory() == CardCategory.WEAPON)) {
@@ -241,10 +242,12 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
                     // Determine the spot override to use when transferring the card using this play card option
                     Map<InactiveReason, Boolean> spotOverrides = self.getBlueprint().getDeployTargetSpotOverride(playCardOption.getId());
 
-                    Filter completeTargetFilter = getValidTransferDeviceOrWeaponTargetFilter(playerId, game, self, playCardOption, forFree, transferTargetFilter);
+                    Filter completeTargetFilter;
+                    if(ignoreDeployRestriction) completeTargetFilter = transferTargetFilter; ///could improve this?  Maybe pass ignoreDeployRestriction into getValidTransferDeviceOrWeaponTargetFilter, down the chain so things like cost checking work properly?
+                    else completeTargetFilter = getValidTransferDeviceOrWeaponTargetFilter(playerId, game, self, playCardOption, forFree, transferTargetFilter);
 
                     // Check that a valid target to transfer to as attached can be found
-                    if (Filters.canSpot(game, self, spotOverrides, TargetingReason.TO_BE_DEPLOYED_ON, completeTargetFilter)) {
+                    if (Filters.canSpot(game, self, spotOverrides, TargetingReason.TO_BE_TRANSFERRED_TO, completeTargetFilter)) {
                         transferDeviceOrWeaponAction = new TransferDeviceOrWeaponAction(playerId, self, playCardOption, forFree, completeTargetFilter);
                     }
 
@@ -268,13 +271,14 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
      * @param game the game
      * @param self the card
      * @param forFree true if moving for free, otherwise false
+     * @param ignoreDeployRestriction true if ignoring deployment restrictions that would normally prevent transferring
      * @param transferTargetFilter the filter for where the card can be transferred
      * @return the transfer device or weapon actions
      */
     @Override
-    public Action getTransferDeviceOrWeaponAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, Filter transferTargetFilter) {
+    public Action getTransferDeviceOrWeaponAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean ignoreDeployRestriction, Filter transferTargetFilter) {
         // Get the transfer actions
-        List<Action> transferActions = getTransferDeviceOrWeaponActions(playerId, game, self, forFree, transferTargetFilter);
+        List<Action> transferActions = getTransferDeviceOrWeaponActions(playerId, game, self, forFree, ignoreDeployRestriction, transferTargetFilter);
 
         if (transferActions.isEmpty())
             return null;
@@ -298,7 +302,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
     @Override
     public Filter getValidTransferDeviceOrWeaponTargetFilter(String playerId, SwccgGame game, PhysicalCard self, PlayCardOption playCardOption, boolean forFree, Filter transferTargetFilter) {
         return Filters.and(Filters.your(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle), Filters.not(Filters.hasAttached(self)),
-                Filters.not(Filters.attachedToWithRecursiveChecking(self)), Filters.atSameLocation(self), transferTargetFilter, getValidTransferTargetFilter(playerId, game, self, playCardOption, forFree));
+                Filters.not(Filters.attachedToWithRecursiveChecking(self)), Filters.presentWith(self, SpotOverride.INCLUDE_UNDERCOVER, Filters.hasAttached(self)), transferTargetFilter, getValidTransferTargetFilter(playerId, game, self, playCardOption, forFree));
     }
 
     /**
@@ -636,6 +640,13 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         if (shuttleAction != null) {
             regularMoveActions.add(shuttleAction);
         }
+
+        // TODO: add other types of regular moves
+        // see https://github.com/PlayersCommittee/gemp-swccg-public/issues/954
+        // Docking bay transit
+        // using the movement text on a location
+        // moving a Death Star
+        // a Light side starfighter moving into the Death Star: Trench to start an Attack Run
 
         if (regularMoveActions.isEmpty())
             return null;
@@ -2058,7 +2069,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
                 }
 
                 // Transfer device or weapon (includes stolen)
-                List<Action> transferDeviceOrWeaponActions = getTransferDeviceOrWeaponActions(playerId, game, self, false, Filters.present(self));
+                List<Action> transferDeviceOrWeaponActions = getTransferDeviceOrWeaponActions(playerId, game, self, false, false, Filters.presentWith(self));
                 if (transferDeviceOrWeaponActions != null) {
                     actions.addAll(transferDeviceOrWeaponActions);
                 }
@@ -2162,6 +2173,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
                     Filters.or(Filters.samePersonaAs(permanentWeapon), Filters.hasPermanentWeapon(Filters.samePersonaAs(permanentWeapon))))) {
                 return null;
             }
+            // TODO: should add checking for isUniquenessOnTableLimitReached here?
         }
         // Determine the target and if character is not disallowed by own game text
         PhysicalCard characterToReplace = characterInPlay.iterator().next();
@@ -2403,59 +2415,6 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
     @Override
     public List<TriggerAction> getOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self) {
         List<TriggerAction> actions = super.getOptionalAfterTriggers(playerId, game, effectResult, self);
-
-        // Check for 'react' actions
-        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, game.getOpponent(playerId))
-                || TriggerConditions.battleInitiated(game, effectResult, game.getOpponent(playerId))) {
-
-            if (self.getZone() == Zone.STACKED) {
-                if (!game.getModifiersQuerying().isGameTextCanceled(game.getGameState(), self)) {
-                    // Deploy other cards as 'react'
-                    List<TriggerAction> deployOtherCardsAsReactActions = getDeployOtherCardsAsReactAction(playerId, game, self);
-                    if (deployOtherCardsAsReactActions != null) {
-                        for (TriggerAction deployOtherCardsAsReactAction : deployOtherCardsAsReactActions) {
-                            actions.add(deployOtherCardsAsReactAction);
-                        }
-                    }
-                }
-            }
-
-            if (self.getZone().isInPlay()) {
-                boolean inPlayActive = game.getGameState().isCardInPlayActive(self, false, true, false, false, false, false, false, false);
-
-                if (!game.getModifiersQuerying().isGameTextCanceled(game.getGameState(), self)) {
-                    if (inPlayActive) {
-
-                        // If device, need to check that it can be used by the card it is attached to.
-                        if (self.getBlueprint().getCardCategory() != CardCategory.DEVICE
-                                || !game.getModifiersQuerying().mayNotBeUsed(game.getGameState(), self)
-                                || self.getAttachedTo() == null
-                                || Filters.canUseDevice(self).accepts(game, self.getOwner().equals(self.getAttachedTo().getOwner()) ? self.getAttachedTo() : self)) {
-
-                            // Deploy other cards as 'react'
-                            List<TriggerAction> deployOtherCardsAsReactActions = getDeployOtherCardsAsReactAction(playerId, game, self);
-                            if (deployOtherCardsAsReactActions != null) {
-                                for (TriggerAction deployOtherCardsAsReactAction : deployOtherCardsAsReactActions) {
-                                    actions.add(deployOtherCardsAsReactAction);
-                                }
-                            }
-
-                            // Move other cards as 'react'
-                            TriggerAction moveOtherCardsAsReactAction = getMoveOtherCardsAsReactAction(playerId, game, self);
-                            if (moveOtherCardsAsReactAction != null) {
-                                actions.add(moveOtherCardsAsReactAction);
-                            }
-
-                            // Move other cards away as 'react'
-                            TriggerAction moveOtherCardsAwayAsReactAction = getMoveOtherCardsAwayAsReactAction(playerId, game, self);
-                            if (moveOtherCardsAwayAsReactAction != null) {
-                                actions.add(moveOtherCardsAwayAsReactAction);
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
         return actions;
     }

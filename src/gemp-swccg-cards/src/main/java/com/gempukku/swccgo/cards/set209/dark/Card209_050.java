@@ -7,10 +7,12 @@ import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -38,6 +40,7 @@ public class Card209_050 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 0);
         addIcons(Icon.VIRTUAL_SET_9, Icon.EXTERIOR_SITE, Icon.PLANET);
+        addKeywords(Keyword.VADERS_CASTLE_SITE);
     }
 
     @Override
@@ -52,13 +55,13 @@ public class Card209_050 extends AbstractSite {
         // Check condition(s)
         if (GameConditions.isDuringYourPhase(game, playerOnDarkSideOfLocation, Phase.MOVE)
                 && GameConditions.canSpotLocation(game, otherBattlegroundSites)) {
-            if (GameConditions.canPerformMovementUsingLocationText(playerOnDarkSideOfLocation, game, Filters.Vader, self, otherBattlegroundSites, false)) {
-                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, Filters.Vader, self, otherBattlegroundSites, false);
+            if (GameConditions.canPerformMovementUsingLocationText(playerOnDarkSideOfLocation, game, SpotOverride.INCLUDE_UNDERCOVER, Filters.Vader, self, otherBattlegroundSites, false)) {
+                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, SpotOverride.INCLUDE_UNDERCOVER, Filters.Vader, self, otherBattlegroundSites, false);
                 action.setText("Move from here to other battleground site");
                 actions.add(action);
             }
-            if (GameConditions.canPerformMovementUsingLocationText(playerOnDarkSideOfLocation, game, Filters.Vader, otherBattlegroundSites, self, false)) {
-                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, Filters.Vader, otherBattlegroundSites, self, false);
+            if (GameConditions.canPerformMovementUsingLocationText(playerOnDarkSideOfLocation, game, SpotOverride.INCLUDE_UNDERCOVER, Filters.Vader, otherBattlegroundSites, self, false)) {
+                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, SpotOverride.INCLUDE_UNDERCOVER, Filters.Vader, otherBattlegroundSites, self, false);
                 action.setText("Move from other battleground site to here");
                 actions.add(action);
             }

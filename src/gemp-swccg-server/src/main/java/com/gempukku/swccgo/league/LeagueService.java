@@ -5,15 +5,18 @@ import com.gempukku.swccgo.collection.CollectionsManager;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.competitive.PlayerStanding;
 import com.gempukku.swccgo.competitive.StandingsProducer;
+import com.gempukku.swccgo.db.DeckSerialization;
 import com.gempukku.swccgo.db.LeagueDAO;
 import com.gempukku.swccgo.db.LeagueMatchDAO;
 import com.gempukku.swccgo.db.LeagueParticipationDAO;
 import com.gempukku.swccgo.db.vo.CollectionType;
 import com.gempukku.swccgo.db.vo.League;
 import com.gempukku.swccgo.db.vo.LeagueMatchResult;
+import com.gempukku.swccgo.draft2.SoloDraftDefinitions;
 import com.gempukku.swccgo.game.CardCollection;
 import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
+import com.gempukku.swccgo.logic.vo.SwccgDeck;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -29,6 +32,7 @@ public class LeagueService {
     private CachedLeagueParticipationDAO _leagueParticipationDAO;
 
     private CollectionsManager _collectionsManager;
+    private SoloDraftDefinitions _soloDraftDefinitions;
 
     private Map<String, List<PlayerStanding>> _leagueStandings = new ConcurrentHashMap<String, List<PlayerStanding>>();
     private Map<String, List<PlayerStanding>> _leagueSeriesStandings = new ConcurrentHashMap<String, List<PlayerStanding>>();
@@ -37,12 +41,14 @@ public class LeagueService {
     private List<League> _activeLeagues;
 
     public LeagueService(SwccgCardBlueprintLibrary library, LeagueDAO leagueDao, LeagueMatchDAO leagueMatchDao,
-                         LeagueParticipationDAO leagueParticipationDAO, CollectionsManager collectionsManager) {
+                         LeagueParticipationDAO leagueParticipationDAO, CollectionsManager collectionsManager,
+                         SoloDraftDefinitions soloDraftDefinitions) {
         _library = library;
         _leagueDao = leagueDao;
         _leagueMatchDao = new CachedLeagueMatchDAO(leagueMatchDao);
         _leagueParticipationDAO = new CachedLeagueParticipationDAO(leagueParticipationDAO);
         _collectionsManager = collectionsManager;
+        _soloDraftDefinitions = soloDraftDefinitions;
     }
 
     public synchronized void clearCache() {
@@ -84,7 +90,7 @@ public class LeagueService {
     private void processLoadedLeagues(int currentDate) {
         for (League activeLeague : _activeLeagues) {
             int oldStatus = activeLeague.getStatus();
-            int newStatus = activeLeague.getLeagueData().process(_collectionsManager, getLeagueStandings(activeLeague), oldStatus, currentDate);
+            int newStatus = activeLeague.getLeagueData(_soloDraftDefinitions).process(_collectionsManager, getLeagueStandings(activeLeague), oldStatus, currentDate);
             if (newStatus != oldStatus)
                 _leagueDao.setStatus(activeLeague, newStatus);
         }
@@ -106,7 +112,7 @@ public class LeagueService {
         int cost = league.getCost();
         if (skipCost || _collectionsManager.removeCurrencyFromPlayerCollection("Joining "+league.getName()+" league", player, CollectionType.MY_CARDS, cost)) {
             _leagueParticipationDAO.userJoinsLeague(league.getType(), player, remoteAddr);
-            league.getLeagueData().joinLeague(_collectionsManager, player, DateUtils.getCurrentDate());
+            league.getLeagueData(_soloDraftDefinitions).joinLeague(_collectionsManager, player, DateUtils.getCurrentDate());
 
             _leagueStandings.remove(LeagueMapKeys.getLeagueMapKey(league));
 
@@ -126,7 +132,7 @@ public class LeagueService {
 
     public synchronized CollectionType getCollectionTypeByCode(String collectionTypeCode) {
         for (League league : getActiveLeagues()) {
-            for (LeagueSeriesData leagueSeriesData : league.getLeagueData().getSeries()) {
+            for (LeagueSeriesData leagueSeriesData : league.getLeagueData(_soloDraftDefinitions).getSeries()) {
                 CollectionType collectionType = leagueSeriesData.getCollectionType();
                 if (collectionType != null && collectionType.getCode().equals(collectionTypeCode))
                     return collectionType;
@@ -138,7 +144,7 @@ public class LeagueService {
     public synchronized LeagueSeriesData getCurrentLeagueSeries(League league) {
         final int currentDate = DateUtils.getCurrentDate();
 
-        for (LeagueSeriesData leagueSeriesData : league.getLeagueData().getSeries()) {
+        for (LeagueSeriesData leagueSeriesData : league.getLeagueData(_soloDraftDefinitions).getSeries()) {
             if (currentDate >= leagueSeriesData.getStart() && currentDate <= leagueSeriesData.getEnd())
                 return leagueSeriesData;
         }
@@ -269,6 +275,44 @@ public class LeagueService {
                 return false;
             }
         }
+        return true;
+    }
+
+    // ---- Deck Lock-In Methods ----
+
+    private static String sideToDbKey(Side side) {
+        return side == Side.LIGHT ? "ls" : "ds";
+    }
+
+    /**
+     * Returns the locked deck for a player in a league for the given side,
+     * or null if no deck has been locked yet.
+     */
+    public synchronized SwccgDeck getLockedDeck(League league, String playerName, Side side) {
+        if (league.getLockedDeckType() == null)
+            return null;
+
+        String[] locked = _leagueParticipationDAO.getLockedDeck(league.getType(), playerName, side);
+        if (locked == null)
+            return null;
+
+        return DeckSerialization.buildDeckFromContents(locked[0], locked[1], _library);
+    }
+
+    /**
+     * If the league has deck lock-in enabled and the player does not yet have
+     * a locked deck for the given side, snapshot and store the deck.
+     */
+    public synchronized boolean lockDeckIfNeeded(League league, String playerName, Side side, SwccgDeck deck) {
+        if (league.getLockedDeckType() == null)
+            return false;
+
+        String[] existing = _leagueParticipationDAO.getLockedDeck(league.getType(), playerName, side);
+        if (existing != null)
+            return false; // Already locked
+
+        String contents = DeckSerialization.buildContentsFromDeck(deck);
+        _leagueParticipationDAO.setLockedDeck(league.getType(), playerName, side, deck.getDeckName(), contents);
         return true;
     }
 }

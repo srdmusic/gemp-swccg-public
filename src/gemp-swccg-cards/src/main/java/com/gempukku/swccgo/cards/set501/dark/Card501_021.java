@@ -26,12 +26,12 @@ import java.util.List;
  */
 public class Card501_021 extends AbstractSite {
     public Card501_021() {
-        super(Side.DARK, "Geonosis: Petranaki Arena", Title.Geonosis, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, Title.Geonosis_Petranaki_Arena, Title.Geonosis, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Your total power here is +1 for each opponent's character here.");
         setLocationLightSideGameText("Your characters are defense value -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setTestingText("Geonosis: Petranaki Arena");
     }
 

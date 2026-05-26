@@ -7,7 +7,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.SubAction;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.AbstractSubActionEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -23,6 +23,7 @@ import java.util.*;
  */
 class PlaceCardsOutOfPlayFromOffTableSimultaneouslyEffect extends AbstractSubActionEffect implements PreventableCardEffect {
     private Collection<PhysicalCard> _originalCardsToPlaceOutOfPlay;
+    private Map<PhysicalCard, Zone> _originalZoneMap = new HashMap<>();
     private Set<PhysicalCard> _preventedCards = new HashSet<PhysicalCard>();
     private PlaceCardsOutOfPlayFromOffTableSimultaneouslyEffect _that;
     private Collection<PhysicalCard> _placedOutOfPlay = new ArrayList<PhysicalCard>();
@@ -36,6 +37,10 @@ class PlaceCardsOutOfPlayFromOffTableSimultaneouslyEffect extends AbstractSubAct
     public PlaceCardsOutOfPlayFromOffTableSimultaneouslyEffect(Action action, Collection<PhysicalCard> cardsToPlaceOutOfPlay) {
         super(action);
         _originalCardsToPlaceOutOfPlay = Collections.unmodifiableCollection(cardsToPlaceOutOfPlay);
+        for(PhysicalCard card:_originalCardsToPlaceOutOfPlay) {
+            _originalZoneMap.put(card, card.getZone());
+        }
+
         _that = this;
     }
 
@@ -95,7 +100,7 @@ class PlaceCardsOutOfPlayFromOffTableSimultaneouslyEffect extends AbstractSubAct
 
                             for (PhysicalCard card : _placedOutOfPlay) {
                                 game.getActionsEnvironment().emitEffectResult(
-                                        new PlacedCardOutOfPlayFromOffTableResult(subAction, card));
+                                        new PlacedCardOutOfPlayFromOffTableResult(subAction, card, _originalZoneMap.get(card)));
                             }
                         }
                     }

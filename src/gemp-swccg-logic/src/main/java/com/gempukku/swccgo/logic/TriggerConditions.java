@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.logic;
 
 import com.gempukku.swccgo.common.CaptureOption;
+import com.gempukku.swccgo.common.CardState;
 import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.common.Filterable;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -27,7 +28,7 @@ import com.gempukku.swccgo.logic.effects.MovingAsReactEffect;
 import com.gempukku.swccgo.logic.effects.RespondableDeployMultipleCardsSimultaneouslyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -382,6 +383,7 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.TRANSFERRED_CAPTIVE_TO_NEW_ESCORT
                 || effectResult.getType() == EffectResult.Type.ROTATE_CARD
                 || effectResult.getType() == EffectResult.Type.TRANSFERRED_DEVICE_OR_WEAPON
+                || effectResult.getType() == EffectResult.Type.RELOCATED_DEVICE_OR_WEAPON
                 || effectResult.getType() == EffectResult.Type.CONVERT_LOCATION
                 || effectResult.getType() == EffectResult.Type.BATTLE_CANCELED
                 || effectResult.getType() == EffectResult.Type.ATTACK_INITIATED
@@ -2332,6 +2334,7 @@ public class TriggerConditions {
             PhysicalCard cardLost = ((LostFromTableResult) effectResult).getCard();
 
             return GameUtils.getZoneFromZoneTop(cardLost.getZone()) == Zone.LOST_PILE
+                    && (cardLost.getPreviousCardState() == CardState.ACTIVE || cardLost.getPreviousCardState() == CardState.INACTIVE)
                     && Filters.and(filter).accepts(game.getGameState(), game.getModifiersQuerying(), cardLost);
         }
         return false;
@@ -2353,6 +2356,7 @@ public class TriggerConditions {
             if (playerId.equals(effectResult.getPerformingPlayerId())
                 || (effectResult.getPerformingPlayerId() == null && playerId.equals(cardLost.getOwner()))) {
                 return GameUtils.getZoneFromZoneTop(cardLost.getZone()) == Zone.LOST_PILE
+                        && (cardLost.getPreviousCardState() == CardState.ACTIVE || cardLost.getPreviousCardState() == CardState.INACTIVE)
                         && Filters.and(filter).accepts(game.getGameState(), game.getModifiersQuerying(), cardLost);
             }
         }
@@ -2377,6 +2381,7 @@ public class TriggerConditions {
             Collection<PhysicalCard> wasPresentWith = lostFromTableResult.getWasPresentWith();
 
             return GameUtils.getZoneFromZoneTop(cardLost.getZone()) == Zone.LOST_PILE
+                    && (cardLost.getPreviousCardState() == CardState.ACTIVE || cardLost.getPreviousCardState() == CardState.INACTIVE)
                     && Filters.and(cardFilter).accepts(game, cardLost)
                     && !Filters.filterCount(wasPresentWith, game, 1, presentWithFilter).isEmpty();
         }
@@ -2400,6 +2405,7 @@ public class TriggerConditions {
             PhysicalCard fromAttachedTo = lostFromTableResult.getFromAttachedTo();
 
             return GameUtils.getZoneFromZoneTop(cardLost.getZone()) == Zone.LOST_PILE
+                    && (cardLost.getPreviousCardState() == CardState.ACTIVE || cardLost.getPreviousCardState() == CardState.INACTIVE)
                     && Filters.and(cardFilter).accepts(game.getGameState(), game.getModifiersQuerying(), cardLost)
                     && fromAttachedTo != null && Filters.and(attachedToFilter).accepts(game.getGameState(), game.getModifiersQuerying(), fromAttachedTo);
         }
@@ -2437,6 +2443,7 @@ public class TriggerConditions {
             PhysicalCard location = lostFromTableResult.getFromLocation();
 
             return GameUtils.getZoneFromZoneTop(cardLost.getZone()) == Zone.LOST_PILE
+                    && (cardLost.getPreviousCardState() == CardState.ACTIVE || cardLost.getPreviousCardState() == CardState.INACTIVE)
                     && Filters.and(cardFilter).accepts(game.getGameState(), game.getModifiersQuerying(), cardLost)
                     && location != null && Filters.and(locationFilter).accepts(game.getGameState(), game.getModifiersQuerying(), location);
         }
@@ -2708,6 +2715,23 @@ public class TriggerConditions {
             return playerId.equals(cancelCardOnTableResult.getPerformingPlayerId())
                     && Filters.and(cardFilter).accepts(game, cardCanceled)
                     && wasAttachedTo != null && Filters.and(attachedToFilter).accepts(game, wasAttachedTo);
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a card was just stolen by another.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param cardFilter the card being stolen
+     * @return true if an acceptable card was just stolen, false otherwise
+     */
+    public static boolean justStolen(SwccgGame game, EffectResult effectResult, Filterable cardFilter) {
+        if (effectResult.getType() == EffectResult.Type.STOLEN) {
+            StolenResult stolenResult = (StolenResult) effectResult;
+            PhysicalCard cardStolen = stolenResult.getStolenCard();
+
+            return Filters.and(cardFilter).accepts(game, cardStolen);
         }
         return false;
     }
@@ -4360,6 +4384,27 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a weapon accepted by the weapon filter was just fired repeatedly.
+     *
+     * @param game         the game
+     * @param effectResult the effect result
+     * @param weaponFilter the weapon filter
+     * @return true or false
+     */
+    public static boolean weaponJustFiredRepeatedly(SwccgGame game, EffectResult effectResult, Filterable weaponFilter) {
+        if (effectResult.getType() == EffectResult.Type.FIRED_WEAPON) {
+            FiredWeaponResult weaponFiredResult = (FiredWeaponResult) effectResult;
+            PhysicalCard weaponCardFired = weaponFiredResult.getWeaponCardFired();
+            SwccgBuiltInCardBlueprint permanentWeaponFired = weaponFiredResult.getPermanentWeaponFired();
+
+            return (weaponCardFired != null && Filters.and(weaponFilter).accepts(game.getGameState(), game.getModifiersQuerying(), weaponCardFired))
+                    || (permanentWeaponFired != null && Filters.and(weaponFilter).accepts(game.getGameState(), game.getModifiersQuerying(), permanentWeaponFired))
+                    && weaponFiredResult.wasRepeatedFiring();
+        }
+        return false;
+    }
+
+    /**
      * Determines if a weapon accepted by the weapon filter was just fired.
      * @param game the game
      * @param effectResult the effect result
@@ -4467,6 +4512,36 @@ public class TriggerConditions {
                 return ((hitByCard != null && Filters.and(hitByCardFilter).accepts(game.getGameState(), game.getModifiersQuerying(), hitByCard))
                         || (hitByPermanentWeapon != null && Filters.and(hitByCardFilter).accepts(game.getGameState(), game.getModifiersQuerying(), hitByPermanentWeapon)))
                         && (weaponFiredBy != null && Filters.and(cardFiringWeaponFilter).accepts(game.getGameState(), game.getModifiersQuerying(), weaponFiredBy));
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a card accepted by cardHitFilter was just 'hit' by repeated firing of a card (including permanent weapon)
+     * accepted by hitByCardFilter that was fired by a card accepted by cardFiringWeaponFilter.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param cardHitFilter the card hit filter
+     * @param hitByCardFilter the hit by card filter
+     * @param cardFiringWeaponFilter the card firing weapon filter
+     * @return true or false
+     */
+    public static boolean justHitByRepeatedFiring(SwccgGame game, EffectResult effectResult, Filterable cardHitFilter, Filterable hitByCardFilter, Filterable cardFiringWeaponFilter) {
+        if (effectResult.getType() == EffectResult.Type.HIT) {
+            HitResult hitResult = (HitResult) effectResult;
+            PhysicalCard hitCard = hitResult.getCardHit();
+
+            if (hitCard.isHit() && Filters.and(cardHitFilter).accepts(game.getGameState(), game.getModifiersQuerying(), hitCard)) {
+                PhysicalCard hitByCard = hitResult.getHitByCard();
+                SwccgBuiltInCardBlueprint hitByPermanentWeapon = hitResult.getHitByPermanentWeapon();
+                PhysicalCard weaponFiredBy = hitResult.getCardFiringWeapon();
+                boolean hitByRepeatedFiring = hitResult.getHitByRepeatedFiring();
+
+                return (hitByRepeatedFiring
+                        && ((hitByCard != null && Filters.and(hitByCardFilter).accepts(game.getGameState(), game.getModifiersQuerying(), hitByCard))
+                        || (hitByPermanentWeapon != null && Filters.and(hitByCardFilter).accepts(game.getGameState(), game.getModifiersQuerying(), hitByPermanentWeapon)))
+                        && (weaponFiredBy != null && Filters.and(cardFiringWeaponFilter).accepts(game.getGameState(), game.getModifiersQuerying(), weaponFiredBy)));
             }
         }
         return false;
@@ -4810,6 +4885,23 @@ public class TriggerConditions {
             PhysicalCard programTrap = explodingProgramTrapResult.getProgramTrap();
 
             return Filters.and(Filters.in_play, programTrapFilter).accepts(game.getGameState(), game.getModifiersQuerying(), programTrap);
+        }
+        return false;
+    }
+
+    /**
+     * Determines if the specified player just lost Force (for any reason)
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean justLostForce(SwccgGame game, EffectResult effectResult, String playerId) {
+        if (effectResult.getType() == EffectResult.Type.FORCE_LOST) {
+            LostForceResult lostForceResult = (LostForceResult) effectResult;
+            if (playerId.equals(lostForceResult.getPerformingPlayerId())) {
+                return true;
+            }
         }
         return false;
     }

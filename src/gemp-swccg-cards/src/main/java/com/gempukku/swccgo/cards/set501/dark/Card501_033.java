@@ -35,7 +35,7 @@ public class Card501_033 extends AbstractStarfighter {
     public Card501_033() {
         super(Side.DARK, 4, 2, 3, null, 5, 4, 4, "CIS Transport Shuttle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("May add 1 pilot and 2 passengers. Permanent pilot provides ability of 2. May deploy to exterior sites. Twice per turn,  may land or take off as an unlimited move for free.");
-        addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_25);
         addIcon(Icon.PILOT, 1);
         addModelType(ModelType.SHEATHIPEDE_CLASS_SHUTTLE);
         setPilotCapacity(1);

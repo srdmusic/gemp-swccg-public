@@ -74,60 +74,80 @@ public class MerchantRequestHandler extends SwccgoServerRequestHandler implement
 
     private void tradeInFoil(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String participantId = getFormParameterSafely(postDecoder, "participantId");
-        String blueprintId = getFormParameterSafely(postDecoder, "blueprintId");
+        try {        
+            String participantId = getFormParameterSafely(postDecoder, "participantId");
+            String blueprintId = getFormParameterSafely(postDecoder, "blueprintId");
 
-        Player resourceOwner = getResourceOwnerSafely(request, participantId);
-        try {
-            _merchantService.tradeForFoil(resourceOwner, blueprintId);
-            responseWriter.writeXmlResponse(null);
-        } catch (MerchantException exp) {
-            responseWriter.writeXmlResponse(marshalException(exp));
+            Player resourceOwner = getResourceOwnerSafely(request, participantId);
+            try {
+                _merchantService.tradeForFoil(resourceOwner, blueprintId);
+                responseWriter.writeXmlResponse(null);
+            } catch (MerchantException exp) {
+                responseWriter.writeXmlResponse(marshalException(exp));
+            }
+        }
+        finally {
+            postDecoder.destroy();
         }
     }
 
     private void sell(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String participantId = getFormParameterSafely(postDecoder, "participantId");
-        String blueprintId = getFormParameterSafely(postDecoder, "blueprintId");
-        int price = Integer.parseInt(getFormParameterSafely(postDecoder, "price"));
-
-        Player resourceOwner = getResourceOwnerSafely(request, participantId);
         try {
-            _merchantService.merchantBuysCard(resourceOwner, blueprintId, price);
-            responseWriter.writeXmlResponse(null);
-        } catch (MerchantException exp) {
-            responseWriter.writeXmlResponse(marshalException(exp));
+            String participantId = getFormParameterSafely(postDecoder, "participantId");
+            String blueprintId = getFormParameterSafely(postDecoder, "blueprintId");
+            int price = Integer.parseInt(getFormParameterSafely(postDecoder, "price"));
+
+            Player resourceOwner = getResourceOwnerSafely(request, participantId);
+            try {
+                _merchantService.merchantBuysCard(resourceOwner, blueprintId, price);
+                responseWriter.writeXmlResponse(null);
+            } catch (MerchantException exp) {
+                responseWriter.writeXmlResponse(marshalException(exp));
+            }
+        }
+        finally {
+            postDecoder.destroy();
         }
     }
 
     private void sellAll(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String participantId = getFormParameterSafely(postDecoder, "participantId");
-        String blueprintId = getFormParameterSafely(postDecoder, "blueprintId");
-        int price = Integer.parseInt(getFormParameterSafely(postDecoder, "price"));
-
-        Player resourceOwner = getResourceOwnerSafely(request, participantId);
         try {
-            _merchantService.merchantBuysAllOfACard(resourceOwner, blueprintId, price);
-            responseWriter.writeXmlResponse(null);
-        } catch (MerchantException exp) {
-            responseWriter.writeXmlResponse(marshalException(exp));
+            String participantId = getFormParameterSafely(postDecoder, "participantId");
+            String blueprintId = getFormParameterSafely(postDecoder, "blueprintId");
+            int price = Integer.parseInt(getFormParameterSafely(postDecoder, "price"));
+
+            Player resourceOwner = getResourceOwnerSafely(request, participantId);
+            try {
+                _merchantService.merchantBuysAllOfACard(resourceOwner, blueprintId, price);
+                responseWriter.writeXmlResponse(null);
+            } catch (MerchantException exp) {
+                responseWriter.writeXmlResponse(marshalException(exp));
+            }
+        }
+        finally {
+            postDecoder.destroy();
         }
     }
 
     private void buy(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String participantId = getFormParameterSafely(postDecoder, "participantId");
-        String blueprintId = getFormParameterSafely(postDecoder, "blueprintId");
-        int price = Integer.parseInt(getFormParameterSafely(postDecoder, "price"));
-
-        Player resourceOwner = getResourceOwnerSafely(request, participantId);
         try {
-            _merchantService.merchantSellsCard(resourceOwner, blueprintId, price);
-            responseWriter.writeXmlResponse(null);
-        } catch (MerchantException exp) {
-            responseWriter.writeXmlResponse(marshalException(exp));
+            String participantId = getFormParameterSafely(postDecoder, "participantId");
+            String blueprintId = getFormParameterSafely(postDecoder, "blueprintId");
+            int price = Integer.parseInt(getFormParameterSafely(postDecoder, "price"));
+
+            Player resourceOwner = getResourceOwnerSafely(request, participantId);
+            try {
+                _merchantService.merchantSellsCard(resourceOwner, blueprintId, price);
+                responseWriter.writeXmlResponse(null);
+            } catch (MerchantException exp) {
+                responseWriter.writeXmlResponse(marshalException(exp));
+            }
+        }
+        finally {
+            postDecoder.destroy();
         }
     }
 
@@ -197,6 +217,15 @@ public class MerchantRequestHandler extends SwccgoServerRequestHandler implement
             if (blueprintId.contains("_") && !blueprintId.endsWith("*") && !blueprintId.endsWith("^") && collection.getItemCount(blueprintId) >= 4 && currency >= MerchantService.TRADE_FOIL_COST)
                 elem.setAttribute("tradeFoil", "true");
             elem.setAttribute("blueprintId", blueprintId);
+            
+            // Add horizontal attribute if the card is horizontal
+            if (blueprintId.contains("_")) {
+                SwccgCardBlueprint blueprint = _library.getSwccgoCardBlueprint(blueprintId);
+                if (blueprint != null && blueprint.isHorizontal()) {
+                    elem.setAttribute("horizontal", "true");
+                }
+            }
+            
             Integer buyPrice = buyPrices.get(blueprintId);
             if (buyPrice != null && collection.getItemCount(blueprintId) > 0)
                 elem.setAttribute("buyPrice", buyPrice.toString());

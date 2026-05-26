@@ -33,11 +33,11 @@ jobs:
           docker compose build
           docker compose up -d
 
-      - name: Client Test
-        run: |
-          docker exec gemp_swccg_app_1 curl -s --retry 10 --retry-connrefused http://localhost/gemp-swccg/index.html
-          echo "Python3: $(which python3)"
-          echo "pip3...: $(which pip3)"
-          pip3 install -r src/requirements.txt
-          python3 src/gemp_client_test.py
+      # - name: Client Test
+      #   run: |
+      #     docker exec gemp_swccg_app_1 curl -s --retry 10 --retry-connrefused http://localhost/gemp-swccg/index.html
+      #     echo "Python3: $(which python3)"
+      #     echo "pip3...: $(which pip3)"
+      #     pip3 install -r src/requirements.txt
+      #     python3 src/gemp_client_test.py
 

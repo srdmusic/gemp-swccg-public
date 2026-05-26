@@ -10,6 +10,7 @@ import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 
 /**
@@ -152,6 +153,19 @@ public class TotalBattleDestinyModifier extends AbstractModifier {
      */
     public TotalBattleDestinyModifier(PhysicalCard source, Filterable locationFilter, Condition condition, float modifierAmount, String playerId) {
         this(source, locationFilter, condition, new ConstantEvaluator(modifierAmount), playerId, false);
+    }
+
+    /**
+     * Creates a modifier to total battle destiny.
+     * @param source the source of the modifier
+     * @param locationFilter the filter for locations where total battle destiny is modified
+     * @param condition the condition that must be fulfilled for the modifier to be in effect
+     * @param modifierAmount the amount of the modifier
+     * @param playerId the player whose total battle destiny is modified
+     * @param skipInBattleCheck true if check for source card in battle is skipped, otherwise false
+     */
+    public TotalBattleDestinyModifier(PhysicalCard source, Filterable locationFilter, Condition condition, float modifierAmount, String playerId, boolean skipInBattleCheck) {
+        this(source, locationFilter, condition, new ConstantEvaluator(modifierAmount), playerId, skipInBattleCheck);
     }
 
     /**

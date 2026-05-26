@@ -7,6 +7,7 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 
 public class SpeciesModifier extends AbstractModifier{
     private Species _species;
@@ -39,6 +40,10 @@ public class SpeciesModifier extends AbstractModifier{
 
     public SpeciesModifier(PhysicalCard source, boolean matchRepSpecies) {
         this(source, source, null, null, null, matchRepSpecies);
+    }
+
+    public SpeciesModifier(PhysicalCard source, Condition condition, boolean matchRepSpecies) {
+        this(source, source, condition, null, null, matchRepSpecies);
     }
 
     public SpeciesModifier(PhysicalCard source, Filterable affectFilter, Condition condition, Species species, Evaluator evaluator) {
