@@ -2,6 +2,7 @@ name: Validate CardImages.js
 
 on:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   validate-jcards:
