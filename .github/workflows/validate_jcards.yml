@@ -1,17 +1,16 @@
 name: Validate jCards.js
 
 on:
-    pull_request:
-        branches: [master, main]
+  pull_request:
 
 jobs:
-    validate-jcards:
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: ./
-        steps:
-            - name: Check out repo
-              uses: actions/checkout@master
-            - name: Validate jCards.js
-              run: ./src/scripts/validate_jcards.sh
+  validate-jcards:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@master
+      - name: Validate jCards.js
+        run: ./bin/gemp validate-jcards
