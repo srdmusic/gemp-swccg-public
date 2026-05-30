@@ -5,13 +5,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate-jcards:
+  validate-cardimages:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./
     steps:
       - name: Check out repo
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: Validate CardImages.js
         run: ./bin/gemp validate-cardimages
