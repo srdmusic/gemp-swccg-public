@@ -62,11 +62,11 @@ public class Card501_201 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(playerId);
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter siteFilter = Filters.or(Filters.battleground_site, Filters.and(Filters.opponents(self), Filters.location));
+        Filter locationFilter = Filters.or(Filters.battleground, Filters.and(Filters.opponents(self), Filters.location));
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupies(game, playerId, 4, siteFilter)) {
+                && GameConditions.occupies(game, playerId, 4, locationFilter)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
             // Update usage limit(s)
@@ -86,11 +86,12 @@ public class Card501_201 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(playerId);
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter siteFilter = Filters.or(Filters.battleground_site, Filters.and(Filters.opponents(self), Filters.location));
+        Filter locationFilter = Filters.or(Filters.battleground, Filters.and(Filters.opponents(self), Filters.location));
 
         // Check condition(s)
         if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
-                && GameConditions.occupies(game, playerId, 4, siteFilter)) {
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && GameConditions.occupies(game, playerId, 4, locationFilter)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
