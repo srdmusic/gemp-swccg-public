@@ -38,7 +38,6 @@ public class Card501_216 extends AbstractStarfighter {
         setGameText("May add 2 pilots and 6 passenders.  Permanent pilot provides ability of 2.  Players may not draw more than two battle destiny here. While Beckett on table or out of play, power +3.");
         addIcons(Icon.SCOMP_LINK, Icon.INDEPENDENT, Icon.PILOT, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_27);
         addModelType(ModelType.Y_45_ARMORED_TRANSPORT);
-        addKeywords(Keyword.TRANSPORT_SHIP);
         setPilotCapacity(2);
         setPassengerCapacity(6);
         setTestingText("Beckett's Stolen AT-Hauler");
