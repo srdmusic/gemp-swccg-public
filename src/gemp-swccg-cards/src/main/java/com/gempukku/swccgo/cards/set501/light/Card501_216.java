@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
