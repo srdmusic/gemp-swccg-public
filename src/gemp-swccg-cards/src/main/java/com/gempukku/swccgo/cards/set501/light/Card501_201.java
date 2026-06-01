@@ -1,184 +1,108 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractLostInterrupt;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
-import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.StealCardAndAttachFromTableEffect;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ResetPersonalForceGenerationModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
- * Set: Set 21
- * Type: Interrupt
- * Subtype: Lost
- * Title: A Jedi's Fury
+ * Set: Playtesting
+ * Type: Effect
+ * Title: Commando Training (V)
  */
-public class Card501_201 extends AbstractLostInterrupt {
+public class Card501_201 extends AbstractNormalEffect {
     public Card501_201() {
-        super(Side.LIGHT, 5, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
-        setGameText("If His Destiny on table, choose: Luke steals Luke's Lightsaber. (Immune to Weapon Of A Sith.) OR Cancel Dark Strike, Force Field, or You Are Beaten. OR Cancel the game text of a Dark Jedi with Luke for remainder of turn. OR Target a Jedi. Target is power +2 for remainder of turn.");
-        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
-        setTestingText("A Jedi's Fury");
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Commando_Training, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Han's Rebel strike team on the forest moon of Endor was highly trained in the use of blasters and explosives.");
+        setGameText("Deploy on table. Your personal Force generation = 2. You initiate battles for free. During your control phase, if you occupy four battlegrounds and/or opponent's locations, opponent loses 1 Force. You may not deploy characters except Rebels or droids. (Immune to Alter.)");
+        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_27);
+        addImmuneToCardTitle(Title.Alter);
+        setVirtualSuffix(true);
+        setTestingText("Commando Training (V)");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Dark_Strike, Filters.Force_Field, Filters.You_Are_Beaten))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)
-                && GameConditions.canTarget(game, self, Filters.His_Destiny)) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        String playerId = self.getOwner();
+        modifiers.add(new ResetPersonalForceGenerationModifier(self, 2, self.getOwner()));
+        modifiers.add(new InitiateBattlesForFreeModifier(self, playerId));
+        Filter characterFilter = Filters.and(Filters.character, Filters.not(Filters.or(Filters.Rebel, Filters.droid)));
+        modifiers.add(new MayNotDeployModifier(self, characterFilter, playerId));
+        return modifiers;
+    }
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        final String opponent = game.getOpponent(playerId);
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        Filter locationFilter = Filters.or(Filters.battleground, Filters.and(Filters.opponents(self), Filters.location));
+
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && GameConditions.occupies(game, playerId, 4, locationFilter)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make opponent lose 1 Force");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerPhaseEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, 1));
             return Collections.singletonList(action);
         }
         return null;
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
-        
-        TargetingReason targetingReason = TargetingReason.TO_BE_STOLEN;
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        final String playerId = self.getOwner();
+        final String opponent = game.getOpponent(playerId);
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        Filter locationFilter = Filters.or(Filters.battleground, Filters.and(Filters.opponents(self), Filters.location));
 
         // Check condition(s)
-        if (GameConditions.canTarget(game, self, Filters.His_Destiny)) {
-            final Filter characterFilter = Filters.and(Filters.character, Filters.Luke);
-            final Filter weaponFilter = Filters.and(Filters.opponents(self), Filters.character_weapon, Filters.Lukes_Lightsaber, Filters.canBeStolenBy(self, characterFilter));
-            if (GameConditions.canTarget(game, self, targetingReason, weaponFilter)) {
+        if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && GameConditions.occupies(game, playerId, 4, locationFilter)) {
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setImmuneTo(Title.Weapon_Of_A_Sith);
-                action.setText("Luke steals Luke's Lightsaber");
-                // Choose target(s)
-                action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose Luke's Lightsaber to steal", targetingReason, weaponFilter) {
-                            @Override
-                            protected void cardTargeted(final int targetGroupId1, final PhysicalCard weapon) {
-                                final Filter characterToStealWeaponFilter = Filters.and(characterFilter, Filters.canStealAndCarry(weapon));
-                                action.appendTargeting(
-                                        new TargetCardOnTableEffect(action, playerId, "Choose Luke to steal weapon", characterToStealWeaponFilter) {
-                                            @Override
-                                            protected void cardTargeted(final int targetGroupId2, PhysicalCard character) {
-                                                // Allow response(s)
-                                                action.allowResponses("Have " + GameUtils.getCardLink(character) + " 'steal' " + GameUtils.getCardLink(weapon),
-                                                        new RespondablePlayCardEffect(action) {
-                                                            @Override
-                                                            protected void performActionResults(Action targetingAction) {
-                                                                // Get the targeted card(s) from the action using the targetGroupId.
-                                                                // This needs to be done in case the target(s) were changed during the responses.
-                                                                PhysicalCard finalWeapon = action.getPrimaryTargetCard(targetGroupId1);
-                                                                PhysicalCard finalCharacter = action.getPrimaryTargetCard(targetGroupId2);
-
-                                                                // Perform result(s)
-                                                                action.appendEffect(
-                                                                        new StealCardAndAttachFromTableEffect(action, finalWeapon, finalCharacter));
-                                                            }
-                                                        }
-                                                );
-                                            }
-                                        }
-                                    );
-                            }
-                        });
-                    
-                actions.add(action);
-            }
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make opponent lose 1 Force");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerPhaseEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, 1));
+            return Collections.singletonList(action);
         }
-
-        if (GameConditions.canTarget(game, self, Filters.His_Destiny)) {
-            Filter filterDarkJedi = Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.with(self, Filters.Luke));
-
-            if (GameConditions.canTarget(game, self, filterDarkJedi)) {
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Cancel game text of a Dark Jedi");
-                // Choose target(s)
-                action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose Dark Jedi", filterDarkJedi) {
-                            @Override
-                            protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                                action.addAnimationGroup(targetedCard);
-                                // Allow response(s)
-                                action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard) + "'s game text",
-                                        new RespondablePlayCardEffect(action) {
-                                            @Override
-                                            protected void performActionResults(Action targetingAction) {
-                                                // Get the targeted card(s) from the action using the targetGroupId.
-                                                // This needs to be done in case the target(s) were changed during the responses.
-                                                final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-
-                                                // Perform result(s)
-                                                action.appendEffect(
-                                                        new CancelGameTextUntilEndOfTurnEffect(action, finalTarget));
-                                            }
-                                        }
-                                );
-                            }
-                        }
-                );
-                actions.add(action);
-            }
-        }
-
-        Filter filterJedi = Filters.Jedi;
-        if (GameConditions.canTarget(game, self, Filters.His_Destiny)
-                && GameConditions.canTarget(game, self, filterJedi)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Target a Jedi to be power +2");
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Jedi", filterJedi) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Make " + GameUtils.getCardLink(targetedCard) + " power +2",
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Get the targeted card(s) from the action using the targetGroupId.
-                                            // This needs to be done in case the target(s) were changed during the responses.
-                                            final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-
-                                            // Perform result(s)
-                                            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action,
-                                                    new PowerModifier(self, finalTarget, 2)
-                                                    , "Makes " + GameUtils.getCardLink(finalTarget) + " power +2"));
-                                        }
-                                    }
-                            );
-                        }
-                    }
-            );
-            actions.add(action);
-        }
-        return actions;
+        return null;
     }
 }

@@ -18,8 +18,9 @@ public interface Title {
     String A_Great_Tactician_Creates_Plans = "A Great Tactician Creates Plans";
     String A_Jedis_Resilience = "A Jedi's Resilience";
     String A_Million_Voices_Crying_Out = "A Million Voices Crying Out";
-    String A_Siths_Plans = "A Sith's Plans";
+    String A_New_Hope = "A New Hope";
     String A_Power_Loss = "A Power Loss";
+    String A_Siths_Plans = "A Sith's Plans";
     String A_Sith_Legend = "A Sith Legend";
     String A_Stunning_Move = "A Stunning Move";
     String A_Useless_Gesture = "A Useless Gesture";
@@ -226,6 +227,7 @@ public interface Title {
     String Come_With_Me = "Come With Me";
     String Comlink = "Comlink";
     String Comm_Chief = "Comm Chief";
+    String Commando_Training = "Commando Training";
     String Commence_Primary_Ignition = "Commence Primary Ignition";
     String Commence_Recharging = "Commence Recharging";
     String Communing = "Communing";
@@ -339,6 +341,7 @@ public interface Title {
     String Dont_Underestimate_Our_Chances = "Don't Underestimate Our Chances";
     String Double_Agent = "Double Agent";
     String Double_Back = "Double Back";
+    String Double_Crossing_No_Good_Swindler = "Double-Crossing, No-Good Swindler";
     String Double_Laser_Cannon = "Double Laser Cannon";
     String Downtown_Plaza = "Cloud City: Downtown Plaza";
     String Duel_Of_The_Fates = "Duel Of The Fates";
@@ -836,6 +839,7 @@ public interface Title {
     String Oh_Switch_Off = "Oh, Switch Off";
     String Old_Allies = "Old Allies";
     String Old_Ben = "Old Ben";
+    String Old_Pirates = "Old Pirates";
     String Ominous_Rumors = "Ominous Rumors";
     String Ommni_Box = "Ommni Box";
     String Ommni_Box_Its_Worse = "Ommni Box & It's Worse";
@@ -923,6 +927,7 @@ public interface Title {
     String Quad_Laser_Cannon = "Quad Laser Cannon";
     String Quiet_Mining_Colony = "Quiet Mining Colony";
     String Quietly_Observing = "Quietly Observing";
+    String QuiGon_Jinn = "Qui-Gon Jinn";
     String Quite_A_Mercenary = "Quite A Mercenary";
     String Quiggold = "Quiggold";
     String Radar_Scanner = "Radar Scanner";
@@ -998,6 +1003,7 @@ public interface Title {
     String Sabine = "Sabine Wren";
     String Sabotage = "Sabotage";
     String Sacrifice = "Sacrifice";
+    String Sacrifice_For_Something_Bigger = "Sacrifice For Something Bigger";
     String Safehouse = "Mapuzo: Safehouse";
     String Saitorr_Kal_Fas = "Sai'torr Kal Fas";
     String Salm = "Colonel Salm";
@@ -1153,6 +1159,7 @@ public interface Title {
     String The_Force_Is_Strong_In_My_Family = "The Force Is Strong In My Family";
     String The_Force_Is_Strong_With_This_One = "The Force Is Strong With This One";
     String The_Galaxy_May_Need_A_Legend = "The Galaxy May Need A Legend";
+    String The_Greatest_Of_All_The_Jedi = "The Greatest Of All The Jedi";
     String The_Hidden_Path = "The Hidden Path";
     String The_Hyperdrive_Generators_Gone = "The Hyperdrive Generator's Gone";
     String The_Mythrol = "The Mythrol";

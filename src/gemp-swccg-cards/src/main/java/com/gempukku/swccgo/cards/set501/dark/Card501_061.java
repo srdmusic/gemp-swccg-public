@@ -1,84 +1,171 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractSystem;
+import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.takeandputcards.StackCardFromHandEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.BlowAwayEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.StandardEffect;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 11
- * Type: Location
- * Subtype: System
- * Title: D'Qar
+ * Set: Set 25
+ * Type: Epic Event
+ * Title: Tracked Fleet
  */
-public class Card501_061 extends AbstractSystem {
+public class Card501_061 extends AbstractEpicEventDeployable {
     public Card501_061() {
-        super(Side.DARK, Title.Dqar, 5, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Once per game, if you just moved a [First Order] starship to here, may activate 2 Force.");
-        setLocationLightSideGameText("Once per game, may [download] Connix, Paige, or Tallie here.");
-        addIcon(Icon.DARK_FORCE, 2);
-        addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_11);
-        setTestingText("D'Qar");
+        super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.Tracked_Fleet, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setGameText("Deploy on D'Qar system (only at start of game). Tied To The End Of A String: You may not deploy starships here. Supremacy moves to here for free. There Will Be No Surrender: Three times per game, at start of opponent's move phase, opponent may stack a card from hand (or from top of Lost Pile) face down on this card to relocate it to an [Episode VII] system within 3 parsecs. Fire At Will!: At the start of your turn, if you control this system, Tracked Fleet is 'annihilated' (placed out of play).");
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
+        setTestingText("Tracked Fleet");
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextDarkSideOptionalAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.Dqar_system;
+    }
 
-        GameTextActionId gameTextActionId = GameTextActionId.DQAR__ACTIVATE_2_FORCE;
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return GameConditions.isDuringStartOfGame(game);
+    }
 
-        if (TriggerConditions.movedToLocationBy(game, effectResult, playerOnDarkSideOfLocation, Filters.and(Icon.FIRST_ORDER, Filters.starship), self)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Activate 2 Force");
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            action.appendEffect(
-                    new ActivateForceEffect(action, playerOnDarkSideOfLocation, 2));
-            actions.add(action);
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.and(Filters.your(self),Filters.starship), Filters.sameLocation(self)));
+        modifiers.add(new MovesFreeToLocationModifier(self, Filters.Supremacy, Filters.sameLocation(self)));
+        return modifiers;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        final String playerId = self.getOwner();
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        if (TriggerConditions.isStartOfYourTurn(game, effectResult, self)
+            && GameConditions.controls(game, playerId, Filters.here(self))) {
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setPerformingPlayer(playerId);
+                action.setText("Annihilate Tracked Fleet");
+                action.appendEffect(
+                    new BlowAwayEffect(action, self){
+                        @Override
+                        protected StandardEffect getAdditionalGameTextEffect(SwccgGame game, Action blowAwaySubAction){
+                            return new PlaceCardOutOfPlayFromTableEffect(blowAwaySubAction, self);
+                        }
+                    });
+                return Collections.singletonList(action);
         }
-        return actions;
+
+        return null;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-        GameTextActionId gameTextActionId = GameTextActionId.DQAR__DEPLOY_CHARACTER;
+    protected List<OptionalGameTextTriggerAction> getOpponentsCardGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        Filter systemToRelocateTo = Filters.and(Icon.EPISODE_VII, Filters.system, Filters.withinParsecsOf(self, 3), Filters.not(Filters.here(self)));
 
         // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, new HashSet<Persona>(Arrays.asList(Persona.CONNIX, Persona.PAIGE, Persona.TALLIE_LINTRA)))) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Connix, Paige, or Tallie here");
-            action.setActionMsg("Deploy Connix, Paige, or Tallie here from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.Connix, Filters.Paige, Filters.Tallie), Filters.here(self), true));
-            actions.add(action);
+        if (TriggerConditions.isStartOfYourPhase(game, effectResult, Phase.MOVE, playerId)
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
+                && GameConditions.canSpotLocation(game, systemToRelocateTo)
+                && !(GameConditions.hasStackedCards(game, self, 3))) {
+
+                //Stack card from hand action
+                if (GameConditions.hasHand(game, playerId)) {
+                    final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                    action.setText("Stack card from hand");
+                    // Choose target(s)
+                    action.appendUsage(new OncePerPhaseEffect(action));
+                    action.appendTargeting(
+                            new ChooseCardOnTableEffect(action, playerId, "Choose system to relocate " + GameUtils.getCardLink(self) + " to", systemToRelocateTo) {
+                                @Override
+                                protected void cardSelected(final PhysicalCard systemSelected) {
+                                    action.addAnimationGroup(self);
+                                    action.addAnimationGroup(systemSelected);
+                                    // Pay cost(s)
+                                    action.appendCost(
+                                            new StackCardFromHandEffect(action, playerId, self, true));
+                                    // Allow response(s)
+                                    action.allowResponses("Relocate " + GameUtils.getCardLink(self) + " to " + GameUtils.getCardLink(systemSelected),
+                                            new UnrespondableEffect(action) {
+                                                @Override
+                                                protected void performActionResults(Action action) {
+                                                    // Perform result(s)
+                                                    action.appendEffect(
+                                                            new AttachCardFromTableEffect(action, self, systemSelected));
+                                                }
+                                            });
+                                }
+                            });
+                    actions.add(action);
+                }
+
+                //Stack card from Lost Pile action. Intentionally shared gameTextActionId so player can only use one, not both
+                if (GameConditions.hasLostPile(game, playerId)) {
+                    final OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                    action2.setText("Stack card from Lost Pile");
+                    // Choose target(s)
+                    action2.appendUsage(new OncePerPhaseEffect(action2));
+                    action2.appendTargeting(
+                            new ChooseCardOnTableEffect(action2, playerId, "Choose system to relocate " + GameUtils.getCardLink(self) + " to", systemToRelocateTo) {
+                                @Override
+                                protected void cardSelected(final PhysicalCard systemSelected) {
+                                    action2.addAnimationGroup(self);
+                                    action2.addAnimationGroup(systemSelected);
+                                    // Pay cost(s)
+                                    final PhysicalCard topCardOfLostPile = game.getGameState().getTopOfLostPile(playerId);
+                                    action2.appendCost(
+                                            new StackOneCardFromLostPileEffect(action2, topCardOfLostPile, self, true, false, false)
+                                    );
+                                    // Allow response(s)
+                                    action2.allowResponses("Relocate " + GameUtils.getCardLink(self) + " to " + GameUtils.getCardLink(systemSelected),
+                                            new UnrespondableEffect(action2) {
+                                                @Override
+                                                protected void performActionResults(Action action2) {
+                                                    // Perform result(s)
+                                                    action2.appendEffect(
+                                                            new AttachCardFromTableEffect(action2, self, systemSelected));
+                                                }
+                                            });
+                                }
+                            });
+                    actions.add(action2);
+                }
         }
         return actions;
     }

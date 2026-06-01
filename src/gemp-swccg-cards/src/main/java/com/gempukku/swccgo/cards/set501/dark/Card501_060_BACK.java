@@ -36,8 +36,8 @@ import java.util.List;
  * Type: Objective
  * Title: The First Order Reigns / The Resistance Is Doomed
  */
-public class Card501_069_BACK extends AbstractObjective {
-    public Card501_069_BACK() {
+public class Card501_060_BACK extends AbstractObjective {
+    public Card501_060_BACK() {
         super(Side.DARK, 7, Title.The_Resistance_Is_Doomed, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("While this side up, once per turn, may deploy a non-unique trooper (or non-unique [First Order] vehicle) from Lost Pile. While Kylo occupies a Crait location, your Force drains at battlegrounds where you have two First Order characters are +1. While Kylo controls Salt Plateau, opponent may not Force drain where their character or permanent pilot is alone and opponent's Force retrieval is canceled. Place out of play if Kylo was just forfeited from a battle you lost at Salt Plateau where Han, Leia, or Luke present.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
