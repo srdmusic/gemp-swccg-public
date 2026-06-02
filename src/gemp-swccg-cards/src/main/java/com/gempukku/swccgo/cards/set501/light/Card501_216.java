@@ -40,6 +40,8 @@ public class Card501_216 extends AbstractStarfighter {
         addModelType(ModelType.Y_45_ARMORED_TRANSPORT);
         setPilotCapacity(2);
         setPassengerCapacity(6);
+        setAlwaysStolen(true);
+        setMatchingPilotFilter(Filters.Beckett);
         setTestingText("Beckett's Stolen AT-Hauler");
     }
     
