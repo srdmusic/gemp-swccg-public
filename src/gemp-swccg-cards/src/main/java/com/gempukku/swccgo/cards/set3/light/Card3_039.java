@@ -29,12 +29,15 @@ import com.gempukku.swccgo.logic.effects.RecordUtinniEffectCompletedEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.results.BattleInitiatedResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -79,6 +82,7 @@ public class Card3_039 extends AbstractUtinniEffect {
         String playerId = self.getOwner();
         final GameState gameState = game.getGameState();
         final int permCardId = self.getPermanentCardId();
+        final PhysicalCard target = self.getTargetedCard(gameState, TargetId.UTINNI_EFFECT_TARGET_1);
 
         // Check condition(s)
         if (TriggerConditions.justDeployed(game, effectResult, self)) {
@@ -88,15 +92,13 @@ public class Card3_039 extends AbstractUtinniEffect {
                     PhysicalCard self = gameState.findCardByPermanentId(permCardId);
 
                     if (self.getTargetedCard(gameState, TargetId.UTINNI_EFFECT_TARGET_1) != null) {
-                        return 2 * Filters.countActive(game, self, Filters.and(Filters.aboardAsPassenger(self.getTargetedCard(gameState, TargetId.UTINNI_EFFECT_TARGET_1))));
+                        return 2 * Filters.countActive(game, self, Filters.and(Filters.aboardAsPassenger(target)));
                     }
                     return 0;
                 }
             };
             self.setWhileInPlayData(new WhileInPlayData(evaluator));
         }
-
-        PhysicalCard target = self.getTargetedCard(gameState, TargetId.UTINNI_EFFECT_TARGET_1);
 
         // Check condition(s)
         if (!GameConditions.isUtinniEffectReached(game, self)
@@ -126,7 +128,16 @@ public class Card3_039 extends AbstractUtinniEffect {
             action.appendEffect(
                     new RecordUtinniEffectCompletedEffect(action, self));
             action.appendEffect(
-                    new RetrieveForceEffect(action, playerId, forceToRetrieve));
+                    new RetrieveForceEffect(action, playerId, forceToRetrieve) {
+                        @Override
+                        public Collection<PhysicalCard> getAdditionalCardsInvolvedInForceRetrieval() {
+                            return Filters.filterActive(game, null, Filters.or(target, Filters.aboardAsPassenger(target)));
+                        }
+                        @Override
+                        public boolean mayBeTakenIntoHand() {
+                            return GameConditions.hasGameTextModification(game, self, ModifyGameTextType.THE_FIRST_TRANSPORT_IS_AWAY__RETRIEVE_FORCE_INTO_HAND);
+                        }
+                    });
             if (hothSystem != null) {
                 action.appendEffect(
                         new AttachCardFromTableEffect(action, self, hothSystem));

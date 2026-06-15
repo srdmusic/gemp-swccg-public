@@ -29,11 +29,13 @@ import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RecordUtinniEffectCompletedEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -71,7 +73,7 @@ public class Card4_036 extends AbstractUtinniEffect {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
         final GameState gameState = game.getGameState();
-        PhysicalCard target = self.getTargetedCard(gameState, TargetId.UTINNI_EFFECT_TARGET_1);
+        final PhysicalCard target = self.getTargetedCard(gameState, TargetId.UTINNI_EFFECT_TARGET_1);
 
         // Check condition(s)
         if (TriggerConditions.justDeployed(game, effectResult, self)) {
@@ -137,7 +139,16 @@ public class Card4_036 extends AbstractUtinniEffect {
                 action.appendEffect(
                         new LoseCardFromTableEffect(action, self));
                 action.appendEffect(
-                        new RetrieveForceEffect(action, playerId, forceToRetrieve));
+                        new RetrieveForceEffect(action, playerId, forceToRetrieve) {
+                            @Override
+                            public Collection<PhysicalCard> getAdditionalCardsInvolvedInForceRetrieval() {
+                                return Collections.singletonList(target);
+                            }
+                            @Override
+                            public boolean mayBeTakenIntoHand() {
+                                return GameConditions.hasGameTextModification(game, self, ModifyGameTextType.RYCARS_RUN__RETRIEVE_FORCE_INTO_HAND);
+                            }
+                        });
                 return Collections.singletonList(action);
             }
         }

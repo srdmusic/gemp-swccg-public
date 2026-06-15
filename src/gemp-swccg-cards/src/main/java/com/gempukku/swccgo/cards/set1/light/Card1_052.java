@@ -28,6 +28,7 @@ import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RecordUtinniEffectCompletedEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
@@ -160,6 +161,10 @@ public class Card1_052 extends AbstractUtinniEffect {
                                     @Override
                                     public Collection<PhysicalCard> getAdditionalCardsInvolvedInForceRetrieval() {
                                         return Collections.singletonList(target);
+                                    }
+                                    @Override
+                                    public boolean mayBeTakenIntoHand() {
+                                        return GameConditions.hasGameTextModification(game, self, ModifyGameTextType.KESSEL_RUN__RETRIEVE_FORCE_INTO_HAND);
                                     }
                                 });
                         action.appendEffect(
