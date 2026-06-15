@@ -4326,6 +4326,6 @@ const fixedImages = {
 "200_110ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/knowledgeanddefense_ai.png",
 "200_35ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/angerfearaggression_ai.png",
 "215_4ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/calkestis_ai.png",
-"206_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/large/k2sokaytuesso_ai.gif",
+"206_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/k2sokaytuesso_ai.png",
 
 };
