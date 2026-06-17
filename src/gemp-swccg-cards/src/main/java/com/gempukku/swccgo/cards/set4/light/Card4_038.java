@@ -5,6 +5,7 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.PilotingCondition;
 import com.gempukku.swccgo.cards.conditions.TargetedByUtinniEffectCondition;
 import com.gempukku.swccgo.cards.conditions.TrainedByCondition;
+import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -18,6 +19,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
@@ -27,6 +29,7 @@ import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Effect;
 
 import java.util.Collections;
@@ -83,29 +86,93 @@ public class Card4_038 extends AbstractNormalEffect {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        PhysicalCard attachedTo = self.getAttachedTo();
-        Condition trainedByRycar = new TrainedByCondition(attachedTo, Filters.Rycar_Ryjerd);
+        int _permCardId = self.getPermanentCardId();
 
-        Condition qualifyingKesselRunCondition = new AndCondition(
-                trainedByRycar,
-                new PilotingCondition(attachedTo),
-                new TargetedByUtinniEffectCondition(attachedTo,Filters.Kessel_Run));
+        Condition kesselRunCondition = new Condition() {
+            @Override
+            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                SwccgGame game = gameState.getGame();
+                PhysicalCard card = gameState.findCardByPermanentId(_permCardId);
+                PhysicalCard smuggler = card.getAttachedTo();
+                PhysicalCard starship = game.getModifiersQuerying().getIsPilotOf(gameState, smuggler);
+                if (starship == null || !starship.getBlueprint().isCardType(CardType.STARSHIP)) //in case piloting vehicle?
+                    return false;
 
-        Condition qualifyingRycarsRunCondition = new AndCondition(
-                trainedByRycar,
-                new PilotingCondition(attachedTo,Filters.targetedByCardOnTable(Filters.Rycars_Run)));
-        ////////cannot use Filters.targetedByCardOnTable inside condition/modifier due to loop / stack overflow issues
+                for (PhysicalCard utinniEffect : Filters.filterActive(game, card, Filters.Kessel_Run)) {
+                    // Check if attached to smuggler
+                    if (Filters.hasAttached(utinniEffect).accepts(game, smuggler)) {
+                        return true;
+                    }
 
-        Condition qualifyingFirstTransportCondition = new AndCondition(
-                trainedByRycar,
-                new PilotingCondition(attachedTo,Filters.targetedByCardOnTable(Filters.The_First_Transport_Is_Away)));
-        ////////cannot use Filters.targetedByCardOnTable inside condition/modifier due to loop / stack overflow issues
+                    // Check if explicitly targeting the starship
+                    if (utinniEffect.getTargetedCards(gameState).values().contains(starship)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        };
+
+
+        Condition rycarsRunCondition = new Condition() {
+            @Override
+            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                SwccgGame game = gameState.getGame();
+                PhysicalCard card = gameState.findCardByPermanentId(_permCardId);
+                PhysicalCard smuggler = card.getAttachedTo();
+                PhysicalCard starship = game.getModifiersQuerying().getIsPilotOf(gameState, smuggler);
+                if (starship == null || !starship.getBlueprint().isCardType(CardType.STARSHIP)) //in case piloting vehicle?
+                    return false;
+
+                for (PhysicalCard utinniEffect : Filters.filterActive(game, card, Filters.Rycars_Run)) {
+                    // Check if attached to smuggler
+                    if (Filters.hasAttached(utinniEffect).accepts(game, smuggler)) {
+                        return true;
+                    }
+
+                    // Check if explicitly targeting the starship
+                    if (utinniEffect.getTargetedCards(gameState).values().contains(starship)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        };
+
+        Condition theFirstTransportIsAwayCondition = new Condition() {
+            @Override
+            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                SwccgGame game = gameState.getGame();
+                PhysicalCard card = gameState.findCardByPermanentId(_permCardId);
+                PhysicalCard smuggler = card.getAttachedTo();
+                PhysicalCard starship = game.getModifiersQuerying().getIsPilotOf(gameState, smuggler);
+                if (starship == null || !starship.getBlueprint().isCardType(CardType.STARSHIP)) //in case piloting vehicle?
+                    return false;
+
+                for (PhysicalCard utinniEffect : Filters.filterActive(game, card, Filters.The_First_Transport_Is_Away)) {
+                    // Check if attached to smuggler
+                    if (Filters.hasAttached(utinniEffect).accepts(game, smuggler)) {
+                        return true;
+                    }
+
+                    // Check if explicitly targeting the starship
+                    if (utinniEffect.getTargetedCards(gameState).values().contains(starship)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        };
+
+        Condition trainedByRycar = new TrainedByCondition(self.getAttachedTo(), Filters.Rycar_Ryjerd);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Kessel_Run, qualifyingKesselRunCondition, ModifyGameTextType.KESSEL_RUN__RETRIEVE_FORCE_INTO_HAND));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Rycars_Run, qualifyingRycarsRunCondition, ModifyGameTextType.RYCARS_RUN__RETRIEVE_FORCE_INTO_HAND));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.The_First_Transport_Is_Away, qualifyingFirstTransportCondition, ModifyGameTextType.THE_FIRST_TRANSPORT_IS_AWAY__RETRIEVE_FORCE_INTO_HAND));
-
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Kessel_Run, new AndCondition(trainedByRycar, kesselRunCondition), ModifyGameTextType.KESSEL_RUN__RETRIEVE_FORCE_INTO_HAND));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Rycars_Run, new AndCondition(trainedByRycar, rycarsRunCondition), ModifyGameTextType.RYCARS_RUN__RETRIEVE_FORCE_INTO_HAND));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.The_First_Transport_Is_Away, new AndCondition(trainedByRycar, theFirstTransportIsAwayCondition), ModifyGameTextType.THE_FIRST_TRANSPORT_IS_AWAY__RETRIEVE_FORCE_INTO_HAND));
         return modifiers;
     }
 }
