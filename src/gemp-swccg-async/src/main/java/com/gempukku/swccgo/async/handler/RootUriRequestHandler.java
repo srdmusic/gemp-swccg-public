@@ -33,6 +33,7 @@ public class RootUriRequestHandler implements UriRequestHandler {
     private final PlayerStatsRequestHandler _playerStatsRequestHandler;
     private final TournamentRequestHandler _tournamentRequestHandler;
     private SoloDraftRequestHandler _soloDraftRequestHandler;
+    private final ImageProxyRequestHandler _imageProxyRequestHandler;
 
     private final Pattern originPattern;
 
@@ -59,11 +60,15 @@ public class RootUriRequestHandler implements UriRequestHandler {
         _playerStatsRequestHandler = new PlayerStatsRequestHandler(context);
         _tournamentRequestHandler = new TournamentRequestHandler(context);
         _soloDraftRequestHandler = new SoloDraftRequestHandler(context);
+        _imageProxyRequestHandler = new ImageProxyRequestHandler();
     }
 
     @Override
     public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
-        if (uri.startsWith(_webContextPath)) {
+        if (uri.startsWith(_webContextPath + "imageproxy")) {
+            // Card-image CORS proxy for the Unity (Epic Duel) client.
+            _imageProxyRequestHandler.handleRequest(uri, request, context, responseWriter, remoteIp);
+        } else if (uri.startsWith(_webContextPath)) {
             _webRequestHandler.handleRequest(uri.substring(_webContextPath.length()), request, context, responseWriter, remoteIp);
         } else if (uri.equals("/gemp-swccg")) {
             responseWriter.writeError(301, Collections.singletonMap("Location", "/gemp-swccg/"));

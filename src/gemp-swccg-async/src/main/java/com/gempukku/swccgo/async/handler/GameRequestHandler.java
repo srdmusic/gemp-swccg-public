@@ -307,7 +307,14 @@ public class GameRequestHandler extends SwccgoServerRequestHandler implements Ur
                     return Collections.emptySet();
             }
         }
-        return _autoPassDefault;
+        // AUTO-PASS FIX (2026-06-22, Option B): the epic-duel Unity client sends NO cookie,
+        // so it fell through here to _autoPassDefault (all 6 phases) and auto-passed the
+        // player's DEPLOY/BATTLE/MOVE, skipping the turn. Commenting out DEPLOY alone did
+        // NOT fix it, so return an EMPTY set: a cookieless client auto-passes NOTHING and the
+        // player controls every phase. The standard web GUI sends its own autoPassPhases
+        // cookie above and is unaffected. To revert: restore `return _autoPassDefault;`.
+        // return _autoPassDefault;
+        return Collections.emptySet();
     }
 
     private class SerializationVisitor implements ParticipantCommunicationVisitor {

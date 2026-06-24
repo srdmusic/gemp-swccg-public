@@ -134,8 +134,14 @@ public class DrawEvaluator extends ActionEvaluator {
             EvaluatedAction action = new EvaluatedAction(actionId, ActionType.DRAW, 0.0f, actionText);
 
             // Check if this response is blocked (loop prevention)
+            // V163: was a HARD VETO. V167 (Steve, 2026-06): drawing is phase-fundamental —
+            // a permanent block stalls the bot (same class as the Activate-Force stall that
+            // froze Rando after turn 5). Soft-discourage only (-200) so a loop is nudged but
+            // the bot can always still draw. (The DrawEvaluator only ever scores draw actions,
+            // so none of them should ever be hard-vetoed.)
             if (blocked.contains(actionId) || blocked.contains(actionText)) {
-                action.addReasoning("BLOCKED (loop prevention)", -200.0f);
+                action.addReasoning("BLOCKED (loop prevention) — soft (V167: draws never hard-vetoed)", -200.0f);
+                logger.warn("V167: soft-block (not hard veto) on draw action: {}", actionText);
             }
 
             // Rank the draw action
@@ -176,6 +182,18 @@ public class DrawEvaluator extends ActionEvaluator {
         // Get force generation for forward planning
         int forceGeneration = calculateForceGeneration(context);
 
+        // === V42: EMERGENCY DRAW — empty hand is a death spiral ===
+        // If hand is 0-2, we MUST draw regardless of other considerations.
+        // An empty hand means no deploys, no interrupts, no responses — game over.
+        if (handSize <= 2 && forcePile >= 1 && reserveDeck >= 2) {
+            float emergencyBonus = (3 - handSize) * 200.0f; // 0 cards = +600, 1 = +400, 2 = +200
+            action.addReasoning(String.format(
+                "V42 EMERGENCY DRAW: Hand has only %d cards — MUST draw to stay in the game!", handSize),
+                emergencyBonus);
+            logger.warn("V42 EMERGENCY DRAW: hand={}, force={}, reserve={} — bonus +{}",
+                handSize, forcePile, reserveDeck, emergencyBonus);
+        }
+
         // === CRITICAL: LIFE FORCE BASED HAND LIMIT ===
         if (remainingLifeForce < CRITICAL_LIFE_FORCE) {
             float penalty = VERY_BAD_DELTA * 0.8f;
@@ -207,6 +225,27 @@ public class DrawEvaluator extends ActionEvaluator {
             return;
         }
 
+        // === V182 (Steve, 2026-06): OFFENSIVE FORCE-BANKING ===
+        // Steve's bottleneck rule: if we already hold ENOUGH CHARACTERS in hand to win
+        // a fight we're currently losing, but lacked the FORCE to deploy them, STOP
+        // drawing — bank the force so next turn we deploy the army and take the fight.
+        // (If we DON'T have enough characters, computeOffensiveBank returns 0 and we
+        // fall through to normal drawing, which finds more — the other half of the rule.)
+        // Guarded to handSize >= 4 so we never strand ourselves card-starved for the
+        // sake of a battle; the V58 DRAW-DOWN that would otherwise convert this force
+        // into hand cards is skipped by the early return.
+        if (handSize >= 4) {
+            int v182Bank = computeOffensiveBank(context, forcePile, forceGeneration);
+            if (v182Bank > 0 && forcePile < v182Bank) {
+                action.addReasoning(String.format(
+                    "V182 BANK FORCE: hand has the army to win a contested fight (need %d force, have %d) — hold it, don't draw it away",
+                    v182Bank, forcePile), VERY_BAD_DELTA * 2f);
+                logger.warn("V182 BANK FORCE: need={} forcePile={} gen={} — suppress draw, bank for next-turn army",
+                    v182Bank, forcePile, forceGeneration);
+                return;  // skip all draw bonuses — let PASS win so the force banks
+            }
+        }
+
         // === NON-STRATEGIC HOLD-BACK: DRAW TO FIND OPTIONS ===
         // If we held back this turn because we COULDN'T deploy (not strategic save),
         // draw aggressively to find new options. This prevents sitting with
@@ -223,6 +262,32 @@ public class DrawEvaluator extends ActionEvaluator {
         if (applyForceStarvedLogic(action, context, forcePile, forceGeneration, handSize)) {
             // If force-starved logic strongly suggests not drawing, exit early
             return;
+        }
+
+        // === V24.10: DIG FOR PIETT — KEY ENGINE CARD ===
+        // Piett is THE critical pilot for TDIGWATT's Executor engine.
+        // If Piett isn't in hand or reserve, he's stuck in the force pile — draw to find him.
+        // The earlier we find Piett, the earlier Executor gets on the table via AMSD.
+        com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle drawOracle = context.getDeckOracle();
+        if (drawOracle != null && drawOracle.isAnalyzed()) {
+            boolean piettInHand = drawOracle.isCardInHand("Admiral Piett") || drawOracle.isCardInHand("Piett");
+            boolean piettInReserve = drawOracle.isCardInReserve("Admiral Piett") || drawOracle.isCardInReserve("Piett");
+            boolean piettInPlay = drawOracle.isCardInPlay("Admiral Piett") || drawOracle.isCardInPlay("Piett");
+            boolean piettLost = drawOracle.isCardLost("Admiral Piett") || drawOracle.isCardLost("Piett");
+
+            if (!piettInHand && !piettInReserve && !piettInPlay && !piettLost) {
+                // Piett is in the force pile (or used pile cycling back) — DRAW to find him!
+                float piettBonus = 0.0f;
+                if (turnNumber <= 2) {
+                    piettBonus = 200.0f;  // Turns 1-2: maximum urgency — Executor MUST come out
+                } else if (turnNumber <= 4) {
+                    piettBonus = 150.0f;  // Turns 3-4: still very important
+                } else {
+                    piettBonus = 80.0f;   // Later turns: still worth finding
+                }
+                action.addReasoning("V24.10 DIG FOR PIETT: Not in hand/reserve — must be in force pile! Draw to find him!", piettBonus);
+                logger.warn("V24.10 PIETT DIG: Piett not in hand/reserve/play/lost — drawing aggressively to find him! (+{})", piettBonus);
+            }
         }
 
         // === BASELINE: DRAW TOWARDS DYNAMIC SOFT CAP ===
@@ -248,13 +313,24 @@ public class DrawEvaluator extends ActionEvaluator {
         }
 
         // === FORCE RESERVATION FOR OPPONENT'S TURN ===
-        // Enhanced: Reserve more force if we have presence at contested locations
+        // V58: Reserve is now accurate (DTF, First Strike, maintenance,
+        // contested count). If force pile is ABOVE reserve, we should
+        // aggressively DRAW the surplus into hand — hoarding does nothing.
         int forceToReserve = calculateForceToReserve(context, handSize);
-        if (turnNumber >= 4) {
-            if (forcePile <= forceToReserve) {
-                action.addReasoning("Turn " + turnNumber + ": reserve " + forceToReserve + " force for reactions/battles",
-                                   BAD_DELTA * 1.5f);
-            }
+        int drawableSurplus = Math.max(0, forcePile - forceToReserve);
+        if (drawableSurplus > 0 && handSize < effectiveMaxHand && reserveDeck > 2) {
+            // +80 per card of surplus, capped at +400. Beats most penalties.
+            float surplusBonus = Math.min(400.0f, 80.0f * drawableSurplus);
+            action.addReasoning(String.format(
+                "V58 DRAW-DOWN: force pile %d > reserve %d — draw %d surplus into hand!",
+                forcePile, forceToReserve, drawableSurplus), surplusBonus);
+            logger.warn("V58 DRAW-DOWN: pile={}, reserve={}, surplus={} → +{}",
+                forcePile, forceToReserve, drawableSurplus, (int)surplusBonus);
+        }
+        if (forcePile <= forceToReserve && turnNumber >= 4) {
+            action.addReasoning("V58 HOLD RESERVE: force pile " + forcePile +
+                " at/below reserve target " + forceToReserve + " — keep it",
+                BAD_DELTA * 1.5f);
         }
 
         // Don't draw if low reserve (avoid decking)
@@ -346,52 +422,251 @@ public class DrawEvaluator extends ActionEvaluator {
 
     /**
      * Calculate force to reserve for opponent's turn.
-     * Enhanced: Reserve more if we have contested locations.
+     *
+     * V58 FIX 20 (2026-04-16): Match Steve's actual reservation rules.
+     * After activating and deploying, draw MOST force into hand. Reserve
+     * only for specific threats:
+     *   +1 if opponent has Draw Their Fire (taxes our deploys/moves)
+     *   +1 if opponent has First Strike (weapon destiny trigger)
+     *   +1 mid/late game for battle interrupts during opponent's turn
+     *   +N for total maintenance cost of our on-table characters
+     *   +1 per contested location (battle interrupt headroom)
+     * Hard cap at 4 — hoarding more than 4 force in pile is wasted.
      */
     private int calculateForceToReserve(DecisionContext context, int handSize) {
-        int forceToReserve = handSize < 6 ? 1 : 2;
-
+        int forceToReserve = 0;
         SwccgGame game = context.getGame();
         if (game == null) {
-            return forceToReserve;
+            return 1;  // safe default
         }
 
         GameState gameState = context.getGameState();
         String playerId = context.getPlayerId();
+        int turnNumber = context.getTurnNumber();
 
         try {
-            // Count contested locations (both players have presence)
             int contestedCount = 0;
+            int maintenanceCost = 0;
+            boolean opponentHasDTF = false;
+            boolean opponentHasFirstStrike = false;
+            boolean opponentHasIAO = false;  // V78: Imperial Arrest Order
+            boolean ourVergeNeedsDeathStarMove = false;  // V79: save 1 force for Death Star move
+
             Collection<PhysicalCard> locations = gameState.getLocationsInOrder();
             for (PhysicalCard loc : locations) {
                 if (loc == null) continue;
-
-                // Check if both players have cards at this location
                 Collection<PhysicalCard> cardsAtLoc = gameState.getCardsAtLocation(loc);
                 boolean weHavePresence = false;
                 boolean theyHavePresence = false;
-
                 for (PhysicalCard card : cardsAtLoc) {
-                    if (card.getOwner().equals(playerId)) {
+                    if (card.getOwner() != null && card.getOwner().equals(playerId)) {
                         weHavePresence = true;
                     } else {
                         theyHavePresence = true;
                     }
                 }
+                if (weHavePresence && theyHavePresence) contestedCount++;
+            }
 
-                if (weHavePresence && theyHavePresence) {
-                    contestedCount++;
+            // Scan ALL permanent cards for opponent's DTF / First Strike and
+            // our maintenance costs. Title-based detection keeps this robust
+            // across V-sets and variants.
+            for (PhysicalCard pc : gameState.getAllPermanentCards()) {
+                if (pc == null) continue;
+                String title = pc.getTitle();
+                if (title == null) continue;
+                String titleLower = title.toLowerCase(java.util.Locale.ROOT);
+                boolean isOurs = pc.getOwner() != null && pc.getOwner().equals(playerId);
+
+                if (!isOurs) {
+                    if (titleLower.contains("draw their fire"))  opponentHasDTF = true;
+                    if (titleLower.contains("first strike"))     opponentHasFirstStrike = true;
+                    // V78 (Steve, 2026-05-15): Imperial Arrest Order & Secret Plans
+                    // forces opponent to "use 1 Force OR retrieval canceled" every
+                    // retrieval attempt. Reserve +2 to absorb the tax and keep
+                    // retrieval interrupts viable.
+                    if (titleLower.contains("imperial arrest")
+                            || titleLower.contains("secret plans")) opponentHasIAO = true;
+                } else {
+                    // V67w (Steve, 2026-05-03): Use the engine's Icon.MAINTENANCE
+                    // instead of hand-rolled title matching. SWCCG marks every
+                    // maintenance character with this icon on the blueprint.
+                    // OLD code only matched "lando calrissian, scoundrel" — missed
+                    // every other maintenance card in the deck (Lando With Vibro-Ax,
+                    // Han With Heavy Blaster Pistol, etc.). Steve: 'on light side
+                    // he is still not saving enough force for maintenance cards
+                    // like lando.'
+                    try {
+                        if (pc.getBlueprint() != null
+                                && pc.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
+                            maintenanceCost += 1;
+                        }
+                    } catch (Exception e) { /* ignore */ }
+                    // V79: detect Verge of Greatness on Rando's table + Death Star not at Scarif
+                    if (titleLower.contains("on the verge of greatness")
+                            || titleLower.contains("taking control of the weapon")) {
+                        // Verge active — check if Death Star is at Scarif yet
+                        boolean dsAtScarif = false;
+                        PhysicalCard rDeathStar = null;
+                        for (PhysicalCard pc2 : gameState.getAllPermanentCards()) {
+                            if (pc2 == null || !playerId.equals(pc2.getOwner())) continue;
+                            String t2 = pc2.getTitle() != null ? pc2.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                            if (t2.contains("death star")
+                                    && pc2.getBlueprint() != null
+                                    && pc2.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
+                                rDeathStar = pc2;
+                                PhysicalCard loc = pc2.getAtLocation();
+                                if (loc != null && loc.getTitle() != null
+                                        && loc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("scarif")) {
+                                    dsAtScarif = true;
+                                }
+                                break;
+                            }
+                        }
+                        if (rDeathStar != null && !dsAtScarif) {
+                            ourVergeNeedsDeathStarMove = true;
+                        }
+                    }
                 }
             }
 
-            if (contestedCount > 0) {
-                forceToReserve = Math.max(forceToReserve, 2 + contestedCount);
-            }
+            if (opponentHasDTF)        forceToReserve += 1;
+            if (opponentHasFirstStrike) forceToReserve += 1;
+            if (contestedCount > 0)     forceToReserve += 1;  // one battle-interrupt buffer
+            if (turnNumber >= 4)        forceToReserve += 1;  // mid/late-game interrupt buffer
+            if (opponentHasIAO)         forceToReserve += 2;  // V78: IAO retrieval-cancel tax
+            if (ourVergeNeedsDeathStarMove) forceToReserve += 1;  // V79: Death Star move reserve
+            forceToReserve += maintenanceCost;
+
+            // V67w: Bumped cap from 4 → 8. Multiple maintenance characters PLUS
+            // DTF/First Strike/contested can legitimately need 5-6 force reserved.
+            // V78: Bumped cap to 10 to accommodate IAO tax on top of existing reserves.
+            forceToReserve = Math.min(10, forceToReserve);
+
+            // V67z TRANSIT RESERVE (Steve, 2026-06-18): on Hidden Path (unflipped),
+            // each Jedi survivor sitting at Mapuzo: Underground Corridor needs 1 Force
+            // in the MOVE phase to fire "Move Jedi Survivor here to a site" (forFree=
+            // false, baseCost 1) and transit off Mapuzo — which flips the objective and
+            // restores them from crippled (power/forfeit 3, game text canceled). Added
+            // ON TOP of the cap: this is mandatory transit funding, not a defensive
+            // luxury. Without it Rando spends all Force on deploy/activate and the
+            // Jedi sit stranded crippled at the Corridor (replay aj816vuaxukwoie2).
+            try {
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer hpRsvObj =
+                    context.getObjectiveAnalyzer();
+                if (hpRsvObj != null && hpRsvObj.isAnalyzed() && !hpRsvObj.isFlipped()
+                        && hpRsvObj.getObjectiveTitle() != null
+                        && hpRsvObj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path")) {
+                    int corridorJedi = 0;
+                    for (PhysicalCard loc : gameState.getLocationsInOrder()) {
+                        if (loc == null || loc.getTitle() == null
+                                || !loc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("underground corridor")) continue;
+                        for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
+                            if (c != null && playerId.equals(c.getOwner())
+                                    && c.getBlueprint() != null
+                                    && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                corridorJedi++;
+                            }
+                        }
+                    }
+                    if (corridorJedi > 0) {
+                        forceToReserve += corridorJedi;
+                        logger.warn("V67z TRANSIT RESERVE: {} Jedi at Underground Corridor — reserve +{} Force for the move-phase transit off Mapuzo",
+                            corridorJedi, corridorJedi);
+                    }
+                }
+            } catch (Exception e) { logger.debug("V67z transit-reserve error: {}", e.getMessage()); }
+
+            logger.debug("V58 RESERVE: DTF={}, FirstStrike={}, IAO={}, contested={}, maint={}, turn={}, total={}",
+                opponentHasDTF, opponentHasFirstStrike, opponentHasIAO, contestedCount, maintenanceCost, turnNumber, forceToReserve);
         } catch (Exception e) {
-            logger.trace("Error calculating contested locations: {}", e.getMessage());
+            logger.trace("V58 RESERVE: error calculating, using default 1: {}", e.getMessage());
+            return 1;
         }
 
         return forceToReserve;
+    }
+
+    /**
+     * V182 (Steve, 2026-06): OFFENSIVE FORCE-BANKING trigger.
+     *
+     * Steve's bottleneck rule for "save force for a bigger army next turn":
+     *   - Enough characters in hand to win a fight we're losing, but short on force
+     *     → bank the force (return the army's deploy cost).
+     *   - Not enough characters → return 0; draw normally to find more.
+     *
+     * Scans contested/relevant sites where the opponent out-powers us. For the
+     * cheapest such fight that our hand characters COULD win (combined power covers
+     * the gap) but we currently CAN'T afford and could afford within ~2 turns of
+     * banking, returns the force needed. Returns 0 if no such fight exists.
+     */
+    private int computeOffensiveBank(DecisionContext context, int forcePile, int forceGeneration) {
+        SwccgGame game = context.getGame();
+        GameState gs = context.getGameState();
+        String playerId = context.getPlayerId();
+        if (game == null || gs == null || playerId == null) return 0;
+        List<PhysicalCard> hand = context.getHand();
+        if (hand == null || hand.isEmpty()) return 0;
+        String oppId = game.getOpponent(playerId);
+        if (oppId == null) return 0;
+        ModifiersQuerying mq = game.getModifiersQuerying();
+
+        // Hand characters as [power, cost], strongest power first.
+        List<float[]> handChars = new ArrayList<>();
+        for (PhysicalCard c : hand) {
+            if (c == null || c.getBlueprint() == null) continue;
+            if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+            if (!c.getBlueprint().hasPowerAttribute()) continue;
+            Float p = c.getBlueprint().getPower();
+            if (p == null) continue;
+            Float cost = null;
+            try { cost = c.getBlueprint().getDeployCost(); } catch (Exception e) { /* 0 */ }
+            handChars.add(new float[] { p, cost == null ? 0f : cost });
+        }
+        if (handChars.isEmpty()) return 0;
+        handChars.sort((a, b) -> Float.compare(b[0], a[0]));  // power desc
+
+        int bestBank = 0;  // cheapest reachable army cost that wins a relevant fight
+        try {
+            for (PhysicalCard loc : gs.getLocationsInOrder()) {
+                if (loc == null) continue;
+                float oppP;
+                try { oppP = mq.getTotalPowerAtLocation(gs, loc, oppId, false, false); }
+                catch (Exception e) { continue; }
+                if (oppP <= 0f) continue;  // no enemy here — no fight
+
+                // Relevance: only bank for a battleground or a site the opponent drains.
+                boolean worthIt = false;
+                try { worthIt = mq.isBattleground(gs, loc, null); } catch (Exception e) { /* false */ }
+                if (!worthIt) {
+                    try { worthIt = mq.getForceDrainAmount(gs, loc, oppId) >= 1f; } catch (Exception e) { /* false */ }
+                }
+                if (!worthIt) continue;
+
+                float ourP;
+                try { ourP = mq.getTotalPowerAtLocation(gs, loc, playerId, false, false); }
+                catch (Exception e) { ourP = 0f; }
+                float gap = oppP - ourP;
+                if (gap <= 0f) continue;  // already winning/even here
+
+                // Cover the gap with the strongest hand characters; sum their cost.
+                float coveredPower = 0f, costToCover = 0f;
+                for (float[] hc : handChars) {
+                    coveredPower += hc[0];
+                    costToCover += hc[1];
+                    if (coveredPower >= gap) break;
+                }
+                if (coveredPower < gap) continue;             // NOT enough characters → draw to find more
+                if (costToCover <= forcePile) continue;        // already affordable — no force shortage
+                if (forcePile + 2 * forceGeneration < costToCover) continue;  // too expensive to bank for soon
+
+                int need = (int) Math.ceil(costToCover);
+                if (bestBank == 0 || need < bestBank) bestBank = need;
+            }
+        } catch (Exception e) {
+            logger.debug("V182 offensive-bank scan error: {}", e.getMessage());
+        }
+        return bestBank;
     }
 
     /**

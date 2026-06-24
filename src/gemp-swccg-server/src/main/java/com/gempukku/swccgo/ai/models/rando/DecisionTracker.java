@@ -55,6 +55,15 @@ public class DecisionTracker {
     private String lastActionChoiceKey = "";
     private String lastActionChoiceResponse = "";
 
+    // Cancel-loop detection (Steve 2026-05-29): when Rando hits Done/Cancel on
+    // the same target-pick sub-decision N times in a row, the engine is re-asking
+    // because the OUTER action that led here keeps winning. Block the outer
+    // action so Rando picks something else next phase. Loop detection proper
+    // can't see this (empty responses are excluded), so we track it separately.
+    private String consecutiveCancelKey = "";
+    private int consecutiveCancelCount = 0;
+    private static final int CANCEL_LOOP_THRESHOLD = 3;
+
     // Track current turn for clearing blocked responses
     private int lastTurn = 0;
 
@@ -161,10 +170,64 @@ public class DecisionTracker {
 
             // Check for sequence repeat
             checkSequenceLoop();
+
+            // 2026-05-29 FIX (Steve, "still doing it" + U-3PO replay): only reset
+            // the cancel counter if the non-empty response is to the SAME key we
+            // were tracking cancels for. That means Rando finally picked a real
+            // sub-target instead of cancelling, breaking the loop genuinely.
+            // The original "reset on ANY non-empty response" was the bug: the
+            // loop pattern is OUTER_PICK (non-empty, key A) → SUB_CANCEL (empty,
+            // key B) → OUTER_PICK (non-empty, key A) → SUB_CANCEL (empty, key B) → …
+            // Each OUTER_PICK reset the counter that was tracking SUB_CANCEL,
+            // so it stayed at 1 forever and never hit the threshold of 3.
+            // Now: a non-empty response only clears the cancel state for ITS own
+            // key. Different-key non-empties preserve the cancel streak.
+            if (key.equals(consecutiveCancelKey)) {
+                consecutiveCancelKey = "";
+                consecutiveCancelCount = 0;
+            }
         } else {
-            // Pass response - clear any detected loop since we're not looping
+            // Pass / Done / Cancel response.
             if (sequenceRepeatCount > 0) {
                 LOG.debug("Pass response - not counting for loop detection");
+            }
+
+            // === CANCEL-LOOP DETECTION (Steve 2026-05-29) ===
+            // The pass/empty response doesn't tell us WHY it was empty: it could
+            // be a genuine "end-of-phase pass" OR a "Done/Cancel on a sub-decision"
+            // (e.g. "Choose where to deploy Dr. Evazan, or click 'done' to cancel").
+            // The second case loops because the engine re-asks the same sub-decision
+            // every phase tick as long as the OUTER pick keeps choosing the same
+            // dead-end card. Detect it: a cancelable sub-decision (CARD_SELECTION /
+            // ARBITRARY_CARDS with "cancel"/"done" in the text) repeated N times in
+            // a row with the same decision key. After CANCEL_LOOP_THRESHOLD (3),
+            // invoke the existing blockLastActionOnCancel to block the outer action
+            // so Rando picks something else next time.
+            boolean v159IsCancelable = ("CARD_SELECTION".equals(decisionType)
+                                        || "ARBITRARY_CARDS".equals(decisionType))
+                                       && decisionText != null
+                                       && (decisionText.toLowerCase(Locale.ROOT).contains("cancel")
+                                           || decisionText.toLowerCase(Locale.ROOT).contains("done"));
+            if (v159IsCancelable) {
+                if (key.equals(consecutiveCancelKey)) {
+                    consecutiveCancelCount++;
+                } else {
+                    consecutiveCancelKey = key;
+                    consecutiveCancelCount = 1;
+                }
+                if (consecutiveCancelCount >= CANCEL_LOOP_THRESHOLD) {
+                    boolean blocked = blockLastActionOnCancel(decisionType, decisionText);
+                    String truncatedKey = key.length() > 50 ? key.substring(0, 50) : key;
+                    LOG.warn("CANCEL LOOP BROKEN ({} consecutive Dones on '{}'): blockLastActionOnCancel returned {} — Rando will pick differently next phase",
+                        consecutiveCancelCount, truncatedKey, blocked);
+                    // Reset so we don't keep re-blocking if the loop somehow persists
+                    consecutiveCancelKey = "";
+                    consecutiveCancelCount = 0;
+                }
+            } else {
+                // Genuine end-of-phase pass (no cancel/done in text). Reset.
+                consecutiveCancelKey = "";
+                consecutiveCancelCount = 0;
             }
         }
     }
@@ -412,6 +475,8 @@ public class DecisionTracker {
         lastStateHash = "";
         lastActionChoiceKey = "";
         lastActionChoiceResponse = "";
+        consecutiveCancelKey = "";
+        consecutiveCancelCount = 0;
     }
 
     /**

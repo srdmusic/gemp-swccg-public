@@ -57,8 +57,32 @@ public class DecisionSafety {
      * True if there's only one valid option, or decision indicates required choice.
      */
     public static boolean mustChoose(AwaitingDecision decision) {
-        // First check the noPass parameter - this is the authoritative source
         Map<String, String[]> params = decision.getDecisionParameters();
+
+        // V148 (Steve, 2026-05-28): a decision that explicitly offers Done/Cancel
+        // (and allows zero selections, min==0) is NEVER must-choose, even if the
+        // engine set noPass=true. The "Done to cancel" button = select zero cards;
+        // noPass=true refers to the phase-level pass, not this in-selection cancel.
+        // Without this, an empty (cancel) response from the evaluator gets force-
+        // corrected back into a random pick — defeating V148's deploy-abort logic.
+        if (params != null) {
+            String[] minArr = params.get("min");
+            int minVal = 0;
+            if (minArr != null && minArr.length > 0) {
+                try { minVal = Integer.parseInt(minArr[0]); } catch (NumberFormatException ignore) { }
+            }
+            String text = decision.getText();
+            if (minVal == 0 && text != null) {
+                String clean = text.replaceAll("<div[^>]*>.*?</div>", "")
+                                   .replaceAll("<[^>]+>", "").toLowerCase(Locale.ROOT);
+                if (clean.contains("done") || clean.contains("cancel")
+                        || clean.contains("if desired") || clean.contains("optional")) {
+                    return false;  // genuinely cancellable — empty response is valid
+                }
+            }
+        }
+
+        // Otherwise the noPass parameter is the authoritative source
         if (params != null) {
             String[] noPassArr = params.get("noPass");
             if (noPassArr != null && noPassArr.length > 0) {

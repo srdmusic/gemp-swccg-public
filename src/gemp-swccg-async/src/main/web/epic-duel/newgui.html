@@ -23,6 +23,59 @@
     </div>
     <div id="unity-fullscreen-button" style="display: none;"></div>
     <script>
+      // =====================================================================
+      // CARD IMAGE INTERCEPTOR
+      // The Unity client fetches card images from res.starwarsccg.org, which
+      // CORS-blocks cross-origin fetches. Intercept fetch/XHR and reroute those
+      // through /gemp-swccg/imageproxy (server fetches server-to-server, no Origin).
+      // =====================================================================
+      (function installCardImageInterceptor() {
+        var _cardImageMap = null;
+        fetch('StreamingAssets/cardImages.json')
+          .then(function(r) { return r.json(); })
+          .then(function(map) {
+            _cardImageMap = map;
+            console.log('[GEMP] Card image map loaded: ' + Object.keys(map).length + ' entries');
+          })
+          .catch(function(e) { console.error('[GEMP] Failed to load card image map:', e); });
+        function remap(url) {
+          if (typeof url !== 'string') return null;
+          if (url.indexOf('res.starwarsccg.org/') >= 0) {
+            return '/gemp-swccg/imageproxy?url=' + encodeURIComponent(url);
+          }
+          if (_cardImageMap) {
+            var m = url.match(/\/gemp-swccg\/i_(.+?)(?:\?.*)?$/);
+            if (m) {
+              var cdnUrl = _cardImageMap[m[1]];
+              if (cdnUrl) {
+                return '/gemp-swccg/imageproxy?url=' + encodeURIComponent(cdnUrl);
+              }
+            }
+          }
+          return null;
+        }
+        var _origFetch = window.fetch;
+        window.fetch = function(input, init) {
+          var url = (typeof input === 'string') ? input
+                  : (input && input.url) ? input.url : '';
+          var cdnUrl = remap(url);
+          if (cdnUrl) {
+            return _origFetch.call(this, cdnUrl, init);
+          }
+          return _origFetch.apply(this, arguments);
+        };
+        var _origOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url) {
+          var cdnUrl = remap(url);
+          if (cdnUrl) {
+            return _origOpen.apply(this,
+              [method, cdnUrl].concat(Array.prototype.slice.call(arguments, 2)));
+          }
+          return _origOpen.apply(this, arguments);
+        };
+      })();
+      // =====================================================================
+
       const hideFullScreenButton = "1";
       const buildUrl = "Build";
       const loaderUrl = buildUrl + "/9e2cd8213a14debe431d5b6d5ab73726.loader.js";
