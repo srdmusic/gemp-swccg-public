@@ -4,7 +4,7 @@ based on the backup-doc mining workflow (cross-checked against live code)."""
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-PATH = "/Users/steve/gemp-swccg-public/RANDO_BACKUP_AUDIT_2026-06-23.xlsx"
+PATH = "/Users/steve/gemp-swccg-public/resources/RANDO_BACKUP_AUDIT_2026-06-23.xlsx"
 HDR_FILL = PatternFill("solid", fgColor="1F3864"); HDR_FONT = Font(bold=True, color="FFFFFF")
 TITLE_FONT = Font(bold=True, size=14, color="1F3864")
 WRAP = Alignment(wrap_text=True, vertical="top")

@@ -39,7 +39,7 @@ Do not start work, edit code, or propose fixes until you have read 1, 2, and 3. 
 These are reference material. Grep by V-tag or topic when you need them. Reading them top-to-bottom on session start wastes tokens.
 
 - **`AI_VERSION_HISTORY.md`** — every V-tag with full rationale, chronological. 2,700+ lines.
-- **`AI_CHANGELOG.md`** — same V-tags reorganized by user-facing category.
+- **`resources/AI_CHANGELOG.md`** — same V-tags reorganized by user-facing category.
 - **`Rando_AI_Rule_Audit.xlsx`** — K-2-built audit of rule contradictions, dead rules, detection-path mismatches. **Consult BEFORE adding any new V-tag rule.**
 - **`K2_ORCHESTRATOR_HANDOFF.md`** (at `/Users/steve/Documents/Claude/Projects/LOCAL LLM MASTER AGENT/`) — full council playbook. Read before your first non-trivial council call.
 

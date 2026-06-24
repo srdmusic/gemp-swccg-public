@@ -2,7 +2,7 @@
 
 **You are the fresh K-2.** This is your single entry point after onboarding. It consolidates two days of work by three concurrent K-2 sessions and hands you a prioritized implementation queue. Read this, then go execute.
 
-**Paths note:** this file and the three angle handoffs live in `Handoffs/`. Artifacts named below without a folder (`RANDO_BACKUP_AUDIT_2026-06-23.xlsx`, `RANDO_MISSING_LOGIC.md`, `AI_CHANGELOG.md`) are in the install root one level up; `src/...` paths are from the install root.
+**Paths note:** this file and the three angle handoffs live in `Handoffs/`. The artifacts named below (`RANDO_BACKUP_AUDIT_2026-06-23.xlsx`, `RANDO_MISSING_LOGIC.md`, `AI_CHANGELOG.md`) live in the install's **`resources/`** folder (a sibling of `Handoffs/`). `CLAUDE.md` is at `.claude/CLAUDE.md`; `src/...` paths are from the install root.
 
 **State right now:** committed locally to branch `rando-consolidation-2026-06-23` (base = devs `55c22cf49`; the branch holds the work snapshot + the fresh-K-2 equip + this handoffs-folder tidy). **NOTHING is deployed** (running jar = V184). **NOTHING is pushed** (Steve's rule: get it organized before any GitHub upload). The commits are your safety net; keep committing as you work.
 
@@ -54,7 +54,7 @@ Detail + file:line for each open item: `RANDO_BACKUP_AUDIT_2026-06-23.xlsx` → 
 - **dojo:** NOT built (queue item #3).
 
 ## 7. Operating context restored this session (Phase 1)
-- `CLAUDE.md` + `AGENTS.md` restored to the install root; their "first reads" repointed to real targets (this file + the k2-resources hub + MEMORY.md). The deep docs they still name live in `k2-resources/originals/` (PATHS NOTE in each file).
+- `CLAUDE.md` restored to **`.claude/CLAUDE.md`** (auto-loads from there) and `AGENTS.md` to **`resources/`**; their "first reads" repointed to real targets (this file + the k2-resources hub + MEMORY.md). The deep docs they still name live in `k2-resources/originals/` (PATHS NOTE in each file).
 - 3 skills restored to `.claude/skills/`: `gemp-swccg-memory`, `k2-swccg-strategy`, `work-verifier` (alongside the 4 already present).
 - `mcp.json` corrected to `alfred` only; `mcp-gemp-client/` restored (`k2_player.py`, `run_bot_tournament.py`, the curator pipeline).
 
