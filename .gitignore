@@ -71,3 +71,10 @@ database/*
 /.vs
 .local/*
 .vscode/*
+
+# K-2 cleanup 2026-06-23: runtime output + virtiofs junk that got swept in with the
+# mcp-gemp-client restore. Regenerable / not code. Files stay on disk, just untracked.
+mcp-gemp-client/game_logs/
+mcp-gemp-client/tournament_results/
+*.fuse_hidden*
+**/__pycache__/
