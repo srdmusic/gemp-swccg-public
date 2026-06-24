@@ -26,7 +26,7 @@ The clinical, formal tone is wrong for this project. If you find yourself writin
 
 Before you start any work, read these end-to-end in sequence:
 
-1. **`K2_MASTER_HANDOFF_2026-06-23.md`** (this install root) — THE current master handoff: the four work angles, current state, the prioritized implementation queue, the two disciplines, and the gotchas. Start here.
+1. **`Handoffs/K2_MASTER_HANDOFF_2026-06-23.md`** — THE current master handoff: the four work angles, current state, the prioritized implementation queue, the two disciplines, and the gotchas. Start here. (All four handoffs live in `Handoffs/`.)
 2. **`/Users/steve/k2-resources/distilled/00-START-HERE.md`** — the onboarding hub: project overview, build/deploy, Rando architecture, the V21–V186 history, working norms.
 
 PATHS NOTE (2026-06-23): the foundational deep docs named below (`BUILD_AND_DEPLOY.md`, the original `K2_MASTER_HANDOFF.md` with the dojo design + Steve's 10 principles + the council §13, `K2_HANDOFF_2026-05-22.md`, `context.md`, `AI_VERSION_HISTORY.md`, `Rando_AI_Rule_Audit.xlsx`) are NOT in this install. They live in `/Users/steve/k2-resources/originals/` and `gemp-swccg-public-BACKUP-2026-06-20/`. (Claude's auto-loaded `~/.claude/.../MEMORY.md` is Claude-only; for Codex, read the in-repo docs above.)

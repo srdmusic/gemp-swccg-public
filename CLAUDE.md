@@ -27,7 +27,7 @@ The clinical, formal tone is wrong for this project. If you find yourself writin
 Before you start any work, read these end-to-end in sequence:
 
 1. **`~/.claude/projects/-Users-steve-gemp-swccg-public/memory/MEMORY.md`** — auto-loads each session. The standing rules (`feedback_*`, non-negotiable) + project state (`project_*`). Read the linked files relevant to your task.
-2. **`K2_MASTER_HANDOFF_2026-06-23.md`** (this install root) — THE current master handoff: the four work angles, current state, the prioritized implementation queue, the two disciplines, and the gotchas. This is what to actually do.
+2. **`Handoffs/K2_MASTER_HANDOFF_2026-06-23.md`** — THE current master handoff: the four work angles, current state, the prioritized implementation queue, the two disciplines, and the gotchas. This is what to actually do. (All four handoffs live in `Handoffs/`.)
 3. **`/Users/steve/k2-resources/distilled/00-START-HERE.md`** — the onboarding hub: project overview, build/deploy, Rando architecture, the V21–V186 history, working norms.
 
 PATHS NOTE (2026-06-23): the foundational deep docs this file names below (`BUILD_AND_DEPLOY.md`, the original `K2_MASTER_HANDOFF.md` with the dojo design + Steve's 10 principles + the council §13, `K2_HANDOFF_2026-05-22.md`, `context.md`, `AI_VERSION_HISTORY.md`, `Rando_AI_Rule_Audit.xlsx`) are NOT in this install. They live verbatim in `/Users/steve/k2-resources/originals/` (`02-rando-history`, `03-handoffs`, `04-setup-context`) and in `gemp-swccg-public-BACKUP-2026-06-20/`. Read them there. (A future K-2 task: decide whether to copy them in or keep pointing out.)

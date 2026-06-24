@@ -2,7 +2,9 @@
 
 **You are the fresh K-2.** This is your single entry point after onboarding. It consolidates two days of work by three concurrent K-2 sessions and hands you a prioritized implementation queue. Read this, then go execute.
 
-**State right now:** committed locally to branch `rando-consolidation-2026-06-23` (commit `351a0523b`), base = devs `55c22cf49`. **NOTHING is deployed** (running jar = V184). **NOTHING is pushed** (Steve's rule: get it organized before any GitHub upload). The commit is your safety net; keep committing as you work.
+**Paths note:** this file and the three angle handoffs live in `Handoffs/`. Artifacts named below without a folder (`RANDO_BACKUP_AUDIT_2026-06-23.xlsx`, `RANDO_MISSING_LOGIC.md`, `AI_CHANGELOG.md`) are in the install root one level up; `src/...` paths are from the install root.
+
+**State right now:** committed locally to branch `rando-consolidation-2026-06-23` (base = devs `55c22cf49`; the branch holds the work snapshot + the fresh-K-2 equip + this handoffs-folder tidy). **NOTHING is deployed** (running jar = V184). **NOTHING is pushed** (Steve's rule: get it organized before any GitHub upload). The commits are your safety net; keep committing as you work.
 
 ---
 
