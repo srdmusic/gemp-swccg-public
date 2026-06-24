@@ -1,0 +1,2 @@
+{"event": "game_start", "timestamp": "2026-04-14T09:30:32.487444", "game_id": "1b7ad1c3ad5a-8beb-09d1-30b8-b2831f10", "player_deck": "(unknown)", "ai_skill": "RANDO", "ai_deck": "(unknown)"}
+{"event": "decision", "timestamp": "2026-04-14T09:30:43.997173", "decision_id": "1", "decision_type": "ARBITRARY_CARDS", "decision_text": "Choose card to take into hand", "options_count": 0, "response": "temp14", "reasoning": "Piett is the key to the Executor deploy engine - Turn 1 script"}

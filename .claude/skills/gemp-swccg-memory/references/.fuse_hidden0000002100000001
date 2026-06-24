@@ -1,0 +1,93 @@
+---
+title: Rando Cal AI - Improvement Log
+updated: 2026-03-03
+purpose: Accumulated observations from game analysis, testing, and code review. Append new findings at the bottom.
+---
+
+# Rando Cal AI - Improvement Log
+
+This file accumulates observations across sessions. Each entry should include a date, source (code review, game observation, testing), and actionable insight.
+
+## Session 1 - 2026-03-03 (Initial Codebase Analysis)
+
+### Architecture Observations
+
+1. **Evaluator ordering matters**: CombinedEvaluator runs evaluators in fixed order (ForceActivation → Deploy → Battle → Move → Draw → CardSelection → ActionText → Pass). Scores are additive. If DeployEvaluator scores a card +80 and ActionTextEvaluator also matches it at +30, the total is +110. This means evaluator interactions can create unexpected score inflation.
+
+2. **CHAOS_PERCENT is 0**: RandoConfig.CHAOS_PERCENT was reduced from 25% to 0%. This eliminated random exploration. While this makes Rando more predictable and "optimal," it may reduce its ability to discover non-obvious plays. Consider a small exploration rate (5-10%) for non-critical decisions.
+
+3. **BattlePredictor uses 50 simulations**: Monte Carlo with 50 runs is fast but noisy. For critical battles (high stakes), consider increasing simulations or using the deterministic `predictBattleFullIntel()` when DeckOracle data is available.
+
+4. **Loop detection is sophisticated but may over-block**: DecisionTracker blocks responses after just 2 repeats. In some game states, the same action genuinely IS the best play multiple turns in a row (e.g., force draining at a controlled location). The tracker may incorrectly penalize correct repeated play.
+
+5. **No learning between games**: Rando starts fresh every game. There's no mechanism to track win/loss patterns, deck matchup statistics, or strategy effectiveness across games. A BotStatsDAO exists but is only used for recording, not informing decisions.
+
+### Potential Improvement Areas
+
+- **Force activation is always max early**: ForceActivationEvaluator always activates maximum in turns 1-3. Some decks benefit from slower activation (preserving reserve for destiny draws). Could be deck-strategy-aware.
+
+- **Deploy location scoring is position-blind**: DeployEvaluator scores locations without considering the overall board topology. Deploying at a location that connects two friendly positions is strategically different from deploying at an isolated location.
+
+- **No interrupt timing strategy**: The AI doesn't have sophisticated timing for when to play interrupts. It plays them as soon as it can, rather than waiting for optimal moments (e.g., saving Sense for high-impact opponent actions).
+
+- **Destiny draw manipulation is basic**: When choosing destiny draws, the AI doesn't factor in what cards remain in the reserve deck (even though DeckOracle knows). It could calculate expected destiny values and choose whether to substitute.
+
+### Known Issues in Current Code
+
+- **V22.4 suicide block threshold**: 2x power AND > 6 total may be too aggressive. Blocks legitimate attacks at 4 power vs 8 power where we might have good destiny.
+- **LOCATIONS FIRST exception list**: Only covers TDIGWATT, "I'm Sorry", and AMSD. Other location-search cards may exist.
+- **ObjectiveHandler coverage**: Unknown how many objectives are fully mapped. Missing objectives means Rando may fail to play starting cards correctly.
+
+---
+
+## Template for New Entries
+
+### Session N - YYYY-MM-DD (Source: game observation / code review / testing)
+
+**What was observed:**
+[Description]
+
+**Why it matters:**
+[Impact on Rando's play quality]
+
+**Suggested fix or improvement:**
+[Actionable recommendation]
+
+**Files affected:**
+[List of files that would need changes]
+
+**Priority:** High / Medium / Low
+
+## Session 2 - 2026-03-05 (V27 Move/Battle/Force Fixes)
+
+### Changes Made
+
+1. **V27 BUDDY PROTECT (MoveEvaluator)**: Prevents characters from moving away and leaving a vulnerable ally solo. Penalty -150 to -400 based on enemy threat.
+
+2. **V27 MAINTENANCE RESERVE (PassEvaluator, MoveEvaluator)**: Conserves Force for Blizzard maintenance. +25 to +50 pass bonus when Force ≤ maintenance cost + 1. Also -80 move penalty.
+
+3. **V27.1 DRAW THEIR FIRE awareness (BattleEvaluator, PassEvaluator, DeployEvaluator)**: Detects opponent's Draw Their Fire effect on table. Reserves Force for interrupt tax (1 Force per interrupt during battles they initiate). Ghhhk becomes unusable without Force reserve.
+
+4. **V27.2 More permissive buddy protection (MoveEvaluator)**: Changed from requiring both power<6 AND ability<2 to just power<6 for moves. Thrawn (power 4, ability 4) was escaping the check.
+
+## Session 3 - 2026-03-06 (V28 Critical Bug Fixes)
+
+### Bug 1: Upper Walkway NEVER selected as starting site
+
+**Root cause:** TDIGWATT objective creates an ARBITRARY_CARDS decision (not CARD_SELECTION) for site choice. ARBITRARY_CARDS uses temp IDs ("temp0", "temp1") instead of integer card IDs. The evaluateStartingLocation method called `Integer.parseInt(cardId)` which threw NumberFormatException for "temp0", silently caught, causing all card lookups to fail. The V24.10 exterior/interior scoring (+500/-500) never fired.
+
+**Fix:** V28 adds blueprint-based lookup path. For ARBITRARY_CARDS decisions, uses parallel `blueprintIds` array and `lookupBlueprint()` to resolve card properties instead of `findCardById()`.
+
+**Files:** CardSelectionEvaluator.java (evaluateStartingLocation method)
+
+### Bug 2: Lando/Lobot deploying before Executor
+
+**Root cause:** BESPIN-FIRST GUARD checked CC site keywords (e.g., "cloud city", "carbonite") in deploy action text. But character deploy actions don't include the target location name — action text is like "Deploy Lando from hand" not "Deploy Lando to Carbonite Chamber". So the CC keyword check never matched.
+
+**Fix:** V28 rewrites the guard to block ALL non-exempt deploys on turns 1-2 when Bespin isn't occupied. Exemptions: location/site/system deploys, AMSD, Executor, starships. This ensures the deploy order is: locations → AMSD/Executor → characters.
+
+**Files:** DeployEvaluator.java (BESPIN-FIRST GUARD block)
+
+### Key Insight: ARBITRARY_CARDS vs CARD_SELECTION
+
+ARBITRARY_CARDS decisions (from pile effects) use "temp0", "temp1" IDs with parallel blueprintId arrays. CARD_SELECTION decisions use integer card IDs. Any evaluator code that does `findCardById(Integer.parseInt(cardId))` will silently fail for ARBITRARY_CARDS. Always check decision type and use blueprint lookup as fallback.

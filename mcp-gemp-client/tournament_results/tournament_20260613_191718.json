@@ -1,0 +1,46 @@
+{
+  "summary": {
+    "games_requested": 2,
+    "completed": 2,
+    "incomplete": 0,
+    "win_counts": {
+      "The_Chosen_One": 2
+    }
+  },
+  "results": [
+    {
+      "label": "G1/2",
+      "game_id": "d3232b59481d-2efb-4541-d370-89761f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/buth8rwamwkceui3.xml.gz",
+      "light_skill": "RANDO",
+      "light_deck": "1 Rey",
+      "dark_skill": "CHOSENONE",
+      "dark_deck": "1 Dooku",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 2468,
+      "turn_count": 11,
+      "winner": "The_Chosen_One",
+      "loser": "Rando_Cal",
+      "win_reason": "Opponent conceded",
+      "complete": true
+    },
+    {
+      "label": "G2/2",
+      "game_id": "5497b6705eec-779a-9341-fcbd-99761f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/u0issmctofxjxgoq.xml.gz",
+      "light_skill": "CHOSENONE",
+      "light_deck": "1 Rey",
+      "dark_skill": "RANDO",
+      "dark_deck": "1 Dooku",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 4287,
+      "turn_count": 39,
+      "winner": "The_Chosen_One",
+      "loser": "Rando_Cal",
+      "win_reason": "Opponent ran out of time",
+      "complete": true
+    }
+  ]
+}

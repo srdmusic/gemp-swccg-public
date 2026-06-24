@@ -1,0 +1,63 @@
+{
+  "summary": {
+    "games_requested": 3,
+    "completed": 3,
+    "incomplete": 0,
+    "win_counts": {
+      "The_Chosen_One": 3
+    }
+  },
+  "results": [
+    {
+      "label": "G1/3",
+      "game_id": "bea47bcfae35-098a-61a1-1bf6-a5a61f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/8i50xdi4i11smi1s.xml.gz",
+      "light_skill": "RANDO",
+      "light_deck": "1 Rey",
+      "dark_skill": "CHOSENONE",
+      "dark_deck": "DARK DEAL",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 2761,
+      "turn_count": 13,
+      "winner": "The_Chosen_One",
+      "loser": "Rando_Cal",
+      "win_reason": "Depleted opponent's Life Force",
+      "complete": true
+    },
+    {
+      "label": "G2/3",
+      "game_id": "2cd4543c09d1-bb5a-2641-4d71-e6a61f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/kde9ubj6bccprqra.xml.gz",
+      "light_skill": "CHOSENONE",
+      "light_deck": "1 Rey",
+      "dark_skill": "RANDO",
+      "dark_deck": "DARK DEAL",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 5367,
+      "turn_count": 39,
+      "winner": "The_Chosen_One",
+      "loser": "Rando_Cal",
+      "win_reason": "Opponent ran out of time",
+      "complete": true
+    },
+    {
+      "label": "G3/3",
+      "game_id": "287bcdb2c9af-f57b-68b1-f787-26a61f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/juckcpxo6hxjkbko.xml.gz",
+      "light_skill": "RANDO",
+      "light_deck": "1 Rey",
+      "dark_skill": "CHOSENONE",
+      "dark_deck": "DARK DEAL",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 3313,
+      "turn_count": 15,
+      "winner": "The_Chosen_One",
+      "loser": "Rando_Cal",
+      "win_reason": "Opponent conceded",
+      "complete": true
+    }
+  ]
+}

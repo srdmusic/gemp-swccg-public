@@ -1,0 +1,2 @@
+{"event": "game_start", "timestamp": "2026-04-14T09:30:49.281981", "game_id": "1b7ad1c3ad5a-8beb-09d1-30b8-b2831f10", "player_deck": "(unknown)", "ai_skill": "RANDO", "ai_deck": "(unknown)"}
+{"event": "decision", "timestamp": "2026-04-14T09:31:00.726062", "decision_id": "1", "decision_type": "CARD_ACTION_CHOICE", "decision_text": "Choose Activate action or Pass", "options_count": 0, "response": "3", "reasoning": "Activate force first - always"}

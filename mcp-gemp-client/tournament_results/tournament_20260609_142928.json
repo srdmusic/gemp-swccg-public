@@ -1,0 +1,98 @@
+{
+  "summary": {
+    "games_requested": 5,
+    "completed": 5,
+    "incomplete": 0,
+    "win_counts": {
+      "The_Chosen_One": 3,
+      "Rando_Cal": 2
+    }
+  },
+  "results": [
+    {
+      "label": "G1/5",
+      "game_id": "1e67cdc62bd9-0b1b-a601-54c7-43461f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/ymdw7bz6eo1nwofu.xml.gz",
+      "light_skill": "RANDO",
+      "light_deck": "1 Rey",
+      "dark_skill": "CHOSENONE",
+      "dark_deck": "1 Dooku",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 3029,
+      "turn_count": 15,
+      "winner": "The_Chosen_One",
+      "loser": "Rando_Cal",
+      "win_reason": "Depleted opponent's Life Force",
+      "complete": true
+    },
+    {
+      "label": "G2/5",
+      "game_id": "6077c07e6c17-1e38-43b1-6119-d3461f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/whl1g9qjp6ct29ml.xml.gz",
+      "light_skill": "CHOSENONE",
+      "light_deck": "1 Rey",
+      "dark_skill": "RANDO",
+      "dark_deck": "1 Dooku",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 3648,
+      "turn_count": 24,
+      "winner": "The_Chosen_One",
+      "loser": "Rando_Cal",
+      "win_reason": "Depleted opponent's Life Force",
+      "complete": true
+    },
+    {
+      "label": "G3/5",
+      "game_id": "cdf6b7b54bf3-3bda-eb71-037f-83461f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/6sbzggvrm2z27n3o.xml.gz",
+      "light_skill": "RANDO",
+      "light_deck": "1 Rey",
+      "dark_skill": "CHOSENONE",
+      "dark_deck": "1 Dooku",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 3901,
+      "turn_count": 22,
+      "winner": "Rando_Cal",
+      "loser": "The_Chosen_One",
+      "win_reason": "Depleted opponent's Life Force",
+      "complete": true
+    },
+    {
+      "label": "G4/5",
+      "game_id": "b80e65ca5e3a-44f8-36b1-64e2-b3461f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/5ec4gfb588w06iv2.xml.gz",
+      "light_skill": "CHOSENONE",
+      "light_deck": "1 Rey",
+      "dark_skill": "RANDO",
+      "dark_deck": "1 Dooku",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 3614,
+      "turn_count": 21,
+      "winner": "Rando_Cal",
+      "loser": "The_Chosen_One",
+      "win_reason": "Depleted opponent's Life Force",
+      "complete": true
+    },
+    {
+      "label": "G5/5",
+      "game_id": "95b1061cc74a-92ab-4311-37c2-63461f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/0a7kp40d4eho42rw.xml.gz",
+      "light_skill": "RANDO",
+      "light_deck": "1 Rey",
+      "dark_skill": "CHOSENONE",
+      "dark_deck": "1 Dooku",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 3419,
+      "turn_count": 39,
+      "winner": "The_Chosen_One",
+      "loser": "Rando_Cal",
+      "win_reason": "Opponent ran out of time",
+      "complete": true
+    }
+  ]
+}

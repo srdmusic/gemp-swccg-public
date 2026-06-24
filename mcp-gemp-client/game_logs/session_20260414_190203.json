@@ -1,0 +1,115 @@
+{
+  "results": [
+    {
+      "game_id": "87036af782f7-a838-47d1-d0a1-87831f10",
+      "deck": "DARK DEAL",
+      "turns": 10,
+      "decisions": 909,
+      "my_drains": 18,
+      "opp_drains": 0,
+      "winner": "K2",
+      "my_lost": "11",
+      "opp_lost": "41"
+    },
+    {
+      "game_id": "c48a577dcfd4-d8ab-9801-c874-47831f10",
+      "deck": "DARK DEAL",
+      "turns": 7,
+      "decisions": 712,
+      "my_drains": 8,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "29",
+      "opp_lost": "9"
+    },
+    {
+      "game_id": "89bc473b9f53-2fa9-8c91-7b95-57831f10",
+      "deck": "DARK DEAL",
+      "turns": 7,
+      "decisions": 5000,
+      "my_drains": 11,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "?",
+      "opp_lost": "?"
+    },
+    {
+      "game_id": "d175377d2271-eea9-55d1-6227-a7831f10",
+      "deck": "DARK DEAL",
+      "turns": 7,
+      "decisions": 5000,
+      "my_drains": 6,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "?",
+      "opp_lost": "?"
+    },
+    {
+      "game_id": "72c956dfe541-bbf8-cfd1-cff4-08831f10",
+      "deck": "DARK DEAL",
+      "turns": 7,
+      "decisions": 5000,
+      "my_drains": 10,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "?",
+      "opp_lost": "?"
+    },
+    {
+      "game_id": "7dfb66eeae08-6a38-8641-8cb2-48831f10",
+      "deck": "LUKE SAGA TATOOINE",
+      "turns": 6,
+      "decisions": 5000,
+      "my_drains": 6,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "?",
+      "opp_lost": "?"
+    },
+    {
+      "game_id": "d93dbf9caeb7-a67b-b081-02e9-18831f10",
+      "deck": "LUKE SAGA TATOOINE",
+      "turns": 0,
+      "decisions": 5000,
+      "my_drains": 0,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "?",
+      "opp_lost": "?"
+    },
+    {
+      "game_id": "fdf02a55d1c6-8afb-1631-8a60-77831f10",
+      "deck": "LUKE SAGA TATOOINE",
+      "turns": 2,
+      "decisions": 5000,
+      "my_drains": 0,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "?",
+      "opp_lost": "?"
+    },
+    {
+      "game_id": "45438c76b455-794a-d211-d046-67831f10",
+      "deck": "LUKE SAGA TATOOINE",
+      "turns": 0,
+      "decisions": 5000,
+      "my_drains": 0,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "?",
+      "opp_lost": "?"
+    },
+    {
+      "game_id": "1ad27d170618-4fe9-4d21-7026-c7831f10",
+      "deck": "LUKE SAGA TATOOINE",
+      "turns": 2,
+      "decisions": 5000,
+      "my_drains": 0,
+      "opp_drains": 0,
+      "winner": "RANDO",
+      "my_lost": "?",
+      "opp_lost": "?"
+    }
+  ],
+  "record": "1-9"
+}

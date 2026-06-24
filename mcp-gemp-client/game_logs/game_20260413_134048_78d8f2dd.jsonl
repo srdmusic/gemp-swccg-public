@@ -1,0 +1,4 @@
+{"event": "game_start", "timestamp": "2026-04-13T13:40:48.284825", "game_id": "78d8f2dd6914-a3f8-5d91-4faa-16731f10", "player_deck": "(unknown)", "ai_skill": "RANDO", "ai_deck": "(unknown)"}
+{"event": "decision", "timestamp": "2026-04-13T13:41:05.142647", "decision_id": "1", "decision_type": "MULTIPLE_CHOICE", "decision_text": "You have not activated Force. Do you want to Pass?", "options_count": 0, "response": "1", "reasoning": "Activate"}
+{"event": "decision", "timestamp": "2026-04-13T13:41:11.464200", "decision_id": "1", "decision_type": "CARD_ACTION_CHOICE", "decision_text": "Choose Activate action or Pass", "options_count": 0, "response": "9", "reasoning": "Activate all"}
+{"event": "decision", "timestamp": "2026-04-13T13:41:14.989271", "decision_id": "1", "decision_type": "INTEGER", "decision_text": "Choose amount of Force to activate", "options_count": 0, "response": "11", "reasoning": "All 11"}

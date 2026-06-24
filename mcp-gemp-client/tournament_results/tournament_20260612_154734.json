@@ -1,0 +1,29 @@
+{
+  "summary": {
+    "games_requested": 1,
+    "completed": 1,
+    "incomplete": 0,
+    "win_counts": {
+      "Rando_Cal": 1
+    }
+  },
+  "results": [
+    {
+      "label": "G1/1",
+      "game_id": "f90a3d37335c-4b58-6cf1-8baa-0a661f10",
+      "replay": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/2wlomklvh9h5rxcl.xml.gz",
+      "light_skill": "RANDO",
+      "light_deck": "1 Rey",
+      "dark_skill": "CHOSENONE",
+      "dark_deck": "1 Dooku",
+      "elapsed_s": 0.0,
+      "status": "completed",
+      "events": 3031,
+      "turn_count": 39,
+      "winner": "Rando_Cal",
+      "loser": "The_Chosen_One",
+      "win_reason": "Opponent ran out of time",
+      "complete": true
+    }
+  ]
+}
