@@ -360,9 +360,16 @@ public class CharacterDeploySiteEvaluator {
         }
 
         // Scoring (iAmTheBuddy removed — see bug-fix comment above)
-        if (!abilityPass) {
-            if (buddyInHand) return -200f;  // wait for buddy to deploy first or in parallel
-            return -1500f;  // Steve's "almost never"
+        // 2026-06-25 (Steve, Fix #2): ability only matters when there's a BATTLE. At an
+        // UNCONTESTED site (oppPower == 0) a low-ability fodder body (droids, Neimoidians)
+        // just establishes presence/drain and seeds objective flip-sites — deploy it; fall
+        // through to V156 (turn<=2 solo guard) then the +500 reward. Gate the ability penalty
+        // to contested sites only. Boundary: uncontested ability<4 goes -1500 -> +500 (or
+        // V156 -300); contested + ability>=4 unchanged; V151/V181 need oppPower>0. Shared
+        // common/ file → fixes both bots.
+        if (oppPower > 0f && !abilityPass) {
+            if (buddyInHand) return -200f;  // contested + buddy coming: coordinate
+            return -1500f;  // contested + weak solo can't win the battle: almost never
         }
         // V156 (Steve, 2026-05-28): DON'T LEAVE A WEAK CHARACTER SOLO ON TURN <= 2.
         // Steve: "turn two is dangerous to leave a 3-power 4-ability character by
