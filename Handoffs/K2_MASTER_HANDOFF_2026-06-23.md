@@ -11,14 +11,15 @@
 ## 0. Read order
 1. `~/.claude/projects/-Users-steve-gemp-swccg-public/memory/MEMORY.md` — auto-loads. Standing rules (`feedback_*`, non-negotiable) + project state (`project_*`).
 2. **This file** — current state, implementation queue, disciplines, gotchas.
-3. `/Users/steve/k2-resources/distilled/00-START-HERE.md` — onboarding hub (architecture, build/deploy, V21–V186 history, working norms).
-4. `k2-resources/originals/` — the deep docs (original `K2_MASTER_HANDOFF.md` with the dojo design + Steve's 10 principles, `AI_VERSION_HISTORY.md`, `Rando_AI_Rule_Audit.xlsx`, `BUILD_AND_DEPLOY.md`, `context.md`) as needed.
+3. `/Users/steve/gemp-swccg-public/resources/k2-resources/distilled/00-START-HERE.md` — onboarding hub (architecture, build/deploy, V21–V186 history, working norms).
+4. `resources/k2-resources/originals/` — the deep docs (original `K2_MASTER_HANDOFF.md` with the dojo design + Steve's 10 principles, `AI_VERSION_HISTORY.md`, `Rando_AI_Rule_Audit.xlsx`, `BUILD_AND_DEPLOY.md`, `context.md`) as needed.
 
 ## 1. The two disciplines you cannot break
-- **Old rules get DOMINATED, not deleted.** Rando's scoring is ADDITIVE. A bigger-magnitude new rule silently flips decisions an older rule used to win. Steve has been burned by this repeatedly. **Do the boundary math BEFORE you write the code.** (Your #1 open bug, V96/V67al, IS exactly this.)
+- **Old rules get DOMINATED, not deleted.** Rando's scoring is ADDITIVE. A bigger-magnitude new rule silently flips decisions an older rule used to win. Steve has been burned by this repeatedly. **Do the boundary math BEFORE you write the code.** (But FIRST confirm the rule is even live: a prior K-2 lost a full day editing V67al code disabled by `if (false /* SUPERSEDED V136 */)` that never compiled in. Grep the enclosing `if (...)` before touching any rule. See `resources/BUILD_AND_DEPLOY.md` §1.)
 - **Search by type, not text.** CardCategory / Filter / Keyword / Persona / Icon. NEVER substring-match a generic noun ("location", "weapon") against card titles. See `feedback_card_search_by_type_not_text` in memory.
 
 ## 2. Verify-before-done (compiles ≠ fires)
+**Full deploy procedure (build → land it in `web.jar` → prove it fired → the `rebuild`-doesn't-restart trap → the live-vs-dead-code check): `resources/BUILD_AND_DEPLOY.md`. Read it before your first deploy.**
 - Compile in-container (host has `mvn` but no JRE): `docker exec gemp_swccg_app_1 bash -lc 'cd /opt/gemp-swccg/src && mvn -q -pl gemp-swccg-server -am compile 2>&1 | tail -20; echo EXIT=${PIPESTATUS[0]}'`. `EXIT=0` = clean.
 - Compiling does NOT deploy. To go live: rebuild + restart, then play a REAL game and grep the container `nohup.out` for your V-tag. "It compiled" is not "it fired."
 - For AI-logic, adversarially verify the magnitude: does the new score actually win at the boundary, and does it dominate WITHOUT flipping a neighbor rule?
@@ -32,8 +33,8 @@
 
 ## 4. YOUR IMPLEMENTATION QUEUE (prioritized)
 Detail + file:line for each open item: `RANDO_BACKUP_AUDIT_2026-06-23.xlsx` → **Breadcrumb Findings** tab.
-1. **Deploy V185 + V186** (written + compile; jar is still V184). Rebuild + restart, then verify each fires in a real game. *(Steve's call on the docker op.)*
-2. **V96/V67al magnitude inversion — TOP code fix.** V96 "concentrate at contested sites" = flat **+500** (`DeployEvaluator:1832`); V67al "spread penalty" = power-scaled (`:3804`); they sum, so at high stacked power V67al ≥ +500 and Rando spreads instead of piling on. This is the "spreads out instead of piling on" complaint. Council-unanimous fix: **gate V67al OFF when V96 fires.** Do the magnitude math (Discipline #1).
+1. ~~**Deploy V185 + V186**~~ DONE 2026-06-24: both deployed and bytecode-confirmed in the live `web.jar` (V185 `reserveTargetsAreAllUnattachableWeapons` present in rando `DeckOracle.class`; V186 in `CardSelectionEvaluator`/`ObjectiveAnalyzer`). Still pending: confirm each FIRES in a real game (grep `nohup.out`), and the `chosenone` mirror (item 7).
+2. **~~V96/V67al magnitude inversion~~ REFUTED 2026-06-24: V67al is DEAD CODE.** V67aj/V67al/V90 in `DeployEvaluator.java` live inside `if (false /* SUPERSEDED V136 */)` blocks (compiler-stripped; bytecode-confirmed ABSENT from the live `web.jar`), so V67al can't sum with or dominate V96. The old "+500 - 300 - 700" math is void. V96 CONCENTRATE (+500) IS live at `DeployEvaluator.java:1849-1894`. The real spread-vs-pile-on decision now lives in **V136** (`common/strategy/CharacterDeploySiteEvaluator.java` `evaluateSite` §B, the uncontested over-stack penalty) plus V96. IF "spreads instead of piling on" is real, REPRODUCE it from a replay first, then look at V136 §B's contested-site detection (likely cause: a contested site read as uncontested when opponent power = 0, firing the -700 over-stack penalty). Do NOT edit the dead V67al. A prior K-2 lost a day on exactly this. Full detail: `resources/BUILD_AND_DEPLOY.md` §1.
 3. **Dojo regression harness** (systemic guard against silent domination; designed in the original `K2_MASTER_HANDOFF.md §6`, never built). Make this the first big task AFTER onboarding, OR do the V136 stubs first (quick). Do NOT make it an onboarding prerequisite.
 4. **3 dead V136 stubs** in `ai/models/common/strategy/CharacterDeploySiteEvaluator.java`: `deckShipCount` passed literal `0` (`:653` ship-heavy override never fires), `perSiteEffectActive` literal `false` (`:468` per-site override dead), `isAboard` hardcoded `false` (`:137` pilot-aboard guard wrong). Both bots.
 5. **V53b/V60 Hidden-Path precedence** (`MoveEvaluator` ~1560 +9999 vs ~1579 -9999, implicit order; risk: stuck Jedi).
@@ -54,7 +55,7 @@ Detail + file:line for each open item: `RANDO_BACKUP_AUDIT_2026-06-23.xlsx` → 
 - **dojo:** NOT built (queue item #3).
 
 ## 7. Operating context restored this session (Phase 1)
-- `CLAUDE.md` restored to **`.claude/CLAUDE.md`** (auto-loads from there) and `AGENTS.md` to **`resources/`**; their "first reads" repointed to real targets (this file + the k2-resources hub + MEMORY.md). The deep docs they still name live in `k2-resources/originals/` (PATHS NOTE in each file).
+- `CLAUDE.md` restored to **`.claude/CLAUDE.md`** (auto-loads from there) and `AGENTS.md` to **`resources/`**; their "first reads" repointed to real targets (this file + the k2-resources hub + MEMORY.md). The deep docs they still name live in `resources/k2-resources/originals/` (PATHS NOTE in each file).
 - 3 skills restored to `.claude/skills/`: `gemp-swccg-memory`, `k2-swccg-strategy`, `work-verifier` (alongside the 4 already present).
 - `mcp.json` corrected to `alfred` only; `mcp-gemp-client/` restored (`k2_player.py`, `run_bot_tournament.py`, the curator pipeline).
 
@@ -66,4 +67,4 @@ The whole fork + all four angles + every handoff lived ONLY in the working tree,
 - `RANDO_MISSING_LOGIC.md` — the 3 never-coded rules + how they were verified.
 - `AI_CHANGELOG.md` — V185 + V186 + auto-pass + card-proxy, each with Why + Revert.
 - The 3 angle handoffs: `K2_HANDOFF_2026-06-23.md`, `K2_HANDOFF_2026-06-23_audit-V185-council.md`, `K2_HANDOFF_2026-06-23_verification-and-consolidation.md`.
-- `k2-resources/originals/` — the deep historical docs + `AI_VERSION_HISTORY.md`.
+- `resources/k2-resources/originals/` — the deep historical docs + `AI_VERSION_HISTORY.md`.

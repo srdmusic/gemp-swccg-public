@@ -34,7 +34,7 @@ Other concurrent work I'm aware of (did **not** touch): **V186 "I Want That Map"
 
 ## What I CREATED (read these)
 
-- **`/Users/steve/k2-resources/`** — the **ONBOARDING ARCHIVE. I (this K-2 lineage) built it** on 2026-06-22, consolidating every scattered `.md` from `BACKUP-2026-06-20` into one place OUTSIDE any install (so re-clones can't wipe it). **Start at `k2-resources/distilled/00-START-HERE.md`** — the current hub (refreshed 2026-06-23; routes to all three handoffs). ⚠️ The *deep* distilled docs lag the code (`K2_ONBOARDING.md` ≤ V138, `ai-instructions.md` ≤ V126) — trust the **hub + the live install** for anything V185+. Verbatim sources live under `originals/` (the 5 handoffs, full `AI_CHANGELOG` 2336 L, `AI_VERSION_HISTORY` 5358 L, the 2 prior audit `.xlsx`, ~41 SWCCG rules docs).
+- **`/Users/steve/gemp-swccg-public/resources/k2-resources/`** — the **ONBOARDING ARCHIVE. I (this K-2 lineage) built it** on 2026-06-22, consolidating every scattered `.md` from `GEMP ARCHIVE/gemp-swccg-public-BACKUP-2026-06-20` into one place OUTSIDE any install (so re-clones can't wipe it). **Start at `resources/k2-resources/distilled/00-START-HERE.md`** — the current hub (refreshed 2026-06-23; routes to all three handoffs). ⚠️ The *deep* distilled docs lag the code (`K2_ONBOARDING.md` ≤ V138, `ai-instructions.md` ≤ V126) — trust the **hub + the live install** for anything V185+. Verbatim sources live under `originals/` (the 5 handoffs, full `AI_CHANGELOG` 2336 L, `AI_VERSION_HISTORY` 5358 L, the 2 prior audit `.xlsx`, ~41 SWCCG rules docs).
 - **`RANDO_BACKUP_AUDIT_2026-06-23.xlsx`** — 5 sheets. The **Breadcrumb Findings** tab has file:line evidence for every item below.
 - **`RANDO_MISSING_LOGIC.md`** — the 3 never-coded rules + how I verified.
 - This handoff.
@@ -43,15 +43,15 @@ Other concurrent work I'm aware of (did **not** touch): **V186 "I Want That Map"
 
 | You need… | Look here |
 |---|---|
-| **Onboarding / orientation** | `k2-resources/distilled/00-START-HERE.md` (the hub I built); `MEMORY.md` auto-loads a pointer to it each session |
+| **Onboarding / orientation** | `resources/k2-resources/distilled/00-START-HERE.md` (the hub I built); `MEMORY.md` auto-loads a pointer to it each session |
 | **Standing rules + project state** | `~/.claude/projects/-Users-steve-gemp-swccg-public/memory/MEMORY.md` (auto-loaded) — the `feedback_*` rules are non-negotiable |
 | **The 3 K2 angles / current work** | the two handoffs in the install root (this one + `K2_HANDOFF_2026-06-23.md`). The **curator** angle has NO handoff yet — a gap to fill |
 | **Live code changes (V185, V186, proxy, auto-pass)** | `AI_CHANGELOG.md` (each entry has Why + Revert) |
-| **Full V-tag history V21–V184** | `k2-resources/originals/02-rando-history/AI_VERSION_HISTORY.md` (NOT present in the live install) |
-| **SWCCG rules / glossary / expansions** | `k2-resources/originals/05-swccg-reference/` (~41 docs) |
+| **Full V-tag history V21–V184** | `resources/k2-resources/originals/02-rando-history/AI_VERSION_HISTORY.md` (NOT present in the live install) |
+| **SWCCG rules / glossary / expansions** | `resources/k2-resources/originals/05-swccg-reference/` (~41 docs) |
 | **The backup audit + every finding's file:line** | `RANDO_BACKUP_AUDIT_2026-06-23.xlsx` → Breadcrumb Findings tab |
 | **The 3 never-coded rules** | `RANDO_MISSING_LOGIC.md` |
-| **Prior-K2 hard-won lessons (silent regressions, dojo design)** | `BACKUP-2026-06-20/K2_MASTER_HANDOFF.md` (also in `k2-resources/originals/03-handoffs/`) |
+| **Prior-K2 hard-won lessons (silent regressions, dojo design)** | `GEMP ARCHIVE/gemp-swccg-public-BACKUP-2026-06-20/K2_MASTER_HANDOFF.md` (also in `resources/k2-resources/originals/03-handoffs/`) |
 
 ---
 
@@ -77,11 +77,11 @@ V52 (SPEND FORCE +300 removed), V106 (re-enabled 2026-06-17, changelog says remo
 ## KEY FACTS everyone should know
 
 - **Rando reads ZERO external files at runtime** — all knowledge is compiled into `.java`. No data/config files to merge or restore. (Verified: 0 `getResource`/`new File`/`Files.read` across the whole AI tree.)
-- **Current install = the most complete version on disk** = `BACKUP-2026-06-20/ai-improvements-v91` (V184) + the DeckOracle off-by-one fix + V185(source). All V-tags V3–V185 present. **Nothing to merge from any backup.**
+- **Current install = the most complete version on disk** = `GEMP ARCHIVE/gemp-swccg-public-BACKUP-2026-06-20/ai-improvements-v91` (V184) + the DeckOracle off-by-one fix + V185(source). All V-tags V3–V185 present. **Nothing to merge from any backup.**
 - **Running jar = V184, NOT V185** (`web.jar` built 2026-06-22 19:19). V185 + V186 are source-only until a rebuild.
 - **The "dumb moves I thought we fixed" root cause is silent score-magnitude domination** (a present rule out-scored by a bigger newer rule), per `K2_MASTER_HANDOFF.md:28`. Not missing code. The dojo is the fix for the whole class.
 - **Council:** only `deepseek-r1:70b-llama-distill-q8_0` is pulled; all roles re-pointed to it (perspective diversity via prompts only, not multi-family). Its review CONFIRMED the V96/V67al fix.
-- This install **lacks `AI_VERSION_HISTORY.md`** (the 5,358-line V-tag bible); it lives in `BACKUP-2026-06-20/` and `~/k2-resources/`. Worth restoring.
+- This install **lacks `AI_VERSION_HISTORY.md`** (the 5,358-line V-tag bible); it lives in `GEMP ARCHIVE/gemp-swccg-public-BACKUP-2026-06-20/` and `~/k2-resources/`. Worth restoring.
 
 ---
 
@@ -95,4 +95,4 @@ V52 (SPEND FORCE +300 removed), V106 (re-enabled 2026-06-17, changelog says remo
 - [ ] Build the **3 never-coded rules** (RANDO_MISSING_LOGIC.md).
 
 ## Where the detail lives
-`AI_CHANGELOG.md` (V185 + V186) · `RANDO_BACKUP_AUDIT_2026-06-23.xlsx` → **Breadcrumb Findings** tab (file:line for every finding) · `RANDO_MISSING_LOGIC.md` · `BACKUP-2026-06-20/` (`AI_VERSION_HISTORY.md`, `K2_MASTER_HANDOFF.md`, `Rando_AI_Rule_Audit.xlsx`) · memory dir.
+`AI_CHANGELOG.md` (V185 + V186) · `RANDO_BACKUP_AUDIT_2026-06-23.xlsx` → **Breadcrumb Findings** tab (file:line for every finding) · `RANDO_MISSING_LOGIC.md` · `GEMP ARCHIVE/gemp-swccg-public-BACKUP-2026-06-20/` (`AI_VERSION_HISTORY.md`, `K2_MASTER_HANDOFF.md`, `Rando_AI_Rule_Audit.xlsx`) · memory dir.

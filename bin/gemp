@@ -89,8 +89,18 @@ flip_operational() {
     curl -s -c "$COOKIES" -b "$COOKIES" \
         -X POST -d 'enabled=false' \
         "$GEMP_URL/gemp-swccg-server/admin/shutdown" > /dev/null
+    # Auto-enable the gameplay switches that RESET on every restart, so tables,
+    # AI bots, private games, and stat tracking load without a manual flip.
+    # EXCLUDED: bonusabilities — that is the April Fool's Day abilities toggle
+    # (casual-only), it persists across restarts, so we leave it OFF on purpose.
+    # purgestattrackers is a one-shot purge action, not a startup toggle.
+    for s in aitables privategames stattracking newaccounts; do
+        curl -s -c "$COOKIES" -b "$COOKIES" \
+            -X POST -d 'enabled=true' \
+            "$GEMP_URL/gemp-swccg-server/admin/settings/$s" > /dev/null
+    done
     rm -f "$COOKIES"
-    print_success "Server is operational"
+    print_success "Server operational: aitables, privategames, stattracking, newaccounts ON (April Fool's bonus abilities left off)"
 }
 
 # Original attempt at getting stuff to work, but ended up figuring it out

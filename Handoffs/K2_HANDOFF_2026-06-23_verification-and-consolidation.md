@@ -5,7 +5,7 @@
 - `K2_HANDOFF_2026-06-23.md` — angle 1: collision map for the 3 K-2s, V185/V186 code detail, the two gotchas.
 - `K2_HANDOFF_2026-06-23_audit-V185-council.md` — angle 2: backup/breadcrumb audit + council + prioritized gaps.
 - `RANDO_MISSING_LOGIC.md` — the 3 genuinely-unbuilt behaviors.
-- Onboarding hub: `/Users/steve/k2-resources/distilled/00-START-HERE.md`.
+- Onboarding hub: `/Users/steve/gemp-swccg-public/resources/k2-resources/distilled/00-START-HERE.md`.
 
 My angle was NOT writing new Rando logic. It was proving what's real, recording it, and making the onboarding current. I touched zero `src/` code this session.
 
@@ -13,11 +13,11 @@ My angle was NOT writing new Rando logic. It was proving what's real, recording 
 
 ## What I did this session
 
-- **Settled the "did we copy Rando wrong?" scare — by reading actual files, not version labels.** The live install IS the most complete Rando on disk; it matches the `ai-improvements-v91` fork plus V185/V186. The trap that made it look mis-copied: `gemp-swccg-public-OURS-2026-06-20`'s working tree is checked out to `run-devs-pure` (the devs STUB, only `rando`, smaller files). Use `gemp-swccg-public-BACKUP-2026-06-20`'s working tree (the real full fork) as the reference, not OURS's working tree.
+- **Settled the "did we copy Rando wrong?" scare — by reading actual files, not version labels.** The live install IS the most complete Rando on disk; it matches the `ai-improvements-v91` fork plus V185/V186. The trap that made it look mis-copied: `GEMP ARCHIVE/gemp-swccg-public-OURS-2026-06-20`'s working tree is checked out to `run-devs-pure` (the devs STUB, only `rando`, smaller files). Use `GEMP ARCHIVE/gemp-swccg-public-BACKUP-2026-06-20`'s working tree (the real full fork) as the reference, not OURS's working tree.
 
 - **Content archaeology audit** (read actual code across ~30 branches and copies, not V-tag counts). Confirmed three things: (1) no branch or backup holds any implementing logic the live install lacks; (2) the 3 behaviors in `RANDO_MISSING_LOGIC.md` are genuinely missing by CONTENT everywhere (Mapuzo opponent-clear counter, far-behind save-a-Jedi skip, Levitation/Sith-Fury turn-4 gate); (3) it CAUGHT that V186 WAS built when my own earlier grep and the first sweep both missed it — the +400 Starkiller block matches by blueprint id (`208_51`), not the title "starkiller", so a title grep is blind to it.
 
-- **Verified V186 end-to-end by reading the code** (all three blocks) plus every `.md` in BACKUP-2026-06-20. The strategy/handoff docs are SILENT on I Want That Map, so the picks rest on Steve's stated strategy plus the card text. Confirmed naming Starkiller is REQUIRED: the system has no battleground icon, so a generic battleground heuristic misses it (my earlier generic idea would have failed). The fix is correct and structurally sound.
+- **Verified V186 end-to-end by reading the code** (all three blocks) plus every `.md` in GEMP ARCHIVE/gemp-swccg-public-BACKUP-2026-06-20. The strategy/handoff docs are SILENT on I Want That Map, so the picks rest on Steve's stated strategy plus the card text. Confirmed naming Starkiller is REQUIRED: the system has no battleground icon, so a generic battleground heuristic misses it (my earlier generic idea would have failed). The fix is correct and structurally sound.
 
 - **Recorded V185 + V186 in `AI_VERSION_HISTORY.md`** (both the BACKUP copy and the `k2-resources` archive copy, synced identical, 5358 to 5431 lines, through V186, newest-first above the V184 banner). The chronological history had been two versions behind. The live install uses `AI_CHANGELOG.md` (which already had both); `AI_VERSION_HISTORY.md` lives only in BACKUP + k2-resources by convention.
 
@@ -43,7 +43,7 @@ My angle was NOT writing new Rando logic. It was proving what's real, recording 
 ```bash
 cd /Users/steve/gemp-swccg-public
 R=src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando
-grep -nE '════ V18[4-6]' /Users/steve/k2-resources/originals/02-rando-history/AI_VERSION_HISTORY.md   # history through V186
+grep -nE '════ V18[4-6]' /Users/steve/gemp-swccg-public/resources/k2-resources/originals/02-rando-history/AI_VERSION_HISTORY.md   # history through V186
 grep -rn 'V186' "$R"                                                                                   # V186 = 3 blocks, all gated to "i want that map"
 grep -rn 'scoreStartingCard\|\.setObjective(' src/ | grep -v ObjectiveHandler.java                     # empty = ObjectiveHandler is dead
 git log --oneline -1                                                                                   # 55c22cf49 = devs base = nothing committed

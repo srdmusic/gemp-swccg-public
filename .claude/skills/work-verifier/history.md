@@ -327,3 +327,96 @@ card_blueprint_database before claiming "dead code on this side".
 The side-reversal failure mode (calling LIGHT-side cards dark-side
 or vice versa) joins the "no fabrication" rule family. Add to
 references/verify-evaluator-edit.md as a sub-check under Step 10c.
+
+## 2026-06-25 04:20 — V185/V186 fast-path deploy → PASS
+
+Operation: Deploy of two Rando AI rules to the running server via
+fast-path (in-container mvn package + docker compose restart build,
+NOT a full nuke). V185 = weapon-deployability gate (DeployEvaluator +
+DeckOracle). V186 = "I Want That Map" starting setup (CardSelectionEvaluator
++ ObjectiveAnalyzer). Prior running jar was V184.
+Context: branch rando-consolidation-2026-06-23, base 55c22cf49.
+Running jar: gemp_swccg_app_1:/opt/gemp-swccg/src/gemp-swccg-async/target/web.jar.
+
+Verification was BYTECODE-PRESENCE ONLY (read-only, no rebuild/edit).
+RULE-FIRED-IN-GAME is explicitly NOT verified — needs an "I Want That Map"
+objective deck (V186) and an A-Good-Friend-style reserve-deploy-only-
+unattachable-weapons board (V185).
+
+Findings (claim-by-claim):
+
+CLAIM 1 — V185/V186 in running jar bytecode: PASS
+  Extracted 4 classes from web.jar inside container, `strings` + grep:
+  - DeployEvaluator.class       V185=2  V186=0
+  - DeckOracle.class            V185=0  V186=0  (comment-only, expected)
+  - CardSelectionEvaluator.class V185=0 V186=4
+  - ObjectiveAnalyzer.class     V185=0  V186=1
+  Required minimum met: V185 present in DeployEvaluator (>=1), V186 present
+  in CardSelectionEvaluator (>=1). DeckOracle carries V185 only in source
+  comments (no runtime string) — matches the "V-tags may live in comments"
+  caveat in the task. Actual runtime strings dumped and confirmed REAL
+  log/reasoning strings, not coincidental:
+  - V185: "V185 WEAPON-NO-HOLDER blocked: source={} targets={}",
+          "V185 WEAPON, NO LEGAL HOLDER: every Reserve-Deck target left..."
+  - V186: "V186 PREFERRED START (I Want That Map): {} (+1000)",
+          "V186 STARKILLER SYSTEM: cardId={} bp={} title={} (+400)",
+          "V186 STARKILLER BASE SYSTEM - download engine...",
+          "V186 PREFERRED STARTING EFFECT (I Want That Map):",
+          "[ObjectiveAnalyzer] V186: I Want That Map detected - naming
+           Starkiller Base (location) + The First Order Was Just The
+           Beginning (effect)."
+
+CLAIM 2 — clean boot + game servers up: PASS
+  - Java proc alive: PID 1, `java -Xmx4g ... -jar .../web.jar
+    com.gempukku.swccgo.async.SwccgoAsyncServer`
+  - nohup.out tail: "GempukkuServer startup complete." (last at line 148558)
+    preceded by Started: HallServer / SwccgoServer / ChatServer.
+  - "Server is in operational mode and games are now able to be started"
+    at tail.
+  - 10 total startup-complete lines historically; the LAST is the deploy boot.
+  - Fatal-exception scan after line 148558: ZERO real java stacktraces
+    (`^\s+at ...java:NN)` = 0, no "Caused by"/NoClassDefFound/FATAL).
+    The 136 historical "exception" grep hits are log4j config DEBUG attr
+    names ("ignoreExceptions"/"alwaysWriteExceptions") + earlier-startup
+    MySQL races, NOT from this boot.
+
+CLAIM 3 — operational + AI tables: PASS
+  - curl http://localhost:17001/gemp-swccg-server/ → 200
+  - Hall (logged in as asdf): aiTablesEnabledBoolean="true",
+    friendly default motd (no "not yet in operational mode" string).
+
+CLAIM 4 — DB safety: PASS
+  - `docker volume ls` → EMPTY (header only, no volumes).
+  - gemp_swccg_db_1 mount: bind /Users/steve/gemp-swccg-public/database
+    -> /var/lib/mysql. Host bind-mount, not a docker volume. Deploy was
+    Java-only; DB untouched.
+  - Containers: app Up 3 min, db Up 7 min (db older = never restarted,
+    consistent with a build-only restart that left the DB container alone).
+
+Freshness cross-check:
+  - web.jar mtime 2026-06-25 04:16:34 UTC; container StartedAt
+    04:17:27 UTC. Jar built BEFORE restart => the running process loaded
+    the freshly-built V185/V186 jar (not a stale one). The .class mtimes
+    inside the jar are 04:20 (extraction time, expected).
+
+NOT VERIFIED (stated explicitly): V185 and V186 FIRING in a real game.
+Bytecode-present != rule-fired. Requires specific deck scenarios.
+
+Note on /gemp-swccg/ → 404 (static web frontend): AGREE it is unrelated
+to this deploy. Evidence: the change was server-side Java only (AI
+evaluator classes in web.jar); the static frontend is served from a
+separate bind-mounted web dir (/opt/gemp-swccg/web), not rebuilt or
+touched by an mvn package of gemp-swccg-async. The game API path
+/gemp-swccg-server/ returns 200, which is what matters for AI-table play.
+Pre-existing, not a regression from V185/V186.
+
+Verdict: PASS (4/4 claims). Deploy is live in bytecode and the server is
+healthy. Only outstanding item is the in-game firing test, which is out of
+scope for a read-only bytecode verification.
+
+Lesson reinforced: fast-path deploy (in-container mvn package + restart
+build, no nuke) correctly swapped the jar — jar-mtime-before-container-start
+is the clean check that the running process picked up the new build. The
+log4j "ignoreExceptions"/"alwaysWriteExceptions" attribute names are a
+recurring false-positive for exception greps; always filter to real
+stack-frame regex (`^\s+at .*\.java:[0-9]+\)`) when scanning startup tails.
