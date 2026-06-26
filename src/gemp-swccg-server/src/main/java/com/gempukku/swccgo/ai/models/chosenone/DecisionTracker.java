@@ -299,7 +299,13 @@ public class DecisionTracker {
                         for (String[] e : recent) {
                             String k = e[0];
                             String r = e[1];
-                            blockedResponses.computeIfAbsent(k, x -> new HashSet<>()).add(r);
+                            // 2026-06-25 (Steve): same CANCEL-LOOP POISONING FIX as line ~443
+                            // (chosenone mirror). Sequence-repeat detector also wrote into the
+                            // PERMANENT blockedResponses (never cleared mid-game). Write turn-scoped
+                            // only; chosenone's 302 had NO turn-scoped sibling, so it was the most
+                            // exposed copy.
+                            // blockedResponses.computeIfAbsent(k, x -> new HashSet<>()).add(r);
+                            turnBlockedActions.computeIfAbsent(k, x -> new HashSet<>()).add(r);
                         }
                     }
                 }
@@ -440,8 +446,16 @@ public class DecisionTracker {
         if (lastActionChoiceKey != null && !lastActionChoiceKey.isEmpty() &&
             lastActionChoiceResponse != null && !lastActionChoiceResponse.isEmpty()) {
 
-            blockedResponses.computeIfAbsent(lastActionChoiceKey, k -> new HashSet<>())
-                .add(lastActionChoiceResponse);
+            // 2026-06-25 (Steve): CANCEL-LOOP POISONING FIX (chosenone mirror of rando). The
+            // block ALSO wrote to the PERMANENT blockedResponses map, which clears only at game
+            // start (mid-game onPhaseChange resets the WRONG tracker). The key is a positional
+            // action ID the engine reuses for a different card each decision, so a stale block
+            // vetoes a different good card later in the game. Write to turnBlockedActions ONLY:
+            // getBlockedResponses() reads BOTH maps (within-turn protection preserved) and
+            // turnBlockedActions clears every turn change (updateState). Verified GO by review +
+            // council. Same fix at line ~302.
+            // blockedResponses.computeIfAbsent(lastActionChoiceKey, k -> new HashSet<>())
+            //     .add(lastActionChoiceResponse);
 
             turnBlockedActions.computeIfAbsent(lastActionChoiceKey, k -> new HashSet<>())
                 .add(lastActionChoiceResponse);
