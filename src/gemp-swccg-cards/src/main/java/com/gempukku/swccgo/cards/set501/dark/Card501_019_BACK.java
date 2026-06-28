@@ -11,6 +11,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -63,18 +64,19 @@ public class Card501_019_BACK extends AbstractObjective {
 
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.MORE_AND_MORE_SYSTEMS_ARE_JOINING_THE_SEPARATISTS__DEPLOY_BATTLEGROUND_SITE;
+        GameTextActionId gameTextActionId = GameTextActionId.MORE_SYSTEMS_WILL_RALLY_TO_OUR_CAUSE__DEPLOY_BATTLEGROUND_SITE;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+            
+            Filter systemFilter = Filters.and(Filters.your(self), Filters.or(Icon.CLONE_ARMY, Icon.SEPARATIST), Filters.system);
 
-            Filter systemFilter = Filters.and(Filters.your(self), Filters.or(Icon.SEPARATIST, Icon.CLONE_ARMY), Filters.system);
-
-            if (GameConditions.canSpotLocation(game, systemFilter)) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Separatist_Command_Center)
+                    || GameConditions.canSpotLocation(game, systemFilter)) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy a site from Reserve Deck");
-                action.setActionMsg("Deploy a battleground site related to your [Separatist] or [Clone Army] system from Reserve Deck");
+                action.setActionMsg("Deploy Separatist Command Center (or a battleground site related to your [Separatist] or [Clone Army] system) from Reserve Deck");
 
                 Filter siteFilter = Filters.none;
                 for(PhysicalCard system: Filters.filterTopLocationsOnTable(game, systemFilter)) {
@@ -86,8 +88,8 @@ public class Card501_019_BACK extends AbstractObjective {
                         new OncePerTurnEffect(action));
                 // Perform result(s)
                 action.appendEffect(
-                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.title("Separatist Command Center"), Filters.and(Filters.site, siteFilter)), Filters.battleground, true));
-                actions.add(action);
+                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Separatist_Command_Center, Filters.and(Filters.site, siteFilter)), Filters.or(Filters.Separatist_Command_Center, Filters.battleground), true));
+                return Collections.singletonList(action);
             }
         }
 
