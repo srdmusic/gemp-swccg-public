@@ -50,7 +50,7 @@ public class Card501_032 extends AbstractDroid {
         String playerId = self.getOwner();
         
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotForceDrainAtLocationModifier(self, new AloneCondition(self), playerId));
+        modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.sameLocation(self), new AloneCondition(self), playerId));
         return modifiers;
     }
 }
