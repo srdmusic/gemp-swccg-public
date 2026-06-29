@@ -37,7 +37,6 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ConvertLocationResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -103,7 +102,7 @@ public class Card501_019_BACK extends AbstractObjective {
                 // Perform result(s)
                 action.appendEffect(
                         new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Separatist_Command_Center, Filters.and(Filters.site, siteFilter)), Filters.or(Filters.Separatist_Command_Center, Filters.battleground), true));
-                return Collections.singletonList(action);
+                actions.add(action);
             }
         }
 
@@ -124,7 +123,7 @@ public class Card501_019_BACK extends AbstractObjective {
                 // Perform result(s)
                 action.appendEffect(
                         new LoseForceEffect(action, opponent, numForce));
-                return Collections.singletonList(action);
+                actions.add(action);
             }
         }
 
@@ -142,6 +141,7 @@ public class Card501_019_BACK extends AbstractObjective {
             // Perform result(s)
             action.appendEffect(
                     new DeployStackedCardEffect(action, self, Filters.restricted_6, false));
+            actions.add(action);
         }
 
         return actions;
@@ -153,31 +153,7 @@ public class Card501_019_BACK extends AbstractObjective {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
-        GameTextActionId  gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1; //Retrieve if you just flipped
-        // Check condition(s)
-        if (TriggerConditions.cardFlipped(game, effectResult, self)) {
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Retrieve up to 2 Force");
-            action.appendEffect(
-                    new PlayoutDecisionEffect(action, playerId,
-                            new IntegerAwaitingDecision("Choose amount of Force to retrieve", 0, 2, 2) {
-                                @Override
-                                public void decisionMade(final int amountToRetrieve) throws DecisionResultInvalidException {
-                                    GameState gameState = game.getGameState();
-                                    if (amountToRetrieve == 0) {
-                                        gameState.sendMessage(playerId + " chooses to not retrieve any Force");
-                                        return;
-                                    }
-                                    gameState.sendMessage(playerId + " chooses to retrieve " + amountToRetrieve + " Force");
-                                    action.appendEffect(
-                                            new RetrieveForceEffect(action, playerId, amountToRetrieve));
-                                }
-                            }
-                    )
-            );
-        }        
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2; //Control phase damage (used twice: top-level and required response)
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2; //Control phase damage (used twice: top-level and required response)
         // Check condition(s)
         // Check if reached end of each control phase and action was not performed yet.
         if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
@@ -251,7 +227,28 @@ public class Card501_019_BACK extends AbstractObjective {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_6; //Upload unique character
+        GameTextActionId  gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1; //Retrieve if you just flipped
+        // Check condition(s)
+        if (TriggerConditions.cardFlipped(game, effectResult, self)) {
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve up to 2 Force");
+            action.appendEffect(
+                    new PlayoutDecisionEffect(action, playerId,
+                            new IntegerAwaitingDecision("Choose amount of Force to retrieve", 1, 2, 2) {
+                                @Override
+                                public void decisionMade(final int amountToRetrieve) throws DecisionResultInvalidException {
+                                    GameState gameState = game.getGameState();
+                                    gameState.sendMessage(playerId + " chooses to retrieve " + amountToRetrieve + " Force");
+                                    action.appendEffect(
+                                            new RetrieveForceEffect(action, playerId, amountToRetrieve));
+                                }
+                            }
+                    )
+            );
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_6; //Upload unique character
         //Check condition(s)
         if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.your(self), Filters.unique, Filters.character))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
