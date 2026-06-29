@@ -16,14 +16,22 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
+import com.gempukku.swccgo.logic.effects.choose.DeployStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -41,11 +49,8 @@ import java.util.List;
 public class Card501_019_BACK extends AbstractObjective {
     public Card501_019_BACK() {
         super(Side.DARK, 7, "The Galaxy Torn Apart", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, during your control phase, opponent loses X Force, " +
-                "where X = number of systems you occupy where you also occupy a related site. " +
-                "At systems related to sites you occupy, opponent's Force drains are -1 and your [Separatist] starships are immune to attrition. " +
-                "Flip this card if fewer than two [Separatist] systems on table.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
+        setGameText("May immediately retrieve up to 2 Force. While this side up, during your control phase, opponent loses X Force, where X = number of systems you control (limit 3). Once per turn, may deploy a (••• •••) card stacked here as if from hand. If you just lost a battle involving a (••• •••) card, opponent loses 1 Force. If your unique (•) character was just lost, may [upload] a unique (•) character. Flip this card if a [Clone Army] system is on table.");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
         setTestingText("The Galaxy Torn Apart");
     }
 
@@ -53,19 +58,28 @@ public class Card501_019_BACK extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.not(Icon.EPISODE_I), Filters.or(Filters.character, Filters.starship, Filters.vehicle)), self.getOwner()));
-        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.system, Filters.relatedSystemTo(self, Filters.and(Filters.site, Filters.occupies(self.getOwner())))), -1, game.getOpponent(self.getOwner())));
-        modifiers.add(new ImmuneToAttritionModifier(self, Filters.and(Filters.your(self), Icon.SEPARATIST, Filters.starship, Filters.at(Filters.relatedSystemTo(self, Filters.and(Filters.site, Filters.occupies(self.getOwner())))))));
+        modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.restricted_6, Filters.stackedOn(self, Filters.Droid_Racks))));
         return modifiers;
     }
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        
+        // List of action IDs
+        // MORE_SYSTEMS_WILL_RALLY_TO_OUR_CAUSE__DEPLOY_BATTLEGROUND_SITE - Deploy site from Reserve Deck (from 0-side)
+        // OTHER_CARD_ACTION_1 - Retrieve if you just flipped
+        // OTHER_CARD_ACTION_2 - Control phase damage (used twice: top-level and required response)
+        // OTHER_CARD_ACTION_3 - Deploy a 6-dot card from here
+        // OTHER_CARD_ACTION_4 - Force loss after a losing battle
+        // OTHER_CARD_ACTION_5 - Flip
+        // OTHER_CARD_ACTION_6 - Upload unique character
+        // OTHER_CARD_ACTION_7 - Auto-raise converted system  (from 0-side)
+
         String opponent = game.getOpponent(playerId);
 
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.MORE_SYSTEMS_WILL_RALLY_TO_OUR_CAUSE__DEPLOY_BATTLEGROUND_SITE;
-
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
@@ -93,11 +107,13 @@ public class Card501_019_BACK extends AbstractObjective {
             }
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2; //Control phase damage (used twice: top-level and required response)
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
-            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.system, Filters.occupies(playerId), Filters.relatedSystemTo(self, Filters.and(Filters.site, Filters.occupies(playerId)))));
+            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.system, Filters.controls(playerId)));
+            if (numForce > 3) {
+                numForce = 3;
+            }
             if (numForce > 0) {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
@@ -112,6 +128,22 @@ public class Card501_019_BACK extends AbstractObjective {
             }
         }
 
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3; //Deploy a 6-dot card from here
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
+                && GameConditions.hasStackedCards(game, self, Filters.and(Filters.restricted_6, Filters.deployable(self, null, false, 0)))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy a card stacked here");
+            action.setActionMsg("Deploy a (••• •••) card stacked on " + GameUtils.getCardLink(self));
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerPhaseEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployStackedCardEffect(action, self, Filters.restricted_6, false));
+        }
+
         return actions;
     }
 
@@ -121,31 +153,40 @@ public class Card501_019_BACK extends AbstractObjective {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
+        GameTextActionId  gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1; //Retrieve if you just flipped
         // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.canSpot(game, self, 2, Filters.and(Icon.SEPARATIST, Filters.system))) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setSingletonTrigger(true);
-            action.setText("Flip");
-            action.setActionMsg(null);
-            // Perform result(s)
+        if (TriggerConditions.cardFlipped(game, effectResult, self)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve up to 2 Force");
             action.appendEffect(
-                    new FlipCardEffect(action, self));
-            actions.add(action);
-        }
+                    new PlayoutDecisionEffect(action, playerId,
+                            new IntegerAwaitingDecision("Choose amount of Force to retrieve", 0, 2, 2) {
+                                @Override
+                                public void decisionMade(final int amountToRetrieve) throws DecisionResultInvalidException {
+                                    GameState gameState = game.getGameState();
+                                    if (amountToRetrieve == 0) {
+                                        gameState.sendMessage(playerId + " chooses to not retrieve any Force");
+                                        return;
+                                    }
+                                    gameState.sendMessage(playerId + " chooses to retrieve " + amountToRetrieve + " Force");
+                                    action.appendEffect(
+                                            new RetrieveForceEffect(action, playerId, amountToRetrieve));
+                                }
+                            }
+                    )
+            );
+        }        
 
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2; //Control phase damage (used twice: top-level and required response)
         // Check condition(s)
         // Check if reached end of each control phase and action was not performed yet.
         if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
 
-            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.system, Filters.occupies(playerId), Filters.relatedSystemTo(self, Filters.and(Filters.site, Filters.occupies(playerId)))));
+            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.system, Filters.controls(playerId)));
+            if (numForce > 3) {
+                numForce = 3;
+            }
             if (numForce > 0) {
 
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
@@ -158,16 +199,39 @@ public class Card501_019_BACK extends AbstractObjective {
             }
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_4; //Force loss after a losing battle
+        // Check condition(s)
+        if (TriggerConditions.lostBattle(game, effectResult, playerId)
+                && GameConditions.canSpot(game, self, Filters.restricted_6)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make opponent lose 1 Force");
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, 1));
+            actions.add(action);
+        }
 
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_5; //Flip
+        // Check condition(s)
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.canBeFlipped(game, self)
+                && GameConditions.canSpot(game, self, 1, Filters.and(Icon.CLONE_ARMY, Filters.system))) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setSingletonTrigger(true);
+            action.setText("Flip");
+            action.setActionMsg(null);
+            // Perform result(s)
+            action.appendEffect(
+                    new FlipCardEffect(action, self));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_7; //Auto-raise converted system  (from 0-side)
+        //Check condition(s)
         if (TriggerConditions.justConvertedLocation(game, effectResult)) {
-
-            System.out.println("converted location");
             PhysicalCard newLocation = ((ConvertLocationResult)effectResult).getNewLocation();
             PhysicalCard oldLocation = ((ConvertLocationResult)effectResult).getOldLocation();
-
-            System.out.println("new: "+newLocation.getTitle());
-            System.out.println("old: "+oldLocation.getTitle());
             if (oldLocation != null
                     && Filters.and(Filters.your(self.getOwner()), Icon.EPISODE_I, Filters.system).accepts(game, oldLocation)) {
 
@@ -179,6 +243,30 @@ public class Card501_019_BACK extends AbstractObjective {
                 actions.add(action);
             }
         }
+
+        return actions;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_6; //Upload unique character
+        //Check condition(s)
+        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.your(self), Filters.unique, Filters.character))
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take a unique character into hand");
+            action.setText("Take a unique (•) character into hand from Reserve Deck");
+
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Filters.unique, Filters.character), true));
+
+            actions.add(action);
+        }
+
         return actions;
     }
 }
