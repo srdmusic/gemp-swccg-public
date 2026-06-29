@@ -7893,7 +7893,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
-                if (titleCheck.contains("endor shield") || titleCheck.contains("alert my star destroyer")) {
+                // V22 (Steve, 2026-06-28): added Silence Is Golden to the preferred
+                // starting effects (a dark Effect: Card3_110 / Card210_045 V).
+                if (titleCheck.contains("endor shield") || titleCheck.contains("alert my star destroyer")
+                        || titleCheck.contains("silence is golden")) {
                     action.addReasoning("V22 PREFERRED STARTING EFFECT: " + cardTitle, 200.0f);
                     logger.warn("V22 PREFERRED START: {} (+200)", cardTitle);
                 }

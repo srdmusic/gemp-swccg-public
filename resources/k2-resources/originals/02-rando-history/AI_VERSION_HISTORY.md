@@ -1698,6 +1698,19 @@ Total tags catalogued: 179
     Steve's expectation: "Rando is already aware of what's in his
     deck at the start of game and would know when he would have a
     successful search."
+    UPDATE (2026-06-28): JUNK-TARGET PASS-THROUGH (mirror V177).
+    The game-text parser collapses a multi-clause OR interrupt (e.g. We
+    Must Accelerate Our Plans) into ONE garbage target ("3 force to take
+    one effect... podracer s..."), which is never in Reserve, so V67h
+    returned WILL_FAIL and slapped -9999 on a VALID location pull.
+    Forensics: Rando passed 'Deploy a Blockade Flagship site' while
+    Blockade Flagship: Bridge sat in his Reserve. Fix in DeckOracle
+    validatePullFromSourceCard (rando + chosenone): before WILL_FAIL, if
+    ANY parsed target is junk (length > 25 or contains a digit, V177's
+    criterion) return UNKNOWN, so the call sites (DeployEvaluator:789,
+    ActionTextEvaluator:4318) no longer veto it. Short clean dead-search
+    targets (My Sister Has It, Weather Vane) still WILL_FAIL. V177 and
+    V67h now agree. See AI_CHANGELOG.md 2026-06-28.
 
   V67i — GLOBAL LOCATION-FIRST PRIORITY
     Source: DeployEvaluator.java

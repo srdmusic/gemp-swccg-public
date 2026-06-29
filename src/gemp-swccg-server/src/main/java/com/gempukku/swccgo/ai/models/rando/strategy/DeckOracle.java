@@ -383,6 +383,15 @@ public class DeckOracle {
         return cards != null ? cards.size() : 0;
     }
 
+    /** Count total copies of a card across all zones, matched by TITLE (catches multiple copies
+     *  AND same-name versions). Used by the starting-effect chooser (V187) to deprioritize
+     *  effects Rando has duplicates of. */
+    public int countCopiesByTitle(String title) {
+        if (title == null) return 0;
+        List<DeckCard> cards = catalogByTitle.get(title.toLowerCase(Locale.ROOT));
+        return cards != null ? cards.size() : 0;
+    }
+
     /** Total number of cards in the deck at game start. */
     public int getTotalDeckSize() {
         return totalDeckSize;
@@ -1214,6 +1223,26 @@ public class DeckOracle {
         //   failed, target is fully proper-noun → WILL_FAIL is safe (substring
         //   would have matched if title were in zone).
         // So WILL_FAIL is correct in both cases.
+        // V67h FIX (2026-06-28, Steve): JUNK-TARGET PASS-THROUGH, mirror V177.
+        // A multi-clause OR interrupt (e.g. We Must Accelerate Our Plans) has its
+        // whole game-text collapsed by the parser into ONE garbage "target" (a long
+        // phrase / a string with digits). That junk is never literally "in Reserve",
+        // so the old WILL_FAIL made the V67h call sites (DeployEvaluator:789,
+        // ActionTextEvaluator:4318) slap -9999 on a genuinely valid location pull —
+        // forensics caught Rando passing 'Deploy a Blockade Flagship site' while
+        // Blockade Flagship: Bridge sat in his Reserve. V177 already flags this exact
+        // junk (length > 25 OR contains a digit) and stands down; V67h must agree, or
+        // the two dead-search detectors disagree on the same card and the meaner one
+        // (-9999) wins. If ANY parsed target is junk the parse is untrustworthy, so
+        // return UNKNOWN (let the existing weights handle it) instead of WILL_FAIL.
+        for (String v67hJunkT : targets) {
+            if (v67hJunkT != null
+                    && (v67hJunkT.length() > 25 || v67hJunkT.matches(".*\\d.*"))) {
+                return new PullValidation(PullOutcome.UNKNOWN,
+                    "V67h PARSE-JUNK pass-through: target [" + v67hJunkT
+                        + "] unparseable (>25 chars or has digit) — not blocking (mirror V177)");
+            }
+        }
         return new PullValidation(PullOutcome.WILL_FAIL,
             "no parsed target [" + String.join(", ", targets)
                 + "] in " + sourceZone + " — search will FAIL and reveal zone");

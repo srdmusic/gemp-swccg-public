@@ -1107,6 +1107,23 @@ public class DeckOracle {
         //   failed, target is fully proper-noun → WILL_FAIL is safe (substring
         //   would have matched if title were in zone).
         // So WILL_FAIL is correct in both cases.
+        // V67h FIX (2026-06-28, Steve): JUNK-TARGET PASS-THROUGH, mirror V177.
+        // A multi-clause OR interrupt (e.g. We Must Accelerate Our Plans) has its
+        // whole game-text collapsed by the parser into ONE garbage "target" (a long
+        // phrase / a string with digits). That junk is never literally "in Reserve",
+        // so the old WILL_FAIL made the V67h call sites slap -9999 on a genuinely
+        // valid location pull. V177 already flags this exact junk (length > 25 OR
+        // contains a digit) and stands down; V67h must agree, or the two dead-search
+        // detectors disagree on the same card and the meaner one (-9999) wins. If ANY
+        // parsed target is junk, return UNKNOWN (let weights handle it) not WILL_FAIL.
+        for (String v67hJunkT : targets) {
+            if (v67hJunkT != null
+                    && (v67hJunkT.length() > 25 || v67hJunkT.matches(".*\\d.*"))) {
+                return new PullValidation(PullOutcome.UNKNOWN,
+                    "V67h PARSE-JUNK pass-through: target [" + v67hJunkT
+                        + "] unparseable (>25 chars or has digit) — not blocking (mirror V177)");
+            }
+        }
         return new PullValidation(PullOutcome.WILL_FAIL,
             "no parsed target [" + String.join(", ", targets)
                 + "] in " + sourceZone + " — search will FAIL and reveal zone");

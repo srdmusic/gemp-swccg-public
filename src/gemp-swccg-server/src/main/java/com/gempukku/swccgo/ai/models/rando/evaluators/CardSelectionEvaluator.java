@@ -7934,7 +7934,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
-                if (titleCheck.contains("endor shield") || titleCheck.contains("alert my star destroyer")) {
+                // === V187 (Steve, 2026-06-28): DUPLICATE STARTING-EFFECT PENALTY ===
+                // Don't burn the turn-0 effect slot on an effect Rando has more than one of — the
+                // other copy is still drawable/deployable later, so spend the slot on a SINGLETON
+                // for more table variety. DeckOracle counts copies by title across the whole deck.
+                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v187Oracle = context.getDeckOracle();
+                if (v187Oracle != null && v187Oracle.isAnalyzed()) {
+                    int v187Copies = v187Oracle.countCopiesByTitle(cardTitle);
+                    if (v187Copies > 1) {
+                        action.addReasoning("V187 DUPLICATE: Rando has " + v187Copies + " copies of '"
+                            + cardTitle + "' — prefer a singleton starting effect", -300.0f);
+                        logger.warn("V187 DUPLICATE STARTING EFFECT: '{}' x{} — -300", cardTitle, v187Copies);
+                    }
+                }
+                // V22 (Steve, 2026-06-28): added Silence Is Golden to the preferred
+                // starting effects (a dark Effect: Card3_110 / Card210_045 V).
+                if (titleCheck.contains("endor shield") || titleCheck.contains("alert my star destroyer")
+                        || titleCheck.contains("silence is golden")) {
                     action.addReasoning("V22 PREFERRED STARTING EFFECT: " + cardTitle, 200.0f);
                     logger.warn("V22 PREFERRED START: {} (+200)", cardTitle);
                 }
