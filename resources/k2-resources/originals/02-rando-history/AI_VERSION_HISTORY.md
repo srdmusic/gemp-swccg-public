@@ -3216,6 +3216,33 @@ Total tags catalogued: 179
     else. Non-empty responses and genuine end-of-phase passes reset the counter.
     Constants: CANCEL_LOOP_THRESHOLD = 3.
 
+  ════ V188 (2026-06-28) ════
+
+  V188 — SET YOUR COURSE FOR ALDERAAN: don't deploy ability characters to Death Star sites
+    Source: CharacterDeploySiteEvaluator.java (evaluateSite, shared common/ → both bots and both
+    deploy paths: DeployEvaluator from-hand + CardSelectionEvaluator choose-target).
+    Steve's report: "When Rando is playing 'Set Your Course For Alderaan' he should not deploy his
+    characters with ability to the Death Star, he can't Force drain there. Wasted guys deployed
+    there last game." The objective's FRONT text reads: "At Death Star sites, your Force drains and
+    battle damage against you are canceled." An ability character at a Death Star site can't drain
+    (its whole purpose), so it is wasted; steer it to a drainable battleground instead.
+    Fix: an early gate at the top of evaluateSite returns -900 when (deploying card ability >= 1)
+    AND (candidate site is Filters.Death_Star_site) AND (the player has "Set Your Course For
+    Alderaan" in play, front). Front-only detection comes for free: PhysicalCardImpl.getBlueprint()
+    (:497) returns _backBlueprint once flipped, so getTitles()/Filters.title stops matching the
+    instant the card flips to "The Ultimate Power In The Universe", at which point the Death Star
+    becomes the win condition and you WANT presence there, so the gate lifts on its own.
+    Boundary (additive-domination): a NARROW early gate that fires ONLY for (ability >= 1 + Death
+    Star site + this objective front). Ability-0 fodder is untouched (it may still hold a Death Star
+    site for the flip/superlaser); every other objective, every non-Death-Star site, and the flipped
+    back side run the normal §A/§B/§C/§D scoring. -900 sits clearly below a drainable battleground's
+    net (~+600-800 = §A win +500 plus §B), so ability drivers route to drainable sites; it is not an
+    absolute block. No clean engine "drains canceled here" query exists, so we key on objective+site.
+    Verified: compiles clean (mvn -pl gemp-swccg-server -am compile, EXIT=0). NEW V-tag (V187 = the
+    other K-2's concurrent work). PENDING, not done: NOT deployed (Steve is holding reload-ai to test
+    a different deck first), then a live Set Your Course For Alderaan game (grep nohup.out for
+    "V188 ALDERAAN DEATH-STAR").
+
   ════ V186 (2026-06-23) ════
 
   V186 — I WANT THAT MAP STARTING SETUP (Starkiller Base system + The First Order Was Just The Beginning)

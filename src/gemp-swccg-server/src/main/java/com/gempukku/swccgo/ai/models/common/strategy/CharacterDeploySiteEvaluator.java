@@ -85,10 +85,36 @@ public class CharacterDeploySiteEvaluator {
 
         String opponentId = game.getOpponent(playerId);
 
+        // ─── V188: Set Your Course For Alderaan — drains canceled at Death Star sites ───
+        // The objective's FRONT text: "At Death Star sites, your Force drains and battle damage
+        // against you are canceled." An ability character parked at a Death Star site is wasted
+        // there: it cannot Force drain (the point of an ability character). Steer ability characters
+        // to drainable battlegrounds instead. Detection is front-only for free: PhysicalCardImpl
+        // .getBlueprint() returns _backBlueprint once flipped, so getTitles() (and thus
+        // Filters.title) stops matching "Set Your Course For Alderaan" the moment it flips to "The
+        // Ultimate Power In The Universe" — at which point the Death Star becomes the win condition
+        // and you WANT to be there. Only ability >= 1 is hit; ability-0 fodder may still hold a site.
+        // No clean engine "drains canceled here" query exists, so we key on the objective + site.
+        // Narrow early gate: fires ONLY for (ability char + Death Star site + this objective front),
+        // so it cannot dominate the §A/§B/§C/§D scoring in any other situation.
+        try {
+            Float v188Ability = deployingCard.getBlueprint() != null
+                ? deployingCard.getBlueprint().getAbility() : null;
+            if (v188Ability != null && v188Ability >= 1f
+                    && Filters.Death_Star_site.accepts(gs, mq, candidateSite)
+                    && !Filters.filterActive(game, null, Filters.and(
+                            Filters.owner(playerId),
+                            Filters.title("Set Your Course For Alderaan"))).isEmpty()) {
+                LOG.warn("V188 ALDERAAN DEATH-STAR: {} (ability {}) → {} — drains canceled at Death Star sites, wasted deploy (-900)",
+                    safeTitle(deployingCard), v188Ability, safeTitle(candidateSite));
+                return -900f;
+            }
+        } catch (Exception e) { /* fail-open */ }
+
         // ─── §A team viability ──────────────────────────────────────────
         float scoreA = computeTeamViability(
             gs, mq, deployingCard, candidateSite, playerId, opponentId,
-            friendlyHand, availableForceForDeploys, currentTurn);
+            friendlyHand, availableForceForDeploys, currentTurn, isObjectiveRelevantSite);
 
         // ─── §B strategic position ─────────────────────────────────────
         float scoreB = computeStrategicPosition(
@@ -123,7 +149,7 @@ public class CharacterDeploySiteEvaluator {
             PhysicalCard deployingCard, PhysicalCard candidateSite,
             String playerId, String opponentId,
             List<PhysicalCard> friendlyHand, int availableForceForDeploys,
-            int currentTurn) {
+            int currentTurn, boolean isObjectiveRelevantSite) {
 
         // Existing friendlies at the site
         List<PhysicalCard> friendliesAtSite;
@@ -433,11 +459,71 @@ public class CharacterDeploySiteEvaluator {
             } catch (Exception ignore) { /* false */ }
         }
 
+        // === V156 UPDATED 2026-06-25 (Steve): smart solo-deploy hold (ability/weapon/BG aware) ===
+        // Prior V156: turn<=2, solo, uncontested, no-buddy -> -300 at ANY site (OLD, commented below).
+        // Now scoped to a ground BATTLEGROUND site + CHARACTER + NON-objective, and ability/weapon aware:
+        //   solo allowed only if ability >= 6, OR ability >= 5 with an affordable matching weapon in hand;
+        //   weak solos (<=4, or 5 unarmed) hold for a buddy (-600); an allowed strong solo still prefers a
+        //   buddy when force is available (+250). Objective flip-sites are SKIPPED (deploy-to-flip, then buddy
+        //   up after: Endor / Imperial Enforcements / TDIGWATT — generic via isObjectiveRelevantSite).
+        //   Ships/systems excluded (CHARACTER + isBattleground site gate). Vetted by council + helper agent.
+        // OLD:
+        // if (currentTurn <= 2 && teamBodyCount == 1 && oppPower == 0f && !v156AnyBuddyAvailable) {
+        //     LOG.warn("V156 SOLO-NO-BUDDY BLOCK: ... (-300)"); return -300f;
+        // }
+        boolean v156IsBG = false;
+        try { v156IsBG = mq.isBattleground(gs, candidateSite, null); } catch (Exception ignore) { /* false */ }
+        boolean v156IsChar = deployingCard.getBlueprint() != null
+                && deployingCard.getBlueprint().getCardCategory() == CardCategory.CHARACTER;
+        // 2026-06-28 (Steve, Verge interim): the flip-site SKIP above is too broad — it let a weak
+        // lone Ozzel (ability 2) sit at a Scarif flip-site turn 1 and die before the flip was even
+        // reachable. For On The Verge Of Greatness the flip needs the Death Star ORBITING Scarif;
+        // until then the Scarif flip-sites are NOT "ready", so DON'T peel weak solos there — apply
+        // the hold. (Mirrors the DrawEvaluator V79 dsAtScarif check. To be subsumed by Steve's
+        // general "never leave a low-ability solo" rule.)
+        boolean v156FlipNotReady = false;
+        try {
+            boolean vergeUp = false, dsOnTable = false, dsAtScarif = false;
+            for (PhysicalCard pc : gs.getAllPermanentCards()) {
+                if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
+                if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
+                String t = pc.getTitle() != null ? pc.getTitle().toLowerCase(Locale.ROOT) : "";
+                if (t.contains("on the verge of greatness") || t.contains("taking control of the weapon")) vergeUp = true;
+                if (t.contains("death star") && pc.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
+                    dsOnTable = true;
+                    PhysicalCard dsLoc = pc.getAtLocation();
+                    if (dsLoc != null && dsLoc.getTitle() != null
+                            && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) dsAtScarif = true;
+                }
+            }
+            if (vergeUp && dsOnTable && !dsAtScarif) v156FlipNotReady = true;
+        } catch (Exception ignore) { /* fall through */ }
         if (currentTurn <= 2 && teamBodyCount == 1 && oppPower == 0f
-                && !v156AnyBuddyAvailable) {
-            LOG.warn("V156 SOLO-NO-BUDDY BLOCK: {} (power {} / ability {}) solo at uncontested {} on turn {}, no buddy in hand AND no friendly elsewhere on table — hold for a buddy (-300)",
-                safeTitle(deployingCard), v156DeployPower, v156DeployAbility, safeTitle(candidateSite), currentTurn);
-            return -300f;
+                && v156IsBG && v156IsChar && (!isObjectiveRelevantSite || v156FlipNotReady)) {
+            boolean v156Armed = false;
+            if (v156DeployAbility >= 5f && friendlyHand != null) {
+                for (PhysicalCard w : friendlyHand) {
+                    if (w == null || w.getBlueprint() == null) continue;
+                    if (w.getBlueprint().getCardCategory() != CardCategory.WEAPON) continue;
+                    if (safeDeployCost(w) > availableForceForDeploys) continue;
+                    com.gempukku.swccgo.filters.Filter wm;
+                    try { wm = w.getBlueprint().getMatchingCharacterFilter(); } catch (Exception e) { continue; }
+                    if (wm == null || wm == Filters.none) continue;
+                    try { if (wm.accepts(gs, mq, deployingCard)) { v156Armed = true; break; } } catch (Exception ignore) { /* */ }
+                }
+            }
+            boolean v156CanSolo = v156DeployAbility >= 6f || v156Armed;
+            if (!v156CanSolo) {
+                LOG.warn("V156 SOLO HOLD: {} (ability {}) solo at battleground {} turn {} — too weak to solo, hold for a buddy (-600)",
+                    safeTitle(deployingCard), v156DeployAbility, safeTitle(candidateSite), currentTurn);
+                return -600f;
+            }
+            if (v156AnyBuddyAvailable) {
+                LOG.warn("V156 SOLO OK, PREFER BUDDY: {} (ability {}) can solo {} but force for a buddy exists — mild (+250)",
+                    safeTitle(deployingCard), v156DeployAbility, safeTitle(candidateSite));
+                return 250f;
+            }
+            // strong enough + no buddy affordable: solo is fine — fall through to normal scoring.
         }
 
         if (powerPass && bodyPass) return 500f;
