@@ -66,13 +66,13 @@ public class Card501_019_BACK extends AbstractObjective {
         
         // List of action IDs
         // MORE_SYSTEMS_WILL_RALLY_TO_OUR_CAUSE__DEPLOY_BATTLEGROUND_SITE - Deploy site from Reserve Deck (from 0-side)
+        // THE_GALAXY_TORN_APART__UPLOAD_UNIQUE_CHARACTER - Upload unique character
         // OTHER_CARD_ACTION_1 - Retrieve if you just flipped
         // OTHER_CARD_ACTION_2 - Control phase damage (used twice: top-level and required response)
         // OTHER_CARD_ACTION_3 - Deploy a 6-dot card from here
         // OTHER_CARD_ACTION_4 - Force loss after a losing battle
         // OTHER_CARD_ACTION_5 - Flip
-        // OTHER_CARD_ACTION_6 - Upload unique character
-        // OTHER_CARD_ACTION_7 - Auto-raise converted system  (from 0-side)
+        // OTHER_CARD_ACTION_6 - Auto-raise converted system  (from 0-side)
 
         String opponent = game.getOpponent(playerId);
 
@@ -203,7 +203,7 @@ public class Card501_019_BACK extends AbstractObjective {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_7; //Auto-raise converted system  (from 0-side)
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_6; //Auto-raise converted system  (from 0-side)
         //Check condition(s)
         if (TriggerConditions.justConvertedLocation(game, effectResult)) {
             PhysicalCard newLocation = ((ConvertLocationResult)effectResult).getNewLocation();
@@ -248,7 +248,7 @@ public class Card501_019_BACK extends AbstractObjective {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_6; //Upload unique character
+        gameTextActionId = GameTextActionId.THE_GALAXY_TORN_APART__UPLOAD_UNIQUE_CHARACTER; //Upload unique character
         //Check condition(s)
         if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.your(self), Filters.unique, Filters.character))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
