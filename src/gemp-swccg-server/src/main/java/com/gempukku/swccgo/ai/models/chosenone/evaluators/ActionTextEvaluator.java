@@ -1874,8 +1874,33 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 String pTitle = pc.getTitle();
                                 if (pTitle == null) continue;
                                 String pTitleLower = pTitle.toLowerCase(java.util.Locale.ROOT);
-                                if (pTitleLower.contains(v120WeaponLower)
+                                // V120 FIX (#1, Steve 2026-06-29): the loose "title contains parsed-name"
+                                // match caught a CHARACTER pull whose name sits inside a weapon title —
+                                // "Deploy Vader from Reserve Deck" parses "vader", and "darth vader's
+                                // lightsaber".contains("vader") = true, so the Vader CHARACTER pull was
+                                // mis-blocked as a weapon pull (-9999), losing Steve the Hunt Down game.
+                                // A real weapon pull names the WEAPON (its noun, e.g. "...lightsaber");
+                                // a character pull names only the owner ("vader"). So for the loose
+                                // direction require the parsed name to cover the weapon title's last
+                                // significant word (the noun), not just the owner portion. The exact /
+                                // parsed-name-contains-full-title directions (the V125 abbreviated/
+                                // prefixed-title cases) are unchanged.
+                                boolean v120Match;
+                                if (pTitleLower.equals(v120WeaponLower)
                                         || v120WeaponLower.contains(pTitleLower)) {
+                                    v120Match = true;
+                                } else if (pTitleLower.contains(v120WeaponLower)) {
+                                    String v120TitleCore = pTitleLower
+                                        .replaceAll("\\([^)]*\\)", " ").replaceAll("\\s+", " ").trim();
+                                    String v120Noun = v120TitleCore.contains(" ")
+                                        ? v120TitleCore.substring(v120TitleCore.lastIndexOf(' ') + 1)
+                                        : v120TitleCore;
+                                    v120Match = v120Noun.length() >= 4
+                                        && v120WeaponLower.contains(v120Noun);
+                                } else {
+                                    v120Match = false;
+                                }
+                                if (v120Match) {
                                     v120WeaponBp = pc.getBlueprint();
                                     break;
                                 }

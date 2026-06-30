@@ -3216,6 +3216,26 @@ Total tags catalogued: 179
     else. Non-empty responses and genuine end-of-phase passes reset the counter.
     Constants: CANCEL_LOOP_THRESHOLD = 3.
 
+  ════ V120 FIX (2026-06-29): weapon-pull block no longer mis-fires on a character pull ════
+
+  V120 FIX — "DEPLOY VADER FROM RESERVE DECK" WAS BLOCKED AS A WEAPON PULL
+    Source: ActionTextEvaluator.java (rando + chosenone), the V120 weapon-title match (~1877).
+    Steve's report (lost the Hunt Down game): Vader never deployed. The 2026-06-29 replay confirmed
+    V120 hard-blocked "Deploy Vader from Reserve Deck" at -9999 every turn. Cause: the V125
+    bidirectional contains() match also matched a CHARACTER pull whose name is a substring of a
+    weapon title — it parsed "vader", and "darth vader's lightsaber" (in the deck) contains "vader",
+    so the Vader character pull was classified as a weapon pull with no holder and blocked. Vader is
+    the deck's flip engine, so the objective never flipped and Rando lost.
+    Fix: for the loose "title contains parsed-name" direction, require the parsed name to cover the
+    weapon title's last significant word (the weapon noun, e.g. "lightsaber"), not just the owner
+    portion. "vader" lacks the noun -> no match. "vader's lightsaber" has it -> still matches, so the
+    V125 abbreviated/prefixed-title case is preserved. Strips (V)/parenthetical suffixes; >=4-char
+    noun threshold mirrors the V185/DeckOracle idiom.
+    Boundary: V120 still blocks a real weapon pull with no holder. Adjusts V120/V125 in place, no new
+    V-tag (update-old-rule rule). Compiles clean (mvn -pl gemp-swccg-server -am compile, EXIT=0).
+    PENDING: reload-ai + a live Hunt Down game (Vader actually deploys; grep nohup.out that "Deploy
+    Vader from Reserve Deck" is no longer V120-blocked).
+
   ════ V188 (2026-06-28) ════
 
   V188 — SET YOUR COURSE FOR ALDERAAN: don't deploy ability characters to Death Star sites
