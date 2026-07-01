@@ -289,7 +289,25 @@ public class DeployPhaseScript {
                         java.util.List<String> tgts = DeckOracle.parseSourceCardPullTargets(gt);
                         for (String t : tgts) {
                             Step s = stepForPullTargetText(t);
-                            if (s != null) steps.add(s);
+                            if (s == null) continue;
+                            // V179 FIX (#4, Steve 2026-06-29): a [download]/pull that NAMES a specific
+                            // location the bot already HOLDS must NOT classify as a LOCATIONS pull. You
+                            // cannot download a location that is in your hand, so treating it as a
+                            // high-priority location pull makes Rando fire the (often once-per-turn)
+                            // download BEFORE deploying the actual location from hand — wasting it. In
+                            // the 2026-06-29 replay this cost A Good Friend / A Cunning Warrior: they
+                            // download Ahch-To + Be With Me, and Be With Me needs an Ahch-To location on
+                            // table first, but Rando fired the download while Ahch-To sat in hand, so
+                            // nothing was legal and the epic event never came out. Dropping the LOCATIONS
+                            // tag lets the real hand-deploy win the LOCATIONS step and land first; the
+                            // download still classifies by its OTHER targets (weapon/effect) and fires in
+                            // a later step once the location is down. Generic targets ("a location",
+                            // "a site") never match a specific hand-card title, so objective/generic
+                            // location pulls are unaffected.
+                            if (s == Step.LOCATIONS && namedLocationInHand(gameState, playerId, t)) {
+                                continue;
+                            }
+                            steps.add(s);
                         }
                     } catch (Exception ignored) { }
                 }
@@ -346,6 +364,30 @@ public class DeployPhaseScript {
             return Step.OTHER_CHARACTERS;
         }
         return null;
+    }
+
+    /** V179 FIX (#4): true if a LOCATION card in {@code playerId}'s hand has a title containing the
+     *  named location target {@code t} — i.e. the pull would fetch a location the bot already holds,
+     *  so the bot should deploy it from hand rather than fire the download. Bare generic category
+     *  words are excluded so only specific named locations gate (objective/generic pulls untouched). */
+    private boolean namedLocationInHand(GameState gameState, String playerId, String t) {
+        if (gameState == null || playerId == null || t == null) return false;
+        String tl = t.toLowerCase(Locale.ROOT).trim();
+        if (tl.length() < 4 || tl.equals("location") || tl.equals("site") || tl.equals("system")
+                || tl.equals("battleground") || tl.equals("docking bay") || tl.equals("mobile site")) {
+            return false;
+        }
+        try {
+            List<PhysicalCard> hand = gameState.getHand(playerId);
+            if (hand == null) return false;
+            for (PhysicalCard hc : hand) {
+                if (hc == null || hc.getBlueprint() == null) continue;
+                if (hc.getBlueprint().getCardCategory() != CardCategory.LOCATION) continue;
+                String ht = hc.getTitle();
+                if (ht != null && ht.toLowerCase(Locale.ROOT).contains(tl)) return true;
+            }
+        } catch (Exception ignored) { }
+        return false;
     }
 
     /** Last-resort action-text keyword classifier (E). */

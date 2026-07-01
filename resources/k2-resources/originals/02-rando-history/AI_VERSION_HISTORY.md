@@ -3216,6 +3216,27 @@ Total tags catalogued: 179
     else. Non-empty responses and genuine end-of-phase passes reset the counter.
     Constants: CANCEL_LOOP_THRESHOLD = 3.
 
+  ════ V179 FIX (2026-06-29, #4): don't rank a download of a held location above deploying it ════
+
+  V179 FIX — A GOOD FRIEND / A CUNNING WARRIOR WASTED THEIR DOWNLOAD BEFORE THE LOCATION WAS DOWN
+    Source: DeployPhaseScript.java (rando + chosenone), resolveSteps section D + new namedLocationInHand.
+    Steve's report: A Good Friend never pulled the epic event Be With Me even though Ahch-To was on
+    table. Replay-verified root cause (NOT engine/card): Rando's once-per-turn [download] (A Good
+    Friend + A Cunning Warrior each download a location / epic event / weapon) was classified as a
+    high-priority LOCATIONS pull because the target text contains "jedi village", outranking deploying
+    the actual Ahch-To: Jedi Village from hand. So Rando fired the download FIRST, while Ahch-To was
+    still in hand -> no legal target (Be With Me needs an Ahch-To location on table) -> engine
+    reshuffled and the once-per-turn download was burned. Ahch-To deployed seconds later, too late;
+    Be With Me never came out.
+    Fix: in the DPS bucketer, a location-naming pull target classifies as LOCATIONS only if that
+    location is NOT already in the bot's hand (namedLocationInHand). Dropping the LOCATIONS tag moves
+    the download out of the LOCATIONS bucket, so the real hand-deploy wins the LOCATIONS step and lands
+    first; the download fires later, once the location is down, and can then pull Be With Me.
+    Boundary: only a specific named location (>=4 chars, not a bare category word) matched against a
+    LOCATION card in hand gates; generic/objective location pulls and reserve-present locations are
+    untouched. Adjusts V179 in place, no new V-tag. Compiles clean; live in the jar (namedLocationInHand
+    in both bots). PENDING: live Saga game.
+
   ════ V120 FIX (2026-06-29): weapon-pull block no longer mis-fires on a character pull ════
 
   V120 FIX — "DEPLOY VADER FROM RESERVE DECK" WAS BLOCKED AS A WEAPON PULL
