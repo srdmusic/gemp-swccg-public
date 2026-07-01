@@ -32,7 +32,7 @@ public class Card501_021 extends AbstractSite {
         setLocationLightSideGameText("During battle here, you must first use 1 Force to play an Interrupt.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_27);
         setTestingText("Geonosis: Petranaki Arena");
     }
 
