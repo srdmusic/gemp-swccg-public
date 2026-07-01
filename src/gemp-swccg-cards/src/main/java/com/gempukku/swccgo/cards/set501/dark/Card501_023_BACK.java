@@ -31,11 +31,11 @@ import java.util.List;
 public class Card501_023_BACK extends AbstractSystem {
     public Card501_023_BACK() {
         super(Side.DARK, Title.Utapau, 3, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If you control, Jedi are deploy +1 to Utapau sites.");
+        setLocationDarkSideGameText("If you control, Jedi deploy +1 to Utapau sites.");
         setLocationLightSideGameText("If you just initiated a Force drain (or won a battle) at an Utapau site, 'conquer' (flip) Utapau.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_25);
+        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_27);
         setTestingText("Utapau (Separatist controlled)");
     }
 

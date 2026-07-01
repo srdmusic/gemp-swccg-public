@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class Card501_029 extends AbstractSite {
     public Card501_029() {
-        super(Side.DARK, "Separatist Command Center", Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, Title.Separatist_Command_Center, Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Your battle droids are power +1 here.");
         setLocationLightSideGameText("Deploys only to a [Clone Army] or [Separatist] system. Immune to Ounee Ta.");
         addIcon(Icon.DARK_FORCE, 2);
