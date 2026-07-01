@@ -2,8 +2,6 @@ package com.gempukku.swccgo.cards.set4.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.PilotingCondition;
-import com.gempukku.swccgo.cards.conditions.TargetedByUtinniEffectCondition;
 import com.gempukku.swccgo.cards.conditions.TrainedByCondition;
 import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -99,13 +97,8 @@ public class Card4_038 extends AbstractNormalEffect {
                     return false;
 
                 for (PhysicalCard utinniEffect : Filters.filterActive(game, card, Filters.Kessel_Run)) {
-                    // Check if attached to smuggler
-                    if (Filters.hasAttached(utinniEffect).accepts(game, smuggler)) {
-                        return true;
-                    }
-
-                    // Check if explicitly targeting the starship
-                    if (utinniEffect.getTargetedCards(gameState).values().contains(starship)) {
+                    // Check if explicitly targeting the smuggler
+                    if (utinniEffect.getTargetedCards(gameState).values().contains(smuggler)) {
                         return true;
                     }
                 }
@@ -126,11 +119,6 @@ public class Card4_038 extends AbstractNormalEffect {
                     return false;
 
                 for (PhysicalCard utinniEffect : Filters.filterActive(game, card, Filters.Rycars_Run)) {
-                    // Check if attached to smuggler
-                    if (Filters.hasAttached(utinniEffect).accepts(game, smuggler)) {
-                        return true;
-                    }
-
                     // Check if explicitly targeting the starship
                     if (utinniEffect.getTargetedCards(gameState).values().contains(starship)) {
                         return true;
@@ -152,11 +140,6 @@ public class Card4_038 extends AbstractNormalEffect {
                     return false;
 
                 for (PhysicalCard utinniEffect : Filters.filterActive(game, card, Filters.The_First_Transport_Is_Away)) {
-                    // Check if attached to smuggler
-                    if (Filters.hasAttached(utinniEffect).accepts(game, smuggler)) {
-                        return true;
-                    }
-
                     // Check if explicitly targeting the starship
                     if (utinniEffect.getTargetedCards(gameState).values().contains(starship)) {
                         return true;
