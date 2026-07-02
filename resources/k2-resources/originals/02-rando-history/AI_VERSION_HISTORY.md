@@ -3216,6 +3216,23 @@ Total tags catalogued: 179
     else. Non-empty responses and genuine end-of-phase passes reset the counter.
     Constants: CANCEL_LOOP_THRESHOLD = 3.
 
+  ════ V61c (2026-06-30): always keep 3 cards in the Reserve Deck for battle/weapon destiny ════
+
+  V61c — DESTINY BUFFER (backfilled 2026-07-01; full entry in resources/AI_CHANGELOG.md 2026-06-30)
+    Source: ForceActivationEvaluator.java (calculateActivationAmount ~186) + ActionTextEvaluator.java
+    (V168 block ~166, V38.3 confirm ~1342) — rando only. Steve: "He should probably always keep 3
+    cards in reserve for any battle that turn." Root cause was Steve's own V168 always-activate
+    (+5000) draining the reserve to 0, so V61 blocked battles (no destiny to draw).
+    Fix, two halves: (1) cap activation at reserveDeck - 3 (min 1); (2) when reserve <= 3, carve
+    exceptions into V168 (score Activate Force -6000 so Pass wins) and V38.3 (honor the "have not
+    activated - pass?" confirm with Yes) so Rando passes activation entirely instead of eroding
+    3->2->1->0 (the engine forces >=1 per activation). Reserve > 3: activate down to exactly 3.
+    Boundary: -6000 dominates the +5000 it replaces; Pass (~5-8) clears BAD_ACTION_THRESHOLD (-100).
+    reserve >= 4 leaves V168/V38.3 untouched. Tradeoff Steve accepted: low-reserve turns get no new
+    Force (future refinement: only protect the buffer on turns Rando intends to battle).
+    Status: UNCOMMITTED in the working tree, live in the jar. PENDING live-game confirm
+    (grep gemp-swccg.log for "V61c DESTINY BUFFER").
+
   ════ V179 FIX (2026-06-29, #4): don't rank a download of a held location above deploying it ════
 
   V179 FIX — A GOOD FRIEND / A CUNNING WARRIOR WASTED THEIR DOWNLOAD BEFORE THE LOCATION WAS DOWN
@@ -3257,6 +3274,57 @@ Total tags catalogued: 179
     PENDING: reload-ai + a live Hunt Down game (Vader actually deploys; grep nohup.out that "Deploy
     Vader from Reserve Deck" is no longer V120-blocked).
 
+  ════ V61b (2026-06-28): battle anyway when OVERPOWERING, even with an empty Reserve Deck ════
+
+  V61b — OVERPOWER OVERRIDE ON THE V61 EMPTY-RESERVE PENALTIES (backfilled 2026-07-01)
+    Source: BattleEvaluator.java (~627), rando only.
+    Steve's report: Rando sat on a massively overpowered Hoth site (26 vs 4) and refused to battle
+    all game because its Reserve Deck was empty (V61's -800/-400/-200 no-destiny penalties dominated).
+    Fix: before the V61 chain, re-scan the best friendly-vs-opponent power margin across
+    battle-eligible sites; margin >= 8 sets v61Overpowering and SKIPS the V61 penalties — battle
+    on raw power, overflow damage wins without destiny.
+    Boundary: margin < 8 leaves V61 fully intact (close battles still avoided with no destiny).
+    Status: UNCOMMITTED in the working tree, live in the jar; fired live (18-vs-1 -> battled).
+
+  ════ V79b (2026-06-28): Death Star parsec choice — steer Verge of Greatness to Scarif ════
+
+  V79b — THE PARSEC NUMBER IS A SEPARATE MULTIPLE_CHOICE DECISION V79 NEVER SAW (backfilled 2026-07-01)
+    Source: RandoCalAi.java (~692) + MoveEvaluator.java (~291), rando only.
+    Steve's report (two games running): "the death star needs to move to the right parsec number.
+    we never got that right in the previous fix." V79 (2026-05-15) steered the MOVE action, but the
+    engine asks for the parsec NUMBER in a separate "Choose parsec to move to" MULTIPLE_CHOICE that
+    fell through to the generic chooser — the Death Star loitered at parsec 4.
+    Fix: a V79b MULTIPLE_CHOICE handler — when Verge of Greatness is on table, pick the option
+    closest to parsec 7 (or an explicit orbit/Scarif option). Rider: MoveEvaluator's V79 parsec
+    regex now takes the LAST parsec in the action text (inert for this decision, kept as
+    robustness). Gated on Verge in play + the parsec prompt; all other MULTIPLE_CHOICEs untouched.
+    Status: UNCOMMITTED in the working tree, live in the jar. PENDING live Verge game
+    (4->6 turn 1, 6->7 turn 2, then orbit Scarif).
+
+  ════ V187 (2026-06-28): -300 to duplicate starting effects (DeckOracle) ════
+
+  V187 — PREFER ONE-OF EFFECTS AT STARTING-INTERRUPT SETUP (backfilled 2026-07-01)
+    Source: CardSelectionEvaluator.java (~7937, inside the turn<=0 V22 starting-effect block) +
+    DeckOracle.java new countCopiesByTitle (~389), rando only.
+    Steve: "I want a -300 points to any effect that Rando has duplicates in the deck of. So use
+    deck oracle to help score which starting effects should be chosen." Effects are unique-in-play;
+    deploying one of a pair leaves a dead duplicate in the deck, deploying a one-of keeps it clean.
+    Boundary: -300 re-orders only within the candidate pool; V22 preferred (+200) and V80/V186
+    objective boosts (+1000) still dominate by design. Nothing is blocked, only demoted.
+    Status: committed (rode into 8fd884375). PENDING a live game with a duplicated effect
+    (grep "V187 DUPLICATE").
+
+  ════ LOGGING (2026-06-28): decision log survives restarts (mainlog appender) ════
+
+  LOGGING — com.gempukku LOGGER NOW WRITES TO logs/gemp-swccg.log (backfilled 2026-07-01)
+    Source: src/gemp-swccg-async/src/main/resources/prod-log4j.xml (~31-36). Not a scoring rule.
+    Steve: "Last replay is not readable?" The decision log lived on stdout only, which moved
+    between nohup.out and the container TTY across restarts — every restart orphaned the previous
+    game's decisions. Fix: AppenderRef ref="mainlog" level="info" on the com.gempukku logger
+    (additivity=false), so V-tag lines also land in the mainlog RollingFile: logs/gemp-swccg.log,
+    10MB rotation into logs/YYYY-MM/app-*.log.gz (macOS zcat is broken; use gunzip -c).
+    Status: UNCOMMITTED in the working tree, live and verified (V61b/V61c lines observed post-restart).
+
   ════ V188 (2026-06-28) ════
 
   V188 — SET YOUR COURSE FOR ALDERAAN: don't deploy ability characters to Death Star sites
@@ -3283,6 +3351,48 @@ Total tags catalogued: 179
     other K-2's concurrent work). PENDING, not done: NOT deployed (Steve is holding reload-ai to test
     a different deck first), then a live Set Your Course For Alderaan game (grep nohup.out for
     "V188 ALDERAAN DEATH-STAR").
+
+  ════ V156 UPDATE (2026-06-25): smart solo-deploy hold (ability/weapon/battleground aware) ════
+
+  V156 UPDATE — SOLO CHARACTERS AT BATTLEGROUND SITES NEED ABILITY 6+, OR 5 WITH A WEAPON (backfilled 2026-07-01)
+    Source: CharacterDeploySiteEvaluator.java (~462, logging ~517/~522), shared common/ -> both bots.
+    Supersedes the original V156 flat -300 turn<=2 solo guard (old code commented out in place).
+    Steve (after Ozzel died solo turn 1): solo characters at battlegrounds are free kills unless
+    they can defend themselves. Rules: battleground SITES only (not systems; ability-2 ships are
+    often fine), CHARACTERS only, turns 1-2. Solo OK when ability >= 6, or ability >= 5 with a
+    matching weapon in hand (the weapon's own getMatchingCharacterFilter() accepts the deployer —
+    no hardcoded names). Else "V156 SOLO HOLD" -600; "V156 SOLO OK" +250 when a buddy can join.
+    Objective flip-relevant sites are EXEMPT (seeding must stay legal) UNLESS the flip is not
+    mechanically ready (v156FlipNotReady — Verge of Greatness: Death Star not yet orbiting Scarif,
+    so a turn-1 solo seed is still a free kill). Added isObjectiveRelevantSite to computeTeamViability.
+    Boundary: -600 keeps a lone weak body below the SectionA +500 uncontested reward without
+    hard-blocking; +250 cannot flip a contested -1500 site positive.
+    Status: committed (rode into d72ced949). Verified live ("V156 SOLO HOLD" fires in the log).
+
+  ════ FIX #2 (2026-06-25): V136 SectionA -1500 ability penalty gated to contested sites ════
+
+  FIX #2 — FODDER DEPLOYS AT UNCONTESTED SITES (backfilled 2026-07-01; full entry in AI_CHANGELOG.md)
+    Source: CharacterDeploySiteEvaluator.java (~360-365), shared common/ -> both bots.
+    A droid swarm has zero-ability bodies, so SectionA -1500'd EVERY ground deploy, contested or
+    not — Rando couldn't build presence or seed the Invasion objective's Throne Room. Fix: the
+    -1500 "almost never deploy a sub-ability-4 group" gate now requires oppPower > 0 (contested).
+    Uncontested low-ability fodder falls through to V156, then +500 — it deploys to drain and seed.
+    Boundary: contested sub-4 unchanged (-1500); ability >= 4 unchanged; V151/V181 contested-commit
+    logic unreachable by sub-4 bodies. Status: committed (4f8ec16d3), live.
+
+  ════ CANCEL-LOOP FIX (2026-06-25): turn-scope the decision-block maps ════
+
+  CANCEL-LOOP — RANDO STOPPED DEPLOYING AFTER TURN 2 (backfilled 2026-07-01; full entry in AI_CHANGELOG.md)
+    Source: DecisionTracker.java, BOTH rando and chosenone, write sites ~302 and ~443.
+    Root cause: 3 cancels wrote the blocked deploy slot into the PERMANENT blockedResponses map
+    (clears only at game start; mid-game onPhaseChange resets the WRONG tracker instance). The key
+    is a POSITIONAL action ID the engine REUSES, so a slot blocked by an unplaceable droid on turn
+    4 vetoed legitimate group deploys on turn 5; by turn 5 every Deploy action was -9999'd.
+    Fix: both permanent writes redirected to the TURN-SCOPED turnBlockedActions (cleared every turn
+    in updateState; getBlockedResponses() returns the union, so within-turn loop-breaking intact).
+    Known residue: within a SINGLE turn the positional-ID collision survives; real cure is keying
+    on blueprint/title (follow-up, not shipped). Status: committed (d1e2aa890), live, Steve
+    confirmed it helped.
 
   ════ V186 (2026-06-23) ════
 

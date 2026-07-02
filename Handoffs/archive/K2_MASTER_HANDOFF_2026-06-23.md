@@ -1,5 +1,7 @@
 # K-2 MASTER HANDOFF — 2026-06-23 (consolidated, for the fresh K-2)
 
+> **STALENESS NOTICE (added 2026-07-01):** the "State right now" line below and the queue's DONE/PENDING statuses are FROZEN at 2026-06-23 and now wrong (much has since been committed, deployed, and verified — the running jar is well past V184). For CURRENT state read `Handoffs/K2_MASTER_HANDOFF_2026-07-01.md` first (it replaces this file as the master). The disciplines, gotchas, and architecture below remain valid.
+
 **You are the fresh K-2.** This is your single entry point after onboarding. It consolidates two days of work by three concurrent K-2 sessions and hands you a prioritized implementation queue. Read this, then go execute.
 
 **Paths note:** this file and the three angle handoffs live in `Handoffs/`. The artifacts named below (`RANDO_BACKUP_AUDIT_2026-06-23.xlsx`, `RANDO_MISSING_LOGIC.md`, `AI_CHANGELOG.md`) live in the install's **`resources/`** folder (a sibling of `Handoffs/`). `CLAUDE.md` is at `.claude/CLAUDE.md`; `src/...` paths are from the install root.

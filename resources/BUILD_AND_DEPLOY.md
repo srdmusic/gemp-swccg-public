@@ -140,6 +140,10 @@ docker exec gemp_swccg_app_1 bash -lc 'grep -n "V96 CONCENTRATE" /opt/gemp-swccg
 
 If the line appears with a real score in a real decision, the rule fired. If the jar has the string but the log never shows it across games where it should fire, you loaded a stale JVM (gate 3 failed: re-restart with `--force-recreate`) or the branch's condition is never true.
 
+### Where the decision log actually lives (2026-06-28 log4j fix)
+
+The `com.gempukku` logger writes V-tag decision lines to **`logs/gemp-swccg.log`** (the `mainlog` RollingFile appender in `prod-log4j.xml`), which survives restarts. `nohup.out`/stdout still gets a copy but moves between files and the container TTY across restarts — grep `gemp-swccg.log` first. It rotates at 10MB into `logs/YYYY-MM/app-*.log.gz`; macOS `zcat` is broken on these, use `gunzip -c file.gz`. Game replays (readable even when the log rotated away): `replays/asdf/*.xml.gz` (zlib XML).
+
 ---
 
 ## 4. Hard NOs for a code-only change

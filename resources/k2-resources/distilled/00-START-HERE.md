@@ -4,6 +4,8 @@ Orientation hub for any future **K-2** (Claude Code) session on the **GEMP-SWCCG
 
 Built 2026-06-22 by K-2, consolidated from the scattered `.md` files in `GEMP ARCHIVE/gemp-swccg-public-BACKUP-2026-06-20`.
 
+> **STALENESS NOTICE (added 2026-07-01):** this hub is frozen at ~V186 / 2026-06-23. Two of its headline claims are now WRONG: (1) the tree is NOT uncommitted — branch `rando-consolidation-2026-06-23` has 12+ commits; (2) the "V96/V67al silent score-domination = #1 verified code gap" claim was REFUTED 2026-06-24 — V67al is dead code inside `if (false /* SUPERSEDED V136 */)`, bytecode-confirmed absent; do NOT chase it. For current state read `Handoffs/K2_MASTER_HANDOFF_2026-07-01.md` (the live master). The architecture/history depth below is still good.
+
 > **This is an ARCHIVE, not the live project.** The live install is `/Users/steve/gemp-swccg-public`. Use THIS folder for depth.
 >
 > **READ YOUR AUTO-MEMORY FIRST:** `/Users/steve/.claude/projects/-Users-steve-gemp-swccg-public/memory/MEMORY.md` is the index (loaded each session) of the standing rules and project state you must work by. It links:
