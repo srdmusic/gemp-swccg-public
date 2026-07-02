@@ -30,6 +30,10 @@
   <Loggers>
     <Logger name="com.gempukku" level="debug" additivity="false">
         <AppenderRef ref="stdout"/>
+        <!-- 2026-06-28 (Steve): also write decision logs (INFO+) to the gemp-swccg.log FILE so they
+             survive JVM restarts. stdout moves to a TTY/nohup unpredictably on restart and the
+             decision log kept vanishing, blocking verification. RollingFile rotates at 10MB. -->
+        <AppenderRef ref="mainlog" level="info"/>
     </Logger>
     <Logger name="chat" level="ALL">
         <AppenderRef ref="chat"/>
