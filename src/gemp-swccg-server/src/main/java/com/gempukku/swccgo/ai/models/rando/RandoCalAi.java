@@ -689,6 +689,56 @@ public class RandoCalAi extends HeuristicAiBase {
                 }
             }
 
+            // === V79b (Steve, 2026-06-28): DEATH STAR PARSEC CHOICE (Verge of Greatness) ===
+            // The "Move using hyperspeed" action carries NO parsec; the engine then asks a SEPARATE
+            // MULTIPLE_CHOICE "Choose parsec to move to" — which had NO handler, so Rando picked
+            // arbitrarily and the Death Star wandered AWAY from Scarif (replay 4->2->0). V79 in
+            // MoveEvaluator was scoring the wrong decision. When Verge of Greatness + the Death Star
+            // are on our table, steer this choice toward Scarif (parsec 7): 4->6 turn 1, 6->7 turn 2,
+            // and take an orbit/Scarif option immediately if offered. (Found via the now-readable
+            // gemp-swccg.log: "No evaluators produced actions for decision: Choose parsec to move to".)
+            if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
+                    && decisionText.toLowerCase(java.util.Locale.ROOT).contains("parsec")) {
+                String[] pResults = params != null ? params.get("results") : null;
+                if (pResults != null && pResults.length > 0 && gameState != null) {
+                    boolean vergeOnTable = false;
+                    try {
+                        for (PhysicalCard pc : gameState.getAllPermanentCards()) {
+                            if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
+                            if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
+                            String t = pc.getTitle() != null ? pc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                            if (t.contains("on the verge of greatness") || t.contains("taking control of the weapon")) {
+                                vergeOnTable = true; break;
+                            }
+                        }
+                    } catch (Exception ignore) { /* fall through to default */ }
+                    if (vergeOnTable) {
+                        int v79bBest = -1, v79bBestDist = Integer.MAX_VALUE, v79bBestParsec = -1;
+                        for (int i = 0; i < pResults.length; i++) {
+                            String r = pResults[i] == null ? "" : pResults[i].toLowerCase(java.util.Locale.ROOT);
+                            if (r.contains("scarif") || r.contains("orbit")) {
+                                LOG.warn("V79b DEATH STAR ORBIT: choices={} -> index {} ('{}')",
+                                    java.util.Arrays.asList(pResults), i, pResults[i]);
+                                return String.valueOf(i);
+                            }
+                            java.util.regex.Matcher mm = java.util.regex.Pattern.compile("(\\d+)").matcher(r);
+                            if (mm.find()) {
+                                try {
+                                    int p = Integer.parseInt(mm.group(1));
+                                    int d = Math.abs(p - 7);  // Scarif is at parsec 7
+                                    if (d < v79bBestDist) { v79bBestDist = d; v79bBest = i; v79bBestParsec = p; }
+                                } catch (Exception e) { /* ignore */ }
+                            }
+                        }
+                        if (v79bBest >= 0) {
+                            LOG.warn("V79b DEATH STAR PARSEC: choices={} -> index {} (parsec {}, closest to Scarif 7)",
+                                java.util.Arrays.asList(pResults), v79bBest, v79bBestParsec);
+                            return String.valueOf(v79bBest);
+                        }
+                    }
+                }
+            }
+
             // Maybe apply chaos (random action)
             // CRITICAL: Never use chaos mode during DEPLOY phase - deploy decisions are strategic
             // and random deploys can waste resources or violate the deployment plan

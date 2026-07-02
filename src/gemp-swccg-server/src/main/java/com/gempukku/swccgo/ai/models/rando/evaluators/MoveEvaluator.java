@@ -288,7 +288,18 @@ public class MoveEvaluator extends ActionEvaluator {
                             java.util.regex.Matcher v79m = java.util.regex.Pattern.compile(
                                 "parsec\\s+(\\d+)").matcher(v79ActionLower);
                             Integer destParsec = null;
-                            if (v79m.find()) {
+                            // 2026-06-28 (Steve) FIX: action text reads "...at parsec OLD to ...at
+                            // parsec NEW", so .find() (first match) grabbed the SOURCE parsec (always
+                            // the Death Star's current 4) and scored EVERY move -300 "wrong direction" —
+                            // it never steered toward Scarif (replay: it wandered 4->2->0->1). Take the
+                            // LAST match = the DESTINATION parsec. (dest-only text still works: last==only.)
+                            // NOTE 2026-07-01: this branch is effectively INERT for Verge of Greatness —
+                            // the live "Move using hyperspeed" action text carries NO parsec at all, so
+                            // destParsec stays null here. The real steering is V79b in RandoCalAi (~692),
+                            // which handles the separate MULTIPLE_CHOICE "Choose parsec to move to"
+                            // decision. Keep this parse as a harmless fallback for texts that DO embed
+                            // a parsec; do not spend time "fixing" it — fix V79b instead.
+                            while (v79m.find()) {
                                 try { destParsec = Integer.parseInt(v79m.group(1)); }
                                 catch (Exception e) { /* ignore */ }
                             }
