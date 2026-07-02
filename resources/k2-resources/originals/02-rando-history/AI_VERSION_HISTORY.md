@@ -3744,6 +3744,9 @@ Total tags catalogued: 179
     interior-CC search whose real targets are gone — one no-op action per
     turn, bounded (and recordFailedPull, the 2-strikes backstop, has ZERO
     callers — dead wiring — so it repeats; separate fix if ever needed).
+    LIVE-VERIFIED 2026-07-02: 2 self-play games, rescue fired 3x, zero false
+    blocks, I'm Sorry downloaded an interior CC site turn 1 in both games
+    (replays 94d9142hqg0zs0fr, x5cbzmegdjsx24zv).
 
   ════ V177 (2026-06) ════
 
