@@ -1,9 +1,11 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractStarfighter;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AloneCondition;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -15,9 +17,14 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextPowerModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -48,5 +55,24 @@ public class Card501_004 extends AbstractStarfighter {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.sameLocation(self), new AloneCondition(self), playerId));
         return modifiers;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextLeavesTableOptionalTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (TriggerConditions.justLost(game, effectResult, self)
+                && GameConditions.canSpot(game, self, Filters.Droid_Racks)) {
+
+            PhysicalCard droidRacksCard = Filters.findFirstActive(game, self, Filters.Droid_Racks);
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Stack on Droid Racks");
+            action.setActionMsg("Stack " + GameUtils.getCardLink(self) + " on Droid Racks");
+            // Perform result(s)
+            action.appendEffect(
+                    new StackOneCardFromLostPileEffect(action, droidRacksCard, self, false, true, true));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
