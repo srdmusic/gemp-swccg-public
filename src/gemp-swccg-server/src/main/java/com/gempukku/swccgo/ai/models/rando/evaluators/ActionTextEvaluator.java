@@ -259,14 +259,34 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 else v177AnyDead = true;
                             }
                             if (!v177Alive && v177AnyDead && !v177AnyJunk) {
-                                action.addReasoning("V177 DEAD SEARCH: none of " + v177Targets
-                                    + " remain in Reserve Deck — a real player never searches for what he knows isn't there",
-                                    -2000.0f);
-                                logger.warn("V177 DEAD SEARCH blocked: '{}' targets {} (source '{}') — nothing in Reserve",
-                                    actionText, v177Targets,
-                                    v177Src != null ? v177Src.getTitle() : "?");
-                                actions.add(action);
-                                continue;
+                                // V177 CATEGORY RESCUE (adjusted 2026-07-02, TDIGWATT replay
+                                // 7co2xviwqo5q3zac): the raw title matcher above can't match
+                                // type-phrases like "interior cloud city site" against titles
+                                // ("Cloud City: Dining Room"), so V177 declared I'm Sorry's
+                                // site download DEAD every turn (-2000 x19) while V67h's
+                                // validatePullFromSourceCard (V82.1 category / V82.2 predicate
+                                // fallbacks) said WILL_SUCCEED in the SAME evaluations.
+                                // Detection-path mismatch: the dumber matcher ran first and
+                                // won. Before blocking, consult the validated path V67h
+                                // trusts; WILL_SUCCEED -> no block, action scores naturally.
+                                // Any other outcome -> the -2000 block stands unchanged.
+                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullValidation v177Val =
+                                    v177Oracle.validatePullFromSourceCard(
+                                        com.gempukku.swccgo.common.Zone.RESERVE_DECK, v177Gt);
+                                if (v177Val.outcome ==
+                                        com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
+                                    logger.warn("V177 CATEGORY RESCUE: '{}' targets {} — {} — not blocking",
+                                        actionText, v177Targets, v177Val.reason);
+                                } else {
+                                    action.addReasoning("V177 DEAD SEARCH: none of " + v177Targets
+                                        + " remain in Reserve Deck — a real player never searches for what he knows isn't there",
+                                        -2000.0f);
+                                    logger.warn("V177 DEAD SEARCH blocked: '{}' targets {} (source '{}') — nothing in Reserve",
+                                        actionText, v177Targets,
+                                        v177Src != null ? v177Src.getTitle() : "?");
+                                    actions.add(action);
+                                    continue;
+                                }
                             } else if (!v177Alive && v177AnyJunk) {
                                 logger.info("V177 PARSE-JUNK pass-through: '{}' targets {} — unparseable, not blocking",
                                     actionText, v177Targets);

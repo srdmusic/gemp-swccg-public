@@ -3723,6 +3723,27 @@ Total tags catalogued: 179
     Everywhere stayed alive while lightsabers remained in reserve.
     Supersedes (for parseable pulls) the old "fire every turn, stop after 2
     consecutive failures" heuristic — knowledge beats retry-counting.
+    UPDATE (2026-07-01): CATEGORY RESCUE — detection-path alignment with V67h.
+    TDIGWATT loss 2026-07-02 02:09 UTC (replay 7co2xviwqo5q3zac): I'm Sorry
+    (V) may [download] an interior Cloud City
+    site; Dining Room (V) + Security Tower (V) sat in Reserve ALL GAME, yet
+    V177 blocked the download 19 times ("nothing in Reserve") while V67h's
+    validatePullFromSourceCard said WILL_SUCCEED in the SAME evaluations
+    (V82.1: "site" → CardCategory.LOCATION present in RESERVE_DECK). Root
+    cause: the raw hasTargetInZone title matcher cannot match type-phrases
+    ("interior cloud city site") against titles; the ≥6-char word-rescue only
+    tries "interior", which no title contains. The dumber detector ran first
+    and won — flip + Force income dead all game, game lost. Same false
+    negative hit Piett's "[any commander]" search 27x on T4.
+    Fix (in place, both bots): inside the block branch, consult
+    validatePullFromSourceCard(RESERVE_DECK, sourceGameText) BEFORE applying
+    -2000. WILL_SUCCEED → no block (logged "V177 CATEGORY RESCUE"); anything
+    else → the block stands. Genuine dead searches (proper-noun targets) still
+    fail the validator and still block. Accepted false positive: the category
+    fallback ignores qualifiers, so any location left in Reserve un-blocks an
+    interior-CC search whose real targets are gone — one no-op action per
+    turn, bounded (and recordFailedPull, the 2-strikes backstop, has ZERO
+    callers — dead wiring — so it repeats; separate fix if ever needed).
 
   ════ V177 (2026-06) ════
 
