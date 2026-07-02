@@ -164,9 +164,28 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Force is already activated, "Activate Force" is no longer offered, so the bot still
             // passes legitimately at the end of the Activate phase.
             if (textLower.contains("activate force")) {
-                action.addReasoning(
-                    "V168 ALWAYS ACTIVATE: never pass Force activation while Force can be activated", 5000.0f);
-                logger.warn("V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
+                // V61c DESTINY BUFFER exception (Steve, 2026-06-29): if the Reserve Deck is
+                // already <= 3, PASS activation instead of the usual V168 always-activate.
+                // Activating moves Reserve -> Force Pile, so activating the last <=3 drains the
+                // destiny buffer that battle/weapon destiny draws need this turn (the engine
+                // forces >=1 per activation, so capping the amount alone erodes 3->2->1->0 over
+                // turns). Steve: "If Rando intends to battle that turn, he needs to save 3." For
+                // now we ALWAYS protect the buffer; a future refinement will pass only when Rando
+                // actually plans to battle (deploy-and-end-turn can safely activate all). Score
+                // below Pass (~5-8) so the action-choice lands on Pass. Pairs with the V38.3
+                // reserve<=3 carve-out below (else the "you have not activated Force" confirm
+                // would bounce Rando straight back into activating).
+                int v61cReserve = context.getReserveDeckSize();
+                if (v61cReserve <= 3) {
+                    action.addReasoning(
+                        "V61c DESTINY BUFFER: reserve <= 3 — pass activation, keep 3 for destiny", -6000.0f);
+                    logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — passing activation (no V168 +5000) on '{}'",
+                        v61cReserve, actionText);
+                } else {
+                    action.addReasoning(
+                        "V168 ALWAYS ACTIVATE: never pass Force activation while Force can be activated", 5000.0f);
+                    logger.warn("V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
+                }
             }
 
             // === V116 (Steve, 2026-05-22): GUARANTEED +100 FLOOR FOR RESERVE-DECK PULLS ===
@@ -1340,7 +1359,20 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 String decisionTextCheck = context.getDecisionText() != null
                     ? context.getDecisionText().toLowerCase() : "";
                 if (decisionTextCheck.contains("not activated force") || decisionTextCheck.contains("have not activated")) {
-                    if (textLower.equals("no")) {
+                    // V61c DESTINY BUFFER carve-out (Steve, 2026-06-29): when the Reserve Deck is
+                    // already <= 3, Rando deliberately passed activation (V168 exception above) to
+                    // keep 3 cards for battle/weapon destiny. Here the engine confirms "you have not
+                    // activated Force — pass?"; honor the pass ("Yes") instead of the usual V38.3
+                    // bounce-back, or the buffer protection is undone.
+                    int v38cReserve = context.getReserveDeckSize();
+                    if (v38cReserve <= 3) {
+                        if (textLower.equals("yes")) {
+                            action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — confirm pass, keep 3 for destiny", 9999.0f);
+                            logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — confirming pass (skip activation)", v38cReserve);
+                        } else if (textLower.equals("no")) {
+                            action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — do not go back and activate", -9999.0f);
+                        }
+                    } else if (textLower.equals("no")) {
                         action.addReasoning("V38.3 MUST ACTIVATE: Go back and activate Force!", 9999.0f);
                         logger.warn("V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
                     } else if (textLower.equals("yes")) {

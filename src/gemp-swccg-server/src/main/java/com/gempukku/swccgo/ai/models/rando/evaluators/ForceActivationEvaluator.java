@@ -176,13 +176,21 @@ public class ForceActivationEvaluator extends ActionEvaluator {
         //
         // V57 ACTIVATE FULL preserved as default for early/mid-game when
         // life force > 10.
-        int amount = maxAvailable;
-        String mode = "V57 ACTIVATE FULL";
+        // V61c (Steve, 2026-06-29 REVISED): ALWAYS keep 3 cards in the Reserve Deck for battle
+        // destiny + weapon destiny this turn. Force-pile condition removed per Steve — keep 3 for
+        // ANY battle. Cap activation so the Reserve Deck never drops below 3. (Engine requires >=1,
+        // so once the reserve is already <=3 we activate the minimum 1 — can't both keep 3 and
+        // activate when only 3 remain.) The earlier force-pile-gated version almost never fired
+        // (Rando draws its force to hand, so the pile rarely reached the trigger), so the reserve
+        // still drained to 0 and V61 blocked battles. This guarantees the destiny buffer.
+        int amount = Math.max(1, Math.min(maxAvailable, reserveDeck - 3));
+        String mode = (amount < maxAvailable)
+            ? "V61c DESTINY BUFFER (keep 3 in reserve)" : "V57 ACTIVATE FULL";
 
         if (lifeForce <= 10) {
-            // End-game throttle: save 2 force for destiny + weapon destiny
-            amount = Math.max(1, maxAvailable - 2);
-            mode = "V67at END-GAME RESERVE-2 (lifeForce ≤ 10)";
+            // V67at end-game: ALSO save 2 Force from the generation — take the more conservative.
+            int v67at = Math.max(1, maxAvailable - 2);
+            if (v67at < amount) { amount = v67at; mode = "V67at END-GAME RESERVE-2 (lifeForce <= 10)"; }
         }
 
         logger.warn("{}: activating {} of {} (reserve={}, forcePile={}, hand={}, lifeForce={})",
