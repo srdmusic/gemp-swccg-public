@@ -44,6 +44,7 @@ public class Card501_022 extends AbstractRepublic {
         setSpecies(Species.GEONOSIAN);
         addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.PILOT, Icon.VIRTUAL_SET_25);
         setTestingText("Poggle The Lesser");
+        hideFromDeckBuilder();
     }
 
     @Override

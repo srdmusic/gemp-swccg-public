@@ -44,6 +44,7 @@ public class Card501_025 extends AbstractRepublic {
         setSpecies(Species.MUUN);
         addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.PILOT, Icon.VIRTUAL_SET_25);
         setTestingText("San Hill");
+        hideFromDeckBuilder();
     }
 
     @Override

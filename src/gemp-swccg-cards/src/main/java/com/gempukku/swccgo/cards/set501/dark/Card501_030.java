@@ -39,6 +39,7 @@ public class Card501_030 extends AbstractCapitalStarship {
         setPassengerCapacity(5);
         setStarfighterCapacity(1, Filters.shuttle);
         setTestingText("Munificent-Class Star Frigate");
+        hideFromDeckBuilder();
     }
 
     @Override

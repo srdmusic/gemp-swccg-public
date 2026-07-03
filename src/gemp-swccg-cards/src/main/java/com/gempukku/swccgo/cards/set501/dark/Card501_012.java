@@ -45,6 +45,7 @@ public class Card501_012 extends AbstractNormalEffect {
         addKeywords(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Order 66");
+        hideFromDeckBuilder();
     }
 
     @Override
