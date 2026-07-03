@@ -24,6 +24,14 @@ public class ParasiteDetachedResult extends EffectResult {
         _host = host;
     }
 
+    public PhysicalCard getParasite() {
+        return _creature;
+    }
+
+    public PhysicalCard getHost() {
+        return _host;
+    }
+
     /**
      * Gets the text to show to describe the effect result.
      * @param game the game

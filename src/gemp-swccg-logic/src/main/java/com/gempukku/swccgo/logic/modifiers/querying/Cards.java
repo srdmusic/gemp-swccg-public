@@ -3,6 +3,7 @@ package com.gempukku.swccgo.logic.modifiers.querying;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardState;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -69,6 +70,11 @@ public interface Cards extends BaseQuery, Captives, Battle {
 		}
 
 		if (physicalCard.getAttachedTo() != null) {
+			//While a parasite is attached to an inactive host, the parasite remains active. This is a specific exception to the Inactive rules.
+			if(physicalCard.getBlueprint().hasKeyword(Keyword.PARASITE) &&
+					getCardState(gameState, physicalCard.getAttachedTo(), includeExcludedFromBattle, true, includeCaptives, includeConcealed, includeWeaponsForStealing, includeMissing, includeBinaryOff, includeSuspended) == CardState.INACTIVE) {
+				return CardState.ACTIVE;
+			}
 			return getCardState(gameState, physicalCard.getAttachedTo(), includeExcludedFromBattle, true, includeCaptives, includeConcealed, includeWeaponsForStealing, includeMissing, includeBinaryOff, includeSuspended);
 		}
 
