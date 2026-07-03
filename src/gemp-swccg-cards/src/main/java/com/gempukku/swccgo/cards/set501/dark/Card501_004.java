@@ -79,7 +79,7 @@ public class Card501_004 extends AbstractStarfighter {
             action.setActionMsg("Stack " + GameUtils.getCardLink(self) + " on Droid Racks");
             // Perform result(s)
             action.appendEffect(
-                    new StackOneCardFromLostPileEffect(action, droidRacksCard, self, false, true, true));
+                    new StackOneCardFromLostPileEffect(action, self, droidRacksCard, false, true, true));
             return Collections.singletonList(action);
         }
         return null;
