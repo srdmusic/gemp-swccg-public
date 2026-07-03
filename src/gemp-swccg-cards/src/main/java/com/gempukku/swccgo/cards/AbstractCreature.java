@@ -5,6 +5,7 @@ import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -290,7 +291,8 @@ public abstract class AbstractCreature extends AbstractDeployable {
         // Creatures may attack a non-creature if they are present with a valid target during owner's battle phase
         if (GameConditions.isDuringYourPhase(game, playerId, Phase.BATTLE)
                 && !GameConditions.isDuringAttack(game)
-                && !GameConditions.isDuringBattle(game)) {
+                && !GameConditions.isDuringBattle(game)
+                && (!self.getBlueprint().hasKeyword(Keyword.PARASITE) || self.getAttachedTo() == null)) {
             GameState gameState = game.getGameState();
             ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
             if (!modifiersQuerying.hasParticipatedInBattlePhaseAttackOnNonCreatureThisTurn(self)) {
@@ -324,7 +326,7 @@ public abstract class AbstractCreature extends AbstractDeployable {
         if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.BATTLE, playerId)
                 && !GameConditions.isDuringAttack(game)
                 && !GameConditions.isDuringBattle(game)
-                && self.getAttachedTo() == null) {
+                && (!self.getBlueprint().hasKeyword(Keyword.PARASITE) || self.getAttachedTo() == null)) {
             GameState gameState = game.getGameState();
             ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
             if (!modifiersQuerying.hasParticipatedInBattlePhaseAttackOnNonCreatureThisTurn(self)) {

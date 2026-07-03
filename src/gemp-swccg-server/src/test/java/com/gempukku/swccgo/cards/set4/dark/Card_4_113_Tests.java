@@ -298,7 +298,7 @@ public class Card_4_113_Tests {
 
 	@Test
 	public void VineSnakeCannotTargetNewHostWhileAttachedToHost() {
-		//demonstrates https://github.com/PlayersCommittee/gemp-swccg-public/issues/63
+		//shows fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/63
 		//AR: "While attached, a creature will not attempt to attach to another target, and it may not voluntarily detach."
 		//Test1: vine snake does not have attack action while attached to host
 		var scn = GetScenario();
@@ -342,7 +342,7 @@ public class Card_4_113_Tests {
 
 	@Test
 	public void VineSnakeXResetsAfterEating() {
-		//demonstrates https://github.com/PlayersCommittee/gemp-swccg-public/issues/63
+		//shows fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/63
 		//Test1: after eating a host with X > 0, vine snake's X resets to 0 when attaching to new host
 		//eat stormtrooper (x = 1), then attach to power 1 rebeltrooper and confirm power = 1 (not 0)
 		var scn = GetScenario();
