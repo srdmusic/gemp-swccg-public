@@ -34,7 +34,7 @@ import java.util.Set;
  * The abstract class providing the common implementation for starships.
  */
 public abstract class AbstractStarship extends AbstractDeployable {
-    private float _power;
+    private Float _power;
     private Float _armor;
     private Float _maneuver;
     private float _forfeit;
@@ -65,7 +65,7 @@ public abstract class AbstractStarship extends AbstractDeployable {
      * @param expansionSet the expansionSet
      * @param rarity the rarity
      */
-    protected AbstractStarship(Side side, Float destiny, Float deployCost, float power, Float armor, Float maneuver, Float hyperspeed, float forfeit, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
+    protected AbstractStarship(Side side, Float destiny, Float deployCost, Float power, Float armor, Float maneuver, Float hyperspeed, float forfeit, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
         super(side, destiny, null, deployCost, title, uniqueness, expansionSet, rarity);
         _power = power;
         _armor = armor;
