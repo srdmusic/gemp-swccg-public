@@ -795,6 +795,22 @@ public class DeployEvaluator extends ActionEvaluator {
                                             com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
                                             LOG.info("V67h MEMORY OK: source={} — {}",
                                                 v67hSrcCard.getTitle(), v67hResult.reason);
+                                            // === V190 (Steve, 2026-07-04): STARSHIPS DEPLOY TO SYSTEMS ===
+                                            // Mirrored from rando DeployEvaluator; see the rando copy for
+                                            // the full rationale + boundary math. Starship-only pull with
+                                            // no space location on table = the ship can only park at a
+                                            // site at 0 power — block until a system/sector lands.
+                                            if (v60Oracle.reservePullFetchesOnlyStarships(v67hGT)
+                                                    && !com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                                        .spaceLocationOnTable(gameState)) {
+                                                action.addReasoning("V190 STARSHIP PULL, NO SPACE LOCATION ON TABLE: every Reserve target left for '"
+                                                    + actionText + "' is a starship and there is no system to deploy it to — it would park at a docking bay at 0 power; deploy a system first",
+                                                    -12000.0f);
+                                                LOG.warn("V190 STARSHIP-NO-SYSTEM blocked: source={} — starship-only fetch, no space location on table (-12000)",
+                                                    v67hSrcCard.getTitle());
+                                                actions.add(action);
+                                                continue;
+                                            }
                                         }
                                     }
                                 }

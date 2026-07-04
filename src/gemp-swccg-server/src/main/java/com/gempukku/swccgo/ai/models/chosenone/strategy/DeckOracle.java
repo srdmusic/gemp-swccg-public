@@ -916,6 +916,66 @@ public class DeckOracle {
             "'" + String.join("/", targetKeywords) + "' is available in " + sourceZone);
     }
 
+    /**
+     * V190 (Steve, 2026-07-04): "Only deploy starships to systems." Does this
+     * reserve pull fetch ONLY starships? Mirrored from rando DeckOracle; see the
+     * rando copy for full rationale. Resolution order per target: docking-bay
+     * phrase (title-only), type-word category, exact-phrase title substring.
+     * NO last-word fallback (parser junk must resolve to nothing). True only
+     * when something resolved and EVERY resolved reserve card is a STARSHIP.
+     */
+    public boolean reservePullFetchesOnlyStarships(String sourceCardGameText) {
+        List<String> targets = parseSourceCardPullTargets(sourceCardGameText);
+        if (targets == null || targets.isEmpty()) return false;
+        boolean anyStarship = false;
+        for (DeckCard dc : allCards) {
+            if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
+            String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
+            boolean hit = false;
+            for (String kw : targets) {
+                if (kw == null) continue;
+                String kwLower = kw.toLowerCase(Locale.ROOT).trim();
+                if (kwLower.isEmpty()) continue;
+                if (kwLower.contains("docking bay")) {
+                    if (titleLower.contains("docking bay")) { hit = true; break; }
+                    continue;
+                }
+                CardCategory kwCat = mapTypeWordToCategory(kwLower);
+                if (kwCat != null) {
+                    if (dc.getCategory() == kwCat) { hit = true; break; }
+                    continue;
+                }
+                if (titleLower.contains(kwLower)) { hit = true; break; }
+                String kwStripped = kwLower.replaceAll("\\[[^\\]]*\\]", " ").replaceAll("\\s+", " ").trim();
+                if (!kwStripped.isEmpty() && !kwStripped.equals(kwLower)
+                        && titleLower.contains(kwStripped)) { hit = true; break; }
+            }
+            if (!hit) continue;
+            if (dc.getCategory() != CardCategory.STARSHIP) return false;
+            anyStarship = true;
+        }
+        return anyStarship;
+    }
+
+    /**
+     * V190: is any space location (SYSTEM or SECTOR) on table for a ship to
+     * deploy to? Fail-open: null/unreadable state returns true so the gate
+     * never fires blind. Mirrored from rando DeckOracle.
+     */
+    public static boolean spaceLocationOnTable(GameState gameState) {
+        if (gameState == null) return true;
+        try {
+            for (PhysicalCard loc : gameState.getTopLocations()) {
+                if (loc == null || loc.getBlueprint() == null) continue;
+                CardSubtype st = loc.getBlueprint().getCardSubtype();
+                if (st == CardSubtype.SYSTEM || st == CardSubtype.SECTOR) return true;
+            }
+        } catch (Exception e) {
+            return true;
+        }
+        return false;
+    }
+
     // =========================================================================
     // V67h SOURCE-CARD GAME-TEXT PARSER
     //

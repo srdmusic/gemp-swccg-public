@@ -1400,7 +1400,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // Ported from Python card_selection_evaluator.py lines 267-283
                         // =====================================================
                         if (isStarship) {
-                            if (isDockingBay) {
+                            // V190 widening (Steve, 2026-07-04): "Only deploy starships to
+                            // systems." The -1500 now covers ALL sites, not just title-matched
+                            // docking bays (isGroundSite = SITE && !isDockingBay, so the union
+                            // is every site; a null-blueprint docking bay still matches by
+                            // title). Behavior change: non-docking-bay sites go from the old
+                            // -10 "unusual" nudge (branch commented out below) to -1500.
+                            // Sectors deliberately unpenalized pending Steve's ruling.
+                            if (isDockingBay || isGroundSite) {
                                 // NEVER deploy starships to docking bays!
                                 // 2026-06-03 MAGNITUDE BUMP (Steve, Mustafar replay): the
                                 // previous VERY_BAD_DELTA (-150) was the only block protecting
@@ -1418,8 +1425,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 // ~-1450, Rando picks the Done/cancel sub. The cancel-loop
                                 // detector then blocks the outer action after 3 retries, and
                                 // Rando stops invoking the docking bay's game text.
-                                action.addReasoning("⚠️ STARSHIP TO DOCKING BAY = 0 POWER!", -1500.0f);
-                                logger.warn("⚠️ {} would have 0 power at docking bay {} → -1500 (was VERY_BAD_DELTA -150)",
+                                action.addReasoning("⚠️ STARSHIP TO SITE = 0 POWER! (V190: ships deploy to systems)", -1500.0f);
+                                logger.warn("⚠️ V190: {} would have 0 power at site {} → -1500 (widened 2026-07-04 from docking-bays-only)",
                                     deployingCardName, title);
                             } else if (isSpaceSystem) {
                                 // Space system - starship has power here (if piloted)
@@ -1473,10 +1480,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 } else {
                                     action.addReasoning("Starship to space system", GOOD_DELTA * 2);
                                 }
-                            } else if (isGroundSite) {
-                                // Ground location - starship can't deploy here normally
-                                action.addReasoning("STARSHIP TO GROUND - unusual!", BAD_DELTA);
                             }
+                            // V190 (2026-07-04): dead branch commented out — isGroundSite now
+                            // routes into the -1500 site block above (feedback_comment_out_old_rules).
+                            // } else if (isGroundSite) {
+                            //     // Ground location - starship can't deploy here normally
+                            //     action.addReasoning("STARSHIP TO GROUND - unusual!", BAD_DELTA);
+                            // }
                         }
 
                         // =====================================================

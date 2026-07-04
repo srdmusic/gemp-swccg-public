@@ -831,6 +831,35 @@ public class DeployEvaluator extends ActionEvaluator {
                                                 actions.add(action);
                                                 continue;
                                             }
+                                            // === V190 (Steve, 2026-07-04): STARSHIPS DEPLOY TO SYSTEMS ===
+                                            // "He should not have deployed starships to a docking bay.
+                                            // Only deploy starships to systems." Game 20jqtseod148of4y:
+                                            // Court Of The Vile Gangster's pull fetched Elis In Hinthra
+                                            // (then Dengar In Punishing One) and parked them at Executor:
+                                            // Docking Bay at 0 power — the 4 Force it burned starved the
+                                            // V29 PAIRED buddy deploy the same turn. When every fetchable
+                                            // Reserve target left for this pull is a STARSHIP and no
+                                            // space location is on table, the ship can only park at a
+                                            // site: block the pull until a system/sector lands. Known
+                                            // limits (see AI_CHANGELOG 2026-07-04): a space location the
+                                            // ship can't legally deploy to still stands the gate down,
+                                            // and the gate does not itself make Rando deploy the system
+                                            // first (follow-up item). Boundary: the continue skips this
+                                            // evaluator's later bonuses (V60 +100, V38.4, V100 +1500,
+                                            // V67ai +2000), so the blocked action lands ~-6400 vs the
+                                            // -100 viability floor — dominated, and no other rule reads
+                                            // this action after a continue.
+                                            if (v60Oracle.reservePullFetchesOnlyStarships(v67hGT)
+                                                    && !com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                                        .spaceLocationOnTable(gameState)) {
+                                                action.addReasoning("V190 STARSHIP PULL, NO SPACE LOCATION ON TABLE: every Reserve target left for '"
+                                                    + actionText + "' is a starship and there is no system to deploy it to — it would park at a docking bay at 0 power; deploy a system first",
+                                                    -12000.0f);
+                                                LOG.warn("V190 STARSHIP-NO-SYSTEM blocked: source={} — starship-only fetch, no space location on table (-12000)",
+                                                    v67hSrcCard.getTitle());
+                                                actions.add(action);
+                                                continue;
+                                            }
                                         }
                                     }
                                 }
