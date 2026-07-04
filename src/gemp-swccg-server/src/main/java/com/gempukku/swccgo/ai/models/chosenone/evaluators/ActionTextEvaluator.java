@@ -5043,6 +5043,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         } else {
                             logger.info("V24.15 DRAIN CHECK: Force drain at {} will be {} — proceeding", drainLocation.getTitle(), drainAmount);
                         }
+                        // === V189 (Steve, 2026-07-04): NET-VALUE DRAIN GATE ===
+                        // "He should not have paid to drain for 1 with battle plan or
+                        // battle order on the board." Mirrored from rando; see the
+                        // rando ActionTextEvaluator for the full rationale + boundary
+                        // math. Cost > drain = net negative = block (-2000, early
+                        // return). Cost-0 games unaffected; net 0 allowed.
+                        float v189Cost = drainGame.getModifiersQuerying().getInitiateForceDrainCost(
+                            gameState, drainLocation, playerId);
+                        if (v189Cost > drainAmount) {
+                            action.addReasoning(String.format(
+                                "V189 DRAIN NET-VALUE BLOCK: initiate cost %.0f > drain %.0f at %s — paying more than it's worth",
+                                v189Cost, drainAmount, drainLocation.getTitle()), -2000.0f);
+                            logger.warn("V189 DRAIN NET-VALUE BLOCK: initiate cost {} > drain {} at {} → -2000",
+                                (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
+                            return;
+                        } else if (v189Cost > 0) {
+                            logger.info("V189 DRAIN NET-VALUE CHECK: cost {} <= drain {} at {} — worth paying, proceeding",
+                                (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -5169,80 +5188,101 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // 3-force cost. Steve flagged 2026-05-26: "If he satisfies battle order
             // or battle plan he does not need to pay three force to drain." Adding
             // the waiver check so V104/V48 only fire when the cost is actually due.
+            // V140 (UPDATED 2026-07-04, in place): the old hand-rolled scan below
+            // treated "Battle Plan on table" as a UNIVERSAL cost waiver — factually
+            // wrong (Battle Plan imposes its own identical 3-Force drain tax). Ask
+            // the engine what initiating costs HERE. Mirrored from rando; see the
+            // rando ActionTextEvaluator for the full rationale.
             boolean v140CostWaived = false;
             try {
-                if (gameState != null) {
-                    // Check Battle Plan on table (waives Battle Order cost universally)
-                    for (PhysicalCard pc : gameState.getAllPermanentCards()) {
-                        if (pc == null || pc.getTitle() == null) continue;
-                        if (pc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("battle plan")) {
-                            v140CostWaived = true;
-                            break;
-                        }
-                    }
-                    // Check "occupies BG site AND BG system" exemption
-                    if (!v140CostWaived && context.getGame() != null) {
-                        boolean occupiesBGSite = false;
-                        boolean occupiesBGSystem = false;
-                        for (PhysicalCard loc : gameState.getTopLocations()) {
-                            if (loc == null || loc.getBlueprint() == null) continue;
-                            boolean isBG = false;
-                            try {
-                                isBG = context.getGame().getModifiersQuerying()
-                                    .isBattleground(gameState, loc, null);
-                            } catch (Exception ignore) { /* false */ }
-                            if (!isBG) continue;
-                            // Holosite exemption: per Battle Order text, holosites don't count
-                            String locTitle = loc.getTitle() != null
-                                ? loc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                            if (locTitle.contains("holosite")) continue;
-                            // Are we present at this BG?
-                            boolean weOccupy = false;
-                            java.util.List<PhysicalCard> atLoc = gameState.getCardsAtLocation(loc);
-                            if (atLoc != null) {
-                                for (PhysicalCard hc : atLoc) {
-                                    if (hc == null) continue;
-                                    if (!playerId.equals(hc.getOwner())) continue;
-                                    if (hc.getBlueprint() != null
-                                            && hc.getBlueprint().getCardCategory()
-                                                == com.gempukku.swccgo.common.CardCategory.CHARACTER) {
-                                        weOccupy = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!weOccupy) continue;
-                            // Is this a system or a site?
-                            boolean isSystem = false;
-                            try {
-                                if (loc.getBlueprint().getCardSubtype() != null) {
-                                    isSystem = "SYSTEM".equalsIgnoreCase(
-                                        loc.getBlueprint().getCardSubtype().toString());
-                                }
-                            } catch (Exception ignore) { /* */ }
-                            if (isSystem) occupiesBGSystem = true;
-                            else occupiesBGSite = true;
-                            if (occupiesBGSite && occupiesBGSystem) {
-                                v140CostWaived = true;
-                                break;
-                            }
-                        }
+                if (gameState != null && locationCardId != null && context.getGame() != null) {
+                    PhysicalCard v140Loc = gameState.findCardById(Integer.parseInt(locationCardId));
+                    if (v140Loc != null) {
+                        v140CostWaived = context.getGame().getModifiersQuerying()
+                            .getInitiateForceDrainCost(gameState, v140Loc, playerId) <= 0f;
                     }
                 }
             } catch (Exception v140e) {
                 logger.debug("V140 cost-waiver check error: {}", v140e.getMessage());
             }
+            // OLD detection commented out 2026-07-04 (feedback_comment_out_old_rules):
+            // boolean v140CostWaived = false;
+            // try {
+            //     if (gameState != null) {
+            //         // Check Battle Plan on table (waives Battle Order cost universally)   <-- the false premise
+            //         for (PhysicalCard pc : gameState.getAllPermanentCards()) {
+            //             if (pc == null || pc.getTitle() == null) continue;
+            //             if (pc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("battle plan")) {
+            //                 v140CostWaived = true;
+            //                 break;
+            //             }
+            //         }
+            //         // Check "occupies BG site AND BG system" exemption
+            //         if (!v140CostWaived && context.getGame() != null) {
+            //             boolean occupiesBGSite = false;
+            //             boolean occupiesBGSystem = false;
+            //             for (PhysicalCard loc : gameState.getTopLocations()) {
+            //                 if (loc == null || loc.getBlueprint() == null) continue;
+            //                 boolean isBG = false;
+            //                 try {
+            //                     isBG = context.getGame().getModifiersQuerying()
+            //                         .isBattleground(gameState, loc, null);
+            //                 } catch (Exception ignore) { /* false */ }
+            //                 if (!isBG) continue;
+            //                 // Holosite exemption: per Battle Order text, holosites don't count
+            //                 String locTitle = loc.getTitle() != null
+            //                     ? loc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+            //                 if (locTitle.contains("holosite")) continue;
+            //                 // Are we present at this BG?
+            //                 boolean weOccupy = false;
+            //                 java.util.List<PhysicalCard> atLoc = gameState.getCardsAtLocation(loc);
+            //                 if (atLoc != null) {
+            //                     for (PhysicalCard hc : atLoc) {
+            //                         if (hc == null) continue;
+            //                         if (!playerId.equals(hc.getOwner())) continue;
+            //                         if (hc.getBlueprint() != null
+            //                                 && hc.getBlueprint().getCardCategory()
+            //                                     == com.gempukku.swccgo.common.CardCategory.CHARACTER) {
+            //                             weOccupy = true;
+            //                             break;
+            //                         }
+            //                     }
+            //                 }
+            //                 if (!weOccupy) continue;
+            //                 // Is this a system or a site?
+            //                 boolean isSystem = false;
+            //                 try {
+            //                     if (loc.getBlueprint().getCardSubtype() != null) {
+            //                         isSystem = "SYSTEM".equalsIgnoreCase(
+            //                             loc.getBlueprint().getCardSubtype().toString());
+            //                     }
+            //                 } catch (Exception ignore) { /* */ }
+            //                 if (isSystem) occupiesBGSystem = true;
+            //                 else occupiesBGSite = true;
+            //                 if (occupiesBGSite && occupiesBGSystem) {
+            //                     v140CostWaived = true;
+            //                     break;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // } catch (Exception v140e) {
+            //     logger.debug("V140 cost-waiver check error: {}", v140e.getMessage());
+            // }
             if (v140CostWaived) {
                 action.addReasoning(
-                    "V140 BATTLE ORDER COST WAIVED: occupy BG site + BG system (or Battle Plan in play) — drain is FREE!",
+                    "V140 BATTLE ORDER COST WAIVED: engine initiate-cost is 0 — drain is FREE!",
                     VERY_GOOD_DELTA + 10.0f);
-                logger.warn("V140 BATTLE ORDER COST WAIVED: drain is free, skipping V104/V48 penalties");
+                logger.warn("V140 BATTLE ORDER COST WAIVED: engine initiate-cost 0 — drain is free, skipping V104/V48 penalties");
                 // No further BO-specific scoring; drain is free, treat like normal drain
                 return;
             }
 
             // V104 (Steve, 2026-05-20): UNDER BATTLE ORDER — HARD BLOCK DRAIN ≤ 1.
             // (Skipped when V140 cost-waiver fires above.)
+            // NOTE (2026-07-04): V189 upstream (net-value gate at the V24.15 check)
+            // now fronts every V104 case with the engine-true cost; V104 remains as
+            // a backstop for the rare case where the engine cost query throws.
             boolean v104HardBlock = false;
             try {
                 if (gameState != null && locationCardId != null && context.getGame() != null) {
