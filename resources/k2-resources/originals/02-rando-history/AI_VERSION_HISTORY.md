@@ -3301,6 +3301,70 @@ Total tags catalogued: 179
     Status: UNCOMMITTED in the working tree, live in the jar. PENDING live Verge game
     (4->6 turn 1, 6->7 turn 2, then orbit Scarif).
 
+  ════ V189 (2026-07-04) ════
+
+  V189 — NET-VALUE DRAIN GATE (never pay more to initiate a drain than it's worth)
+    Source: ActionTextEvaluator.java evaluateForceDrain (rando + chosenone),
+            immediately after the V24.15 zero-drain check.
+    Steve, game 20jqtseod148of4y (2026-07-04): "He should not have paid to
+    drain for 1 with battle plan or battle order on the board." With asdf's
+    Battle Plan on table, Rando used 3 Force then drained 1 at Audience
+    Chamber, TWICE. Two offenders: the untagged "no deployables — drain is our
+    only pressure" +70 boost (returns before any net math) and V140's false
+    "Battle Plan on table = universal waiver" (+60; Battle Plan actually
+    imposes its OWN 3-Force drain tax, Card8_035).
+    Fix: query getInitiateForceDrainCost(gameState, location, playerId) — the
+    identical query the engine charges via PayInitiateForceDrainCostEffect,
+    summing every INITIATE_FORCE_DRAIN_COST modifier, no card-name hardcoding.
+    Cost > drain → -2000 + early return (skips the +70 boost / V140 / V52 /
+    V29.9 — the offenders). Boundary: cost-0 games untouched; net 0 (pay 3
+    drain 3) allowed — permanent Life Force damage for recycling Force; pay-3-
+    drain-2 blocked, deliberately SUPERSEDING V52's old "net -1 marginal but
+    worth it" stance. Blocked drain = exactly -2000, loses to Pass (+5).
+    V104 (drain ≤ 1 under BO) becomes a redundant backstop fronted by V189.
+    V140 UPDATED in place same session: detection replaced with the same
+    engine query (old hand-rolled scan commented out); its reasoning string
+    now claims only what the engine confirms ("engine initiate-cost is 0").
+    Known remaining gap (pre-existing): the untagged forceAvailable<3 branch
+    still -50s genuinely free drains before V140 runs — under-drain direction,
+    fail-safe, separate item.
+
+  ════ V190 (2026-07-04) ════
+
+  V190 — STARSHIPS DEPLOY TO SYSTEMS, NOT DOCKING BAYS (pull gate + destination widening)
+    Source: DeckOracle.java (both bots): NEW reservePullFetchesOnlyStarships +
+            static spaceLocationOnTable. DeployEvaluator.java (both bots): gate
+            in the V67h WILL_SUCCEED branch (rando: after the V185 gate).
+            CardSelectionEvaluator.java (both bots): the old untagged -1500
+            docking-bay destination rule WIDENED in place to all SITEs.
+    Steve, game 20jqtseod148of4y (2026-07-04): "He should not have deployed
+    starships to a docking bay. Only deploy starships to systems." Court Of
+    The Vile Gangster's pull fetched Elis In Hinthra (later Dengar In
+    Punishing One) and parked them at Executor: Docking Bay at 0 power — and
+    the 4 Force it burned starved the V29 PAIRED buddy deploy (Wooof never
+    joined Greedo at the Great Pit).
+    Fix, two layers sharing the ONE-predicate discipline:
+    (1) PULL GATE: when every fetchable Reserve target left for a pull is a
+        STARSHIP and no SYSTEM/SECTOR is on table, block the pull (-12000 +
+        continue; lands ~-6400 after skipped downstream bonuses, vs the
+        observed +9380 offending stack — dominated). Target resolution:
+        docking-bay targets match docking-bay TITLES only (the V82.3
+        'docking bay'→LOCATION category fallback let the SYSTEM Nal Hutta
+        satisfy a docking-bay check — not repeated); type-words by category;
+        exact phrase by title; NO last-word fallback (parser junk resolves to
+        nothing). Turns 1-2 of the same deck unaffected (docking bays still in
+        Reserve → LOCATION fetch → helper false → pull fires, correct).
+    (2) DESTINATION: -1500 now covers ALL sites (was title-matched docking
+        bays only; the dead -10 "STARSHIP TO GROUND" branch commented out).
+    Known limits, deliberate: a space location the ship can't legally deploy
+    to still stands the gate down (v2: icons/ownership); the gate does not
+    itself make Rando deploy the system first (the "Deploy Nal Hutta" action
+    is unclassified by the DPS walk — follow-up item); SECTORS count as space
+    and are unpenalized pending Steve's ruling; a deck with no system keeps
+    its ships in Reserve permanently (consistent with the rule). Vehicles
+    untouched. Chosenone mirrored (note: chosenone still has NO V185 block —
+    pre-existing mirror debt, not ported here).
+
   ════ V187 (2026-06-28): -300 to duplicate starting effects (DeckOracle) ════
 
   V187 — PREFER ONE-OF EFFECTS AT STARTING-INTERRUPT SETUP (backfilled 2026-07-01)
