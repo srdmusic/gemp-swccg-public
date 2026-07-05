@@ -30,12 +30,12 @@ import java.util.List;
  */
 public class Card501_020_BACK extends AbstractSystem {
     public Card501_020_BACK() {
-        super(Side.DARK, Title.Geonosis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, Title.Geonosis, 7, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If you just initiated a Force drain (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.");
         setLocationLightSideGameText("While you occupy with a [Republic] starship, your Jedi and clones at Geonosis sites are power +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_25);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_27);
         setTestingText("Geonosis (Republic controlled)");
     }
 
@@ -56,7 +56,7 @@ public class Card501_020_BACK extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.or(Filters.Jedi, Filters.clone), Filters.at(Filters.Geonosis_site)), new OccupiesWithCondition(playerOnLightSideOfLocation, self, Filters.and(Icon.REPUBLIC, Filters.starship)), 1));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.or(Filters.Jedi, Filters.clone), Filters.at(Filters.Geonosis_site)), new OccupiesWithCondition(playerOnLightSideOfLocation, self, Filters.Republic_starship), 1));
         return modifiers;
     }
 }

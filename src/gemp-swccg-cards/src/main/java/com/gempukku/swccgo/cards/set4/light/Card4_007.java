@@ -228,6 +228,24 @@ public class Card4_007 extends AbstractCreature {
             }
         }
 
+        // Check condition(s)
+        if (TriggerConditions.justDetachedParasiteFromHost(game, effectResult, self, Filters.any)) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText(null);
+            action.setActionMsg(null);
+            // Perform result(s)
+            action.appendEffect(
+                    new PassthruEffect(action) {
+                        @Override
+                        protected void doPlayEffect(SwccgGame game) {
+                            self.setWhileInPlayData(null); //reset X
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
         return actions;
     }
 }

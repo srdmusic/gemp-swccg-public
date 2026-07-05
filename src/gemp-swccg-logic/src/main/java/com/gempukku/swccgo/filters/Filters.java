@@ -197,6 +197,28 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are restricted 6.
+     */
+    public static final Filter restricted_6 = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            Uniqueness uniqueness = modifiersQuerying.getUniqueness(gameState, physicalCard);
+            return uniqueness!=null && !uniqueness.isPerSystem() && uniqueness.getValue()==6;
+        }
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
+            Uniqueness uniqueness = builtInCardBlueprint.getUniqueness();
+            return uniqueness!=null && !uniqueness.isPerSystem() && uniqueness.getValue()==6;
+        }
+    };
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter restricted_6() {
+        return restricted_6;
+    }
+
+    /**
      * Filter that accepts cards that are non-unique.
      */
     public static final Filter non_unique = new Filter() {
@@ -18051,6 +18073,7 @@ public class Filters {
     public static final Filter Coruscant_battleground_site = Filters.and(Filters.partOfSystem(Title.Coruscant), CardSubtype.SITE, Filters.battleground());
     public static final Filter Coruscant_Celebration = Filters.title(Title.Coruscant_Celebration);
     public static final Filter Coruscant_Guard = Filters.keyword(Keyword.CORUSCANT_GUARD);
+    public static final Filter Coruscant_Jedi_Temple = Filters.title(Title.Coruscant_Jedi_Temple);
     public static final Filter Coruscant_location = Filters.partOfSystem(Title.Coruscant);
     public static final Filter Coruscant_site = Filters.and(Filters.partOfSystem(Title.Coruscant), CardSubtype.SITE);
     public static final Filter Coruscant_Imperial_Square = Filters.title(Title.Coruscant_Imperial_Square);
@@ -18214,6 +18237,7 @@ public class Filters {
     public static final Filter Dopra_Doompa= Filters.title(Title.Dobra_Doompa);
     public static final Filter Double_Agent = Filters.title(Title.Double_Agent);
     public static final Filter Double_Back = Filters.title(Title.Double_Back);
+    public static final Filter Double_Crossing_No_Good_Swindler = Filters.title(Title.Double_Crossing_No_Good_Swindler);
     public static final Filter Downtown_Plaza = Filters.title(Title.Downtown_Plaza);
     public static final Filter DQar_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Dqar));
     public static final Filter Dqar_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dqar));
@@ -19177,6 +19201,7 @@ public class Filters {
     public static final Filter Senate_Hovercam = Filters.title(Title.Senate_Hovercam);
     public static final Filter senator = Filters.keyword(Keyword.SENATOR);
     public static final Filter Sense = Filters.title(Title.Sense);
+    public static final Filter Separatist_Command_Center = Filters.title(Title.Separatist_Command_Center);
     public static final Filter Set_For_Stun = Filters.title(Title.Set_For_Stun);
     public static final Filter Set_Your_Course_For_Alderaan = Filters.title(Title.Set_Your_Course_For_Alderaan);
     public static final Filter Seventh_Marker = Filters.keyword(Keyword.MARKER_7);
@@ -19443,7 +19468,7 @@ public class Filters {
     public static final Filter Trade_Federation_starfighter = Filters.and(Icon.TRADE_FEDERATION, CardSubtype.STARFIGHTER);
     public static final Filter Trample = Filters.title(Title.Trample);
     public static final Filter Trandoshan = Filters.species(Species.TRANDOSHAN);
-    public static final Filter transport = Filters.and(CardType.STARSHIP, Filters.or(Keyword.TRANSPORT_SHIP, ModelType.BYBLOS_G1A_TRANSPORT, ModelType.KOMRK_CLASS_FIGHTER_TRANSPORT, ModelType.MODIFIED_TRANSPORT, ModelType.OUBLIETTE_CLASS_TRANSPORT, ModelType.RESISTANCE_TRANSPORT, ModelType.TRANSPORT, ModelType.WTK_85A_INTERSTELLAR_TRANSPORT, ModelType.ZETA_CLASS_TRANSPORT));
+    public static final Filter transport = Filters.and(CardType.STARSHIP, Filters.or(Keyword.TRANSPORT_SHIP, ModelType.BYBLOS_G1A_TRANSPORT, ModelType.KOMRK_CLASS_FIGHTER_TRANSPORT, ModelType.MODIFIED_TRANSPORT, ModelType.OUBLIETTE_CLASS_TRANSPORT, ModelType.RESISTANCE_TRANSPORT, ModelType.TRANSPORT, ModelType.WTK_85A_INTERSTELLAR_TRANSPORT, ModelType.ZETA_CLASS_TRANSPORT, ModelType.Y_45_ARMORED_TRANSPORT));
     public static final Filter transport_vehicle = Filters.and(CardType.VEHICLE, CardSubtype.TRANSPORT);
     public static final Filter Transmission_Terminated = Filters.title(Title.Transmission_Terminated);
     public static final Filter Trap_Door = Filters.title(Title.Trap_Door);

@@ -1,0 +1,14 @@
+name: Validate CardImages.js
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate-cardimages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+      - name: Validate CardImages.js
+        run: ./bin/gemp validate-cardimages

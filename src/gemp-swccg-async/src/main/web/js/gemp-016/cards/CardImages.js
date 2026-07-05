@@ -3869,6 +3869,7 @@ const fixedImages = {
 "501_213":"https://res.starwarsccg.org/cards/Premiere-Light/large/noblesacrifice.gif",
 "501_214":"https://res.starwarsccg.org/cards/EnhancedJabbasPalace-Light/large/seethreepio.gif",
 "501_215":"https://res.starwarsccg.org/cards/Endor-Light/large/orrimaarko.gif",
+"501_216":"https://res.starwarsccg.org/cards/Endor-Light/large/yt1300transport.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
@@ -4324,5 +4325,7 @@ const fixedImages = {
 "221_41ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/vadersobsession_ai.png",
 "200_110ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/knowledgeanddefense_ai.png",
 "200_35ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/angerfearaggression_ai.png",
+"215_4ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/calkestis_ai.png",
+"206_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/k2sokaytuesso_ai.png",
 
 };

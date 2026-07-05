@@ -245,6 +245,7 @@ public interface Title {
     String Coruscant = "Coruscant";
     String Coruscant_Guard = "Coruscant Guard";
     String Coruscant_Imperial_Square = "Coruscant: Imperial Square";
+    String Coruscant_Jedi_Temple = "Coruscant: Jedi Temple";
     String Coruscant_Celebration = "Coruscant Celebration";
     String Coruscant_The_Works = "Coruscant: The Works";
     String Count_Me_In = "Count Me In";
@@ -341,6 +342,7 @@ public interface Title {
     String Dont_Underestimate_Our_Chances = "Don't Underestimate Our Chances";
     String Double_Agent = "Double Agent";
     String Double_Back = "Double Back";
+    String Double_Crossing_No_Good_Swindler = "Double-Crossing, No-Good Swindler";
     String Double_Laser_Cannon = "Double Laser Cannon";
     String Downtown_Plaza = "Cloud City: Downtown Plaza";
     String Duel_Of_The_Fates = "Duel Of The Fates";
@@ -838,6 +840,7 @@ public interface Title {
     String Oh_Switch_Off = "Oh, Switch Off";
     String Old_Allies = "Old Allies";
     String Old_Ben = "Old Ben";
+    String Old_Pirates = "Old Pirates";
     String Ominous_Rumors = "Ominous Rumors";
     String Ommni_Box = "Ommni Box";
     String Ommni_Box_Its_Worse = "Ommni Box & It's Worse";
@@ -1041,6 +1044,7 @@ public interface Title {
     String Senate_Hovercam = "Senate Hovercam";
     String Send_A_Detachment_Down = "Send A Detachment Down";
     String Sense = "Sense";
+    String Separatist_Command_Center = "Separatist Command Center";
     String Set_For_Stun = "Set For Stun";
     String Set_Your_Course_For_Alderaan = "Set Your Course For Alderaan";
     String Starship_Levitation = "Starship Levitation";

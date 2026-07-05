@@ -14,6 +14,7 @@ import com.gempukku.swccgo.common.ModelType;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Variable;
 import com.gempukku.swccgo.filters.Filter;
@@ -27,10 +28,12 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.TriggeringResultEffect;
 import com.gempukku.swccgo.logic.modifiers.CalculationVariableModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.modifiers.ParasiteTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
@@ -226,6 +229,24 @@ public class Card4_113 extends AbstractCreature {
                 );
                 actions.add(action);
             }
+        }
+
+        // Check condition(s)
+        if (TriggerConditions.justDetachedParasiteFromHost(game, effectResult, self, Filters.any)) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText(null);
+            action.setActionMsg(null);
+            // Perform result(s)
+            action.appendEffect(
+                    new PassthruEffect(action) {
+                        @Override
+                        protected void doPlayEffect(SwccgGame game) {
+                            self.setWhileInPlayData(null); //reset X
+                        }
+                    }
+            );
+            actions.add(action);
         }
 
         return actions;
