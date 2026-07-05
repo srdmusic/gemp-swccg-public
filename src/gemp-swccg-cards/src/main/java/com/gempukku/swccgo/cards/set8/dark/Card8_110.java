@@ -8,22 +8,17 @@ import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
+import com.gempukku.swccgo.logic.effects.ShieldOneCardAtEachLocationEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -47,54 +42,14 @@ public class Card8_110 extends AbstractImperial {
         if (TriggerConditions.justRevealedInsertCard(game, effectResult, Filters.Never_Tell_Me_The_Odds)
                 && GameConditions.isAtScompLink(game, self)) {
 
-            final List<PhysicalCard> validSites = new LinkedList<>();
-            for (PhysicalCard site : Filters.filterTopLocationsOnTable(game, Filters.any)) {
-                if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.character, Filters.at(site), Filters.canBeTargetedBy(self)))) {
-                    validSites.add(site);
-                }
-            }
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("'Shield' characters");
+            // Perform result(s)
+            Collection<PhysicalCard> toShield = Filters.filterAllOnTable(game, Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.location), Filters.canBeTargetedBy(self)));
+            action.appendEffect(
+                    new ShieldOneCardAtEachLocationEffect(action, toShield));
+            return Collections.singletonList(action);
 
-            if (!validSites.isEmpty()) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setText("'Shield' characters");
-
-                final List<PhysicalCard> charactersToShield = new LinkedList<>();
-
-                //////////////////////////////////////////////////////////////////////////////////////////////////////
-                ///replace this section with a way to build the collection of characters to shield
-                    ///for each site in validSites:
-                    ///get user to choose a card
-                    ///store card in charactersToShield
-                ///either with a for loop or recursively nested?
-                ///then apply destiny modifier to set of characters
-
-                //recursiveTargeting:
-                    //appendTargeting
-                    //remove site from list
-                    //if sites remaining, recursiveTargeting
-                    //else apply modifier
-
-                // Choose target(s)
-                for (PhysicalCard site : validSites) {
-                    action.appendTargeting(
-                            new TargetCardOnTableEffect(action, playerId, "Choose character to 'shield' at " + site.getTitle(), Filters.and(Filters.your(self), Filters.character, Filters.at(site), Filters.canBeTargetedBy(self))) {
-                                @Override
-                                protected void cardTargeted(final int targetGroupId, final PhysicalCard cardToShield) {
-                                    charactersToShield.add(cardToShield);
-                                    final GameState gameState = game.getGameState();
-                                    action.addAnimationGroup(cardToShield);
-
-                                    // Perform result(s)
-                                    action.appendEffect(
-                                            new AddUntilEndOfTurnModifierEffect(action,
-                                                    new DestinyModifier(self, Filters.in(charactersToShield), 3),
-                                                    "'Shields' (adds 3 to destiny number of) " + GameUtils.getAppendedNames(charactersToShield) + " until end of turn"));
-                //////////////////////////////////////////////////////////////////////////////////////////////////////
-                                }
-                            });
-                }
-                return Collections.singletonList(action);
-            }
         }
         return null;
     }
