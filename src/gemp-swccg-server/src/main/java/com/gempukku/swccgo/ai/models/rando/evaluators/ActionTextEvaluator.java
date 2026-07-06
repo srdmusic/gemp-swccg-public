@@ -5081,26 +5081,70 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         // what initiating costs (getInitiateForceDrainCost sums every
                         // INITIATE_FORCE_DRAIN_COST modifier — Battle Order, Battle
                         // Plan, anything future — the same query the engine charges via
-                        // PayInitiateForceDrainCostEffect). Cost > drain = net negative
-                        // = block. Boundary: cost 0 games completely unaffected (0 is
-                        // never > drain, drainAmount > 0 past V24.15); net 0 (pay 3
-                        // drain 3) ALLOWED — 3 permanent Life Force damage for 3
-                        // recycling Force; pay 3 drain 2 blocked, deliberately
-                        // superseding V52's old "net -1 marginal but worth it" stance.
-                        // -2000 with early return: nothing scores a drain before this
-                        // point, so the action lands at exactly -2000, losing to Pass
-                        // (+5) by ~2005 while staying above the -9999 pointless-trap
-                        // tier. Skips the +70 no-deployables boost / V140 / V52 /
-                        // V29.9 below — that's the point, they were the offenders.
+                        // PayInitiateForceDrainCostEffect). Boundary: cost 0 games
+                        // completely unaffected (0 is never > drain, drainAmount > 0
+                        // past V24.15); net 0 (pay 3 drain 3) ALLOWED — 3 permanent
+                        // Life Force damage for 3 recycling Force. -2000 blocks land
+                        // exactly -2000 (nothing scores a drain before this point),
+                        // losing to Pass (+5) by ~2005, above the -9999 trap tier.
+                        // UPDATED 2026-07-06 in place (Steve, 2026-07-04): "We should
+                        // still allow drain 2 for 3 force if there is enough force to
+                        // deploy and move everything that rando wants to do that turn."
+                        // Two tiers now. Net <= -2 (pay 3 drain 1, the original
+                        // offender) stays flat-blocked. Net -1 (pay 3 drain 2) is
+                        // BUDGET-GATED: allowed only when forcePile - cost still covers
+                        // the live deployables in hand + a 2-Force move allowance.
+                        // Drains are CONTROL phase (before Deploy/Move), so the budget
+                        // is a forecast, recomputed from live gameState at EVERY drain
+                        // decision — automatically re-checked whenever Force is spent
+                        // (the DeckOracle.refresh freshness pattern; no spend event
+                        // exists to hook, and priming DeployPhasePlanner at Control
+                        // would cache a stale over-budgeted plan into the V38.4
+                        // hold-back machinery — see AI_CHANGELOG 2026-07-06). This
+                        // restores V52's old "net -1 marginal but worth it" stance
+                        // ONLY while the turn plan stays funded. Under-forecast gaps
+                        // (Effects/weapons/devices/pull costs uncounted) err toward
+                        // allowing a marginal drain — bounded, listed in changelog.
                         float v189Cost = drainGame.getModifiersQuerying().getInitiateForceDrainCost(
                             gameState, drainLocation, playerId);
                         if (v189Cost > drainAmount) {
-                            action.addReasoning(String.format(
-                                "V189 DRAIN NET-VALUE BLOCK: initiate cost %.0f > drain %.0f at %s — paying more than it's worth",
-                                v189Cost, drainAmount, drainLocation.getTitle()), -2000.0f);
-                            logger.warn("V189 DRAIN NET-VALUE BLOCK: initiate cost {} > drain {} at {} → -2000",
-                                (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
-                            return;
+                            if (v189Cost - drainAmount >= 2.0f) {
+                                action.addReasoning(String.format(
+                                    "V189 DRAIN NET-VALUE BLOCK: initiate cost %.0f > drain %.0f at %s — net <= -2, never worth it",
+                                    v189Cost, drainAmount, drainLocation.getTitle()), -2000.0f);
+                                logger.warn("V189 DRAIN NET-VALUE BLOCK: initiate cost {} > drain {} at {} — net <= -2 → -2000",
+                                    (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
+                                return;
+                            }
+                            // Net -1 tier: TURN SPEND FORECAST — live deployable hand
+                            // costs (persona-dead cards excluded, same isDeadCard test
+                            // DeployPhasePlanner uses) + flat 2-Force move allowance.
+                            int v189ForcePile = gameState.getForcePileSize(playerId);
+                            int v189PlannedSpend = 0;
+                            List<PhysicalCard> v189Hand = gameState.getHand(playerId);
+                            if (v189Hand != null) {
+                                for (PhysicalCard v189Hc : v189Hand) {
+                                    if (v189Hc == null || v189Hc.getBlueprint() == null) continue;
+                                    CardCategory v189Cat = v189Hc.getBlueprint().getCardCategory();
+                                    if (v189Cat == CardCategory.CHARACTER || v189Cat == CardCategory.STARSHIP
+                                            || v189Cat == CardCategory.VEHICLE) {
+                                        if (com.gempukku.swccgo.ai.common.AiCardHelper.isDeadCard(v189Hc, drainGame, playerId)) continue;
+                                        Float v189DepCost = v189Hc.getBlueprint().getDeployCost();
+                                        if (v189DepCost != null && v189DepCost > 0) v189PlannedSpend += v189DepCost.intValue();
+                                    }
+                                }
+                            }
+                            final int v189MoveAllowance = 2;
+                            if (v189ForcePile - v189Cost < v189PlannedSpend + v189MoveAllowance) {
+                                action.addReasoning(String.format(
+                                    "V189 DRAIN NET-VALUE BLOCK: net -1 but budget fails — %d Force - %.0f cost < %d planned deploys + %d move allowance at %s",
+                                    v189ForcePile, v189Cost, v189PlannedSpend, v189MoveAllowance, drainLocation.getTitle()), -2000.0f);
+                                logger.warn("V189 DRAIN NET-1 BUDGET BLOCK: force {} - cost {} < plan {} + moves {} at {} → -2000",
+                                    v189ForcePile, (int)v189Cost, v189PlannedSpend, v189MoveAllowance, drainLocation.getTitle());
+                                return;
+                            }
+                            logger.warn("V189 NET -1 DRAIN ALLOWED: cost {} drain {} at {} — force {} covers plan {} + moves {} — proceeding",
+                                (int)v189Cost, (int)drainAmount, drainLocation.getTitle(), v189ForcePile, v189PlannedSpend, v189MoveAllowance);
                         } else if (v189Cost > 0) {
                             logger.info("V189 DRAIN NET-VALUE CHECK: cost {} <= drain {} at {} — worth paying, proceeding",
                                 (int)v189Cost, (int)drainAmount, drainLocation.getTitle());

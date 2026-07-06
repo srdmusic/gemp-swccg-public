@@ -5047,17 +5047,49 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         // "He should not have paid to drain for 1 with battle plan or
                         // battle order on the board." Mirrored from rando; see the
                         // rando ActionTextEvaluator for the full rationale + boundary
-                        // math. Cost > drain = net negative = block (-2000, early
-                        // return). Cost-0 games unaffected; net 0 allowed.
+                        // math. UPDATED 2026-07-06 in place: two tiers — net <= -2
+                        // flat-blocked; net -1 budget-gated (allowed only when
+                        // forcePile - cost covers live deployable hand costs + a
+                        // 2-Force move allowance, recomputed at every drain decision).
+                        // Cost-0 games unaffected; net 0 allowed.
                         float v189Cost = drainGame.getModifiersQuerying().getInitiateForceDrainCost(
                             gameState, drainLocation, playerId);
                         if (v189Cost > drainAmount) {
-                            action.addReasoning(String.format(
-                                "V189 DRAIN NET-VALUE BLOCK: initiate cost %.0f > drain %.0f at %s — paying more than it's worth",
-                                v189Cost, drainAmount, drainLocation.getTitle()), -2000.0f);
-                            logger.warn("V189 DRAIN NET-VALUE BLOCK: initiate cost {} > drain {} at {} → -2000",
-                                (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
-                            return;
+                            if (v189Cost - drainAmount >= 2.0f) {
+                                action.addReasoning(String.format(
+                                    "V189 DRAIN NET-VALUE BLOCK: initiate cost %.0f > drain %.0f at %s — net <= -2, never worth it",
+                                    v189Cost, drainAmount, drainLocation.getTitle()), -2000.0f);
+                                logger.warn("V189 DRAIN NET-VALUE BLOCK: initiate cost {} > drain {} at {} — net <= -2 → -2000",
+                                    (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
+                                return;
+                            }
+                            // Net -1 tier: turn spend forecast, mirrored from rando.
+                            int v189ForcePile = gameState.getForcePileSize(playerId);
+                            int v189PlannedSpend = 0;
+                            List<PhysicalCard> v189Hand = gameState.getHand(playerId);
+                            if (v189Hand != null) {
+                                for (PhysicalCard v189Hc : v189Hand) {
+                                    if (v189Hc == null || v189Hc.getBlueprint() == null) continue;
+                                    CardCategory v189Cat = v189Hc.getBlueprint().getCardCategory();
+                                    if (v189Cat == CardCategory.CHARACTER || v189Cat == CardCategory.STARSHIP
+                                            || v189Cat == CardCategory.VEHICLE) {
+                                        if (com.gempukku.swccgo.ai.common.AiCardHelper.isDeadCard(v189Hc, drainGame, playerId)) continue;
+                                        Float v189DepCost = v189Hc.getBlueprint().getDeployCost();
+                                        if (v189DepCost != null && v189DepCost > 0) v189PlannedSpend += v189DepCost.intValue();
+                                    }
+                                }
+                            }
+                            final int v189MoveAllowance = 2;
+                            if (v189ForcePile - v189Cost < v189PlannedSpend + v189MoveAllowance) {
+                                action.addReasoning(String.format(
+                                    "V189 DRAIN NET-VALUE BLOCK: net -1 but budget fails — %d Force - %.0f cost < %d planned deploys + %d move allowance at %s",
+                                    v189ForcePile, v189Cost, v189PlannedSpend, v189MoveAllowance, drainLocation.getTitle()), -2000.0f);
+                                logger.warn("V189 DRAIN NET-1 BUDGET BLOCK: force {} - cost {} < plan {} + moves {} at {} → -2000",
+                                    v189ForcePile, (int)v189Cost, v189PlannedSpend, v189MoveAllowance, drainLocation.getTitle());
+                                return;
+                            }
+                            logger.warn("V189 NET -1 DRAIN ALLOWED: cost {} drain {} at {} — force {} covers plan {} + moves {} — proceeding",
+                                (int)v189Cost, (int)drainAmount, drainLocation.getTitle(), v189ForcePile, v189PlannedSpend, v189MoveAllowance);
                         } else if (v189Cost > 0) {
                             logger.info("V189 DRAIN NET-VALUE CHECK: cost {} <= drain {} at {} — worth paying, proceeding",
                                 (int)v189Cost, (int)drainAmount, drainLocation.getTitle());

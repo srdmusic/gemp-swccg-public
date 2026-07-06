@@ -3328,6 +3328,26 @@ Total tags catalogued: 179
     Known remaining gap (pre-existing): the untagged forceAvailable<3 branch
     still -50s genuinely free drains before V140 runs — under-drain direction,
     fail-safe, separate item.
+    UPDATED 2026-07-06 in place (Steve, 2026-07-04): "We should still allow
+    drain 2 for 3 force if there is enough force to deploy and move everything
+    that rando wants to do that turn." Two tiers: net <= -2 (pay 3 drain 1,
+    the actual 07-04 offender) stays flat-blocked; net -1 (pay 3 drain 2) is
+    budget-gated — allowed iff forcePile - initCost >= sum(live deployable
+    hand costs, persona-dead excluded) + 2 move allowance. Drains are CONTROL
+    phase, so the budget is a forecast recomputed from live gameState at every
+    drain decision ("recheck on every spend" by construction). The literal
+    "prime DeployPhasePlanner after activation" was rejected with evidence:
+    the planner caches per turn, and a Control-time plan would be budgeted
+    with pre-drain Force (07-04 log: drain paid 17:16:50, plan created
+    17:16:57 with force=9 not 12), feeding the V38.4 hold-back machinery a
+    stale plan. V52's old "net -1 marginal but worth it" stance is RESTORED
+    only while the turn plan stays funded. Boundary: 12F/no-plan drain-2-
+    cost-3 fires (+70); 12F/5-plan fires (ceiling ~+340); 6F/5-plan blocked
+    (-2000); turns 1-2 under BO an allowed net -1 scores V48 -50 + multi-
+    drain +200 = +150 and fires (pre-V189 behavior, intended). Over-allow
+    gaps (bounded): Effects/weapons/devices/pull costs and opponent reacts
+    uncounted; budget-loop exception fails open at logger.debug. Grep:
+    "V189 NET -1 DRAIN ALLOWED" / "V189 DRAIN NET-1 BUDGET BLOCK".
 
   ════ V190 (2026-07-04) ════
 
