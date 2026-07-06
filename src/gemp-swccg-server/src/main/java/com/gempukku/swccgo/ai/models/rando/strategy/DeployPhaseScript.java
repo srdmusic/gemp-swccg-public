@@ -13,6 +13,16 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: DEPLOY-1 (Sequencing & Budget) (reorg 2026-07-06) ═══
+// Owns: the DPS bucket walk: V67bc bucket ordering, V67bb, locations-first doctrine, V179
+// deploy-from-reserve step. Hub: none. KIND mix (DEPLOY-1 overall): 11 ORDERING / 9 BANDED / 4 VETO.
+// PARITY PAIR WARNING: V179 (here) <-> V67ai (deploy-from-reserve magnitudes in DeployEvaluator/
+// ActionTextEvaluator) must stay in lockstep — re-check both when touching either.
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+// Cross-refs: DEPLOY-1 twin DeployPhasePlanner, DEPLOY-2 (V136 siting consumes the walk),
+// PULL-ENGINE (V60/V67ai scoring on the reserve routes). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * V67bb DEPLOY PHASE SCRIPT (DPS) — REDESIGNED.
  *

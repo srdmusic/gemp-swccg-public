@@ -17,6 +17,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: MOVE (reorg 2026-07-06) ═══
+// Owns: the stay/flee/hunt/transit ladder: V29.13 drain-delta (-40/pt, group +/-100..250), V73 hunt +400
+// (must beat V29.13's penalty), V137 no-abandon veto, V169 retreat +600, V85/V32/V49 vetoes, V91 +600..800,
+// V53 spy-follow +/-300..500. Hub: none. KIND mix (MOVE overall): 26 BANDED / 20 VETO / 3 ORDERING.
+// PARITY PAIR: V137 (here) pairs with V136 (deploy-side siting) — change them together or the bot
+// deploys to spots it immediately flees.
+// NOTE: the V79 parse in this file is INERT; live Verge parsec steering = V79b in RandoCalAi
+// (+ the V103 fallback in ActionTextEvaluator).
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+// Cross-refs: DEPLOY-2 (V136 twin), MOVE region in ActionTextEvaluator (V67ae + Movement Actions dispatch),
+// SVC-SAFETY (V163/V167/V169 loop trio). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * Evaluates movement decisions.
  *

@@ -7,6 +7,17 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: SHIELDS (reorg 2026-07-06) ═══
+// Owns: shield pick tables + pacing: V29 shield-mix tables, V53 priority order (Battle Order/Battle Plan
+// downgraded to SITUATIONAL_HIGH), V29.1 pacing -40, V102 K&D per-turn activation cap, and the 4th-slot
+// conditional gate (Triggers A/B/C = V105/V106/V107; V112/V117 twins live CardSelectionEvaluator-side).
+// Hub: none. KIND mix (SHIELDS overall): 9 ORDERING / 3 VETO / 1 BANDED.
+// CENSUS: the single most-consulted gate in the codebase (2,553 checks / 4 games).
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+// Cross-refs: RESPONSE (shield window routes here), SHIELDS rows in CardSelectionEvaluator
+// (V105/V107/V112/V117/V51-battle-order-gate) + ActionTextEvaluator (V124/V129/V102/V29.1). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * Defensive Shield Strategy for SWCCG AI.
  *

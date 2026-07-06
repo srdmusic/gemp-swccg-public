@@ -102,6 +102,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             EvaluatedAction action = new EvaluatedAction(actionId, ActionType.UNKNOWN, 0.0f, actionText);
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: SVC-SAFETY — loop-prevention veto trio (reorg 2026-07-06) ═══
+            // Owns: blocked-response handling: V163 hard veto -100000; V167 phase-fundamental soft -200
+            // (Activate Force is NEVER hard-vetoed); V169 endangered-mover soft -250 with V169_SOFT_RETRY_BUDGET=3
+            // per turn, then falls back to the V163 hard veto. Magnitudes FROZEN (plan: do not retune before T4).
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): V169 old single-shot -400.
+            // Cross-refs: SVC-SAFETY peers DecisionSafety (V148 all-bad pass), MOVE (V169-retreat +600 pairing). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // Check if this response is blocked (loop prevention)
             // V163 (2026-06): HARD VETO, not a nudge. The old additive -200 got
             // swamped by later positive rules (e.g. V35.4 spy-flee +250), so a
@@ -190,6 +198,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: ACTIVATE — activation guards (reorg 2026-07-06) ═══
+            // Owns: whether to activate: V168 always-activate +5000 vs V61c destiny-buffer -6000 (reserve<=3 AND
+            // battle plausible); with V38.3's +500 confirm (evaluateActivateForce below) this triangle is ONE boundary.
+            // Shared predicate DecisionContext.isBattlePlausibleThisTurn() — THREE sites must agree: this block,
+            // the ForceActivationEvaluator keep-3 cap, and the V38.3 reserve<=3 carve-out.
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): V61c pre-2026-07-06
+            // always-on buffer branch.
+            // Cross-refs: ACTIVATE (ForceActivationEvaluator owns how MUCH), PULL-ENGINE (V97 pulls fire BEFORE
+            // activation and must outrank V168's +5000). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // === V168 (Steve, 2026-06): ALWAYS ACTIVATE FORCE — never pass activation ===
             // Steve: "Rando should always activate force and not pass activating." Activating
             // Force is the bot's entire economy (it pays for deploys, drains, battles); passing
@@ -1936,6 +1955,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actionText, v67uSourceTitle);
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: DEPLOY-3 — weapon-pull criteria gate (reorg 2026-07-06) ═══
+            // Owns: V120 universal weapon-pull criteria block (-9999 when no in-play character satisfies the weapon's
+            // OWN matching filter; V125 contains() fix + 2026-06-29 strict-match fix folded in). Deliberately SEPARATE
+            // from the V185 oracle-side attach gate in DeckOracle — keep both.
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+            // Cross-refs: DEPLOY-3 (V158/V115/V67aq in DeployEvaluator), SVC-ORACLE (V185). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== V120 (Steve, 2026-05-22): UNIVERSAL WEAPON-PULL CRITERIA BLOCK ==========
             // Per Steve: "We need to hard block deploy from reserve deck or with an
             // interrupt when a character already has a weapon."
@@ -2385,6 +2412,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 continue;
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: SETUP — saga choice (reorg 2026-07-06) ═══
+            // Owns: V29.15 The Force Is Strong In My Family saga pick keyed by deck name
+            // (+1000 correct / -500 wrong / +500 default to I Have It when no deck name).
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+            // Cross-refs: SETUP (CardSelectionEvaluator turn-0 block), PLAYBOOKS (V54/V61-saga deck scripts). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== V29.15 Epic Event Saga Choice ==========
             // "The Force Is Strong In My Family" presents choices:
             //   "My Father Has It", "I Have It", "You Have That Power, Too"
@@ -2581,6 +2615,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: BATTLE-2 — weapons-segment window (reorg 2026-07-06) ═══
+            // Owns: the weapons-segment dispatch head: fire-before-throw (V29.12 fire +300 must beat throw's 200-250),
+            // Add Battle Destiny, V29.10 lightsaber throw. The wider battle-interrupt suite (V35.x hatred lifecycle,
+            // V144, V155, V175, V67u Force Push) sits scattered ABOVE in this file — same section, one owner.
+            // KIND mix (BATTLE-2 overall): 11 VETO / 5 BANDED / 2 ORDERING.
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+            // Cross-refs: BATTLE-1 (BattleEvaluator + this file's V25 power-tier block — the SUM is the
+            // behavior), TARGETING (V36 weapon targeting in CardSelectionEvaluator). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== Fire Weapons ==========
             // V29.12: Fire MUST score higher than throw (250) so Rando fires the
             // lightsaber BEFORE throwing it. Throwing sacrifices the weapon (places it
@@ -3514,6 +3558,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 action.addReasoning("Draw option (see DrawEvaluator)", 0.0f);
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: MOVE — movement guards + dispatch (reorg 2026-07-06) ═══
+            // Owns: V67ae 'move to here' drain guard (-300) + the Movement Actions dispatch below (V35.4 spy-flee,
+            // landspeed/shuttle scoring). The full stay/flee/hunt ladder lives in MoveEvaluator (V136<->V137 parity).
+            // NOTE: the V79 parse in MoveEvaluator is INERT; live parsec steering = V79b in RandoCalAi
+            // (+ the V103 fallback near line ~1216 in this file).
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+            // Cross-refs: MOVE (MoveEvaluator), SVC-SAFETY (V169 endangered movers), CONTROL (drain-before-move
+            // interleave: moving a participant first forfeits that card's drain). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== V67ae: GAME-TEXT 'MOVE TO HERE' DRAIN GUARD ==========
             // Steve's report: Rando moved Vader from CC Lower Corridor (3-drain
             // battleground) to Mustafar: Vader's Castle (0 drain) using Castle's
@@ -4284,6 +4338,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: PULL-ENGINE — V60 reserve pulls + dead-search (reorg 2026-07-06) ═══
+            // Owns: V60 always-fire reserve pulls (+150 baseline here; NOTE known drift: DeployEvaluator's twin uses
+            // +100), V67l/V82 location-pull dominance (+1500/+2500), -9999 guards; dead-search verdicts come from
+            // SVC-ORACLE (V177 -2000 skip-all, V131 tiers, V95 reserves>=15 hold, V82.1-.3 rescue). V97 orders pulls
+            // BEFORE Force activation. KIND mix (PULL-ENGINE overall): 22 VETO / 6 ORDERING / 2 BANDED.
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): V82 original pre-guard
+            // +2500 scoring block (moved below the V60 guards 2026-07-06, old block commented in place).
+            // Cross-refs: ACTIVATE (V97 must outrank V168 +5000), SVC-ORACLE (facts), DEPLOY-3 (V120/V185 weapon
+            // gates). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== V60 RESERVE DECK PULLS — always positive, always fire ==========
             // Steve's rule (feedback_reserve_deck_pulls.md): Reserve Deck pull effects
             // are FREE VALUE — thin the deck, bring key cards into play. Always try them.
@@ -5197,6 +5262,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
         logger.info("V38.3 ACTIVATE FORCE: Scored +500 — always activate");
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // ═══ REGION: CONTROL — force drain scoring (reorg 2026-07-06) ═══
+    // Owns: drain go/no-go and sizing: V52-drain +50 drain-anyway (+100..300 multi-site), V48 early-turn
+    // deferral -50, V189 net -1 drain budget gate (turn spend forecast), V104 / V24.15 zero-drain guards,
+    // V140 ordering, V29.9 Hunt Down drain priority. Drain-before-move interleave rule: each card drains
+    // once/turn — moving a participant first forfeits the drain.
+    // KIND mix (CONTROL overall): 5 VETO / 4 BANDED / 1 ORDERING.
+    // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+    // Cross-refs: MOVE (interleave), PLAYBOOKS (V24.x TDIGWATT drain rules), RESPONSE (the two
+    // drain-response timings). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+    // ═══════════════════════════════════════════════════════════
     private void evaluateForceDrain(EvaluatedAction action, DecisionContext context, String locationCardId) {
         // Force drains are generally good unless under Battle Order rules
         // Ported from Python action_text_evaluator.py lines 351-493

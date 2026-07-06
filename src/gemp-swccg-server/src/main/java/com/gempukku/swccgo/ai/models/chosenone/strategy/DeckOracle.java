@@ -15,6 +15,16 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.stream.Collectors;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: SVC-ORACLE (reorg 2026-07-06) ═══
+// Owns: FACTS ONLY — this class owns NO scores. Zone catalogs, pull parsing, ALIVE/DEAD/JUNK
+// verdict chain (V177 dead-pull + V82.1/V82.2/V82.3 rescue), V185 weapon-attach gate, V187 duplicate
+// counts, V66/V67h zone presence, V29.4/V29.7 pull-validation data, V190/V130/V131 facts. Hub: none.
+// KIND: verdicts feed VETOes, but every magnitude lives in the PULL-ENGINE consumers (ATE/DeployEvaluator).
+// Absorbs (dead, commented below/nearby — revert path, do not delete): V185 first pass
+// (superseded same-session 2026-06-23, commented ~line 412).
+// Cross-refs: PULL-ENGINE (all scoring), DEPLOY-3 (V185/V120 weapon gates), SETUP (V187). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * V22.6 DeckOracle — Full deck knowledge for Rando.
  *

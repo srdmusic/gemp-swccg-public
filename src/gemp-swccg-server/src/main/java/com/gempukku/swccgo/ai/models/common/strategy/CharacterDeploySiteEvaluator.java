@@ -12,6 +12,22 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.Locale;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: DEPLOY-2 — Character Siting (reorg 2026-07-06) ═══
+// Owns: character→site placement scoring — V136 §A–D + overlays (contest/protect/spy
+// V166–V174), concentrate-vs-spread (V96), senators (V83/V88/V99), solo hold (V156),
+// V188 Alderaan gate; callable from RESPONSE for react-deploys. Hub: V136 LIVE
+// (evaluateSite() in THIS file is the hub; overlay arms live in each bot's
+// DeployEvaluator/CardSelectionEvaluator). SHARED FILE — serves BOTH bots (rando AND
+// chosenone); any code motion here needs Steve. KIND mix + key magnitudes: BANDED
+// ±2000 (§A team viability) / ±700 (§B strategic position), overlay bands +250..+1100,
+// vetoes to -2000 (V110) / -900 (V188).
+// Absorbs (dead, commented below/nearby — revert path, do not delete): V90, V122,
+// V67aj, V67al, V67as (+ V133 dropped pre-ship). Dead ledger travels with this hub.
+// Cross-refs: DEPLOY-1 (V67bc feeds this hub), DEPLOY-3 (weapon gate), MOVE (V137
+// winnability parity pair), RESPONSE. See resources/RANDO_REORG_PLAN_2026-07-02.md §3
+// + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * V136 — Unified scoring for "deploy character X to site Y" decisions.
  *

@@ -16,6 +16,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ DORMANT — V68, ZERO CALLERS (reorg 2026-07-06) ═══
+// Owns: nothing live. V68 unified pre-flight audit layer; compiled but never wired (zero callers
+// outside this file). Do NOT wire, do NOT delete — it documents the intended consolidation
+// targets (V67ac/V67ad/V67h/V67g/V67ae/V21/V66/V67ag/V67ah), whose LIVE checks remain in the evaluators.
+// Cross-refs: PULL-ENGINE + MOVE + DEPLOY-2 own the live twins of these checks. See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * V68 ActionAudit — unified pre-flight validation for any action under consideration.
  *

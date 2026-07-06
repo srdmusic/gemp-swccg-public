@@ -171,12 +171,12 @@ Mechanical rules per extraction: carry every early-return guard above the extrac
 | Step | Status | Session note |
 |---|---|---|
 | T0.0 reconcile audit vs HEAD | ✅ 2026-07-06 | 9 findings re-verified at HEAD `8f841bd25` (audit xlsx col M): control-drain-1 PARTIALLY ADDRESSED by V189 (net-0 fall-through survives, sev→low); shields-response-2 PARTIALLY ADDRESSED by ee0a1b435 (ShieldStrategy trigger-A copy remains, sev→low); 7 STILL VALID — control-drain-5 + deploy-sequencing-1 stay HIGH; control-drain-4 WIDENED (V189 protections are evaluator-brain only, fallback brain unprotected). Other 41 non-refuted rows: cited code untouched since audit (diff-checked). §7 five-bug list unchanged and still valid |
-| T0.1 TDIGWATT B + battle-intent bypass | ☐ | bug A already DONE (`fcec408b9`) |
-| T0.2 queue the 5 audit bugs (Steve) | ☐ | |
-| T0.3 single-owner manifest | ☐ | |
-| T0.4 KIND column + version-table regen | ☐ | |
-| T0.5 top-N logging | ☐ | |
-| T0.6 jar↔tree parity | ☐ | |
+| T0.1 TDIGWATT B + battle-intent bypass | ✅ 2026-07-06 | Both SHIPPED + deployed: V29 release (`8f5ff5e71`, universal text-scan verified vs Card226_012/Card109_012) + V61c battle-intent (`3cd4cfa61`, shared predicate DecisionContext.isBattlePlausibleThisTurn, 3 sites). Boundary tables in the changelog entries. Smoke game: 16 DESTINY BUFFER fires (contested board — bypass correctly dormant); live TDIGWATT-variant + separated-board games still owed |
+| T0.2 queue the 5 audit bugs (Steve) | ✅ 2026-07-06 | SUPERSEDED: Steve authorized fixing everything — all 5 FIXED + deployed (move-7 V35.4 ownership, move-8 V47 gate, xb-1 V169 single-owner −250 + 3/turn retry, ds-1 V82-inside-guard + V60 −9999, ds-4 V67bc epilogue floor +50) + control-drain-5 (V25 engine isBattleground). Commits `73f3be388`/`b16dd8899`/`3cd4cfa61`. work-verifier PASS 5/5; smoke game 610 decisions 0 exceptions |
+| T0.3 single-owner manifest | ✅ 2026-07-06 | `resources/Rando_Section_Manifest_2026-07-06.xlsx`: 340 tag/arm entries, all sections, per-file grep hit counts. 6 cross-cluster duplicate claims adjudicated at merge. 2 stray section names (TARGETING→BATTLE-2, INFRA→appendix) to fold at T3 |
+| T0.4 KIND column + version-table regen | ✅/⚠ 2026-07-06 | KIND DONE in manifest (113 VETO / 78 ORDERING / 149 BANDED + bands). Version-table full regen DEFERRED: 07-01 xlsx now frozen-history; today's 10 in-place updates carried by changelogs + audit col M. Regen when convenient |
+| T0.5 top-N logging | ✅ 2026-07-06 | V191 TOPN live (`b16dd8899`), logs from copies, both brains incl. fallback marker. Smoke game: 608/610 decisions logged. CAVEAT: shipped in the same deploy as behavior fixes, so no pure A/B neutrality soak exists — instrumentation code review + zero-exception game stand in |
+| T0.6 jar↔tree parity | ✅ 2026-07-06 | work-verifier: jar 14s post-commit, JVM restarted onto it, 6/6 + bonus mirror markers, HTTP 200 |
 | T1.1–T1.3 hub banners | ☐ | |
 | T2 sections (8) | ☐ | |
 | T3 sections (6, fixed order) | ☐ | |

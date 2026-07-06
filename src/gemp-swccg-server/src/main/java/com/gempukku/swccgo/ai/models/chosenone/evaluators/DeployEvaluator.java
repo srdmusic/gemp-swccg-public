@@ -1863,16 +1863,19 @@ public class DeployEvaluator extends ActionEvaluator {
                     // to overpower me. Overpowering is a quick way to win because
                     // that causes overflow damage."
                     //
-                    // V67al currently penalizes ANY deploy when friendly power at
-                    // a site exceeds 20, regardless of opponent power. That's
-                    // wrong when opponent has comparable power: we should
+                    // NOTE (comment corrected 2026-07-06): V67al is DEAD — superseded by
+                    // V136 §B; its code (~3850 in this file) sits inside the dead
+                    // `if (false /* V67aj SUPERSEDED V136 */)` block, retained as the
+                    // revert path only. Historical context: V67al penalized ANY deploy
+                    // when friendly power at a site exceeded 20, regardless of opponent
+                    // power. That was wrong when opponent has comparable power: we should
                     // CONCENTRATE for overflow battle, not spread.
                     //
                     // Rule: if target location has opponent presence AND the
                     // friendly-vs-opponent power diff is close (within 10), give
-                    // a STRONG bonus that beats V67al's spread penalty. If already
-                    // crushing (diff > 10), small bonus. Uncontested sites left
-                    // alone (V67al's spread penalty stays in effect).
+                    // a STRONG bonus. If already crushing (diff > 10), small bonus.
+                    // Uncontested sites get no V96 bonus (the uncontested over-stack
+                    // penalty is V136 §B's job now, not dead V67al's).
                     if (card != null && blueprint != null
                             && blueprint.getCardCategory() == CardCategory.CHARACTER
                             && gameState != null && game != null) {
@@ -1913,7 +1916,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     // diff < -10 (we're badly behind) → no V96 bonus.
                                     // Other rules handle retreat decisions.
                                 }
-                                // opponentPower == 0 → uncontested, V67al spread penalty stays in effect.
+                                // opponentPower == 0 → uncontested, no V96 bonus. (Comment corrected
+                                // 2026-07-06: V67al is DEAD; V136 §B's uncontested over-stack penalty
+                                // owns this case.)
                             }
                         } catch (Exception e) {
                             LOG.debug("V96 CONCENTRATE: error: {}", e.getMessage());
@@ -3941,6 +3946,23 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
+                    // ═══════════════════════════════════════════════════════════
+                    // ═══ SECTION: DEPLOY-3 — Weapons, Pilots & Ships (reorg 2026-07-06) ═══
+                    // (chosenone twin of rando/evaluators/DeployEvaluator.java — same hub.)
+                    // Owns: V158 unified weapon deploy gate (below) + the deliberately-separate
+                    // V120/V185 pull gates (ActionTextEvaluator/DeckOracle side), pilots (V30),
+                    // vehicles/ships (V35.5/V35.6/V86). Hub: V158 LIVE. KIND mix + key
+                    // magnitudes: VETO-heavy (-9999 one-weapon gate, V185 -2000 pull block) +
+                    // ORDERING (V67m/V67am +600 weapon pulls, V33 named-weapon-first) + BANDED
+                    // (V30 ±1000 pilot+ship, V86/V121 -1500/+300, V158 +300 arm-unarmed).
+                    // Absorbs (dead, commented below/nearby — revert path, do not delete):
+                    // V33-block, V67aq, V115 (V180 persona-scan fix lives inside V158's
+                    // NO-WIELDER guard).
+                    // Cross-refs: DEPLOY-2 (character siting), SVC-ORACLE (V185 attach gate),
+                    // CardSelectionEvaluator wielder-pick (decides WHICH character gets the
+                    // weapon). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 +
+                    // Rando_Section_Manifest_2026-07-06.xlsx.
+                    // ═══════════════════════════════════════════════════════════
                     // ============================================================
                     // === V158 (Steve, 2026-05-28): UNIFIED WEAPON DEPLOY GATE ===
                     // Combines V33 one-weapon-block + V67aq + V115 into ONE rule (the old

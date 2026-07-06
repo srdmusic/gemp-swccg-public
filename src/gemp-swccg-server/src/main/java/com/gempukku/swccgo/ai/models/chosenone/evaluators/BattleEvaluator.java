@@ -11,6 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: BATTLE-1 (Initiation) (reorg 2026-07-06) ═══
+// Owns: whether/where to initiate battle: V22.4 power math (-800 danger tiers), V76 predictor veto,
+// V61/V61b low-reserve destiny guards (-800/-400/-200), V164a +40 favorable, V34 must-fight raises
+// (+100 base / +150-200), V27/V27.1 interrupt-fee Force reservations, V29.9 Hunt Down aggro + Barrier risk.
+// Hub: none. KIND mix: 14 BANDED / 3 VETO.
+// TRAP: initiation is ALSO scored by ActionTextEvaluator's V25 power-tier block (SUICIDE/CRUSH/FAVORABLE/
+// MARGINAL tiers) — the SUM of the two is the behavior; preserve it when changing either side.
+// Creature ATTACKS are OUT of scope (different rulebook construct — obligations lane, SVC-SAFETY);
+// battle-keyed rules must never fire on attacks.
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+// Cross-refs: BATTLE-2 (ATE weapons-segment suite), BATTLE-3 (forfeit/damage in CardSelectionEvaluator),
+// ACTIVATE (V61c battle-intent predicate). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * Evaluates battle initiation decisions.
  *

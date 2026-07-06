@@ -123,6 +123,19 @@ public class TheChosenOneAi extends HeuristicAiBase {
     // =========================================================================
     // Keyword Weights - Higher than AdvancedAi for more aggressive play
     // =========================================================================
+    // ═══════════════════════════════════════════════════════════
+    // ═══ SECTION: SVC-SAFETY (reorg 2026-07-06) ═══
+    // OWNED BY: SVC-SAFETY — the LEGACY FALLBACK BRAIN (int scale ~50-200).
+    // FROZEN until reorg T4: editing weights or canEvaluate routing silently
+    // moves decisions between brains (audit cross-brain-6).
+    // Owns: ACTION_WEIGHTS / ACTION_PENALTIES / CHOICE_WEIGHTS / CHOICE_PENALTIES /
+    //   CARD_HINTS keyword tables. Hub: none. KIND: BANDED (int scale 50-200,
+    //   separate from the evaluators' float scale — do NOT compare across brains).
+    // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+    // Cross-refs: SVC-SAFETY decide() pipeline (routes here only when no evaluator
+    //   canEvaluate), DEPLOY-1/SVC-SAFETY in CombinedEvaluator (the primary brain).
+    //   See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+    // ═══════════════════════════════════════════════════════════
 
     private static final KeywordWeight[] ACTION_WEIGHTS = new KeywordWeight[] {
         // Control phase actions (highest priority)
@@ -473,6 +486,20 @@ public class TheChosenOneAi extends HeuristicAiBase {
     // =========================================================================
     // Main Decision Method
     // =========================================================================
+    // ═══════════════════════════════════════════════════════════
+    // ═══ SECTION: SVC-SAFETY (reorg 2026-07-06) ═══
+    // Owns: the decide() pipeline's safety lanes — loop-block (DecisionTracker loop
+    //   detection here; the V163/V167/V169 veto trio itself lives in
+    //   ActionTextEvaluator, magnitudes frozen), revert handling, concede
+    //   (V25 deficit >= 30, V67aw defer-until-after-battle), emergency/fallback
+    //   response lanes. Hub: none. KIND mix: VETO + ORDERING; key magnitudes:
+    //   loop veto -100000-class, concede trigger Lost-Pile deficit 30.
+    // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+    // Cross-refs: SVC-SAFETY keyword tables above (legacy fallback brain, frozen),
+    //   DEPLOY-1 + SVC-SAFETY in CombinedEvaluator (primary scoring brain this
+    //   pipeline dispatches to). See resources/RANDO_REORG_PLAN_2026-07-02.md §3
+    //   + Rando_Section_Manifest_2026-07-06.xlsx.
+    // ═══════════════════════════════════════════════════════════
 
     @Override
     public String decide(String playerId, AwaitingDecision decision, GameState gameState) {

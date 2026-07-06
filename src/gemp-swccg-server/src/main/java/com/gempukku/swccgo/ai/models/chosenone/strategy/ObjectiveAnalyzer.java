@@ -15,6 +15,16 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: SVC-INTEL (reorg 2026-07-06) ═══
+// Owns: the LIVE objective brain: objective detection (V25-detector), flip-condition intel (V22.2),
+// objective-text parsing (V29-objtext), V67ak flip-critical intel, V186 I Want That Map, V160 SWBD.
+// Owns NO scores. Hub: none. KIND mix (SVC-INTEL overall): 4 ORDERING / 2 BANDED (intel plumbing).
+// LOUD NOTE: strategy/ObjectiveHandler.java is NOT this brain — it is dead code; do not wire it.
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+// Cross-refs: PLAYBOOKS (deck scripts consume this intel), SETUP (turn-0 bootstrap), SVC-INTEL peers
+// StrategyController / BattlePredictor / OpponentDeckTracker (V24.7). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * V21 ObjectiveAnalyzer - Runtime parser for objective game text.
  *

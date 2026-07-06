@@ -7,6 +7,16 @@ import com.gempukku.swccgo.game.state.GameState;
 import java.util.ArrayList;
 import java.util.List;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: SVC-SAFETY (adjacent — pass-side Force reservations) (reorg 2026-07-06) ═══
+// Owns: Pass baseline scoring + pass-side Force reservations: V27 battle-interrupt reserve,
+// V27.1 Draw Their Fire tax reservation, V37.4 deploy-phase pass penalty / penalty-reduction.
+// Hub: none. KIND mix: BANDED only, small magnitudes — the Pass baseline (~5-8) is a boundary
+// other sections deliberately score against (e.g. V61c lands BELOW Pass by design).
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+// Cross-refs: SVC-SAFETY (V148 all-bad pass in DecisionSafety; NO-PASS damage-segment context),
+// DEPLOY-1 (V37.4 pairs with DeployEvaluator), ACTIVATE (V61c/V168 boundary). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * Pass Evaluator
  *

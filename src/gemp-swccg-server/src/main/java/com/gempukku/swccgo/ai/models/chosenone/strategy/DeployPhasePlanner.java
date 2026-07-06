@@ -17,6 +17,17 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.stream.Collectors;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: DEPLOY-1 (Sequencing & Budget) (reorg 2026-07-06) ═══
+// Owns: deploy-phase planning layer: what to deploy this turn, hold-back, persona dead-card skip,
+// V22 combo/turn planning, V22.3 pacing, V59 shuttle safety, V21 objective-critical holds. Hub: none.
+// KIND mix (DEPLOY-1 overall): 11 ORDERING / 9 BANDED / 4 VETO.
+// PARITY PAIR WARNING: V179 (DeployPhaseScript) <-> V67ai (deploy-from-reserve magnitudes in
+// DeployEvaluator/ActionTextEvaluator) must stay in lockstep — re-check both when touching either.
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+// Cross-refs: DEPLOY-1 twin DeployPhaseScript (the DPS bucket walk), DEPLOY-2/DEPLOY-3 (siting/weapons),
+// CombinedEvaluator DPS lines (co-owned with SVC-SAFETY), PULL-ENGINE. See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * Deploy Phase Planner - Creates holistic deployment plans for the entire phase.
  *

@@ -3700,6 +3700,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return actions;
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // ═══ SECTION: FORCE-LOSS — Loss-Source Picker (reorg 2026-07-06) ═══
+    // (chosenone twin of rando/evaluators/CardSelectionEvaluator.java — same hub.)
+    // Owns: V153 two-tier zone order (protect characters when life force >= 4;
+    // survival mode < 4) + bolt-ons V109 (senators -300), V175a (weapon-protect
+    // turn-4 gate), V178-loss (wielded-weapon zone rerank 600→150), V28-DTF
+    // (Draw Their Fire force-pile protect), V21/V25 protections. Hub: V153 LIVE.
+    // KIND mix + key magnitudes: ORDERING via zone bands; HAND FLOOR -700,
+    // PRIORITY CARD -100, V21 hard bans on flip-required/objective-pullable cards.
+    // Absorbs (dead, commented below/nearby — revert path, do not delete): V127,
+    // V101, V119, V29.8-zone (the old //-commented zone-scoring blocks).
+    // NOTE: the zone order is DUPLICATED in evaluateForceLossOrForfeit (battle
+    // handler, further down this file) — byte-identical parity pair, EDIT BOTH
+    // TOGETHER until an extract-method pass.
+    // Cross-refs: BATTLE-3 (forfeit side of the combined lose-or-forfeit prompt),
+    // RESPONSE (pay-loss route). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 +
+    // Rando_Section_Manifest_2026-07-06.xlsx.
+    // ═══════════════════════════════════════════════════════════
     /**
      * Choose force to lose - pick cards we want to lose least.
      */
@@ -9026,6 +9044,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return null;
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // ═══ SECTION: BATTLE-3 — Damage & Forfeit (reorg 2026-07-06) ═══
+    // (chosenone twin of rando/evaluators/CardSelectionEvaluator.java — same hub.)
+    // Owns: v159ForfeitScore 4-step picker (below) + V161/V178-forfeit/V154/V118/V150.
+    // Callable from RESPONSE (the bot defends inside opponent battles). NO-PASS context:
+    // the damage segment legally forbids passing with obligations pending.
+    // Hub: V159 LIVE (this helper; called from BOTH forfeit handlers so the same
+    // situation gets the same score). KIND mix + key magnitudes: ORDERING via
+    // deliberately-strong additive bands — V154 lose-attached-weapon +2000/+2200,
+    // hit-forfeit +1500 tier, V161 immune-forfeit 1500+savings*80-waste*30,
+    // V118 +200/-500 small-damage, V178 -10 armed tiebreaker.
+    // Absorbs (dead, commented near the two call sites — revert path, do not delete):
+    // V67t, V67bd, V67bh, V143, V145, V146, V139-heavy (the eleven
+    // `if (false /* V159 SUPERSEDED */)` taped-off branches).
+    // Cross-refs: FORCE-LOSS (V153 owns the lose-Force side of the combined prompt),
+    // BATTLE-1/BATTLE-2 (upstream), RESPONSE router.
+    // See resources/RANDO_REORG_PLAN_2026-07-02.md §3 +
+    // Rando_Section_Manifest_2026-07-06.xlsx.
+    // ═══════════════════════════════════════════════════════════
     // ====================================================================
     // === V159 (Steve, 2026-05-31): UNIFIED FORFEIT PICKER (FORFEIT_SPEC v3) ===
     // Replaces / dominates V143 / V67bh / V67t / V139-small / V146 (+150 drift)

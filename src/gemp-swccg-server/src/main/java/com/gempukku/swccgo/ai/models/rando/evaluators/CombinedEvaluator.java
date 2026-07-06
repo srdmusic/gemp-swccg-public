@@ -17,6 +17,7 @@ import java.util.Random;
  */
 public class CombinedEvaluator {
     private static final Logger LOG = RandoLogger.getEvaluatorLogger();
+    // OWNED BY: SVC-SAFETY. Additive sum per actionId: score-neutral = IDENTICAL SCORES.
     private static final float BAD_ACTION_THRESHOLD = -100.0f;
     // V67bc UPDATED 2026-07-06 (audit deploy-sequencing-4): floor for the DPS
     // epilogue that considers NON-BUCKET actions before passing. +50 so junk
@@ -60,6 +61,17 @@ public class CombinedEvaluator {
      * @return Best evaluated action, or null if no evaluators apply
      */
     public EvaluatedAction evaluateDecision(DecisionContext context) {
+        // ═══════════════════════════════════════════════════════════
+        // ═══ SECTION: SVC-SAFETY (reorg 2026-07-06) ═══
+        // Owns: the score-merge loop below + the all-bad/V148 pass gate + BAD_ACTION_THRESHOLD.
+        //   Hub: none. KIND mix: VETO (V148 cancellable all-bad pass) over BANDED sums;
+        //   key magnitudes: threshold -100, merge is ADDITIVE per actionId.
+        // Additive sum per actionId: score-neutral = IDENTICAL SCORES.
+        //   A bigger-magnitude new rule silently dominates an old one inside the same sum.
+        // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+        // Cross-refs: DEPLOY-1 (DPS walk mid-method), SVC-SAFETY V191 TOPN block.
+        //   See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+        // ═══════════════════════════════════════════════════════════
         // Use a map to merge scores for actions with the same ID
         // This prevents a generic evaluator from overriding a specific evaluator's score
         Map<String, EvaluatedAction> actionMap = new HashMap<>();
@@ -99,6 +111,7 @@ public class CombinedEvaluator {
             return null;
         }
 
+        // OWNED BY: SVC-SAFETY (instrumentation; log from copy only, never mutate live list)
         // V191 (2026-07-06): TOP-N CANDIDATE LOGGING — the dominance-regression
         // detector. One line per decision showing the top-5 merged candidates,
         // so a future rule that silently out-dominates an old one shows up in
@@ -119,6 +132,18 @@ public class CombinedEvaluator {
                 context.getDecisionType(), context.getPhase(), v191Top);
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // ═══ SECTION: DEPLOY-1 (reorg 2026-07-06) ═══
+        // OWNED BY: DEPLOY-1 (bucket walk V67bc/V67ax + non-bucket epilogue)
+        // Owns: DPS hierarchy walk + epilogue + legacy V67ax single-set filter (through
+        //   the "Legacy single-set filter" block below). Hub: none. KIND: ORDERING
+        //   (first-viable-bucket wins); key magnitudes: viability floor -100,
+        //   non-bucket epilogue floor +50.
+        // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+        // Cross-refs: SVC-SAFETY (merge loop above / all-bad gate below), DEPLOY-2
+        //   (V67bc buckets feed siting). See resources/RANDO_REORG_PLAN_2026-07-02.md §3
+        //   + Rando_Section_Manifest_2026-07-06.xlsx.
+        // ═══════════════════════════════════════════════════════════
         // V67bc DPS HIERARCHY WALK: when DPS provided ordered step buckets,
         // walk them top→bottom. For each bucket, pick the highest-scoring
         // action. If that action's score is above the bad threshold, return
@@ -253,6 +278,7 @@ public class CombinedEvaluator {
             return null;
         }
 
+        // OWNED BY: SVC-SAFETY. Additive sum per actionId: score-neutral = IDENTICAL SCORES.
         // If ALL actions are terrible, consider passing
         if (bestAction.getScore() < BAD_ACTION_THRESHOLD) {
             // V148 (Steve, 2026-05-28): "Rando should always have the option to hit

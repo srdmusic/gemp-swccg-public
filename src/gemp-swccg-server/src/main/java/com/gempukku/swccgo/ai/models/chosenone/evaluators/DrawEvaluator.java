@@ -17,6 +17,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: DRAW (reorg 2026-07-06) ═══
+// Owns: end-of-turn draw count: V58 draw-down (+80/surplus card, cap +400) vs V182 banking veto;
+// threat-keyed reserve target (V78 +2, cap raised to 10; V67w maintenance via Icon.MAINTENANCE);
+// V42-draw emergency +200/+400/+600 at hand 2/1/0; V24.10 Piett dig +200/+150/+80. Hub: none.
+// KIND mix: 5 BANDED / 1 VETO (V182).
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+// Cross-refs: SVC-SAFETY (V163/V167 loop guards also touch draws), PLAYBOOKS (V24.10 AMSD dig). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * Draw Evaluator
  *

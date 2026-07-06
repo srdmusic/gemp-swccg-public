@@ -6,6 +6,17 @@ import com.gempukku.swccgo.game.state.GameState;
 import java.util.ArrayList;
 import java.util.List;
 
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: ACTIVATE (reorg 2026-07-06) ═══
+// Owns: how MUCH Force to activate (INTEGER amount): V57 economy curve, V67at tuning, V42 pacing,
+// V43 floor, V61c keep-3 destiny cap. Hub: none. KIND mix (ACTIVATE overall): 4 VETO / 3 ORDERING;
+// key magnitudes live in ActionTextEvaluator: the V61c -6000 / V168 +5000 / V38.3 +500 triangle is ONE boundary.
+// V61c battle-intent gate uses the shared predicate DecisionContext.isBattlePlausibleThisTurn() —
+// THREE sites must agree: the keep-3 cap here, ATE's V168/V61c activate block, ATE's V38.3 confirm carve-out.
+// Absorbs (dead, commented below/nearby — revert path, do not delete): none in this file.
+// Cross-refs: ACTIVATE region in ActionTextEvaluator (whether/interleave), PULL-ENGINE (V97: pulls fire
+// BEFORE activating), BATTLE-1 (V61b shares the battle-plausible scan). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// ═══════════════════════════════════════════════════════════
 /**
  * Evaluates force activation decisions (INTEGER type).
  *
