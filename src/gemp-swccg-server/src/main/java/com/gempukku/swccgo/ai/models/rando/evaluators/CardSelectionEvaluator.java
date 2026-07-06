@@ -7813,53 +7813,40 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             if (cardTitle != null) {
                 String v112TitleLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
                 if (v112TitleLower.contains("battle order") || v112TitleLower.contains("battle plan")) {
-                    boolean v112BGSite = false;
-                    boolean v112BGSystem = false;
-                    try {
-                        GameState gs112 = context.getGameState();
-                        SwccgGame g112 = context.getGame();
-                        String pid112 = context.getPlayerId();
-                        if (g112 != null && gs112 != null && pid112 != null) {
-                            for (PhysicalCard loc112 : gs112.getAllPermanentCards()) {
-                                if (loc112 == null || loc112.getBlueprint() == null) continue;
-                                com.gempukku.swccgo.common.Zone lz112 = loc112.getZone();
-                                if (lz112 == null || lz112 != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
-                                boolean isBG112 = false;
-                                try {
-                                    isBG112 = g112.getModifiersQuerying().isBattleground(gs112, loc112, null);
-                                } catch (Exception e2) { /* not BG */ }
-                                if (!isBG112) continue;
-                                boolean weOccupy112 = false;
-                                for (PhysicalCard atLoc : gs112.getCardsAtLocation(loc112)) {
-                                    if (atLoc == null || !pid112.equals(atLoc.getOwner())) continue;
-                                    CardCategory cat112 = atLoc.getBlueprint() != null
-                                        ? atLoc.getBlueprint().getCardCategory() : null;
-                                    if (cat112 == CardCategory.CHARACTER
-                                            || cat112 == CardCategory.STARSHIP
-                                            || cat112 == CardCategory.VEHICLE) {
-                                        weOccupy112 = true;
-                                        break;
-                                    }
-                                }
-                                if (weOccupy112) {
-                                    com.gempukku.swccgo.common.CardSubtype sub112 =
-                                        loc112.getBlueprint().getCardSubtype();
-                                    if (sub112 == com.gempukku.swccgo.common.CardSubtype.SYSTEM)
-                                        v112BGSystem = true;
-                                    else if (sub112 == com.gempukku.swccgo.common.CardSubtype.SITE)
-                                        v112BGSite = true;
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.debug("V112 BATTLE ORDER: Error checking occupation: {}", e.getMessage());
+                    // V112 UPDATED 2026-07-06: engine occupies predicate (occupiesBothTheaters)
+                    // replaces the hand-rolled loop (old loop commented out below per
+                    // feedback_comment_out_old_rules) — same V140-class fix as V51.
+                    if (!occupiesBothTheaters(context.getGame(), context.getPlayerId())) {
+                        action.addReasoning("V112 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
+                        logger.warn("V112 BATTLE ORDER GATE: '{}' blocked — occupiesBothTheaters=false", cardTitle);
                     }
-                    if (!v112BGSite || !v112BGSystem) {
-                        action.addReasoning("V112 BATTLE ORDER GATE: Need BOTH a BG site AND BG system! site="
-                            + v112BGSite + " sys=" + v112BGSystem, -9999.0f);
-                        logger.warn("V112 BATTLE ORDER GATE: '{}' blocked — hasBGSite={}, hasBGSystem={}",
-                            cardTitle, v112BGSite, v112BGSystem);
-                    }
+                    // OLD hand-rolled occupation loop (superseded 2026-07-06):
+                    // boolean v112BGSite = false; boolean v112BGSystem = false;
+                    // try {
+                    //     GameState gs112 = context.getGameState(); SwccgGame g112 = context.getGame(); String pid112 = context.getPlayerId();
+                    //     if (g112 != null && gs112 != null && pid112 != null) {
+                    //         for (PhysicalCard loc112 : gs112.getAllPermanentCards()) {
+                    //             if (loc112 == null || loc112.getBlueprint() == null) continue;
+                    //             com.gempukku.swccgo.common.Zone lz112 = loc112.getZone();
+                    //             if (lz112 == null || lz112 != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
+                    //             boolean isBG112 = false;
+                    //             try { isBG112 = g112.getModifiersQuerying().isBattleground(gs112, loc112, null); } catch (Exception e2) { }
+                    //             if (!isBG112) continue;
+                    //             boolean weOccupy112 = false;
+                    //             for (PhysicalCard atLoc : gs112.getCardsAtLocation(loc112)) {
+                    //                 if (atLoc == null || !pid112.equals(atLoc.getOwner())) continue;
+                    //                 CardCategory cat112 = atLoc.getBlueprint() != null ? atLoc.getBlueprint().getCardCategory() : null;
+                    //                 if (cat112 == CardCategory.CHARACTER || cat112 == CardCategory.STARSHIP || cat112 == CardCategory.VEHICLE) { weOccupy112 = true; break; }
+                    //             }
+                    //             if (weOccupy112) {
+                    //                 com.gempukku.swccgo.common.CardSubtype sub112 = loc112.getBlueprint().getCardSubtype();
+                    //                 if (sub112 == com.gempukku.swccgo.common.CardSubtype.SYSTEM) v112BGSystem = true;
+                    //                 else if (sub112 == com.gempukku.swccgo.common.CardSubtype.SITE) v112BGSite = true;
+                    //             }
+                    //         }
+                    //     }
+                    // } catch (Exception e) { logger.debug("V112 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
+                    // if (!v112BGSite || !v112BGSystem) { action.addReasoning("V112 BATTLE ORDER GATE: ...", -9999.0f); ... }
                 }
             }
 
@@ -7904,13 +7891,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 logger.debug("V117 prefers4thSlot error: {}", e.getMessage());
                             }
                         }
-                        if (v117Preferred == null) {
+                        // V117 UPDATED 2026-07-06 (Verge twin of the V105 deadlock): only
+                        // pursue the preferred card if it is actually on the menu this
+                        // decision; else HOLD the slot closed instead of hard-blocking every
+                        // real shield for a card that can't be picked.
+                        if (v117Preferred == null || !preferredShieldInCandidates(context, v117Preferred)) {
                             action.addReasoning(
                                 "V117 4TH SHIELD HOLD: " + v117ShieldsOnTable
-                                    + " shields already on table, no V105/V107 trigger — slot closed!",
+                                    + " shields on table, no available preferred card — slot closed!",
                                 -9999.0f);
-                            logger.warn("V117 4TH SHIELD HOLD: '{}' blocked — {} shields on table, no trigger active",
-                                cardTitle, v117ShieldsOnTable);
+                            logger.warn("V117 4TH SHIELD HOLD: '{}' blocked — {} shields on table, preferred={} not on menu / no trigger",
+                                cardTitle, v117ShieldsOnTable, v117Preferred);
                         } else {
                             String v117tLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
                             String v117pLower = v117Preferred.toLowerCase(java.util.Locale.ROOT);
@@ -8617,49 +8608,42 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 // Battle Order requires occupying BOTH a battleground site AND a battleground system.
                 // If we don't occupy both, deploying Battle Order is a waste — it does nothing.
                 if (cardTitleLower.contains("battle order")) {
-                    boolean hasBGSite = false;
-                    boolean hasBGSystem = false;
-                    try {
-                        GameState gsBO = (game != null) ? game.getGameState() : null;
-                        if (game != null && gsBO != null && playerId != null) {
-                            for (PhysicalCard loc : gsBO.getAllPermanentCards()) {
-                                if (loc == null || loc.getBlueprint() == null) continue;
-                                com.gempukku.swccgo.common.Zone locZone = loc.getZone();
-                                if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
-                                SwccgCardBlueprint locBp = loc.getBlueprint();
-                                boolean isBattleground = false;
-                                try {
-                                    com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = game.getModifiersQuerying();
-                                    if (mq != null) isBattleground = mq.isBattleground(gsBO, loc, null);
-                                } catch (Exception bgEx) { /* fallback: not battleground */ }
-                                if (!isBattleground) continue;
-                                // Check if we occupy it (have a character/starship present)
-                                boolean weOccupy = false;
-                                for (PhysicalCard atLoc : gsBO.getCardsAtLocation(loc)) {
-                                    if (atLoc != null && playerId.equals(atLoc.getOwner())) {
-                                        weOccupy = true;
-                                        break;
-                                    }
-                                }
-                                if (weOccupy) {
-                                    if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) {
-                                        hasBGSystem = true;
-                                    } else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) {
-                                        hasBGSite = true;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage());
-                    }
-                    if (!hasBGSite || !hasBGSystem) {
+                    // V51 UPDATED 2026-07-06 (Verge game): engine occupies predicate
+                    // (occupiesBothTheaters) replaces the hand-rolled loop — old loop
+                    // commented out below per feedback_comment_out_old_rules.
+                    if (!occupiesBothTheaters(game, playerId)) {
                         action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
-                        logger.warn("V51 BATTLE ORDER GATE: hasBGSite={}, hasBGSystem={} — BLOCKED!", hasBGSite, hasBGSystem);
+                        logger.warn("V51 BATTLE ORDER GATE: occupiesBothTheaters=false — BLOCKED!");
                     } else {
                         action.addReasoning("V51 BATTLE ORDER: Occupy BG site + BG system — ready!", 50.0f);
                         logger.warn("V51 BATTLE ORDER: Requirements met — deploying!");
                     }
+                    // OLD hand-rolled occupation loop (superseded 2026-07-06):
+                    // boolean hasBGSite = false; boolean hasBGSystem = false;
+                    // try {
+                    //     GameState gsBO = (game != null) ? game.getGameState() : null;
+                    //     if (game != null && gsBO != null && playerId != null) {
+                    //         for (PhysicalCard loc : gsBO.getAllPermanentCards()) {
+                    //             if (loc == null || loc.getBlueprint() == null) continue;
+                    //             com.gempukku.swccgo.common.Zone locZone = loc.getZone();
+                    //             if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
+                    //             SwccgCardBlueprint locBp = loc.getBlueprint();
+                    //             boolean isBattleground = false;
+                    //             try { com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = game.getModifiersQuerying();
+                    //                   if (mq != null) isBattleground = mq.isBattleground(gsBO, loc, null); } catch (Exception bgEx) { }
+                    //             if (!isBattleground) continue;
+                    //             boolean weOccupy = false;
+                    //             for (PhysicalCard atLoc : gsBO.getCardsAtLocation(loc)) {
+                    //                 if (atLoc != null && playerId.equals(atLoc.getOwner())) { weOccupy = true; break; }
+                    //             }
+                    //             if (weOccupy) {
+                    //                 if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) hasBGSystem = true;
+                    //                 else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) hasBGSite = true;
+                    //             }
+                    //         }
+                    //     }
+                    // } catch (Exception e) { logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
+                    // if (!hasBGSite || !hasBGSystem) { -9999 } else { +50 }
                 }
             }
 
@@ -8724,6 +8708,74 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     /**
      * Defensive shield selection - use ShieldStrategy scoring.
      */
+    /**
+     * V51/V112 (UPDATED 2026-07-06): mirror Battle Order's OWN occupation condition
+     * via the engine instead of a hand-rolled owner-present loop (the V140-class
+     * fix). Battle Order/Plan help Rando only while HE occupies both a battleground
+     * site AND a battleground system (opponent's drains then cost +3; Rando's are
+     * not taxed). canSpot(occupies + battleground_site/system) is exactly what the
+     * card's OccupiesCondition checks, so gate and card can never disagree again
+     * (the Verge game bug: the hand loop missed a Scarif SYSTEM occupation the
+     * engine predicate catches). Fails closed on any error (no false deploy).
+     */
+    private boolean occupiesBothTheaters(com.gempukku.swccgo.game.SwccgGame game, String playerId) {
+        if (game == null || playerId == null) return false;
+        try {
+            boolean site = com.gempukku.swccgo.filters.Filters.canSpot(game, null,
+                com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.filters.Filters.occupies(playerId),
+                    com.gempukku.swccgo.filters.Filters.battleground_site));
+            boolean sys = com.gempukku.swccgo.filters.Filters.canSpot(game, null,
+                com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.filters.Filters.occupies(playerId),
+                    com.gempukku.swccgo.filters.Filters.battleground_system));
+            return site && sys;
+        } catch (Exception e) {
+            logger.debug("occupiesBothTheaters error: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * V105/V117 (UPDATED 2026-07-06): is the 4th-slot preferred shield title
+     * actually offered among THIS decision's candidates? The Verge game held the
+     * 4th shield slot hostage all game: prefers4thSlot returned "Battle Order"
+     * (Rando occupied both theaters) but Battle Order was never in the candidate
+     * list, so the old code hard-blocked every real shield at -5000 (2760 fires)
+     * and the slot deployed nothing. When the preferred card is not on the menu,
+     * the caller holds the slot closed instead of spamming a block for a card that
+     * can't be picked. Scans the full candidate list from context (both the
+     * ARBITRARY_CARDS blueprint path and the standard card-id path). Fails to
+     * false (= treat as not offered = hold slot closed), the conservative side.
+     */
+    private boolean preferredShieldInCandidates(DecisionContext context, String preferredTitle) {
+        if (context == null || preferredTitle == null) return false;
+        String want = preferredTitle.toLowerCase(java.util.Locale.ROOT);
+        try {
+            List<String> pcIds = context.getCardIds();
+            List<String> pcBps = context.getBlueprints();
+            boolean arbitrary = "ARBITRARY_CARDS".equals(context.getDecisionType());
+            GameState pcGs = context.getGameState();
+            int n = pcIds != null ? pcIds.size() : 0;
+            for (int i = 0; i < n; i++) {
+                String t = null;
+                if (arbitrary && pcBps != null && i < pcBps.size()) {
+                    SwccgCardBlueprint bp = getBlueprintFromId(context, pcBps.get(i));
+                    if (bp != null) t = bp.getTitle();
+                } else if (pcGs != null) {
+                    try {
+                        PhysicalCard c = pcGs.findCardById(Integer.parseInt(pcIds.get(i)));
+                        if (c != null) t = c.getTitle();
+                    } catch (NumberFormatException nfe) { /* skip unparseable */ }
+                }
+                if (t != null && t.toLowerCase(java.util.Locale.ROOT).contains(want)) return true;
+            }
+        } catch (Exception e) {
+            logger.debug("preferredShieldInCandidates error: {}", e.getMessage());
+        }
+        return false;
+    }
+
     private List<EvaluatedAction> evaluateShieldSelection(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
         GameState gameState = context.getGameState();
@@ -8795,7 +8847,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (shieldStrategy.shieldsRemaining() <= 1) {
                             String preferred = shieldStrategy.prefers4thSlot(
                                 context.getGameState(), context.getGame(), context.getPlayerId());
-                            if (preferred != null) {
+                            // V105 UPDATED 2026-07-06 (Verge game unli50oa1ur8bdux): only pursue
+                            // the preferred card if it is actually offered in THIS decision.
+                            // Otherwise the 4th slot was held hostage all game — "prefer Battle
+                            // Order" fired while Battle Order was never in the candidate list, so
+                            // every real shield was hard-blocked at -5000 (2760 fires) and the
+                            // slot deployed nothing. When the preferred card is absent, fall
+                            // through to HOLD (slot stays closed, Steve's closed-by-default 4th
+                            // slot) instead of spamming a block for a card that can't be picked.
+                            boolean preferredOnMenu = preferred != null
+                                && preferredShieldInCandidates(context, preferred);
+                            if (preferredOnMenu) {
                                 String tLower = title.toLowerCase(java.util.Locale.ROOT);
                                 String pLower = preferred.toLowerCase(java.util.Locale.ROOT);
                                 if (tLower.contains(pLower)) {
@@ -8810,63 +8872,64 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         "V105/V107 4TH SLOT: '" + title
                                             + "' not preferred (we want '" + preferred + "') -5000",
                                         -5000.0f);
-                                    logger.warn("V105/V107 4TH SLOT: HARD-BLOCK '{}' (prefer '{}') -5000",
+                                    logger.warn("V105/V107 4TH SLOT: HARD-BLOCK '{}' (prefer '{}', on menu) -5000",
                                         title, preferred);
                                 }
                             } else {
-                                // No trigger active — 4th slot stays CLOSED.
-                                // Hard-block any shield from being chosen at this slot.
+                                // No trigger active, OR the preferred card is not on the menu
+                                // this decision — 4th slot stays CLOSED (hold), no spam.
                                 action.addReasoning(
-                                    "V105/V107 4TH SLOT HOLD: no trigger active — keep slot closed indefinitely -5000",
+                                    "V105/V107 4TH SLOT HOLD: no available preferred card — keep slot closed -5000",
                                     -5000.0f);
-                                logger.warn("V105/V107 4TH SLOT: HOLD '{}' — no V105/V107 trigger, slot closed -5000",
-                                    title);
+                                logger.warn("V105/V107 4TH SLOT: HOLD '{}' — preferred={} not on menu / no trigger, slot closed -5000",
+                                    title, preferred);
                             }
                         }
 
                         // === V51: BATTLE ORDER GATE (shield selection path) ===
+                        // UPDATED 2026-07-06 (Verge game unli50oa1ur8bdux): detection swapped
+                        // to the engine occupies predicate (occupiesBothTheaters) — the old
+                        // hand-rolled owner-present loop below missed a Scarif SYSTEM occupation
+                        // while V105's power-based scan caught it, so the two disagreed. Old
+                        // loop commented out per feedback_comment_out_old_rules.
                         if (title.toLowerCase(java.util.Locale.ROOT).contains("battle order")) {
-                            boolean hasBGSite = false;
-                            boolean hasBGSystem = false;
-                            try {
-                                GameState gs = context.getGameState();
-                                SwccgGame g = context.getGame();
-                                String pid = context.getPlayerId();
-                                if (g != null && gs != null && pid != null) {
-                                    for (PhysicalCard loc : gs.getAllPermanentCards()) {
-                                        if (loc == null || loc.getBlueprint() == null) continue;
-                                        com.gempukku.swccgo.common.Zone locZone = loc.getZone();
-                                        if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
-                                        SwccgCardBlueprint locBp = loc.getBlueprint();
-                                        boolean isBattleground = false;
-                                        try {
-                                            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = g.getModifiersQuerying();
-                                            if (mq != null) isBattleground = mq.isBattleground(gs, loc, null);
-                                        } catch (Exception bgEx) { /* fallback */ }
-                                        if (!isBattleground) continue;
-                                        boolean weOccupy = false;
-                                        for (PhysicalCard atLoc : gs.getCardsAtLocation(loc)) {
-                                            if (atLoc != null && pid.equals(atLoc.getOwner())) {
-                                                weOccupy = true;
-                                                break;
-                                            }
-                                        }
-                                        if (weOccupy) {
-                                            if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) {
-                                                hasBGSystem = true;
-                                            } else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) {
-                                                hasBGSite = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (Exception e) {
-                                logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage());
-                            }
-                            if (!hasBGSite || !hasBGSystem) {
+                            if (!occupiesBothTheaters(context.getGame(), context.getPlayerId())) {
                                 action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
-                                logger.warn("V51 BATTLE ORDER GATE (shield): hasBGSite={}, hasBGSystem={} — BLOCKED!", hasBGSite, hasBGSystem);
+                                logger.warn("V51 BATTLE ORDER GATE (shield): occupiesBothTheaters=false — BLOCKED!");
+                            } else {
+                                logger.warn("V51 BATTLE ORDER (shield): Requirements met (occupy BG site + system) — not blocking!");
                             }
+                            // OLD hand-rolled occupation loop (superseded 2026-07-06):
+                            // boolean hasBGSite = false;
+                            // boolean hasBGSystem = false;
+                            // try {
+                            //     GameState gs = context.getGameState();
+                            //     SwccgGame g = context.getGame();
+                            //     String pid = context.getPlayerId();
+                            //     if (g != null && gs != null && pid != null) {
+                            //         for (PhysicalCard loc : gs.getAllPermanentCards()) {
+                            //             if (loc == null || loc.getBlueprint() == null) continue;
+                            //             com.gempukku.swccgo.common.Zone locZone = loc.getZone();
+                            //             if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
+                            //             SwccgCardBlueprint locBp = loc.getBlueprint();
+                            //             boolean isBattleground = false;
+                            //             try {
+                            //                 com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = g.getModifiersQuerying();
+                            //                 if (mq != null) isBattleground = mq.isBattleground(gs, loc, null);
+                            //             } catch (Exception bgEx) { /* fallback */ }
+                            //             if (!isBattleground) continue;
+                            //             boolean weOccupy = false;
+                            //             for (PhysicalCard atLoc : gs.getCardsAtLocation(loc)) {
+                            //                 if (atLoc != null && pid.equals(atLoc.getOwner())) { weOccupy = true; break; }
+                            //             }
+                            //             if (weOccupy) {
+                            //                 if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) hasBGSystem = true;
+                            //                 else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) hasBGSite = true;
+                            //             }
+                            //         }
+                            //     }
+                            // } catch (Exception e) { logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
+                            // if (!hasBGSite || !hasBGSystem) { action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f); ... }
                         }
                     } else {
                         // Fallback if no shield strategy

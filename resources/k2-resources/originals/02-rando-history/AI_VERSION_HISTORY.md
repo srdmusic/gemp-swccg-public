@@ -3349,6 +3349,36 @@ Total tags catalogued: 179
     uncounted; budget-loop exception fails open at logger.debug. Grep:
     "V189 NET -1 DRAIN ALLOWED" / "V189 DRAIN NET-1 BUDGET BLOCK".
 
+  ════ V51/V105/V112/V117 (in-place UPDATE 2026-07-06) ════
+
+  Battle Order 4th-slot deadlock + occupation-predicate unification.
+    Verge of Greatness game (replay unli50oa1ur8bdux, 2026-07-06): Rando
+    controlled Scarif (battleground SYSTEM) + Scarif battleground sites, drained
+    there 70+ times, qualified for his own Battle Order (dark Effect 13_54, a K&D
+    defensive shield taxing the OPPONENT's drains +3 while Rando occupies both
+    theaters) all game — and never deployed it.
+    Two faults: (1) prefers4thSlot returned "Battle Order" all game (occupation
+    true), and the V105/V107 4th-slot code hard-blocked every OTHER offered shield
+    at -5000 (2760 fires) to force a Battle Order that was never in the candidate
+    list — 4th slot deployed nothing (prefer-an-unavailable-card deadlock). (2)
+    latent: the three occupation checks (V51 deploy, V51 shield, V112) hand-rolled
+    hasBGSite/hasBGSystem via getCardsAtLocation + owner-match, disagreeing with
+    V105's power-based scan (same detection-mismatch class as the V140 fix).
+    Fix (both bots, CardSelectionEvaluator, in place, no new V-tag): two helpers.
+    occupiesBothTheaters(game, pid) = canSpot(and(occupies(pid), battleground_site))
+    && ...battleground_system — the engine's own OccupiesCondition, exactly what
+    Card13_054 checks, so gate and card can never disagree; replaces the 3 hand
+    loops (commented out in place). preferredShieldInCandidates(context, title)
+    scans the decision's full candidate list; V105 + V117 now only pursue/hard-block
+    for the preferred 4th-slot card when it is actually on the menu, else HOLD the
+    slot closed (Steve's closed-by-default 4th slot; his call 2026-07-06 was "just
+    stop the spam", not fall to a random shield). Kills the 2760-fire deadlock.
+    Boundary: no magnitude changes (only the booleans feeding +2000/-5000/-9999
+    change). Occupy-not-control (matches the card). Known unmodeled edge (over-
+    deploy, not self-tax): the helper omits Card13_054's battlePlanOnTable waiver.
+    UNVERIFIED until self-play shows Battle Order actually deploying when offered +
+    qualifying (K&D's 4x/game shield-play cap is a separate limiter).
+
   ════ V190 (2026-07-04) ════
 
   V190 — STARSHIPS DEPLOY TO SYSTEMS, NOT DOCKING BAYS (pull gate + destination widening)
