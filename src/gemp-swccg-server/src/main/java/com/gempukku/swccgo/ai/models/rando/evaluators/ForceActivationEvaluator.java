@@ -183,7 +183,22 @@ public class ForceActivationEvaluator extends ActionEvaluator {
         // activate when only 3 remain.) The earlier force-pile-gated version almost never fired
         // (Rando draws its force to hand, so the pile rarely reached the trigger), so the reserve
         // still drained to 0 and V61 blocked battles. This guarantees the destiny buffer.
-        int amount = Math.max(1, Math.min(maxAvailable, reserveDeck - 3));
+        // V61c UPDATED 2026-07-06: battle-intent bypass — the keep-3 cap now applies ONLY on turns
+        // a battle is plausible (any contested location, per the shared predicate
+        // DecisionContext.isBattlePlausibleThisTurn(), same scan V61b uses). Zero contested
+        // locations => Rando deploys and ends turn without battling => activate ALL. The SAME
+        // predicate gates the ActionTextEvaluator V168 + V38.3 carve-outs so all three sites agree.
+        // V61c pre-2026-07-06 (always-on buffer):
+        // int amount = Math.max(1, Math.min(maxAvailable, reserveDeck - 3));
+        int amount;
+        if (context.isBattlePlausibleThisTurn()) {
+            amount = Math.max(1, Math.min(maxAvailable, reserveDeck - 3));
+        } else {
+            amount = maxAvailable;
+            if (reserveDeck - 3 < maxAvailable) {
+                logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
+            }
+        }
         String mode = (amount < maxAvailable)
             ? "V61c DESTINY BUFFER (keep 3 in reserve)" : "V57 ACTIVATE FULL";
 

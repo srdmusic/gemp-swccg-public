@@ -306,6 +306,36 @@ public class DecisionContext {
         return gameState.getHand(playerId).size();
     }
 
+    // V61c UPDATED 2026-07-06: shared battle-intent predictor for the destiny-buffer bypass.
+    // Steve (2026-07-01): "If Rando intends to battle that turn, he needs to save 3. If he
+    // intends to deploy and end turn without battling he can activate all force."
+    // Conservative v1: battle is "plausible" if ANY location is CONTESTED (both sides have
+    // power presence) at decision time — the same scan V61b uses in BattleEvaluator. Zero
+    // contested locations => deploy-and-end turn => the keep-3 buffer may be bypassed.
+    // Bias toward keeping 3 when unsure: any null/error => TRUE (battle plausible), because a
+    // false "no battle" re-opens the no-destiny bug for a turn, while a false "battle" only
+    // costs a little activation.
+    // ONE predicate shared by ALL THREE V61c sites (ForceActivationEvaluator keep-3 cap,
+    // ActionTextEvaluator V168 carve-out, ActionTextEvaluator V38.3 confirm carve-out) — the
+    // original V61c bug was exactly these sites disagreeing.
+    public boolean isBattlePlausibleThisTurn() {
+        if (game == null || gameState == null || playerId == null) return true;  // can't tell — keep 3
+        try {
+            String opponentId = gameState.getOpponent(playerId);
+            if (opponentId == null) return true;  // can't tell — keep 3
+            for (PhysicalCard location : gameState.getTopLocations()) {
+                float ourPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(gameState, location, playerId, false, false);
+                float theirPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(gameState, location, opponentId, false, false);
+                if (ourPower > 0 && theirPower > 0) return true;  // contested — battle plausible
+            }
+            return false;  // zero contested locations — deploy-and-end turn
+        } catch (Exception e) {
+            return true;  // error — keep 3 (conservative)
+        }
+    }
+
     // Strategy component getters and setters
     public StrategyController getStrategyController() {
         return strategyController;

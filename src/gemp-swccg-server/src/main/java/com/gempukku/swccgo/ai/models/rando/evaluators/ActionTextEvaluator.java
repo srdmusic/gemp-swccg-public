@@ -38,6 +38,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
     private Set<String> barrieredTargets = new HashSet<>();
     private int barrierTurn = 0;
 
+    // V169 UPDATED 2026-07-06 (audit cross-brain-1): per-turn budget of soft excusals for a
+    // blocked endangered mover's retreat. Now that the soft block is small enough to beat
+    // Pass (see the V169 branch in evaluate()), a retreat whose destination step keeps
+    // cancelling must eventually fall back to the V163 hard veto, or the Keder-style
+    // re-pick loop returns. Budget resets each turn (blockedResponses is turn-scoped too).
+    private static final int V169_SOFT_RETRY_BUDGET = 3;
+    private final Map<String, Integer> v169SoftRetryCounts = new HashMap<>();
+    private int v169SoftRetryTurn = -1;
+
     public ActionTextEvaluator() {
         super("ActionText");
     }
@@ -119,10 +128,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // at its current site) must stay attemptable — retreat is how it survives.
                 // Replay lk6xgsokjcwrwxuu: Asajj's 'Move using landspeed' was cancel-blocked
                 // (V41 had blocked every safe destination), the hard veto made retreat
-                // impossible, and she was beaten 6v27 next turn. With V169's retreat scoring
-                // fixing the destination step, the soft block (-400) lets the retreat retry;
-                // -400 still loses to Pass when no safe destination exists (no Keder loop —
-                // and Keder himself wasn't endangered, so non-endangered movers keep the veto).
+                // impossible, and she was beaten 6v27 next turn. Non-endangered movers keep
+                // the veto (Keder himself wasn't endangered).
+                // V169 UPDATED 2026-07-06 (audit cross-brain-1): the old -400 could NEVER let
+                // the retreat retry: MoveEvaluator applied a second copy at double strength
+                // (ctor -400 PLUS addReasoning -400 = -800, both add per EvaluatedAction) on
+                // the same actionId, so the merged score was ~-1050 vs Pass +5. This branch is
+                // now the SINGLE owner of the soft block (MoveEvaluator's copy commented out),
+                // resized -400 -> -250 so a badly-outmatched retreat can actually win:
+                // -250 (here) + V35.4 enemy-presence +150 + MoveEvaluator RETREAT tier +150
+                // = +50 > Pass (~5-8). Guarded by V169_SOFT_RETRY_BUDGET per turn: if the
+                // destination step keeps cancelling (no safe destination), the V163 hard veto
+                // resumes instead of re-looping.
                 boolean v169EndangeredMover = false;
                 if ((v167tl.contains("move using") || v167tl.contains("transport") || v167tl.contains("relocate"))
                         && cardId != null && context.getGameState() != null && context.getGame() != null
@@ -146,8 +163,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     action.addReasoning("BLOCKED (loop prevention) — soft (V167: Activate Force never hard-vetoed)", -200.0f);
                     logger.warn("V167: soft-block (not hard veto) on essential action: {}", actionText);
                 } else if (v169EndangeredMover) {
-                    action.addReasoning("BLOCKED (loop prevention) — soft (V169: endangered mover, retreat must stay possible)", -400.0f);
-                    logger.warn("V169: soft-block (not hard veto) on endangered mover's action: {}", actionText);
+                    // V169 UPDATED 2026-07-06 (audit cross-brain-1): single owner, -250, retry budget.
+                    // action.addReasoning("BLOCKED (loop prevention) — soft (V169: endangered mover, retreat must stay possible)", -400.0f);
+                    // logger.warn("V169: soft-block (not hard veto) on endangered mover's action: {}", actionText);
+                    if (v169SoftRetryTurn != context.getTurnNumber()) {
+                        v169SoftRetryCounts.clear();
+                        v169SoftRetryTurn = context.getTurnNumber();
+                    }
+                    String v169Key = (actionText != null && !actionText.isEmpty()) ? actionText : actionId;
+                    int v169Tries = v169SoftRetryCounts.merge(v169Key, 1, Integer::sum);
+                    if (v169Tries <= V169_SOFT_RETRY_BUDGET) {
+                        action.addReasoning("BLOCKED (loop prevention) — soft (V169: endangered mover, retreat must stay possible)", -250.0f);
+                        logger.warn("V169: soft-block (not hard veto) on endangered mover's action: {} (excusal {}/{} this turn)",
+                            actionText, v169Tries, V169_SOFT_RETRY_BUDGET);
+                    } else {
+                        action.addReasoning("BLOCKED (loop prevention) — hard veto (V169 retry budget exhausted: no safe destination materialized)", -100000.0f);
+                        logger.warn("V169: retry budget exhausted for '{}' this turn, reverting to V163 hard veto", actionText);
+                        actions.add(action);
+                        continue;
+                    }
                 } else {
                     action.addReasoning("BLOCKED (loop prevention) — hard veto", -100000.0f);
                     logger.warn("Blocked action (V163 hard veto): {}", actionText);
@@ -169,14 +203,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // Activating moves Reserve -> Force Pile, so activating the last <=3 drains the
                 // destiny buffer that battle/weapon destiny draws need this turn (the engine
                 // forces >=1 per activation, so capping the amount alone erodes 3->2->1->0 over
-                // turns). Steve: "If Rando intends to battle that turn, he needs to save 3." For
-                // now we ALWAYS protect the buffer; a future refinement will pass only when Rando
-                // actually plans to battle (deploy-and-end-turn can safely activate all). Score
+                // turns). Steve: "If Rando intends to battle that turn, he needs to save 3." Score
                 // below Pass (~5-8) so the action-choice lands on Pass. Pairs with the V38.3
                 // reserve<=3 carve-out below (else the "you have not activated Force" confirm
                 // would bounce Rando straight back into activating).
+                // V61c UPDATED 2026-07-06: battle-intent bypass — the buffer protection now applies
+                // ONLY on turns a battle is plausible (any contested location, per the shared
+                // predicate DecisionContext.isBattlePlausibleThisTurn(), same scan V61b uses).
+                // Zero contested locations => deploy-and-end turn => normal V168 always-activate.
+                // SAME predicate gates the ForceActivationEvaluator keep-3 cap + the V38.3
+                // carve-out below so all three sites agree.
                 int v61cReserve = context.getReserveDeckSize();
-                if (v61cReserve <= 3) {
+                // V61c pre-2026-07-06 (always-on buffer):
+                // if (v61cReserve <= 3) {
+                boolean v61cBattlePlausible = context.isBattlePlausibleThisTurn();
+                if (v61cReserve <= 3 && !v61cBattlePlausible) {
+                    logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
+                }
+                if (v61cReserve <= 3 && v61cBattlePlausible) {
                     action.addReasoning(
                         "V61c DESTINY BUFFER: reserve <= 3 — pass activation, keep 3 for destiny", -6000.0f);
                     logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — passing activation (no V168 +5000) on '{}'",
@@ -1384,8 +1428,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     // keep 3 cards for battle/weapon destiny. Here the engine confirms "you have not
                     // activated Force — pass?"; honor the pass ("Yes") instead of the usual V38.3
                     // bounce-back, or the buffer protection is undone.
+                    // V61c UPDATED 2026-07-06: battle-intent bypass — honor the pass ONLY when a
+                    // battle is plausible (shared predicate DecisionContext.isBattlePlausibleThisTurn(),
+                    // same gate as the V168 carve-out above + the ForceActivationEvaluator keep-3
+                    // cap). Zero contested locations => normal V38.3 bounce-back ("No", go activate).
                     int v38cReserve = context.getReserveDeckSize();
-                    if (v38cReserve <= 3) {
+                    // V61c pre-2026-07-06 (always-on buffer):
+                    // if (v38cReserve <= 3) {
+                    boolean v38cBattlePlausible = context.isBattlePlausibleThisTurn();
+                    if (v38cReserve <= 3 && !v38cBattlePlausible && textLower.equals("no")) {
+                        // Logged once (on the "No" option, which the bypass flips to +9999).
+                        logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
+                    }
+                    if (v38cReserve <= 3 && v38cBattlePlausible) {
                         if (textLower.equals("yes")) {
                             action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — confirm pass, keep 3 for destiny", 9999.0f);
                             logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — confirming pass (skip activation)", v38cReserve);
@@ -3511,39 +3566,81 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // If our character is at ANY location where an opponent (including undercover spy)
                 // has presence, our force drain is blocked. Moving away lets us drain elsewhere.
                 // Undercover spies deploy on OUR side but count as opponent presence!
+                // V35.4 UPDATED 2026-07-06 (audit row move-7): two fixes —
+                //   1. OWNERSHIP: an opponent undercover spy is owner == OPPONENT &&
+                //      isUndercover (the engine never flips owner on undercover). The old
+                //      test flagged OUR OWN spy (owner == us) as the "opponent spy", so our
+                //      V170 drain-block spy paid +250 to EVERY move action on the table,
+                //      including its own move-away (fighting V53 SPY STAY -300 and losing).
+                //   2. SCOPE: bonus only for actions whose MOVER (this action's cardId) is
+                //      at the blocked location, and never for an undercover mover (V53/V170
+                //      doctrine: the spy stays put). If the mover can't be resolved, fall
+                //      back to the old any-location scan (keeps the rule alive).
                 if (gameState != null && context.getPlayerId() != null) {
                     try {
                         String opponentId = gameState.getOpponent(context.getPlayerId());
-                        for (com.gempukku.swccgo.game.PhysicalCard loc : gameState.getLocationsInOrder()) {
-                            if (loc == null || loc.getTitle() == null) continue;
-
-                            boolean weHavePresence = false;
-                            boolean oppHasPresence = false;
-                            boolean oppHasUndercoverSpy = false;
-                            for (com.gempukku.swccgo.game.PhysicalCard card : gameState.getCardsAtLocation(loc)) {
-                                if (card == null) continue;
-                                if (context.getPlayerId().equals(card.getOwner())) {
-                                    weHavePresence = true;
-                                    // V35.4: Check if this is actually an opponent's undercover spy
-                                    // Undercover spies appear on our side but are opponent cards
-                                    if (card.isUndercover()) {
-                                        oppHasUndercoverSpy = true;
-                                    }
-                                } else if (opponentId != null && opponentId.equals(card.getOwner())) {
-                                    oppHasPresence = true;
-                                }
+                        // Resolve this action's mover and its current location (may stay null)
+                        PhysicalCard v354Mover = null;
+                        PhysicalCard v354MoverLoc = null;
+                        if (cardId != null) {
+                            try {
+                                v354Mover = gameState.findCardById(Integer.parseInt(cardId));
+                            } catch (NumberFormatException nfe) { /* temp id — mover unknown */ }
+                        }
+                        if (v354Mover != null) {
+                            v354MoverLoc = v354Mover.getAtLocation();
+                            if (v354MoverLoc == null && v354Mover.getAttachedTo() != null) {
+                                v354MoverLoc = v354Mover.getAttachedTo().getAtLocation();
                             }
-                            // If opponent has presence (or undercover spy) at our location, drain is blocked
-                            if (weHavePresence && (oppHasPresence || oppHasUndercoverSpy)) {
-                                float spyBonus = oppHasUndercoverSpy ? 250.0f : 150.0f;
-                                action.addReasoning(String.format(
-                                    "V35.4: %s blocking drain at %s — move away to drain elsewhere!",
-                                    oppHasUndercoverSpy ? "UNDERCOVER SPY" : "Enemy presence",
-                                    loc.getTitle()), spyBonus);
-                                logger.warn("V35.4: {} at {} blocking our drain — boosting movement (+{})",
-                                    oppHasUndercoverSpy ? "UNDERCOVER SPY" : "Enemy",
-                                    loc.getTitle(), (int)spyBonus);
-                                break;
+                        }
+                        boolean v354MoverIsUndercover = v354Mover != null && v354Mover.isUndercover();
+                        if (!v354MoverIsUndercover) {
+                            for (com.gempukku.swccgo.game.PhysicalCard loc : gameState.getLocationsInOrder()) {
+                                if (loc == null || loc.getTitle() == null) continue;
+                                // Scope to the mover's own location when we know it
+                                if (v354MoverLoc != null && loc.getCardId() != v354MoverLoc.getCardId()) continue;
+
+                                boolean weHavePresence = false;
+                                boolean oppHasPresence = false;
+                                boolean oppHasUndercoverSpy = false;
+                                for (com.gempukku.swccgo.game.PhysicalCard card : gameState.getCardsAtLocation(loc)) {
+                                    if (card == null) continue;
+                                    if (context.getPlayerId().equals(card.getOwner())) {
+                                        weHavePresence = true;
+                                    } else if (opponentId != null && opponentId.equals(card.getOwner())) {
+                                        oppHasPresence = true;
+                                        // V35.4 UPDATED 2026-07-06: opponent spy = OPPONENT-owned
+                                        // undercover card at a location we occupy
+                                        if (card.isUndercover()) {
+                                            oppHasUndercoverSpy = true;
+                                        }
+                                    }
+                                }
+                                // OLD ownership-inverted detection commented out 2026-07-06
+                                // (feedback_comment_out_old_rules) — flagged OUR undercover card:
+                                // if (context.getPlayerId().equals(card.getOwner())) {
+                                //     weHavePresence = true;
+                                //     // V35.4: Check if this is actually an opponent's undercover spy
+                                //     // Undercover spies appear on our side but are opponent cards
+                                //     if (card.isUndercover()) {
+                                //         oppHasUndercoverSpy = true;
+                                //     }
+                                // } else if (opponentId != null && opponentId.equals(card.getOwner())) {
+                                //     oppHasPresence = true;
+                                // }
+
+                                // If opponent has presence (or undercover spy) at our location, drain is blocked
+                                if (weHavePresence && (oppHasPresence || oppHasUndercoverSpy)) {
+                                    float spyBonus = oppHasUndercoverSpy ? 250.0f : 150.0f;
+                                    action.addReasoning(String.format(
+                                        "V35.4: %s blocking drain at %s — move away to drain elsewhere!",
+                                        oppHasUndercoverSpy ? "UNDERCOVER SPY" : "Enemy presence",
+                                        loc.getTitle()), spyBonus);
+                                    logger.warn("V35.4: {} at {} blocking our drain — boosting movement (+{})",
+                                        oppHasUndercoverSpy ? "UNDERCOVER SPY" : "Enemy",
+                                        loc.getTitle(), (int)spyBonus);
+                                    break;
+                                }
                             }
                         }
                     } catch (Exception e) {
@@ -4224,38 +4321,44 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // verb anchor. Per Steve: "Just do 'from reserve deck' and don't
                 // search for the text 'deploy' at all. This will cover any deploy
                 // from reserve." Matches any pull phrasing.
-                {
-                    GameState v82Gs = context.getGameState();
-                    if (cardId != null && v82Gs != null) {
-                        try {
-                            PhysicalCard srcCard = v82Gs.findCardById(Integer.parseInt(cardId));
-                            if (srcCard != null && srcCard.getBlueprint() != null) {
-                                String srcGt = srcCard.getBlueprint().getGameText();
-                                if (srcGt != null) {
-                                    // V82.2 (Steve, 2026-05-16): added "docking bay" and "system|sector"
-                                    // — all are LOCATION-type pulls and deserve the +2500 boost.
-                                    // Begin Landing Your Troops pulls Episode I docking bays.
-                                    java.util.regex.Matcher v82m = java.util.regex.Pattern.compile(
-                                        "\\b(site|location|battleground|docking\\s+bay|system|sector)\\b[^.;]*?\\bfrom\\s+reserve",
-                                        java.util.regex.Pattern.CASE_INSENSITIVE).matcher(srcGt);
-                                    if (v82m.find()) {
-                                        String matched = v82m.group(1);
-                                        action.addReasoning(
-                                            "V82 SITE PULL: source '" + srcCard.getTitle()
-                                            + "' pulls a " + matched + " from Reserve — must take this every turn!",
-                                            2500.0f);
-                                        logger.warn("V82 SITE PULL: '{}' (src '{}', matched '{}') → +2500",
-                                            actionText, srcCard.getTitle(), matched);
-                                    }
-                                }
-                            }
-                        } catch (NumberFormatException nfe) {
-                            // cardId not numeric (temp ID, etc.) — skip V82
-                        } catch (Exception e) {
-                            logger.debug("V82 SITE PULL error: {}", e.getMessage());
-                        }
-                    }
-                }
+                //
+                // V82 UPDATED 2026-07-06: scoring MOVED below the V60 guards, inside the
+                // if (!hardBlocked) region. Here it ran BEFORE hardBlocked even existed,
+                // so Guard 1 (reserve <= 2, reveal risk) fired -400 and the +2500 still
+                // outvoted it — Rando revealed his last 2 reserve cards (audit row
+                // deploy-sequencing-1). OLD placement commented out per house rules:
+                // {
+                //     GameState v82Gs = context.getGameState();
+                //     if (cardId != null && v82Gs != null) {
+                //         try {
+                //             PhysicalCard srcCard = v82Gs.findCardById(Integer.parseInt(cardId));
+                //             if (srcCard != null && srcCard.getBlueprint() != null) {
+                //                 String srcGt = srcCard.getBlueprint().getGameText();
+                //                 if (srcGt != null) {
+                //                     // V82.2 (Steve, 2026-05-16): added "docking bay" and "system|sector"
+                //                     // — all are LOCATION-type pulls and deserve the +2500 boost.
+                //                     // Begin Landing Your Troops pulls Episode I docking bays.
+                //                     java.util.regex.Matcher v82m = java.util.regex.Pattern.compile(
+                //                         "\\b(site|location|battleground|docking\\s+bay|system|sector)\\b[^.;]*?\\bfrom\\s+reserve",
+                //                         java.util.regex.Pattern.CASE_INSENSITIVE).matcher(srcGt);
+                //                     if (v82m.find()) {
+                //                         String matched = v82m.group(1);
+                //                         action.addReasoning(
+                //                             "V82 SITE PULL: source '" + srcCard.getTitle()
+                //                             + "' pulls a " + matched + " from Reserve — must take this every turn!",
+                //                             2500.0f);
+                //                         logger.warn("V82 SITE PULL: '{}' (src '{}', matched '{}') → +2500",
+                //                             actionText, srcCard.getTitle(), matched);
+                //                     }
+                //                 }
+                //             }
+                //         } catch (NumberFormatException nfe) {
+                //             // cardId not numeric (temp ID, etc.) — skip V82
+                //         } catch (Exception e) {
+                //             logger.debug("V82 SITE PULL error: {}", e.getMessage());
+                //         }
+                //     }
+                // }
 
                 com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle pullOracle = context.getDeckOracle();
                 GameState pullGs = context.getGameState();
@@ -4266,9 +4369,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     try {
                         int reserveSize = pullGs.getReserveDeckSize(context.getPlayerId());
                         if (reserveSize <= 2) {
+                            // V60 UPDATED 2026-07-06: -400 → -9999, matching the DeployEvaluator
+                            // copy of this exact guard (V60 RESERVE RISK, reserve <= 2). -400 was
+                            // outvoted by the ungated V116 +100 / V100 +1500 / V97 +1500 stack
+                            // (audit row deploy-sequencing-1); -9999 dominates all of them.
                             action.addReasoning("V60 RESERVE RISK: Reserve deck has " + reserveSize
-                                + " cards — pull would reveal almost everything!", -400.0f);
-                            logger.warn("V60 RESERVE RISK: '{}' — reserve {} cards — too risky (-400)",
+                                + " cards — pull would reveal almost everything!", -9999.0f);
+                            // OLD magnitude commented out 2026-07-06 (feedback_comment_out_old_rules):
+                            // action.addReasoning("V60 RESERVE RISK: Reserve deck has " + reserveSize
+                            //     + " cards — pull would reveal almost everything!", -400.0f);
+                            logger.warn("V60 RESERVE RISK: '{}' — reserve {} cards — too risky (-9999)",
                                 actionText, reserveSize);
                             hardBlocked = true;
                         }
@@ -4497,6 +4607,45 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         + "' — thin deck, bring value into play!", baseline);
                     logger.warn("V60 RESERVE PULL: '{}' scored +{} — pull every turn!",
                         actionText, (int)baseline);
+
+                    // === V82 EXPLICIT SOURCE-CARD SITE-PULL TRIGGER ===
+                    // V82 UPDATED 2026-07-06: moved here from ABOVE the V60 guards so the
+                    // +2500 respects hardBlocked (Guard 1 reserve<=2 / Guard 2 fail-stop /
+                    // Guard 3 target-missing / V66 / V67h / V67ac). Full rationale lives in
+                    // the original V82/V82.1/V82.2 comment block above the guards. Logic
+                    // unchanged, only the placement.
+                    {
+                        GameState v82Gs = context.getGameState();
+                        if (cardId != null && v82Gs != null) {
+                            try {
+                                PhysicalCard srcCard = v82Gs.findCardById(Integer.parseInt(cardId));
+                                if (srcCard != null && srcCard.getBlueprint() != null) {
+                                    String srcGt = srcCard.getBlueprint().getGameText();
+                                    if (srcGt != null) {
+                                        // V82.2 (Steve, 2026-05-16): added "docking bay" and "system|sector"
+                                        // — all are LOCATION-type pulls and deserve the +2500 boost.
+                                        // Begin Landing Your Troops pulls Episode I docking bays.
+                                        java.util.regex.Matcher v82m = java.util.regex.Pattern.compile(
+                                            "\\b(site|location|battleground|docking\\s+bay|system|sector)\\b[^.;]*?\\bfrom\\s+reserve",
+                                            java.util.regex.Pattern.CASE_INSENSITIVE).matcher(srcGt);
+                                        if (v82m.find()) {
+                                            String matched = v82m.group(1);
+                                            action.addReasoning(
+                                                "V82 SITE PULL: source '" + srcCard.getTitle()
+                                                + "' pulls a " + matched + " from Reserve — must take this every turn!",
+                                                2500.0f);
+                                            logger.warn("V82 SITE PULL: '{}' (src '{}', matched '{}') → +2500",
+                                                actionText, srcCard.getTitle(), matched);
+                                        }
+                                    }
+                                }
+                            } catch (NumberFormatException nfe) {
+                                // cardId not numeric (temp ID, etc.) — skip V82
+                            } catch (Exception e) {
+                                logger.debug("V82 SITE PULL error: {}", e.getMessage());
+                            }
+                        }
+                    }
 
                     // V67l UNIVERSAL LOCATION-PULL PRIORITY (mirrors DeployEvaluator V67i)
                     // Steve's rule: "If an effect lets rando pull a location from his deck
@@ -5166,8 +5315,21 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 if (drainLoc != null) {
                     SwccgCardBlueprint locBp = drainLoc.getBlueprint();
                     // Check if the drain location is a non-battleground site
+                    // V25 UPDATED 2026-07-06: ask the ENGINE for DYNAMIC battleground status
+                    // (modifiersQuerying.isBattleground — the same call pattern V140 used
+                    // before its 2026-07-04 rework). The old static printed-icon check said
+                    // "battleground" for dual-icon sites dynamically made non-battleground
+                    // (cancelled force icons, NONBATTLEGROUND modifiers, Senate/Audience
+                    // Chamber class cards), so the -9999 block below never fired and Rando
+                    // drained into a guaranteed Simple Tricks cancel (audit row
+                    // control-drain-5). Static icons kept ONLY as fallback when the game
+                    // object is unavailable (pre-2026-07-06 behavior).
                     boolean isBattlegroundSite = false;
-                    if (locBp != null) {
+                    if (context.getGame() != null) {
+                        isBattlegroundSite = context.getGame().getModifiersQuerying()
+                            .isBattleground(gameState, drainLoc, null);
+                    } else if (locBp != null) {
+                        // OLD static detection (now fallback-only), pre-2026-07-06:
                         // A battleground site typically has force icons from both sides
                         isBattlegroundSite = locBp.hasIcon(com.gempukku.swccgo.common.Icon.DARK_FORCE)
                             && locBp.hasIcon(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
