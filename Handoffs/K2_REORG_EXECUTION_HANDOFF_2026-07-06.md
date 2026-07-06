@@ -170,7 +170,7 @@ Mechanical rules per extraction: carry every early-return guard above the extrac
 
 | Step | Status | Session note |
 |---|---|---|
-| T0.0 reconcile audit vs HEAD | ☐ | |
+| T0.0 reconcile audit vs HEAD | ✅ 2026-07-06 | 9 findings re-verified at HEAD `8f841bd25` (audit xlsx col M): control-drain-1 PARTIALLY ADDRESSED by V189 (net-0 fall-through survives, sev→low); shields-response-2 PARTIALLY ADDRESSED by ee0a1b435 (ShieldStrategy trigger-A copy remains, sev→low); 7 STILL VALID — control-drain-5 + deploy-sequencing-1 stay HIGH; control-drain-4 WIDENED (V189 protections are evaluator-brain only, fallback brain unprotected). Other 41 non-refuted rows: cited code untouched since audit (diff-checked). §7 five-bug list unchanged and still valid |
 | T0.1 TDIGWATT B + battle-intent bypass | ☐ | bug A already DONE (`fcec408b9`) |
 | T0.2 queue the 5 audit bugs (Steve) | ☐ | |
 | T0.3 single-owner manifest | ☐ | |
