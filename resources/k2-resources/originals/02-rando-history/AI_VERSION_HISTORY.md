@@ -3378,6 +3378,20 @@ Total tags catalogued: 179
     deploy, not self-tax): the helper omits Card13_054's battlePlanOnTable waiver.
     UNVERIFIED until self-play shows Battle Order actually deploying when offered +
     qualifying (K&D's 4x/game shield-play cap is a separate limiter).
+    EARLY-DEPLOY EXTENSION (2026-07-06, Steve: "Battle Order can be deployed
+    during turn 1 or 2 as well if a battleground site and system is occupied by
+    Rando... just have to occupy, does not matter if opponent also occupies"):
+    the base fix un-blocks Battle Order when qualifying but it still scored only
+    80 (SITUATIONAL_HIGH untriggered) outside the turn-3 4th slot, losing to
+    auto-play shields (200). Both V51 branches (shield-selection + deploy path,
+    both bots) now add +200 when occupiesBothTheaters is true → 280, beating the
+    auto-plays so it deploys within turn 1-2 pacing. GUARDED on shieldScore > -50
+    so V43 redundancy (-100), pacing (-50) and not-played (-100) still win; 4th
+    slot unchanged (V105 +2000 still dominates, +200 rides on top). Occupy-only
+    (no opponent clause per Steve). Title tests extended to "battle plan" (light
+    twin). Known gap: the evaluateUnknown/V112 route (mixed K&D pile) has no
+    positive branch, so the boost only fires on the primary shield-selection +
+    deploy routes. Self-play still owed.
 
   ════ V190 (2026-07-04) ════
 

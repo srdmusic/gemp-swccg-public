@@ -8607,7 +8607,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 // === V51: BATTLE ORDER GATE ===
                 // Battle Order requires occupying BOTH a battleground site AND a battleground system.
                 // If we don't occupy both, deploying Battle Order is a waste — it does nothing.
-                if (cardTitleLower.contains("battle order")) {
+                if (cardTitleLower.contains("battle order") || cardTitleLower.contains("battle plan")) {
                     // V51 UPDATED 2026-07-06 (Verge game): engine occupies predicate
                     // (occupiesBothTheaters) replaces the hand-rolled loop — old loop
                     // commented out below per feedback_comment_out_old_rules.
@@ -8617,6 +8617,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     } else {
                         action.addReasoning("V51 BATTLE ORDER: Occupy BG site + BG system — ready!", 50.0f);
                         logger.warn("V51 BATTLE ORDER: Requirements met — deploying!");
+                        // V51 EARLY-DEPLOY (EXTENDED 2026-07-06, Steve): +200 so Battle Order/Plan
+                        // deploys turns 1-2 the moment Rando occupies both theaters (tax compounds).
+                        // Guard shieldScore > -50 so a V43 redundant / pacing / not-played rejection
+                        // still wins. Occupy-only gate per Steve ("does not matter if opponent occupies").
+                        if (shieldScore > -50f) {
+                            action.addReasoning("V51 BATTLE ORDER EARLY-DEPLOY: occupy BG site + system — deploy now, tax compounds +200", 200.0f);
+                            logger.warn("V51 BATTLE ORDER: both theaters — +200 EARLY-DEPLOY (base {})", shieldScore);
+                        }
                     }
                     // OLD hand-rolled occupation loop (superseded 2026-07-06):
                     // boolean hasBGSite = false; boolean hasBGSystem = false;
@@ -8892,12 +8900,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // hand-rolled owner-present loop below missed a Scarif SYSTEM occupation
                         // while V105's power-based scan caught it, so the two disagreed. Old
                         // loop commented out per feedback_comment_out_old_rules.
-                        if (title.toLowerCase(java.util.Locale.ROOT).contains("battle order")) {
+                        if (title.toLowerCase(java.util.Locale.ROOT).contains("battle order")
+                                || title.toLowerCase(java.util.Locale.ROOT).contains("battle plan")) {
                             if (!occupiesBothTheaters(context.getGame(), context.getPlayerId())) {
                                 action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
                                 logger.warn("V51 BATTLE ORDER GATE (shield): occupiesBothTheaters=false — BLOCKED!");
                             } else {
-                                logger.warn("V51 BATTLE ORDER (shield): Requirements met (occupy BG site + system) — not blocking!");
+                                // V51 EARLY-DEPLOY (EXTENDED 2026-07-06, Steve): once Rando occupies
+                                // both theaters, his own drains stop being taxed and the opponent's
+                                // are taxed +3 — value that COMPOUNDS every turn, so deploy Battle
+                                // Order/Plan EARLY (turns 1-2 too), not only in the turn-3 4th slot.
+                                // Base SITUATIONAL_HIGH untriggered = 80, which loses to auto-play
+                                // shields (200). +200 → 280 beats them and deploys within the turn's
+                                // pacing budget; stays far under the 4th-slot V105 +2000 (rides on
+                                // top there, harmless). Gated on occupy-only per Steve ("does not
+                                // matter if opponent also occupies"). GUARD shieldScore > -50 so this
+                                // never resurrects a V43 redundant-shield block (-100, opponent
+                                // already has the equivalent), a pacing-cap -50, or a not-played -100.
+                                if (shieldScore > -50f) {
+                                    action.addReasoning("V51 BATTLE ORDER EARLY-DEPLOY: occupy BG site + system — deploy now, tax compounds +200", 200.0f);
+                                    logger.warn("V51 BATTLE ORDER (shield): both theaters — +200 EARLY-DEPLOY (base {})", shieldScore);
+                                } else {
+                                    logger.warn("V51 BATTLE ORDER (shield): both theaters but base {} <= -50 (V43/pacing) — boost suppressed", shieldScore);
+                                }
                             }
                             // OLD hand-rolled occupation loop (superseded 2026-07-06):
                             // boolean hasBGSite = false;
