@@ -18,6 +18,11 @@ import java.util.Random;
 public class CombinedEvaluator {
     private static final Logger LOG = RandoLogger.getEvaluatorLogger();
     private static final float BAD_ACTION_THRESHOLD = -100.0f;
+    // V67bc UPDATED 2026-07-06 (audit deploy-sequencing-4): floor for the DPS
+    // epilogue that considers NON-BUCKET actions before passing. +50 so junk
+    // keyword-scored actions don't fire; real into-hand Reserve pulls carry
+    // V116's +100 reserve-deck baseline (plus per-card bonuses) and clear it.
+    private static final float NON_BUCKET_EPILOGUE_FLOOR = 50.0f;
 
     private final List<ActionEvaluator> evaluators;
     private final Random random = new Random();
@@ -94,6 +99,26 @@ public class CombinedEvaluator {
             return null;
         }
 
+        // V191 (2026-07-06): TOP-N CANDIDATE LOGGING — the dominance-regression
+        // detector. One line per decision showing the top-5 merged candidates,
+        // so a future rule that silently out-dominates an old one shows up in
+        // log deltas. Instrumentation ONLY — zero scoring changes; sorts a COPY
+        // of the candidate list (the live list's order, and therefore stream
+        // tie-breaking below, is never touched).
+        {
+            List<EvaluatedAction> v191Copy = new ArrayList<>(allActions);
+            v191Copy.sort(Comparator.comparing(EvaluatedAction::getScore).reversed());
+            StringBuilder v191Top = new StringBuilder();
+            int v191N = Math.min(5, v191Copy.size());
+            for (int i = 0; i < v191N; i++) {
+                if (i > 0) v191Top.append(", ");
+                EvaluatedAction v191Ea = v191Copy.get(i);
+                v191Top.append(v191Ea.getActionId()).append('=').append(v191Ea.getScore());
+            }
+            LOG.warn("V191 TOPN: {} phase={} :: {}",
+                context.getDecisionType(), context.getPhase(), v191Top);
+        }
+
         // V67bc DPS HIERARCHY WALK: when DPS provided ordered step buckets,
         // walk them top→bottom. For each bucket, pick the highest-scoring
         // action. If that action's score is above the bad threshold, return
@@ -136,6 +161,48 @@ public class CombinedEvaluator {
                 LOG.warn("V67bc DPS WALK: step={} all bad (best score {}) → falling through to next step",
                     label, bestInBucket.getScore());
             }
+            // V67bc UPDATED 2026-07-06 (audit deploy-sequencing-4): EPILOGUE —
+            // before passing, consider positively-scored NON-BUCKET actions.
+            // DeployPhaseScript.resolveSteps deliberately excludes "take X into
+            // hand / into pile" Reserve pulls from EVERY bucket (they don't put
+            // a card on table), so the old walk could never pick them: once all
+            // buckets were exhausted it returned PASS no matter how well the
+            // pull scored. Now: gather the evaluated actions that appear in NO
+            // bucket; if the best of them clears NON_BUCKET_EPILOGUE_FLOOR
+            // (+50), pick it instead of passing. Bucketed decisions are
+            // untouched — any viable bucket already returned inside the loop
+            // above, so this epilogue only ever replaces PASS, never a bucket
+            // winner.
+            java.util.Set<String> v67bcAllBucketIds = new java.util.HashSet<>();
+            for (java.util.Set<String> v67bcBkt : buckets) {
+                v67bcAllBucketIds.addAll(v67bcBkt);
+            }
+            EvaluatedAction v67bcBestNonBucket = null;
+            for (EvaluatedAction ea : allActions) {
+                // Skip pass-like entries: PassEvaluator emits actionId "" OR a
+                // real "Cancel" actionId (ACTION_CHOICE) typed PASS — its
+                // conserve bonuses (V27/V27.1) can stack past the floor, and
+                // picking Cancel here would just be PASS with extra steps.
+                if (ea.getActionType() == ActionType.PASS) continue;
+                if (ea.getActionId() == null || ea.getActionId().isEmpty()) continue;
+                if (v67bcAllBucketIds.contains(ea.getActionId())) continue;
+                if (v67bcBestNonBucket == null || ea.getScore() > v67bcBestNonBucket.getScore()) {
+                    v67bcBestNonBucket = ea;
+                }
+            }
+            if (v67bcBestNonBucket != null
+                    && v67bcBestNonBucket.getScore() >= NON_BUCKET_EPILOGUE_FLOOR) {
+                LOG.warn("V67bc DPS EPILOGUE: buckets exhausted, but non-bucket action '{}' scored {} (>= floor {}) → picking it over PASS",
+                    v67bcBestNonBucket.getDisplayText(), v67bcBestNonBucket.getScore(),
+                    NON_BUCKET_EPILOGUE_FLOOR);
+                return v67bcBestNonBucket;
+            }
+            if (v67bcBestNonBucket != null) {
+                LOG.warn("V67bc DPS EPILOGUE: best non-bucket action '{}' scored {} < floor {} → still PASS",
+                    v67bcBestNonBucket.getDisplayText(), v67bcBestNonBucket.getScore(),
+                    NON_BUCKET_EPILOGUE_FLOOR);
+            }
+
             // All buckets exhausted with all-bad scores — true PASS time.
             LOG.warn("V67bc DPS WALK: every bucket all-bad → PASS");
             EvaluatedAction passAction = new EvaluatedAction(

@@ -756,6 +756,15 @@ public class RandoCalAi extends HeuristicAiBase {
                     // Fall back to keyword-based heuristics
                     LOG.debug("Evaluators returned null, falling back to heuristics");
                     result = super.decide(playerId, decision, gameState);
+                    // V191 (2026-07-06): TOP-N breadcrumb for the fallback path.
+                    // The per-candidate score loop (scoreAction + penalty stack)
+                    // lives in HeuristicAiBase.decide — private penalties there
+                    // make a faithful top-5 impossible from this subclass without
+                    // duplicating scoring, so log the path + final pick only.
+                    // Instrumentation only: zero scoring changes.
+                    LOG.warn("V191 TOPN: {} phase={} :: fallback-heuristic picked='{}' (top-5 n/a: pick loop in HeuristicAiBase)",
+                        decision.getDecisionType(), currentPhase,
+                        result != null ? result : "(pass)");
                 }
             }
 
