@@ -49,6 +49,9 @@ public class ObjectiveAnalyzer {
     private String flipConditionText = null;
     private String objectiveTitle = null;
     private String objectiveBlueprintId = null;
+    // V29 UPDATED 2026-07-06: keep the raw objective game text so evaluators can check clauses
+    // the fragment parsers don't capture (e.g. "may not deploy ... Executor" on TDIGWATT (V)).
+    private String objectiveGameText = null;
     private boolean analyzed = false;
     private boolean isFlipped = false;
     private boolean requiresOccupy = false;
@@ -119,6 +122,8 @@ public class ObjectiveAnalyzer {
 
             this.objectiveTitle = title;
             this.objectiveBlueprintId = bpId;
+            // V29 UPDATED 2026-07-06: store raw text for objectiveForbidsDeployingExecutor()
+            this.objectiveGameText = gameText;
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Analyzing objective: '{}'", title);
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Game text: {}", gameText);
 
@@ -403,6 +408,8 @@ public class ObjectiveAnalyzer {
         flipConditionText = null;
         objectiveTitle = null;
         objectiveBlueprintId = null;
+        // V29 UPDATED 2026-07-06: clear stored game text with the rest of the analysis
+        objectiveGameText = null;
         analyzed = false;
         isFlipped = false;
         requiresOccupy = false;
@@ -1010,6 +1017,29 @@ public class ObjectiveAnalyzer {
                flipConditionLocationFragments.contains("cloud city") ||
                flipBackLocationFragments.contains("bespin") ||
                flipBackLocationFragments.contains("cloud city");
+    }
+
+    /**
+     * V29 UPDATED 2026-07-06 (TDIGWATT bug B): does the active objective's OWN game text
+     * forbid deploying Executor? TDIGWATT (V) (Card226_012) reads "For remainder of game,
+     * you may not deploy Admiral's Orders or [Death Star II] Executor." — the V29
+     * BESPIN-FIRST gate in DeployEvaluator must not hold character deploys hostage waiting
+     * for a ship the objective itself bans. Universal sentence-scan of the blueprint text
+     * (no card-name/id lists): a sentence containing "executor" plus a deploy-forbid phrase
+     * counts. Classic TDIGWATT (Card109_012) has no such clause on either side, so this
+     * stays false for it (its back-side "may not cancel"/"may not be modified" do not match).
+     */
+    public boolean objectiveForbidsDeployingExecutor() {
+        if (!analyzed || objectiveGameText == null) return false;
+        String textLower = objectiveGameText.toLowerCase(Locale.ROOT);
+        for (String sentence : textLower.split("\\.")) {
+            if (!sentence.contains("executor")) continue;
+            if (sentence.contains("may not deploy") || sentence.contains("cannot deploy")
+                || sentence.contains("may not be deployed")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void logAnalysisResults() {

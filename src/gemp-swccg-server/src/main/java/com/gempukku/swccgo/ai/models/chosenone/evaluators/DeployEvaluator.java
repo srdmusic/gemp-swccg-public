@@ -1183,11 +1183,58 @@ public class DeployEvaluator extends ActionEvaluator {
                         boolean isBespinDeploy = guardCheckText.contains("bespin");
 
                         if (!isLocationDeploy && !isAmsdAction && !isExecutorDeploy && !isShipDeploy && !isBespinDeploy) {
-                            action.addReasoning(
-                                "V29 BESPIN-FIRST: Executor MUST deploy before characters! " +
-                                "Get Bespin → Executor/AMSD → THEN characters.", -500.0f);
-                            LOG.warn("V29 BESPIN-FIRST: BLOCKING deploy '{}' on turn {} — Bespin not occupied, deploy Executor first!",
-                                actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn);
+                            // V29 UPDATED 2026-07-06 (TDIGWATT bug B): release the -500 gate when there is
+                            // NO live path to ever satisfy it — otherwise every character deploy is blocked
+                            // forever and the bot floods weak solos without flipping. Two universal checks
+                            // (no card-name lists):
+                            //   (a) the objective's OWN game text forbids deploying Executor (TDIGWATT (V)
+                            //       Card226_012: "you may not deploy Admiral's Orders or [Death Star II]
+                            //       Executor" — verified from the card source);
+                            //   (b) DeckOracle sees no capital starship in hand/reserve/force/used — nothing
+                            //       left that could establish Bespin space presence.
+                            // Classic TDIGWATT keeps the gate: no forbid clause + Executor in deck.
+                            boolean bfGateReleased = false;
+                            String bfGateReleaseReason = null;
+                            if (bespinFirstAnalyzer.objectiveForbidsDeployingExecutor()) {
+                                bfGateReleased = true;
+                                bfGateReleaseReason = "objective game text forbids deploying Executor";
+                            } else {
+                                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle bfOracle = context.getDeckOracle();
+                                if (bfOracle != null && bfOracle.isAnalyzed()) {
+                                    boolean bfCapitalAccessible = false;
+                                    com.gempukku.swccgo.common.Zone[] bfZones = {
+                                        com.gempukku.swccgo.common.Zone.HAND,
+                                        com.gempukku.swccgo.common.Zone.RESERVE_DECK,
+                                        com.gempukku.swccgo.common.Zone.FORCE_PILE,
+                                        com.gempukku.swccgo.common.Zone.USED_PILE };
+                                    for (com.gempukku.swccgo.common.Zone bfZone : bfZones) {
+                                        for (com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.DeckCard bfDc
+                                                : bfOracle.getCardsByCategory(CardCategory.STARSHIP, bfZone)) {
+                                            if (bfDc.getSubtype() == com.gempukku.swccgo.common.CardSubtype.CAPITAL) {
+                                                bfCapitalAccessible = true;
+                                                break;
+                                            }
+                                        }
+                                        if (bfCapitalAccessible) break;
+                                    }
+                                    if (!bfCapitalAccessible) {
+                                        bfGateReleased = true;
+                                        bfGateReleaseReason = "no capital starship in hand/reserve/force/used — no live path to occupy Bespin space";
+                                    }
+                                }
+                            }
+
+                            if (bfGateReleased) {
+                                LOG.info("V29 BESPIN-FIRST RELEASED: NOT blocking deploy '{}' on turn {} — {}",
+                                    actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn, bfGateReleaseReason);
+                            } else {
+                                // Original V29 penalty (unchanged) — still fires for classic TDIGWATT.
+                                action.addReasoning(
+                                    "V29 BESPIN-FIRST: Executor MUST deploy before characters! " +
+                                    "Get Bespin → Executor/AMSD → THEN characters.", -500.0f);
+                                LOG.warn("V29 BESPIN-FIRST: BLOCKING deploy '{}' on turn {} — Bespin not occupied, deploy Executor first!",
+                                    actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn);
+                            }
                         }
                     }
                 }
