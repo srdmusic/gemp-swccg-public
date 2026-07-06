@@ -165,9 +165,16 @@ public class MoveEvaluator extends ActionEvaluator {
                 // V169 (Steve, 2026-06): if the MOVER is ENDANGERED (outpowered at its current
                 // site), keep the move attemptable — retreat is how it survives. Asajj's
                 // landspeed move was cancel-blocked here (V41 had blocked her safe
-                // destinations) and she was beaten 6v27 next turn. With V169's retreat
-                // scoring fixing the destination step, a soft -400 lets the retreat retry;
-                // it still loses to Pass when no safe destination actually exists.
+                // destinations) and she was beaten 6v27 next turn.
+                // V169 UPDATED 2026-07-06 (audit cross-brain-1): the soft penalty now lives
+                // ONLY in ActionTextEvaluator (-250, retry-budgeted). The old code here added
+                // a SECOND copy at double strength (EvaluatedAction ctor -400 PLUS
+                // addReasoning -400 = -800, both add) on the same actionId, then 'continue'd
+                // past rankMoveFromLocation so the endangered mover's own retreat bonuses
+                // (+150 RETREAT tier) never attached. Merged ~-1050 vs Pass +5: the retry
+                // this rule exists for was mathematically impossible. Now: endangered movers
+                // fall through to normal scoring (retreat bonuses accrue); everyone else
+                // keeps the hard block.
                 boolean v169EndangeredMover = false;
                 try {
                     if (cardIdStr != null && context.getGameState() != null && context.getGame() != null
@@ -188,17 +195,22 @@ public class MoveEvaluator extends ActionEvaluator {
                     }
                 } catch (Exception ignore) { }
                 if (v169EndangeredMover) {
-                    EvaluatedAction softBlockedMove = new EvaluatedAction(actionId, ActionType.MOVE, -400.0f, actionText);
-                    softBlockedMove.addReasoning("CANCEL-LOOP BLOCK — soft (V169: endangered mover, retreat must stay possible)", -400.0f);
-                    logger.warn("V169 MoveEvaluator: endangered mover '{}' soft-blocked (-400) instead of -9999", actionText);
-                    actions.add(softBlockedMove);
+                    // V169 UPDATED 2026-07-06 (audit cross-brain-1): no penalty here, no 'continue'.
+                    // EvaluatedAction softBlockedMove = new EvaluatedAction(actionId, ActionType.MOVE, -400.0f, actionText);
+                    // softBlockedMove.addReasoning("CANCEL-LOOP BLOCK — soft (V169: endangered mover, retreat must stay possible)", -400.0f);
+                    // logger.warn("V169 MoveEvaluator: endangered mover '{}' soft-blocked (-400) instead of -9999", actionText);
+                    // actions.add(softBlockedMove);
+                    // continue;
+                    logger.warn("V169 MoveEvaluator: endangered mover '{}' blocked-but-excused; soft penalty owned by ActionTextEvaluator (-250), falling through to retreat scoring", actionText);
+                } else {
+                    // V169 UPDATED 2026-07-06: hard block unchanged, wrapped in else so the
+                    // endangered-mover path above falls through instead of hitting it.
+                    EvaluatedAction blockedMove = new EvaluatedAction(actionId, ActionType.MOVE, -9999.0f, actionText);
+                    blockedMove.addReasoning("CANCEL-LOOP BLOCK: this move led to repeated Done-cancels — try something else", -9999.0f);
+                    logger.warn("MoveEvaluator: actionId='{}' is in blockedResponses → -9999 (cancel-loop block)", actionId);
+                    actions.add(blockedMove);
                     continue;
                 }
-                EvaluatedAction blockedMove = new EvaluatedAction(actionId, ActionType.MOVE, -9999.0f, actionText);
-                blockedMove.addReasoning("CANCEL-LOOP BLOCK: this move led to repeated Done-cancels — try something else", -9999.0f);
-                logger.warn("MoveEvaluator: actionId='{}' is in blockedResponses → -9999 (cancel-loop block)", actionId);
-                actions.add(blockedMove);
-                continue;
             }
 
             // === SPECIAL CASES: Passenger/Pilot capacity slots ===
@@ -363,19 +375,71 @@ public class MoveEvaluator extends ActionEvaluator {
             // Lando at a Cloud City site should STAY PUT. He establishes occupation for
             // the objective. V32 SOLO ESCAPE was moving him because ability < 4, but
             // that's wrong — Lando's JOB is to sit at CC sites for drains/occupation.
+            // V47 UPDATED 2026-07-06 (audit move-8): the -9999 lock used to fire for ANY
+            // *lando* card at ANY site whose title contained 'platform' (real false positives:
+            // Endor: Landing Platform (Docking Bay), Coruscant: Private Platform, Kashyyyk:
+            // Skyhook Platform), on any deck, with no danger exit, burying every retreat rule
+            // (RETREAT +150, V22.5 +160, V53 +500). Now gated on (a) an active Cloud City
+            // occupation objective that still wants Lando at THIS site, and (b) survivability.
             if (cardToMove != null && cardToMove.getTitle() != null
                 && cardToMove.getTitle().toLowerCase(Locale.ROOT).contains("lando")) {
                 PhysicalCard currentLoc = cardToMove.getAtLocation();
                 if (currentLoc != null && currentLoc.getTitle() != null) {
                     String locLower = currentLoc.getTitle().toLowerCase(Locale.ROOT);
+                    // V47 UPDATED 2026-07-06: every Cloud City site title starts with
+                    // "Cloud City: " (see Title.java), so the 'cloud city' fragment alone covers
+                    // the whole CC site set incl. East Platform (Docking Bay). The generic
+                    // 'platform' fragment matched non-CC sites and is commented out; the other
+                    // CC-specific fragments are kept (redundant but harmless).
                     boolean isAtCC = locLower.contains("cloud city") || locLower.contains("dining room")
                         || locLower.contains("upper walkway") || locLower.contains("carbonite")
-                        || locLower.contains("security tower") || locLower.contains("platform")
+                        || locLower.contains("security tower") // || locLower.contains("platform") // V47 UPDATED 2026-07-06: generic substring, false-positived on Endor/Coruscant/Kashyyyk platforms
                         || locLower.contains("lower corridor");
                     if (isAtCC) {
-                        action.addReasoning("V47 LANDO STAY: Lando at " + currentLoc.getTitle()
-                            + " — stay for occupation! Don't move!", -9999.0f);
-                        logger.warn("V47 LANDO STAY: Lando at {} — HARD BLOCK on move!", currentLoc.getTitle());
+                        // V47 UPDATED 2026-07-06 gate (a): objective. Only lock when OUR analyzed
+                        // objective is a Bespin/Cloud City occupation objective (V22.5 detector)
+                        // and this site still serves it: pre-flip = flip-condition site (the
+                        // occupation Lando is establishing), post-flip = flip-back protection
+                        // site (the occupation Lando is defending). No CC objective, or a CC
+                        // site the objective no longer cares about, = no lock.
+                        boolean v47ObjectiveWantsLandoHere = false;
+                        try {
+                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v47Analyzer =
+                                context.getObjectiveAnalyzer();
+                            if (v47Analyzer != null && v47Analyzer.isAnalyzed()
+                                    && v47Analyzer.needsBespinSystemPresence()) {
+                                v47ObjectiveWantsLandoHere = v47Analyzer.isFlipped()
+                                    ? v47Analyzer.isFlipBackProtectionLocation(currentLoc.getTitle())
+                                    : v47Analyzer.isObjectiveRelevantLocation(currentLoc.getTitle());
+                            }
+                        } catch (Exception e) {
+                            logger.debug("V47 objective gate error: {}", e.getMessage());
+                        }
+                        // V47 UPDATED 2026-07-06 gate (b): survivability. Skip the lock when
+                        // Lando's side is outpowered past the RETREAT threshold used by
+                        // calculateThreatLevel (powerDiff < RandoConfig.BATTLE_DANGER_THRESHOLD,
+                        // -6): a dead Lando occupies nothing, let the retreat tier take over.
+                        boolean v47Survivable = true;
+                        float v47PowerDiff = 0;
+                        try {
+                            String v47Opp = gameState.getOpponent(playerId);
+                            float v47Our = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                gameState, currentLoc, playerId, false, false);
+                            float v47Their = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                gameState, currentLoc, v47Opp, false, false);
+                            v47PowerDiff = v47Our - v47Their;
+                            v47Survivable = v47PowerDiff >= RandoConfig.BATTLE_DANGER_THRESHOLD;
+                        } catch (Exception e) {
+                            logger.debug("V47 survivability gate error: {}", e.getMessage());
+                        }
+                        if (v47ObjectiveWantsLandoHere && v47Survivable) {
+                            action.addReasoning("V47 LANDO STAY: Lando at " + currentLoc.getTitle()
+                                + " — stay for occupation! Don't move!", -9999.0f);
+                            logger.warn("V47 LANDO STAY: Lando at {} — HARD BLOCK on move!", currentLoc.getTitle());
+                        } else {
+                            logger.warn("V47 LANDO STAY skipped at {}: objectiveWantsHere={}, survivable={} (powerDiff={})",
+                                currentLoc.getTitle(), v47ObjectiveWantsLandoHere, v47Survivable, (int)v47PowerDiff);
+                        }
                     }
                 }
             }
