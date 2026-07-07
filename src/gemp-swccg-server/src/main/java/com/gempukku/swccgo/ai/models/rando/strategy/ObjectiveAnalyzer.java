@@ -88,6 +88,9 @@ public class ObjectiveAnalyzer {
     // logic to ObjectiveAnalyzer — that's what the deploy evaluator should be looking at."
     private boolean isInvasion = false;   // objective title contains "invasion"
     private boolean isMyLord = false;      // title contains "my lord" OR "make it legal" (MLITL)
+    // ObjectivePlaybook pilot (2026-07-07): the active objective's typed profile, or null. Selected
+    // in analyze() when the objective matches a known playbook; consumed via getActivePlaybook().
+    private ObjectivePlaybook activePlaybook = null;
     // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + TYPED steer data. The +400
     // Starkiller-system pick and +1000 preferred-starting-effect pick in CardSelectionEvaluator
     // used to hardcode these ids/titles inline; they now read these slots. Populated title-derived
@@ -170,6 +173,8 @@ public class ObjectiveAnalyzer {
             String titleLowerId = (title != null) ? title.toLowerCase(Locale.ROOT) : "";
             this.isInvasion = titleLowerId.contains("invasion");
             this.isMyLord = titleLowerId.contains("my lord") || titleLowerId.contains("make it legal");
+            // ObjectivePlaybook pilot: select the active objective profile (My Lord for now; more as they land).
+            this.activePlaybook = this.isMyLord ? MY_LORD_PLAYBOOK : null;
             // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + typed steer data (title-derived).
             this.isWantThatMap = titleLowerId.contains("i want that map");
             iwtmSystemBpIds.clear();
@@ -333,6 +338,77 @@ public class ObjectiveAnalyzer {
         return lore != null && lore.toLowerCase(Locale.ROOT).contains("senator");
     }
 
+    // ═══ OBJECTIVE PLAYBOOK — analyzer-owned typed facts + weights (pilot 2026-07-07, Steve's ruling) ═══
+    // Steve: ObjectiveAnalyzer owns objective identity, typed facts, and objective SCORING WEIGHTS;
+    // evaluators consume via getActivePlaybook() at existing call sites (ordering unchanged). Facts
+    // sourced from Codex batch resources/Objective_Playbook_Facts_2026-07-07.json, independently
+    // source-verified 2026-07-07 (My Lord = GO). Weights REUSE existing V-tag magnitudes — no new balance.
+
+    /** A card/objective reference matched by blueprint id OR title fragment (virtual-reprint proof). */
+    public static final class NamedCardRef {
+        public final java.util.Set<String> blueprintIds;
+        public final java.util.List<String> titleFragments;   // lowercased
+        public NamedCardRef(String[] ids, String[] titleFragments) {
+            this.blueprintIds = new java.util.LinkedHashSet<>(java.util.Arrays.asList(ids));
+            java.util.List<String> tf = new java.util.ArrayList<>();
+            for (String t : titleFragments) tf.add(t.toLowerCase(Locale.ROOT));
+            this.titleFragments = tf;
+        }
+        /** True if bpId is in the id set OR title contains any fragment. */
+        public boolean matches(String bpId, String title) {
+            if (bpId != null && blueprintIds.contains(bpId)) return true;
+            if (title != null) {
+                String tl = title.toLowerCase(Locale.ROOT);
+                for (String f : titleFragments) if (tl.contains(f)) return true;
+            }
+            return false;
+        }
+    }
+
+    /** Per-objective DEPLOY score magnitudes. Values REUSE existing V-tag numbers; no new balance. */
+    public static final class ObjectiveWeights {
+        public final float rewardKeyCharAtKeySite;    // My Lord V88: senator → Galactic Senate  +1500
+        public final float penalizeKeyCharOffKeySite; // My Lord V83: senator → non-Senate        -2000
+        public final float prioritizeKeyCharDeploy;   // My Lord V108: deploy a senator            +500
+        public final float holdNonKeyCharNoSite;      // My Lord V110: hold non-senator, no site   -2000
+        public ObjectiveWeights(float rewardKeyCharAtKeySite, float penalizeKeyCharOffKeySite,
+                                float prioritizeKeyCharDeploy, float holdNonKeyCharNoSite) {
+            this.rewardKeyCharAtKeySite = rewardKeyCharAtKeySite;
+            this.penalizeKeyCharOffKeySite = penalizeKeyCharOffKeySite;
+            this.prioritizeKeyCharDeploy = prioritizeKeyCharDeploy;
+            this.holdNonKeyCharNoSite = holdNonKeyCharNoSite;
+        }
+    }
+
+    /** One objective's analyzer-owned profile: identity + key rules-truth Filters + weights. */
+    public static final class ObjectivePlaybook {
+        public final String label;
+        public final NamedCardRef identity;
+        public final com.gempukku.swccgo.filters.Filter keyCharacter;  // rules-truth (My Lord: Filters.senator)
+        public final com.gempukku.swccgo.filters.Filter keySite;       // rules-truth (My Lord: Filters.Galactic_Senate)
+        public final ObjectiveWeights weights;
+        public ObjectivePlaybook(String label, NamedCardRef identity,
+                com.gempukku.swccgo.filters.Filter keyCharacter,
+                com.gempukku.swccgo.filters.Filter keySite, ObjectiveWeights weights) {
+            this.label = label; this.identity = identity;
+            this.keyCharacter = keyCharacter; this.keySite = keySite; this.weights = weights;
+        }
+    }
+
+    /** MY LORD, IS THAT LEGAL? / I WILL MAKE IT LEGAL (12_179, DARK; no virtual reprint). Senators belong
+     *  at Galactic Senate. Weights = the exact existing V-tag magnitudes (V88 +1500, V83 -2000, V108 +500,
+     *  V110 -2000). Source-verified vs Card12_179.java 2026-07-07 (Codex batch, GO). */
+    public static final ObjectivePlaybook MY_LORD_PLAYBOOK = new ObjectivePlaybook(
+        "My Lord",
+        new NamedCardRef(new String[]{"12_179", "12_179_BACK"},
+                         new String[]{"my lord", "make it legal"}),
+        com.gempukku.swccgo.filters.Filters.senator,
+        com.gempukku.swccgo.filters.Filters.Galactic_Senate,
+        new ObjectiveWeights(1500.0f, -2000.0f, 500.0f, -2000.0f));
+
+    /** The active objective's playbook, or null. Analyzer-owned API for evaluators/planners to consult. */
+    public ObjectivePlaybook getActivePlaybook() { return activePlaybook; }
+
     /**
      * Objective-driven DEPLOY adjustments for one candidate card. Returns the score notes the
      * deploy evaluator should apply (in place, at its objective region). Empty when nothing applies.
@@ -365,7 +441,7 @@ public class ObjectiveAnalyzer {
                 boolean atSenate = com.gempukku.swccgo.filters.Filters.Galactic_Senate.accepts(
                     gameState, game.getModifiersQuerying(), mlTargetLoc);
                 if (!atSenate) {
-                    notes.add(new ScoreNote(-2000.0f,
+                    notes.add(new ScoreNote(MY_LORD_PLAYBOOK.weights.penalizeKeyCharOffKeySite,
                         "V83 MY LORD: senator '" + card.getTitle() + "' → '" + mlTargetLoc.getTitle()
                             + "' — must deploy to Galactic Senate (dies elsewhere)"));
                     LOG.warn("V83 MY LORD: blocking senator {} → {} (only Galactic Senate is safe)",
@@ -388,7 +464,7 @@ public class ObjectiveAnalyzer {
                 }
             } catch (Exception ignore) { /* */ }
             if (!hasNonSenateSite) {
-                notes.add(new ScoreNote(-2000.0f,
+                notes.add(new ScoreNote(MY_LORD_PLAYBOOK.weights.holdNonKeyCharNoSite,
                     "V110 MY LORD: HOLD non-senator '" + card.getTitle()
                         + "' — no non-Senate site on table yet, would land at Senate"));
                 LOG.warn("V110 MY LORD: HOLD deploy non-senator {} → -2000 (no non-Senate site)",
@@ -398,7 +474,7 @@ public class ObjectiveAnalyzer {
 
         // === V108: MY LORD — prioritize deploying senators from hand ===
         if (analyzed && isMyLord && isCharacter && isSenatorCard(blueprint)) {
-            notes.add(new ScoreNote(500.0f,
+            notes.add(new ScoreNote(MY_LORD_PLAYBOOK.weights.prioritizeKeyCharDeploy,
                 "V108 MY LORD: senator '" + card.getTitle() + "' in hand — prioritize deploy (flip target)"));
             LOG.warn("V108 MY LORD: BOOST deploy senator {} → +500", card.getTitle());
         }
@@ -446,7 +522,7 @@ public class ObjectiveAnalyzer {
         if (analyzed && isMyLord && com.gempukku.swccgo.filters.Filters.senator.accepts(
                 gameState, game.getModifiersQuerying(), card)
                 && actionLower.contains("galactic senate")) {
-            notes.add(new ScoreNote(1500.0f,
+            notes.add(new ScoreNote(MY_LORD_PLAYBOOK.weights.rewardKeyCharAtKeySite,
                 "V88 MY LORD: senator '" + card.getTitle()
                     + "' → Galactic Senate (flip condition + weapon destiny -6 protection)"));
             LOG.warn("V88 MY LORD: BOOST senator {} → Galactic Senate → +1500", card.getTitle());
@@ -695,6 +771,7 @@ public class ObjectiveAnalyzer {
         // V86/V88/V121 CONSOLIDATED: objective-identity flags (mirror objectiveTitle's lifecycle)
         isInvasion = false;
         isMyLord = false;
+        activePlaybook = null;
         // V186 CONSOLIDATED: I Want That Map identity + typed steer data
         isWantThatMap = false;
         iwtmSystemBpIds.clear();

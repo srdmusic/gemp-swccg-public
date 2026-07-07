@@ -6018,3 +6018,14 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     both bots. SEPARATE companion commit: chosenone full-clone from rando (erase 7-file mirror drift;
     entry points RandoCalAi/TheChosenOneAi untouched). Full details in resources/AI_CHANGELOG.md
     2026-07-07 entries.
+
+  ════ OBJECTIVE PLAYBOOK PILOT (2026-07-07): My Lord weights → typed analyzer-owned playbook ════
+    NOT a new V-tag. First analyzer-owned ObjectivePlaybook per Steve's ruling (ObjectiveAnalyzer owns
+    objective identity + typed facts + scoring weights; evaluators consume at existing call sites).
+    ObjectiveAnalyzer gains nested types NamedCardRef / ObjectiveWeights / ObjectivePlaybook + static
+    MY_LORD_PLAYBOOK (identity 12_179/_BACK; keyCharacter Filters.senator; keySite Filters.Galactic_Senate;
+    weights V88 +1500 / V83 -2000 / V108 +500 / V110 -2000) + activePlaybook field + getActivePlaybook().
+    The four My Lord deploy magnitudes in getDeployObjectiveAdjustments now read MY_LORD_PLAYBOOK.weights.*
+    instead of inline literals. Behavior byte-identical (weights == old literals; V99/V86 untouched).
+    Facts from Codex batch resources/Objective_Playbook_Facts_2026-07-07.json, source-verified (My Lord=GO).
+    Compiles both bots; chosenone mirrored. Full details in resources/AI_CHANGELOG.md 2026-07-07 entry.
