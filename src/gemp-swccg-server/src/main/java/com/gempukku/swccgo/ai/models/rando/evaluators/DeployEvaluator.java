@@ -1939,13 +1939,23 @@ public class DeployEvaluator extends ActionEvaluator {
                                         && (v193Oracle.isCardInHand(v193GateCard)
                                             || v193Oracle.isCardInReserve(v193GateCard));
                                     if (!v193AlreadyControls && v193HoldsGateCard) {
+                                        // ObjectivePlaybook consolidation (2026-07-07): the +400 magnitude
+                                        // is now analyzer-owned in ENDOR_PLAYBOOK.weights.deployFlipGateSite.
+                                        // Behavior-preserving: V193 only fires when the analyzer named a
+                                        // flip-gate site (Endor Operations today), which also selects
+                                        // ENDOR_PLAYBOOK (weight = 400). Fall back to the literal if no
+                                        // playbook is active (defensive; unreachable on the Endor path).
+                                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.ObjectivePlaybook
+                                            v193Playbook = v136Obj.getActivePlaybook();
+                                        float v193Bonus = (v193Playbook != null)
+                                            ? v193Playbook.weights.deployFlipGateSite : 400.0f;
                                         action.addReasoning(
                                             "V193 FLIP-GATE CONTROL: steer one body to '"
                                                 + v136Candidate.getTitle()
                                                 + "' to enable '" + v193GateCard + "' (objective flip gate)",
-                                            400.0f);
-                                        LOG.warn("V193 FLIP-GATE CONTROL [{}]: {} → {} +400 (seize flip-gate, card={})",
-                                            playerId, card.getTitle(), v136Candidate.getTitle(), v193GateCard);
+                                            v193Bonus);
+                                        LOG.warn("V193 FLIP-GATE CONTROL [{}]: {} → {} +{} (seize flip-gate, card={})",
+                                            playerId, card.getTitle(), v136Candidate.getTitle(), v193Bonus, v193GateCard);
                                     }
                                 }
                             }

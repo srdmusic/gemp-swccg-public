@@ -88,6 +88,7 @@ public class ObjectiveAnalyzer {
     // logic to ObjectiveAnalyzer — that's what the deploy evaluator should be looking at."
     private boolean isInvasion = false;   // objective title contains "invasion"
     private boolean isMyLord = false;      // title contains "my lord" OR "make it legal" (MLITL)
+    private boolean isEndor = false;       // title contains "endor operations" (ENDOR_PLAYBOOK pilot 2026-07-07)
     // ObjectivePlaybook pilot (2026-07-07): the active objective's typed profile, or null. Selected
     // in analyze() when the objective matches a known playbook; consumed via getActivePlaybook().
     private ObjectivePlaybook activePlaybook = null;
@@ -173,8 +174,11 @@ public class ObjectiveAnalyzer {
             String titleLowerId = (title != null) ? title.toLowerCase(Locale.ROOT) : "";
             this.isInvasion = titleLowerId.contains("invasion");
             this.isMyLord = titleLowerId.contains("my lord") || titleLowerId.contains("make it legal");
-            // ObjectivePlaybook pilot: select the active objective profile (My Lord for now; more as they land).
-            this.activePlaybook = this.isMyLord ? MY_LORD_PLAYBOOK : null;
+            this.isEndor = titleLowerId.contains("endor operations");
+            // ObjectivePlaybook pilot: select the active objective profile (My Lord + Endor so far; more as they land).
+            this.activePlaybook = this.isMyLord ? MY_LORD_PLAYBOOK
+                                : this.isEndor ? ENDOR_PLAYBOOK
+                                : null;
             // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + typed steer data (title-derived).
             this.isWantThatMap = titleLowerId.contains("i want that map");
             iwtmSystemBpIds.clear();
@@ -371,12 +375,22 @@ public class ObjectiveAnalyzer {
         public final float penalizeKeyCharOffKeySite; // My Lord V83: senator → non-Senate        -2000
         public final float prioritizeKeyCharDeploy;   // My Lord V108: deploy a senator            +500
         public final float holdNonKeyCharNoSite;      // My Lord V110: hold non-senator, no site   -2000
+        public final float deployFlipGateSite;        // Endor V193: steer one body to flip-gate site +400
+        /** My Lord family (senator rules only; no flip-gate steer). */
         public ObjectiveWeights(float rewardKeyCharAtKeySite, float penalizeKeyCharOffKeySite,
                                 float prioritizeKeyCharDeploy, float holdNonKeyCharNoSite) {
+            this(rewardKeyCharAtKeySite, penalizeKeyCharOffKeySite,
+                 prioritizeKeyCharDeploy, holdNonKeyCharNoSite, 0.0f);
+        }
+        /** Full: adds deployFlipGateSite (Endor V193). Unused categories pass 0 (score never applied). */
+        public ObjectiveWeights(float rewardKeyCharAtKeySite, float penalizeKeyCharOffKeySite,
+                                float prioritizeKeyCharDeploy, float holdNonKeyCharNoSite,
+                                float deployFlipGateSite) {
             this.rewardKeyCharAtKeySite = rewardKeyCharAtKeySite;
             this.penalizeKeyCharOffKeySite = penalizeKeyCharOffKeySite;
             this.prioritizeKeyCharDeploy = prioritizeKeyCharDeploy;
             this.holdNonKeyCharNoSite = holdNonKeyCharNoSite;
+            this.deployFlipGateSite = deployFlipGateSite;
         }
     }
 
@@ -405,6 +419,21 @@ public class ObjectiveAnalyzer {
         com.gempukku.swccgo.filters.Filters.senator,
         com.gempukku.swccgo.filters.Filters.Galactic_Senate,
         new ObjectiveWeights(1500.0f, -2000.0f, 500.0f, -2000.0f));
+
+    /** ENDOR OPERATIONS / IMPERIAL OUTPOST (8_167 / _BACK, DARK; virtual/Legacy reprints share the title).
+     *  Flips once Ominous Rumors + Establish Secret Base are both on table. Establish Secret Base (V)
+     *  (207_25) "Deploy on Bunker if you control that site", so the flip-gate is CONTROLLING Endor: Bunker.
+     *  keyCharacter = biker scout (back-side Imperial Outpost drain-protect / draw-phase retrieve target,
+     *  not yet scored); keySite = Bunker (the flip-gate control site). Weight = the exact existing V193
+     *  magnitude (+400 one-shot Bunker steer); senator categories unused (0). Source-verified vs
+     *  Card8_167.java / Card207_025.java / Card8_124.java 2026-07-07 (Codex facts batch, GO_WITH_FIXES). */
+    public static final ObjectivePlaybook ENDOR_PLAYBOOK = new ObjectivePlaybook(
+        "Endor Operations",
+        new NamedCardRef(new String[]{"8_167", "8_167_BACK"},
+                         new String[]{"endor operations", "imperial outpost"}),
+        com.gempukku.swccgo.filters.Filters.biker_scout,
+        com.gempukku.swccgo.filters.Filters.Bunker,
+        new ObjectiveWeights(0.0f, 0.0f, 0.0f, 0.0f, 400.0f));
 
     /** The active objective's playbook, or null. Analyzer-owned API for evaluators/planners to consult. */
     public ObjectivePlaybook getActivePlaybook() { return activePlaybook; }
@@ -771,6 +800,7 @@ public class ObjectiveAnalyzer {
         // V86/V88/V121 CONSOLIDATED: objective-identity flags (mirror objectiveTitle's lifecycle)
         isInvasion = false;
         isMyLord = false;
+        isEndor = false;
         activePlaybook = null;
         // V186 CONSOLIDATED: I Want That Map identity + typed steer data
         isWantThatMap = false;

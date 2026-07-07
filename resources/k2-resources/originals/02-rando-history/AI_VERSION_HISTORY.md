@@ -3,6 +3,13 @@ V58/V67w maintenance floor hardened (DrawEvaluator); V153 THIN RESERVE guard (re
 reserve); V24.15 EFFECTIVE DRAIN arm CONSOLIDATED (was V189b, folded in — no contradictory new version);
 V193 Endor Operations playbook + Bunker-control bonus (unlock Establish Secret Base). Both bots. See AI_CHANGELOG.md 2026-07-07.
 
+  ════ ObjectivePlaybook #2 (2026-07-07): Endor Operations → typed analyzer-owned playbook (behavior-preserving) ════
+ENDOR_PLAYBOOK added to ObjectiveAnalyzer (both bots): identity {8_167,_BACK}, keyCharacter Filters.biker_scout,
+keySite Filters.Bunker, weight deployFlipGateSite = the existing V193 +400. DeployEvaluator V193 now reads that
+weight instead of the literal. No behavior change (V193 fires only for Endor, which selects ENDOR_PLAYBOOK, weight
+== old literal). Same typed shape as MY_LORD_PLAYBOOK. Flip-gate CARD V-scoping (8_124 base vs 207_25 V) is a
+separate follow-up. See AI_CHANGELOG.md 2026-07-07.
+
 Rando Cal / Chosen One AI — Version History
 =================================================================
 
