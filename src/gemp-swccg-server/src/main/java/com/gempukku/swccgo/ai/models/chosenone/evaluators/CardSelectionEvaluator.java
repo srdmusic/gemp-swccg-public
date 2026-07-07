@@ -5795,6 +5795,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         // at a flip-relevant site (shared CharacterDeploySiteEvaluator.isV156FlipNotReady).
         boolean v156JoinMode = false;
         String v156FromTitle = null;
+        float v156MoverAbility = 0f;  // STACK-MATH (2026-07-07): mover's ability, for the defensible-join kicker below
         if (game != null && gameState != null && playerId != null) {
             try {
                 String v156MoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
@@ -5834,6 +5835,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (v156Alone && v156OppPowerHere == 0f && !v156AtReadyFlipSite) {
                             v156JoinMode = true;
                             v156FromTitle = v156Loc.getTitle();
+                            v156MoverAbility = v156Ab;
                             logger.warn("V156 JOIN-GROUP MODE: mover '{}' (ability {}) is a weak solo at {} — friendly-stack destinations boosted, V41 gated",
                                 v156Pc.getTitle(), (int) v156Ab.floatValue(), v156FromTitle);
                         }
@@ -5883,9 +5885,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // V156 JOIN-GROUP (2026-07-07): friendly CHARACTER count at this destination —
-                        // used by the JOIN DEST bonus below and the V41 wrong-direction exemption.
+                        // V156 JOIN-GROUP (2026-07-07): friendly presence at this destination.
+                        // v156DestFriendlyChars (count) gates the V41 wrong-direction exemption;
+                        // v156DestAbilityTotal (STACK-MATH) ranks join destinations by the shared predicate.
                         int v156DestFriendlyChars = 0;
+                        float v156DestAbilityTotal = 0f;
                         if (v156JoinMode) {
                             try {
                                 for (PhysicalCard c : gameState.getCardsAtLocation(location)) {
@@ -5895,6 +5899,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         v156DestFriendlyChars++;
                                     }
                                 }
+                                v156DestAbilityTotal = com.gempukku.swccgo.ai.models.common.strategy.MovePredicates
+                                    .siteAbilityTotal(gameState, location, playerId);
                             } catch (Exception ignore) { /* 0 */ }
                         }
 
@@ -5948,17 +5954,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 logger.warn("V169 RETREAT (move dest): {} -> +600 (fleeing {})", title, v169FromTitle);
                             }
 
-                            // === V156 JOIN-GROUP DEST (2026-07-07): weak solo mover → friendly stack ===
-                            // Only fires in join mode. Base +250 (mirrors the move-arm claim fine)
-                            // +50 per EXTRA friendly character (largest-stack preference), cap +400.
-                            // Boundary math in the rando mirror (Fel replay: -152.5 + 350 = +197.5).
+                            // === V156 JOIN-GROUP DEST (2026-07-07, STACK-MATH refit): weak solo → defensible stack ===
+                            // Rank join destinations by ABILITY-TOTAL, not headcount: base +250 for any
+                            // friendly group, a small ability-total lean (up to +100), and a +150 kicker
+                            // when this join makes the stack destiny-capable (dest total + mover ability >= 4),
+                            // cap +450. Boundary math in the rando mirror.
                             if (v156JoinMode && v156DestFriendlyChars > 0) {
-                                float v156JoinBonus = Math.min(400.0f, 250.0f + 50.0f * (v156DestFriendlyChars - 1));
+                                boolean v156Defensible = (v156DestAbilityTotal + v156MoverAbility)
+                                    >= com.gempukku.swccgo.ai.models.common.strategy.MovePredicates.DEFENSIBLE_ABILITY;
+                                float v156JoinBonus = Math.min(450.0f,
+                                    250.0f + Math.min(100.0f, v156DestAbilityTotal * 10.0f) + (v156Defensible ? 150.0f : 0.0f));
                                 action.addReasoning(String.format(
-                                    "V156 JOIN-GROUP DEST: %s has %d friendly character(s) — join the group (weak solo leaving %s)!",
-                                    title, v156DestFriendlyChars, v156FromTitle), v156JoinBonus);
-                                logger.warn("V156 JOIN-GROUP DEST: {} ({} friendlies) -> +{} (mover from {})",
-                                    title, v156DestFriendlyChars, (int) v156JoinBonus, v156FromTitle);
+                                    "V156 JOIN-GROUP DEST: %s reaches ability %.0f%s — join (weak solo leaving %s)!",
+                                    title, v156DestAbilityTotal + v156MoverAbility,
+                                    v156Defensible ? " (destiny-capable)" : "", v156FromTitle), v156JoinBonus);
+                                logger.warn("V156 JOIN-GROUP DEST: {} (stack ability {}->{}) -> +{} (mover from {})",
+                                    title, (int) v156DestAbilityTotal, (int) (v156DestAbilityTotal + v156MoverAbility),
+                                    (int) v156JoinBonus, v156FromTitle);
                             }
 
                             // === V166 (Steve, 2026-06): CONTEST THE OPPONENT'S DRAIN when out-drained ===

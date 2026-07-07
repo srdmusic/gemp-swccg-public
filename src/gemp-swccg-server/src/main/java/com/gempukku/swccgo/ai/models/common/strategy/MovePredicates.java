@@ -170,4 +170,65 @@ public final class MovePredicates {
     private static String safeTitle(PhysicalCard pc) {
         try { return pc.getTitle(); } catch (Exception e) { return "?"; }
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // ═══ V156 STACK-MATH (2026-07-07): "no stranded bodies" doctrine ═══
+    // Steve's rule: a friendly site is DEFENSIBLE only when its TOTAL friendly
+    // ability reaches 4 (the rulebook battle-destiny threshold). ONE predicate,
+    // shared by the deploy-side V156 hold, the MoveEvaluator JOIN-GROUP R2 claim,
+    // and the CardSelectionEvaluator JOIN-GROUP destination boost — replaces the
+    // earlier friendly-COUNT heuristic so joins target ability-total, not headcount
+    // (3 ability-1 droids are NOT defensible; 1 ability-6 already is).
+    // ═══════════════════════════════════════════════════════════
+    public static final float DEFENSIBLE_ABILITY = 4f;
+
+    /** Sum of friendly (playerId-owned) CHARACTER ability at a location. 0 on error. */
+    public static float siteAbilityTotal(GameState gs, PhysicalCard site, String playerId) {
+        if (gs == null || site == null || playerId == null) return 0f;
+        float total = 0f;
+        try {
+            for (PhysicalCard c : gs.getCardsAtLocation(site)) {
+                if (c == null || c.getBlueprint() == null) continue;
+                if (!playerId.equals(c.getOwner())) continue;
+                if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                Float ab = c.getBlueprint().getAbility();
+                if (ab != null) total += ab;
+            }
+        } catch (Exception e) { return total; }
+        return total;
+    }
+
+    /** True when a site's total friendly ability reaches the battle-destiny threshold (>= 4). */
+    public static boolean isDefensibleStack(GameState gs, PhysicalCard site, String playerId) {
+        return siteAbilityTotal(gs, site, playerId) >= DEFENSIBLE_ABILITY;
+    }
+
+    /**
+     * Best adjacent site for a weak solo to JOIN, by ABILITY-TOTAL (not body count).
+     * Prefers a site that BECOMES defensible when the mover joins (site total + moverAbility >= 4),
+     * choosing the highest resulting total; if none reaches 4, falls back to the strongest
+     * adjacent friendly group (still consolidate — no stranded bodies). Null if no adjacent
+     * site holds a friendly character.
+     */
+    public static PhysicalCard bestJoinDestination(SwccgGame game, GameState gs, PhysicalCard from,
+                                                   float moverAbility, String playerId) {
+        if (game == null || gs == null || from == null || playerId == null) return null;
+        try {
+            ModifiersQuerying mq = game.getModifiersQuerying();
+            PhysicalCard bestDefensible = null; float bestDefTotal = -1f;
+            PhysicalCard bestAny = null;        float bestAnyTotal = -1f;
+            for (PhysicalCard adj : gs.getLocationsInOrder()) {
+                if (adj == null || adj == from) continue;
+                try { if (!mq.isAdjacentSites(gs, from, adj)) continue; } catch (Exception e) { continue; }
+                float here = siteAbilityTotal(gs, adj, playerId);
+                if (here <= 0f) continue;  // no friendly character to join
+                float resulting = here + moverAbility;
+                if (resulting > bestAnyTotal) { bestAnyTotal = resulting; bestAny = adj; }
+                if (resulting >= DEFENSIBLE_ABILITY && resulting > bestDefTotal) {
+                    bestDefTotal = resulting; bestDefensible = adj;
+                }
+            }
+            return bestDefensible != null ? bestDefensible : bestAny;
+        } catch (Exception e) { return null; }
+    }
 }

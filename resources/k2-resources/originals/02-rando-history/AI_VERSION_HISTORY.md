@@ -3301,6 +3301,12 @@ Total tags catalogued: 179
     Status: UNCOMMITTED in the working tree, live in the jar. PENDING live Verge game
     (4->6 turn 1, 6->7 turn 2, then orbit Scarif).
 
+  ════ V156 STACK-MATH refit (2026-07-07): JOIN-GROUP by ability-total, not headcount ════
+Shared MovePredicates.siteAbilityTotal/isDefensibleStack/bestJoinDestination (site total
+friendly ability >= 4 = destiny-capable). Weak solos join the site that REACHES ability 4,
+not the one with the most bodies. Both bots. Deploy-hold + V41 override + V79b Verge guard
+from draft c1d5ced8c unchanged. See AI_CHANGELOG.md 2026-07-07 for boundary math.
+
   ════ V43 UPDATE (2026-07-07): starting-interrupt pick reads game text — effect-deployers beat duds ════
 in place: starting-interrupt pick reads what the interrupt DOES (effect-deployers beat duds)
 - MOD `server/.../ai/models/rando/evaluators/CardSelectionEvaluator.java` (~7048, inside the V43 STARTING INTERRUPT block) + chosenone mirror (~7003): the generic-tie branch now scans the interrupt's game text — deploys Effects/defensive shields from Reserve = +300/+250/+200 (scaled by "up to three/two"), deploys anything from Reserve = +100, else the old flat 0. Epic Event +1500 top tier unchanged.
@@ -3625,6 +3631,39 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     other K-2's concurrent work). PENDING, not done: NOT deployed (Steve is holding reload-ai to test
     a different deck first), then a live Set Your Course For Alderaan game (grep nohup.out for
     "V188 ALDERAAN DEATH-STAR").
+
+  ════ V156 UPDATE (2026-07-07): weak-band hold on ALL turns + NEW JOIN-GROUP move arm ════
+
+  V156 UPDATE — ABILITY<4 SOLO HOLD NO LONGER EXPIRES AFTER TURN 2; MOVE-SIDE JOIN-GROUP ARM ADDED
+    Source: CharacterDeploySiteEvaluator.java (gate ~:563, new shared helper isV156FlipNotReady),
+    MoveEvaluator.java (V32 SOLO ESCAPE branch) + CardSelectionEvaluator.java
+    (evaluateMoveDestination) in BOTH rando and chosenone. Full entry in AI_CHANGELOG.md.
+    Incident (2026-07-07 game, Rando DARK Verge vs asdf): turn 2 the hold correctly -600'd Tagge
+    and Death Trooper at every empty battleground and both joined Vader. Turn 3 the SAME deploy
+    sailed through — the turn<=2 gate was the ONLY stopper: Baron Soontir Fel (ability 3, power 2)
+    went solo to Scarif: Beach (+1065; V136 SectionA +500 uncontested reward, only V38 -150 and a
+    self-cancelling V113 -300 against). The move ladder then claimed the fix (V31 R2 DOCTRINE) but
+    V41 WRONG DIRECTION -9999'd the only join target because its "empty" counts only OPPONENTS —
+    consolidating onto Vader's own stack read as wrong direction. V160 broke the cancel loop and
+    Fel rotted at Beach until battled + forfeited. Audit rows deploy-siting-1/-2 (confirmed, high)
+    named this exact deploy/move contradiction.
+    DEPLOY arm (in place): gate is now (currentTurn <= 2 || (ability < 4 && buddy plan exists)).
+    Weak band holds -600 on ALL turns at uncontested BG sites when another character is on table
+    or affordable in hand; no buddy anywhere -> the lone body still deploys. The ability>=4 class
+    keeps turn<=2 + all exemptions (ability>=6, armed-5, flip carve-back) untouched.
+    MOVE arm (new, both surfaces): MoveEvaluator claims R2 DOCTRINE "V156 JOIN-GROUP" (fine +250
+    passes L2; NON-battle-seeking so the V137 canWinAt veto never applies; R3/R4 still outrank)
+    for a weak solo at an uncontested site with an adjacent friendly stack. CardSelectionEvaluator
+    JOIN-GROUP MODE (V169 retreat-mode pattern): friendly-stack destinations +250 +50/extra body
+    (cap +400), and V41 WRONG DIRECTION gated off for them (new exemption beside V169/V67z).
+    Exempt everywhere: undercover spies (V170 parked spies sit), opponent presence at the solo's
+    site, and a solo doing READY objective work at a flip-relevant site (isV156FlipNotReady —
+    the old inline Verge scan extracted verbatim to a public static, shared by all arms).
+    Boundary: deploy replay 1065 -> -35 < Tower 615 (joins the stack = turn-2 behavior); turn<=2
+    byte-identical; destination replay -10151.5 -> +197.5 (> -100 BAD_ACTION floor -> executes);
+    action ~+5380 > Pass 6; R2 6000 < R3 12000 < R4 20000; retreat mode mutually exclusive.
+    Status: typed javac compile clean in the app container (no mvn per house rules).
+    PENDING: rebuild + live game (grep "V156 JOIN-GROUP" / turn-3+ "V156 SOLO HOLD").
 
   ════ V156 UPDATE (2026-06-25): smart solo-deploy hold (ability/weapon/battleground aware) ════
 
@@ -5927,3 +5966,30 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     V114 deletes the obsolete catch-all in both rando (line 2725)
     and chosenone (line 1921). Pull actions now reach V60/V67ai
     and score correctly.
+
+  ════ V79 family UPDATE + V79b FLIP-BACK GUARD (2026-07-07): Verge post-flip — Death Star STAYS in Scarif orbit ════
+
+  V79/V79b — POST-FLIP ORBIT TOGGLE: THE AT-SCARIF CHECK WAS READING A FIELD THAT IS ALWAYS NULL
+    Source game: Game9f3c46b00681 (Rando DS Verge, conceded T5 down 39-9 lost-pile).
+    Root cause: getAtLocation() is ALWAYS null for the Death Star mobile-system LOCATION card, so
+    every "DS at Scarif" check in the V79 family (6 copies across MoveEvaluator, ActionTextEvaluator,
+    DeployEvaluator, ForceReserveService, CharacterDeploySiteEvaluator.isV156FlipNotReady, both bots)
+    was permanently false. Post-flip the V79 +500 default kept the hyperspeed move top-ranked forever,
+    and V79b's closest-to-7 answer FROM ORBIT is the deep-space EXIT (the engine excludes the orbited
+    system from re-orbit at the chosen parsec — MoveMobileSystemUsingHyperspeedAction:82). The DS
+    toggled out of/into orbit turns 3-5; V35.4 +150 misfired onto the system move; a perpetual
+    1-Force VERGE MOVE RESERVE suppressed a real Mara Jade deploy.
+    Fix (all V-tags updated in place, no new tag): all six at-Scarif checks → getSystemOrbited()
+    (the engine's own orbit primitive; the flip condition itself is Filters.isOrbiting(Title.Scarif),
+    Card216_011:122); old getAtLocation lines commented in place. NEW V79b FLIP-BACK GUARD in both
+    MoveEvaluators: objective FLIPPED + DS orbiting Scarif → T4.1 ladder HARD VETO (-100000) on the
+    hyperspeed move. RandoCalAi V79b belt-and-suspenders: flipped + orbiting → prefer orbit/Scarif
+    option, else answer the CURRENT parsec (stay). ATE V35.4 skips mobile-system LOCATION movers.
+    Card-text note: this objective's printed flip-back is LEADER-based (Card216_011_BACK), so the
+    toggle never unflipped it — the guard is V22.2 protection-class (keeps the flipped side's
+    'system it orbits' battle-destiny umbrella; an orbit-based flip-back objective would lose outright).
+    Boundary: post-flip+orbiting = veto -100000 vs Pass +28; pre-flip+orbiting ≈ -110 vs Pass +28
+    (Pass wins, DS holds); pre-flip transit + post-flip deep-space recovery steering UNCHANGED.
+    Status: UNCOMMITTED in the working tree; compile + live Verge game PENDING (expect
+    'V79b FLIP-BACK GUARD ... VETOED' each post-flip move phase and NO 'V79 VERGE MOVE RESERVE'
+    while orbiting). Full details in resources/AI_CHANGELOG.md 2026-07-07 entry.

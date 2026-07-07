@@ -1023,36 +1023,24 @@ public class MoveEvaluator extends ActionEvaluator {
                                                 .isV156FlipNotReady(gameState, playerId);
                                     } catch (Exception ignore) { /* false */ }
                                     if (v156OppPowerHere == 0f && !cardToMove.isUndercover() && !v156AtReadyFlipSite) {
-                                        // Adjacent-first: find the LARGEST adjacent friendly character stack
-                                        // (same isAdjacentSites reachability gate the ATTACK R2 claim uses).
-                                        PhysicalCard v156BestStackLoc = null;
-                                        int v156BestStackSize = 0;
-                                        for (PhysicalCard adj : gameState.getLocationsInOrder()) {
-                                            if (adj == null || adj == currentLocation) continue;
-                                            try {
-                                                if (!game.getModifiersQuerying().isAdjacentSites(gameState, currentLocation, adj)) continue;
-                                            } catch (Exception ignore) { continue; }
-                                            int v156Stack = 0;
-                                            for (PhysicalCard c : gameState.getCardsAtLocation(adj)) {
-                                                if (c == null || !playerId.equals(c.getOwner())) continue;
-                                                if (c.getBlueprint() == null) continue;
-                                                if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                                v156Stack++;
-                                            }
-                                            if (v156Stack > v156BestStackSize) {
-                                                v156BestStackSize = v156Stack;
-                                                v156BestStackLoc = adj;
-                                            }
-                                        }
-                                        if (v156BestStackLoc != null) {
+                                        // STACK-MATH REFIT (2026-07-07): join by ABILITY-TOTAL, not headcount.
+                                        // Pick the adjacent site that becomes destiny-capable (total ability >= 4)
+                                        // when this body joins, via the shared MovePredicates.bestJoinDestination.
+                                        // (Solo site total == mover ability, since friendlyCharsHere == 1.)
+                                        float v156MoverAb = totalAbilityHere;
+                                        PhysicalCard v156JoinLoc = com.gempukku.swccgo.ai.models.common.strategy.MovePredicates
+                                            .bestJoinDestination(game, gameState, currentLocation, v156MoverAb, playerId);
+                                        if (v156JoinLoc != null) {
+                                            float v156DestTotal = com.gempukku.swccgo.ai.models.common.strategy.MovePredicates
+                                                .siteAbilityTotal(gameState, v156JoinLoc, playerId) + v156MoverAb;
                                             action.addReasoning(String.format(
-                                                "V156 JOIN-GROUP: %s (ability %.0f) solo at uncontested %s — join the group at %s (%d friendlies)!",
+                                                "V156 JOIN-GROUP: %s (ability %.0f) solo at uncontested %s — join %s (stack reaches ability %.0f)!",
                                                 cardToMove.getTitle(), totalAbilityHere, currentLocation.getTitle(),
-                                                v156BestStackLoc.getTitle(), v156BestStackSize), 250.0f);
+                                                v156JoinLoc.getTitle(), v156DestTotal), 250.0f);
                                             ladderClaimR2("V156 JOIN-GROUP", 250.0f, 0.0f, false);
-                                            logger.warn("V156 JOIN-GROUP: {} (ability {}) solo at {} — R2 claim to join {} ({} friendlies)",
+                                            logger.warn("V156 JOIN-GROUP: {} (ability {}) solo at {} — R2 claim to join {} (stack ability {})",
                                                 cardToMove.getTitle(), (int) totalAbilityHere, currentLocation.getTitle(),
-                                                v156BestStackLoc.getTitle(), v156BestStackSize);
+                                                v156JoinLoc.getTitle(), (int) v156DestTotal);
                                         }
                                     }
                                 } catch (Exception e) {
