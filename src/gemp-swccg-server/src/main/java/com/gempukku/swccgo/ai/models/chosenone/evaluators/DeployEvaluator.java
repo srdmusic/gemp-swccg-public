@@ -1851,19 +1851,23 @@ public class DeployEvaluator extends ActionEvaluator {
                                     boolean v193AlreadyControls =
                                         com.gempukku.swccgo.cards.GameConditions.controls(
                                             game, playerId, v136Candidate);
+                                    // The flip-gate CARD (whose deploy needs this control) comes from
+                                    // the objective logic too — no card name hardcoded here, so this
+                                    // steer generalizes to any occupation objective the analyzer flags.
+                                    String v193GateCard = v136Obj.getFlipCriticalControlCard();
                                     com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle v193Oracle =
                                         context.getDeckOracle();
-                                    boolean v193HoldsEstablish = v193Oracle != null
-                                        && (v193Oracle.isCardInHand("establish secret base")
-                                            || v193Oracle.isCardInReserve("establish secret base"));
-                                    if (!v193AlreadyControls && v193HoldsEstablish) {
+                                    boolean v193HoldsGateCard = v193GateCard != null && v193Oracle != null
+                                        && (v193Oracle.isCardInHand(v193GateCard)
+                                            || v193Oracle.isCardInReserve(v193GateCard));
+                                    if (!v193AlreadyControls && v193HoldsGateCard) {
                                         action.addReasoning(
-                                            "V193 BUNKER CONTROL: steer one body to '"
+                                            "V193 FLIP-GATE CONTROL: steer one body to '"
                                                 + v136Candidate.getTitle()
-                                                + "' to enable Establish Secret Base flip (Endor Operations)",
+                                                + "' to enable '" + v193GateCard + "' (objective flip gate)",
                                             400.0f);
-                                        LOG.warn("V193 BUNKER CONTROL [{}]: {} → {} +400 (seize flip-gate site)",
-                                            playerId, card.getTitle(), v136Candidate.getTitle());
+                                        LOG.warn("V193 FLIP-GATE CONTROL [{}]: {} → {} +400 (seize flip-gate, card={})",
+                                            playerId, card.getTitle(), v136Candidate.getTitle(), v193GateCard);
                                     }
                                 }
                             }

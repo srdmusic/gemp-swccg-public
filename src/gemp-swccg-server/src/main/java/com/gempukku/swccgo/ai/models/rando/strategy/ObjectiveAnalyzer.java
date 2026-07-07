@@ -63,6 +63,10 @@ public class ObjectiveAnalyzer {
     // (parseFlipCondition) names that gate site so DeployEvaluator can steer one body there.
     // null for every objective without an explicit flip-gate control site.
     private String flipCriticalControlSite = null;
+    // The card whose deploy REQUIRES controlling flipCriticalControlSite (e.g. Establish
+    // Secret Base needs Endor: Bunker). Kept HERE (objective logic) so DeployEvaluator's
+    // flip-gate steer is fully general — no card names hardcoded in the deploy scorer.
+    private String flipCriticalControlCard = null;
     private String objectiveTitle = null;
     private String objectiveBlueprintId = null;
     // V29 UPDATED 2026-07-06: keep the raw objective game text so evaluators can check clauses
@@ -221,6 +225,7 @@ public class ObjectiveAnalyzer {
     // V193 (Steve, 2026-07-07): the site Rando must CONTROL to enable an objective flip
     // (e.g. Endor: Bunker for Establish Secret Base (V)). null when the objective has none.
     public String getFlipCriticalControlSite() { return flipCriticalControlSite; }
+    public String getFlipCriticalControlCard() { return flipCriticalControlCard; }
     public Set<String> getRequiredCardsOnTable() { return Collections.unmodifiableSet(requiredCardsOnTable); }
     public Set<String> getPullableCards() { return Collections.unmodifiableSet(pullableCards); }
     public boolean requiresOccupy() { return requiresOccupy; }
@@ -427,6 +432,7 @@ public class ObjectiveAnalyzer {
         flipConditionText = null;
         // V193 (Steve, 2026-07-07): clear the flip-gate control site with the rest.
         flipCriticalControlSite = null;
+        flipCriticalControlCard = null;
         objectiveTitle = null;
         objectiveBlueprintId = null;
         // V29 UPDATED 2026-07-06: clear stored game text with the rest of the analysis
@@ -505,6 +511,7 @@ public class ObjectiveAnalyzer {
         flipBackRequiresControl = false;
         // V193 (Steve, 2026-07-07): reset the flip-gate control site before re-parsing.
         flipCriticalControlSite = null;
+        flipCriticalControlCard = null;
 
         parseFlipCondition(gameText);
         parsePullableCards(gameText);
@@ -688,9 +695,11 @@ public class ObjectiveAnalyzer {
             requiredCardsOnTable.clear();
             requiredCardsOnTable.add("ominous rumors");
             requiredCardsOnTable.add("establish secret base");
-            // (c) expose the flip-gate control site consumed by DeployEvaluator V193 (BUNKER CONTROL).
+            // (c) expose the flip-gate: the control SITE and the CARD whose deploy needs it.
+            //     Both live here (objective logic) so DeployEvaluator's V193 steer is general.
             flipCriticalControlSite = "endor: bunker";
-            LOG.warn("🎯 [ObjectiveAnalyzer] V193: Endor Operations detected — Endor sites objective-relevant, required=[ominous rumors, establish secret base], flip-gate control site = Endor: Bunker.");
+            flipCriticalControlCard = "establish secret base";
+            LOG.warn("🎯 [ObjectiveAnalyzer] V193: Endor Operations detected — Endor sites objective-relevant, required=[ominous rumors, establish secret base], flip-gate: control 'Endor: Bunker' to deploy 'Establish Secret Base'.");
         }
 
         if (!requiresOccupy && !requiresControl && !isISBOperations && !isHuntDownV) {
