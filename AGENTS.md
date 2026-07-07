@@ -29,10 +29,11 @@ Claude's `~/.claude/.../memory/MEMORY.md` (an earlier version of this file point
 fabricated `~/.Codex/...` path that does not exist — ignore any such path). Everything you
 need is in the repo. Read these in order before touching anything:
 
-1. **`Handoffs/K2_CODEX_HANDOFF_2026-07-07_audit-solo-pull.md`** — THE current entry point,
-   written for you. It inlines the non-negotiable standing rules, the exact build/deploy/verify
-   commands, the current state (HEAD, what shipped, what's pending), and Codex-specific notes.
-   This is what to actually do.
+1. **`Handoffs/K2_HANDOFF_2026-07-07_endor-fixes-and-bridge.md`** — THE current entry point
+   (evening 2026-07-07): current state/HEAD, what shipped, the queue, the AI-to-AI bridge, standing
+   rules, build/deploy + the server-recovery gotcha. This is what to actually do. (The earlier
+   `Handoffs/K2_CODEX_HANDOFF_2026-07-07_audit-solo-pull.md` still has the 2-day reorg-audit detail
+   and the fully-inlined Codex rules/commands — read it for depth.)
 2. **`resources/BUILD_AND_DEPLOY.md`** — deploy mechanics + the 4 verify gates (compiles ≠ in
    jar ≠ loaded ≠ fired). Read before any edit or deploy.
 3. **`resources/AI_CHANGELOG.md`** — the live changelog: every divergence from devs' code, with
@@ -62,6 +63,16 @@ When you add a scoring rule to Rando, **OLD RULES DO NOT GO MISSING — THEY GET
 A local AI council of open-source LLMs runs on Steve's Mac. Go direct to Ollama at `http://127.0.0.1:11434/api/generate` (the FastAPI bridge on `:8000` has been down; the working deepseek tag is `deepseek-r1:70b-llama-distill-q8_0`, ~4 min/call). Use for second opinions on score magnitudes. Full playbook: `/Users/steve/Documents/Claude/Projects/LOCAL LLM MASTER AGENT/K2_ORCHESTRATOR_HANDOFF.md`.
 
 The council hallucinates Decipher card text. Verify every card-specific claim against the actual code or `mcp-gemp-client/card_cache.json` before acting on it.
+
+## AI-to-AI coordination
+
+There is no assumed direct live channel between Claude Code K-2 and Codex Alfred. When Steve asks one agent to coordinate with the other, use the repo mailbox:
+
+- Read `Handoffs/AI_PROTOCOL.md`.
+- Append messages to `Handoffs/AI_MAILBOX.md`.
+- Include evidence: commit hashes, log line numbers, replay ids, file paths, and exact V-tags.
+- Do not overwrite older mailbox entries. Append a `RESOLVED` entry when a thread closes.
+- Alfred also has a narrow Claude Bridge MCP registered in Codex config: `tools/claude-bridge-mcp/claude_bridge_mcp.py`. It exposes `claude_status`, `claude`, and `claude_reply`. The shell Claude CLI must be authenticated with `claude auth login` before it can actually call K-2/Claude.
 
 ---
 
