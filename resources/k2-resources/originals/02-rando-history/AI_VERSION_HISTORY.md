@@ -3301,6 +3301,12 @@ Total tags catalogued: 179
     Status: UNCOMMITTED in the working tree, live in the jar. PENDING live Verge game
     (4->6 turn 1, 6->7 turn 2, then orbit Scarif).
 
+  ════ V177/V82.1 PARSER FIX (2026-07-07): objective pull-targets anchored on the pull verb ════
+parseSourceCardPullTargets now captures the object AFTER the last pull-verb before 'from
+Reserve Deck' (not the whole clause). Fixes Endor Operations (leaked 'while this side up' →
+V177 false-DEAD block) and the recurring 'Rando won't pull with his objective' class.
+Regression-tested vs Invasion/capital-ship/battleground cases. Both bots. See AI_CHANGELOG.md.
+
   ════ V156 STACK-MATH refit (2026-07-07): JOIN-GROUP by ability-total, not headcount ════
 Shared MovePredicates.siteAbilityTotal/isDefensibleStack/bestJoinDestination (site total
 friendly ability >= 4 = destiny-capable). Weak solos join the site that REACHES ability 4,

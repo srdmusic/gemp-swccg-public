@@ -1160,8 +1160,16 @@ public class DeckOracle {
             java.util.regex.Pattern.compile(
                 "\\[upload\\]\\s+([^.;]+?)(?=\\.|;|$)",
                 java.util.regex.Pattern.CASE_INSENSITIVE),
+            // ANCHORED (2026-07-07, Steve — Endor Operations garbage-parse fix):
+            // capture only the object AFTER the LAST pull-verb before "from Reserve
+            // Deck", not the whole clause back to the previous period. The greedy
+            // [^.;]* stays within the sentence and consumes up to the last verb, so
+            // "deploy phase may deploy a Naboo site" still yields "naboo site" (last
+            // "deploy"), while "While this side up, once during each of your control
+            // phases, may take one Ominous Rumors or Establish Secret Base into hand"
+            // no longer leaks the timing clauses ("while this side up", "phases").
             java.util.regex.Pattern.compile(
-                "([^.;]+?)\\s+from\\s+reserve\\s+deck",
+                "[^.;]*\\b(?:take|deploy|download|upload|reveal|retrieve|use|search\\s+for|add|put|choose)\\b\\s+([^.;]*?)\\s+from\\s+reserve\\s+deck",
                 java.util.regex.Pattern.CASE_INSENSITIVE),
         };
 
@@ -1192,6 +1200,8 @@ public class DeckOracle {
                         t = t.replaceFirst("^once\\s+(per|during|each)\\b[^,]*\\b(turn|phase|game|deployment|battle|move|draw|control|activate|deploy)\\b\\s*", "");
                         t = t.replaceFirst("^(may|can|must|will)\\s+", "");
                         t = t.replaceFirst("^(deploy|take|download|reveal|use|put|place|move|search\\s+for)\\s+", "");
+                        // Quantifier strip (2026-07-07): "take ONE Ominous Rumors" → "ominous rumors".
+                        t = t.replaceFirst("^(one|two|three|four|up\\s+to\\s+\\w+)\\s+", "");
                         t = t.replaceFirst("^(a|an|the)\\s+", "");
                         t = t.replaceFirst("^to\\s+", "");
                     } while (!t.equals(prev));
@@ -1213,6 +1223,8 @@ public class DeckOracle {
                         prev2 = t;
                         t = t.replaceFirst("^(may|can|must|will)\\s+", "");
                         t = t.replaceFirst("^(deploy|take|download|reveal|use|put|place|move|search\\s+for)\\s+", "");
+                        // Quantifier strip (2026-07-07): "take ONE Ominous Rumors" → "ominous rumors".
+                        t = t.replaceFirst("^(one|two|three|four|up\\s+to\\s+\\w+)\\s+", "");
                         t = t.replaceFirst("^(a|an|the)\\s+", "");
                         t = t.replaceFirst("^to\\s+", "");
                     } while (!t.equals(prev2));
