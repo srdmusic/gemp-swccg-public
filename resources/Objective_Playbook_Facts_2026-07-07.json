@@ -1,0 +1,951 @@
+{
+  "schemaVersion": "objective-playbook-facts-v0.1",
+  "generatedAt": "2026-07-07",
+  "generatedBy": "Codex Alfred",
+  "batchStatus": {
+    "status": "partial",
+    "frontBpsIncluded": [
+      "12_179",
+      "8_167"
+    ],
+    "frontBpsRemaining": 56,
+    "notes": [
+      "This first batch is for K-2 pilot implementation only: My Lord and Endor Operations.",
+      "No Java files under ai/models/rando or ai/models/chosenone were edited.",
+      "Runtime Filter strings are the implementation truth. Candidate counts and samples are snapshots for verification only."
+    ]
+  },
+  "globalRules": [
+    "Back-side objective id is <front>_BACK, never front+1.",
+    "Systems and named locations can have per-side ids. Carry side on card references.",
+    "Card*.java setGameText wins over card_blueprint_database.json when they disagree.",
+    "ObjectiveHandler.java is dead/stale and is not a source for these facts.",
+    "Candidate id lists are DB/source snapshots only. Runtime should use filter recipes and DeckOracle availability.",
+    "Weights reuse existing V-tag magnitudes only. This file does not invent balance numbers."
+  ],
+  "entries": [
+    {
+      "frontBp": "12_179",
+      "backBp": "12_179_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "My Lord, Is That Legal?",
+      "objectiveTitleBack": "I Will Make It Legal",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "12_179",
+          "12_179_BACK"
+        ],
+        "titleFragments": [
+          "my lord, is that legal?",
+          "i will make it legal"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Galactic Senate",
+          "blueprintIds": [
+            "12_167",
+            "12_75"
+          ],
+          "titleFragments": [
+            "coruscant: galactic senate",
+            "galactic senate"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_167",
+            "12_75"
+          ],
+          "notes": "Objective deploys from the dark player's Reserve, so 12_167 is the practical setup target. Filter title matches both sides."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Counter Assault",
+          "blueprintIds": [
+            "1_238"
+          ],
+          "titleFragments": [
+            "counter assault"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Counter_Assault",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_238"
+          ],
+          "notes": "Canceled by objective, not pulled."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Surprise Assault",
+          "blueprintIds": [
+            "1_113"
+          ],
+          "titleFragments": [
+            "surprise assault"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Surprise_Assault",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_113"
+          ],
+          "notes": "Canceled by objective, not pulled."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Goo Nee Tay",
+          "blueprintIds": [
+            "7_62"
+          ],
+          "titleFragments": [
+            "goo nee tay"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Goo_Nee_Tay",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_62"
+          ],
+          "notes": "Objective gives Republic characters immunity to this deploy-cost modifier."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Political Effect",
+          "blueprintIds": [
+            "12_127",
+            "12_137",
+            "12_138",
+            "12_142",
+            "12_40",
+            "12_43",
+            "12_45",
+            "12_48",
+            "204_16"
+          ],
+          "titleFragments": [
+            "political effect"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Political_Effect",
+          "candidateSource": "DB_PLUS_SOURCE_SUPPLEMENT",
+          "resolvedCount": 9,
+          "resolvedSample": [
+            "12_127",
+            "12_137",
+            "12_138",
+            "12_142",
+            "12_40"
+          ],
+          "notes": "This is a card subtype requirement, not a literal title. It is represented here as a NamedCardRef-like broad card requirement because the current schema has no EffectRequirement type."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Galactic Senate",
+          "text": "Deploy Galactic Senate",
+          "planetOrSystemGroup": "CORUSCANT",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "EPISODE_I"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_167",
+            "12_75"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Any other Episode I location",
+          "text": "any other [Episode I] location",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "EPISODE_I"
+          ],
+          "exceptions": [
+            {
+              "runtimeFilter": "Filters.not(Filters.Galactic_Senate)",
+              "text": "not Galactic Senate"
+            }
+          ],
+          "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))",
+          "candidateSource": "DB",
+          "resolvedCount": 34,
+          "resolvedSample": [
+            "11_92",
+            "11_93",
+            "11_94",
+            "12_164",
+            "12_165",
+            "12_166",
+            "12_168",
+            "12_169"
+          ],
+          "notes": "Snapshot counts dark-side Episode I locations from the fresh export, excluding Galactic Senate. Runtime deploy is from the dark player's Reserve."
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Senator",
+          "text": "3 senators at Galactic Senate",
+          "runtimeFilter": "Filters.senator",
+          "keyword": "SENATOR",
+          "matchSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 28,
+          "resolvedSample": [
+            "12_105",
+            "12_110",
+            "12_113",
+            "12_116",
+            "12_122",
+            "12_123",
+            "12_126",
+            "12_97",
+            "12_98",
+            "217_18"
+          ],
+          "notes": "Rules truth is Filters.senator = Keyword.SENATOR. Some existing Rando guards intentionally widen to lore contains 'senator' for historical coverage."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Blockade agenda senator",
+          "text": "2 senators, at least 1 with a blockade agenda",
+          "runtimeFilter": "Filters.and(Filters.senator, Filters.blockade_agenda)",
+          "keyword": "SENATOR",
+          "matchSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "12_110",
+            "12_97",
+            "12_98"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Ambition agenda senator",
+          "text": "senator has an ambition agenda",
+          "runtimeFilter": "Filters.and(Filters.senator, Filters.ambition_agenda)",
+          "keyword": "SENATOR",
+          "matchSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 8,
+          "resolvedSample": [
+            "12_105",
+            "12_110",
+            "12_116",
+            "12_123",
+            "12_97",
+            "217_18",
+            "12_28",
+            "12_29"
+          ],
+          "notes": "Back-side destiny modifier uses ambition agenda for +3 instead of +2."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Low-ability Rebel or Imperial leader",
+          "text": "Rebel and Imperial leaders of ability < 4 are politics +2",
+          "runtimeFilter": "Filters.and(Filters.or(Filters.Rebel, Filters.Imperial), Filters.leader, Filters.abilityLessThan(4))",
+          "icon": [
+            "REBEL",
+            "IMPERIAL"
+          ],
+          "keyword": "LEADER",
+          "abilityConstraint": "< 4",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Modifier support fact, not a flip gate."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Republic character",
+          "text": "Your Republic characters are immune to Goo Nee Tay",
+          "runtimeFilter": "Filters.Republic_character",
+          "icon": "REPUBLIC",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Support fact, not a pull or flip gate."
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Galactic_Senate",
+            "label": "Galactic Senate"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card12_179.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Galactic_Senate)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))",
+            "label": "Any other Episode I location"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card12_179.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate)))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "take",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Political_Effect",
+            "label": "Political Effect"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card12_179_BACK.java getGameTextTopLevelActions TakeCardIntoHandFromReserveDeckEffect(Filters.Political_Effect)"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT",
+        "count": 3,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "label": "Galactic Senate"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.senator",
+          "label": "Senator"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [
+          {
+            "relation": "PRESENT",
+            "count": 2,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.Galactic_Senate",
+              "label": "Galactic Senate"
+            },
+            "byWhom": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.senator",
+              "label": "Senator"
+            },
+            "additionalRequirement": {
+              "relation": "PRESENT",
+              "count": 1,
+              "target": {
+                "kind": "CharacterRequirement",
+                "runtimeFilter": "Filters.blockade_agenda",
+                "label": "Blockade agenda"
+              }
+            }
+          }
+        ],
+        "sourceEvidence": "Card12_179.java filters active your senators at Galactic Senate; flip if size >=3 OR size >=2 and one Filters.blockade_agenda"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "label": "Galactic Senate"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.senator",
+          "label": "Senator"
+        },
+        "sourceEvidence": "Card12_179_BACK.java flips if !canSpot(2, your senator at Galactic Senate)"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [
+          {
+            "vtag": "V83",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 356,
+            "whatItDoes": "My Lord senator deploy to explicit non-Senate target gets -2000."
+          },
+          {
+            "vtag": "V110",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 377,
+            "whatItDoes": "Hold non-senator deploys at -2000 while no non-Senate site exists."
+          },
+          {
+            "vtag": "V108",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 399,
+            "whatItDoes": "Deploying a senator under My Lord gets +500."
+          },
+          {
+            "vtag": "V88",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 445,
+            "whatItDoes": "Senator deploy action explicitly targeting Galactic Senate gets +1500."
+          },
+          {
+            "vtag": "V99",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 455,
+            "whatItDoes": "Ungated Senate guard: non-senator to Galactic Senate gets -1500 unless defensive reinforcement is needed."
+          },
+          {
+            "vtag": "V88-CS",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "line": 1668,
+            "whatItDoes": "CardSelection destination variant: senator to Galactic Senate +1500, senator to non-Senate -2000."
+          },
+          {
+            "vtag": "V99-CS",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "line": 1817,
+            "whatItDoes": "CardSelection destination variant of ungated non-senator Galactic Senate guard."
+          },
+          {
+            "vtag": "V109",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "line": 3890,
+            "whatItDoes": "Protect senators from Force loss/cost/forfeit choices at -300."
+          }
+        ],
+        "newVsExisting": "Existing code already handles many My Lord deploy and selection scores. Full playbook adds typed setup facts, exact flip/flip-back facts, Political Effect post-flip upload, and one owner-visible objective profile so K-2 can consolidate without duplicating V83/V88/V99/V108/V109/V110."
+      },
+      "weights": [
+        {
+          "situation": "Senator deploy action explicitly targets non-Galactic Senate location",
+          "score": -2000,
+          "sourceVtag": "V83"
+        },
+        {
+          "situation": "Non-senator deploy should wait because only Galactic Senate/no non-Senate site is available",
+          "score": -2000,
+          "sourceVtag": "V110"
+        },
+        {
+          "situation": "Deploying senator under My Lord",
+          "score": 500,
+          "sourceVtag": "V108"
+        },
+        {
+          "situation": "Senator deploy action or destination targets Galactic Senate",
+          "score": 1500,
+          "sourceVtag": "V88"
+        },
+        {
+          "situation": "Senator destination is not Galactic Senate in CardSelection",
+          "score": -2000,
+          "sourceVtag": "V88-CS"
+        },
+        {
+          "situation": "Non-senator destination is Galactic Senate and not needed for defense",
+          "score": -1500,
+          "sourceVtag": "V99"
+        },
+        {
+          "situation": "Senator selected for Force loss, cost, or forfeit under My Lord",
+          "score": -300,
+          "sourceVtag": "V109"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "verifiedFromSource": [
+          "front+back setGameText read",
+          "Card12_179.java filters read",
+          "Card12_179_BACK.java filters read",
+          "Filters.java definitions checked for Galactic_Senate, senator, blockade_agenda, ambition_agenda, Political_Effect",
+          "ids confirmed from fresh card export and checked-in DB where available",
+          "existing Rando V-tags mapped from current rando files"
+        ],
+        "forK2ToCheck": [
+          "Political Effect is a card subtype requirement represented as a NamedCardRef-like broad requirement because the schema has no EffectRequirement type.",
+          "Candidate senator count uses source keyword scan restricted to CHARACTER cards. Existing Rando V99/V108/V109/V110 intentionally widen senator detection to lore contains 'senator'.",
+          "Do not gate V99 under isMyLord. Current code explicitly keeps V99 ungated because it keys on Galactic Senate being on table."
+        ]
+      }
+    },
+    {
+      "frontBp": "8_167",
+      "backBp": "8_167_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Endor Operations",
+      "objectiveTitleBack": "Imperial Outpost",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "8_167",
+          "8_167_BACK"
+        ],
+        "titleFragments": [
+          "endor operations",
+          "imperial outpost"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Endor system",
+          "blueprintIds": [
+            "8_157",
+            "8_68",
+            "204_24"
+          ],
+          "titleFragments": [
+            "endor"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Endor_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_157",
+            "8_68",
+            "204_24"
+          ],
+          "notes": "Objective deploys from the dark player's Reserve, so 8_157 is the practical setup target. Filter title matches all Endor systems."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Bunker",
+          "blueprintIds": [
+            "8_160",
+            "8_70",
+            "204_25"
+          ],
+          "titleFragments": [
+            "endor: bunker",
+            "bunker"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Bunker",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_160",
+            "8_70",
+            "204_25"
+          ],
+          "notes": "V193 flip-gate scoring cares about controlling Endor: Bunker to enable Establish Secret Base (V)."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Landing Platform",
+          "blueprintIds": [
+            "8_166",
+            "8_76"
+          ],
+          "titleFragments": [
+            "endor: landing platform",
+            "landing platform"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Landing_Platform",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "8_166",
+            "8_76"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Ominous Rumors",
+          "blueprintIds": [
+            "8_127",
+            "223_19",
+            "601_261"
+          ],
+          "titleFragments": [
+            "ominous rumors"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Ominous_Rumors",
+          "candidateSource": "DB_PLUS_SOURCE_SUPPLEMENT",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_127",
+            "223_19",
+            "601_261"
+          ],
+          "notes": "Checked-in DB lacks some set601/Legacy rows; fresh export/source supplement includes 601_261."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Establish Secret Base",
+          "blueprintIds": [
+            "8_124",
+            "207_25",
+            "601_260"
+          ],
+          "titleFragments": [
+            "establish secret base"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Establish_Secret_Base",
+          "candidateSource": "DB_PLUS_SOURCE_SUPPLEMENT",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_124",
+            "207_25",
+            "601_260"
+          ],
+          "notes": "V193 diagnosed deck used Establish Secret Base (V) 207_25, which deploys on Bunker if you control it. Objective flip only requires an Establish Secret Base on table."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Endor system",
+          "text": "Deploy Endor system",
+          "planetOrSystemGroup": "ENDOR",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Endor_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_157",
+            "8_68",
+            "204_24"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Endor site",
+          "text": "at each Endor site where you have a biker scout or a piloted AT-ST",
+          "planetOrSystemGroup": "ENDOR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Endor_site",
+          "candidateSource": "DB",
+          "resolvedCount": 9,
+          "resolvedSample": [
+            "8_158",
+            "8_159",
+            "8_160",
+            "8_161",
+            "8_162",
+            "8_163",
+            "8_164",
+            "8_165",
+            "8_166"
+          ],
+          "notes": "Dark-side fresh export snapshot, excluding Endor system."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Endor location",
+          "text": "Place out of play if an Endor location is blown away",
+          "planetOrSystemGroup": "ENDOR",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Endor_location",
+          "candidateSource": "DB",
+          "resolvedCount": 10,
+          "resolvedSample": [
+            "8_157",
+            "8_158",
+            "8_159",
+            "8_160",
+            "8_161",
+            "8_162",
+            "8_163",
+            "8_164",
+            "8_165",
+            "8_166"
+          ],
+          "notes": "Dark-side fresh export snapshot, system plus sites."
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Biker scout",
+          "text": "biker scout",
+          "runtimeFilter": "Filters.biker_scout",
+          "keyword": "BIKER_SCOUT",
+          "matchSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 11,
+          "resolvedSample": [
+            "8_92",
+            "8_95",
+            "8_97",
+            "8_98",
+            "8_99",
+            "8_111",
+            "8_112",
+            "8_113",
+            "221_14",
+            "221_16",
+            "223_15"
+          ],
+          "notes": "Back-side drain protection and draw-phase retrieve target."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Piloted AT-ST",
+          "text": "piloted AT-ST",
+          "runtimeFilter": "Filters.and(Filters.piloted, Filters.AT_ST)",
+          "matchSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 12,
+          "resolvedSample": [
+            "3_156",
+            "8_171",
+            "8_172",
+            "8_173",
+            "8_174",
+            "8_175",
+            "8_176",
+            "8_177",
+            "200_140",
+            "202_15",
+            "601_214",
+            "8_81"
+          ],
+          "notes": "This is a vehicle/model requirement, not a character. It is included under characters only because the current schema has no VehicleRequirement type."
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Endor_system",
+            "label": "Endor system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card8_167.java DeployCardFromReserveDeckEffect(Filters.Endor_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Bunker",
+            "label": "Bunker"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card8_167.java DeployCardFromReserveDeckEffect(Filters.Bunker)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Landing_Platform",
+            "label": "Landing Platform"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card8_167.java DeployCardFromReserveDeckEffect(Filters.Landing_Platform)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "take",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.or(Filters.Ominous_Rumors, Filters.Establish_Secret_Base)",
+            "label": "Ominous Rumors or Establish Secret Base"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "phaseDetail": "CONTROL",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card8_167.java TakeCardIntoHandFromReserveDeckEffect(Filters.or(Filters.Ominous_Rumors, Filters.Establish_Secret_Base))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "retrieve",
+          "sourceZone": "LOST",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.biker_scout",
+            "label": "Biker scout"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "phaseDetail": "DRAW",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card8_167_BACK.java RetrieveCardEffect(Filters.biker_scout)"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "ON_TABLE",
+        "count": 2,
+        "target": {
+          "kind": "NamedCardRefSet",
+          "runtimeFilter": "Filters.Ominous_Rumors AND Filters.Establish_Secret_Base",
+          "labels": [
+            "Ominous Rumors",
+            "Establish Secret Base"
+          ]
+        },
+        "byWhom": null,
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card8_167.java flips if canSpot Ominous_Rumors and canSpot Establish_Secret_Base"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "ON_TABLE",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "NamedCardRefSet",
+          "runtimeFilter": "Filters.Ominous_Rumors AND Filters.Establish_Secret_Base",
+          "labels": [
+            "Ominous Rumors",
+            "Establish Secret Base"
+          ]
+        },
+        "sourceEvidence": "Card8_167_BACK.java flips if !canSpot Ominous_Rumors OR !canSpot Establish_Secret_Base"
+      },
+      "hardLose": {
+        "condition": "BLOWN_AWAY",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Endor_location",
+          "label": "Endor location"
+        },
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "sourceEvidence": "Card8_167.java and Card8_167_BACK.java PlaceCardOutOfPlayFromTableEffect if TriggerConditions.isBlownAwayLastStep(Filters.Endor_location)"
+      },
+      "randoMapping": {
+        "existingVtags": [
+          {
+            "vtag": "V177",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/DeckOracle.java",
+            "line": 1163,
+            "whatItDoes": "Parser fix anchors objective pull targets after the pull verb, preserving Endor's Ominous Rumors / Establish Secret Base target list."
+          },
+          {
+            "vtag": "V177",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/ActionTextEvaluator.java",
+            "line": 267,
+            "whatItDoes": "Dead-search guard blocks Reserve searches only when parsed targets are actually absent and not parse junk."
+          },
+          {
+            "vtag": "V193",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 932,
+            "whatItDoes": "Endor Operations title-keyed playbook marks Endor relevant, required cards Ominous Rumors plus Establish Secret Base, flip-critical site Endor: Bunker, flip-critical card Establish Secret Base."
+          },
+          {
+            "vtag": "V193",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/DeployEvaluator.java",
+            "line": 1900,
+            "whatItDoes": "Adds +400 once to steer one body to the flip-critical control site while Establish Secret Base is in hand/reserve and Bunker is not controlled."
+          }
+        ],
+        "newVsExisting": "Existing code handles pull parsing and the Bunker control deploy steer. Full playbook adds typed setup facts, exact pull-chain objects, explicit flip/flip-back facts, back-side biker scout/AT-ST protection facts, and hardLose for Endor location blown away."
+      },
+      "weights": [
+        {
+          "situation": "Deploy one body to Endor: Bunker while it is the flip-critical control site, not already controlled, and Establish Secret Base is in hand/reserve",
+          "score": 400,
+          "sourceVtag": "V193"
+        },
+        {
+          "situation": "Pre-flip objective-relevant location generic bonus",
+          "score": 150,
+          "sourceVtag": "ObjectiveAnalyzer.getLocationObjectiveBonus"
+        },
+        {
+          "situation": "Post-flip flip-back protection location generic bonus",
+          "score": 200,
+          "sourceVtag": "V22.2 ObjectiveAnalyzer.getLocationObjectiveBonus"
+        },
+        {
+          "situation": "Dead Reserve search where none of parsed targets remain and parse is trusted",
+          "score": -2000,
+          "sourceVtag": "V177"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "verifiedFromSource": [
+          "front+back setGameText read",
+          "Card8_167.java filters read",
+          "Card8_167_BACK.java filters read",
+          "Filters.java definitions checked for Endor_system, Endor_site, Endor_location, Bunker, Landing_Platform, Ominous_Rumors, Establish_Secret_Base, biker_scout, AT_ST",
+          "ids confirmed from fresh export and checked-in DB where available",
+          "existing Rando V-tags mapped from current rando files"
+        ],
+        "forK2ToCheck": [
+          "V193 was diagnosed specifically with Establish Secret Base (V) 207_25. The objective itself accepts any Establish Secret Base on table, so verify base, V, and Legacy deploy constraints before making one universal flip-gate score.",
+          "Piloted AT-ST is a vehicle/model requirement represented under characters because the schema has no VehicleRequirement type.",
+          "No existing Rando logic was found for back-side biker scout retrieve or Endor-site drain protection with biker scout/piloted AT-ST. Add only after boundary math.",
+          "Endor system/site/location candidate snapshots are dark-side DB/fresh-export samples. Runtime must use Filters.Endor_*."
+        ]
+      }
+    }
+  ]
+}
