@@ -248,9 +248,21 @@ public class DeployEvaluator extends ActionEvaluator {
                     if (pTitle.contains("death star")
                             && pCard.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
                         v79DeathStar = pCard;
-                        PhysicalCard dsLoc = pCard.getAtLocation();
-                        if (dsLoc != null && dsLoc.getTitle() != null
-                                && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) {
+                        // V79 UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681):
+                        // getAtLocation() is ALWAYS null for the Death Star mobile-system LOCATION
+                        // card, so this 1-Force move reserve fired EVERY turn forever — including
+                        // while the DS was parked in Scarif orbit — and at 06:02 suppressed a real
+                        // Mara Jade With Lightsaber deploy (cost 5, leaves 0) to hoard Force for a
+                        // move the MoveEvaluator now vetoes post-flip (V79b FLIP-BACK GUARD). Use
+                        // the engine's orbit primitive getSystemOrbited() (same check as the flip
+                        // condition, Filters.isOrbiting(Title.Scarif), Card216_011:122).
+                        // PhysicalCard dsLoc = pCard.getAtLocation();
+                        // if (dsLoc != null && dsLoc.getTitle() != null
+                        //         && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) {
+                        //     v79DeathStarAtScarif = true;
+                        // }
+                        String dsOrbited = pCard.getSystemOrbited();
+                        if (dsOrbited != null && dsOrbited.toLowerCase(Locale.ROOT).contains("scarif")) {
                             v79DeathStarAtScarif = true;
                         }
                     }

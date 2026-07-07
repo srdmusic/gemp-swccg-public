@@ -213,13 +213,24 @@ public final class ForceReserveService {
                     }
                     // V79: detect our Death Star LOCATION (title only — the (V)
                     // marker is Rarity, not title) and whether it orbits Scarif.
+                    // V79 UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681):
+                    // getAtLocation() is ALWAYS null for a mobile-system LOCATION card, so
+                    // deathStarAtScarif stayed false forever and the draw-phase 1-Force reserve
+                    // (DrawEvaluator V79, both bots) fired every turn even with the DS parked in
+                    // Scarif orbit. Use the engine's orbit primitive getSystemOrbited() (same
+                    // check as the flip condition, Filters.isOrbiting(Title.Scarif)).
                     if (titleLower.contains("death star") && bp != null
                             && bp.getCardCategory() == CardCategory.LOCATION) {
                         deathStarFound = true;
                         try {
-                            PhysicalCard dsLoc = pc.getAtLocation();
-                            if (dsLoc != null && dsLoc.getTitle() != null
-                                    && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) {
+                            // PhysicalCard dsLoc = pc.getAtLocation();
+                            // if (dsLoc != null && dsLoc.getTitle() != null
+                            //         && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) {
+                            //     deathStarAtScarif = true;
+                            // }
+                            String dsOrbited = pc.getSystemOrbited();
+                            if (dsOrbited != null
+                                    && dsOrbited.toLowerCase(Locale.ROOT).contains("scarif")) {
                                 deathStarAtScarif = true;
                             }
                         } catch (Exception ignore) { /* ignore */ }

@@ -5787,6 +5787,62 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             } catch (Exception e) { logger.debug("V169 retreat-mode error: {}", e.getMessage()); }
         }
 
+        // === V156 JOIN-GROUP MODE (2026-07-07, destination arm; Fel-at-Beach loss, audit deploy-siting-2) ===
+        // Mirror of the rando block (see rando/evaluators/CardSelectionEvaluator.java for the
+        // full rationale). Weak (ability<4) SOLO mover at an uncontested site → this decision
+        // is a JOIN: friendly-stack destinations get the bonus below and V41 WRONG DIRECTION
+        // is gated off for them. Exempt: undercover spies + a solo doing READY objective work
+        // at a flip-relevant site (shared CharacterDeploySiteEvaluator.isV156FlipNotReady).
+        boolean v156JoinMode = false;
+        String v156FromTitle = null;
+        if (game != null && gameState != null && playerId != null) {
+            try {
+                String v156MoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
+                if (v156MoverBp != null) {
+                    for (PhysicalCard v156Pc : gameState.getAllPermanentCards()) {
+                        if (v156Pc == null || !playerId.equals(v156Pc.getOwner())) continue;
+                        if (!v156MoverBp.equals(v156Pc.getBlueprintId(true))) continue;
+                        if (v156Pc.getBlueprint() == null
+                            || v156Pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) break;
+                        if (v156Pc.isUndercover()) break;  // V170 parked spies sit
+                        Float v156Ab = v156Pc.getBlueprint().hasAbilityAttribute()
+                            ? v156Pc.getBlueprint().getAbility() : null;
+                        if (v156Ab == null || v156Ab >= 4f) break;  // weak band only
+                        PhysicalCard v156Loc = v156Pc.getAtLocation();
+                        if (v156Loc == null) break;
+                        boolean v156Alone = true;
+                        for (PhysicalCard c : gameState.getCardsAtLocation(v156Loc)) {
+                            if (c == null || c == v156Pc || !playerId.equals(c.getOwner())) continue;
+                            if (c.getBlueprint() == null) continue;
+                            if (c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                v156Alone = false;
+                                break;
+                            }
+                        }
+                        float v156OppPowerHere = game.getModifiersQuerying().getTotalPowerAtLocation(
+                            gameState, v156Loc, gameState.getOpponent(playerId), false, false);
+                        boolean v156AtReadyFlipSite = false;
+                        try {
+                            com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v156Oa =
+                                context.getObjectiveAnalyzer();
+                            v156AtReadyFlipSite = v156Oa != null && v156Oa.isAnalyzed()
+                                && v156Loc.getTitle() != null
+                                && v156Oa.isObjectiveRelevantLocation(v156Loc.getTitle())
+                                && !com.gempukku.swccgo.ai.models.common.strategy.CharacterDeploySiteEvaluator
+                                    .isV156FlipNotReady(gameState, playerId);
+                        } catch (Exception ignore) { /* false */ }
+                        if (v156Alone && v156OppPowerHere == 0f && !v156AtReadyFlipSite) {
+                            v156JoinMode = true;
+                            v156FromTitle = v156Loc.getTitle();
+                            logger.warn("V156 JOIN-GROUP MODE: mover '{}' (ability {}) is a weak solo at {} — friendly-stack destinations boosted, V41 gated",
+                                v156Pc.getTitle(), (int) v156Ab.floatValue(), v156FromTitle);
+                        }
+                        break;
+                    }
+                }
+            } catch (Exception e) { logger.debug("V156 join-mode error: {}", e.getMessage()); }
+        }
+
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
@@ -5825,6 +5881,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     theirPower += power;
                                 }
                             }
+                        }
+
+                        // V156 JOIN-GROUP (2026-07-07): friendly CHARACTER count at this destination —
+                        // used by the JOIN DEST bonus below and the V41 wrong-direction exemption.
+                        int v156DestFriendlyChars = 0;
+                        if (v156JoinMode) {
+                            try {
+                                for (PhysicalCard c : gameState.getCardsAtLocation(location)) {
+                                    if (c == null || !playerId.equals(c.getOwner())) continue;
+                                    if (c.getBlueprint() == null) continue;
+                                    if (c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                        v156DestFriendlyChars++;
+                                    }
+                                }
+                            } catch (Exception ignore) { /* 0 */ }
                         }
 
                         // === ICON-BASED SCORING ===
@@ -5875,6 +5946,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     "V169 RETREAT: %s is safe (no opponent power) — get the endangered character out of %s!",
                                     title, v169FromTitle), 600.0f);
                                 logger.warn("V169 RETREAT (move dest): {} -> +600 (fleeing {})", title, v169FromTitle);
+                            }
+
+                            // === V156 JOIN-GROUP DEST (2026-07-07): weak solo mover → friendly stack ===
+                            // Only fires in join mode. Base +250 (mirrors the move-arm claim fine)
+                            // +50 per EXTRA friendly character (largest-stack preference), cap +400.
+                            // Boundary math in the rando mirror (Fel replay: -152.5 + 350 = +197.5).
+                            if (v156JoinMode && v156DestFriendlyChars > 0) {
+                                float v156JoinBonus = Math.min(400.0f, 250.0f + 50.0f * (v156DestFriendlyChars - 1));
+                                action.addReasoning(String.format(
+                                    "V156 JOIN-GROUP DEST: %s has %d friendly character(s) — join the group (weak solo leaving %s)!",
+                                    title, v156DestFriendlyChars, v156FromTitle), v156JoinBonus);
+                                logger.warn("V156 JOIN-GROUP DEST: {} ({} friendlies) -> +{} (mover from {})",
+                                    title, v156DestFriendlyChars, (int) v156JoinBonus, v156FromTitle);
                             }
 
                             // === V166 (Steve, 2026-06): CONTEST THE OPPONENT'S DRAIN when out-drained ===
@@ -6613,6 +6697,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             // move hard-vetoed -> beaten 6v27). Skip it in retreat mode.
                                             logger.warn("V169 RETREAT EXEMPT: {} — V41 wrong-direction skipped (mover fleeing {})",
                                                 title, v169FromTitle);
+                                        } else if (v156JoinMode && v156DestFriendlyChars > 0) {
+                                            // V156 JOIN-GROUP EXEMPT (2026-07-07): a weak solo consolidating
+                                            // onto OUR OWN stack is not "wrong direction" — V41's 'empty' only
+                                            // counts opponents, so it -9999'd the one join destination and
+                                            // stranded Fel at Scarif: Beach (cancel-loop -> V160 veto -> rot ->
+                                            // forfeit). Skip it for friendly-character destinations in join
+                                            // mode, same pattern as the V169/V67z exemptions above.
+                                            logger.warn("V156 JOIN-GROUP EXEMPT: {} has {} friendly character(s) — V41 wrong-direction skipped (weak solo joining from {})",
+                                                title, v156DestFriendlyChars, v156FromTitle);
                                         } else {
                                             // V41: WRONG DIRECTION — moving to empty site while opponents drain elsewhere
                                             action.addReasoning(String.format(

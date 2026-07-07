@@ -1317,9 +1317,26 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             if (t.contains("death star")
                                     && pc.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
                                 v79HaveDeathStar = true;
-                                PhysicalCard dsLoc = pc.getAtLocation();
-                                if (dsLoc != null && dsLoc.getTitle() != null
-                                        && dsLoc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("scarif")) {
+                                // V79 UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681):
+                                // getAtLocation() is ALWAYS null for the Death Star mobile-system
+                                // LOCATION card, so v79AtScarif never went true and this arm kept
+                                // paying to steer a parked Death Star (from orbit the parsec-7 pick
+                                // is the DEEP-SPACE EXIT — the engine excludes the orbited system,
+                                // MoveMobileSystemUsingHyperspeedAction:82). Use the engine's orbit
+                                // primitive getSystemOrbited() (same check as the flip condition,
+                                // Filters.isOrbiting(Title.Scarif), Card216_011:122). With
+                                // v79AtScarif true the steering branch below is skipped and the V103
+                                // PARSEC FALLBACK's closest-to-7 pick IS the stay pick (Scarif =
+                                // parsec 7) — no extra !flipped gate needed; post-flip deep-space
+                                // recovery steering intentionally stays live so the DS re-orbits.
+                                // PhysicalCard dsLoc = pc.getAtLocation();
+                                // if (dsLoc != null && dsLoc.getTitle() != null
+                                //         && dsLoc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("scarif")) {
+                                //     v79AtScarif = true;
+                                // }
+                                String dsOrbited = pc.getSystemOrbited();
+                                if (dsOrbited != null
+                                        && dsOrbited.toLowerCase(java.util.Locale.ROOT).contains("scarif")) {
                                     v79AtScarif = true;
                                 }
                             }
@@ -3686,7 +3703,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             }
                         }
                         boolean v354MoverIsUndercover = v354Mover != null && v354Mover.isUndercover();
-                        if (!v354MoverIsUndercover) {
+                        // V35.4 UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681): the mover
+                        // can be a mobile-system LOCATION card (the Death Star). 'Move away to drain
+                        // elsewhere' is character/starship doctrine — a location neither drains nor
+                        // unblocks a drain by moving, yet this +150 attached to the Death Star's
+                        // hyperspeed move at T4/T5 and cemented the pointless orbit-exit toggles
+                        // (boundary: with V79's +500 orbit-gated, +40 base +150 would still beat
+                        // Pass ~+28). Skip location movers entirely.
+                        boolean v354MoverIsLocation = v354Mover != null && v354Mover.getBlueprint() != null
+                            && v354Mover.getBlueprint().getCardCategory() == CardCategory.LOCATION;
+                        if (!v354MoverIsUndercover && !v354MoverIsLocation) {
                             for (com.gempukku.swccgo.game.PhysicalCard loc : gameState.getLocationsInOrder()) {
                                 if (loc == null || loc.getTitle() == null) continue;
                                 // Scope to the mover's own location when we know it

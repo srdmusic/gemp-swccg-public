@@ -740,6 +740,65 @@ public class RandoCalAi extends HeuristicAiBase {
                         }
                     } catch (Exception ignore) { /* fall through to default */ }
                     if (vergeOnTable) {
+                        // V79b UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681): from Scarif
+                        // orbit the old closest-to-7 pick was the DEEP-SPACE EXIT — the engine excludes
+                        // the currently-orbited system from re-orbit at the chosen parsec
+                        // (MoveMobileSystemUsingHyperspeedAction:82, Filters.not(Filters.isOrbitedBy(card))),
+                        // so answering '7' silently dropped the DS out of orbit (the turns-3/5 toggle).
+                        // Post-flip + orbiting Scarif this prompt should never appear at all (the
+                        // MoveEvaluator V79b FLIP-BACK GUARD vetoes the hyperspeed move) — belt-and-
+                        // suspenders here: prefer an orbit/Scarif option, else answer the DS's CURRENT
+                        // parsec (least-bad: stays at Scarif's parsec; from deep space at that parsec
+                        // the engine auto-re-orbits the lone orbitable system, :91-96). Pre-flip and
+                        // post-flip deep-space recovery keep the original closest-to-7 steering below.
+                        boolean v79bStayParked = false;
+                        Integer v79bCurrentParsec = null;
+                        try {
+                            objectiveAnalyzer.refreshFlipStatus(gameState, playerId);
+                            if (objectiveAnalyzer.isAnalyzed() && objectiveAnalyzer.isFlipped()) {
+                                for (PhysicalCard pc : gameState.getAllPermanentCards()) {
+                                    if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
+                                    if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
+                                    if (pc.getBlueprint().getCardCategory() != CardCategory.LOCATION) continue;
+                                    String dsT = pc.getTitle() != null ? pc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                    if (!dsT.contains("death star")) continue;
+                                    v79bCurrentParsec = pc.getParsec();
+                                    String orbited = pc.getSystemOrbited();
+                                    v79bStayParked = orbited != null
+                                        && orbited.toLowerCase(java.util.Locale.ROOT).contains("scarif");
+                                    break;
+                                }
+                            }
+                        } catch (Exception ignore) { /* fall through to pre-flip steering */ }
+                        if (v79bStayParked) {
+                            for (int i = 0; i < pResults.length; i++) {
+                                String r = pResults[i] == null ? "" : pResults[i].toLowerCase(java.util.Locale.ROOT);
+                                if (r.contains("scarif") || r.contains("orbit")) {
+                                    LOG.warn("V79b FLIP-BACK GUARD: flipped + orbiting Scarif — take orbit option: choices={} -> index {} ('{}')",
+                                        java.util.Arrays.asList(pResults), i, pResults[i]);
+                                    return String.valueOf(i);
+                                }
+                            }
+                            if (v79bCurrentParsec != null) {
+                                for (int i = 0; i < pResults.length; i++) {
+                                    String r = pResults[i] == null ? "" : pResults[i];
+                                    java.util.regex.Matcher sm = java.util.regex.Pattern.compile("(\\d+)").matcher(r);
+                                    if (sm.find()) {
+                                        try {
+                                            if (Integer.parseInt(sm.group(1)) == v79bCurrentParsec.intValue()) {
+                                                LOG.warn("V79b FLIP-BACK GUARD: flipped + orbiting Scarif — staying at parsec {} "
+                                                    + "(choices={} -> index {}; NOTE this prompt should be unreachable, "
+                                                    + "MoveEvaluator vetoes the move)",
+                                                    v79bCurrentParsec, java.util.Arrays.asList(pResults), i);
+                                                return String.valueOf(i);
+                                            }
+                                        } catch (Exception e) { /* ignore */ }
+                                    }
+                                }
+                            }
+                            LOG.warn("V79b FLIP-BACK GUARD: flipped + orbiting but current parsec {} not offered in {} — falling through to closest-to-7",
+                                v79bCurrentParsec, java.util.Arrays.asList(pResults));
+                        }
                         int v79bBest = -1, v79bBestDist = Integer.MAX_VALUE, v79bBestParsec = -1;
                         for (int i = 0; i < pResults.length; i++) {
                             String r = pResults[i] == null ? "" : pResults[i].toLowerCase(java.util.Locale.ROOT);

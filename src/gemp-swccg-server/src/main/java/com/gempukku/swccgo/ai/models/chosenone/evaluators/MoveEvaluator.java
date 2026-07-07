@@ -25,8 +25,10 @@ import java.util.Set;
 // V53 spy-follow +/-300..500. Hub: none. KIND mix (MOVE overall): 26 BANDED / 20 VETO / 3 ORDERING.
 // PARITY PAIR: V137 (here) pairs with V136 (deploy-side siting) — change them together or the bot
 // deploys to spots it immediately flees.
-// NOTE: the V79 parse in this file is INERT; live Verge parsec steering = V79b in RandoCalAi
-// (+ the V103 fallback in ActionTextEvaluator).
+// NOTE: the V79 parsec PARSE in this file is INERT; live Verge parsec steering = V79b in RandoCalAi
+// (+ the V103 fallback in ActionTextEvaluator). LIVE here (2026-07-07): the V79 +500 default-move
+// arm (now orbit-gated via getSystemOrbited) and the V79b FLIP-BACK GUARD hard veto
+// (post-flip + orbiting Scarif = never initiate the DS hyperspeed move).
 // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
 // Cross-refs: DEPLOY-2 (V136 twin), MOVE region in ActionTextEvaluator (V67ae + Movement Actions dispatch),
 // SVC-SAFETY (V163/V167/V169 loop trio). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
@@ -493,9 +495,21 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
                     // Current location of Death Star
-                    PhysicalCard currentLoc = cardToMove.getAtLocation();
-                    if (currentLoc != null && currentLoc.getTitle() != null
-                            && currentLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) {
+                    // V79 UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681): getAtLocation()
+                    // is ALWAYS null for the Death Star mobile-system LOCATION card (every DS move
+                    // logged 'Card not at a location'), so v79AtScarif stayed false forever and the
+                    // +500 default-move bonus below fired every single turn — post-flip Rando
+                    // hokey-pokeyed the DS out of/into Scarif orbit on turns 3-5. Use the engine's
+                    // own orbit primitive instead: getSystemOrbited() holds the orbited system's
+                    // TITLE ("Scarif"), the exact check the flip condition itself uses
+                    // (Filters.isOrbiting(Title.Scarif), Card216_011:122).
+                    // PhysicalCard currentLoc = cardToMove.getAtLocation();
+                    // if (currentLoc != null && currentLoc.getTitle() != null
+                    //         && currentLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) {
+                    //     v79AtScarif = true;
+                    // }
+                    String v79Orbited = cardToMove.getSystemOrbited();
+                    if (v79Orbited != null && v79Orbited.toLowerCase(Locale.ROOT).contains("scarif")) {
                         v79AtScarif = true;
                     }
                     if (v79Verge && !v79AtScarif) {
@@ -558,6 +572,42 @@ public class MoveEvaluator extends ActionEvaluator {
                                     500.0f);
                                 logger.warn("V79 DEATH STAR MOVE (no parsec parsed): '{}' → +500", v79ActionLower);
                             }
+                        }
+                    }
+                    // === V79b FLIP-BACK GUARD (Steve, 2026-07-07): VERGE POST-FLIP — STAY IN ORBIT ===
+                    // Once On The Verge Of Greatness has flipped (Taking Control Of The Weapon),
+                    // moving the Death Star OUT of Scarif orbit is pure self-harm: it un-satisfies
+                    // the parsed flip condition ('Death Star orbiting Scarif') and drops the flipped
+                    // side's 'At Death Star, system it orbits, and sites related to either, your
+                    // total battle destiny is +1 (+2...)' umbrella over the Scarif sites
+                    // (Card216_011_BACK — NOTE this objective's own printed flip-back is leader-based,
+                    // 'Flip if you do not have a leader at a Scarif battleground site', not
+                    // orbit-based; the guard is V22.2 protection-class regardless: the toggle wasted
+                    // moves + 1-Force reservations all game in Game9f3c46b00681, and any orbit-based
+                    // flip-back objective would lose outright). Hard veto (T4.1 ladder veto class) —
+                    // the hyperspeed move is never initiated post-flip while orbiting. Pre-flip
+                    // steering (4->6->7->orbit) is untouched by this branch, and a post-flip DS
+                    // knocked into deep space still enters the steering branch above to re-orbit.
+                    if (v79Verge && v79AtScarif) {
+                        boolean v79Flipped = false;
+                        try {
+                            com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v79Analyzer =
+                                context.getObjectiveAnalyzer();
+                            v79Flipped = v79Analyzer != null && v79Analyzer.isAnalyzed() && v79Analyzer.isFlipped();
+                        } catch (Exception ex) {
+                            logger.debug("V79b flip-state check error: {}", ex.getMessage());
+                        }
+                        if (v79Flipped) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason = "V79b FLIP-BACK GUARD: objective flipped + Death Star orbiting Scarif"
+                                + " — leaving orbit un-satisfies 'Death Star orbiting Scarif'; stay parked";
+                            logger.warn("V79b FLIP-BACK GUARD: post-flip Death Star orbiting Scarif — hyperspeed move VETOED ('{}')", actionText);
+                        } else {
+                            // Pre-flip + already orbiting (waiting on Krennic/Tarkin at a Scarif
+                            // battleground site): no steering bonus (v79AtScarif now detects orbit
+                            // correctly), no veto — base fines (~-110) lose to Pass (~+28) on their
+                            // own. Boundary math in the 2026-07-07 changelog entry.
+                            logger.info("V79 DEATH STAR: orbiting Scarif pre-flip — no move bonus, holding for flip");
                         }
                     }
                 } catch (Exception e) {
@@ -931,6 +981,64 @@ public class MoveEvaluator extends ActionEvaluator {
                                 action.addReasoning(String.format(
                                     "V32 ABILITY SOLO ESCAPE: %s alone with ability %.0f < 4 — move to join allies!",
                                     cardToMove.getTitle(), totalAbilityHere), 50.0f);
+
+                                // === V156 JOIN-GROUP (2026-07-07, move arm; Fel-at-Beach loss, audit deploy-siting-2) ===
+                                // Mirror of the rando block (see rando/evaluators/MoveEvaluator.java for the
+                                // full rationale). Weak (ability<4) solo at an uncontested site with an
+                                // adjacent friendly group to join claims R2 DOCTRINE (fine +250 passes the
+                                // L2 gate; NON-battle-seeking so the V137 canWinAt veto never applies).
+                                // Exempt: undercover spies, opponent presence at the site, and a solo doing
+                                // READY objective work at a flip-relevant site (shared isV156FlipNotReady).
+                                try {
+                                    String v156Opp = game.getOpponent(playerId);
+                                    float v156OppPowerHere = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, currentLocation, v156Opp, false, false);
+                                    boolean v156AtReadyFlipSite = false;
+                                    try {
+                                        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v156Oa =
+                                            context.getObjectiveAnalyzer();
+                                        v156AtReadyFlipSite = v156Oa != null && v156Oa.isAnalyzed()
+                                            && currentLocation.getTitle() != null
+                                            && v156Oa.isObjectiveRelevantLocation(currentLocation.getTitle())
+                                            && !com.gempukku.swccgo.ai.models.common.strategy.CharacterDeploySiteEvaluator
+                                                .isV156FlipNotReady(gameState, playerId);
+                                    } catch (Exception ignore) { /* false */ }
+                                    if (v156OppPowerHere == 0f && !cardToMove.isUndercover() && !v156AtReadyFlipSite) {
+                                        // Adjacent-first: find the LARGEST adjacent friendly character stack
+                                        // (same isAdjacentSites reachability gate the ATTACK R2 claim uses).
+                                        PhysicalCard v156BestStackLoc = null;
+                                        int v156BestStackSize = 0;
+                                        for (PhysicalCard adj : gameState.getLocationsInOrder()) {
+                                            if (adj == null || adj == currentLocation) continue;
+                                            try {
+                                                if (!game.getModifiersQuerying().isAdjacentSites(gameState, currentLocation, adj)) continue;
+                                            } catch (Exception ignore) { continue; }
+                                            int v156Stack = 0;
+                                            for (PhysicalCard c : gameState.getCardsAtLocation(adj)) {
+                                                if (c == null || !playerId.equals(c.getOwner())) continue;
+                                                if (c.getBlueprint() == null) continue;
+                                                if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                                v156Stack++;
+                                            }
+                                            if (v156Stack > v156BestStackSize) {
+                                                v156BestStackSize = v156Stack;
+                                                v156BestStackLoc = adj;
+                                            }
+                                        }
+                                        if (v156BestStackLoc != null) {
+                                            action.addReasoning(String.format(
+                                                "V156 JOIN-GROUP: %s (ability %.0f) solo at uncontested %s — join the group at %s (%d friendlies)!",
+                                                cardToMove.getTitle(), totalAbilityHere, currentLocation.getTitle(),
+                                                v156BestStackLoc.getTitle(), v156BestStackSize), 250.0f);
+                                            ladderClaimR2("V156 JOIN-GROUP", 250.0f, 0.0f, false);
+                                            logger.warn("V156 JOIN-GROUP: {} (ability {}) solo at {} — R2 claim to join {} ({} friendlies)",
+                                                cardToMove.getTitle(), (int) totalAbilityHere, currentLocation.getTitle(),
+                                                v156BestStackLoc.getTitle(), v156BestStackSize);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    logger.debug("V156 JOIN-GROUP error: {}", e.getMessage());
+                                }
                             }
                         }
                     }

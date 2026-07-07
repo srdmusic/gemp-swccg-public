@@ -521,24 +521,47 @@ public class CharacterDeploySiteEvaluator {
         // until then the Scarif flip-sites are NOT "ready", so DON'T peel weak solos there — apply
         // the hold. (Mirrors the DrawEvaluator V79 dsAtScarif check. To be subsumed by Steve's
         // general "never leave a low-ability solo" rule.)
-        boolean v156FlipNotReady = false;
-        try {
-            boolean vergeUp = false, dsOnTable = false, dsAtScarif = false;
-            for (PhysicalCard pc : gs.getAllPermanentCards()) {
-                if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
-                if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
-                String t = pc.getTitle() != null ? pc.getTitle().toLowerCase(Locale.ROOT) : "";
-                if (t.contains("on the verge of greatness") || t.contains("taking control of the weapon")) vergeUp = true;
-                if (t.contains("death star") && pc.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
-                    dsOnTable = true;
-                    PhysicalCard dsLoc = pc.getAtLocation();
-                    if (dsLoc != null && dsLoc.getTitle() != null
-                            && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) dsAtScarif = true;
-                }
-            }
-            if (vergeUp && dsOnTable && !dsAtScarif) v156FlipNotReady = true;
-        } catch (Exception ignore) { /* fall through */ }
-        if (currentTurn <= 2 && teamBodyCount == 1 && oppPower == 0f
+        // V156 UPDATED 2026-07-07: the flip-not-ready scan moved VERBATIM into the shared
+        // static helper isV156FlipNotReady(...) below, so the NEW move-side V156 JOIN-GROUP
+        // arm (MoveEvaluator + CardSelectionEvaluator, both bots) reuses the SAME predicate
+        // instead of forking it. Behavior identical. OLD inline scan (kept for revert):
+        // boolean v156FlipNotReady = false;
+        // try {
+        //     boolean vergeUp = false, dsOnTable = false, dsAtScarif = false;
+        //     for (PhysicalCard pc : gs.getAllPermanentCards()) {
+        //         if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
+        //         if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
+        //         String t = pc.getTitle() != null ? pc.getTitle().toLowerCase(Locale.ROOT) : "";
+        //         if (t.contains("on the verge of greatness") || t.contains("taking control of the weapon")) vergeUp = true;
+        //         if (t.contains("death star") && pc.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
+        //             dsOnTable = true;
+        //             PhysicalCard dsLoc = pc.getAtLocation();
+        //             if (dsLoc != null && dsLoc.getTitle() != null
+        //                     && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) dsAtScarif = true;
+        //         }
+        //     }
+        //     if (vergeUp && dsOnTable && !dsAtScarif) v156FlipNotReady = true;
+        // } catch (Exception ignore) { /* fall through */ }
+        boolean v156FlipNotReady = isV156FlipNotReady(gs, playerId);
+        // V156 UPDATED 2026-07-07 (Steve, Fel-at-Beach loss, audit rows deploy-siting-1/-2):
+        // the turn<=2 cliff let the SAME deploy the hold correctly blocked on turn 2 sail
+        // through on turn 3 — Baron Soontir Fel (ability 3, power 2) solo to Scarif: Beach,
+        // battled and forfeited three minutes later. A weak solo at an uncontested BG is no
+        // safer on turn 3+ than on turn 2, so for the ability<4 band the hold now applies on
+        // ALL turns — but only when a buddy plan exists (another character on table or
+        // affordable in hand, the existing v156AnyBuddyAvailable); with no buddy anywhere the
+        // lone body is all we have, let it deploy. The ability>=4 class keeps the original
+        // turn<=2 gate and ALL exemptions (ability>=6 solo, armed ability-5, objective
+        // flip-site carve-back) exactly as before.
+        // Boundary (Fel replay math): §A +500 -> -600 flips V136 CS 800 -> -300; Beach site
+        // total 1065 -> -35, loses to Citadel Tower's 615 (join Vader's stack) — exactly the
+        // turn-2 behavior (Tagge 905 -> Tower). -600 still beats §A's +500 uncontested reward
+        // by construction; objective-forced deploys stay exempt via the carve-back.
+        // OLD (turn-gate only, kept for revert):
+        // if (currentTurn <= 2 && teamBodyCount == 1 && oppPower == 0f
+        //         && v156IsBG && v156IsChar && (!isObjectiveRelevantSite || v156FlipNotReady)) {
+        boolean v156WeakBandAllTurns = v156DeployAbility < 4f && v156AnyBuddyAvailable;
+        if ((currentTurn <= 2 || v156WeakBandAllTurns) && teamBodyCount == 1 && oppPower == 0f
                 && v156IsBG && v156IsChar && (!isObjectiveRelevantSite || v156FlipNotReady)) {
             boolean v156Armed = false;
             if (v156DeployAbility >= 5f && friendlyHand != null) {
@@ -799,6 +822,49 @@ public class CharacterDeploySiteEvaluator {
     // ═══════════════════════════════════════════════════════════════════
     // Helpers
     // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * V156 flip-not-ready predicate (extracted 2026-07-07 from the inline scan in
+     * computeTeamViability — body VERBATIM, behavior identical).
+     *
+     * 2026-06-28 (Steve, Verge interim): the flip-site SKIP is too broad when the flip
+     * is not mechanically reachable — a weak lone Ozzel (ability 2) sat at a Scarif
+     * flip-site turn 1 and died before the flip was even possible. For On The Verge Of
+     * Greatness the flip needs the Death Star ORBITING Scarif; until then the Scarif
+     * flip-sites are NOT "ready", so weak solos get no objective exemption there.
+     * (Mirrors the DrawEvaluator V79 dsAtScarif check.)
+     *
+     * PUBLIC + shared (2026-07-07) so the move-side V156 JOIN-GROUP arm (MoveEvaluator
+     * + CardSelectionEvaluator, both bots) tests the SAME "is the solo actually doing
+     * ready objective work" carve-back the deploy side uses — one predicate, no fork.
+     */
+    public static boolean isV156FlipNotReady(GameState gs, String playerId) {
+        if (gs == null || playerId == null) return false;
+        try {
+            boolean vergeUp = false, dsOnTable = false, dsAtScarif = false;
+            for (PhysicalCard pc : gs.getAllPermanentCards()) {
+                if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
+                if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
+                String t = pc.getTitle() != null ? pc.getTitle().toLowerCase(Locale.ROOT) : "";
+                if (t.contains("on the verge of greatness") || t.contains("taking control of the weapon")) vergeUp = true;
+                if (t.contains("death star") && pc.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
+                    dsOnTable = true;
+                    // V79 UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681): getAtLocation()
+                    // is ALWAYS null for a mobile-system LOCATION card, so dsAtScarif stayed false
+                    // and this predicate returned 'flip not ready' even with the DS parked in Scarif
+                    // orbit (or the objective already flipped). Use getSystemOrbited() — the engine's
+                    // own orbit primitive (same check as the flip condition, Filters.isOrbiting).
+                    // PhysicalCard dsLoc = pc.getAtLocation();
+                    // if (dsLoc != null && dsLoc.getTitle() != null
+                    //         && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) dsAtScarif = true;
+                    String dsOrbited = pc.getSystemOrbited();
+                    if (dsOrbited != null
+                            && dsOrbited.toLowerCase(Locale.ROOT).contains("scarif")) dsAtScarif = true;
+                }
+            }
+            return vergeUp && dsOnTable && !dsAtScarif;
+        } catch (Exception ignore) { return false; }
+    }
 
     private static float safeDeployCost(PhysicalCard pc) {
         try {
