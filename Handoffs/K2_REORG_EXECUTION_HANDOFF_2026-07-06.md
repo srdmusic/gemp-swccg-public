@@ -182,7 +182,7 @@ Mechanical rules per extraction: carry every early-return guard above the extrac
 | T3 sections (6, fixed order) | ✅/⚠ 2026-07-06 | Banner + manifest layer complete (sections are logical homes per plan trap: no physical regrouping). PLAYBOOKS physical cross-ref pass = the manifest's cross_refs column; deeper per-file carves deliberately NOT done (plan's own file-motion warning) |
 | T4.1 move ladder | ✅ 2026-07-06 | `378f4b6fe`: rank bands R1-R4 + veto matrix, council sound-with-changes, all 4 rulings applied, boundary tables committed pre-build (`e84b1b788`), acceptance rows re-verified vs final code. AWAITING deploy + live soak |
 | T4.2 pull-engine merge | ✅ 2026-07-06 | `34b47ba50`: V192 hub (new tag, hub precedent), vetoes-first, ds-2 double-count killed, V61c-shared stand-down, corridor audits in changelog. AWAITING deploy + live soak |
-| DEPLOY #2 + soak | ☐ | Everything above is committed but NOT yet in the running jar. reload-ai + jar byte-verify + 2 self-play soaks (watch: LADDER BANDS OK once, zero LADDER-band inversions, V192 lines, zero MAINT CACHE MISMATCH) + work-verifier + Steve's test game |
+| DEPLOY #2 + soak | ✅/⚠ 2026-07-07 | DEPLOYED (7/7 markers) + V43 take-2 hotfix (`9c18a12ed`, CONFIRMED by Steve's game). V192 + MAINT-CACHE verified in smoke games. ⚠ LADDER still UNEXERCISED (no live move decisions yet) — first full game with moves is the acceptance test. NEXT SESSION: see `Handoffs/K2_HANDOFF_2026-07-07_reorg-build-day.md` — solo/Verge fix in flight with DRAFT EDITS in tree, refit to stack math before shipping |
 
 ## 12. Backlog after the ladder (do NOT bundle into reorg steps)
 
