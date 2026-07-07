@@ -1935,9 +1935,27 @@ public class DeployEvaluator extends ActionEvaluator {
                                     String v193GateCard = v136Obj.getFlipCriticalControlCard();
                                     com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle v193Oracle =
                                         context.getDeckOracle();
-                                    boolean v193HoldsGateCard = v193GateCard != null && v193Oracle != null
-                                        && (v193Oracle.isCardInHand(v193GateCard)
-                                            || v193Oracle.isCardInReserve(v193GateCard));
+                                    // FIX 2026-07-07: detect by the analyzer's scoped Bunker-gated
+                                    // blueprint ids when present (Establish Secret Base V 207_25 /
+                                    // Legacy 601_260 — NOT the base 8_124, which gates on 3 Endor
+                                    // sites, not Bunker). Empty set → fall back to the title name so
+                                    // any future flip-gate objective that names only a card still works.
+                                    java.util.Set<String> v193GateIds = v136Obj.getFlipCriticalControlCardIds();
+                                    boolean v193HoldsGateCard = false;
+                                    if (v193Oracle != null) {
+                                        if (v193GateIds != null && !v193GateIds.isEmpty()) {
+                                            for (String v193Id : v193GateIds) {
+                                                if (v193Oracle.isCardInHand(v193Id)
+                                                        || v193Oracle.isCardInReserve(v193Id)) {
+                                                    v193HoldsGateCard = true;
+                                                    break;
+                                                }
+                                            }
+                                        } else if (v193GateCard != null) {
+                                            v193HoldsGateCard = v193Oracle.isCardInHand(v193GateCard)
+                                                || v193Oracle.isCardInReserve(v193GateCard);
+                                        }
+                                    }
                                     if (!v193AlreadyControls && v193HoldsGateCard) {
                                         // ObjectivePlaybook consolidation (2026-07-07): the +400 magnitude
                                         // is now analyzer-owned in ENDOR_PLAYBOOK.weights.deployFlipGateSite.

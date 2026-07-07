@@ -69,7 +69,17 @@ public class ObjectiveAnalyzer {
     // The card whose deploy REQUIRES controlling flipCriticalControlSite (e.g. Establish
     // Secret Base needs Endor: Bunker). Kept HERE (objective logic) so DeployEvaluator's
     // flip-gate steer is fully general — no card names hardcoded in the deploy scorer.
+    // This is the DISPLAY name (log/reasoning); DETECTION uses flipCriticalControlCardIds.
     private String flipCriticalControlCard = null;
+    // FIX (Steve, 2026-07-07): the EXACT blueprint ids whose deploy is gated on controlling
+    // flipCriticalControlSite. "Establish Secret Base" has three printings that SHARE the
+    // title but NOT the deploy gate: base 8_124 deploys on Endor SYSTEM gated on controlling
+    // 3 Endor sites (NOT Bunker); V 207_25 deploys on Bunker gated on Bunker; Legacy V 601_260
+    // deploys on Endor system but is ALSO gated on controlling Bunker. So the Bunker steer is
+    // correct ONLY for {207_25, 601_260}. Matching by the shared title would misfire the +400
+    // when a deck runs the base 8_124. When non-empty, DeployEvaluator detects by these ids
+    // (blueprint-id exact match) instead of the title. Empty → fall back to the title name.
+    private final Set<String> flipCriticalControlCardIds = new HashSet<>();
     private String objectiveTitle = null;
     private String objectiveBlueprintId = null;
     // V29 UPDATED 2026-07-06: keep the raw objective game text so evaluators can check clauses
@@ -274,6 +284,8 @@ public class ObjectiveAnalyzer {
     // (e.g. Endor: Bunker for Establish Secret Base (V)). null when the objective has none.
     public String getFlipCriticalControlSite() { return flipCriticalControlSite; }
     public String getFlipCriticalControlCard() { return flipCriticalControlCard; }
+    // FIX 2026-07-07: the exact Bunker-gated Establish Secret Base ids (empty → detect by title).
+    public Set<String> getFlipCriticalControlCardIds() { return Collections.unmodifiableSet(flipCriticalControlCardIds); }
     public Set<String> getRequiredCardsOnTable() { return Collections.unmodifiableSet(requiredCardsOnTable); }
     public Set<String> getPullableCards() { return Collections.unmodifiableSet(pullableCards); }
     public boolean requiresOccupy() { return requiresOccupy; }
@@ -789,6 +801,7 @@ public class ObjectiveAnalyzer {
         // V193 (Steve, 2026-07-07): clear the flip-gate control site with the rest.
         flipCriticalControlSite = null;
         flipCriticalControlCard = null;
+        flipCriticalControlCardIds.clear();
         objectiveTitle = null;
         objectiveBlueprintId = null;
         // V29 UPDATED 2026-07-06: clear stored game text with the rest of the analysis
@@ -1065,6 +1078,17 @@ public class ObjectiveAnalyzer {
             //     Both live here (objective logic) so DeployEvaluator's V193 steer is general.
             flipCriticalControlSite = "endor: bunker";
             flipCriticalControlCard = "establish secret base";
+            // FIX 2026-07-07: scope the Bunker steer to the Bunker-GATED Establish Secret Base
+            // printings only. Base 8_124 deploys on Endor SYSTEM gated on controlling 3 Endor
+            // sites (verified Card8_124.java) — a single Bunker body does NOT enable it, so the
+            // +400 must NOT fire for it. V 207_25 (Card207_025.java: deploy on Bunker) and Legacy
+            // V 601_260 (Card601_260.java: "If you control Bunker, deploy on Endor system") are
+            // both gated on Bunker control → steer is correct. Hedge both id forms for 207_25
+            // (same as the IWTM 208_51/208_051 hedge) since runtime blueprint-id padding varies.
+            flipCriticalControlCardIds.clear();
+            flipCriticalControlCardIds.add("207_25");
+            flipCriticalControlCardIds.add("207_025");
+            flipCriticalControlCardIds.add("601_260");
             LOG.warn("🎯 [ObjectiveAnalyzer] V193: Endor Operations detected — Endor sites objective-relevant, required=[ominous rumors, establish secret base], flip-gate: control 'Endor: Bunker' to deploy 'Establish Secret Base'.");
         }
 
