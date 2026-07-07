@@ -7045,23 +7045,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         action.addReasoning("V43 EPIC EVENT: Deploys saga Epic Event — MUST USE THIS!", 1500.0f);
                         logger.warn("V43 STARTING INTERRUPT: {} references Epic Event — HARD PREFER (+1500)", title);
                     } else {
-                        // V43 UPDATED 2026-07-07: break the generic 50/50 tie by reading what the
-                        // interrupt actually DOES. Incident: game 2a999777 (2026-07-07) — Prepared
-                        // Defenses (deploy up to 3 Effects) tied with Surface Defense (V) at 50 and
-                        // the engine's shuffle order picked the dud; zero starting effects deployed.
-                        // Setup power ranking: effect-deployers first, scaled by how many.
-                        boolean deploysFromReserve = gameText.contains("from reserve deck");
-                        boolean deploysEffects = deploysFromReserve
-                            && (gameText.contains("effect") || gameText.contains("defensive shield"));
-                        if (deploysEffects) {
+                        // V43 UPDATED 2026-07-07 (take 2 — the first scan looked for "from reserve
+                        // deck", a phrase NEITHER card contains; read the actual cards this time):
+                        // Prepared Defenses STARTING = "Deploy up to three Effects if each of them
+                        // deploys for free..." (Card9_139). Surface Defense (V) STARTING = "draw up
+                        // to 12 cards instead of 8" (Card200_125) — deploys NOTHING at setup.
+                        // Discriminator: the STARTING clause deploys Effects → prefer, scaled by count.
+                        String startingClause = gameText;
+                        int sIdx = gameText.indexOf("starting:");
+                        if (sIdx >= 0) startingClause = gameText.substring(sIdx);
+                        boolean startingDeploysEffects = startingClause.contains("deploy")
+                            && startingClause.contains("effect");
+                        if (startingDeploysEffects) {
                             float effectBonus = 200.0f;
-                            if (gameText.contains("up to three") || gameText.contains("up to 3")) effectBonus = 300.0f;
-                            else if (gameText.contains("up to two") || gameText.contains("up to 2")) effectBonus = 250.0f;
-                            action.addReasoning("V43 EFFECT-DEPLOYER: deploys Effects from Reserve at setup", effectBonus);
-                            logger.warn("V43 STARTING INTERRUPT: {} deploys Effects from Reserve — PREFER (+{})", title, effectBonus);
-                        } else if (deploysFromReserve) {
-                            action.addReasoning("V43: deploys something from Reserve at setup", 100.0f);
-                            logger.warn("V43 STARTING INTERRUPT: {} deploys from Reserve — mild prefer (+100)", title);
+                            if (startingClause.contains("three effects") || startingClause.contains("3 effects")) effectBonus = 300.0f;
+                            else if (startingClause.contains("two effects") || startingClause.contains("2 effects")) effectBonus = 250.0f;
+                            action.addReasoning("V43 EFFECT-DEPLOYER: STARTING clause deploys Effects", effectBonus);
+                            logger.warn("V43 STARTING INTERRUPT: {} deploys Effects at setup — PREFER (+{})", title, effectBonus);
+                        } else if (startingClause.contains("deploy")) {
+                            action.addReasoning("V43: STARTING clause deploys something", 100.0f);
+                            logger.warn("V43 STARTING INTERRUPT: {} deploys at setup — mild prefer (+100)", title);
                         } else {
                             action.addReasoning("V43: Generic starting interrupt — no Epic Event", 0.0f);
                             logger.warn("V43 STARTING INTERRUPT: {} is generic (no Epic Event reference)", title);
