@@ -799,6 +799,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             }
         }
 
+        // V186 (Steve, 2026-06-23): I Want That Map starting LOCATION pick. This loop
+        // resolves each candidate via findCardById(parseInt(cardId)) (~line 813), which
+        // throws for ARBITRARY temp IDs ("temp0"...) — the form the objective's
+        // "Choose [Episode VII] location to deploy" decision uses — so the normal +150
+        // objective bonus (~line 1607) never fires and every candidate ties at the +50
+        // base, making the pick arbitrary (the root cause of the wrong-location report).
+        // Resolve temp-safely from the parallel blueprint / testing-text lists and steer
+        // the pick to the Starkiller Base SYSTEM (208_51), whose once-per-turn [download]
+        // fetches the SB battleground sites that feed the 2-battleground flip. Its sites
+        // (208_52..55) are different blueprint IDs, so this names the download engine, not
+        // a site.
+        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v186oa = context.getObjectiveAnalyzer();
+        java.util.List<String> v186Ids = context.getCardIds();
+        java.util.List<String> v186Bps = context.getBlueprints();
+        java.util.List<String> v186Tts = context.getTestingTexts();
+        // V186 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isWantThatMap().
+        boolean v186IsWantThatMap = v186oa != null && v186oa.isAnalyzed() && v186oa.isWantThatMap();
+
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
@@ -806,6 +824,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 50.0f,
                 "Deploy to location " + cardId
             );
+
+            // V186: temp-safe Starkiller Base SYSTEM preference (see note above the loop).
+            // +400 over the +50 base is decisive vs the other [Episode VII] candidates (which
+            // stay at +50 because their objective/battleground bonuses are also unreachable on
+            // the temp-id path). Names ONLY the system (208_51 / title "Starkiller Base" with
+            // no ":" site suffix), so its battleground sites are not picked here.
+            // Gated to temp IDs (the ARBITRARY reserve-deck pick) so it does NOT fire for
+            // later real-id "deploy where" decisions — otherwise it would over-prioritize
+            // deploying onto the SYSTEM instead of the battleground SITES the flip needs.
+            if (v186IsWantThatMap && cardId != null && cardId.startsWith("temp")) {
+                int v186Idx = v186Ids != null ? v186Ids.indexOf(cardId) : -1;
+                String v186Bp = (v186Bps != null && v186Idx >= 0 && v186Idx < v186Bps.size()) ? v186Bps.get(v186Idx) : null;
+                String v186Tt = (v186Tts != null && v186Idx >= 0 && v186Idx < v186Tts.size()) ? v186Tts.get(v186Idx) : null;
+                // V186 CONSOLIDATED (2026-07-07): system blueprint ids + title fragment come from
+                // ObjectiveAnalyzer (was hardcoded "208_51"/"208_051"/"starkiller base" here).
+                java.util.Set<String> v186SysIds = v186oa.getIwtmSystemBpIds();
+                String v186SysFrag = v186oa.getIwtmSystemTitleFragment();
+                boolean v186BpSystem = v186Bp != null && v186SysIds != null && v186SysIds.contains(v186Bp);
+                boolean v186TtSystem = v186Tt != null && v186SysFrag != null
+                        && v186Tt.toLowerCase(java.util.Locale.ROOT).contains(v186SysFrag)
+                        && !v186Tt.contains(":");
+                if (v186BpSystem || v186TtSystem) {
+                    action.addReasoning("V186 STARKILLER BASE SYSTEM - download engine for the 2-battleground flip", 400.0f);
+                    logger.warn("V186 STARKILLER SYSTEM: cardId={} bp={} title={} (+400)", cardId, v186Bp, v186Tt);
+                }
+            }
 
             // Try to get location info
             if (gameState != null) {
@@ -927,7 +971,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // Steve: "Spies cost much less to block a drain than deploying a bunch
                         // of characters to overpower opponent." When the card being deployed is
                         // a SPY, deploying it AT an opponent-occupied drain site is the cheap
-                        // block (the V170 yes/no intercept in TheChosenOneAi answers the undercover
+                        // block (the V170 yes/no intercept in RandoCalAi answers the undercover
                         // prompt; undercover breaks their control -> drain stops). No power
                         // requirement — spies don't fight, undercover is safe. Scaled by the
                         // drain it denies, preferring their BIGGEST drain. Magnitude: beats
@@ -1360,8 +1404,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // =====================================================
                         if (isStarship) {
                             // V190 widening (Steve, 2026-07-04): "Only deploy starships to
-                            // systems." Mirrored from rando — -1500 covers ALL sites now;
-                            // sectors deliberately unpenalized pending Steve's ruling.
+                            // systems." The -1500 now covers ALL sites, not just title-matched
+                            // docking bays (isGroundSite = SITE && !isDockingBay, so the union
+                            // is every site; a null-blueprint docking bay still matches by
+                            // title). Behavior change: non-docking-bay sites go from the old
+                            // -10 "unusual" nudge (branch commented out below) to -1500.
+                            // Sectors deliberately unpenalized pending Steve's ruling.
                             if (isDockingBay || isGroundSite) {
                                 // NEVER deploy starships to docking bays!
                                 // 2026-06-03 MAGNITUDE BUMP (Steve, Mustafar replay): the
@@ -1629,9 +1677,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 && locObjAnalyzer.getObjectiveTitle() != null
                                 && title != null
                                 && deployingBlueprintId != null) {
-                            String v88ObjLower = locObjAnalyzer.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT);
-                            boolean v88IsMyLord = v88ObjLower.contains("my lord")
-                                || v88ObjLower.contains("make it legal");
+                            // V88 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean v88IsMyLord = locObjAnalyzer.isMyLord();
                             if (v88IsMyLord) {
                                 try {
                                     SwccgCardBlueprint v88DepBp = getBlueprintFromId(context, deployingBlueprintId);
@@ -1775,6 +1822,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // Block non-senators from picking Galactic Senate as their destination
                         // unless opponent power at Senate already exceeds friendly senator power
                         // (defensive reinforcement is allowed).
+                        // NOTE (2026-07-07 consolidation): DELIBERATELY not isMyLord()-gated — this
+                        // keys on the destination CANDIDATE being Galactic Senate, not the objective
+                        // identity. Gating it would change behavior. Leave as a typed/title dest check.
                         if (title != null && deployingBlueprintId != null && gameState != null) {
                             String v99TitleLower = title.toLowerCase(java.util.Locale.ROOT);
                             if (v99TitleLower.contains("galactic senate")) {
@@ -1936,10 +1986,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             try {
                                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v121Obj =
                                     context.getObjectiveAnalyzer();
-                                if (v121Obj != null && v121Obj.isAnalyzed()
-                                        && v121Obj.getObjectiveTitle() != null
-                                        && v121Obj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT)
-                                            .contains("invasion")) {
+                                // V121 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isInvasion().
+                                if (v121Obj != null && v121Obj.isAnalyzed() && v121Obj.isInvasion()) {
                                     SwccgCardBlueprint v121DepBp = getBlueprintFromId(context, deployingBlueprintId);
                                     if (v121DepBp != null) {
                                         // Need a temp PhysicalCard view for Filters — fall back to
@@ -3742,7 +3790,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
     // ═══════════════════════════════════════════════════════════
     // ═══ SECTION: FORCE-LOSS — Loss-Source Picker (reorg 2026-07-06) ═══
-    // (chosenone twin of rando/evaluators/CardSelectionEvaluator.java — same hub.)
     // Owns: V153 two-tier zone order (protect characters when life force >= 4;
     // survival mode < 4) + bolt-ons V109 (senators -300), V175a (weapon-protect
     // turn-4 gate), V178-loss (wielded-weapon zone rerank 600→150), V28-DTF
@@ -3850,10 +3897,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 context.getObjectiveAnalyzer();
                             if (v109Obj != null && v109Obj.isAnalyzed()
                                     && v109Obj.getObjectiveTitle() != null) {
-                                String v109ObjLower = v109Obj.getObjectiveTitle()
-                                    .toLowerCase(java.util.Locale.ROOT);
-                                boolean v109IsMyLord = v109ObjLower.contains("my lord")
-                                    || v109ObjLower.contains("make it legal");
+                                // V109 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                                boolean v109IsMyLord = v109Obj.isMyLord();
                                 if (v109IsMyLord) {
                                     boolean v109IsSenator = false;
                                     if (card.getBlueprint().hasKeyword(
@@ -5870,11 +5915,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         // === V156 JOIN-GROUP MODE (2026-07-07, destination arm; Fel-at-Beach loss, audit deploy-siting-2) ===
-        // Mirror of the rando block (see rando/evaluators/CardSelectionEvaluator.java for the
-        // full rationale). Weak (ability<4) SOLO mover at an uncontested site → this decision
-        // is a JOIN: friendly-stack destinations get the bonus below and V41 WRONG DIRECTION
-        // is gated off for them. Exempt: undercover spies + a solo doing READY objective work
-        // at a flip-relevant site (shared CharacterDeploySiteEvaluator.isV156FlipNotReady).
+        // Twin of MoveEvaluator's V156 JOIN-GROUP R2 claim (same date). When the mover is a
+        // weak (ability<4) SOLO character at an uncontested site, this destination decision
+        // is a JOIN: friendly-stack destinations get a bonus below (largest stack preferred)
+        // and V41 WRONG DIRECTION is gated off for them — a consolidate/join-allies move
+        // toward OUR OWN stack is by definition not "wrong direction" (V41's 'empty' only
+        // counts opponents; that -9999 is what stranded Fel at Scarif: Beach: the ladder's
+        // R2 claim moved, the only join destination scored -10151, V160 broke the cancel
+        // loop, and Fel rotted in place until battled and forfeited). Mirrors the V169
+        // retreat-mode and V67z exemption pattern. Exempt: undercover spies (V170 parked
+        // spies sit) and a solo doing READY objective work at a flip-relevant site (shared
+        // CharacterDeploySiteEvaluator.isV156FlipNotReady predicate — same carve the deploy
+        // side uses). Mutually exclusive with V169 retreat mode (that needs opponent excess
+        // AT the mover's site; join mode needs opponent power 0 there).
         boolean v156JoinMode = false;
         String v156FromTitle = null;
         float v156MoverAbility = 0f;  // STACK-MATH (2026-07-07): mover's ability, for the defensible-join kicker below
@@ -6040,7 +6093,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             // Rank join destinations by ABILITY-TOTAL, not headcount: base +250 for any
                             // friendly group, a small ability-total lean (up to +100), and a +150 kicker
                             // when this join makes the stack destiny-capable (dest total + mover ability >= 4),
-                            // cap +450. Boundary math in the rando mirror.
+                            // cap +450. Fel boundary preserved: Citadel Tower (Vader+Tagge+Trooper = ability 11,
+                            // already defensible) scores the +450 cap, well above the ~-152 non-join PASS.
                             if (v156JoinMode && v156DestFriendlyChars > 0) {
                                 boolean v156Defensible = (v156DestAbilityTotal + v156MoverAbility)
                                     >= com.gempukku.swccgo.ai.models.common.strategy.MovePredicates.DEFENSIBLE_ABILITY;
@@ -8018,8 +8072,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             if (cardTitle != null) {
                 String v112TitleLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
                 if (v112TitleLower.contains("battle order") || v112TitleLower.contains("battle plan")) {
-                    // V112 UPDATED 2026-07-06: engine occupies predicate replaces the hand-rolled
-                    // loop (old loop commented out per feedback_comment_out_old_rules).
+                    // V112 UPDATED 2026-07-06: engine occupies predicate (occupiesBothTheaters)
+                    // replaces the hand-rolled loop (old loop commented out below per
+                    // feedback_comment_out_old_rules) — same V140-class fix as V51.
                     if (!occupiesBothTheaters(context.getGame(), context.getPlayerId())) {
                         action.addReasoning("V112 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
                         logger.warn("V112 BATTLE ORDER GATE: '{}' blocked — occupiesBothTheaters=false", cardTitle);
@@ -8030,11 +8085,27 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     //     GameState gs112 = context.getGameState(); SwccgGame g112 = context.getGame(); String pid112 = context.getPlayerId();
                     //     if (g112 != null && gs112 != null && pid112 != null) {
                     //         for (PhysicalCard loc112 : gs112.getAllPermanentCards()) {
-                    //             ... isBattleground + owner-present (char/starship/vehicle) occupy scan → v112BGSite/v112BGSystem ...
+                    //             if (loc112 == null || loc112.getBlueprint() == null) continue;
+                    //             com.gempukku.swccgo.common.Zone lz112 = loc112.getZone();
+                    //             if (lz112 == null || lz112 != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
+                    //             boolean isBG112 = false;
+                    //             try { isBG112 = g112.getModifiersQuerying().isBattleground(gs112, loc112, null); } catch (Exception e2) { }
+                    //             if (!isBG112) continue;
+                    //             boolean weOccupy112 = false;
+                    //             for (PhysicalCard atLoc : gs112.getCardsAtLocation(loc112)) {
+                    //                 if (atLoc == null || !pid112.equals(atLoc.getOwner())) continue;
+                    //                 CardCategory cat112 = atLoc.getBlueprint() != null ? atLoc.getBlueprint().getCardCategory() : null;
+                    //                 if (cat112 == CardCategory.CHARACTER || cat112 == CardCategory.STARSHIP || cat112 == CardCategory.VEHICLE) { weOccupy112 = true; break; }
+                    //             }
+                    //             if (weOccupy112) {
+                    //                 com.gempukku.swccgo.common.CardSubtype sub112 = loc112.getBlueprint().getCardSubtype();
+                    //                 if (sub112 == com.gempukku.swccgo.common.CardSubtype.SYSTEM) v112BGSystem = true;
+                    //                 else if (sub112 == com.gempukku.swccgo.common.CardSubtype.SITE) v112BGSite = true;
+                    //             }
                     //         }
                     //     }
                     // } catch (Exception e) { logger.debug("V112 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
-                    // if (!v112BGSite || !v112BGSystem) { -9999 }
+                    // if (!v112BGSite || !v112BGSystem) { action.addReasoning("V112 BATTLE ORDER GATE: ...", -9999.0f); ... }
                 }
             }
 
@@ -8079,9 +8150,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 logger.debug("V117 prefers4thSlot error: {}", e.getMessage());
                             }
                         }
-                        // V117 UPDATED 2026-07-06 (Verge twin of the V105 deadlock): only pursue
-                        // the preferred card if it is actually on the menu this decision; else
-                        // HOLD the slot closed instead of hard-blocking for an unavailable card.
+                        // V117 UPDATED 2026-07-06 (Verge twin of the V105 deadlock): only
+                        // pursue the preferred card if it is actually on the menu this
+                        // decision; else HOLD the slot closed instead of hard-blocking every
+                        // real shield for a card that can't be picked.
                         if (v117Preferred == null || !preferredShieldInCandidates(context, v117Preferred)) {
                             action.addReasoning(
                                 "V117 4TH SHIELD HOLD: " + v117ShieldsOnTable
@@ -8122,6 +8194,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
+                // === V187 (Steve, 2026-06-28): DUPLICATE STARTING-EFFECT PENALTY ===
+                // Don't burn the turn-0 effect slot on an effect Rando has more than one of — the
+                // other copy is still drawable/deployable later, so spend the slot on a SINGLETON
+                // for more table variety. DeckOracle counts copies by title across the whole deck.
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle v187Oracle = context.getDeckOracle();
+                if (v187Oracle != null && v187Oracle.isAnalyzed()) {
+                    int v187Copies = v187Oracle.countCopiesByTitle(cardTitle);
+                    if (v187Copies > 1) {
+                        action.addReasoning("V187 DUPLICATE: Rando has " + v187Copies + " copies of '"
+                            + cardTitle + "' — prefer a singleton starting effect", -300.0f);
+                        logger.warn("V187 DUPLICATE STARTING EFFECT: '{}' x{} — -300", cardTitle, v187Copies);
+                    }
+                }
                 // V22 (Steve, 2026-06-28): added Silence Is Golden to the preferred
                 // starting effects (a dark Effect: Card3_110 / Card210_045 V).
                 if (titleCheck.contains("endor shield") || titleCheck.contains("alert my star destroyer")
@@ -8138,6 +8223,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 if (titleCheck.contains("you'll be dead") || titleCheck.contains("inconsequential losses")) {
                     action.addReasoning("V22 PREFERRED STARTING EFFECT (Shadow Collective payoff): " + cardTitle, 500.0f);
                     logger.warn("V22 PREFERRED START (Shadow Collective): {} (+500)", cardTitle);
+                }
+
+                // V186 (Steve, 2026-06-23): I Want That Map starting effect. "The First Order
+                // Was Just The Beginning" is the immune-to-Alter Effect to deploy via You Know
+                // What I've Come For (208_46). It downloads Jakku/Kijimi battlegrounds to feed
+                // the 2-battleground flip. Gated on the active objective so it only fires for
+                // this deck; +1000 matches the V80 magnitude so it beats any other matching
+                // Effect in the same prompt. Pairs with the ObjectiveAnalyzer V186 block that
+                // names Starkiller Base + marks this effect required/pullable.
+                // V186 CONSOLIDATED (2026-07-07): identity AND preferred-effect title from analyzer
+                // (getIwtmPreferredStartingEffect() is non-null only under I Want That Map, so it
+                // double-gates exactly like the old title-contains + objective-contains pair).
+                {
+                    com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v186Obj = context.getObjectiveAnalyzer();
+                    String v186Eff = (v186Obj != null) ? v186Obj.getIwtmPreferredStartingEffect() : null;
+                    if (v186Obj != null && v186Obj.isAnalyzed() && v186Obj.isWantThatMap()
+                            && v186Eff != null && titleCheck.contains(v186Eff)) {
+                        action.addReasoning("V186 PREFERRED STARTING EFFECT (I Want That Map): " + cardTitle, 1000.0f);
+                        logger.warn("V186 PREFERRED START (I Want That Map): {} (+1000)", cardTitle);
+                    }
                 }
 
                 // === V126 (Steve, 2026-05-22): EXPANDED STARTING-EFFECT BONUSES ===
@@ -8766,8 +8871,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 // Battle Order requires occupying BOTH a battleground site AND a battleground system.
                 // If we don't occupy both, deploying Battle Order is a waste — it does nothing.
                 if (cardTitleLower.contains("battle order") || cardTitleLower.contains("battle plan")) {
-                    // V51 UPDATED 2026-07-06 (Verge game): engine occupies predicate replaces
-                    // the hand-rolled loop (old loop commented out per feedback_comment_out_old_rules).
+                    // V51 UPDATED 2026-07-06 (Verge game): engine occupies predicate
+                    // (occupiesBothTheaters) replaces the hand-rolled loop — old loop
+                    // commented out below per feedback_comment_out_old_rules.
                     if (!occupiesBothTheaters(game, playerId)) {
                         action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
                         logger.warn("V51 BATTLE ORDER GATE: occupiesBothTheaters=false — BLOCKED!");
@@ -8777,7 +8883,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // V51 EARLY-DEPLOY (EXTENDED 2026-07-06, Steve): +200 so Battle Order/Plan
                         // deploys turns 1-2 the moment Rando occupies both theaters (tax compounds).
                         // Guard shieldScore > -50 so a V43 redundant / pacing / not-played rejection
-                        // still wins. Occupy-only gate per Steve. Mirrored from rando.
+                        // still wins. Occupy-only gate per Steve ("does not matter if opponent occupies").
                         if (shieldScore > -50f) {
                             action.addReasoning("V51 BATTLE ORDER EARLY-DEPLOY: occupy BG site + system — deploy now, tax compounds +200", 200.0f);
                             logger.warn("V51 BATTLE ORDER: both theaters — +200 EARLY-DEPLOY (base {})", shieldScore);
@@ -8789,7 +8895,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     //     GameState gsBO = (game != null) ? game.getGameState() : null;
                     //     if (game != null && gsBO != null && playerId != null) {
                     //         for (PhysicalCard loc : gsBO.getAllPermanentCards()) {
-                    //             ... isBattleground + owner-present occupy scan → hasBGSite/hasBGSystem ...
+                    //             if (loc == null || loc.getBlueprint() == null) continue;
+                    //             com.gempukku.swccgo.common.Zone locZone = loc.getZone();
+                    //             if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
+                    //             SwccgCardBlueprint locBp = loc.getBlueprint();
+                    //             boolean isBattleground = false;
+                    //             try { com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = game.getModifiersQuerying();
+                    //                   if (mq != null) isBattleground = mq.isBattleground(gsBO, loc, null); } catch (Exception bgEx) { }
+                    //             if (!isBattleground) continue;
+                    //             boolean weOccupy = false;
+                    //             for (PhysicalCard atLoc : gsBO.getCardsAtLocation(loc)) {
+                    //                 if (atLoc != null && playerId.equals(atLoc.getOwner())) { weOccupy = true; break; }
+                    //             }
+                    //             if (weOccupy) {
+                    //                 if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) hasBGSystem = true;
+                    //                 else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) hasBGSite = true;
+                    //             }
                     //         }
                     //     }
                     // } catch (Exception e) { logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
@@ -8862,7 +8983,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      * V51/V112 (UPDATED 2026-07-06): mirror Battle Order's OWN occupation condition
      * via the engine instead of a hand-rolled owner-present loop (the V140-class
      * fix). Battle Order/Plan help Rando only while HE occupies both a battleground
-     * site AND a battleground system. Fails closed on any error. Mirrored from rando.
+     * site AND a battleground system (opponent's drains then cost +3; Rando's are
+     * not taxed). canSpot(occupies + battleground_site/system) is exactly what the
+     * card's OccupiesCondition checks, so gate and card can never disagree again
+     * (the Verge game bug: the hand loop missed a Scarif SYSTEM occupation the
+     * engine predicate catches). Fails closed on any error (no false deploy).
      */
     private boolean occupiesBothTheaters(com.gempukku.swccgo.game.SwccgGame game, String playerId) {
         if (game == null || playerId == null) return false;
@@ -8883,10 +9008,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     }
 
     /**
-     * V105/V117 (UPDATED 2026-07-06): is the 4th-slot preferred shield title actually
-     * offered among THIS decision's candidates? Prevents the Verge deadlock where the
-     * 4th slot was held hostage for a Battle Order that was never on the menu. Fails
-     * to false (= hold slot closed). Mirrored from rando.
+     * V105/V117 (UPDATED 2026-07-06): is the 4th-slot preferred shield title
+     * actually offered among THIS decision's candidates? The Verge game held the
+     * 4th shield slot hostage all game: prefers4thSlot returned "Battle Order"
+     * (Rando occupied both theaters) but Battle Order was never in the candidate
+     * list, so the old code hard-blocked every real shield at -5000 (2760 fires)
+     * and the slot deployed nothing. When the preferred card is not on the menu,
+     * the caller holds the slot closed instead of spamming a block for a card that
+     * can't be picked. Scans the full candidate list from context (both the
+     * ARBITRARY_CARDS blueprint path and the standard card-id path). Fails to
+     * false (= treat as not offered = hold slot closed), the conservative side.
      */
     private boolean preferredShieldInCandidates(DecisionContext context, String preferredTitle) {
         if (context == null || preferredTitle == null) return false;
@@ -8987,9 +9118,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (shieldStrategy.shieldsRemaining() <= 1) {
                             String preferred = shieldStrategy.prefers4thSlot(
                                 context.getGameState(), context.getGame(), context.getPlayerId());
-                            // V105 UPDATED 2026-07-06 (Verge game): only pursue the preferred card
-                            // if it is actually offered in THIS decision; else HOLD (slot closed)
-                            // instead of hard-blocking every real shield for a card not on the menu.
+                            // V105 UPDATED 2026-07-06 (Verge game unli50oa1ur8bdux): only pursue
+                            // the preferred card if it is actually offered in THIS decision.
+                            // Otherwise the 4th slot was held hostage all game — "prefer Battle
+                            // Order" fired while Battle Order was never in the candidate list, so
+                            // every real shield was hard-blocked at -5000 (2760 fires) and the
+                            // slot deployed nothing. When the preferred card is absent, fall
+                            // through to HOLD (slot stays closed, Steve's closed-by-default 4th
+                            // slot) instead of spamming a block for a card that can't be picked.
                             boolean preferredOnMenu = preferred != null
                                 && preferredShieldInCandidates(context, preferred);
                             if (preferredOnMenu) {
@@ -9011,8 +9147,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         title, preferred);
                                 }
                             } else {
-                                // No trigger active, OR preferred card not on the menu — 4th slot
-                                // stays CLOSED (hold), no spam.
+                                // No trigger active, OR the preferred card is not on the menu
+                                // this decision — 4th slot stays CLOSED (hold), no spam.
                                 action.addReasoning(
                                     "V105/V107 4TH SLOT HOLD: no available preferred card — keep slot closed -5000",
                                     -5000.0f);
@@ -9022,19 +9158,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         }
 
                         // === V51: BATTLE ORDER GATE (shield selection path) ===
-                        // UPDATED 2026-07-06 (Verge game): engine occupies predicate replaces the
-                        // hand-rolled loop (old loop commented out per feedback_comment_out_old_rules).
+                        // UPDATED 2026-07-06 (Verge game unli50oa1ur8bdux): detection swapped
+                        // to the engine occupies predicate (occupiesBothTheaters) — the old
+                        // hand-rolled owner-present loop below missed a Scarif SYSTEM occupation
+                        // while V105's power-based scan caught it, so the two disagreed. Old
+                        // loop commented out per feedback_comment_out_old_rules.
                         if (title.toLowerCase(java.util.Locale.ROOT).contains("battle order")
                                 || title.toLowerCase(java.util.Locale.ROOT).contains("battle plan")) {
                             if (!occupiesBothTheaters(context.getGame(), context.getPlayerId())) {
                                 action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
                                 logger.warn("V51 BATTLE ORDER GATE (shield): occupiesBothTheaters=false — BLOCKED!");
                             } else {
-                                // V51 EARLY-DEPLOY (EXTENDED 2026-07-06, Steve): +200 so Battle
-                                // Order/Plan deploys turns 1-2 once Rando occupies both theaters
-                                // (tax compounds). Guard shieldScore > -50 so V43 redundant /
-                                // pacing / not-played rejections still win. Occupy-only gate.
-                                // Mirrored from rando.
+                                // V51 EARLY-DEPLOY (EXTENDED 2026-07-06, Steve): once Rando occupies
+                                // both theaters, his own drains stop being taxed and the opponent's
+                                // are taxed +3 — value that COMPOUNDS every turn, so deploy Battle
+                                // Order/Plan EARLY (turns 1-2 too), not only in the turn-3 4th slot.
+                                // Base SITUATIONAL_HIGH untriggered = 80, which loses to auto-play
+                                // shields (200). +200 → 280 beats them and deploys within the turn's
+                                // pacing budget; stays far under the 4th-slot V105 +2000 (rides on
+                                // top there, harmless). Gated on occupy-only per Steve ("does not
+                                // matter if opponent also occupies"). GUARD shieldScore > -50 so this
+                                // never resurrects a V43 redundant-shield block (-100, opponent
+                                // already has the equivalent), a pacing-cap -50, or a not-played -100.
                                 if (shieldScore > -50f) {
                                     action.addReasoning("V51 BATTLE ORDER EARLY-DEPLOY: occupy BG site + system — deploy now, tax compounds +200", 200.0f);
                                     logger.warn("V51 BATTLE ORDER (shield): both theaters — +200 EARLY-DEPLOY (base {})", shieldScore);
@@ -9043,16 +9188,36 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
                             // OLD hand-rolled occupation loop (superseded 2026-07-06):
-                            // boolean hasBGSite = false; boolean hasBGSystem = false;
+                            // boolean hasBGSite = false;
+                            // boolean hasBGSystem = false;
                             // try {
-                            //     GameState gs = context.getGameState(); SwccgGame g = context.getGame(); String pid = context.getPlayerId();
+                            //     GameState gs = context.getGameState();
+                            //     SwccgGame g = context.getGame();
+                            //     String pid = context.getPlayerId();
                             //     if (g != null && gs != null && pid != null) {
                             //         for (PhysicalCard loc : gs.getAllPermanentCards()) {
-                            //             ... isBattleground + owner-present occupy scan → hasBGSite/hasBGSystem ...
+                            //             if (loc == null || loc.getBlueprint() == null) continue;
+                            //             com.gempukku.swccgo.common.Zone locZone = loc.getZone();
+                            //             if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
+                            //             SwccgCardBlueprint locBp = loc.getBlueprint();
+                            //             boolean isBattleground = false;
+                            //             try {
+                            //                 com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = g.getModifiersQuerying();
+                            //                 if (mq != null) isBattleground = mq.isBattleground(gs, loc, null);
+                            //             } catch (Exception bgEx) { /* fallback */ }
+                            //             if (!isBattleground) continue;
+                            //             boolean weOccupy = false;
+                            //             for (PhysicalCard atLoc : gs.getCardsAtLocation(loc)) {
+                            //                 if (atLoc != null && pid.equals(atLoc.getOwner())) { weOccupy = true; break; }
+                            //             }
+                            //             if (weOccupy) {
+                            //                 if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) hasBGSystem = true;
+                            //                 else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) hasBGSite = true;
+                            //             }
                             //         }
                             //     }
                             // } catch (Exception e) { logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
-                            // if (!hasBGSite || !hasBGSystem) { -9999 }
+                            // if (!hasBGSite || !hasBGSystem) { action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f); ... }
                         }
                     } else {
                         // Fallback if no shield strategy
@@ -9278,9 +9443,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
     // ═══════════════════════════════════════════════════════════
     // ═══ SECTION: BATTLE-3 — Damage & Forfeit (reorg 2026-07-06) ═══
-    // (chosenone twin of rando/evaluators/CardSelectionEvaluator.java — same hub.)
     // Owns: v159ForfeitScore 4-step picker (below) + V161/V178-forfeit/V154/V118/V150.
-    // Callable from RESPONSE (the bot defends inside opponent battles). NO-PASS context:
+    // Callable from RESPONSE (Rando defends inside opponent battles). NO-PASS context:
     // the damage segment legally forbids passing with obligations pending.
     // Hub: V159 LIVE (this helper; called from BOTH forfeit handlers so the same
     // situation gets the same score). KIND mix + key magnitudes: ORDERING via

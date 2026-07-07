@@ -299,11 +299,11 @@ public class DecisionTracker {
                         for (String[] e : recent) {
                             String k = e[0];
                             String r = e[1];
-                            // 2026-06-25 (Steve): same CANCEL-LOOP POISONING FIX as line ~443
-                            // (chosenone mirror). Sequence-repeat detector also wrote into the
-                            // PERMANENT blockedResponses (never cleared mid-game). Write turn-scoped
-                            // only; chosenone's 302 had NO turn-scoped sibling, so it was the most
-                            // exposed copy.
+                            // 2026-06-25 (Steve): same CANCEL-LOOP POISONING FIX as line ~443.
+                            // The sequence-repeat detector also wrote looping responses into the
+                            // PERMANENT blockedResponses (never cleared mid-game; same positional-ID
+                            // reuse landmine). Write turn-scoped only; getBlockedResponses() unions
+                            // both maps so within-turn protection holds and it clears each turn.
                             // blockedResponses.computeIfAbsent(k, x -> new HashSet<>()).add(r);
                             turnBlockedActions.computeIfAbsent(k, x -> new HashSet<>()).add(r);
                         }
@@ -446,14 +446,15 @@ public class DecisionTracker {
         if (lastActionChoiceKey != null && !lastActionChoiceKey.isEmpty() &&
             lastActionChoiceResponse != null && !lastActionChoiceResponse.isEmpty()) {
 
-            // 2026-06-25 (Steve): CANCEL-LOOP POISONING FIX (chosenone mirror of rando). The
-            // block ALSO wrote to the PERMANENT blockedResponses map, which clears only at game
-            // start (mid-game onPhaseChange resets the WRONG tracker). The key is a positional
-            // action ID the engine reuses for a different card each decision, so a stale block
-            // vetoes a different good card later in the game. Write to turnBlockedActions ONLY:
-            // getBlockedResponses() reads BOTH maps (within-turn protection preserved) and
-            // turnBlockedActions clears every turn change (updateState). Verified GO by review +
-            // council. Same fix at line ~302.
+            // 2026-06-25 (Steve): CANCEL-LOOP POISONING FIX. The block ALSO wrote to the
+            // PERMANENT blockedResponses map, which clears only at game start (mid-game
+            // onPhaseChange resets the WRONG tracker). The key is a positional action ID the
+            // engine reuses for a different card each decision, so a slot blocked by an
+            // un-placeable droid on turn 4 vetoed the good Sidious/Dofine deploys on turn 5 —
+            // Rando quit deploying. Write to turnBlockedActions ONLY: getBlockedResponses()
+            // reads BOTH maps (within-turn loop protection preserved) and turnBlockedActions
+            // clears every turn change (updateState). Verified GO by adversarial review +
+            // council. Same fix applied at line ~302 + the chosenone mirror.
             // blockedResponses.computeIfAbsent(lastActionChoiceKey, k -> new HashSet<>())
             //     .add(lastActionChoiceResponse);
 

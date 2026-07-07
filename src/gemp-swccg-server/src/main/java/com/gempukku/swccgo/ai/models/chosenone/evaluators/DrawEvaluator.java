@@ -192,20 +192,21 @@ public class DrawEvaluator extends ActionEvaluator {
         int forceGeneration = calculateForceGeneration(context);
 
         // === V58/V67w MAINTENANCE FLOOR (hard) — HARDENING 2026-07-07 ===
-        // Mirror of the rando DrawEvaluator fix. The maintenance reserve was
-        // COMPUTED correctly (calculateForceToReserve adds maintenanceObligation)
-        // but only ENFORCED as the soft "V58 HOLD RESERVE" -15, which draw-hunger
-        // bonuses (+64/+80/+400) trivially dominate. Rando drew its Force Pile to 0
-        // through the reserve floor and a MAINTENANCE card (Ap'lek, "End of your
-        // turn: Use 1 Force") was sacrificed at end of turn → lost on Life Force.
-        // Mirror the DeployEvaluator V59 HARD philosophy: an early return that
-        // strips ALL draw bonuses so PASS wins. Key ONLY off maintenanceObligation
-        // (not the full forceToReserve): only the maintenance portion has the
-        // property "spend it and you LOSE A CARD." Placed BEFORE V42 and all bonuses
-        // so the return actually blocks. Gated handSize > 1 so the genuine empty-hand
-        // death spiral (handSize<=1) still falls through to V42 EMERGENCY DRAW.
-        // No new V-tag — hardens V58/V67w in place
-        // (feedback_update_old_rule_not_new_version).
+        // The maintenance reserve was COMPUTED correctly (calculateForceToReserve
+        // adds maintenanceObligation) but only ENFORCED as the soft "V58 HOLD
+        // RESERVE" -15, which draw-hunger bonuses (+64/+80/+400) trivially dominate.
+        // Rando drew its Force Pile to 0 through the reserve floor and a MAINTENANCE
+        // card (Ap'lek, "End of your turn: Use 1 Force") was sacrificed at end of
+        // turn 5 → lost on Life Force (replay qgdridfo166f27r3). Mirror the
+        // DeployEvaluator V59 HARD philosophy: an early return that strips ALL draw
+        // bonuses so PASS wins, rather than another dominated soft delta.
+        // Key ONLY off maintenanceObligation (not the full forceToReserve): the
+        // DTF/First-Strike/contested/turn>=4 buffers are "nice for interrupts", but
+        // ONLY the maintenance portion has the property "spend it and you LOSE A
+        // CARD." Placed BEFORE V42 and all bonuses so the return actually blocks.
+        // Gated handSize > 1 so the genuine empty-hand death spiral (handSize<=1)
+        // still falls through to V42 EMERGENCY DRAW. No new V-tag — hardens
+        // V58/V67w in place (feedback_update_old_rule_not_new_version).
         int maintFloor = context.getForceReserveFacts().maintenanceObligation;
         if (maintFloor > 0 && forcePile <= maintFloor && handSize > 1) {
             action.addReasoning("V58 MAINTENANCE FLOOR (hard): force pile " + forcePile +

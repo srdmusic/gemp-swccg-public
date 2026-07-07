@@ -102,6 +102,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             EvaluatedAction action = new EvaluatedAction(actionId, ActionType.UNKNOWN, 0.0f, actionText);
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: SVC-SAFETY — loop-prevention veto trio (reorg 2026-07-06) ═══
+            // Owns: blocked-response handling: V163 hard veto -100000; V167 phase-fundamental soft -200
+            // (Activate Force is NEVER hard-vetoed); V169 endangered-mover soft -250 with V169_SOFT_RETRY_BUDGET=3
+            // per turn, then falls back to the V163 hard veto. Magnitudes FROZEN (plan: do not retune before T4).
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): V169 old single-shot -400.
+            // Cross-refs: SVC-SAFETY peers DecisionSafety (V148 all-bad pass), MOVE (V169-retreat +600 pairing). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // Check if this response is blocked (loop prevention)
             // V163 (2026-06): HARD VETO, not a nudge. The old additive -200 got
             // swamped by later positive rules (e.g. V35.4 spy-flee +250), so a
@@ -190,6 +198,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: ACTIVATE — activation guards (reorg 2026-07-06) ═══
+            // Owns: whether to activate: V168 always-activate +5000 vs V61c destiny-buffer -6000 (reserve<=3 AND
+            // battle plausible); with V38.3's +500 confirm (evaluateActivateForce below) this triangle is ONE boundary.
+            // Shared predicate DecisionContext.isBattlePlausibleThisTurn() — THREE sites must agree: this block,
+            // the ForceActivationEvaluator keep-3 cap, and the V38.3 reserve<=3 carve-out.
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): V61c pre-2026-07-06
+            // always-on buffer branch.
+            // Cross-refs: ACTIVATE (ForceActivationEvaluator owns how MUCH), PULL-ENGINE (V97 pulls fire BEFORE
+            // activation and must outrank V168's +5000). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // === V168 (Steve, 2026-06): ALWAYS ACTIVATE FORCE — never pass activation ===
             // Steve: "Rando should always activate force and not pass activating." Activating
             // Force is the bot's entire economy (it pays for deploys, drains, battles); passing
@@ -198,9 +217,38 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Force is already activated, "Activate Force" is no longer offered, so the bot still
             // passes legitimately at the end of the Activate phase.
             if (textLower.contains("activate force")) {
-                action.addReasoning(
-                    "V168 ALWAYS ACTIVATE: never pass Force activation while Force can be activated", 5000.0f);
-                logger.warn("V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
+                // V61c DESTINY BUFFER exception (Steve, 2026-06-29): if the Reserve Deck is
+                // already <= 3, PASS activation instead of the usual V168 always-activate.
+                // Activating moves Reserve -> Force Pile, so activating the last <=3 drains the
+                // destiny buffer that battle/weapon destiny draws need this turn (the engine
+                // forces >=1 per activation, so capping the amount alone erodes 3->2->1->0 over
+                // turns). Steve: "If Rando intends to battle that turn, he needs to save 3." Score
+                // below Pass (~5-8) so the action-choice lands on Pass. Pairs with the V38.3
+                // reserve<=3 carve-out below (else the "you have not activated Force" confirm
+                // would bounce Rando straight back into activating).
+                // V61c UPDATED 2026-07-06: battle-intent bypass — the buffer protection now applies
+                // ONLY on turns a battle is plausible (any contested location, per the shared
+                // predicate DecisionContext.isBattlePlausibleThisTurn(), same scan V61b uses).
+                // Zero contested locations => deploy-and-end turn => normal V168 always-activate.
+                // SAME predicate gates the ForceActivationEvaluator keep-3 cap + the V38.3
+                // carve-out below so all three sites agree.
+                int v61cReserve = context.getReserveDeckSize();
+                // V61c pre-2026-07-06 (always-on buffer):
+                // if (v61cReserve <= 3) {
+                boolean v61cBattlePlausible = context.isBattlePlausibleThisTurn();
+                if (v61cReserve <= 3 && !v61cBattlePlausible) {
+                    logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
+                }
+                if (v61cReserve <= 3 && v61cBattlePlausible) {
+                    action.addReasoning(
+                        "V61c DESTINY BUFFER: reserve <= 3 — pass activation, keep 3 for destiny", -6000.0f);
+                    logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — passing activation (no V168 +5000) on '{}'",
+                        v61cReserve, actionText);
+                } else {
+                    action.addReasoning(
+                        "V168 ALWAYS ACTIVATE: never pass Force activation while Force can be activated", 5000.0f);
+                    logger.warn("V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
+                }
             }
 
             // === V116 (Steve, 2026-05-22): GUARANTEED +100 FLOOR FOR RESERVE-DECK PULLS ===
@@ -285,7 +333,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 // won. Before blocking, consult the validated path V67h
                                 // trusts; WILL_SUCCEED -> no block, action scores naturally.
                                 // Any other outcome -> the -2000 block stands unchanged.
-                                // Mirrored from rando.
                                 com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullValidation v177Val =
                                     v177Oracle.validatePullFromSourceCard(
                                         com.gempukku.swccgo.common.Zone.RESERVE_DECK, v177Gt);
@@ -354,11 +401,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 } catch (Exception v177E) {
                     logger.debug("V177 dead-search check error: {}", v177E.getMessage());
                 }
-                // V116 +100 floor ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge,
-                // mirrored from rando): the scorer's +150 deploy-grade base covers the
-                // floor, and it is now VETO-GATED (the old unconditional floor could
-                // resurrect pulls the V60 guards were trying to kill). V177/V183 above
-                // are untouched — their continue still runs before any positive tier.
+                // V116 +100 floor ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge):
+                // the scorer's +150 deploy-grade base covers the floor, and it is now
+                // VETO-GATED (the old unconditional floor could resurrect pulls the V60
+                // guards were trying to kill). V177/V183 above are untouched — their
+                // continue still runs before any positive tier.
                 // Commented out per feedback_comment_out_old_rules:
                 // action.addReasoning(
                 //     "V116 RESERVE OPTION: deploy-from-reserve always at least +100", 100.0f);
@@ -438,12 +485,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // scope — Effects, Epic Events, Interrupts, Objectives, but this
             // V95 check focuses specifically on interrupts since those are the
             // ones typically lost as fodder).
-            // V95 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge,
-            // mirrored from rando): moved into the PULL-ENGINE veto chain as a hardBlock
-            // (see the V192 region) so the activate-window base (+5500) can NEVER outvote
-            // it — as an additive here, the pull pile netted the dead pull to +100 and it
-            // FIRED (boundary row 5). Logic verbatim in the new location.
-            // Commented out per feedback_comment_out_old_rules:
+            // V95 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge):
+            // moved into the PULL-ENGINE veto chain as a hardBlock (see the V192 region) so the
+            // activate-window base (+5500) can NEVER outvote it — as an additive here, the pull
+            // pile netted the dead pull to +100 and it FIRED (boundary row 5). Logic verbatim
+            // in the new location. Commented out per feedback_comment_out_old_rules:
             // if (cardId != null && context.getGameState() != null) {
                 // try {
                     // com.gempukku.swccgo.game.state.GameState v95Gs = context.getGameState();
@@ -527,10 +573,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         if (v134Lower.contains("odin nesloor") && v134ActionMatches) {
                             int v134ForcePile = context.getForcePileSize();
                             if (v134ForcePile < 5) {
-                                // V134 UPDATED 2026-07-06 T4.1 (mirrored from rando): -9999 raised to
-                                // the MOVE-ladder veto class -100000. Its "transport" text co-sums with
-                                // MoveEvaluator-scored actions (ME keyword "Transport"), so it must stay
-                                // veto-class across the new R2-R4 bands.
+                                // V134 UPDATED 2026-07-06 T4.1: -9999 raised to the MOVE-ladder veto
+                                // class -100000. Its "transport" text co-sums with MoveEvaluator-scored
+                                // actions (ME keyword "Transport"), so it must stay veto-class across
+                                // the new R2-R4 bands (an R4 transit +20000 would have outvoted -9999).
                                 // OLD: action.addReasoning(
                                 //     "V134 ODIN NESLOOR FLOOR: only " + v134ForcePile
                                 //         + " force in pile (need 5+) — hold the interrupt",
@@ -1056,13 +1102,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Knowledge And Defense (pulls from stacked cards, not Reserve).
             // Excludes character / starship / vehicle pulls (those have their
             // own timing windows in Deploy Phase).
-            // V97 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge,
-            // mirrored from rando): the scope predicate (Phase==ACTIVATE, static source
-            // EFFECT/EPIC_EVENT/INTERRUPT/OBJECTIVE, K&D + Anger, Fear, Aggression excluded)
-            // moved VERBATIM into the scorer as the +5500 PULL_BASE_ACTIVATE gate. +1500 was
-            // NOT enough: V168 ALWAYS ACTIVATE (+5000) outvoted the whole pull pile (+2000)
-            // and pulls fired AFTER activation with a shrunken pool (boundary row 1a,
-            // feedback_pull_before_activate). Commented out per feedback_comment_out_old_rules:
+            // V97 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge):
+            // the scope predicate (Phase==ACTIVATE, static source EFFECT/EPIC_EVENT/INTERRUPT/
+            // OBJECTIVE, K&D + Anger, Fear, Aggression excluded) moved VERBATIM into the scorer
+            // as the +5500 PULL_BASE_ACTIVATE gate. +1500 was NOT enough: V168 ALWAYS ACTIVATE
+            // (+5000) outvoted the whole pull pile (+2000) and pulls fired AFTER activation with
+            // a shrunken pool (boundary row 1a, feedback_pull_before_activate).
+            // Commented out per feedback_comment_out_old_rules:
             // if (cardId != null && context.getGameState() != null
                     // && context.getPhase() == Phase.ACTIVATE) {
                 // try {
@@ -1121,13 +1167,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // during DEPLOY phase and is LOCATION-specific.
             //
             // EXCLUDE Knowledge And Defense (stacked-card pull, not Reserve).
-            // V100 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge,
-            // mirrored from rando): its location-noun vocabulary merged into the shared
-            // isLocationPull predicate (V67l list, V192 region), and its chars-or-vehicles-
-            // in-hand check is now the scorer's +25 DEPLOY context bonus (ds-5: one tier
-            // bonus, not stacked — the old standalone +1500 double-counted with V67ai's
-            // tier on every location pull, boundary row 2's +8000 pile).
-            // Commented out per feedback_comment_out_old_rules:
+            // V100 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge):
+            // its location-noun vocabulary ("planet") merged into the shared isLocationPull
+            // predicate (V67l list, V192 region), and its chars-or-vehicles-in-hand check is now
+            // the +25 CONTEXT bonus on location tiers during DEPLOY (one tier bonus, not a
+            // stacked +1500 — ds-5). Commented out per feedback_comment_out_old_rules:
             // if (cardId != null && context.getGameState() != null
                     // && context.getPhase() == Phase.DEPLOY) {
                 // try {
@@ -1446,7 +1490,31 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 String decisionTextCheck = context.getDecisionText() != null
                     ? context.getDecisionText().toLowerCase() : "";
                 if (decisionTextCheck.contains("not activated force") || decisionTextCheck.contains("have not activated")) {
-                    if (textLower.equals("no")) {
+                    // V61c DESTINY BUFFER carve-out (Steve, 2026-06-29): when the Reserve Deck is
+                    // already <= 3, Rando deliberately passed activation (V168 exception above) to
+                    // keep 3 cards for battle/weapon destiny. Here the engine confirms "you have not
+                    // activated Force — pass?"; honor the pass ("Yes") instead of the usual V38.3
+                    // bounce-back, or the buffer protection is undone.
+                    // V61c UPDATED 2026-07-06: battle-intent bypass — honor the pass ONLY when a
+                    // battle is plausible (shared predicate DecisionContext.isBattlePlausibleThisTurn(),
+                    // same gate as the V168 carve-out above + the ForceActivationEvaluator keep-3
+                    // cap). Zero contested locations => normal V38.3 bounce-back ("No", go activate).
+                    int v38cReserve = context.getReserveDeckSize();
+                    // V61c pre-2026-07-06 (always-on buffer):
+                    // if (v38cReserve <= 3) {
+                    boolean v38cBattlePlausible = context.isBattlePlausibleThisTurn();
+                    if (v38cReserve <= 3 && !v38cBattlePlausible && textLower.equals("no")) {
+                        // Logged once (on the "No" option, which the bypass flips to +9999).
+                        logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
+                    }
+                    if (v38cReserve <= 3 && v38cBattlePlausible) {
+                        if (textLower.equals("yes")) {
+                            action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — confirm pass, keep 3 for destiny", 9999.0f);
+                            logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — confirming pass (skip activation)", v38cReserve);
+                        } else if (textLower.equals("no")) {
+                            action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — do not go back and activate", -9999.0f);
+                        }
+                    } else if (textLower.equals("no")) {
                         action.addReasoning("V38.3 MUST ACTIVATE: Go back and activate Force!", 9999.0f);
                         logger.warn("V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
                     } else if (textLower.equals("yes")) {
@@ -1935,6 +2003,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actionText, v67uSourceTitle);
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: DEPLOY-3 — weapon-pull criteria gate (reorg 2026-07-06) ═══
+            // Owns: V120 universal weapon-pull criteria block (-9999 when no in-play character satisfies the weapon's
+            // OWN matching filter; V125 contains() fix + 2026-06-29 strict-match fix folded in). Deliberately SEPARATE
+            // from the V185 oracle-side attach gate in DeckOracle — keep both.
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+            // Cross-refs: DEPLOY-3 (V158/V115/V67aq in DeployEvaluator), SVC-ORACLE (V185). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== V120 (Steve, 2026-05-22): UNIVERSAL WEAPON-PULL CRITERIA BLOCK ==========
             // Per Steve: "We need to hard block deploy from reserve deck or with an
             // interrupt when a character already has a weapon."
@@ -2384,6 +2460,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 continue;
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: SETUP — saga choice (reorg 2026-07-06) ═══
+            // Owns: V29.15 The Force Is Strong In My Family saga pick keyed by deck name
+            // (+1000 correct / -500 wrong / +500 default to I Have It when no deck name).
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+            // Cross-refs: SETUP (CardSelectionEvaluator turn-0 block), PLAYBOOKS (V54/V61-saga deck scripts). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== V29.15 Epic Event Saga Choice ==========
             // "The Force Is Strong In My Family" presents choices:
             //   "My Father Has It", "I Have It", "You Have That Power, Too"
@@ -2580,6 +2663,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: BATTLE-2 — weapons-segment window (reorg 2026-07-06) ═══
+            // Owns: the weapons-segment dispatch head: fire-before-throw (V29.12 fire +300 must beat throw's 200-250),
+            // Add Battle Destiny, V29.10 lightsaber throw. The wider battle-interrupt suite (V35.x hatred lifecycle,
+            // V144, V155, V175, V67u Force Push) sits scattered ABOVE in this file — same section, one owner.
+            // KIND mix (BATTLE-2 overall): 11 VETO / 5 BANDED / 2 ORDERING.
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+            // Cross-refs: BATTLE-1 (BattleEvaluator + this file's V25 power-tier block — the SUM is the
+            // behavior), TARGETING (V36 weapon targeting in CardSelectionEvaluator). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== Fire Weapons ==========
             // V29.12: Fire MUST score higher than throw (250) so Rando fires the
             // lightsaber BEFORE throwing it. Throwing sacrifices the weapon (places it
@@ -3483,12 +3576,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             }
 
             // ========== Take Card Into Hand ==========
-            // V192 (2026-07-06, mirrored from rando): reserve-deck takes now FALL THROUGH
-            // to the merged pull scorer branch below (single owner — the old routing sent
-            // "Take X into hand from Reserve Deck" here, so the pull branch never saw it
-            // and the V29.7 +250 fired instead of the tier table). Non-reserve takes
-            // (V29.7 BOUNCE class, lost/used/force pile) keep routing here.
-            // Old dispatch commented out:
+            // V192 (2026-07-06): reserve-deck takes now FALL THROUGH to the merged pull
+            // scorer branch below (single owner — the old routing sent "Take X into hand
+            // from Reserve Deck" here, so the pull branch never saw it and the V29.7 +250
+            // fired instead of the tier table). Non-reserve takes (V29.7 BOUNCE class,
+            // lost/used/force pile) keep routing here. Old dispatch commented out:
             // else if (actionText.contains("Take") && actionText.contains("into hand")) {
             else if (actionText.contains("Take") && actionText.contains("into hand")
                      && !textLower.contains("reserve deck") && !textLower.contains("[upload]")) {
@@ -3521,6 +3613,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 action.addReasoning("Draw option (see DrawEvaluator)", 0.0f);
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: MOVE — movement guards + dispatch (reorg 2026-07-06) ═══
+            // Owns: V67ae 'move to here' drain guard (-300) + the Movement Actions dispatch below (V35.4 spy-flee,
+            // landspeed/shuttle scoring). The full stay/flee/hunt ladder lives in MoveEvaluator (V136<->V137 parity).
+            // NOTE: the V79 parse in MoveEvaluator is INERT; live parsec steering = V79b in RandoCalAi
+            // (+ the V103 fallback near line ~1216 in this file).
+            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+            // Cross-refs: MOVE (MoveEvaluator), SVC-SAFETY (V169 endangered movers), CONTROL (drain-before-move
+            // interleave: moving a participant first forfeits that card's drain). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
             // ========== V67ae: GAME-TEXT 'MOVE TO HERE' DRAIN GUARD ==========
             // Steve's report: Rando moved Vader from CC Lower Corridor (3-drain
             // battleground) to Mustafar: Vader's Castle (0 drain) using Castle's
@@ -3573,11 +3675,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // If our character is at ANY location where an opponent (including undercover spy)
                 // has presence, our force drain is blocked. Moving away lets us drain elsewhere.
                 // Undercover spies deploy on OUR side but count as opponent presence!
-                // V35.4 UPDATED 2026-07-06 (audit row move-7; mirrored from rando): two fixes —
+                // V35.4 UPDATED 2026-07-06 (audit row move-7): two fixes —
                 //   1. OWNERSHIP: an opponent undercover spy is owner == OPPONENT &&
                 //      isUndercover (the engine never flips owner on undercover). The old
                 //      test flagged OUR OWN spy (owner == us) as the "opponent spy", so our
-                //      drain-block spy paid +250 to EVERY move action on the table,
+                //      V170 drain-block spy paid +250 to EVERY move action on the table,
                 //      including its own move-away (fighting V53 SPY STAY -300 and losing).
                 //   2. SCOPE: bonus only for actions whose MOVER (this action's cardId) is
                 //      at the blocked location, and never for an undercover mover (V53/V170
@@ -4293,11 +4395,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     && hpTransit.getObjectiveTitle() != null
                     && hpTransit.getObjectiveTitle().toLowerCase(Locale.ROOT).contains("hidden path");
                 if (onHiddenPath) {
-                    // V60 UPDATED 2026-07-06 T4.1 (mirrored from rando): +9999 raised to +20000 =
-                    // the MOVE-ladder R4 MANDATORY TRANSIT band, so both transit arms (this
-                    // game-text action and MoveEvaluator's V53b landspeed arms) share one band
-                    // and beat any ME R3 stack by construction instead of by statement order.
-                    // V60 keeps ONLY this Hidden Path transit arm (ruling P3).
+                    // V60 UPDATED 2026-07-06 T4.1: +9999 raised to +20000 = the MOVE-ladder R4
+                    // MANDATORY TRANSIT band, so both transit arms (this game-text action and
+                    // MoveEvaluator's V53b landspeed arms) share one band and beat any ME R3
+                    // stack (≤ ~12000+2800+550) by construction instead of by statement order
+                    // (move-3e boundary). V60 keeps ONLY this Hidden Path transit arm (ruling P3).
                     // OLD: action.addReasoning("V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective!", 9999.0f);
                     action.addReasoning("V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)", 20000.0f);
                     logger.warn("V60 HIDDEN PATH TRANSIT: '{}' — +20000 (R4 band; CORRECT outward move, unlike landspeed)", actionText);
@@ -4306,11 +4408,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
-            // ========== V192 RESERVE DECK PULLS — merged scorer (was V60 always-fire) ==========
-            // V192 (Steve + council, T4.2 pull-engine merge, 2026-07-06, mirrored from rando):
-            // ONE scorer for every reserve-deck pull. Vetoes run FIRST and short-circuit
-            // (hardBlocked); only then ONE positive line is emitted:
-            //   BASE (+150 deploy-grade; +5500 PULL_BASE_ACTIVATE under the old V97 scope)
+            // ═══════════════════════════════════════════════════════════
+            // ═══ REGION: PULL-ENGINE — V192 merged pull scorer + dead-search (reorg 2026-07-06) ═══
+            // V192 (Steve + council, T4.2 pull-engine merge, 2026-07-06): ONE scorer for every
+            // reserve-deck pull, hub-tag precedent V136/V153/V158/V159. Vetoes run FIRST and
+            // short-circuit (hardBlocked); only then ONE positive line is emitted:
+            //   BASE (+150 deploy-grade; +5500 PULL_BASE_ACTIVATE under the old V97 scope,
+            //         with the P1 stand-down when V61c holds the destiny buffer)
             //   + TYPE TIER (location 1500/1400/1300/1200 by source cat; weapon 600; device 400)
             //   + CONTEXT (+50 [download]; +25 chars-in-hand during DEPLOY, the V100 rationale)
             //   clamped 1750 deploy-grade / 7100 activate-grade.
@@ -4318,13 +4422,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
             //   V60-pull baseline, V82 +2500 grant, V95 dead-interrupt (folded as hardBlock),
             //   V97 +1500, V100 +1500, V116 +100 floor, V67l/V67ai location tiers,
             //   V67m/V67am weapon/device grants, V29.7 generic PULL FIRST +250.
-            // V60 keeps ONLY its Hidden Path transit arm (branch above). Veto-chain lines keep
-            // their historical V-tags for replay-grep continuity.
-            // MIRROR NOTE: chosenone has NO V61c destiny buffer and NO
-            // DecisionContext.isBattlePlausibleThisTurn(), so the rando P1 stand-down
-            // (activate base drops to deploy-grade at reserve<=3 + battle plausible) is
-            // ABSENT here by design — add it if/when V61c is ever mirrored.
-            // ----------------------------------------------------------------------------
+            // V60 keeps ONLY its Hidden Path transit arm (+20000 R4, branch above). Veto-chain
+            // lines keep their historical V-tags (V60 guards, V66, V67h, V67ac, V95, V131,
+            // V67ar/V67ao/V149) for replay-grep continuity.
+            // Dead-search verdicts still come from SVC-ORACLE (V177 -2000 skip-all upstream,
+            // V131 tiers, V82.1-.3 rescue).
+            // Cross-refs: ACTIVATE (V192 base 5500 must outrank V168 +5000; P1 stand-down uses
+            // the SAME DecisionContext.isBattlePlausibleThisTurn() predicate as V61c),
+            // SVC-ORACLE (facts), DEPLOY-3 (V120/V185 weapon gates). Boundary math:
+            // resources/T4_Boundary_Tables_2026-07-06.md §T4.2. See also
+            // resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+            // ═══════════════════════════════════════════════════════════
+            // ========== V192 RESERVE DECK PULLS — merged scorer (was V60 always-fire) ==========
             // Steve's rule (feedback_reserve_deck_pulls.md): Reserve Deck pull effects
             // are FREE VALUE — thin the deck, bring key cards into play. Always try them.
             // Covers [Download] actions (Sai'torr Kal Fas → matching weapon, Visage of
@@ -4336,7 +4445,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             //   2. Force can't cover the action cost (defer to next turn)
             //   3. This action has failed 2x in a row (shouldAvoidPulling)
             // V192 TRIGGER WIDENED 2026-07-06 to the union of the absorbed V97/V95/V116
-            // triggers ("[upload]" + generic take-into-hand). Old trigger commented out:
+            // triggers ("[upload]" + generic take-into-hand) so no absorbed rule loses
+            // coverage. The Take-into-hand dispatch above now excludes reserve-deck takes
+            // so they fall through to here (single owner). Old trigger commented out:
             // else if (textLower.contains("[download]")
             //          || (textLower.contains("from reserve deck") && !textLower.contains("shuffle"))
             //          || textLower.contains("take an effect into hand")
@@ -4371,9 +4482,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // V82 UPDATED 2026-07-06: scoring MOVED below the V60 guards, inside the
                 // if (!hardBlocked) region. Here it ran BEFORE hardBlocked even existed,
                 // so Guard 1 (reserve <= 2, reveal risk) fired -400 and the +2500 still
-                // outvoted it — the bot revealed its last 2 reserve cards (audit row
-                // deploy-sequencing-1; mirrored from rando). OLD placement commented out
-                // per house rules:
+                // outvoted it — Rando revealed his last 2 reserve cards (audit row
+                // deploy-sequencing-1). OLD placement commented out per house rules:
                 // {
                 //     GameState v82Gs = context.getGameState();
                 //     if (cardId != null && v82Gs != null) {
@@ -4419,7 +4529,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             // V60 UPDATED 2026-07-06: -400 → -9999, matching the DeployEvaluator
                             // copy of this exact guard (V60 RESERVE RISK, reserve <= 2). -400 was
                             // outvoted by the ungated V116 +100 / V100 +1500 / V97 +1500 stack
-                            // (audit row deploy-sequencing-1; mirrored from rando).
+                            // (audit row deploy-sequencing-1); -9999 dominates all of them.
                             action.addReasoning("V60 RESERVE RISK: Reserve deck has " + reserveSize
                                 + " cards — pull would reveal almost everything!", -9999.0f);
                             // OLD magnitude commented out 2026-07-06 (feedback_comment_out_old_rules):
@@ -4648,10 +4758,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
                 // === V95 (Steve, 2026-05-20; folded into the V192 veto chain 2026-07-06):
                 // SAVE DEAD INTERRUPTS WHEN RESERVES >= 15 ===
-                // Moved from the standalone top-of-loop block (commented out near line ~430)
-                // into this chain as a hardBlock — the old ADDITIVE placement let the pull
-                // pile outvote the -2000 and the dead pull fired (boundary row 5). Mirrored
-                // from rando; logic verbatim from the old block.
+                // Moved from the standalone top-of-loop block (commented out near line ~470)
+                // into this chain as a hardBlock. Old placement was ADDITIVE: the pull pile
+                // (V116+V97+V60 dl+V29.7 = +2100) outvoted the -2000 to +100 and the dead
+                // pull FIRED, revealing reserve (boundary row 5). As a hardBlock the -2000
+                // stands alone and Pass wins. Logic verbatim from the old block.
                 if (!hardBlocked && cardId != null && pullGs != null) {
                     try {
                         PhysicalCard v95Src = pullGs.findCardById(Integer.parseInt(cardId));
@@ -4702,7 +4813,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
 
                 if (!hardBlocked) {
-                    // ═══ V192 PULL SCORER (Steve + council, 2026-07-06, mirrored from rando) ═══
+                    // ═══ V192 PULL SCORER (Steve + council, 2026-07-06) ═══
                     // All positives below feed ONE addReasoning at the end of this block
                     // (see "V192 SINGLE EMIT"). Detection predicates (V67l keywords, V82
                     // regex, V67m/V67am keywords, V131 deck-aware gate) survive as inputs;
@@ -4720,15 +4831,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     //     actionText, (int)baseline);
 
                     // === V82 EXPLICIT SOURCE-CARD SITE-PULL TRIGGER ===
-                    // V82 UPDATED 2026-07-06: moved here from ABOVE the V60 guards so the
-                    // +2500 respects hardBlocked (Guard 1 reserve<=2 / Guard 2 fail-stop /
-                    // Guard 3 target-missing / V66 / V67h / V67ac). Full rationale lives in
-                    // the original V82/V82.1/V82.2 comment block above the guards.
-                    // V82 UPDATED AGAIN 2026-07-06 (V192 merge, mirrored from rando): the
-                    // standalone +2500 grant is ABSORBED — the regex now only feeds the shared
-                    // isLocationPull predicate (V67l keyword list ∪ THIS regex ∪ V100's
-                    // "planet"), and the LOCATION tier value comes from the single V192 tier
-                    // table below. Old grant commented out.
+                    // V82 UPDATED 2026-07-06 (earlier today): moved here from ABOVE the V60
+                    // guards so it respects hardBlocked. Full rationale lives in the original
+                    // V82/V82.1/V82.2 comment block above the guards.
+                    // V82 UPDATED AGAIN 2026-07-06 (V192 merge): the standalone +2500 grant is
+                    // ABSORBED — the regex now only feeds the shared isLocationPull predicate
+                    // (V67l keyword list ∪ THIS regex ∪ V100's "planet"), and the LOCATION tier
+                    // value comes from the single V192 tier table below. Old grant commented out.
                     boolean v192LocByV82 = false;
                     String v192V82Noun = null;
                     String v192V82SrcTitle = null;
@@ -4834,7 +4943,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                     // === V131 (Steve, 2026-05-25): DECK-AWARE PULL DETECTION (three-tier) ===
                     //
-                    // Gates V67ai LOCATION-tier bonus on actual deck-state checks:
+                    // Gates the LOCATION tier (was V67ai's bonus) on actual deck-state checks:
                     //   Tier 1 HARD BLOCK -9999: target proven not in deck at all
                     //     (countMatchingInDeck == 0). The effect would fail and reveal
                     //     reserve. Example: Emperor's "search reserve for Force Lightning"
@@ -4939,14 +5048,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         hardBlocked = true;
                     }
                     if (v131DowngradeBonus) {
-                        // V131 Tier 2 RE-WIRED 2026-07-06 (V192 merge, mirrored from rando):
-                        // the old additive -2000 was DROWNED by the +8000 pile (boundary row
-                        // 3: downgraded pull still scored +5200..+6000 and burned the
-                        // once-per-turn download on a satisfied target). Now the downgrade
-                        // flag makes the V192 SINGLE EMIT below suppress ALL positives and
-                        // emit -200 instead — the pull loses to Pass by arithmetic, not by a
-                        // constant race. Old additive penalty commented out
-                        // (feedback_comment_out_old_rules):
+                        // V131 Tier 2 RE-WIRED 2026-07-06 (V192 merge): the old additive -2000
+                        // was DROWNED by the +8000 pile (boundary row 3: downgraded pull still
+                        // scored +5200..+6000 and burned the once-per-turn download on a
+                        // satisfied target). Now the downgrade flag makes the V192 SINGLE EMIT
+                        // below suppress ALL positives and emit -200 instead — the pull loses
+                        // to Pass by arithmetic, not by a constant race. Old additive penalty
+                        // commented out (feedback_comment_out_old_rules):
                         // action.addReasoning(
                         //     "V131 DECK-AWARE SOFT DOWNGRADE: " + v131Reason
                         //         + " — neutralize LOCATION bonus",
@@ -4956,8 +5064,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                     if (v131GateOpen && !hardBlocked) {
                         // V67ai (Steve, 2026-05-07): TIERED LOCATION DEPLOY ORDER — ABSORBED
-                        // into the V192 tier table 2026-07-06 (T4.2 pull-engine merge,
-                        // mirrored from rando).
+                        // into the V192 tier table 2026-07-06 (T4.2 pull-engine merge).
                         //
                         // Steve's rule: 'Rando should never under any circumstances avoid
                         // deploying locations.' Location-pull cards keep a strict priority
@@ -4995,7 +5102,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             } catch (Exception e) { /* fall through to default */ }
                         }
                         // Old V67ai magnitudes commented out 2026-07-06 (V192 re-size):
-                        // float v67aiBonus;
                         // switch (v67aiTier) {
                         //     case 1: v67aiBonus = 2000.0f; break;
                         //     case 2: v67aiBonus = 1800.0f; break;
@@ -5350,14 +5456,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     // where the action would actually FAIL (weapon/device pull with no
                     // character host — see V67ao gates inside V67am blocks).
 
-                    // ═══ V192 SINGLE EMIT (Steve + council, 2026-07-06, mirrored from rando) ═══
+                    // ═══ V192 SINGLE EMIT (Steve + council, 2026-07-06) ═══
                     // Exactly ONE positive pull-scorer line per action (acceptance test:
                     // grep per actionId finds one). Absorbs V60-pull/V82/V95/V97/V100/V116/
                     // V67l/V67ai/V67am/V29.7-generic.
-                    // MIRROR NOTE: the rando P1 stand-down (activate base drops to deploy
-                    // grade at reserve<=3 + isBattlePlausibleThisTurn) is ABSENT here —
-                    // chosenone has no V61c destiny buffer and no shared battle-intent
-                    // predicate. Add it if/when V61c is mirrored.
                     if (hardBlocked) {
                         // A veto fired inside the scorer (V131 hard block / weapon-holder
                         // gates) — its own negative line is already on the action; emit no
@@ -5399,8 +5501,23 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                         || v192Cat == com.gempukku.swccgo.common.CardCategory.INTERRUPT
                                         || v192Cat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE;
                                     if (v192StaticSource) {
-                                        v192Base = 5500.0f;
-                                        v192ActivateBase = true;
+                                        // P1 STAND-DOWN (orchestrator ruling 2026-07-06): when
+                                        // the V61c destiny buffer is holding activation
+                                        // (reserve <= 3 AND battle plausible — the SAME shared
+                                        // predicate, DecisionContext.isBattlePlausibleThisTurn(),
+                                        // never a second copy), the pull must not fire at
+                                        // activate grade either: it erodes the same 3-card
+                                        // destiny buffer activation is protecting. Stand down
+                                        // to the deploy-grade base. Guard 1 above still kills
+                                        // pulls outright at reserve <= 2.
+                                        if (context.getReserveDeckSize() <= 3
+                                                && context.isBattlePlausibleThisTurn()) {
+                                            logger.warn("V192 PULL SCORER STAND-DOWN (V61c destiny buffer): reserve={} <= 3, battle plausible — deploy-grade base on '{}'",
+                                                context.getReserveDeckSize(), actionText);
+                                        } else {
+                                            v192Base = 5500.0f;
+                                            v192ActivateBase = true;
+                                        }
                                     }
                                 }
                             } catch (NumberFormatException nfe) { /* not numeric cardId */ }
@@ -5485,6 +5602,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
         logger.info("V38.3 ACTIVATE FORCE: Scored +500 — always activate");
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // ═══ REGION: CONTROL — force drain scoring (reorg 2026-07-06) ═══
+    // Owns: drain go/no-go and sizing: V52-drain +50 drain-anyway (+100..300 multi-site), V48 early-turn
+    // deferral -50, V189 net -1 drain budget gate (turn spend forecast), V104 / V24.15 zero-drain guards,
+    // V140 ordering, V29.9 Hunt Down drain priority. Drain-before-move interleave rule: each card drains
+    // once/turn — moving a participant first forfeits the drain.
+    // KIND mix (CONTROL overall): 5 VETO / 4 BANDED / 1 ORDERING.
+    // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
+    // Cross-refs: MOVE (interleave), PLAYBOOKS (V24.x TDIGWATT drain rules), RESPONSE (the two
+    // drain-response timings). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+    // ═══════════════════════════════════════════════════════════
     private void evaluateForceDrain(EvaluatedAction action, DecisionContext context, String locationCardId) {
         // Force drains are generally good unless under Battle Order rules
         // Ported from Python action_text_evaluator.py lines 351-493
@@ -5513,13 +5641,35 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         }
                         // === V189 (Steve, 2026-07-04): NET-VALUE DRAIN GATE ===
                         // "He should not have paid to drain for 1 with battle plan or
-                        // battle order on the board." Mirrored from rando; see the
-                        // rando ActionTextEvaluator for the full rationale + boundary
-                        // math. UPDATED 2026-07-06 in place: two tiers — net <= -2
-                        // flat-blocked; net -1 budget-gated (allowed only when
-                        // forcePile - cost covers live deployable hand costs + a
-                        // 2-Force move allowance, recomputed at every drain decision).
-                        // Cost-0 games unaffected; net 0 allowed.
+                        // battle order on the board." Game 20jqtseod148of4y: Rando paid
+                        // 3 Force to drain 1 at Audience Chamber, twice. Ask the engine
+                        // what initiating costs (getInitiateForceDrainCost sums every
+                        // INITIATE_FORCE_DRAIN_COST modifier — Battle Order, Battle
+                        // Plan, anything future — the same query the engine charges via
+                        // PayInitiateForceDrainCostEffect). Boundary: cost 0 games
+                        // completely unaffected (0 is never > drain, drainAmount > 0
+                        // past V24.15); net 0 (pay 3 drain 3) ALLOWED — 3 permanent
+                        // Life Force damage for 3 recycling Force. -2000 blocks land
+                        // exactly -2000 (nothing scores a drain before this point),
+                        // losing to Pass (+5) by ~2005, above the -9999 trap tier.
+                        // UPDATED 2026-07-06 in place (Steve, 2026-07-04): "We should
+                        // still allow drain 2 for 3 force if there is enough force to
+                        // deploy and move everything that rando wants to do that turn."
+                        // Two tiers now. Net <= -2 (pay 3 drain 1, the original
+                        // offender) stays flat-blocked. Net -1 (pay 3 drain 2) is
+                        // BUDGET-GATED: allowed only when forcePile - cost still covers
+                        // the live deployables in hand + a 2-Force move allowance.
+                        // Drains are CONTROL phase (before Deploy/Move), so the budget
+                        // is a forecast, recomputed from live gameState at EVERY drain
+                        // decision — automatically re-checked whenever Force is spent
+                        // (the DeckOracle.refresh freshness pattern; no spend event
+                        // exists to hook, and priming DeployPhasePlanner at Control
+                        // would cache a stale over-budgeted plan into the V38.4
+                        // hold-back machinery — see AI_CHANGELOG 2026-07-06). This
+                        // restores V52's old "net -1 marginal but worth it" stance
+                        // ONLY while the turn plan stays funded. Under-forecast gaps
+                        // (Effects/weapons/devices/pull costs uncounted) err toward
+                        // allowing a marginal drain — bounded, listed in changelog.
                         float v189Cost = drainGame.getModifiersQuerying().getInitiateForceDrainCost(
                             gameState, drainLocation, playerId);
                         if (v189Cost > drainAmount) {
@@ -5531,7 +5681,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
                                 return;
                             }
-                            // Net -1 tier: turn spend forecast, mirrored from rando.
+                            // Net -1 tier: TURN SPEND FORECAST — live deployable hand
+                            // costs (persona-dead cards excluded, same isDeadCard test
+                            // DeployPhasePlanner uses) + flat 2-Force move allowance.
                             int v189ForcePile = gameState.getForcePileSize(playerId);
                             int v189PlannedSpend = 0;
                             List<PhysicalCard> v189Hand = gameState.getHand(playerId);
@@ -5584,10 +5736,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     // before its 2026-07-04 rework). The old static printed-icon check said
                     // "battleground" for dual-icon sites dynamically made non-battleground
                     // (cancelled force icons, NONBATTLEGROUND modifiers, Senate/Audience
-                    // Chamber class cards), so the -9999 block below never fired and the bot
+                    // Chamber class cards), so the -9999 block below never fired and Rando
                     // drained into a guaranteed Simple Tricks cancel (audit row
-                    // control-drain-5; mirrored from rando). Static icons kept ONLY as
-                    // fallback when the game object is unavailable (pre-2026-07-06 behavior).
+                    // control-drain-5). Static icons kept ONLY as fallback when the game
+                    // object is unavailable (pre-2026-07-06 behavior).
                     boolean isBattlegroundSite = false;
                     if (context.getGame() != null) {
                         isBattlegroundSite = context.getGame().getModifiersQuerying()
@@ -5703,9 +5855,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // the waiver check so V104/V48 only fire when the cost is actually due.
             // V140 (UPDATED 2026-07-04, in place): the old hand-rolled scan below
             // treated "Battle Plan on table" as a UNIVERSAL cost waiver — factually
-            // wrong (Battle Plan imposes its own identical 3-Force drain tax). Ask
-            // the engine what initiating costs HERE. Mirrored from rando; see the
-            // rando ActionTextEvaluator for the full rationale.
+            // wrong. Battle Plan (Card8_035) waives only Battle Order's (Card8_118)
+            // modifier and imposes its OWN identical 3-Force drain tax unless the
+            // occupy-BG-site-AND-BG-system test is met. That false waiver put +60 on
+            // a pay-3-to-drain-1 in game 20jqtseod148of4y (2026-07-04). Ask the
+            // engine the one true question instead: what does initiating cost HERE?
             boolean v140CostWaived = false;
             try {
                 if (gameState != null && locationCardId != null && context.getGame() != null) {
@@ -6041,12 +6195,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // from effects like Endor Shield, Mobilization Points, etc.
             // These should ALWAYS fire before locations (+200) and characters.
             // Getting cards into hand first = better deploy decisions.
-            // V192 (2026-07-06, mirrored from rando): generic +250 ABSORBED into the V192
-            // pull scorer base — "Reserve Deck" takes now route to the PULL-ENGINE branch
-            // (dispatch gate), so this arm only sees leftover "from Reserve" phrasings
-            // without "Deck". Grant commented out (feedback_comment_out_old_rules); the
-            // TDIGWATT-specific admiral/general +250/+300 branch earlier in the chain is
-            // untouched.
+            // V192 (2026-07-06): generic +250 ABSORBED into the V192 pull scorer base —
+            // "Reserve Deck" takes now route to the PULL-ENGINE branch (dispatch gate),
+            // so this arm only sees leftover "from Reserve" phrasings without "Deck".
+            // Grant commented out (feedback_comment_out_old_rules); the TDIGWATT-specific
+            // admiral/general +250/+300 branch earlier in the chain is untouched.
             // action.addReasoning("V29.7 PULL FIRST: Get cards into hand before deploying!", 250.0f);
             logger.info("V29.7 PULL FIRST (absorbed by V192): '{}' — no standalone +250", actionText);
         } else if (isFromDeck && textLower.contains("from lost pile")) {

@@ -531,9 +531,18 @@ public class MoveEvaluator extends ActionEvaluator {
                             java.util.regex.Matcher v79m = java.util.regex.Pattern.compile(
                                 "parsec\\s+(\\d+)").matcher(v79ActionLower);
                             Integer destParsec = null;
-                            // (chosenone keeps the original first-match parse; rando's 2026-06-28
-                            // last-match V79 fix was never mirrored here and is out of T4.1 scope.)
-                            if (v79m.find()) {
+                            // 2026-06-28 (Steve) FIX: action text reads "...at parsec OLD to ...at
+                            // parsec NEW", so .find() (first match) grabbed the SOURCE parsec (always
+                            // the Death Star's current 4) and scored EVERY move -300 "wrong direction" —
+                            // it never steered toward Scarif (replay: it wandered 4->2->0->1). Take the
+                            // LAST match = the DESTINATION parsec. (dest-only text still works: last==only.)
+                            // NOTE 2026-07-01: this branch is effectively INERT for Verge of Greatness —
+                            // the live "Move using hyperspeed" action text carries NO parsec at all, so
+                            // destParsec stays null here. The real steering is V79b in RandoCalAi (~692),
+                            // which handles the separate MULTIPLE_CHOICE "Choose parsec to move to"
+                            // decision. Keep this parse as a harmless fallback for texts that DO embed
+                            // a parsec; do not spend time "fixing" it — fix V79b instead.
+                            while (v79m.find()) {
                                 try { destParsec = Integer.parseInt(v79m.group(1)); }
                                 catch (Exception e) { /* ignore */ }
                             }
@@ -983,12 +992,22 @@ public class MoveEvaluator extends ActionEvaluator {
                                     cardToMove.getTitle(), totalAbilityHere), 50.0f);
 
                                 // === V156 JOIN-GROUP (2026-07-07, move arm; Fel-at-Beach loss, audit deploy-siting-2) ===
-                                // Mirror of the rando block (see rando/evaluators/MoveEvaluator.java for the
-                                // full rationale). Weak (ability<4) solo at an uncontested site with an
-                                // adjacent friendly group to join claims R2 DOCTRINE (fine +250 passes the
-                                // L2 gate; NON-battle-seeking so the V137 canWinAt veto never applies).
-                                // Exempt: undercover spies, opponent presence at the site, and a solo doing
-                                // READY objective work at a flip-relevant site (shared isV156FlipNotReady).
+                                // The deploy-side V156 hold now blocks CREATING weak solos at BGs on all
+                                // turns, but solos still arise (battle losses, forced deploys, pre-fix
+                                // states). V32's +50 above was never enough to move them: the ladder needs
+                                // an R2 claim (fine >= +200, ruling L2) or the R1 fines (V85 -800 STAY,
+                                // V22.2 -120...) bury the move. Claim R2 DOCTRINE when the weak solo has
+                                // an adjacent friendly group to join: fine +250 passes the L2 gate,
+                                // NON-battle-seeking so the V137 canWinAt veto never applies (ruling L3),
+                                // and R2 base 6000 < R3 12000 / R4 20000 so survival/transit still outrank.
+                                // Exempt: undercover spies (V170's parked spies sit), opponent presence at
+                                // the site (that's a battle/retreat problem, not a join), and a solo doing
+                                // READY objective work at a flip-relevant site (same carve the deploy-side
+                                // V156 uses, via the shared isV156FlipNotReady predicate).
+                                // Destination arm: CardSelectionEvaluator's V156 JOIN-GROUP MODE (same
+                                // date) boosts friendly-stack destinations and gates V41 WRONG DIRECTION —
+                                // without it this claim moves and the destination surface vetoes (-9999),
+                                // the exact V160 cancel-loop that stranded Fel.
                                 try {
                                     String v156Opp = game.getOpponent(playerId);
                                     float v156OppPowerHere = game.getModifiersQuerying().getTotalPowerAtLocation(

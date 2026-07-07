@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * It does NOT need to infer card movements — it reads the ground truth directly.
  *
  * Integration:
- *   - Initialized in TheChosenOneAi constructor
+ *   - Initialized in RandoCalAi constructor
  *   - analyze() called on first decision of each game
  *   - refresh() called every decision in buildEvaluatorContext()
  *   - Injected into DecisionContext for evaluator access
@@ -269,7 +269,11 @@ public class DeckOracle {
 
         // Any unmatched DeckCards may be new cards (pulled from outside deck)
         // or cards that moved to a zone we don't track. Mark them as unknown.
-        for (int i = 0; i < allCards.size(); i++) {
+        // DeckOracle off-by-one fix: bound to matched.length, NOT allCards.size() —
+        // matchCardsFromZone() can append new mid-game cards (see ~line 1371), growing
+        // allCards past matched.length (which cannot resize); matched[i] would then throw
+        // ArrayIndexOutOfBounds and crash Rando on the devs' 55c22cf49 engine.
+        for (int i = 0; i < matched.length; i++) {
             if (!matched[i] && allCards.get(i).getCurrentZone() == null) {
                 // Card not found in any zone — might be stacked, out of play, etc.
                 // Leave as null (callers should handle gracefully)
@@ -389,6 +393,15 @@ public class DeckOracle {
         return cards != null ? cards.size() : 0;
     }
 
+    /** Count total copies of a card across all zones, matched by TITLE (catches multiple copies
+     *  AND same-name versions). Used by the starting-effect chooser (V187) to deprioritize
+     *  effects Rando has duplicates of. */
+    public int countCopiesByTitle(String title) {
+        if (title == null) return 0;
+        List<DeckCard> cards = catalogByTitle.get(title.toLowerCase(Locale.ROOT));
+        return cards != null ? cards.size() : 0;
+    }
+
     /** Total number of cards in the deck at game start. */
     public int getTotalDeckSize() {
         return totalDeckSize;
@@ -404,6 +417,175 @@ public class DeckOracle {
         return allCards.stream()
             .filter(dc -> category.equals(dc.getCategory()) && zone.equals(dc.getCurrentZone()))
             .collect(Collectors.toList());
+    }
+
+    // === V185 first pass (Steve, 2026-06-22) — SUPERSEDED same-session 2026-06-23 ===
+    // First cut gated on "Rando has ZERO characters of ANY kind in play". Too crude: a weapon
+    // attaches only to the SPECIFIC characters its own matching-character filter accepts
+    // (Leia's Lightsaber -> Leia/Ben Solo/Rey ability>4), so Rando could have bodies on the
+    // table yet none able to hold THIS weapon, and the pull still dead-fails. Replaced by
+    // reserveTargetsAreAllUnattachableWeapons() below. Kept commented per the project's
+    // comment-out-superseded-logic rule; see AI_CHANGELOG 2026-06-23.
+    //
+    // public boolean hasCharacterInPlay() {
+    //     for (DeckCard dc : allCards) {
+    //         if (dc.getCategory() == CardCategory.CHARACTER
+    //                 && dc.getCurrentZone() != null && dc.getCurrentZone().isInPlay()) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
+    //
+    // public boolean reserveTargetsAreAllWeapons(List<String> targets) {
+    //     if (targets == null || targets.isEmpty()) return false;
+    //     boolean anyMatched = false;
+    //     for (DeckCard dc : allCards) {
+    //         if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
+    //         String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
+    //         boolean hit = false;
+    //         for (String kw : targets) {
+    //             if (kw == null) continue;
+    //             String kwLower = kw.toLowerCase(Locale.ROOT);
+    //             if (titleLower.contains(kwLower)) { hit = true; break; }
+    //             String kwStripped = kwLower.replaceAll("\\[[^\\]]*\\]", " ").replaceAll("\\s+", " ").trim();
+    //             if (!kwStripped.isEmpty() && !kwStripped.equals(kwLower) && titleLower.contains(kwStripped)) { hit = true; break; }
+    //             if (!kwStripped.isEmpty() && kwStripped.contains(" ")) {
+    //                 String lastWord = kwStripped.substring(kwStripped.lastIndexOf(' ') + 1);
+    //                 if (lastWord.length() >= 4 && titleLower.contains(lastWord)) { hit = true; break; }
+    //             }
+    //         }
+    //         if (hit) {
+    //             anyMatched = true;
+    //             if (dc.getCategory() != CardCategory.WEAPON) return false;
+    //         }
+    //     }
+    //     return anyMatched;
+    // }
+
+    /**
+     * V185 (Steve, 2026-06-23): of the pull targets, are ALL the copies still in the Reserve
+     * Deck weapons that have NO legal in-play character to hold them? A weapon deploys only on
+     * the characters its OWN matching-character filter accepts (Leia's Lightsaber -> Leia/Ben
+     * Solo/Rey ability>4; Anakin's Lightsaber -> Skywalker ability>3), so "any character on
+     * table" is not enough — the right character must be present. Returns false (do NOT block)
+     * the moment it finds: a matched NON-weapon target still pullable (location/epic event), OR
+     * a matched weapon WITH a valid in-play holder, OR a matched weapon whose matching filter is
+     * Filters.none (those deploy via game text, not the matching filter — we cannot predict that
+     * from Reserve, so defer to the engine), OR nothing matched. Returns true only when every
+     * matched Reserve target is a weapon with no legal holder. Title matching mirrors
+     * hasTargetInZone inline; deployability is judged by the card's own filter, never by title.
+     */
+    public boolean reserveTargetsAreAllUnattachableWeapons(
+            com.gempukku.swccgo.game.SwccgGame game, String playerId, List<String> targets) {
+        if (game == null || playerId == null || targets == null || targets.isEmpty()) return false;
+        boolean anyMatched = false;
+        for (DeckCard dc : allCards) {
+            if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
+            String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
+            boolean hit = false;
+            for (String kw : targets) {
+                if (kw == null) continue;
+                String kwLower = kw.toLowerCase(Locale.ROOT);
+                if (titleLower.contains(kwLower)) { hit = true; break; }
+                String kwStripped = kwLower.replaceAll("\\[[^\\]]*\\]", " ").replaceAll("\\s+", " ").trim();
+                if (!kwStripped.isEmpty() && !kwStripped.equals(kwLower) && titleLower.contains(kwStripped)) { hit = true; break; }
+                if (!kwStripped.isEmpty() && kwStripped.contains(" ")) {
+                    String lastWord = kwStripped.substring(kwStripped.lastIndexOf(' ') + 1);
+                    if (lastWord.length() >= 4 && titleLower.contains(lastWord)) { hit = true; break; }
+                }
+            }
+            if (!hit) continue;
+            anyMatched = true;
+            // A non-weapon target still in Reserve (location/epic event) — Rando has a good pull.
+            if (dc.getCategory() != CardCategory.WEAPON) return false;
+            // getMatchingCharacterFilter() is safe to call only on weapons (base blueprint throws).
+            com.gempukku.swccgo.filters.Filter matching =
+                (dc.getBlueprint() != null) ? dc.getBlueprint().getMatchingCharacterFilter() : null;
+            // Filters.none = no matching-character filter set; those weapons deploy via game text,
+            // which we cannot predict from Reserve — defer (don't block).
+            if (matching == null || matching == com.gempukku.swccgo.filters.Filters.none) return false;
+            // This weapon HAS a legal in-play holder — don't block.
+            if (hasInPlayCharacterAccepting(game, playerId, matching)) return false;
+            // else: real filter, no holder on table — keep scanning; only ALL-unattachable blocks.
+        }
+        return anyMatched;
+    }
+
+    /** V185: does {@code playerId} have an in-play CHARACTER that this weapon's matching filter accepts? */
+    private boolean hasInPlayCharacterAccepting(
+            com.gempukku.swccgo.game.SwccgGame game, String playerId, com.gempukku.swccgo.filters.Filter matching) {
+        return !com.gempukku.swccgo.filters.Filters.filterActive(game, null,
+            com.gempukku.swccgo.filters.Filters.and(
+                com.gempukku.swccgo.filters.Filters.owner(playerId),
+                com.gempukku.swccgo.filters.Filters.character,
+                matching)).isEmpty();
+    }
+
+    /**
+     * V190 (Steve, 2026-07-04): "Only deploy starships to systems." Does this
+     * reserve pull fetch ONLY starships? Each parsed pull-target resolves against
+     * the RESERVE_DECK catalog in order: (1) a target containing "docking bay"
+     * matches only titles that actually contain "docking bay" (the V82.3
+     * 'docking bay' → LOCATION category fallback let a SYSTEM satisfy a
+     * docking-bay pull; not repeated here); (2) generic type-words resolve by
+     * category (mapTypeWordToCategory); (3) exact-phrase title substring
+     * (bracket-stripped). Deliberately NO last-word fallback: parser junk like
+     * "while this side up" must resolve to NOTHING, not to titles containing
+     * "side". Unresolvable targets are ignored. True only when at least one
+     * reserve card resolved and EVERY resolved card is a STARSHIP.
+     */
+    public boolean reservePullFetchesOnlyStarships(String sourceCardGameText) {
+        List<String> targets = parseSourceCardPullTargets(sourceCardGameText);
+        if (targets == null || targets.isEmpty()) return false;
+        boolean anyStarship = false;
+        for (DeckCard dc : allCards) {
+            if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
+            String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
+            boolean hit = false;
+            for (String kw : targets) {
+                if (kw == null) continue;
+                String kwLower = kw.toLowerCase(Locale.ROOT).trim();
+                if (kwLower.isEmpty()) continue;
+                if (kwLower.contains("docking bay")) {
+                    if (titleLower.contains("docking bay")) { hit = true; break; }
+                    continue;
+                }
+                CardCategory kwCat = mapTypeWordToCategory(kwLower);
+                if (kwCat != null) {
+                    if (dc.getCategory() == kwCat) { hit = true; break; }
+                    continue;
+                }
+                if (titleLower.contains(kwLower)) { hit = true; break; }
+                String kwStripped = kwLower.replaceAll("\\[[^\\]]*\\]", " ").replaceAll("\\s+", " ").trim();
+                if (!kwStripped.isEmpty() && !kwStripped.equals(kwLower)
+                        && titleLower.contains(kwStripped)) { hit = true; break; }
+            }
+            if (!hit) continue;
+            if (dc.getCategory() != CardCategory.STARSHIP) return false;
+            anyStarship = true;
+        }
+        return anyStarship;
+    }
+
+    /**
+     * V190: is any space location (SYSTEM or SECTOR) on table for a ship to
+     * deploy to? Fail-open: a null/unreadable game state returns true so the
+     * gate never fires blind. SECTOR counts as space parking pending Steve's
+     * ruling (his words were "systems"; sectors are legal space locations).
+     */
+    public static boolean spaceLocationOnTable(GameState gameState) {
+        if (gameState == null) return true;
+        try {
+            for (PhysicalCard loc : gameState.getTopLocations()) {
+                if (loc == null || loc.getBlueprint() == null) continue;
+                CardSubtype st = loc.getBlueprint().getCardSubtype();
+                if (st == CardSubtype.SYSTEM || st == CardSubtype.SECTOR) return true;
+            }
+        } catch (Exception e) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -926,66 +1108,6 @@ public class DeckOracle {
             "'" + String.join("/", targetKeywords) + "' is available in " + sourceZone);
     }
 
-    /**
-     * V190 (Steve, 2026-07-04): "Only deploy starships to systems." Does this
-     * reserve pull fetch ONLY starships? Mirrored from rando DeckOracle; see the
-     * rando copy for full rationale. Resolution order per target: docking-bay
-     * phrase (title-only), type-word category, exact-phrase title substring.
-     * NO last-word fallback (parser junk must resolve to nothing). True only
-     * when something resolved and EVERY resolved reserve card is a STARSHIP.
-     */
-    public boolean reservePullFetchesOnlyStarships(String sourceCardGameText) {
-        List<String> targets = parseSourceCardPullTargets(sourceCardGameText);
-        if (targets == null || targets.isEmpty()) return false;
-        boolean anyStarship = false;
-        for (DeckCard dc : allCards) {
-            if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
-            String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
-            boolean hit = false;
-            for (String kw : targets) {
-                if (kw == null) continue;
-                String kwLower = kw.toLowerCase(Locale.ROOT).trim();
-                if (kwLower.isEmpty()) continue;
-                if (kwLower.contains("docking bay")) {
-                    if (titleLower.contains("docking bay")) { hit = true; break; }
-                    continue;
-                }
-                CardCategory kwCat = mapTypeWordToCategory(kwLower);
-                if (kwCat != null) {
-                    if (dc.getCategory() == kwCat) { hit = true; break; }
-                    continue;
-                }
-                if (titleLower.contains(kwLower)) { hit = true; break; }
-                String kwStripped = kwLower.replaceAll("\\[[^\\]]*\\]", " ").replaceAll("\\s+", " ").trim();
-                if (!kwStripped.isEmpty() && !kwStripped.equals(kwLower)
-                        && titleLower.contains(kwStripped)) { hit = true; break; }
-            }
-            if (!hit) continue;
-            if (dc.getCategory() != CardCategory.STARSHIP) return false;
-            anyStarship = true;
-        }
-        return anyStarship;
-    }
-
-    /**
-     * V190: is any space location (SYSTEM or SECTOR) on table for a ship to
-     * deploy to? Fail-open: null/unreadable state returns true so the gate
-     * never fires blind. Mirrored from rando DeckOracle.
-     */
-    public static boolean spaceLocationOnTable(GameState gameState) {
-        if (gameState == null) return true;
-        try {
-            for (PhysicalCard loc : gameState.getTopLocations()) {
-                if (loc == null || loc.getBlueprint() == null) continue;
-                CardSubtype st = loc.getBlueprint().getCardSubtype();
-                if (st == CardSubtype.SYSTEM || st == CardSubtype.SECTOR) return true;
-            }
-        } catch (Exception e) {
-            return true;
-        }
-        return false;
-    }
-
     // =========================================================================
     // V67h SOURCE-CARD GAME-TEXT PARSER
     //
@@ -1040,7 +1162,12 @@ public class DeckOracle {
                 java.util.regex.Pattern.CASE_INSENSITIVE),
             // ANCHORED (2026-07-07, Steve — Endor Operations garbage-parse fix):
             // capture only the object AFTER the LAST pull-verb before "from Reserve
-            // Deck", not the whole clause back to the previous period. See rando twin.
+            // Deck", not the whole clause back to the previous period. The greedy
+            // [^.;]* stays within the sentence and consumes up to the last verb, so
+            // "deploy phase may deploy a Naboo site" still yields "naboo site" (last
+            // "deploy"), while "While this side up, once during each of your control
+            // phases, may take one Ominous Rumors or Establish Secret Base into hand"
+            // no longer leaks the timing clauses ("while this side up", "phases").
             java.util.regex.Pattern.compile(
                 "[^.;]*\\b(?:take|deploy|download|upload|reveal|retrieve|use|search\\s+for|add|put|choose)\\b\\s+([^.;]*?)\\s+from\\s+reserve\\s+deck",
                 java.util.regex.Pattern.CASE_INSENSITIVE),
@@ -1188,11 +1315,14 @@ public class DeckOracle {
         // A multi-clause OR interrupt (e.g. We Must Accelerate Our Plans) has its
         // whole game-text collapsed by the parser into ONE garbage "target" (a long
         // phrase / a string with digits). That junk is never literally "in Reserve",
-        // so the old WILL_FAIL made the V67h call sites slap -9999 on a genuinely
-        // valid location pull. V177 already flags this exact junk (length > 25 OR
-        // contains a digit) and stands down; V67h must agree, or the two dead-search
-        // detectors disagree on the same card and the meaner one (-9999) wins. If ANY
-        // parsed target is junk, return UNKNOWN (let weights handle it) not WILL_FAIL.
+        // so the old WILL_FAIL made the V67h call sites (DeployEvaluator:789,
+        // ActionTextEvaluator:4318) slap -9999 on a genuinely valid location pull —
+        // forensics caught Rando passing 'Deploy a Blockade Flagship site' while
+        // Blockade Flagship: Bridge sat in his Reserve. V177 already flags this exact
+        // junk (length > 25 OR contains a digit) and stands down; V67h must agree, or
+        // the two dead-search detectors disagree on the same card and the meaner one
+        // (-9999) wins. If ANY parsed target is junk the parse is untrustworthy, so
+        // return UNKNOWN (let the existing weights handle it) instead of WILL_FAIL.
         for (String v67hJunkT : targets) {
             if (v67hJunkT != null
                     && (v67hJunkT.length() > 25 || v67hJunkT.matches(".*\\d.*"))) {
@@ -1449,7 +1579,9 @@ public class DeckOracle {
             // Find an unmatched DeckCard with this blueprintId
             List<DeckCard> candidates = catalogByBlueprint.get(bpId);
             if (candidates != null) {
-                for (int i = 0; i < allCards.size(); i++) {
+                // off-by-one fix: search only original deck cards [0, matched.length);
+                // new mid-game cards appended past matched.length aren't matchable here.
+                for (int i = 0; i < matched.length; i++) {
                     if (matched[i]) continue;
                     DeckCard dc = allCards.get(i);
                     if (dc.getBlueprintId().equals(bpId)) {

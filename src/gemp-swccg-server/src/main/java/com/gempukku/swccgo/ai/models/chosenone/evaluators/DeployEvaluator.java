@@ -807,11 +807,60 @@ public class DeployEvaluator extends ActionEvaluator {
                                             com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
                                             LOG.info("V67h MEMORY OK: source={} — {}",
                                                 v67hSrcCard.getTitle(), v67hResult.reason);
+                                            // === V185 (Steve, 2026-06): WEAPON-DEPLOYABILITY GATE ===
+                                            // V67h confirms the target is IN the Reserve Deck, but NOT that it
+                                            // can be DEPLOYED. A Good Friend (225_37) deploys one of {location,
+                                            // epic event, Leia's Lightsaber} from Reserve; once the location +
+                                            // epic event are deployed, only the lightsaber remains — and a weapon
+                                            // can only attach to the SPECIFIC characters its own matching-character
+                                            // filter accepts (Leia's Lightsaber -> Leia/Ben Solo/Rey ability>4;
+                                            // Anakin's Lightsaber -> Skywalker ability>3). If Rando has no such
+                                            // character on the table the deploy has no legal target, so the pull
+                                            // FAILS: wasted action + Reserve revealed/reshuffled. Steve: "no one was
+                                            // on table that could hold a lightsaber, so the pull failed. If Rando had
+                                            // waited for characters to deploy first he would have been successful.
+                                            // This lost Rando the game." (Refined 2026-06-23: the first pass checked
+                                            // "any character" — too crude; Rando can have bodies out yet none able to
+                                            // hold THIS weapon. Now we read each weapon's own filter.) Block when
+                                            // EVERY remaining Reserve target is a weapon with NO in-play character its
+                                            // own filter accepts. A non-weapon target still pullable, a weapon with a
+                                            // legal holder already down, or a game-text (Filters.none) weapon we can't
+                                            // predict, all leave the pull untouched. -2000 matches V177's dead-pull
+                                            // penalty (drops below the V60 +100 baseline; not the absolute -9999 of a
+                                            // no-target search — a safety valve if this heuristic ever over-fires).
+                                            List<String> v185Targets =
+                                                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                                    .parseSourceCardPullTargets(v67hGT);
+                                            com.gempukku.swccgo.game.SwccgGame v185Game = context.getGame();
+                                            if (v185Game != null
+                                                    && v60Oracle.reserveTargetsAreAllUnattachableWeapons(
+                                                        v185Game, context.getPlayerId(), v185Targets)) {
+                                                action.addReasoning("V185 WEAPON, NO LEGAL HOLDER: every Reserve-Deck target left for '"
+                                                    + actionText + "' is a weapon Rando has no in-play character to hold (per the weapon's own deploy filter) — deploy a valid character first",
+                                                    -2000.0f);
+                                                LOG.warn("V185 WEAPON-NO-HOLDER blocked: source={} targets={} — all weapons, no legal in-play holder",
+                                                    v67hSrcCard.getTitle(), v185Targets);
+                                                actions.add(action);
+                                                continue;
+                                            }
                                             // === V190 (Steve, 2026-07-04): STARSHIPS DEPLOY TO SYSTEMS ===
-                                            // Mirrored from rando DeployEvaluator; see the rando copy for
-                                            // the full rationale + boundary math. Starship-only pull with
-                                            // no space location on table = the ship can only park at a
-                                            // site at 0 power — block until a system/sector lands.
+                                            // "He should not have deployed starships to a docking bay.
+                                            // Only deploy starships to systems." Game 20jqtseod148of4y:
+                                            // Court Of The Vile Gangster's pull fetched Elis In Hinthra
+                                            // (then Dengar In Punishing One) and parked them at Executor:
+                                            // Docking Bay at 0 power — the 4 Force it burned starved the
+                                            // V29 PAIRED buddy deploy the same turn. When every fetchable
+                                            // Reserve target left for this pull is a STARSHIP and no
+                                            // space location is on table, the ship can only park at a
+                                            // site: block the pull until a system/sector lands. Known
+                                            // limits (see AI_CHANGELOG 2026-07-04): a space location the
+                                            // ship can't legally deploy to still stands the gate down,
+                                            // and the gate does not itself make Rando deploy the system
+                                            // first (follow-up item). Boundary: the continue skips this
+                                            // evaluator's later bonuses (V60 +100, V38.4, V100 +1500,
+                                            // V67ai +2000), so the blocked action lands ~-6400 vs the
+                                            // -100 viability floor — dominated, and no other rule reads
+                                            // this action after a continue.
                                             if (v60Oracle.reservePullFetchesOnlyStarships(v67hGT)
                                                     && !com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
                                                         .spaceLocationOnTable(gameState)) {
@@ -832,12 +881,13 @@ public class DeployEvaluator extends ActionEvaluator {
                     }
                 }
 
-                // Passed all guards — V192 (2026-07-06, T4.2 pull-engine merge, mirrored
-                // from rando): the +100 baseline is ABSORBED by the single V192 pull scorer
-                // in ActionTextEvaluator (ds-3 same-tag drift: this DE copy stacked with the
-                // ATE baseline on every pull). The guards ABOVE this line all STAY as vetoes
-                // (duplicate -9999s with the ATE chain are harmless).
-                // Commented out per feedback_comment_out_old_rules:
+                // Passed all guards — V192 (2026-07-06, T4.2 pull-engine merge): the +100
+                // baseline is ABSORBED by the single V192 pull scorer in ActionTextEvaluator
+                // (ds-3 same-tag drift: this DE twin used +100 while the ATE arm used +150 —
+                // ONE baseline lives in the scorer now, and CombinedEvaluator's additive
+                // merge means this line double-counted on every pull). The guards above
+                // (V60 FAIL-STOP/RISK/MISS, V67bg, V66, V67h, V185, V190) STAY as vetoes —
+                // duplicate -9999s are harmless. Commented out per feedback_comment_out_old_rules:
                 // action.addReasoning("V60 RESERVE PULL: try every turn — free value", 100.0f);
                 // LOG.warn("V60 RESERVE PULL: '{}' passed guards — +100 baseline", actionText);
                 LOG.info("V60 RESERVE PULL guards passed for '{}' — baseline owned by V192 (ActionTextEvaluator)", actionText);
@@ -1203,7 +1253,7 @@ public class DeployEvaluator extends ActionEvaluator {
                         if (!isLocationDeploy && !isAmsdAction && !isExecutorDeploy && !isShipDeploy && !isBespinDeploy) {
                             // V29 UPDATED 2026-07-06 (TDIGWATT bug B): release the -500 gate when there is
                             // NO live path to ever satisfy it — otherwise every character deploy is blocked
-                            // forever and the bot floods weak solos without flipping. Two universal checks
+                            // forever and Rando floods weak solos without flipping. Two universal checks
                             // (no card-name lists):
                             //   (a) the objective's OWN game text forbids deploying Executor (TDIGWATT (V)
                             //       Card226_012: "you may not deploy Admiral's Orders or [Death Star II]
@@ -1370,9 +1420,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (mlObj != null && mlObj.isAnalyzed() && mlObj.getObjectiveTitle() != null
                                 && gameState != null && game != null) {
-                            String mlObjLower = mlObj.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean isMyLord = mlObjLower.contains("my lord")
-                                || mlObjLower.contains("make it legal");
+                            // V83 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean isMyLord = mlObj.isMyLord();
                             if (isMyLord
                                     && com.gempukku.swccgo.filters.Filters.senator.accepts(
                                         gameState, game.getModifiersQuerying(), card)) {
@@ -1423,9 +1472,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (v110Obj != null && v110Obj.isAnalyzed()
                                 && v110Obj.getObjectiveTitle() != null) {
-                            String v110ObjLower = v110Obj.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean v110IsMyLord = v110ObjLower.contains("my lord")
-                                || v110ObjLower.contains("make it legal");
+                            // V110 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean v110IsMyLord = v110Obj.isMyLord();
                             if (v110IsMyLord) {
                                 boolean v110IsSenator = false;
                                 if (blueprint.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) {
@@ -1480,9 +1528,8 @@ public class DeployEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v108Obj =
                             context.getObjectiveAnalyzer();
                         if (v108Obj != null && v108Obj.isAnalyzed() && v108Obj.getObjectiveTitle() != null) {
-                            String v108ObjLower = v108Obj.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean v108IsMyLord = v108ObjLower.contains("my lord")
-                                || v108ObjLower.contains("make it legal");
+                            // V108 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean v108IsMyLord = v108Obj.isMyLord();
                             if (v108IsMyLord) {
                                 boolean v108IsSenator = false;
                                 if (blueprint.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) {
@@ -1524,8 +1571,10 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (invObj != null && invObj.isAnalyzed() && invObj.getObjectiveTitle() != null
                                 && gameState != null && game != null) {
-                            String invObjLower = invObj.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean isInvasion = invObjLower.contains("invasion");
+                            // V86 CONSOLIDATED (2026-07-07): objective identity now lives in
+                            // ObjectiveAnalyzer.isInvasion() (title-derived, set in analyze()).
+                            // Deploy evaluator reads the getter — no title string matched here.
+                            boolean isInvasion = invObj.isInvasion();
                             boolean isNeimoidianPilot =
                                 com.gempukku.swccgo.filters.Filters.Neimoidian.accepts(
                                     gameState, game.getModifiersQuerying(), card)
@@ -1600,9 +1649,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (mlObj88 != null && mlObj88.isAnalyzed() && mlObj88.getObjectiveTitle() != null
                                 && gameState != null && game != null) {
-                            String mlObj88Lower = mlObj88.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean isMyLord88 = mlObj88Lower.contains("my lord")
-                                || mlObj88Lower.contains("make it legal");
+                            // V88 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean isMyLord88 = mlObj88.isMyLord();
                             if (isMyLord88
                                     && com.gempukku.swccgo.filters.Filters.senator.accepts(
                                         gameState, game.getModifiersQuerying(), card)) {
@@ -1628,6 +1676,11 @@ public class DeployEvaluator extends ActionEvaluator {
                     //
                     // Allow non-senator deploys only when opponent power at Senate already
                     // exceeds my senator power there (genuine reinforcement need).
+                    //
+                    // NOTE (2026-07-07 consolidation): V99 is DELIBERATELY NOT isMyLord()-gated.
+                    // It keys on Galactic Senate being on the table (typed Filters.Galactic_Senate),
+                    // not on the objective identity. Gating it under isMyLord() would CHANGE behavior
+                    // (a non-My-Lord deck with a Senate on table would stop being guarded). Leave ungated.
                     {
                         if (card != null && blueprint != null
                                 && blueprint.getCardCategory() == CardCategory.CHARACTER
@@ -1935,7 +1988,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     // that causes overflow damage."
                     //
                     // NOTE (comment corrected 2026-07-06): V67al is DEAD — superseded by
-                    // V136 §B; its code (~3850 in this file) sits inside the dead
+                    // V136 §B; its code (~3900 in this file) sits inside the dead
                     // `if (false /* V67aj SUPERSEDED V136 */)` block, retained as the
                     // revert path only. Historical context: V67al penalized ANY deploy
                     // when friendly power at a site exceeded 20, regardless of opponent
@@ -3570,14 +3623,14 @@ public class DeployEvaluator extends ActionEvaluator {
                     } catch (Exception e) { LOG.debug("V67i error: {}", e.getMessage()); }
 
                     // V67ai Tier 1-3 DE COPY ABSORBED by V192 pull scorer 2026-07-06 (T4.2
-                    // merge, ds-2, mirrored from rando): the tier lives in ActionTextEvaluator
-                    // where V131's deck-aware gate covers it — this ungated DE copy
-                    // DOUBLE-COUNTED with the ATE copy on every location pull (boundary row 2:
-                    // the +8000 pile). The V67i detection above is KEPT LIVE as a predicate —
-                    // the weapon-gate routing below (V67ar/V67ao/V149 need !v67iAddsLocation)
-                    // still uses it. The V162/V67ai-Tier4-HAND block above (bare "deploy" of a
-                    // LOCATION from hand, +1900 total) is NOT touched — it is the anchor the
-                    // pull scorer must stay below (the V179 lesson).
+                    // merge, ds-2): the tier lives in ActionTextEvaluator where V131's
+                    // deck-aware gate covers it — this ungated DE copy DOUBLE-COUNTED with
+                    // the ATE copy on every location pull (boundary row 2: the +8000 pile).
+                    // The V67i detection above is KEPT LIVE as a predicate — the weapon-gate
+                    // routing below (V67ar/V67ao/V149 need !v67iAddsLocation) still uses it.
+                    // The V162/V67ai-Tier4-HAND block above (bare "deploy" of a LOCATION from
+                    // hand, +1900 total) is NOT touched — it is the anchor the pull scorer
+                    // must stay below (the V179 lesson).
                     // Commented out per feedback_comment_out_old_rules:
                     // if (v67iAddsLocation) {
                     //     // V67ai Tier 1-3 (Steve, 2026-05-07): When DeployEvaluator scores
@@ -3755,11 +3808,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                 actionText);
                         } else {
                             // V67am +600 DE GRANT ABSORBED by V192 pull scorer 2026-07-06
-                            // (T4.2 merge, mirrored from rando): the ATE scorer's WEAPON tier
-                            // (+600) is the single owner — this DE copy DOUBLE-COUNTED
-                            // (boundary row 6: +1600 stack on one blaster pull). The
-                            // V67ar/V67ao/V149 veto mirrors above stay verbatim (duplicate
-                            // -9999s are harmless).
+                            // (T4.2 merge): the ATE scorer's WEAPON tier (+600) is the single
+                            // owner — this DE copy DOUBLE-COUNTED (boundary row 6: +1600
+                            // stack on one blaster pull). The V67ar/V67ao/V149 veto mirrors
+                            // above stay verbatim (duplicate -9999s are harmless).
                             // Commented out per feedback_comment_out_old_rules:
                             // action.addReasoning(String.format(
                             //     "V67am WEAPON PULL (universal, tier 1): %d unarmed character(s) — pull weapon from reserve! %s",
@@ -4095,7 +4147,6 @@ public class DeployEvaluator extends ActionEvaluator {
 
                     // ═══════════════════════════════════════════════════════════
                     // ═══ SECTION: DEPLOY-3 — Weapons, Pilots & Ships (reorg 2026-07-06) ═══
-                    // (chosenone twin of rando/evaluators/DeployEvaluator.java — same hub.)
                     // Owns: V158 unified weapon deploy gate (below) + the deliberately-separate
                     // V120/V185 pull gates (ActionTextEvaluator/DeckOracle side), pilots (V30),
                     // vehicles/ships (V35.5/V35.6/V86). Hub: V158 LIVE. KIND mix + key

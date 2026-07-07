@@ -638,7 +638,25 @@ public class BattleEvaluator extends ActionEvaluator {
                 // (log: "No cards in Reserve Deck. Rando can't draw battle destiny")
                 // auto-losing every destiny draw. This is a hard auto-lose trap.
                 // Scale penalty to severity — 0 cards = hard block, 1-2 = heavy penalty.
-                if (reserveDeck == 0) {
+                // V61b (Steve, 2026-06-28): UNLESS we OVERPOWER a contested site by a lot — then we
+                // win on raw power and battle destiny is irrelevant, so the empty-reserve guard must
+                // NOT veto a free win (replay: Hoth 26 vs 4, diff 22, V61 -800 blocked it and Rando
+                // passed). Re-scan contested sites for the best overpower margin; if it clears a
+                // strong opponent destiny swing, skip the reserve penalty entirely and take the battle.
+                float v61BestOverpower = 0f;
+                try {
+                    String v61pid = context.getPlayerId();
+                    String v61oid = gameState.getOpponent(v61pid);
+                    for (PhysicalCard v61loc : gameState.getTopLocations()) {
+                        float op = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, v61loc, v61pid, false, false);
+                        float tp = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, v61loc, v61oid, false, false);
+                        if (op > 0 && tp > 0 && (op - tp) > v61BestOverpower) v61BestOverpower = op - tp;
+                    }
+                } catch (Exception ignore) { /* 0 */ }
+                boolean v61Overpowering = v61BestOverpower >= 8f;  // beats a strong single destiny; win w/o ours
+                if (v61Overpowering) {
+                    logger.warn("V61b OVERPOWER: best margin {} >= 8 — reserve guard skipped, take the battle", (int) v61BestOverpower);
+                } else if (reserveDeck == 0) {
                     action.addReasoning(
                         "V61 RESERVE EMPTY: 0 cards in Reserve — CANNOT draw battle destiny, auto-lose!",
                         -800.0f);

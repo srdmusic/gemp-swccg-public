@@ -306,6 +306,36 @@ public class DecisionContext {
         return gameState.getHand(playerId).size();
     }
 
+    // V61c UPDATED 2026-07-06: shared battle-intent predictor for the destiny-buffer bypass.
+    // Steve (2026-07-01): "If Rando intends to battle that turn, he needs to save 3. If he
+    // intends to deploy and end turn without battling he can activate all force."
+    // Conservative v1: battle is "plausible" if ANY location is CONTESTED (both sides have
+    // power presence) at decision time — the same scan V61b uses in BattleEvaluator. Zero
+    // contested locations => deploy-and-end turn => the keep-3 buffer may be bypassed.
+    // Bias toward keeping 3 when unsure: any null/error => TRUE (battle plausible), because a
+    // false "no battle" re-opens the no-destiny bug for a turn, while a false "battle" only
+    // costs a little activation.
+    // ONE predicate shared by ALL THREE V61c sites (ForceActivationEvaluator keep-3 cap,
+    // ActionTextEvaluator V168 carve-out, ActionTextEvaluator V38.3 confirm carve-out) — the
+    // original V61c bug was exactly these sites disagreeing.
+    public boolean isBattlePlausibleThisTurn() {
+        if (game == null || gameState == null || playerId == null) return true;  // can't tell — keep 3
+        try {
+            String opponentId = gameState.getOpponent(playerId);
+            if (opponentId == null) return true;  // can't tell — keep 3
+            for (PhysicalCard location : gameState.getTopLocations()) {
+                float ourPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(gameState, location, playerId, false, false);
+                float theirPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(gameState, location, opponentId, false, false);
+                if (ourPower > 0 && theirPower > 0) return true;  // contested — battle plausible
+            }
+            return false;  // zero contested locations — deploy-and-end turn
+        } catch (Exception e) {
+            return true;  // error — keep 3 (conservative)
+        }
+    }
+
     // Strategy component getters and setters
     public StrategyController getStrategyController() {
         return strategyController;
@@ -375,11 +405,12 @@ public class DecisionContext {
     }
 
     // ═══ T2 MOVE #1 COMMIT-2 (2026-07-06): per-decision force-reserve facts ═══
-    // Mirror of the rando DecisionContext cache (traps ledger: every commit
-    // mirrors to chosenone in the same commit). ONE cached ForceReserveService.
-    // compute() per decide() call; SOAK: every 20th decision, every cache READ
-    // re-runs compute() and logs "MAINT CACHE MISMATCH" on divergence — remove
-    // the soak branch after 2 clean full games.
+    // ONE cached ForceReserveService.compute() per decide() call, shared by
+    // DrawEvaluator/PassEvaluator/MoveEvaluator/DeployEvaluator (DeployPhasePlanner
+    // has no DecisionContext and calls the static compute at plan creation).
+    // SOAK INSTRUMENT: every 20th decision (static counter across the JVM), every
+    // cache READ re-runs compute() and logs "MAINT CACHE MISMATCH" on divergence —
+    // remove the soak branch after 2 clean full games.
     private com.gempukku.swccgo.ai.models.common.strategy.ForceReserveService.Facts reserveFacts;
     private boolean reserveFactsSoak;
     private static final java.util.concurrent.atomic.AtomicLong RESERVE_FACTS_DECISIONS =
