@@ -19,7 +19,10 @@ import java.util.regex.Pattern;
 // ═══ SECTION: SVC-INTEL (reorg 2026-07-06) ═══
 // Owns: the LIVE objective brain: objective detection (V25-detector), flip-condition intel (V22.2),
 // objective-text parsing (V29-objtext), V67ak flip-critical intel, V186 I Want That Map, V160 SWBD.
-// Owns NO scores. Hub: none. KIND mix (SVC-INTEL overall): 4 ORDERING / 2 BANDED (intel plumbing).
+// Owns objective DECISION scores as of 2026-07-07 (Steve: "singular ObjectiveAnalyzer — the deploy
+// evaluator should check it"): getDeployObjectiveAdjustments() returns the objective deploy score
+// notes the deploy phase applies. This REPLACES the reorg's original "owns NO scores" contract.
+// Hub: none. KIND mix (SVC-INTEL overall): 4 ORDERING / 2 BANDED (intel plumbing).
 // LOUD NOTE: strategy/ObjectiveHandler.java is NOT this brain — it is dead code; do not wire it.
 // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
 // Cross-refs: PLAYBOOKS (deck scripts consume this intel), SETUP (turn-0 bootstrap), SVC-INTEL peers
@@ -301,6 +304,201 @@ public class ObjectiveAnalyzer {
     public java.util.Set<String> getIwtmSystemBpIds() { return iwtmSystemBpIds; }
     public String getIwtmSystemTitleFragment() { return iwtmSystemTitleFragment; }
     public String getIwtmPreferredStartingEffect() { return iwtmPreferredStartingEffect; }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══ OBJECTIVE DEPLOY DECISIONS (consolidated 2026-07-07 per Steve) ═══
+    // The deploy phase CHECKS the objective brain here instead of scattering objective
+    // scoring across DeployEvaluator. This method owns the objective-specific DEPLOY
+    // score adjustments (V83/V110/V108/V86/V88 title-gated + V99 Senate-guard ungated).
+    // DeployEvaluator calls it ONCE in the objective region and applies each ScoreNote via
+    // action.addReasoning at that same spot — so additive-score ORDERING is unchanged (the
+    // region has no outer control-flow escape between these rules; verified 2026-07-07).
+    // NOTE: this evolves the reorg's original "SVC-INTEL owns no scores" contract — the
+    // analyzer now owns objective DECISION scores, which is what the deploy evaluator reads.
+    // Scores/reasons/conditions are transcribed verbatim from the old inline blocks.
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** A single objective-driven score adjustment: apply via action.addReasoning(reason, score). */
+    public static final class ScoreNote {
+        public final float score;
+        public final String reason;
+        public ScoreNote(float score, String reason) { this.score = score; this.reason = reason; }
+    }
+
+    /** Senator detection: Keyword.SENATOR OR lore contains "senator" (only ~29/35 add the keyword). */
+    private static boolean isSenatorCard(SwccgCardBlueprint bp) {
+        if (bp == null) return false;
+        if (bp.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) return true;
+        String lore = bp.getLore();
+        return lore != null && lore.toLowerCase(Locale.ROOT).contains("senator");
+    }
+
+    /**
+     * Objective-driven DEPLOY adjustments for one candidate card. Returns the score notes the
+     * deploy evaluator should apply (in place, at its objective region). Empty when nothing applies.
+     * Consolidates DeployEvaluator V83/V110/V108/V86/V88 (My Lord / Invasion, objective-gated) and
+     * V99 (Senate guard, DELIBERATELY ungated — keys on Galactic Senate on table, not the objective).
+     */
+    public java.util.List<ScoreNote> getDeployObjectiveAdjustments(
+            SwccgGame game, GameState gameState, String playerId,
+            PhysicalCard card, SwccgCardBlueprint blueprint, String actionText) {
+        java.util.List<ScoreNote> notes = new java.util.ArrayList<>();
+        // NOTE: do NOT early-return on !analyzed. The objective arms (V83/V110/V108/V86/V88) are
+        // already gated by isMyLord/isInvasion (false unless analyze() ran), but V99 SENATE GUARD is
+        // DELIBERATELY ungated in the original code — it must fire whenever a Galactic Senate is on
+        // table even with no analyzed objective. Gating the whole method on analyzed narrowed V99
+        // (caught by Codex 2026-07-07). Only the null-safety checks belong here.
+        if (game == null || gameState == null || playerId == null
+                || card == null || blueprint == null || actionText == null) return notes;
+        String actionLower = actionText.toLowerCase(Locale.ROOT);
+        boolean isCharacter = blueprint.getCardCategory() == CardCategory.CHARACTER;
+
+        // === V83: MY LORD — senators only at Galactic Senate (penalize senator → non-Senate) ===
+        if (analyzed && isMyLord && com.gempukku.swccgo.filters.Filters.senator.accepts(
+                gameState, game.getModifiersQuerying(), card)) {
+            PhysicalCard mlTargetLoc = null;
+            for (PhysicalCard loc : gameState.getTopLocations()) {
+                if (loc == null || loc.getTitle() == null) continue;
+                if (actionLower.contains(loc.getTitle().toLowerCase(Locale.ROOT))) { mlTargetLoc = loc; break; }
+            }
+            if (mlTargetLoc != null) {
+                boolean atSenate = com.gempukku.swccgo.filters.Filters.Galactic_Senate.accepts(
+                    gameState, game.getModifiersQuerying(), mlTargetLoc);
+                if (!atSenate) {
+                    notes.add(new ScoreNote(-2000.0f,
+                        "V83 MY LORD: senator '" + card.getTitle() + "' → '" + mlTargetLoc.getTitle()
+                            + "' — must deploy to Galactic Senate (dies elsewhere)"));
+                    LOG.warn("V83 MY LORD: blocking senator {} → {} (only Galactic Senate is safe)",
+                        card.getTitle(), mlTargetLoc.getTitle());
+                }
+            }
+        }
+
+        // === V110: MY LORD — hold non-senator until a non-Senate SITE exists ===
+        if (analyzed && isMyLord && isCharacter && !isSenatorCard(blueprint)) {
+            boolean hasNonSenateSite = false;
+            try {
+                for (PhysicalCard loc : gameState.getTopLocations()) {
+                    if (loc == null || loc.getBlueprint() == null) continue;
+                    if (com.gempukku.swccgo.filters.Filters.Galactic_Senate.accepts(
+                            gameState, game.getModifiersQuerying(), loc)) continue;
+                    if (loc.getBlueprint().getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) {
+                        hasNonSenateSite = true; break;
+                    }
+                }
+            } catch (Exception ignore) { /* */ }
+            if (!hasNonSenateSite) {
+                notes.add(new ScoreNote(-2000.0f,
+                    "V110 MY LORD: HOLD non-senator '" + card.getTitle()
+                        + "' — no non-Senate site on table yet, would land at Senate"));
+                LOG.warn("V110 MY LORD: HOLD deploy non-senator {} → -2000 (no non-Senate site)",
+                    card.getTitle());
+            }
+        }
+
+        // === V108: MY LORD — prioritize deploying senators from hand ===
+        if (analyzed && isMyLord && isCharacter && isSenatorCard(blueprint)) {
+            notes.add(new ScoreNote(500.0f,
+                "V108 MY LORD: senator '" + card.getTitle() + "' in hand — prioritize deploy (flip target)"));
+            LOG.warn("V108 MY LORD: BOOST deploy senator {} → +500", card.getTitle());
+        }
+
+        // === V86: INVASION — Neimoidian pilots aboard capital ship ===
+        if (analyzed && isInvasion
+                && com.gempukku.swccgo.filters.Filters.Neimoidian.accepts(
+                    gameState, game.getModifiersQuerying(), card)
+                && com.gempukku.swccgo.filters.Filters.pilot.accepts(
+                    gameState, game.getModifiersQuerying(), card)) {
+            PhysicalCard friendlyCapital = null;
+            for (PhysicalCard pCard : gameState.getAllPermanentCards()) {
+                if (pCard == null) continue;
+                if (!playerId.equals(pCard.getOwner())) continue;
+                if (com.gempukku.swccgo.filters.Filters.capital_starship.accepts(
+                        gameState, game.getModifiersQuerying(), pCard)) { friendlyCapital = pCard; break; }
+            }
+            if (friendlyCapital != null) {
+                String capitalTitleLower = friendlyCapital.getTitle() != null
+                    ? friendlyCapital.getTitle().toLowerCase(Locale.ROOT) : "";
+                boolean targetExplicit = actionLower.contains("aboard")
+                    || actionLower.contains(" to ") || actionLower.contains(" on ");
+                if (targetExplicit) {
+                    boolean aboardCapital = !capitalTitleLower.isEmpty()
+                        && actionLower.contains(capitalTitleLower);
+                    if (!aboardCapital) {
+                        notes.add(new ScoreNote(-1500.0f,
+                            "V86 INVASION: Neimoidian pilot '" + card.getTitle()
+                                + "' must deploy aboard friendly capital ship '"
+                                + friendlyCapital.getTitle() + "' (vulnerable on ground sites)"));
+                        LOG.warn("V86 INVASION: blocking Neimoidian pilot {} (target not aboard {}) → -1500",
+                            card.getTitle(), friendlyCapital.getTitle());
+                    } else {
+                        notes.add(new ScoreNote(300.0f,
+                            "V86 INVASION: Neimoidian pilot '" + card.getTitle()
+                                + "' deploying aboard capital ship — correct placement!"));
+                        LOG.info("V86 INVASION: Neimoidian pilot {} aboard {} → +300",
+                            card.getTitle(), friendlyCapital.getTitle());
+                    }
+                }
+            }
+        }
+
+        // === V88: MY LORD — senator → Galactic Senate bonus ===
+        if (analyzed && isMyLord && com.gempukku.swccgo.filters.Filters.senator.accepts(
+                gameState, game.getModifiersQuerying(), card)
+                && actionLower.contains("galactic senate")) {
+            notes.add(new ScoreNote(1500.0f,
+                "V88 MY LORD: senator '" + card.getTitle()
+                    + "' → Galactic Senate (flip condition + weapon destiny -6 protection)"));
+            LOG.warn("V88 MY LORD: BOOST senator {} → Galactic Senate → +1500", card.getTitle());
+        }
+
+        // === V99: NON-SENATOR AT GALACTIC SENATE BLOCK (DELIBERATELY ungated — keys on Senate on table) ===
+        if (isCharacter && !isSenatorCard(blueprint)) {
+            PhysicalCard v99Senate = null;
+            for (PhysicalCard loc : gameState.getTopLocations()) {
+                if (loc == null) continue;
+                if (com.gempukku.swccgo.filters.Filters.Galactic_Senate.accepts(
+                        gameState, game.getModifiersQuerying(), loc)) { v99Senate = loc; break; }
+            }
+            if (v99Senate != null && v99Senate.getTitle() != null
+                    && actionLower.contains(v99Senate.getTitle().toLowerCase(Locale.ROOT))) {
+                float friendlySenatorPower = 0f;
+                for (PhysicalCard pc : gameState.getAllPermanentCards()) {
+                    if (pc == null) continue;
+                    if (!playerId.equals(pc.getOwner())) continue;
+                    PhysicalCard pcLoc = null;
+                    try {
+                        pcLoc = game.getModifiersQuerying().getLocationThatCardIsAt(gameState, pc);
+                    } catch (Exception ignore) { /* */ }
+                    if (pcLoc != v99Senate) continue;
+                    if (pc.getBlueprint() == null) continue;
+                    if (!isSenatorCard(pc.getBlueprint())) continue;
+                    Float p = pc.getBlueprint().getPower();
+                    if (p != null) friendlySenatorPower += p;
+                }
+                String v99Opp = game.getOpponent(playerId);
+                float v99OpponentPower = (v99Opp != null)
+                    ? game.getModifiersQuerying().getTotalPowerAtLocation(
+                        gameState, v99Senate, v99Opp, false, false)
+                    : 0f;
+                if (v99OpponentPower <= friendlySenatorPower) {
+                    notes.add(new ScoreNote(-1500.0f, String.format(
+                        "V99 SENATE GUARD: non-senator '%s' → Galactic Senate"
+                            + " (opp %.0f <= my senator %.0f) — wasted, deploy elsewhere",
+                        card.getTitle(), v99OpponentPower, friendlySenatorPower)));
+                    LOG.warn("V99 SENATE GUARD: BLOCK non-senator {} → Galactic Senate"
+                            + " (opp={} my-senators={}) -1500",
+                        card.getTitle(), (int) v99OpponentPower, (int) friendlySenatorPower);
+                } else {
+                    LOG.info("V99 SENATE GUARD: ALLOW non-senator {} → Galactic Senate"
+                            + " (opp={} > my-senators={}) — defensive reinforcement",
+                        card.getTitle(), (int) v99OpponentPower, (int) friendlySenatorPower);
+                }
+            }
+        }
+
+        return notes;
+    }
 
     // V25: Hunt Down V accessors
     public boolean isHuntDownV() { return isHuntDownV; }
