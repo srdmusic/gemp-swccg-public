@@ -2208,23 +2208,63 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // === V24.15: AVOID DEPLOYING CHARACTERS TO 0-DRAIN LOCATIONS ===
-                        // Characters at 0-drain locations contribute nothing to force drain pressure.
-                        // They're wasted resources and vulnerable to Surprise Assault traps.
-                        // Penalty scales with character power — don't waste your best characters!
+                        // === V24.15: AVOID DEPLOYING CHARACTERS TO WORTHLESS-DRAIN LOCATIONS ===
+                        // (UPDATED 2026-07-07, Steve — CONSOLIDATED: now covers EFFECTIVE drain, not
+                        // just literal raw 0, per feedback_update_old_rule_not_new_version. The old
+                        // block only read raw drain, so under an opponent Battle Plan (+3 drain-
+                        // INITIATION tax) Rando piled bodies onto Endor: Landing Platform — raw drain
+                        // 1, net 1-3 = -2, a drain there is a net LOSS that V189 blocks every time —
+                        // yet the deploy path still scored it high (mistake 4, replay qgdridfo166f27r3).
+                        // The effective-drain check is folded IN HERE (one rule) instead of a separate
+                        // contradictory penalty.)
+                        // Characters at worthless-drain sites add no drain pressure and are Surprise-
+                        // Assault bait. Penalty scales with power — don't waste your best characters.
                         if (isCharacter && !earlySpyDetected && game != null && location != null) {
                             try {
-                                float deployDrainAmount = game.getModifiersQuerying().getForceDrainAmount(
+                                float v2415RawDrain = game.getModifiersQuerying().getForceDrainAmount(
                                     game.getGameState(), location, playerId);
-                                if (deployDrainAmount <= 0) {
-                                    // 0-drain location — penalize character deployment
-                                    Float charPower = (blueprint != null && blueprint.hasPowerAttribute()) ? blueprint.getPower() : null;
-                                    float powerVal = (charPower != null) ? charPower : 3.0f;
-                                    // Higher power characters get bigger penalty — don't waste Palpatine on a 0-drain site!
-                                    float zeroDrainPenalty = -50.0f - (powerVal * 10.0f);
+                                float v2415InitCost = game.getModifiersQuerying().getInitiateForceDrainCost(
+                                    game.getGameState(), location, playerId);
+                                boolean v2415ZeroDrain = v2415RawDrain <= 0;
+                                // Net-negative EFFECTIVE drain: drain capped below its cost by a tax
+                                // (Battle Plan / Battle Order) — the EXACT V189 predicate. cost 0 (no
+                                // tax = the vast majority of games) => this arm can NEVER fire, so every
+                                // existing game is byte-identical to before this consolidation.
+                                boolean v2415NetNeg = v2415InitCost > 0f && (v2415RawDrain - v2415InitCost) <= -2f;
+                                Float v2415CharPower = (blueprint != null && blueprint.hasPowerAttribute()) ? blueprint.getPower() : null;
+                                float v2415PowerVal = (v2415CharPower != null) ? v2415CharPower : 3.0f;
+                                if (v2415ZeroDrain) {
+                                    // ORIGINAL behavior, unchanged: gentle nudge off a literal 0-drain site.
+                                    float zeroDrainPenalty = -50.0f - (v2415PowerVal * 10.0f);
                                     action.addReasoning("V24.15 ZERO DRAIN: Location has 0 drain — character wasted here!", zeroDrainPenalty);
                                     logger.warn("V24.15 ZERO DRAIN: {} has 0 drain — penalizing {} (power {}) by {}",
-                                        title, decisionText, powerVal, zeroDrainPenalty);
+                                        title, decisionText, v2415PowerVal, zeroDrainPenalty);
+                                } else if (v2415NetNeg) {
+                                    // NEW arm (tax-capped drain = net loss). Exempt objective flip/seed
+                                    // sites (e.g. Endor: Bunker) and legit V166 contests; else a stronger
+                                    // deterrent so a genuinely drainable site wins the body instead.
+                                    boolean v2415ObjRelevant = locObjAnalyzer != null && locObjAnalyzer.isAnalyzed()
+                                        && title != null && locObjAnalyzer.isObjectiveRelevantLocation(title);
+                                    boolean v2415V166Contest = false;
+                                    if (!v2415ObjRelevant) {
+                                        String v2415Opp = gameState.getOpponent(playerId);
+                                        float v2415TheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, location, v2415Opp, false, false);
+                                        int v2415OppDrain = (int) game.getModifiersQuerying().getForceDrainAmount(
+                                            gameState, location, v2415Opp);
+                                        v2415V166Contest = (v2415TheirPower > 0 && v2415OppDrain > 0
+                                            && computeNetDrainBalance(game, gameState, playerId) >= 2);
+                                    }
+                                    if (!v2415ObjRelevant && !v2415V166Contest) {
+                                        // -(300 + power*30) cap -700: stays above the -1500/-2000/-9999
+                                        // hard blocks so a forced/objective deploy can still exceed it.
+                                        float v2415Pen = Math.min(700.0f, 300.0f + v2415PowerVal * 30.0f);
+                                        action.addReasoning(String.format(
+                                            "V24.15 EFFECTIVE DRAIN: raw %.0f - initiate cost %.0f <= -2 at %s (a drain here is a net loss) — don't pile bodies",
+                                            v2415RawDrain, v2415InitCost, title), -v2415Pen);
+                                        logger.warn("V24.15 EFFECTIVE DRAIN: {} raw={} cost={} power={} -> {}",
+                                            title, (int) v2415RawDrain, (int) v2415InitCost, (int) v2415PowerVal, (int) (-v2415Pen));
+                                    }
                                 }
                             } catch (Exception e) {
                                 logger.debug("V24.15: Error checking drain amount for deploy: {}", e.getMessage());
@@ -3773,10 +3813,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         // V21: Count hand size and reserves for hand protection
         int handSize = 0;
         int totalReserves = 0;
+        // V153 THIN RESERVE (Steve, 2026-07-07): reserve DECK size in isolation (NOT the
+        // life-force sum totalReserves) — used by the thin-reserve guard below to spare
+        // destiny-draw fuel when the deck runs low.
+        int reserveDeckSize = 0;
         if (gameState != null && playerId != null) {
             try {
                 handSize = gameState.getHand(playerId).size();
-                totalReserves = gameState.getReserveDeckSize(playerId)
+                reserveDeckSize = gameState.getReserveDeckSize(playerId);
+                totalReserves = reserveDeckSize
                     + gameState.getUsedPile(playerId).size()
                     + gameState.getForcePileSize(playerId);
             } catch (Exception e) {
@@ -4051,6 +4096,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             + ", lifeForce=" + totalReserves + ", protectChars=" + v153ProtectChars + ")", v153Zone);
                         if (isFromHand && v153HandChar) {
                             logger.warn("V153 HAND CHAR: {} protectChars={} lifeForce={} → zone {}", title, v153ProtectChars, totalReserves, v153Zone);
+                        }
+
+                        // === V153 THIN RESERVE (Steve, 2026-07-07): spare destiny fuel when the
+                        // reserve DECK runs thin. PROTECT-CHARS tier only (life force >= 4). Mistake
+                        // 3 (Endor Operations game): reserve deck was down near the last few destiny
+                        // cards, yet the protect-chars order keeps reserve (base 400) ABOVE hand
+                        // characters (100), so Rando kept eating reserve to protect deployable hand
+                        // pieces — burning the destiny draws it needed for battles. This demotes a
+                        // reserve loss BELOW hand characters (400 - 335 = 65) once the reserve DECK is
+                        // <=10, but keeps it ABOVE the force pile (50) so activation fuel is still lost
+                        // last. Keys on reserveDeckSize alone (life force can be comfortable while the
+                        // deck is thin — the rest is in used/force). Survival tier (protectChars=false,
+                        // life force <4) is intentionally NOT guarded: there reserve is already 300,
+                        // below hand junk/chars, and we WANT to preserve the life-force piles to avoid
+                        // decking out. Additive — nothing removed.
+                        // -335 window: must exceed 400-100=300 to drop reserve under hand chars, and
+                        // stay under 400-50=350 to remain above the force pile. Re-derive if the V153
+                        // base magnitudes (400/100/50) ever move.
+                        if (isFromReserve && v153ProtectChars && reserveDeckSize <= 10) {
+                            action.addReasoning("V153 THIN RESERVE (deck=" + reserveDeckSize
+                                + "): demote reserve below hand chars to preserve destiny", -335.0f);
+                            logger.warn("V153 THIN RESERVE: reserve deck={} (protectChars) — demote reserve loss 400 -> 65", reserveDeckSize);
                         }
 
                         // === V175 (Steve, 2026-06): PROTECT BATTLE INTERRUPTS FROM THE FODDER PILE ===
@@ -4615,9 +4682,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         // V153 (Steve, 2026-05-28): life force = reserve + used + force pile (the lose
         // condition; hand and table are excluded). Used by the V153 force-loss tier below.
         int totalReservesV127 = 0;
+        // V153 THIN RESERVE (Steve, 2026-07-07): reserve DECK size in isolation (battle mirror).
+        int reserveDeckSizeV127 = 0;
         if (gameState != null && playerId != null) {
             try {
-                totalReservesV127 = gameState.getReserveDeckSize(playerId)
+                reserveDeckSizeV127 = gameState.getReserveDeckSize(playerId);
+                totalReservesV127 = reserveDeckSizeV127
                     + gameState.getUsedPile(playerId).size()
                     + gameState.getForcePileSize(playerId);
             } catch (Exception e) { /* fallback to 0 */ }
@@ -4942,6 +5012,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                             action.addReasoning("V153 ZONE (" + v153ZoneName + ", lifeForce=" + totalReservesV127
                                 + ", protectChars=" + v153ProtectChars + ")", v153Zone);
+
+                            // === V153 THIN RESERVE (Steve, 2026-07-07): battle-mirror of the regular
+                            // block's thin-reserve guard. PROTECT-CHARS tier only. Reserve DECK <=10 ->
+                            // demote reserve loss below hand chars (400 - 335 = 65), still above the
+                            // force pile (50). Keys on reserveDeckSizeV127 alone. Survival tier
+                            // untouched. Additive. See the regular evaluateForceLoss block for the full
+                            // rationale + boundary window.
+                            if (v153FromReserve && v153ProtectChars && reserveDeckSizeV127 <= 10) {
+                                action.addReasoning("V153 THIN RESERVE (deck=" + reserveDeckSizeV127
+                                    + "): demote reserve below hand chars to preserve destiny", -335.0f);
+                                logger.warn("V153 THIN RESERVE (battle): reserve deck={} (protectChars) — demote reserve loss 400 -> 65", reserveDeckSizeV127);
+                            }
 
                             // Hand floor: keep >=4 cards in hand while life force >= 10.
                             if (v153FromHand) {

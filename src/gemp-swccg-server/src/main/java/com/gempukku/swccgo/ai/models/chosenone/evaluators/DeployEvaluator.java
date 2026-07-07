@@ -1818,6 +1818,55 @@ public class DeployEvaluator extends ActionEvaluator {
                                 LOG.info("V136 [{}]: {} → {} score={}", playerId,
                                     card.getTitle(), v136Candidate.getTitle(), v136Score);
                             }
+
+                            // === V193 (Steve, 2026-07-07): BUNKER-CONTROL BONUS (Endor Operations flip gate) ===
+                            // Endor Operations (dark) flips once Ominous Rumors + Establish Secret Base are
+                            // both on table. Establish Secret Base (V) (207_25) "Deploy on Bunker if you
+                            // control that site" — so the LAST flip-card only reaches the table once Rando
+                            // CONTROLS Endor: Bunker. In the diagnosed game (replay qgdridfo166f27r3) Bunker
+                            // sat empty all game (us:0 them:0) while Rando piled every body onto Endor:
+                            // Landing Platform, so the cost-0 Establish Secret Base in hand was never a legal
+                            // deploy and the objective never flipped. Steer exactly ONE body to Bunker to
+                            // seize control. Self-limiting/one-shot: fires only while (a) the objective
+                            // analyzer named Bunker as the flip-critical control site (ObjectiveAnalyzer
+                            // V193), (b) Rando does NOT already control it, and (c) Establish Secret Base is
+                            // still in hand/reserve (flip is reachable). Once one body lands on the empty
+                            // site Rando controls it -> guard (b) closes -> the bonus never stacks per-body,
+                            // and the rest of the pile reverts to normal siting (Landing Platform for drains).
+                            //
+                            // BOUNDARY MATH (from the diagnosis of that game):
+                            //   Landing Platform, first body  ≈ 660 (docking-bay empty-bay +80, V136 CS
+                            //     350->600, V23 drain +30, high-ability +50, reinforce-solo +150, buddy +40,
+                            //     battleground +80, V22 non-obj -40).
+                            //   Endor: Bunker, first body, WITH ObjectiveAnalyzer V193 relevance but WITHOUT
+                            //     this bonus ≈ 430-470 (BG bonuses + obj +200, no drain/empty-bay/reinforce).
+                            //   +400 -> Bunker ≈ 830-870 > 660, so the FIRST body picks Bunker (beats the
+                            //     pile by ~170-240). After that body lands Rando controls Bunker, guard (b)
+                            //     closes, and Bunker drops back below Landing Platform for every later body.
+                            if (v136Obj != null && v136Obj.isAnalyzed()
+                                    && v136Candidate.getTitle() != null) {
+                                String v193GateSite = v136Obj.getFlipCriticalControlSite();
+                                if (v193GateSite != null
+                                        && v193GateSite.equalsIgnoreCase(v136Candidate.getTitle())) {
+                                    boolean v193AlreadyControls =
+                                        com.gempukku.swccgo.cards.GameConditions.controls(
+                                            game, playerId, v136Candidate);
+                                    com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle v193Oracle =
+                                        context.getDeckOracle();
+                                    boolean v193HoldsEstablish = v193Oracle != null
+                                        && (v193Oracle.isCardInHand("establish secret base")
+                                            || v193Oracle.isCardInReserve("establish secret base"));
+                                    if (!v193AlreadyControls && v193HoldsEstablish) {
+                                        action.addReasoning(
+                                            "V193 BUNKER CONTROL: steer one body to '"
+                                                + v136Candidate.getTitle()
+                                                + "' to enable Establish Secret Base flip (Endor Operations)",
+                                            400.0f);
+                                        LOG.warn("V193 BUNKER CONTROL [{}]: {} → {} +400 (seize flip-gate site)",
+                                            playerId, card.getTitle(), v136Candidate.getTitle());
+                                    }
+                                }
+                            }
                         }
                     }
 

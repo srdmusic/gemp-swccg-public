@@ -191,6 +191,31 @@ public class DrawEvaluator extends ActionEvaluator {
         // Get force generation for forward planning
         int forceGeneration = calculateForceGeneration(context);
 
+        // === V58/V67w MAINTENANCE FLOOR (hard) — HARDENING 2026-07-07 ===
+        // Mirror of the rando DrawEvaluator fix. The maintenance reserve was
+        // COMPUTED correctly (calculateForceToReserve adds maintenanceObligation)
+        // but only ENFORCED as the soft "V58 HOLD RESERVE" -15, which draw-hunger
+        // bonuses (+64/+80/+400) trivially dominate. Rando drew its Force Pile to 0
+        // through the reserve floor and a MAINTENANCE card (Ap'lek, "End of your
+        // turn: Use 1 Force") was sacrificed at end of turn → lost on Life Force.
+        // Mirror the DeployEvaluator V59 HARD philosophy: an early return that
+        // strips ALL draw bonuses so PASS wins. Key ONLY off maintenanceObligation
+        // (not the full forceToReserve): only the maintenance portion has the
+        // property "spend it and you LOSE A CARD." Placed BEFORE V42 and all bonuses
+        // so the return actually blocks. Gated handSize > 1 so the genuine empty-hand
+        // death spiral (handSize<=1) still falls through to V42 EMERGENCY DRAW.
+        // No new V-tag — hardens V58/V67w in place
+        // (feedback_update_old_rule_not_new_version).
+        int maintFloor = context.getForceReserveFacts().maintenanceObligation;
+        if (maintFloor > 0 && forcePile <= maintFloor && handSize > 1) {
+            action.addReasoning("V58 MAINTENANCE FLOOR (hard): force pile " + forcePile +
+                " <= upkeep " + maintFloor + " — hold it or a maintenance card is sacrificed at end of turn",
+                VERY_BAD_DELTA);
+            logger.warn("V58 MAINTENANCE FLOOR (hard): forcePile={} <= maintObligation={}, hand={} — suppress draw, PASS wins",
+                forcePile, maintFloor, handSize);
+            return;  // strip all draw bonuses — hold the Force to pay upkeep
+        }
+
         // === V42: EMERGENCY DRAW — empty hand is a death spiral ===
         // If hand is 0-2, we MUST draw regardless of other considerations.
         // An empty hand means no deploys, no interrupts, no responses — game over.

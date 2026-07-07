@@ -1,3 +1,8 @@
+  ════ SIX ENDOR-GAME FIXES (2026-07-07): maintenance floor, thin-reserve, effective-drain, Endor Bunker plan ════
+V58/V67w maintenance floor hardened (DrawEvaluator); V153 THIN RESERVE guard (reserve<=10 → lose hand not
+reserve); V24.15 EFFECTIVE DRAIN arm CONSOLIDATED (was V189b, folded in — no contradictory new version);
+V193 Endor Operations playbook + Bunker-control bonus (unlock Establish Secret Base). Both bots. See AI_CHANGELOG.md 2026-07-07.
+
 Rando Cal / Chosen One AI — Version History
 =================================================================
 
