@@ -363,40 +363,64 @@ public class CharacterDeploySiteEvaluator {
             // NOTE: this only fires when we're contested (oppPower > 0); the turn<=2
             // solo-protection (V156) is the uncontested case (oppPower == 0) and is
             // mutually exclusive, so nothing it guards is bypassed.
-            float v181Gap = oppPower - projectedPower;
-            if (v181Gap > 0f && v181Gap <= 3f) {
-                float v181Drain = 0f;
-                try { v181Drain = mq.getForceDrainAmount(gs, candidateSite, opponentId); }
-                catch (Exception ignore) { /* treat as 0 → won't fire */ }
-                if (v181Drain >= 2f) {
-                    // Forfeit trade over the bodies that will actually battle — our
-                    // team at the site + the deploying card vs their team here.
-                    float ourForfeit = safeForfeit(deployingCard);
-                    float theirForfeit = 0f;
-                    for (PhysicalCard pc : friendliesAtSite) {
-                        if (pc == null || pc.getBlueprint() == null) continue;
-                        if (pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                        if (playerId.equals(pc.getOwner())) ourForfeit += safeForfeit(pc);
-                        else if (opponentId.equals(pc.getOwner())) theirForfeit += safeForfeit(pc);
-                    }
-                    // Parity = we don't lose MORE value than them. Favorable trades
-                    // (our fodder cheaper than theirs) and even trades both commit;
-                    // only a clearly-worse trade — we'd forfeit >25% more value than
-                    // they would — holds. A one-sided CAP, not a band: an earlier
-                    // symmetric ±25% window wrongly blocked the favorable case (our 7
-                    // forfeit vs their 12 → we lose LESS, exactly the trade to take).
-                    boolean v181Parity = theirForfeit <= 0f
-                        || ourForfeit <= theirForfeit * 1.25f;
-                    if (v181Parity) {
-                        float v181Bonus = Math.min(300f, v181Drain * 100f);
-                        LOG.warn("V181 FAIR-FIGHT COMMIT: {} → {} gap={} drain={} ourForfeit={} theirForfeit={} → +{}",
-                            safeTitle(deployingCard), safeTitle(candidateSite),
-                            v181Gap, v181Drain, ourForfeit, theirForfeit, v181Bonus);
-                        return v181Bonus;
-                    }
-                    LOG.warn("V181 NO-PARITY: {} → {} gap={} drain={} ourForfeit={} theirForfeit={} — forfeit mismatch, hold",
+            //
+            // V181 UPDATED 2026-07-06 T4.1: the gap/drain/parity condition chain now
+            // lives in the SHARED predicate MovePredicates.canWinAt (same package) —
+            // the same predicate MoveEvaluator's V137 consumes, killing the move-4a
+            // deploy/move same-tag drift permanently (parity pair V136/V137).
+            // PARITY NOTE (behavior-identical port): at this point projectedPower <
+            // oppPower always (the V151 loop above returned +400 otherwise), so the
+            // predicate's clean-win arm can never fire here; its tolerance arm is
+            // byte-equivalent to the old inline chain (gap in (0,3], opp drain >= 2,
+            // ability >= 4 — guaranteed by the enclosing abilityPass gate — and the
+            // one-sided 1.25x forfeit cap, forfeits summed identically). All
+            // deploy-side bonus math (+min(300, drain*100)) is kept exactly as was.
+            // OLD (inline chain, kept for revert):
+            // float v181Gap = oppPower - projectedPower;
+            // if (v181Gap > 0f && v181Gap <= 3f) {
+            //     float v181Drain = 0f;
+            //     try { v181Drain = mq.getForceDrainAmount(gs, candidateSite, opponentId); }
+            //     catch (Exception ignore) { /* treat as 0 → won't fire */ }
+            //     if (v181Drain >= 2f) {
+            //         float ourForfeit = safeForfeit(deployingCard);
+            //         float theirForfeit = 0f;
+            //         for (PhysicalCard pc : friendliesAtSite) {
+            //             if (pc == null || pc.getBlueprint() == null) continue;
+            //             if (pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+            //             if (playerId.equals(pc.getOwner())) ourForfeit += safeForfeit(pc);
+            //             else if (opponentId.equals(pc.getOwner())) theirForfeit += safeForfeit(pc);
+            //         }
+            //         boolean v181Parity = theirForfeit <= 0f
+            //             || ourForfeit <= theirForfeit * 1.25f;
+            //         if (v181Parity) {
+            //             float v181Bonus = Math.min(300f, v181Drain * 100f);
+            //             LOG.warn("V181 FAIR-FIGHT COMMIT: ... → +{}", ...);
+            //             return v181Bonus;
+            //         }
+            //         LOG.warn("V181 NO-PARITY: ... — forfeit mismatch, hold", ...);
+            //     }
+            // }
+            // Forfeit trade over the bodies that will actually battle — our team at
+            // the site + the deploying card vs their team here (their side is summed
+            // inside the shared predicate from the same site list).
+            float v181OurForfeit = safeForfeit(deployingCard);
+            for (PhysicalCard pc : friendliesAtSite) {
+                if (pc == null || pc.getBlueprint() == null) continue;
+                if (pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                if (playerId.equals(pc.getOwner())) v181OurForfeit += safeForfeit(pc);
+            }
+            if (MovePredicates.canWinAt(gs, mq, playerId, opponentId, candidateSite,
+                    projectedPower, teamAbility, v181OurForfeit)) {
+                float v181Drain = MovePredicates.drainAt(gs, mq, candidateSite, opponentId);
+                float v181Bonus = Math.min(300f, v181Drain * 100f);
+                // Guard: a tolerance pass guarantees drain >= 2 → bonus >= 200. A bonus of 0
+                // can only mean the predicate fail-opened on an engine error — fall through
+                // to the normal scoring exactly like the old inline chain did.
+                if (v181Bonus > 0f) {
+                    LOG.warn("V181 FAIR-FIGHT COMMIT (shared canWinAt): {} → {} gap={} drain={} ourForfeit={} → +{}",
                         safeTitle(deployingCard), safeTitle(candidateSite),
-                        v181Gap, v181Drain, ourForfeit, theirForfeit);
+                        oppPower - projectedPower, v181Drain, v181OurForfeit, v181Bonus);
+                    return v181Bonus;
                 }
             }
         }

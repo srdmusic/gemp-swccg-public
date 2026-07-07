@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
@@ -29,6 +30,19 @@ import java.util.Set;
 // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
 // Cross-refs: DEPLOY-2 (V136 twin), MOVE region in ActionTextEvaluator (V67ae + Movement Actions dispatch),
 // SVC-SAFETY (V163/V167/V169 loop trio). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+//
+// T4.1 MOVE CLOBBER LADDER (2026-07-06, spec: T4_Boundary_Tables_2026-07-06.md §T4.1 + orchestrator
+// rulings L1-L4): every move action is scored as fine-grained deltas as before, but now carries a
+// RANK (R4 mandatory transit +20000 / R3 survival +12000 / R2 doctrine +6000 / R1 default 0) and
+// veto flags, applied by a FINALIZER just before actions.add(). Fines are clamped to ±2800
+// ("LADDER CLAMP"); a NEGATIVE clamp hit demotes the claim one band, R2→R1 / R3→R2 ("LADDER
+// DEMOTE", ruling L1). R2 claims need strength: own fine >= +200 OR drain-delta >= 2 (ruling L2).
+// Veto×rank matrix (ruling L3): cancel-loop (V160) veto beats everything; the canWinAt (V137)
+// veto applies ONLY to battle-seeking R2 claims (hunt/contest/attack), never R4/R3/non-battle-R2;
+// the V38.3 wrong-direction veto is suppressed by the SPECIFIC V53b transit claim identities.
+// Old -9999 hard blocks are now veto-class -100000; old cross-rank early returns are gone —
+// V37.1 and V85 survive as R1 weights (-1500 / -800). Winnability + drain metrics route through
+// common/strategy/MovePredicates (shared with CharacterDeploySiteEvaluator V181 — parity pair).
 // ═══════════════════════════════════════════════════════════
 /**
  * Evaluates movement decisions.
@@ -69,6 +83,37 @@ public class MoveEvaluator extends ActionEvaluator {
     private static final float BAD_DELTA = -10.0f;
     private static final float VERY_BAD_DELTA = -150.0f;
 
+    // ═══ T4.1 LADDER CONSTANTS (2026-07-06) ═══
+    // Rank bands (rank-as-band-offset; CombinedEvaluator's additive merge untouched)
+    private static final float RANK_R4 = 20000.0f;   // mandatory transit (V53b transit arms; ATE V60 transit shares the band)
+    private static final float RANK_R3 = 12000.0f;   // survival (threat RETREAT, V59 DOOMED, V91 landed-ship escape)
+    private static final float RANK_R2 = 6000.0f;    // doctrine (hunt/contest/shuttle/consolidate/spy-follow/…)
+    private static final float RANK_R1 = 0.0f;       // default — behaves exactly as today
+    private static final float LADDER_VETO = -100000.0f;
+    private static final float FINE_CLAMP = 2800.0f; // non-base fines clamped to ±2800 ("LADDER CLAMP")
+    // Ruling L2: an R2 claim needs strength — claiming rule's own fine >= +200 OR drain-delta >= 2
+    private static final float R2_CLAIM_MIN_FINE = 200.0f;
+    private static final float R2_CLAIM_MIN_DRAIN_DELTA = 2.0f;
+    // Ruling L4 band-assert inputs (verified cross-evaluator bounds, T4_Boundary_Tables §Band check):
+    // worst ATE co-sum stack -550 (V29.7-Castle/V67ae -300 + V169 soft -250), best +250 (V35.4);
+    // largest R1 fine stack ≈ +1670 (V79 orbit-Scarif +1500 dominates).
+    private static final float ATE_CROSS_NEG = 550.0f;
+    private static final float ATE_CROSS_POS = 250.0f;
+    private static final float R1_FINE_CEILING = 1670.0f;
+    private static boolean ladderBandsChecked = false;
+
+    // ═══ T4.1 per-action ladder state (reset via ladderResetForAction at each action) ═══
+    private int ladderRank;                    // 1..4, max of matched rank-predicates, default 1
+    private boolean ladderVetoHard;            // absolute veto class (V47/V49/V135/V60-landspeed/V38.3-Castle)
+    private String ladderVetoHardReason;
+    private boolean ladderCanWinVeto;          // V137 winnability failed shared canWinAt — L3: battle-seeking R2 only
+    private String ladderCanWinVetoReason;
+    private boolean ladderBattleSeekingClaim;  // an accepted hunt/contest/attack R2 claim exists (L3 veto scope)
+    private boolean ladderMandatoryTransit;    // set ONLY by the specific V53b transit claim identities (L3 carve-out key)
+    private boolean ladderWrongDirVeto;        // V38.3 wrong-direction — deferred so the transit carve-out can suppress it
+    private String ladderWrongDirVetoReason;
+    private boolean ladderRankMoveRan;         // rankMoveFromLocation executed (gates the finalizer's default -50)
+
     // Threat levels (matching Python ThreatLevel enum)
     private enum ThreatLevel {
         CRUSH, FAVORABLE, RISKY, DANGEROUS, RETREAT
@@ -84,6 +129,155 @@ public class MoveEvaluator extends ActionEvaluator {
 
     public void resetPendingMoves() {
         pendingMoveCardIds.clear();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // T4.1 LADDER MACHINERY (2026-07-06)
+    // ═══════════════════════════════════════════════════════════
+
+    /** Reset per-action ladder state. Called once per evaluated move action. */
+    private void ladderResetForAction() {
+        ladderRank = 1;
+        ladderVetoHard = false;
+        ladderVetoHardReason = null;
+        ladderCanWinVeto = false;
+        ladderCanWinVetoReason = null;
+        ladderBattleSeekingClaim = false;
+        ladderMandatoryTransit = false;
+        ladderWrongDirVeto = false;
+        ladderWrongDirVetoReason = null;
+        ladderRankMoveRan = false;
+    }
+
+    /** R4 claim — MANDATORY TRANSIT. Keyed claim identity (V53b arms only) also arms the V38.3 carve-out (ruling L3). */
+    private void ladderClaimR4Transit(String tag) {
+        ladderRank = Math.max(ladderRank, 4);
+        ladderMandatoryTransit = true;
+        logger.info("LADDER: R4 TRANSIT claim by {}", tag);
+    }
+
+    /** R3 claim — SURVIVAL (retreat/escape). Not subject to the L2 strength gate. */
+    private void ladderClaimR3(String tag) {
+        ladderRank = Math.max(ladderRank, 3);
+        logger.info("LADDER: R3 SURVIVAL claim by {}", tag);
+    }
+
+    /**
+     * R2 claim — DOCTRINE. Ruling L2 strength gate: accepted only when the claiming
+     * rule's own fine is >= +200 OR its drain-delta is >= 2. battleSeeking marks
+     * hunt/contest/attack claims — the only claims the V137 canWinAt veto may kill (ruling L3).
+     *
+     * @return true if the claim was accepted
+     */
+    private boolean ladderClaimR2(String tag, float ownFine, float drainDelta, boolean battleSeeking) {
+        if (ownFine >= R2_CLAIM_MIN_FINE || drainDelta >= R2_CLAIM_MIN_DRAIN_DELTA) {
+            ladderRank = Math.max(ladderRank, 2);
+            if (battleSeeking) ladderBattleSeekingClaim = true;
+            logger.info("LADDER: R2 DOCTRINE claim by {} (fine {}, drainDelta {}, battleSeeking={})",
+                tag, (int) ownFine, (int) drainDelta, battleSeeking);
+            return true;
+        }
+        logger.info("LADDER: R2 claim by {} REJECTED — weak claim (fine {} < +{}, drainDelta {} < {}) (ruling L2)",
+            tag, (int) ownFine, (int) R2_CLAIM_MIN_FINE, (int) drainDelta, (int) R2_CLAIM_MIN_DRAIN_DELTA);
+        return false;
+    }
+
+    /**
+     * Ruling L4: first-use band-integrity assertion. Recomputes the R1 ceiling vs the
+     * R2 floor from the live constants and logger.error's on inversion (no crash).
+     */
+    private void ladderAssertBandsOnce() {
+        if (ladderBandsChecked) return;
+        ladderBandsChecked = true;
+        float r2Floor = RANK_R2 - FINE_CLAMP - ATE_CROSS_NEG;
+        float r1Ceiling = RANK_R1 + R1_FINE_CEILING + ATE_CROSS_POS;
+        if (r2Floor <= r1Ceiling) {
+            logger.error("LADDER BAND INVERSION: R2 floor {} <= R1 ceiling {} — rank bands no longer separate "
+                + "(RANK_R2={}, FINE_CLAMP={}, ATE_CROSS_NEG={}, R1_FINE_CEILING={}, ATE_CROSS_POS={}). "
+                + "Rebalance before trusting MOVE decisions.",
+                r2Floor, r1Ceiling, RANK_R2, FINE_CLAMP, ATE_CROSS_NEG, R1_FINE_CEILING, ATE_CROSS_POS);
+        } else {
+            logger.info("LADDER BANDS OK: R2 floor {} > R1 ceiling {} (margin {})",
+                r2Floor, r1Ceiling, r2Floor - r1Ceiling);
+        }
+    }
+
+    /**
+     * T4.1 FINALIZER — applied once per action just before actions.add().
+     * Order: hard veto → V38.3 deferred veto (with the L3 transit carve-out) →
+     * canWinAt veto (L3 matrix: battle-seeking R2 only) → fine clamp (±2800, with
+     * the L1 negative-clamp demote R2→R1 / R3→R2) → rank base → R1 default -50.
+     */
+    private void ladderFinalize(EvaluatedAction action) {
+        ladderAssertBandsOnce();
+
+        // 1. Hard veto class — absolute (cancel-loop V160 keeps its own -100000 short-circuit upstream).
+        if (ladderVetoHard) {
+            action.addReasoning("LADDER VETO: " + ladderVetoHardReason, LADDER_VETO);
+            logger.warn("LADDER VETO -100000 (hard): {}", ladderVetoHardReason);
+            return;
+        }
+
+        // 2. V38.3 wrong-direction deferred veto — suppressed by the SPECIFIC transit
+        //    claim identities (V53b Safehouse→Corridor / Mapuzo-exit), not by rank==R4 (ruling L3).
+        if (ladderWrongDirVeto) {
+            if (ladderMandatoryTransit) {
+                action.addReasoning("V38.3 wrong-direction suppressed (R4 mandatory transit)", 0.0f);
+                logger.warn("V38.3 WRONG DIRECTION suppressed (R4 mandatory transit): {}", ladderWrongDirVetoReason);
+            } else {
+                action.addReasoning("LADDER VETO: " + ladderWrongDirVetoReason, LADDER_VETO);
+                logger.warn("LADDER VETO -100000 (V38.3): {}", ladderWrongDirVetoReason);
+                return;
+            }
+        }
+
+        // 3. canWinAt veto — ruling L3 matrix: ONLY battle-seeking R2 claims (hunt/contest/attack).
+        //    Never R4 transit, R3 survival, or non-battle R2. Non-vetoed unwinnable paths keep the
+        //    old V137 -800/-1500 weights (applied inline at the V137 block).
+        if (ladderCanWinVeto) {
+            if (ladderRank == 2 && ladderBattleSeekingClaim) {
+                action.addReasoning("LADDER VETO: " + ladderCanWinVetoReason, LADDER_VETO);
+                logger.warn("V137 UNWINNABLE (battle-seeking R2) — LADDER VETO -100000: {}", ladderCanWinVetoReason);
+                return;
+            }
+            logger.info("V137 canWinAt veto NOT applied (L3 matrix: rank=R{}, battleSeeking={}) — R1 weights already applied inline",
+                ladderRank, ladderBattleSeekingClaim);
+        }
+
+        // 4. Fine clamp ±2800 + ruling L1 demote on a NEGATIVE clamp hit (R2→R1, R3→R2; R4 exempt).
+        int rank = ladderRank;
+        float fines = action.getScore();  // ctor base is 0 → current score == accumulated fines
+        if (fines > FINE_CLAMP) {
+            action.addReasoning(String.format("LADDER CLAMP: fines %+.0f clamped to %+.0f", fines, FINE_CLAMP),
+                FINE_CLAMP - fines);
+            logger.warn("LADDER CLAMP: fines {} clamped to +{} on '{}'", (int) fines, (int) FINE_CLAMP,
+                action.getDisplayText());
+        } else if (fines < -FINE_CLAMP) {
+            action.addReasoning(String.format("LADDER CLAMP: fines %+.0f clamped to %+.0f", fines, -FINE_CLAMP),
+                -FINE_CLAMP - fines);
+            logger.warn("LADDER CLAMP: fines {} clamped to -{} on '{}'", (int) fines, (int) FINE_CLAMP,
+                action.getDisplayText());
+            if (rank == 2 || rank == 3) {
+                rank -= 1;
+                action.addReasoning("LADDER DEMOTE: negative clamp hit — claim demoted one band (ruling L1)", 0.0f);
+                logger.warn("LADDER DEMOTE: negative clamp hit — R{} demoted to R{} (ruling L1)", rank + 1, rank);
+            }
+        }
+
+        // 5. Rank base (band offset).
+        if (rank >= 4) {
+            action.addReasoning("LADDER: R4 MANDATORY TRANSIT base", RANK_R4);
+        } else if (rank == 3) {
+            action.addReasoning("LADDER: R3 SURVIVAL base", RANK_R3);
+        } else if (rank == 2) {
+            action.addReasoning("LADDER: R2 DOCTRINE base", RANK_R2);
+        } else if (ladderRankMoveRan && ladderRank == 1) {
+            // Default -50 moved here from the tail of rankMoveFromLocation (T4.1): applied only
+            // when no rank claim was accepted (rank==R1; a demoted claim keeps its reason and is
+            // NOT re-penalized) and only for actions that went through rankMoveFromLocation —
+            // exactly the population that could reach the old line.
+            action.addReasoning("No strategic reason to move", -50.0f);
+        }
     }
 
     @Override
@@ -218,9 +412,15 @@ public class MoveEvaluator extends ActionEvaluator {
                 } else {
                     // V169 UPDATED 2026-07-06: hard block unchanged, wrapped in else so the
                     // endangered-mover path above falls through instead of hitting it.
-                    EvaluatedAction blockedMove = new EvaluatedAction(actionId, ActionType.MOVE, -9999.0f, actionText);
-                    blockedMove.addReasoning("CANCEL-LOOP BLOCK: this move led to repeated Done-cancels — try something else", -9999.0f);
-                    logger.warn("MoveEvaluator: actionId='{}' is in blockedResponses → -9999 (cancel-loop block)", actionId);
+                    // V160 UPDATED 2026-07-06 T4.1: -9999 raised to the ladder veto class
+                    // -100000 (ruling L3: the cancel-loop veto beats everything, including
+                    // R4 transit bands). Old lines kept for revert:
+                    // EvaluatedAction blockedMove = new EvaluatedAction(actionId, ActionType.MOVE, -9999.0f, actionText);
+                    // blockedMove.addReasoning("CANCEL-LOOP BLOCK: this move led to repeated Done-cancels — try something else", -9999.0f);
+                    // logger.warn("MoveEvaluator: actionId='{}' is in blockedResponses → -9999 (cancel-loop block)", actionId);
+                    EvaluatedAction blockedMove = new EvaluatedAction(actionId, ActionType.MOVE, 0.0f, actionText);
+                    blockedMove.addReasoning("CANCEL-LOOP BLOCK: this move led to repeated Done-cancels — try something else (LADDER VETO)", -100000.0f);
+                    logger.warn("MoveEvaluator: actionId='{}' is in blockedResponses → -100000 (V160 cancel-loop LADDER VETO)", actionId);
                     actions.add(blockedMove);
                     continue;
                 }
@@ -248,6 +448,10 @@ public class MoveEvaluator extends ActionEvaluator {
                 0.0f,  // Start at 0 - let analysis determine score
                 actionText
             );
+
+            // T4.1 (2026-07-06): reset the per-action ladder state (rank/veto flags)
+            // before any rule below can claim a band or set a veto.
+            ladderResetForAction();
 
             // === Get the card being moved ===
             PhysicalCard cardToMove = null;
@@ -313,6 +517,8 @@ public class MoveEvaluator extends ActionEvaluator {
                             java.util.regex.Matcher v79m = java.util.regex.Pattern.compile(
                                 "parsec\\s+(\\d+)").matcher(v79ActionLower);
                             Integer destParsec = null;
+                            // (chosenone keeps the original first-match parse; rando's 2026-06-28
+                            // last-match V79 fix was never mirrored here and is out of T4.1 scope.)
                             if (v79m.find()) {
                                 try { destParsec = Integer.parseInt(v79m.group(1)); }
                                 catch (Exception e) { /* ignore */ }
@@ -435,9 +641,15 @@ public class MoveEvaluator extends ActionEvaluator {
                             logger.debug("V47 survivability gate error: {}", e.getMessage());
                         }
                         if (v47ObjectiveWantsLandoHere && v47Survivable) {
-                            action.addReasoning("V47 LANDO STAY: Lando at " + currentLoc.getTitle()
-                                + " — stay for occupation! Don't move!", -9999.0f);
-                            logger.warn("V47 LANDO STAY: Lando at {} — HARD BLOCK on move!", currentLoc.getTitle());
+                            // V47 UPDATED 2026-07-06 T4.1: -9999 addReasoning converted to the ladder
+                            // hard-veto class (-100000 at the finalizer). Today's gates (a)+(b) kept
+                            // unchanged — semantics identical, magnitude now band-proof. Old line:
+                            // action.addReasoning("V47 LANDO STAY: Lando at " + currentLoc.getTitle()
+                            //     + " — stay for occupation! Don't move!", -9999.0f);
+                            ladderVetoHard = true;
+                            ladderVetoHardReason = "V47 LANDO STAY: Lando at " + currentLoc.getTitle()
+                                + " — stay for occupation! Don't move!";
+                            logger.warn("V47 LANDO STAY: Lando at {} — LADDER VETO on move!", currentLoc.getTitle());
                         } else {
                             logger.warn("V47 LANDO STAY skipped at {}: objectiveWantsHere={}, survivable={} (powerDiff={})",
                                 currentLoc.getTitle(), v47ObjectiveWantsLandoHere, v47Survivable, (int)v47PowerDiff);
@@ -458,32 +670,40 @@ public class MoveEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.common.Zone.FORCE_PILE, false);
                     if (fpCards != null) forcePile = fpCards.size();
 
-                    // Check if opponent has Draw Their Fire (makes interrupts cost +1)
-                    boolean dtfActive = false;
-                    String opponentId = game.getOpponent(playerId);
-                    // Check for grabber shield (Allegations Of Corruption / A Tragedy Has Occurred)
-                    boolean grabberNeedsForce = false;
-                    for (PhysicalCard pCard : gameState.getAllPermanentCards()) {
-                        if (pCard == null || pCard.getBlueprint() == null) continue;
-                        com.gempukku.swccgo.common.Zone pZ = pCard.getZone();
-                        if (pZ == null || !pZ.isInPlay()) continue;
-
-                        // DTF check (opponent's card)
-                        if (!dtfActive && opponentId != null && opponentId.equals(pCard.getOwner())
-                            && pCard.getBlueprint().getTitle() != null
-                            && pCard.getBlueprint().getTitle().toLowerCase(Locale.ROOT).contains("draw their fire")) {
-                            dtfActive = true;
-                        }
-
-                        // Grabber check (our card, unused)
-                        if (!grabberNeedsForce && playerId.equals(pCard.getOwner())
-                            && pCard.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.GRABBER)) {
-                            java.util.List<PhysicalCard> stacked = gameState.getStackedCards(pCard);
-                            if (stacked == null || stacked.isEmpty()) {
-                                grabberNeedsForce = true; // Hasn't grabbed yet — needs 1 Force
-                            }
-                        }
-                    }
+                    // T2 MOVE #1 COMMIT-2 (2026-07-06): DTF + grabber facts from the
+                    // shared per-decision ForceReserveService cache (same in-play-gated
+                    // detection; grabberUnused keeps THIS block's any-unused-grabber
+                    // semantic — see ForceReserveService header). Old inline scan
+                    // commented out below per feedback_comment_out_old_rules; V29
+                    // weights (-100/-150/-60) untouched.
+                    boolean dtfActive = context.getForceReserveFacts().dtfActive;
+                    boolean grabberNeedsForce = context.getForceReserveFacts().grabberUnused;
+//                     // Check if opponent has Draw Their Fire (makes interrupts cost +1)
+//                     boolean dtfActive = false;
+//                     String opponentId = game.getOpponent(playerId);
+//                     // Check for grabber shield (Allegations Of Corruption / A Tragedy Has Occurred)
+//                     boolean grabberNeedsForce = false;
+//                     for (PhysicalCard pCard : gameState.getAllPermanentCards()) {
+//                         if (pCard == null || pCard.getBlueprint() == null) continue;
+//                         com.gempukku.swccgo.common.Zone pZ = pCard.getZone();
+//                         if (pZ == null || !pZ.isInPlay()) continue;
+//
+//                         // DTF check (opponent's card)
+//                         if (!dtfActive && opponentId != null && opponentId.equals(pCard.getOwner())
+//                             && pCard.getBlueprint().getTitle() != null
+//                             && pCard.getBlueprint().getTitle().toLowerCase(Locale.ROOT).contains("draw their fire")) {
+//                             dtfActive = true;
+//                         }
+//
+//                         // Grabber check (our card, unused)
+//                         if (!grabberNeedsForce && playerId.equals(pCard.getOwner())
+//                             && pCard.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.GRABBER)) {
+//                             java.util.List<PhysicalCard> stacked = gameState.getStackedCards(pCard);
+//                             if (stacked == null || stacked.isEmpty()) {
+//                                 grabberNeedsForce = true; // Hasn't grabbed yet — needs 1 Force
+//                             }
+//                         }
+//                     }
 
                     // Calculate total Force we should reserve
                     int reserveNeeded = 0;
@@ -613,6 +833,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                             "V59 DOOMED: %s is a lost position (us %d vs enemy %d) — ESCAPE the valuable character!",
                                             currentLocation.getTitle(), (int)ourPowerHere, (int)theirPowerHere),
                                             200.0f);
+                                        // V59 UPDATED 2026-07-06 T4.1: DOOMED escape claims R3 SURVIVAL
+                                        // (fine +200 kept; base applied at the finalizer).
+                                        ladderClaimR3("V59 DOOMED ESCAPE");
                                         logger.warn("V59 DOOMED: {} at {} is lost ({} vs {}) — buddy protect DISABLED, flee!",
                                             cardToMove.getTitle(), currentLocation.getTitle(),
                                             (int)ourPowerHere, (int)theirPowerHere);
@@ -837,6 +1060,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                             weakestObjLoc, weakestPwr), 200.0f);
                                         logger.warn("V31 POST-FLIP CONSOLIDATE: {} should leave {} (weakest, power={}) to reinforce",
                                             cardToMove.getTitle(), weakestObjLoc, (int)weakestPwr);
+                                        // V31 UPDATED 2026-07-06 T4.1: consolidation claims R2 DOCTRINE
+                                        // (non-battle; fine +200 passes the L2 strength gate).
+                                        ladderClaimR2("V31 POST-FLIP CONSOLIDATE", 200.0f, 0.0f, false);
                                     }
                                 }
                             } catch (Exception e) {
@@ -917,10 +1143,17 @@ public class MoveEvaluator extends ActionEvaluator {
                                             v135FriendlyAtDest++;
                                         }
                                         if (v135FriendlyAtDest == 0) {
-                                            action.addReasoning(String.format(
+                                            // V135 UPDATED 2026-07-06 T4.1: -2000 (outbiddable by +2000+ stacks)
+                                            // strengthened to the ladder hard-veto class — a self-move-to-friend
+                                            // that lands ALONE is absolutely blocked. Old lines kept for revert:
+                                            // action.addReasoning(String.format(
+                                            //     "V135 SELF-MOVE-TO-FRIEND ALONE: '%s' would land alone at %s — no friendly characters there",
+                                            //     cardToMove.getTitle(), destLoc37.getTitle()), -2000.0f);
+                                            ladderVetoHard = true;
+                                            ladderVetoHardReason = String.format(
                                                 "V135 SELF-MOVE-TO-FRIEND ALONE: '%s' would land alone at %s — no friendly characters there",
-                                                cardToMove.getTitle(), destLoc37.getTitle()), -2000.0f);
-                                            logger.warn("V135 SELF-MOVE-TO-FRIEND ALONE: {} → {} (0 friendlies) -2000",
+                                                cardToMove.getTitle(), destLoc37.getTitle());
+                                            logger.warn("V135 SELF-MOVE-TO-FRIEND ALONE: {} → {} (0 friendlies) LADDER VETO",
                                                 cardToMove.getTitle(), destLoc37.getTitle());
                                         }
                                     }
@@ -1034,6 +1267,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                     logger.warn("V35 HUNT {}: Armed Vader at {} — target {} (power {}, bonus +{})",
                                         bestJediLoc != null ? "JEDI" : "DOWN",
                                         locName, huntTarget, (int)huntTargetPower, (int)huntMoveBonus);
+                                    // V35/V29.12 UPDATED 2026-07-06 T4.1: the hunt claims R2 DOCTRINE
+                                    // (battle-seeking — subject to the V137 canWinAt veto per ruling L3).
+                                    // Fine +350 (Jedi) / +200 (generic) passes the L2 strength gate.
+                                    ladderClaimR2("V35 HUNT " + (bestJediLoc != null ? "JEDI" : "DOWN"),
+                                        huntMoveBonus, 0.0f, true);
                                 }
                             }
                         }
@@ -1110,15 +1348,54 @@ public class MoveEvaluator extends ActionEvaluator {
                                             ? fc.getBlueprint().getAbility() : null;
                                         if (a != null) v137OurAbility += a;
                                     }
-                                    boolean v137CanWin = v137OurPower >= v137OppPower && v137OurAbility >= 4f;
+                                    // V137 UPDATED 2026-07-06 T4.1: mover-side forfeit sum (projected team =
+                                    // friendlies at dest + the whole group at the current location, parallel
+                                    // to the power/ability projection above) for the shared parity check.
+                                    float v137OurForfeit = 0f;
+                                    for (PhysicalCard fc : gameState.getCardsAtLocation(v137Dest)) {
+                                        if (fc == null || fc.getBlueprint() == null) continue;
+                                        if (!playerId.equals(fc.getOwner())) continue;
+                                        if (fc.getBlueprint().getCardCategory()
+                                                != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                        if (!fc.getBlueprint().hasForfeitAttribute()) continue;
+                                        Float ff = fc.getBlueprint().getForfeit();
+                                        if (ff != null) v137OurForfeit += ff;
+                                    }
+                                    for (PhysicalCard fc : gameState.getCardsAtLocation(currentLocation)) {
+                                        if (fc == null || fc.getBlueprint() == null) continue;
+                                        if (!playerId.equals(fc.getOwner())) continue;
+                                        if (fc.getBlueprint().getCardCategory()
+                                                != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                        if (!fc.getBlueprint().hasForfeitAttribute()) continue;
+                                        Float ff = fc.getBlueprint().getForfeit();
+                                        if (ff != null) v137OurForfeit += ff;
+                                    }
+                                    // V137 UPDATED 2026-07-06 T4.1: winnability now decided by the SHARED
+                                    // graded predicate MovePredicates.canWinAt (clean win OR the V181
+                                    // fair-fight tolerance) — kills the move-4a deploy/move mirror where
+                                    // V181 committed a deploy that V137 refused as a move. On failure the
+                                    // canWinAt VETO flag is set (applied at the finalizer ONLY to
+                                    // battle-seeking R2 claims — hunt/contest/attack — per ruling L3); the
+                                    // old -800/-1500 magnitudes are RETAINED below as R1-band weights so
+                                    // non-battle-seeking paths (R4 transit / R3 survival / non-battle R2 /
+                                    // plain R1) keep today's deterrent instead of going unprotected.
+                                    // OLD (inline clean-win only):
+                                    // boolean v137CanWin = v137OurPower >= v137OppPower && v137OurAbility >= 4f;
+                                    boolean v137CanWin = MovePredicates.canWinAt(game, gameState, playerId,
+                                        v137Dest, v137OurPower, v137OurAbility, v137OurForfeit);
                                     if (!v137CanWin) {
+                                        ladderCanWinVeto = true;
+                                        ladderCanWinVetoReason = String.format(
+                                            "V137 UNWINNABLE MOVE: %s → %s contested — even the full group (%.0f pwr/%.0f abil) loses to opp %.0f pwr (shared canWinAt false)",
+                                            cardToMove.getTitle(), v137Dest.getTitle(),
+                                            v137OurPower, v137OurAbility, v137OppPower);
                                         float v137Pen = -800.0f;
                                         if (v137OppPower - v137OurPower >= 6f) v137Pen = -1500.0f;
                                         action.addReasoning(String.format(
                                             "V137 UNWINNABLE MOVE: %s → %s contested — even the full group (%.0f pwr/%.0f abil) loses to opp %.0f pwr; don't waste move force",
                                             cardToMove.getTitle(), v137Dest.getTitle(),
                                             v137OurPower, v137OurAbility, v137OppPower), v137Pen);
-                                        logger.warn("V137 UNWINNABLE MOVE: {} → {} (group pwr {} abil {} vs opp {}) → {}",
+                                        logger.warn("V137 UNWINNABLE MOVE: {} → {} (group pwr {} abil {} vs opp {}) → {} (+canWinAt veto flag)",
                                             cardToMove.getTitle(), v137Dest.getTitle(),
                                             (int)v137OurPower, (int)v137OurAbility, (int)v137OppPower, (int)v137Pen);
                                     }
@@ -1240,6 +1517,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                                 totalAllyChars, bestAllyLoc.getTitle(), bestAllyPower), groupBonus);
                                             logger.warn("V29.13 HUNT GROUP: Vader moving to allies at {} (+{})",
                                                 bestAllyLoc.getTitle(), (int)groupBonus);
+                                            // V29.13 UPDATED 2026-07-06 T4.1: toward-group claims R2 DOCTRINE
+                                            // (non-battle; +200/+250 passes the L2 gate). Scatter arms stay R1 weights.
+                                            ladderClaimR2("V29.13 HUNT GROUP MOVE (Vader→allies)", groupBonus, 0.0f, false);
                                         } else {
                                             // Vader moving AWAY from his characters — BAD!
                                             // Exception: moving toward opponents to hunt (already handled by HUNT DOWN block above)
@@ -1321,6 +1601,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                                 cardToMove.getTitle(), vaderLoc.getTitle()), groupBonus);
                                             logger.warn("V29.13 HUNT GROUP: {} moving to Vader at {} (+{})",
                                                 cardToMove.getTitle(), vaderLoc.getTitle(), (int)groupBonus);
+                                            // V29.13 UPDATED 2026-07-06 T4.1: toward-group claims R2 DOCTRINE
+                                            // (non-battle; +250 passes the L2 gate). Scatter arms stay R1 weights.
+                                            ladderClaimR2("V29.13 HUNT GROUP MOVE (→Vader)", groupBonus, 0.0f, false);
                                         } else if (!currentlyWithVader && !movingToVader) {
                                             // Moving but NOT toward Vader — mild penalty
                                             action.addReasoning(String.format(
@@ -1396,6 +1679,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                 cardToMove.getTitle(), preFlipLocTitle,
                                 (int)preFlipOurPower, (int)preFlipTheirPower,
                                 bestAllyLoc != null ? " at " + bestAllyLoc : "");
+                            // V22.5 UPDATED 2026-07-06 T4.1: consolidation attempts an R2 DOCTRINE claim
+                            // (spec Table 2). NOTE: +100/+160 fails the L2 strength gate (< +200, no
+                            // drain-delta) so today it stays R1 by ruling — the attempt is kept so a
+                            // future magnitude bump promotes cleanly.
+                            ladderClaimR2("V22.5 PRE-FLIP CONSOLIDATE", consolidateBonus, 0.0f, false);
                         } else if (preFlipOurChars <= 2 && preFlipTheirPower > preFlipOurPower * 1.5f && preFlipTheirPower > 8) {
                             // Small group outgunned — moderate consolidation pressure
                             action.addReasoning("V22.5 PRE-FLIP: Outgunned at " + preFlipLocTitle +
@@ -1482,6 +1770,10 @@ public class MoveEvaluator extends ActionEvaluator {
                                     (weakestLoc != null ? weakestLoc : "protection locs"), moveBonus);
                                 logger.warn("V22.2 CONSOLIDATE: {} alone at {} - move to reinforce (worst deficit={})",
                                     cardToMove.getTitle(), curLocTitle, (int)worstDeficit);
+                                // V22.2 UPDATED 2026-07-06 T4.1: reinforce attempts an R2 DOCTRINE claim
+                                // (spec Table 2). NOTE: +80/+120/+160 fails the L2 strength gate (< +200)
+                                // so today it stays R1 by ruling; attempt kept for a future magnitude bump.
+                                ladderClaimR2("V22.2 POST-FLIP REINFORCE", moveBonus, 0.0f, false);
                             } else if (worstDeficit > 6) {
                                 // Even non-lone characters should move if protection locs are severely underguarded
                                 action.addReasoning("V22.2 POST-FLIP: Protection locations severely under-guarded!", 60.0f);
@@ -1555,20 +1847,28 @@ public class MoveEvaluator extends ActionEvaluator {
                 // for maintenance payment at end of turn.
                 if (gameState != null) {
                     try {
-                        int maintenanceCost = 0;
-                        java.util.List<PhysicalCard> allCards = gameState.getAllPermanentCards();
-                        if (allCards != null) {
-                            for (PhysicalCard mCard : allCards) {
-                                if (mCard == null || !playerId.equals(mCard.getOwner())) continue;
-                                com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
-                                if (mZone == null || !mZone.isInPlay()) continue;
-                                SwccgCardBlueprint mBp = mCard.getBlueprint();
-                                if (mBp != null && mBp.hasIcon(Icon.MAINTENANCE)) {
-                                    Float mCostVal = mBp.getDeployCost();
-                                    maintenanceCost += (mCostVal != null) ? mCostVal.intValue() : 1;
-                                }
-                            }
-                        }
+                        // T2 MOVE #1 COMMIT-2 (2026-07-06): maintenance obligation from
+                        // the shared per-decision ForceReserveService cache. NOTE: this
+                        // block was the one COMMIT-1 site still on the deploy-cost basis
+                        // (missed in wave 1) — the cache applies the MaintenanceFacts
+                        // engine basis here too (V27 basis updated in place, audit
+                        // force-economy-1). Old inline scan commented out below per
+                        // feedback_comment_out_old_rules; -80 weight untouched.
+                        int maintenanceCost = context.getForceReserveFacts().maintenanceObligation;
+//                         int maintenanceCost = 0;
+//                         java.util.List<PhysicalCard> allCards = gameState.getAllPermanentCards();
+//                         if (allCards != null) {
+//                             for (PhysicalCard mCard : allCards) {
+//                                 if (mCard == null || !playerId.equals(mCard.getOwner())) continue;
+//                                 com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
+//                                 if (mZone == null || !mZone.isInPlay()) continue;
+//                                 SwccgCardBlueprint mBp = mCard.getBlueprint();
+//                                 if (mBp != null && mBp.hasIcon(Icon.MAINTENANCE)) {
+//                                     Float mCostVal = mBp.getDeployCost();
+//                                     maintenanceCost += (mCostVal != null) ? mCostVal.intValue() : 1;
+//                                 }
+//                             }
+//                         }
                         if (maintenanceCost > 0) {
                             int forcePile = gameState.getForcePileSize(playerId);
                             if (forcePile <= maintenanceCost + 1) {
@@ -1620,6 +1920,9 @@ public class MoveEvaluator extends ActionEvaluator {
                         // Opponent left this location — spy should follow them!
                         action.addReasoning("V53 SPY FOLLOW: Opponent moved away — follow them to keep reducing drain!", 500.0f);
                         logger.warn("V53 SPY FOLLOW: {} following opponent to new location — +500!", cardToMove.getTitle());
+                        // V53 UPDATED 2026-07-06 T4.1: spy-follow claims R2 DOCTRINE (non-battle:
+                        // the spy leeches drain, it does not seek battle; +500 passes L2).
+                        ladderClaimR2("V53 SPY FOLLOW", 500.0f, 0.0f, false);
                     } else if (oppPowerHere > 0 && !destHasOpponent) {
                         // Moving spy AWAY from opponent — bad, defeats the purpose
                         action.addReasoning("V53 SPY STAY: Opponent is HERE — don't leave, keep reducing their drain!", -300.0f);
@@ -1628,6 +1931,8 @@ public class MoveEvaluator extends ActionEvaluator {
                         // Moving to opponent from empty location — good repositioning
                         action.addReasoning("V53 SPY REPOSITION: Move spy to opponent location — start reducing drain!", 400.0f);
                         logger.warn("V53 SPY REPOSITION: {} moving to opponent location — +400!", cardToMove.getTitle());
+                        // V53 UPDATED 2026-07-06 T4.1: spy-reposition claims R2 DOCTRINE (non-battle; +400 passes L2).
+                        ladderClaimR2("V53 SPY REPOSITION", 400.0f, 0.0f, false);
                     }
                 } catch (Exception e) {
                     logger.debug("V53 SPY FOLLOW: Error: {}", e.getMessage());
@@ -1639,7 +1944,8 @@ public class MoveEvaluator extends ActionEvaluator {
             // Underground Corridor. Characters at Corridor MUST move OFF Mapuzo.
             // Jedi Survivors move FREE on Mapuzo — there is ZERO cost. No force reserve
             // excuses. The objective REQUIRES Jedi outside Mapuzo to flip.
-            // This overrides ALL other move scoring with +9999.
+            // T4.1 (2026-07-06): overrides via the R4 MANDATORY TRANSIT band (+20000 at the
+            // finalizer), no longer via setScore(±9999) ordering hacks.
             {
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer hpMoveAnalyzer =
                     context.getObjectiveAnalyzer();
@@ -1669,29 +1975,51 @@ public class MoveEvaluator extends ActionEvaluator {
                         // ANY character at Safehouse → MUST move to Corridor (landspeed OK,
                         // only 1 adjacent battleground anyway)
                         if (srcName.contains("safehouse") && isLandspeed) {
-                            action.setScore(9999.0f);
-                            action.addReasoning("V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!", 9999.0f);
-                            logger.warn("V53b HIDDEN PATH: {} MUST landspeed Safehouse → Corridor (+9999)!", charName);
+                            // V53b UPDATED 2026-07-06 T4.1: the setScore(9999) ordering hack is GONE —
+                            // any rule appended after it silently re-decided the pick. Replaced by an
+                            // R4 MANDATORY TRANSIT claim (+20000 band at the finalizer, order-independent)
+                            // plus a +800 fine (matches the Mapuzo-exit arm; move-3c boundary = +20800).
+                            // OLD: action.setScore(9999.0f);
+                            // OLD: action.addReasoning("V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!", 9999.0f);
+                            action.addReasoning("V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!", 800.0f);
+                            ladderClaimR4Transit("V53b SAFEHOUSE→CORRIDOR");
+                            logger.warn("V53b HIDDEN PATH: {} MUST landspeed Safehouse → Corridor (R4 transit +800 fine)!", charName);
                         }
                         // ANY character at Corridor:
                         //   - Landspeed = BLOCKED (only adjacent is Mapuzo = going backwards)
                         //   - Transit action scored in ActionTextEvaluator
                         else if (srcName.contains("underground corridor") || srcName.contains("underground")) {
                             if (isLandspeed) {
-                                action.setScore(-9999.0f);
-                                action.addReasoning("V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!", -9999.0f);
-                                logger.warn("V60 HIDDEN PATH: {} BLOCKED landspeed from Corridor (-9999) — must use 'Move Jedi Survivor here to a site'!", charName);
+                                // V60 UPDATED 2026-07-06 T4.1: setScore(-9999) ordering hack replaced by
+                                // the ladder hard-veto class (-100000 at the finalizer, veto-class per
+                                // move-3d boundary). Same trigger, band-proof magnitude.
+                                // OLD: action.setScore(-9999.0f);
+                                // OLD: action.addReasoning("V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!", -9999.0f);
+                                ladderVetoHard = true;
+                                ladderVetoHardReason = "V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!";
+                                logger.warn("V60 HIDDEN PATH: {} BLOCKED landspeed from Corridor (LADDER VETO) — must use 'Move Jedi Survivor here to a site'!", charName);
                             }
                         }
                         // Moving OFF any Mapuzo location to non-Mapuzo via landspeed
                         // (e.g., Jabiim Path Operations Center has interior path to Mapuzo)
                         else if (srcName.contains("mapuzo") && isLandspeed) {
                             action.addReasoning("V53b HIDDEN PATH: Leaving Mapuzo via landspeed — objective progress!", 800.0f);
-                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo via landspeed — +800!", charName);
+                            // V53b UPDATED 2026-07-06 T4.1: the Mapuzo-exit claims R4 MANDATORY TRANSIT.
+                            // The claim identity also suppresses the V38.3 wrong-direction veto (ruling
+                            // L3 carve-out, move-3f: exit to an EMPTY site must fire) and outranks the
+                            // V37.1/V85 R1 weights by band (move-3a/3b boundaries: +19300 / +20000).
+                            ladderClaimR4Transit("V53b MAPUZO EXIT");
+                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo via landspeed — R4 transit +800!", charName);
                         }
                     }
                 }
             }
+
+            // T4.1 (2026-07-06): LADDER FINALIZER — applies veto flags (with the L3
+            // veto×rank matrix), the ±2800 fine clamp (+L1 demote), the rank base
+            // band, and the relocated default -50. Must stay the LAST scoring step
+            // before actions.add so every rule above has already spoken.
+            ladderFinalize(action);
 
             logger.debug("[MoveEvaluator] Scored '{}' -> {}",
                 actionText.length() > 40 ? actionText.substring(0, 40) + "..." : actionText,
@@ -1711,6 +2039,11 @@ public class MoveEvaluator extends ActionEvaluator {
     private void rankMoveFromLocation(EvaluatedAction action, GameState gameState,
                                        SwccgGame game, String playerId, Side mySide,
                                        PhysicalCard cardToMove, PhysicalCard location) {
+        // T4.1 (2026-07-06): all early returns in this method are REMOVED — every block
+        // always runs and the ladder finalizer (evaluate loop tail) decides the band.
+        // This flag gates the finalizer's relocated default -50 to the same population
+        // that could reach the old tail line.
+        ladderRankMoveRan = true;
         String opponentId = gameState.getOpponent(playerId);
 
         // Calculate power at current location
@@ -1753,28 +2086,40 @@ public class MoveEvaluator extends ActionEvaluator {
                     action.addReasoning("Strategic retreat - badly outmatched (" + (int)powerDiff + ")",
                                        VERY_GOOD_DELTA);
                     logger.info("[MoveEvaluator] RETREAT recommended - outmatched by {}", -powerDiff);
-                    return;
+                    // T4.1 (2026-07-06): the RETREAT tier claims R3 SURVIVAL; the early
+                    // return is removed so later blocks (V29.13 drain, V34 contest…) still run.
+                    ladderClaimR3("THREAT RETREAT");
+                    break;
 
                 case DANGEROUS:
                     action.addReasoning("Dangerous location - retreat recommended (" + (int)powerDiff + ")",
                                        GOOD_DELTA * 2);
-                    return;
+                    // T4.1 (2026-07-06): early return removed — R1 fine (+20), block falls through.
+                    break;
 
                 case CRUSH:
-                    // V37.1: ABSOLUTE BLOCK — NEVER leave when crushing opponents!
-                    action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them! HARD BLOCK!",
-                                       -9999.0f);
-                    logger.warn("V37.1 STAY AND CRUSH at {}: power +{} — HARD BLOCK (-9999)",
+                    // V37.1 UPDATED 2026-07-06 T4.1: the cross-rank -9999 + return silently buried
+                    // every doctrine/transit rule below (move-3a boundary: Hidden Path stalled
+                    // forever at a FAVORABLE Mining Village). Now an R1-internal weight (-1500,
+                    // no return): still buries every same-band R1 move (V37.1-protect boundary:
+                    // -1550 < Pass), but an R2+ claim outranks it by band.
+                    // OLD: action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them! HARD BLOCK!",
+                    //                    -9999.0f); return;
+                    action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them!",
+                                       -1500.0f);
+                    logger.warn("V37.1 STAY AND CRUSH at {}: power +{} — -1500 (weight)",
                         location.getTitle(), (int)powerDiff);
-                    return;
+                    break;
 
                 case FAVORABLE:
-                    // V37.1: ABSOLUTE BLOCK — strong advantage, STAY AND FIGHT!
-                    action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — HARD BLOCK!",
-                                       -9999.0f);
-                    logger.warn("V37.1 STAY AND FIGHT at {}: power +{} — HARD BLOCK (-9999)",
+                    // V37.1 UPDATED 2026-07-06 T4.1: same conversion as CRUSH (-9999+return → -1500 weight).
+                    // OLD: action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — HARD BLOCK!",
+                    //                    -9999.0f); return;
+                    action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — hold position!",
+                                       -1500.0f);
+                    logger.warn("V37.1 STAY AND FIGHT at {}: power +{} — -1500 (weight)",
                         location.getTitle(), (int)powerDiff);
-                    return;
+                    break;
 
                 case RISKY:
                     // V37.1: Even fight — very strong discouragement to leave
@@ -1804,8 +2149,10 @@ public class MoveEvaluator extends ActionEvaluator {
         // Fires BEFORE FLEE/ATTACK/V29.7 so the -2000 dominates their bonuses.
         if (gameState != null && game != null && location != null && !theirHasCards) {
             try {
-                float currentDrainV85 = game.getModifiersQuerying().getForceDrainAmount(
-                    gameState, location, playerId);
+                // V85 UPDATED 2026-07-06 T4.1: drain math routed through the shared engine
+                // metric MovePredicates.drainAt (behavior-identical — this was already
+                // engine-based; move-6 single-detection consolidation).
+                float currentDrainV85 = MovePredicates.drainAt(game, gameState, location, playerId);
                 if (currentDrainV85 > 0) {
                     float bestAdjDrain = Float.NEGATIVE_INFINITY;
                     PhysicalCard bestAdjLoc = null;
@@ -1813,8 +2160,7 @@ public class MoveEvaluator extends ActionEvaluator {
                         if (adj == null || adj == location) continue;
                         try {
                             if (!game.getModifiersQuerying().isAdjacentSites(gameState, location, adj)) continue;
-                            float adjDrain = game.getModifiersQuerying().getForceDrainAmount(
-                                gameState, adj, playerId);
+                            float adjDrain = MovePredicates.drainAt(game, gameState, adj, playerId);
                             if (adjDrain > bestAdjDrain) {
                                 bestAdjDrain = adjDrain;
                                 bestAdjLoc = adj;
@@ -1822,16 +2168,22 @@ public class MoveEvaluator extends ActionEvaluator {
                         } catch (Exception ie) { /* skip non-comparable */ }
                     }
                     if (bestAdjLoc != null && bestAdjDrain < currentDrainV85) {
+                        // V85 UPDATED 2026-07-06 T4.1: the -2000 + bare return killed every
+                        // doctrine rule below it (move-1 boundary: the Cantina↔Mos Eisley
+                        // shuttle was dead; move-2: Vader farmed drain instead of hunting).
+                        // Now an R1-internal weight (-800, NO return): still blocks every
+                        // same-band R1 wander (V85-protect boundary: Rey stays at -720 < Pass),
+                        // while an R2+ doctrine claim (V73 shuttle, V35 hunt…) outranks it by band.
+                        // OLD: action.addReasoning(..., -2000.0f); return;
                         action.addReasoning(String.format(
-                            "V85 UNCONTESTED HARD BLOCK: at %s (drain %.0f) with no opponent — "
+                            "V85 UNCONTESTED: at %s (drain %.0f) with no opponent — "
                                 + "best adjacent %s only drains %.0f. STAY for the better drain!",
                             location.getTitle(), currentDrainV85,
                             bestAdjLoc.getTitle(), bestAdjDrain),
-                            -2000.0f);
-                        logger.warn("V85 UNCONTESTED HARD BLOCK: {} drain {} → best adj {} drain {} → -2000",
+                            -800.0f);
+                        logger.warn("V85 UNCONTESTED: {} drain {} → best adj {} drain {} → -800 (weight)",
                             location.getTitle(), (int)currentDrainV85,
                             bestAdjLoc.getTitle(), (int)bestAdjDrain);
-                        return;
                     }
                 }
             } catch (Exception e) {
@@ -1844,7 +2196,7 @@ public class MoveEvaluator extends ActionEvaluator {
             float disadvantage = theirPower - myPower;
             action.addReasoning("Outmatched by " + (int)disadvantage + " - should flee",
                                GOOD_DELTA * Math.min(disadvantage / 2, 5));
-            return;
+            // T4.1 (2026-07-06): early return removed — R1 fine (≤ +50), block falls through.
         }
 
         // === OFFENSIVE ATTACK OPPORTUNITY ===
@@ -1860,13 +2212,26 @@ public class MoveEvaluator extends ActionEvaluator {
             if (attack != null && attack.viable && attack.hasForcedrainPotential) {
                 action.addReasoning(attack.reason, attack.score);
                 logger.info("[MoveEvaluator] ⚔️ ATTACK opportunity: {}", attack.reason);
-                return;
+                // T4.1 (2026-07-06): early return removed. ATTACK claims R2 DOCTRINE
+                // (battle-seeking) — NEWLY gated on isAdjacentSites reachability to the
+                // best target (same engine call V85 uses) so the destination-blind Rey
+                // class can't claim a band for an unreachable fight (V85-protect boundary).
+                boolean attackTargetAdjacent = false;
+                try {
+                    attackTargetAdjacent = attack.targetLocation != null
+                        && game.getModifiersQuerying().isAdjacentSites(gameState, location, attack.targetLocation);
+                } catch (Exception ignore) { /* false */ }
+                if (attackTargetAdjacent) {
+                    ladderClaimR2("ATTACK", attack.score, 0.0f, true);
+                } else {
+                    logger.info("LADDER: ATTACK no R2 claim (target not adjacent) — fine kept as R1 weight");
+                }
             } else if (attack != null && attack.viable) {
                 // Attack possible but no force drain - much smaller bonus
                 // Don't waste moves just to attack weak positions
                 action.addReasoning("Possible attack (no drain icons)", 15.0f);
                 logger.debug("[MoveEvaluator] Weak attack opportunity (no icons): {}", attack.reason);
-                return;
+                // T4.1 (2026-07-06): early return removed — R1 fine, block falls through.
             }
         }
 
@@ -1912,7 +2277,7 @@ public class MoveEvaluator extends ActionEvaluator {
                         if (saberInHand) {
                             action.addReasoning("V29.9 UNARMED VADER: Lightsaber in hand — EQUIP FIRST before attacking!", -250.0f);
                             logger.warn("V29.9 UNARMED VADER: Vader has no weapon but lightsaber in hand — blocking attack move (-250)");
-                            return;
+                            // T4.1 (2026-07-06): early return removed — R1 weight, block falls through.
                         } else {
                             action.addReasoning("V29.9 UNARMED VADER: No weapon — vulnerable without lightsaber!", -100.0f);
                             logger.warn("V29.9 UNARMED VADER: Vader has no weapon and none in hand — penalizing attack move (-100)");
@@ -1976,6 +2341,7 @@ public class MoveEvaluator extends ActionEvaluator {
                     // Look for opponent locations to attack (opponentId already declared above)
                     float bestAttackScore = 0;
                     String bestTargetLoc = null;
+                    PhysicalCard bestTargetLocCard = null; // T4.1: tracked for the R2 adjacency gate
                     boolean foundLuke = false;
 
                     for (PhysicalCard adjLocation : gameState.getLocationsInOrder()) {
@@ -2033,6 +2399,7 @@ public class MoveEvaluator extends ActionEvaluator {
                             if (attackScore > bestAttackScore) {
                                 bestAttackScore = attackScore;
                                 bestTargetLoc = adjLocation.getTitle();
+                                bestTargetLocCard = adjLocation; // T4.1: for the adjacency gate
                             }
                         }
                     }
@@ -2049,7 +2416,21 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                         action.addReasoning(reason, bestAttackScore);
                         logger.info("[MoveEvaluator] ⚔️ {} — score {}", reason, bestAttackScore);
-                        return;
+                        // V29.7 UPDATED 2026-07-06 T4.1: early return removed. Claims R2 DOCTRINE
+                        // (battle-seeking) ONLY when the best target is ADJACENT (same engine call
+                        // V85 uses) — the destination-blind Rey class (+130 for an unreachable
+                        // target) stays an R1 fine and V85's -800 weight holds her (V85-protect
+                        // boundary: -720 < Pass). The L2 strength gate also applies (fine >= +200).
+                        boolean v297TargetAdjacent = false;
+                        try {
+                            v297TargetAdjacent = bestTargetLocCard != null
+                                && game.getModifiersQuerying().isAdjacentSites(gameState, location, bestTargetLocCard);
+                        } catch (Exception ignore) { /* false */ }
+                        if (v297TargetAdjacent) {
+                            ladderClaimR2("V29.7 WEAPON HUNTER", bestAttackScore, 0.0f, true);
+                        } else {
+                            logger.info("LADDER: V29.7 no R2 claim (target not adjacent) — fine kept as R1 weight");
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -2067,10 +2448,14 @@ public class MoveEvaluator extends ActionEvaluator {
                                                            location, myPower, myCardCount, theirPower);
             if (spread != null && spread.viable) {
                 action.addReasoning(spread.reason, spread.score);
-                return;
+                // T4.1 (2026-07-06): early return removed. SPREAD attempts an R2 DOCTRINE
+                // claim (spec Table 2); its "contest" branch is battle-seeking. Typical
+                // scores (< +200, no drain-delta) fail the L2 strength gate and stay R1.
+                ladderClaimR2("SPREAD", spread.score, 0.0f,
+                    spread.reason != null && spread.reason.startsWith("Can contest"));
             } else if (spread != null) {
                 action.addReasoning("Can't spread: " + spread.reason, BAD_DELTA);
-                return;
+                // T4.1 (2026-07-06): early return removed — R1 fine, block falls through.
             }
         }
 
@@ -2098,10 +2483,11 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
 
                 if (destLocation != null) {
-                    float destDrainAmount = game.getModifiersQuerying().getForceDrainAmount(
-                        gameState, destLocation, playerId);
-                    float currentDrainAmount = game.getModifiersQuerying().getForceDrainAmount(
-                        gameState, location, playerId);
+                    // V29.13 UPDATED 2026-07-06 T4.1: drain math routed through the shared engine
+                    // metric MovePredicates.drainAt (behavior-identical — already engine-based;
+                    // move-6 single-detection consolidation).
+                    float destDrainAmount = MovePredicates.drainAt(game, gameState, destLocation, playerId);
+                    float currentDrainAmount = MovePredicates.drainAt(game, gameState, location, playerId);
 
                     // V73 (Steve, 2026-05-15): Dropped the `< 1` and `>= 2` thresholds
                     // that left Cantina(2) → Lars Farm(1) un-penalized (and
@@ -2126,6 +2512,11 @@ public class MoveEvaluator extends ActionEvaluator {
                         logger.info("V29.13 GOOD DRAIN: Moving to {} drain={} from {} drain={} — bonus {}",
                             destLocation.getTitle(), (int)destDrainAmount,
                             location.getTitle(), (int)currentDrainAmount, (int)drainBonus);
+                        // V29.13 UPDATED 2026-07-06 T4.1: a positive drain-delta claims R2 DOCTRINE
+                        // (non-battle). L2 strength gate: accepted only when drainDelta >= 2
+                        // (fine 40*delta alone is < +200 for small deltas — exactly ruling L2's
+                        // drain-delta arm).
+                        ladderClaimR2("V29.13 GOOD DRAIN", drainBonus, delta, false);
                     }
                 }
             } catch (Exception e) {
@@ -2192,6 +2583,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                 isTakeOff ? "lift to system" : "drop pilot to ground"), bonus);
                             logger.warn("V91 ESCAPE LANDED SHIP: bonus {} for {} at landed site {}",
                                 (int)bonus, isTakeOff ? "take-off" : "disembark", location.getTitle());
+                            // V91 UPDATED 2026-07-06 T4.1: landed-ship escape claims R3 SURVIVAL
+                            // (fines +800/+600 kept; base applied at the finalizer).
+                            ladderClaimR3("V91 ESCAPE LANDED SHIP");
                         }
                     }
                 }
@@ -2257,6 +2651,10 @@ public class MoveEvaluator extends ActionEvaluator {
                                 srcCharsRemainingAfterMove, location.getTitle()), 400.0f);
                             logger.warn("V73 SHUTTLE: {} → {} — drain BOTH Tatooine sites (+400)",
                                 location.getTitle(), destLoc.getTitle());
+                            // V73 UPDATED 2026-07-06 T4.1: the shuttle claims R2 DOCTRINE (non-battle;
+                            // +400 passes L2). This is the move-1 boundary fix: V85's old -2000+return
+                            // buried the shuttle forever; now R2 base + fines = +5560 > Pass.
+                            ladderClaimR2("V73 SHUTTLE", 400.0f, 0.0f, false);
                         } else {
                             // Source becomes empty → not a shuttle, just a relocation
                             logger.debug("V73: Cantina ↔ Mos Eisley move but source goes empty — no shuttle bonus");
@@ -2351,6 +2749,10 @@ public class MoveEvaluator extends ActionEvaluator {
                         cardToMove != null ? cardToMove.getTitle() : "?",
                         v34Dest.getTitle(), (int)destOppPower,
                         v35JediAtDest ? " JEDI" : "", (int)contestBonus);
+                    // V34/V36 UPDATED 2026-07-06 T4.1: the contest claims R2 DOCTRINE
+                    // (battle-seeking — subject to the V137 canWinAt veto per ruling L3;
+                    // move-4a/4b boundaries). Bonus >= +250 always passes the L2 gate.
+                    ladderClaimR2("V34 CONTEST", contestBonus, 0.0f, true);
                 } else {
                     // Moving to empty location — check if opponents are draining uncontested elsewhere
                     boolean opponentsUncontested = false;
@@ -2393,13 +2795,24 @@ public class MoveEvaluator extends ActionEvaluator {
                             logger.info("V111 BG ADVANCE: {} from {} (non-BG) to {} (BG) — drain position +400",
                                 cardToMove != null ? cardToMove.getTitle() : "?",
                                 location.getTitle(), v34Dest.getTitle());
+                            // V111 UPDATED 2026-07-06 T4.1: the BG advance claims R2 DOCTRINE
+                            // (non-battle: destination is EMPTY; +400 passes L2, existing V38.3 carve kept).
+                            ladderClaimR2("V111 BG ADVANCE", 400.0f, 0.0f, false);
                         } else {
-                            // V38.3: HARD BLOCK moving to empty locations when opponents exist
-                            float wrongDirPenalty = -9999.0f; // V38.3: Raised from -400 — HARD BLOCK
-                            action.addReasoning(String.format(
-                                "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s — HARD BLOCK!",
-                                v34Dest.getTitle(), opUncontestedLoc), wrongDirPenalty);
-                            logger.warn("V38.3 WRONG DIRECTION: {} to empty {} — opponents at {} — HARD BLOCKED",
+                            // V38.3 UPDATED 2026-07-06 T4.1: the -9999 hard block is now a DEFERRED
+                            // ladder veto (-100000 at the finalizer) so the V53b mandatory-transit
+                            // claim identities can suppress it (ruling L3 carve-out; move-3f
+                            // boundary: a Mapuzo exit to an EMPTY site must fire — the old code
+                            // stalled at ~-9199). Non-transit movers still get the full veto.
+                            // OLD: float wrongDirPenalty = -9999.0f; // V38.3: Raised from -400 — HARD BLOCK
+                            // OLD: action.addReasoning(String.format(
+                            // OLD:     "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s — HARD BLOCK!",
+                            // OLD:     v34Dest.getTitle(), opUncontestedLoc), wrongDirPenalty);
+                            ladderWrongDirVeto = true;
+                            ladderWrongDirVetoReason = String.format(
+                                "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s",
+                                v34Dest.getTitle(), opUncontestedLoc);
+                            logger.warn("V38.3 WRONG DIRECTION: {} to empty {} — opponents at {} — veto flagged (transit carve-out may suppress)",
                                 cardToMove != null ? cardToMove.getTitle() : "?",
                                 v34Dest.getTitle(), opUncontestedLoc);
                         }
@@ -2421,9 +2834,15 @@ public class MoveEvaluator extends ActionEvaluator {
                             }
                         } catch (Exception e) { /* ignore */ }
                         if (anyOpponentsOnBoard) {
-                            action.addReasoning("V38.3 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!",
-                                -9999.0f);
-                            logger.warn("V38.3 CASTLE RETREAT BLOCKED: {} trying to flee to Mustafar Castle!",
+                            // V38.3 UPDATED 2026-07-06 T4.1: Castle-retreat arm converted to the
+                            // ladder hard-veto class (-100000 at the finalizer). NO transit
+                            // carve-out here — the carve-out is keyed to the V53b transit claim
+                            // identities and a Mapuzo exit never targets Mustafar Castle.
+                            // OLD: action.addReasoning("V38.3 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!",
+                            //     -9999.0f);
+                            ladderVetoHard = true;
+                            ladderVetoHardReason = "V38.3 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!";
+                            logger.warn("V38.3 CASTLE RETREAT BLOCKED (LADDER VETO): {} trying to flee to Mustafar Castle!",
                                 cardToMove != null ? cardToMove.getTitle() : "?");
                         }
                     }
@@ -2433,7 +2852,9 @@ public class MoveEvaluator extends ActionEvaluator {
 
         // Default: not a good time to move - strong penalty to avoid wasteful moves
         // Moves cost force and can leave positions vulnerable
-        action.addReasoning("No strategic reason to move", -50.0f);
+        // T4.1 (2026-07-06): moved to the ladder finalizer — applied there only when
+        // rank==R1 (no accepted claim) so R2+ claims are not double-taxed.
+        // OLD: action.addReasoning("No strategic reason to move", -50.0f);
     }
 
     /**
@@ -2537,7 +2958,8 @@ public class MoveEvaluator extends ActionEvaluator {
                 boolean hasForcedrainPotential = theirIcons > 0;
                 if (score > bestScore) {
                     bestScore = score;
-                    bestAttack = new AttackAnalysis(true, reason, score, hasForcedrainPotential);
+                    // T4.1 (2026-07-06): carry the target location for the R2 adjacency gate.
+                    bestAttack = new AttackAnalysis(true, reason, score, hasForcedrainPotential, adjLocation);
                 }
             }
         }
@@ -2725,10 +3147,16 @@ public class MoveEvaluator extends ActionEvaluator {
         // A starship at a site has power 0 — anyone can attack for catastrophic overflow damage.
         // Only allow landing if the ship has passengers who can disembark and provide power.
         if (isStarship && !hasPassengers) {
-            action.addReasoning(String.format(
+            // V49 UPDATED 2026-07-06 T4.1: -9999 addReasoning converted to the ladder
+            // hard-veto class (-100000 at the finalizer). Same gates, band-proof magnitude.
+            // OLD: action.addReasoning(String.format(
+            //     "V49 BLOCKED: Landing %s at a site with NO passengers = power 0 = instant death from overflow! NEVER land unprotected!",
+            //     cardName), -9999.0f);
+            ladderVetoHard = true;
+            ladderVetoHardReason = String.format(
                 "V49 BLOCKED: Landing %s at a site with NO passengers = power 0 = instant death from overflow! NEVER land unprotected!",
-                cardName), -9999.0f);
-            logger.warn("[MoveEvaluator] V49 HARD BLOCK: {} landing at site with no passengers — power 0 death trap!", cardName);
+                cardName);
+            logger.warn("[MoveEvaluator] V49 LADDER VETO: {} landing at site with no passengers — power 0 death trap!", cardName);
         } else if (isStarfighter) {
             action.addReasoning("AVOID: Landing starfighter (" + cardName + ") wastes combat power!", -100.0f);
             logger.info("[MoveEvaluator] BLOCKED: Landing starfighter {}", cardName);
@@ -2771,12 +3199,15 @@ public class MoveEvaluator extends ActionEvaluator {
         String reason;
         float score;
         boolean hasForcedrainPotential;  // True if target has opponent icons
+        PhysicalCard targetLocation;     // T4.1 (2026-07-06): best target, for the R2 adjacency gate
 
-        AttackAnalysis(boolean viable, String reason, float score, boolean hasForcedrainPotential) {
+        AttackAnalysis(boolean viable, String reason, float score, boolean hasForcedrainPotential,
+                       PhysicalCard targetLocation) {
             this.viable = viable;
             this.reason = reason;
             this.score = score;
             this.hasForcedrainPotential = hasForcedrainPotential;
+            this.targetLocation = targetLocation;
         }
     }
 
