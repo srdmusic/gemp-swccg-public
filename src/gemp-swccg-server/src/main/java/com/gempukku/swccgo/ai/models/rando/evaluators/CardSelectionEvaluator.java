@@ -7045,8 +7045,27 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         action.addReasoning("V43 EPIC EVENT: Deploys saga Epic Event — MUST USE THIS!", 1500.0f);
                         logger.warn("V43 STARTING INTERRUPT: {} references Epic Event — HARD PREFER (+1500)", title);
                     } else {
-                        action.addReasoning("V43: Generic starting interrupt — no Epic Event", 0.0f);
-                        logger.warn("V43 STARTING INTERRUPT: {} is generic (no Epic Event reference)", title);
+                        // V43 UPDATED 2026-07-07: break the generic 50/50 tie by reading what the
+                        // interrupt actually DOES. Incident: game 2a999777 (2026-07-07) — Prepared
+                        // Defenses (deploy up to 3 Effects) tied with Surface Defense (V) at 50 and
+                        // the engine's shuffle order picked the dud; zero starting effects deployed.
+                        // Setup power ranking: effect-deployers first, scaled by how many.
+                        boolean deploysFromReserve = gameText.contains("from reserve deck");
+                        boolean deploysEffects = deploysFromReserve
+                            && (gameText.contains("effect") || gameText.contains("defensive shield"));
+                        if (deploysEffects) {
+                            float effectBonus = 200.0f;
+                            if (gameText.contains("up to three") || gameText.contains("up to 3")) effectBonus = 300.0f;
+                            else if (gameText.contains("up to two") || gameText.contains("up to 2")) effectBonus = 250.0f;
+                            action.addReasoning("V43 EFFECT-DEPLOYER: deploys Effects from Reserve at setup", effectBonus);
+                            logger.warn("V43 STARTING INTERRUPT: {} deploys Effects from Reserve — PREFER (+{})", title, effectBonus);
+                        } else if (deploysFromReserve) {
+                            action.addReasoning("V43: deploys something from Reserve at setup", 100.0f);
+                            logger.warn("V43 STARTING INTERRUPT: {} deploys from Reserve — mild prefer (+100)", title);
+                        } else {
+                            action.addReasoning("V43: Generic starting interrupt — no Epic Event", 0.0f);
+                            logger.warn("V43 STARTING INTERRUPT: {} is generic (no Epic Event reference)", title);
+                        }
                     }
                 }
             } catch (Exception e) {
