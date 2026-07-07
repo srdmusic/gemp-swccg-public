@@ -5662,18 +5662,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      * V174 (Steve, 2026-06): the budget now RESERVES force before filling the wave.
      * Steve: "We need to account for saving force for maintenance cards on table / in
      * hand to deploy with the army and any interrupts that would be useful in battle."
-     * Reserved off the top: (a) upkeep for our MAINTENANCE-icon cards already on table
-     * (maintenance cost = deploy cost, the V22.3/V59 rule), (b) the deploying card's own
-     * upkeep if IT is a maintenance card, (c) 1-2 force for battle interrupts in hand
-     * (Steve's standing force-management rule). Maintenance BUDDIES joining the wave
-     * consume deploy cost + upkeep (double) from the budget.
+     * Reserved off the top: (a) upkeep for our MAINTENANCE-icon cards already on table,
+     * (b) the deploying card's own upkeep if IT is a maintenance card, (c) 1-2 force for
+     * battle interrupts in hand (Steve's standing force-management rule). Maintenance
+     * BUDDIES joining the wave consume deploy cost + upkeep from the budget.
+     * T2 COMMIT-1 (2026-07-06, audit force-economy-1/-5, ruling H2): upkeep basis is now
+     * the ENGINE's card-specific maintain cost (MaintenanceFacts, e.g. Lando 1 not 5) —
+     * the old "maintenance cost = deploy cost, the V22.3/V59 rule" claim was refuted and
+     * the buddy "double" (2x deploy cost) spend over-charged the wave; the table scan is
+     * also Zone.isInPlay()-gated (getAllPermanentCards returns reserve-deck cards too).
      * Returns {wavePower, buddiesTaken, reservedForce}.
      */
     private static float[] v173WaveProjection(GameState gs, String playerId, String deployingBpId) {
         try {
             float thisCost = 0f;
-            boolean skippedSelf = false, thisIsMaint = false;
-            java.util.List<float[]> buddies = new java.util.ArrayList<>(); // {power, cost, maint}
+            // T2 COMMIT-1 (2026-07-06): track the deploying card's ENGINE maintain cost
+            // (was: boolean thisIsMaint reserving its full deploy cost).
+            float thisMaintCost = 0f;
+            boolean skippedSelf = false;
+            java.util.List<float[]> buddies = new java.util.ArrayList<>(); // {power, cost, maintainCost}
             int sabers = 0, otherWeapons = 0, interrupts = 0;
             for (PhysicalCard h : gs.getHand(playerId)) {
                 if (h == null || h.getBlueprint() == null) continue;
@@ -5682,14 +5689,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     Float p = bp.hasPowerAttribute() ? bp.getPower() : null;
                     Float c = bp.getDeployCost();
                     float pv = p != null ? p : 0f, cv = c != null ? c : 0f;
-                    boolean maint = bp.hasIcon(Icon.MAINTENANCE);
+                    // T2 COMMIT-1 (2026-07-06): engine maintain cost, not deploy cost
+                    float maintCost = com.gempukku.swccgo.ai.models.common.strategy
+                        .MaintenanceFacts.maintainCost(bp);
                     if (!skippedSelf && deployingBpId != null
                             && deployingBpId.equals(h.getBlueprintId(true))) {
                         thisCost = cv;
-                        thisIsMaint = maint;
+                        // thisIsMaint = maint;  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
+                        thisMaintCost = maintCost;
                         skippedSelf = true; // the deploying card is not its own buddy
                     } else {
-                        buddies.add(new float[]{pv, cv, maint ? 1f : 0f});
+                        // buddies.add(new float[]{pv, cv, maint ? 1f : 0f});  // superseded T2 COMMIT-1 2026-07-06 (flag → cost)
+                        buddies.add(new float[]{pv, cv, maintCost});
                     }
                 } else if (bp.getCardCategory() == CardCategory.WEAPON) {
                     String wt = h.getTitle() != null
@@ -5702,10 +5713,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // Upkeep for maintenance cards ALREADY on table (they die without it).
             float tableMaint = 0f;
             for (PhysicalCard t : gs.getAllPermanentCards()) {
-                if (t != null && playerId.equals(t.getOwner()) && t.getBlueprint() != null
+                if (t == null) continue;
+                // T2 COMMIT-1 (2026-07-06, audit force-economy-5): in-play gate —
+                // getAllPermanentCards returns reserve-deck cards too; without this a
+                // maintenance card still in Reserve Deck phantom-taxed the wave budget.
+                com.gempukku.swccgo.common.Zone tZone = t.getZone();
+                if (tZone == null || !tZone.isInPlay()) continue;
+                if (playerId.equals(t.getOwner()) && t.getBlueprint() != null
                         && t.getBlueprint().hasIcon(Icon.MAINTENANCE)) {
-                    Float mc = t.getBlueprint().getDeployCost();
-                    tableMaint += mc != null ? mc : 0f;
+                    // Float mc = t.getBlueprint().getDeployCost();  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
+                    // tableMaint += mc != null ? mc : 0f;  // superseded T2 COMMIT-1 2026-07-06
+                    tableMaint += com.gempukku.swccgo.ai.models.common.strategy
+                        .MaintenanceFacts.maintainCost(t.getBlueprint());
                 }
             }
             float interruptReserve = interrupts >= 2 ? 2f : (interrupts >= 1 ? 1f : 0f);
@@ -5713,7 +5732,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // deployed onto solo Yoda and then could NOT battle him — the deploys spent
             // the last force and battle initiation costs 1. A wave that exists to fight
             // must keep the fee to start the fight.
-            float reserved = tableMaint + interruptReserve + (thisIsMaint ? thisCost : 0f) + 1f;
+            // float reserved = tableMaint + interruptReserve + (thisIsMaint ? thisCost : 0f) + 1f;  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
+            float reserved = tableMaint + interruptReserve + thisMaintCost + 1f;
             // V177 (Steve, 2026-06): RESERVE CAP — never let upkeep reserves starve the wave
             // to zero. Replay aab2jiaa5sca (Luke vs Kylo): force=10 but reserved=12 (full table
             // maintenance + interrupt + fee), so budget=0, wave=0, buddies=0 — Young Skywalker
@@ -5731,7 +5751,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             int taken = 0;
             for (float[] ch : buddies) {
                 // a maintenance buddy must bring its own upkeep: deploy cost + upkeep
-                float spend = ch[2] > 0f ? ch[1] * 2f : ch[1];
+                // T2 COMMIT-1 (2026-07-06): upkeep = engine maintain cost (ch[2]), fixing
+                // the double-spend that charged 2x deploy cost for maintenance buddies.
+                // float spend = ch[2] > 0f ? ch[1] * 2f : ch[1];  // superseded T2 COMMIT-1 2026-07-06 (2x deploy-cost double-spend)
+                float spend = ch[1] + ch[2];
                 if (spend <= budget) { addPower += ch[0]; budget -= spend; taken++; }
                 // unaffordable big hitter: skip and try the next (cheaper) character
             }

@@ -404,6 +404,35 @@ public class DecisionContext {
         this.deckName = deckName;
     }
 
+    // ═══ T2 MOVE #1 COMMIT-2 (2026-07-06): per-decision force-reserve facts ═══
+    // ONE cached ForceReserveService.compute() per decide() call, shared by
+    // DrawEvaluator/PassEvaluator/MoveEvaluator/DeployEvaluator (DeployPhasePlanner
+    // has no DecisionContext and calls the static compute at plan creation).
+    // SOAK INSTRUMENT: every 20th decision (static counter across the JVM), every
+    // cache READ re-runs compute() and logs "MAINT CACHE MISMATCH" on divergence —
+    // remove the soak branch after 2 clean full games.
+    private com.gempukku.swccgo.ai.models.common.strategy.ForceReserveService.Facts reserveFacts;
+    private boolean reserveFactsSoak;
+    private static final java.util.concurrent.atomic.AtomicLong RESERVE_FACTS_DECISIONS =
+        new java.util.concurrent.atomic.AtomicLong();
+
+    public com.gempukku.swccgo.ai.models.common.strategy.ForceReserveService.Facts getForceReserveFacts() {
+        if (reserveFacts == null) {
+            reserveFacts = com.gempukku.swccgo.ai.models.common.strategy
+                .ForceReserveService.compute(game, gameState, playerId);
+            reserveFactsSoak = (RESERVE_FACTS_DECISIONS.incrementAndGet() % 20 == 0);
+        } else if (reserveFactsSoak) {
+            // SOAK: compare the cached facts against a fresh compute at read time —
+            // exactly what the old per-caller inline scan would have produced here.
+            com.gempukku.swccgo.ai.models.common.strategy.ForceReserveService.Facts fresh =
+                com.gempukku.swccgo.ai.models.common.strategy
+                    .ForceReserveService.compute(game, gameState, playerId);
+            com.gempukku.swccgo.ai.models.common.strategy
+                .ForceReserveService.soakCompare(reserveFacts, fresh, playerId);
+        }
+        return reserveFacts;
+    }
+
     // V67ax DEPLOY PHASE SCRIPT
     public Set<String> getAllowedActionIds() {
         return allowedActionIds;

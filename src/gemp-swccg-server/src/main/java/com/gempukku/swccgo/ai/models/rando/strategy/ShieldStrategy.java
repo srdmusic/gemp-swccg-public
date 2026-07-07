@@ -17,6 +17,8 @@ import java.util.*;
 // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
 // Cross-refs: RESPONSE (shield window routes here), SHIELDS rows in CardSelectionEvaluator
 // (V105/V107/V112/V117/V51-battle-order-gate) + ActionTextEvaluator (V124/V129/V102/V29.1). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
+// T2 MOVE #3 (2026-07-06): occupation predicates unified into common/strategy/ShieldFacts
+// (trigger A + weOccupyAnyBg here consume it; CSE/ATE adopt in a later wave).
 // ═══════════════════════════════════════════════════════════
 /**
  * Defensive Shield Strategy for SWCCG AI.
@@ -469,37 +471,62 @@ public class ShieldStrategy {
         boolean isDark = (mySide == Side.DARK);
 
         // ---------- Trigger A: V105 — Battle Order / Battle Plan ----------
-        boolean weOccupySystemBg = false;
-        boolean weOccupySiteBg = false;
-        try {
-            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mods =
-                game.getModifiersQuerying();
-            for (com.gempukku.swccgo.game.PhysicalCard loc : gs.getTopLocations()) {
-                if (loc == null || loc.getBlueprint() == null) continue;
-                // Friendly power > 0 = we occupy
-                float myPower = 0f;
-                try {
-                    myPower = mods.getTotalPowerAtLocation(gs, loc, playerId, false, false);
-                } catch (Exception ignore) { /* */ }
-                if (myPower <= 0f) continue;
-                if (!com.gempukku.swccgo.filters.Filters.battleground.accepts(gs, mods, loc)) continue;
-                com.gempukku.swccgo.common.CardSubtype sub = loc.getBlueprint().getCardSubtype();
-                if (sub == com.gempukku.swccgo.common.CardSubtype.SYSTEM) {
-                    weOccupySystemBg = true;
-                } else if (sub == com.gempukku.swccgo.common.CardSubtype.SITE) {
-                    weOccupySiteBg = true;
-                }
-            }
-        } catch (Exception e) {
-            LOG.debug("V105 occupancy scan error: {}", e.getMessage());
-        }
-        boolean triggerA = weOccupySystemBg && weOccupySiteBg;
+        // V105 UPDATED 2026-07-06 (T2 MOVE #3, audit shields-response-2 residue):
+        // trigger A now uses the SAME engine occupies-predicate as the V51/V112
+        // gates in CardSelectionEvaluator (ShieldFacts.occupiesBothTheaters,
+        // canSpot(occupies + battleground_site/system)) instead of the old
+        // power>0 scan below. The two disagreed on zero-power occupation
+        // (unpiloted ship occupies a system but has power 0, Power.java:49-51),
+        // so Battle Order's own condition could be LIVE while this gate said no
+        // and the 4th slot stayed dead (V117 -9999 / V105 -5000 / V124 -3000).
+        boolean occupyBothTheaters =
+            com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts
+                .occupiesBothTheaters(game, playerId);
+        // --- SUPERSEDED 2026-07-06 (T2 MOVE #3): old power-based theater scan.
+        // --- Kept per feedback_comment_out_old_rules; revert path only.
+        // boolean weOccupySystemBg = false;
+        // boolean weOccupySiteBg = false;
+        // try {
+        //     com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mods =
+        //         game.getModifiersQuerying();
+        //     for (com.gempukku.swccgo.game.PhysicalCard loc : gs.getTopLocations()) {
+        //         if (loc == null || loc.getBlueprint() == null) continue;
+        //         // Friendly power > 0 = we occupy
+        //         float myPower = 0f;
+        //         try {
+        //             myPower = mods.getTotalPowerAtLocation(gs, loc, playerId, false, false);
+        //         } catch (Exception ignore) { /* */ }
+        //         if (myPower <= 0f) continue;
+        //         if (!com.gempukku.swccgo.filters.Filters.battleground.accepts(gs, mods, loc)) continue;
+        //         com.gempukku.swccgo.common.CardSubtype sub = loc.getBlueprint().getCardSubtype();
+        //         if (sub == com.gempukku.swccgo.common.CardSubtype.SYSTEM) {
+        //             weOccupySystemBg = true;
+        //         } else if (sub == com.gempukku.swccgo.common.CardSubtype.SITE) {
+        //             weOccupySiteBg = true;
+        //         }
+        //     }
+        // } catch (Exception e) {
+        //     LOG.debug("V105 occupancy scan error: {}", e.getMessage());
+        // }
+        // boolean triggerA = weOccupySystemBg && weOccupySiteBg;
+        boolean triggerA = occupyBothTheaters;
 
         // ---------- Trigger B: V106 — CHYBC / Simple Tricks ----------
         // We occupy any battleground, opponent occupies < 2 battlegrounds,
         // opponent has drain-bonus sources (lightsaber on table OR game text
         // matches "force drain" + "+1|+2|+3").
-        boolean weOccupyAnyBg = weOccupySystemBg || weOccupySiteBg;
+        // V106 UPDATED 2026-07-06 (T2 MOVE #3): weOccupyAnyBg is now the engine
+        // occupies-predicate (presence-based) instead of derived from the old
+        // power-based theater scan — matches the shields' own play conditions
+        // (feedback_fourth_shield_conditional). Boundary row 15.
+        boolean weOccupyAnyBg =
+            com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts
+                .occupiesAnyBattleground(game, playerId);
+        // boolean weOccupyAnyBg = weOccupySystemBg || weOccupySiteBg;  // SUPERSEDED 2026-07-06 (T2 MOVE #3)
+        // DIVERGENCE NOTE 2026-07-06 (T2 MOVE #3, T4 candidate): oppBgCount below
+        // and myBgCount in trigger C stay POWER-based (getTotalPowerAtLocation > 0)
+        // — deliberately NOT swapped to the occupies predicate this wave; only the
+        // trigger-A gate and the weOccupyAnyBg input were unified per the spec.
         int oppBgCount = 0;
         boolean oppHasDrainBonus = false;
         String oppId = game.getOpponent(playerId);
@@ -605,10 +632,54 @@ public class ShieldStrategy {
             LOG.warn("V106 4TH SLOT (B): {} — opp draining a non-BG; we occupy BG, opp bg<2 + drain-bonus", pick);
             return pick;
         }
-        LOG.info("V105/V107: no 4th-slot trigger — HOLD indefinitely (myBg={} oppBg={} sysBg={} siteBg={}"
+        // V105 UPDATED 2026-07-06 (T2 MOVE #3): sysBg/siteBg placeholders replaced by
+        // the unified predicates (old power-scan variables are commented out above).
+        LOG.info("V105/V107: no 4th-slot trigger — HOLD indefinitely (myBg={} oppBg={} bothTheaters={} anyBg={}"
             + " drain3+={})",
-            myBgCount, oppBgCount, weOccupySystemBg, weOccupySiteBg, oppCanDrain3Plus);
+            myBgCount, oppBgCount, occupyBothTheaters, weOccupyAnyBg, oppCanDrain3Plus);
         return null;
+    }
+
+    // ====================================================================
+    // T2 MOVE #3 (2026-07-06): 4TH-SLOT PICK + MENU CONSOLIDATION
+    // ====================================================================
+    // V105/V117/V124 each hand-roll the same two-step dance: (1) ask
+    // prefers4thSlot for the preferred title, (2) check whether that title is
+    // actually offered on THIS decision's menu before pursuing (the Verge-game
+    // deadlock fix from ee0a1b435). fourthSlotPick consolidates that pick+menu
+    // logic in ONE place. Callers keep their own triggers and weights
+    // (-9999/+2000 V117, -5000/+2000 V105, -3000 V124 — weights stay per-caller,
+    // score-neutral by construction). A null predicate reproduces V124's current
+    // preferred!=null semantics. NOTE: the V117/V105/V124 call sites in
+    // CardSelectionEvaluator / ActionTextEvaluator adopt this in a LATER wave
+    // (both files untouched this wave per orchestrator instruction).
+
+    /** Result of a 4th-slot consultation: the preferred title (or null) and
+     *  whether the caller should PURSUE it on this decision's menu. */
+    public static class FourthSlotPick {
+        public final String preferred;
+        public final boolean pursue;
+
+        public FourthSlotPick(String preferred, boolean pursue) {
+            this.preferred = preferred;
+            this.pursue = pursue;
+        }
+    }
+
+    /**
+     * Consolidated 4th-slot pick (T2 MOVE #3, 2026-07-06). preferredOnMenu is
+     * the caller's "is this title actually offered on this decision's menu?"
+     * test (e.g. CardSelectionEvaluator.preferredShieldInCandidates); pass null
+     * to skip the menu check (V124's current preferred!=null semantics).
+     */
+    public FourthSlotPick fourthSlotPick(com.gempukku.swccgo.game.state.GameState gs,
+                                         com.gempukku.swccgo.game.SwccgGame game,
+                                         String playerId,
+                                         java.util.function.Predicate<String> preferredOnMenu) {
+        String preferred = prefers4thSlot(gs, game, playerId);
+        boolean pursue = preferred != null
+            && (preferredOnMenu == null || preferredOnMenu.test(preferred));
+        return new FourthSlotPick(preferred, pursue);
     }
 
     /**

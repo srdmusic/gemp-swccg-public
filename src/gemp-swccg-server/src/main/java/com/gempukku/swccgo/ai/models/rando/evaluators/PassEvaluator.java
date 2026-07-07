@@ -188,23 +188,29 @@ public class PassEvaluator extends ActionEvaluator {
             // we take full attrition and lose cards from hand/reserve in every battle.
             if (!isActivateDecision && !isInitiateBattleDecision) {
                 try {
-                    String opponentIdDtf = gameState.getOpponent(playerId);
-                    boolean dtfActive = false;
-                    for (PhysicalCard dtfCard : gameState.getAllPermanentCards()) {
-                        if (dtfCard == null) continue;
-                        if (opponentIdDtf != null && opponentIdDtf.equals(dtfCard.getOwner())
-                            && dtfCard.getBlueprint() != null
-                            && dtfCard.getBlueprint().getTitle() != null) {
-                            String dtfTitle = dtfCard.getBlueprint().getTitle().toLowerCase();
-                            if (dtfTitle.contains("draw their fire")) {
-                                com.gempukku.swccgo.common.Zone dtfZone = dtfCard.getZone();
-                                if (dtfZone != null && dtfZone.isInPlay()) {
-                                    dtfActive = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                    // T2 MOVE #1 COMMIT-2 (2026-07-06): dtfActive from the shared
+                    // per-decision ForceReserveService cache — same detection
+                    // (opponent-owned "draw their fire", in-play gate). Old inline
+                    // scan commented out below per feedback_comment_out_old_rules;
+                    // V27.1 weights (20/40/60) untouched.
+                    boolean dtfActive = context.getForceReserveFacts().dtfActive;
+//                     String opponentIdDtf = gameState.getOpponent(playerId);
+//                     boolean dtfActive = false;
+//                     for (PhysicalCard dtfCard : gameState.getAllPermanentCards()) {
+//                         if (dtfCard == null) continue;
+//                         if (opponentIdDtf != null && opponentIdDtf.equals(dtfCard.getOwner())
+//                             && dtfCard.getBlueprint() != null
+//                             && dtfCard.getBlueprint().getTitle() != null) {
+//                             String dtfTitle = dtfCard.getBlueprint().getTitle().toLowerCase();
+//                             if (dtfTitle.contains("draw their fire")) {
+//                                 com.gempukku.swccgo.common.Zone dtfZone = dtfCard.getZone();
+//                                 if (dtfZone != null && dtfZone.isInPlay()) {
+//                                     dtfActive = true;
+//                                     break;
+//                                 }
+//                             }
+//                         }
+//                     }
                     if (dtfActive) {
                         // Need 3 Force minimum: 1 for DTF defender loss, 1 for interrupt tax, 1 for the interrupt
                         int dtfReserveNeeded = 3;
@@ -225,26 +231,38 @@ public class PassEvaluator extends ActionEvaluator {
             // === V27: MAINTENANCE FORCE RESERVATION ===
             // If we have cards with MAINTENANCE icon in play (like Blizzard),
             // we MUST keep enough Force to pay their upkeep at end of turn.
-            // Maintenance cost = card's deploy cost. If we can't pay, card is sacrificed.
+            // T2 COMMIT-1 (2026-07-06, audit force-economy-1): maintenance cost is the
+            // ENGINE's card-specific maintain cost (MaintenanceFacts, parsed from game
+            // text; e.g. Lando Scoundrel maintains for 1, deploys for 5) — the old
+            // "maintenance cost = card's deploy cost" claim was refuted; it OVER-
+            // reserved 2-5x. If we can't pay, card is sacrificed.
             // This check applies across ALL phases — not just Deploy phase.
             if (!isActivateDecision) {
                 try {
-                    int maintenanceCostTotal = 0;
-                    java.util.List<PhysicalCard> allCards = gameState.getAllPermanentCards();
-                    if (allCards != null) {
-                        for (PhysicalCard mCard : allCards) {
-                            if (mCard == null) continue;
-                            if (!playerId.equals(mCard.getOwner())) continue;
-                            com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
-                            if (mZone == null || !mZone.isInPlay()) continue;
-                            com.gempukku.swccgo.game.SwccgCardBlueprint mBp = mCard.getBlueprint();
-                            if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-                                Float mCost = mBp.getDeployCost();
-                                int cardMaint = (mCost != null) ? mCost.intValue() : 1;
-                                maintenanceCostTotal += cardMaint;
-                            }
-                        }
-                    }
+                    // T2 MOVE #1 COMMIT-2 (2026-07-06): maintenance obligation from the
+                    // shared per-decision ForceReserveService cache (MaintenanceFacts
+                    // basis, in-play gate — identical to the inline scan below, now
+                    // commented out per feedback_comment_out_old_rules). V27 weights
+                    // (25/50) untouched.
+                    int maintenanceCostTotal = context.getForceReserveFacts().maintenanceObligation;
+//                     int maintenanceCostTotal = 0;
+//                     java.util.List<PhysicalCard> allCards = gameState.getAllPermanentCards();
+//                     if (allCards != null) {
+//                         for (PhysicalCard mCard : allCards) {
+//                             if (mCard == null) continue;
+//                             if (!playerId.equals(mCard.getOwner())) continue;
+//                             com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
+//                             if (mZone == null || !mZone.isInPlay()) continue;
+//                             com.gempukku.swccgo.game.SwccgCardBlueprint mBp = mCard.getBlueprint();
+//                             if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
+//                                 // Float mCost = mBp.getDeployCost();  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
+//                                 // int cardMaint = (mCost != null) ? mCost.intValue() : 1;  // superseded T2 COMMIT-1 2026-07-06
+//                                 int cardMaint = com.gempukku.swccgo.ai.models.common.strategy
+//                                     .MaintenanceFacts.maintainCost(mBp);
+//                                 maintenanceCostTotal += cardMaint;
+//                             }
+//                         }
+//                     }
                     if (maintenanceCostTotal > 0 && forcePile <= maintenanceCostTotal + 1) {
                         // Force pile is at or below maintenance requirement — STRONGLY prefer pass
                         float maintBonus = 25.0f;
