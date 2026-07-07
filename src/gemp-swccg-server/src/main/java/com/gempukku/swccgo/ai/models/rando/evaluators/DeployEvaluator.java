@@ -1420,9 +1420,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (mlObj != null && mlObj.isAnalyzed() && mlObj.getObjectiveTitle() != null
                                 && gameState != null && game != null) {
-                            String mlObjLower = mlObj.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean isMyLord = mlObjLower.contains("my lord")
-                                || mlObjLower.contains("make it legal");
+                            // V83 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean isMyLord = mlObj.isMyLord();
                             if (isMyLord
                                     && com.gempukku.swccgo.filters.Filters.senator.accepts(
                                         gameState, game.getModifiersQuerying(), card)) {
@@ -1473,9 +1472,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (v110Obj != null && v110Obj.isAnalyzed()
                                 && v110Obj.getObjectiveTitle() != null) {
-                            String v110ObjLower = v110Obj.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean v110IsMyLord = v110ObjLower.contains("my lord")
-                                || v110ObjLower.contains("make it legal");
+                            // V110 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean v110IsMyLord = v110Obj.isMyLord();
                             if (v110IsMyLord) {
                                 boolean v110IsSenator = false;
                                 if (blueprint.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) {
@@ -1530,9 +1528,8 @@ public class DeployEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v108Obj =
                             context.getObjectiveAnalyzer();
                         if (v108Obj != null && v108Obj.isAnalyzed() && v108Obj.getObjectiveTitle() != null) {
-                            String v108ObjLower = v108Obj.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean v108IsMyLord = v108ObjLower.contains("my lord")
-                                || v108ObjLower.contains("make it legal");
+                            // V108 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean v108IsMyLord = v108Obj.isMyLord();
                             if (v108IsMyLord) {
                                 boolean v108IsSenator = false;
                                 if (blueprint.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) {
@@ -1574,8 +1571,10 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (invObj != null && invObj.isAnalyzed() && invObj.getObjectiveTitle() != null
                                 && gameState != null && game != null) {
-                            String invObjLower = invObj.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean isInvasion = invObjLower.contains("invasion");
+                            // V86 CONSOLIDATED (2026-07-07): objective identity now lives in
+                            // ObjectiveAnalyzer.isInvasion() (title-derived, set in analyze()).
+                            // Deploy evaluator reads the getter — no title string matched here.
+                            boolean isInvasion = invObj.isInvasion();
                             boolean isNeimoidianPilot =
                                 com.gempukku.swccgo.filters.Filters.Neimoidian.accepts(
                                     gameState, game.getModifiersQuerying(), card)
@@ -1650,9 +1649,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (mlObj88 != null && mlObj88.isAnalyzed() && mlObj88.getObjectiveTitle() != null
                                 && gameState != null && game != null) {
-                            String mlObj88Lower = mlObj88.getObjectiveTitle().toLowerCase(Locale.ROOT);
-                            boolean isMyLord88 = mlObj88Lower.contains("my lord")
-                                || mlObj88Lower.contains("make it legal");
+                            // V88 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean isMyLord88 = mlObj88.isMyLord();
                             if (isMyLord88
                                     && com.gempukku.swccgo.filters.Filters.senator.accepts(
                                         gameState, game.getModifiersQuerying(), card)) {
@@ -1678,6 +1676,11 @@ public class DeployEvaluator extends ActionEvaluator {
                     //
                     // Allow non-senator deploys only when opponent power at Senate already
                     // exceeds my senator power there (genuine reinforcement need).
+                    //
+                    // NOTE (2026-07-07 consolidation): V99 is DELIBERATELY NOT isMyLord()-gated.
+                    // It keys on Galactic Senate being on the table (typed Filters.Galactic_Senate),
+                    // not on the objective identity. Gating it under isMyLord() would CHANGE behavior
+                    // (a non-My-Lord deck with a Senate on table would stop being guarded). Leave ungated.
                     {
                         if (card != null && blueprint != null
                                 && blueprint.getCardCategory() == CardCategory.CHARACTER

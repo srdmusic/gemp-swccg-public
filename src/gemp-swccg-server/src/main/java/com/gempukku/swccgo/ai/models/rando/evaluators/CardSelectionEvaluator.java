@@ -814,9 +814,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         java.util.List<String> v186Ids = context.getCardIds();
         java.util.List<String> v186Bps = context.getBlueprints();
         java.util.List<String> v186Tts = context.getTestingTexts();
-        boolean v186IsWantThatMap = v186oa != null && v186oa.isAnalyzed()
-                && v186oa.getObjectiveTitle() != null
-                && v186oa.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("i want that map");
+        // V186 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isWantThatMap().
+        boolean v186IsWantThatMap = v186oa != null && v186oa.isAnalyzed() && v186oa.isWantThatMap();
 
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
@@ -838,9 +837,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 int v186Idx = v186Ids != null ? v186Ids.indexOf(cardId) : -1;
                 String v186Bp = (v186Bps != null && v186Idx >= 0 && v186Idx < v186Bps.size()) ? v186Bps.get(v186Idx) : null;
                 String v186Tt = (v186Tts != null && v186Idx >= 0 && v186Idx < v186Tts.size()) ? v186Tts.get(v186Idx) : null;
-                boolean v186BpSystem = v186Bp != null && (v186Bp.equals("208_51") || v186Bp.equals("208_051"));
-                boolean v186TtSystem = v186Tt != null
-                        && v186Tt.toLowerCase(java.util.Locale.ROOT).contains("starkiller base")
+                // V186 CONSOLIDATED (2026-07-07): system blueprint ids + title fragment come from
+                // ObjectiveAnalyzer (was hardcoded "208_51"/"208_051"/"starkiller base" here).
+                java.util.Set<String> v186SysIds = v186oa.getIwtmSystemBpIds();
+                String v186SysFrag = v186oa.getIwtmSystemTitleFragment();
+                boolean v186BpSystem = v186Bp != null && v186SysIds != null && v186SysIds.contains(v186Bp);
+                boolean v186TtSystem = v186Tt != null && v186SysFrag != null
+                        && v186Tt.toLowerCase(java.util.Locale.ROOT).contains(v186SysFrag)
                         && !v186Tt.contains(":");
                 if (v186BpSystem || v186TtSystem) {
                     action.addReasoning("V186 STARKILLER BASE SYSTEM - download engine for the 2-battleground flip", 400.0f);
@@ -1674,9 +1677,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 && locObjAnalyzer.getObjectiveTitle() != null
                                 && title != null
                                 && deployingBlueprintId != null) {
-                            String v88ObjLower = locObjAnalyzer.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT);
-                            boolean v88IsMyLord = v88ObjLower.contains("my lord")
-                                || v88ObjLower.contains("make it legal");
+                            // V88 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                            boolean v88IsMyLord = locObjAnalyzer.isMyLord();
                             if (v88IsMyLord) {
                                 try {
                                     SwccgCardBlueprint v88DepBp = getBlueprintFromId(context, deployingBlueprintId);
@@ -1820,6 +1822,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // Block non-senators from picking Galactic Senate as their destination
                         // unless opponent power at Senate already exceeds friendly senator power
                         // (defensive reinforcement is allowed).
+                        // NOTE (2026-07-07 consolidation): DELIBERATELY not isMyLord()-gated — this
+                        // keys on the destination CANDIDATE being Galactic Senate, not the objective
+                        // identity. Gating it would change behavior. Leave as a typed/title dest check.
                         if (title != null && deployingBlueprintId != null && gameState != null) {
                             String v99TitleLower = title.toLowerCase(java.util.Locale.ROOT);
                             if (v99TitleLower.contains("galactic senate")) {
@@ -1981,10 +1986,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             try {
                                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v121Obj =
                                     context.getObjectiveAnalyzer();
-                                if (v121Obj != null && v121Obj.isAnalyzed()
-                                        && v121Obj.getObjectiveTitle() != null
-                                        && v121Obj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT)
-                                            .contains("invasion")) {
+                                // V121 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isInvasion().
+                                if (v121Obj != null && v121Obj.isAnalyzed() && v121Obj.isInvasion()) {
                                     SwccgCardBlueprint v121DepBp = getBlueprintFromId(context, deployingBlueprintId);
                                     if (v121DepBp != null) {
                                         // Need a temp PhysicalCard view for Filters — fall back to
@@ -3894,10 +3897,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 context.getObjectiveAnalyzer();
                             if (v109Obj != null && v109Obj.isAnalyzed()
                                     && v109Obj.getObjectiveTitle() != null) {
-                                String v109ObjLower = v109Obj.getObjectiveTitle()
-                                    .toLowerCase(java.util.Locale.ROOT);
-                                boolean v109IsMyLord = v109ObjLower.contains("my lord")
-                                    || v109ObjLower.contains("make it legal");
+                                // V109 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
+                                boolean v109IsMyLord = v109Obj.isMyLord();
                                 if (v109IsMyLord) {
                                     boolean v109IsSenator = false;
                                     if (card.getBlueprint().hasKeyword(
@@ -8231,10 +8232,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 // this deck; +1000 matches the V80 magnitude so it beats any other matching
                 // Effect in the same prompt. Pairs with the ObjectiveAnalyzer V186 block that
                 // names Starkiller Base + marks this effect required/pullable.
-                if (titleCheck.contains("the first order was just the beginning")) {
+                // V186 CONSOLIDATED (2026-07-07): identity AND preferred-effect title from analyzer
+                // (getIwtmPreferredStartingEffect() is non-null only under I Want That Map, so it
+                // double-gates exactly like the old title-contains + objective-contains pair).
+                {
                     com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v186Obj = context.getObjectiveAnalyzer();
-                    if (v186Obj != null && v186Obj.isAnalyzed() && v186Obj.getObjectiveTitle() != null
-                            && v186Obj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("i want that map")) {
+                    String v186Eff = (v186Obj != null) ? v186Obj.getIwtmPreferredStartingEffect() : null;
+                    if (v186Obj != null && v186Obj.isAnalyzed() && v186Obj.isWantThatMap()
+                            && v186Eff != null && titleCheck.contains(v186Eff)) {
                         action.addReasoning("V186 PREFERRED STARTING EFFECT (I Want That Map): " + cardTitle, 1000.0f);
                         logger.warn("V186 PREFERRED START (I Want That Map): {} (+1000)", cardTitle);
                     }

@@ -6004,3 +6004,17 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Status: UNCOMMITTED in the working tree; compile + live Verge game PENDING (expect
     'V79b FLIP-BACK GUARD ... VETOED' each post-flip move phase and NO 'V79 VERGE MOVE RESERVE'
     while orbiting). Full details in resources/AI_CHANGELOG.md 2026-07-07 entry.
+
+  ════ OBJECTIVE-LOGIC CONSOLIDATION (2026-07-07): identity → ObjectiveAnalyzer (pure REFACTOR) ════
+    NOT a new V-tag. Consolidates existing V86/V121 (Invasion), V83/V88/V108/V110/V109 (My Lord),
+    V186 (I Want That Map). Objective-IDENTITY detection each branch re-matched inline now lives on
+    ObjectiveAnalyzer as title-derived getters isInvasion()/isMyLord()/isWantThatMap() (set in
+    analyze() before the flip-parse early return, reset in reset()), plus typed IWTM steer slots
+    getIwtmSystemBpIds()={208_51,208_051} / getIwtmSystemTitleFragment()="starkiller base" /
+    getIwtmPreferredStartingEffect()="the first order was just the beginning". Deploy + CardSelection
+    branches read the getters; scoring bodies UNMOVED (additive-order preserved). V99 (both bots,
+    Deploy+CardSel) left DELIBERATELY ungated. Getter values byte-identical to the old inline checks.
+    Codex/Alfred review PASS on all three objectives (no score/ordering/branch drift). Compiles clean
+    both bots. SEPARATE companion commit: chosenone full-clone from rando (erase 7-file mirror drift;
+    entry points RandoCalAi/TheChosenOneAi untouched). Full details in resources/AI_CHANGELOG.md
+    2026-07-07 entries.

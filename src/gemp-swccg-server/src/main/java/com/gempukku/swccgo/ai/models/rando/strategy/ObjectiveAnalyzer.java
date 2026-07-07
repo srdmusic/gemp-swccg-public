@@ -77,6 +77,24 @@ public class ObjectiveAnalyzer {
     private boolean requiresOccupy = false;
     private boolean requiresControl = false;
 
+    // V86/V88/V121 CONSOLIDATED (2026-07-07): objective-IDENTITY flags. Title-derived, set in
+    // analyze() right after objectiveTitle so every evaluator reads ONE definition instead of
+    // re-matching the objective title string inline. The Deploy/CardSelection scoring bodies stay
+    // in place (additive-score ORDERING unchanged — moving a branch past a veto/early-return would
+    // silently flip decisions) but now gate on these getters. Steve 2026-07-07: "move the version
+    // logic to ObjectiveAnalyzer — that's what the deploy evaluator should be looking at."
+    private boolean isInvasion = false;   // objective title contains "invasion"
+    private boolean isMyLord = false;      // title contains "my lord" OR "make it legal" (MLITL)
+    // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + TYPED steer data. The +400
+    // Starkiller-system pick and +1000 preferred-starting-effect pick in CardSelectionEvaluator
+    // used to hardcode these ids/titles inline; they now read these slots. Populated title-derived
+    // in analyze() (NOT the flip block) so they're set whether or not the objective exposes a flip
+    // pattern — matching the old evaluator's title-derived gate exactly (Codex review 2026-07-07).
+    private boolean isWantThatMap = false;
+    private final java.util.Set<String> iwtmSystemBpIds = new java.util.LinkedHashSet<>(); // {208_51, 208_051}
+    private String iwtmSystemTitleFragment = null;      // "starkiller base" (SYSTEM; caller keeps its no-colon guard)
+    private String iwtmPreferredStartingEffect = null;  // "the first order was just the beginning"
+
     // V25: ISB Operations awareness
     private boolean isISBOperations = false;
     private int isbFlipAgentCount = 0;         // How many ISB agents needed on table to flip (e.g. 4)
@@ -142,6 +160,24 @@ public class ObjectiveAnalyzer {
 
             this.objectiveTitle = title;
             this.objectiveBlueprintId = bpId;
+            // V86/V88/V121 CONSOLIDATED (2026-07-07): compute objective-identity flags from the
+            // title HERE (before parseGameText's no-flip early return) so they are set for EVERY
+            // objective, flip-parsed or not. Exact substring semantics preserved verbatim from the
+            // old inline checks in Deploy/CardSelection (title.toLowerCase().contains(...)).
+            String titleLowerId = (title != null) ? title.toLowerCase(Locale.ROOT) : "";
+            this.isInvasion = titleLowerId.contains("invasion");
+            this.isMyLord = titleLowerId.contains("my lord") || titleLowerId.contains("make it legal");
+            // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + typed steer data (title-derived).
+            this.isWantThatMap = titleLowerId.contains("i want that map");
+            iwtmSystemBpIds.clear();
+            iwtmSystemTitleFragment = null;
+            iwtmPreferredStartingEffect = null;
+            if (this.isWantThatMap) {
+                iwtmSystemBpIds.add("208_51");
+                iwtmSystemBpIds.add("208_051");
+                iwtmSystemTitleFragment = "starkiller base";
+                iwtmPreferredStartingEffect = "the first order was just the beginning";
+            }
             // V29 UPDATED 2026-07-06: store raw text for objectiveForbidsDeployingExecutor()
             this.objectiveGameText = gameText;
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Analyzing objective: '{}'", title);
@@ -248,6 +284,23 @@ public class ObjectiveAnalyzer {
     public int getISBFlipAgentCount() { return isbFlipAgentCount; }
     public int getISBFlipLocationCount() { return isbFlipLocationCount; }
     public boolean isbFlipBackRequiresAgents() { return isbFlipBackNoAgents; }
+
+    // V86/V88/V121 CONSOLIDATED accessors (2026-07-07): objective-identity, read by the Deploy +
+    // CardSelection scoring branches that used to re-match the title string inline.
+    //   isInvasion()  consumers: DeployEvaluator V86 (Neimoidian-pilot-aboard-capital-ship),
+    //                            CardSelectionEvaluator V121 (same, deploy-target side)
+    //   isMyLord()    consumers: DeployEvaluator V83/V108/V110/V88 (senator↔Galactic Senate),
+    //                            CardSelectionEvaluator V88/V109 (senator deploy priority)
+    //   (V99 SENATE GUARD is DELIBERATELY left ungated — it keys on Galactic Senate being on
+    //    table, not on the objective, so it stays a typed-Filter check, NOT isMyLord()-gated.)
+    public boolean isInvasion() { return isInvasion; }
+    public boolean isMyLord() { return isMyLord; }
+    // V186 CONSOLIDATED accessors (2026-07-07): consumers = CardSelectionEvaluator V186
+    // (+400 Starkiller-SYSTEM starting-location pick, +1000 preferred starting-effect pick).
+    public boolean isWantThatMap() { return isWantThatMap; }
+    public java.util.Set<String> getIwtmSystemBpIds() { return iwtmSystemBpIds; }
+    public String getIwtmSystemTitleFragment() { return iwtmSystemTitleFragment; }
+    public String getIwtmPreferredStartingEffect() { return iwtmPreferredStartingEffect; }
 
     // V25: Hunt Down V accessors
     public boolean isHuntDownV() { return isHuntDownV; }
@@ -441,6 +494,14 @@ public class ObjectiveAnalyzer {
         isFlipped = false;
         requiresOccupy = false;
         requiresControl = false;
+        // V86/V88/V121 CONSOLIDATED: objective-identity flags (mirror objectiveTitle's lifecycle)
+        isInvasion = false;
+        isMyLord = false;
+        // V186 CONSOLIDATED: I Want That Map identity + typed steer data
+        isWantThatMap = false;
+        iwtmSystemBpIds.clear();
+        iwtmSystemTitleFragment = null;
+        iwtmPreferredStartingEffect = null;
         // V25: ISB Operations
         isISBOperations = false;
         isbFlipAgentCount = 0;
