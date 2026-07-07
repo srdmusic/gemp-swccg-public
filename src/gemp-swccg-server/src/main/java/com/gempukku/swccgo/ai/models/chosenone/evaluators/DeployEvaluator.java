@@ -820,9 +820,15 @@ public class DeployEvaluator extends ActionEvaluator {
                     }
                 }
 
-                // Passed all guards — positive signal (final score combines with plan bonuses)
-                action.addReasoning("V60 RESERVE PULL: try every turn — free value", 100.0f);
-                LOG.warn("V60 RESERVE PULL: '{}' passed guards — +100 baseline", actionText);
+                // Passed all guards — V192 (2026-07-06, T4.2 pull-engine merge, mirrored
+                // from rando): the +100 baseline is ABSORBED by the single V192 pull scorer
+                // in ActionTextEvaluator (ds-3 same-tag drift: this DE copy stacked with the
+                // ATE baseline on every pull). The guards ABOVE this line all STAY as vetoes
+                // (duplicate -9999s with the ATE chain are harmless).
+                // Commented out per feedback_comment_out_old_rules:
+                // action.addReasoning("V60 RESERVE PULL: try every turn — free value", 100.0f);
+                // LOG.warn("V60 RESERVE PULL: '{}' passed guards — +100 baseline", actionText);
+                LOG.info("V60 RESERVE PULL guards passed for '{}' — baseline owned by V192 (ActionTextEvaluator)", actionText);
             }
 
             // === V38.4 + V56 FIX 18: AGGRESSIVE DEPLOY — HAND SIZE + FORCE PILE URGENCY ===
@@ -2042,14 +2048,17 @@ public class DeployEvaluator extends ActionEvaluator {
                         Float deployCost = blueprint.getDeployCost();
                         cost = deployCost != null ? deployCost.intValue() : 0;
                         // V22.3: Maintenance card check - need enough Force for upkeep AFTER deploying
-                        // Maintenance cost = card's deploy cost. Must have that much Force
-                        // remaining in Force Pile after paying deploy cost, or card dies at end of turn.
+                        // T2 COMMIT-1 (2026-07-06, audit force-economy-1): upkeep is the ENGINE's
+                        // card-specific maintain cost (MaintenanceFacts), NOT deploy cost — the old
+                        // basis made Lando Scoundrel (deploy 5, maintain 1) essentially undeployable
+                        // below pile ~10 (V59 HARD -2000 on a phantom 5F obligation).
                         if (blueprint.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
                             int totalForce = context.getGameState() != null ?
                                 context.getGameState().getForcePileSize(context.getPlayerId()) : 0;
                             int forceAfterDeploy = totalForce - cost;
-                            // Maintenance cost = deploy cost (SWCCG rule)
-                            int maintenanceCost = cost;
+                            // int maintenanceCost = cost;  // superseded T2 COMMIT-1 2026-07-06 ("maintenance cost = deploy cost" refuted)
+                            int maintenanceCost = com.gempukku.swccgo.ai.models.common.strategy
+                                .MaintenanceFacts.maintainCost(blueprint);
 
                             // V59 HOLISTIC MAINTENANCE: Account for other planned deploys AND
                             // battle reserve. FIXES Issue #4 from peaceful-pike replay: Lando
@@ -2126,22 +2135,31 @@ public class DeployEvaluator extends ActionEvaluator {
                     // must leave enough Force to pay their upkeep. Otherwise they get sacrificed.
                     if (cost > 0 && gameState != null) {
                         try {
-                            int existingMaintenanceCost = 0;
-                            java.util.List<PhysicalCard> allInPlay = gameState.getAllPermanentCards();
-                            if (allInPlay != null) {
-                                for (PhysicalCard mCard : allInPlay) {
-                                    if (mCard == null) continue;
-                                    if (!context.getPlayerId().equals(mCard.getOwner())) continue;
-                                    com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
-                                    if (mZone == null || !mZone.isInPlay()) continue;
-                                    SwccgCardBlueprint mBp = mCard.getBlueprint();
-                                    if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-                                        Float mCost = mBp.getDeployCost();
-                                        int cardMaint = (mCost != null) ? mCost.intValue() : 1;
-                                        existingMaintenanceCost += cardMaint;
-                                    }
-                                }
-                            }
+                            // T2 MOVE #1 COMMIT-2 (2026-07-06): maintenance obligation from
+                            // the shared per-decision ForceReserveService cache (same
+                            // in-play gate + MaintenanceFacts basis). Old inline scan
+                            // commented out below per feedback_comment_out_old_rules;
+                            // V24.5 weights (-50/-50) untouched.
+                            int existingMaintenanceCost = context.getForceReserveFacts().maintenanceObligation;
+//                             int existingMaintenanceCost = 0;
+//                             java.util.List<PhysicalCard> allInPlay = gameState.getAllPermanentCards();
+//                             if (allInPlay != null) {
+//                                 for (PhysicalCard mCard : allInPlay) {
+//                                     if (mCard == null) continue;
+//                                     if (!context.getPlayerId().equals(mCard.getOwner())) continue;
+//                                     com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
+//                                     if (mZone == null || !mZone.isInPlay()) continue;
+//                                     SwccgCardBlueprint mBp = mCard.getBlueprint();
+//                                     if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
+//                                         // T2 COMMIT-1 (2026-07-06): engine maintain cost, not deploy cost
+//                                         // Float mCost = mBp.getDeployCost();  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
+//                                         // int cardMaint = (mCost != null) ? mCost.intValue() : 1;  // superseded T2 COMMIT-1 2026-07-06
+//                                         int cardMaint = com.gempukku.swccgo.ai.models.common.strategy
+//                                             .MaintenanceFacts.maintainCost(mBp);
+//                                         existingMaintenanceCost += cardMaint;
+//                                     }
+//                                 }
+//                             }
                             if (existingMaintenanceCost > 0) {
                                 int totalForceNow = gameState.getForcePileSize(context.getPlayerId());
                                 int forceAfterThisDeploy = totalForceNow - cost;
@@ -2258,9 +2276,15 @@ public class DeployEvaluator extends ActionEvaluator {
                         try {
                             boolean thisCardHasMaint = blueprint.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE);
                             int forceAfterThisDeploy = availableForce - cost;
+                            // T2 COMMIT-1 (2026-07-06, audit force-economy-1): compare against the
+                            // ENGINE's maintain cost, not deploy cost (old basis over-penalized 2-5x).
+                            int thisCardMaint = thisCardHasMaint
+                                ? com.gempukku.swccgo.ai.models.common.strategy.MaintenanceFacts.maintainCost(blueprint)
+                                : 0;
 
                             // --- Only apply maintenance awareness to maintenance card deploys ---
-                            if (thisCardHasMaint && forceAfterThisDeploy < cost) {
+                            // if (thisCardHasMaint && forceAfterThisDeploy < cost) {  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
+                            if (thisCardHasMaint && forceAfterThisDeploy < thisCardMaint) {
                                 // Deploying a maintenance card but won't have enough Force to pay
                                 // its own maintenance at end of turn. Small tiebreaker — NOT a blocker.
                                 // The card can be lost as attrition in battle, or Rando activates
@@ -2272,43 +2296,52 @@ public class DeployEvaluator extends ActionEvaluator {
                                 action.addReasoning(
                                     String.format("V29.13 MAINT AWARENESS: This card costs %d maint at end of turn, " +
                                         "only %d Force left after deploy — plan to activate more next turn",
-                                        cost, forceAfterThisDeploy),
+                                        thisCardMaint, forceAfterThisDeploy),
                                     maintPenalty);
                             }
 
                             // --- DTF / Grabber interrupt reserve (soft penalty) ---
                             // Nice to keep 1 Force for interrupts, but never block a deploy over it.
-                            String dtfOpponentId = gameState.getOpponent(context.getPlayerId());
-                            boolean dtfOnTable = false;
-                            for (PhysicalCard dtfCard : gameState.getAllPermanentCards()) {
-                                if (dtfCard == null) continue;
-                                if (dtfOpponentId != null && dtfOpponentId.equals(dtfCard.getOwner())
-                                    && dtfCard.getBlueprint() != null
-                                    && dtfCard.getBlueprint().getTitle() != null) {
-                                    String dtfT = dtfCard.getBlueprint().getTitle().toLowerCase(Locale.ROOT);
-                                    if (dtfT.contains("draw their fire")) {
-                                        com.gempukku.swccgo.common.Zone dtfZ = dtfCard.getZone();
-                                        if (dtfZ != null && dtfZ.isInPlay()) {
-                                            dtfOnTable = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            boolean grabberUnused = false;
-                            for (PhysicalCard gCard : gameState.getAllPermanentCards()) {
-                                if (gCard == null || gCard.getBlueprint() == null) continue;
-                                if (!context.getPlayerId().equals(gCard.getOwner())) continue;
-                                com.gempukku.swccgo.common.Zone gZ = gCard.getZone();
-                                if (gZ == null || !gZ.isInPlay()) continue;
-                                if (gCard.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.GRABBER)) {
-                                    java.util.List<PhysicalCard> stacked = gameState.getStackedCards(gCard);
-                                    if (stacked == null || stacked.isEmpty()) {
-                                        grabberUnused = true;
-                                    }
-                                    break;
-                                }
-                            }
+                            // T2 MOVE #1 COMMIT-2 (2026-07-06): DTF + grabber facts from the
+                            // shared per-decision ForceReserveService cache. NOTE documented
+                            // unification: the old scan below broke on the FIRST grabber card
+                            // found regardless of state; the shared fact counts ANY unused
+                            // grabber (MoveEvaluator V29 semantic) — identical unless a deck
+                            // fields 2+ grabbers with mixed state (no current deck does). Old
+                            // scans commented out per feedback_comment_out_old_rules; -30 untouched.
+                            boolean dtfOnTable = context.getForceReserveFacts().dtfActive;
+                            boolean grabberUnused = context.getForceReserveFacts().grabberUnused;
+//                             String dtfOpponentId = gameState.getOpponent(context.getPlayerId());
+//                             boolean dtfOnTable = false;
+//                             for (PhysicalCard dtfCard : gameState.getAllPermanentCards()) {
+//                                 if (dtfCard == null) continue;
+//                                 if (dtfOpponentId != null && dtfOpponentId.equals(dtfCard.getOwner())
+//                                     && dtfCard.getBlueprint() != null
+//                                     && dtfCard.getBlueprint().getTitle() != null) {
+//                                     String dtfT = dtfCard.getBlueprint().getTitle().toLowerCase(Locale.ROOT);
+//                                     if (dtfT.contains("draw their fire")) {
+//                                         com.gempukku.swccgo.common.Zone dtfZ = dtfCard.getZone();
+//                                         if (dtfZ != null && dtfZ.isInPlay()) {
+//                                             dtfOnTable = true;
+//                                             break;
+//                                         }
+//                                     }
+//                                 }
+//                             }
+//                             boolean grabberUnused = false;
+//                             for (PhysicalCard gCard : gameState.getAllPermanentCards()) {
+//                                 if (gCard == null || gCard.getBlueprint() == null) continue;
+//                                 if (!context.getPlayerId().equals(gCard.getOwner())) continue;
+//                                 com.gempukku.swccgo.common.Zone gZ = gCard.getZone();
+//                                 if (gZ == null || !gZ.isInPlay()) continue;
+//                                 if (gCard.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.GRABBER)) {
+//                                     java.util.List<PhysicalCard> stacked = gameState.getStackedCards(gCard);
+//                                     if (stacked == null || stacked.isEmpty()) {
+//                                         grabberUnused = true;
+//                                     }
+//                                     break;
+//                                 }
+//                             }
                             if ((dtfOnTable || grabberUnused) && forceAfterThisDeploy <= 0) {
                                 action.addReasoning(
                                     String.format("V29.13 INTERRUPT RESERVE: %s%s but 0 Force left for them after deploy",
@@ -2357,53 +2390,79 @@ public class DeployEvaluator extends ActionEvaluator {
 
                             if (wouldBeSolo) {
                                 // --- Calculate Force reserve needed (maint + interrupts) ---
-                                int maintObligation = 0;
-                                for (PhysicalCard mCard : gameState.getAllPermanentCards()) {
-                                    if (mCard == null) continue;
-                                    if (!playerId.equals(mCard.getOwner())) continue;
-                                    com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
-                                    if (mZone == null || !mZone.isInPlay()) continue;
-                                    SwccgCardBlueprint mBp = mCard.getBlueprint();
-                                    if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-                                        Float mCostF = mBp.getDeployCost();
-                                        maintObligation += (mCostF != null) ? mCostF.intValue() : 1;
-                                    }
-                                }
+                                // T2 MOVE #1 COMMIT-2 (2026-07-06): on-table maintenance
+                                // obligation from the shared per-decision ForceReserveService
+                                // cache; THIS card's own maintain cost stays a local add
+                                // below (per-candidate, not a shared fact). Old inline scan
+                                // commented out per feedback_comment_out_old_rules.
+                                int maintObligation = context.getForceReserveFacts().maintenanceObligation;
+//                                 int maintObligation = 0;
+//                                 for (PhysicalCard mCard : gameState.getAllPermanentCards()) {
+//                                     if (mCard == null) continue;
+//                                     if (!playerId.equals(mCard.getOwner())) continue;
+//                                     com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
+//                                     if (mZone == null || !mZone.isInPlay()) continue;
+//                                     SwccgCardBlueprint mBp = mCard.getBlueprint();
+//                                     if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
+//                                         // T2 COMMIT-1 (2026-07-06): engine maintain cost, not deploy cost
+//                                         // Float mCostF = mBp.getDeployCost();  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
+//                                         // maintObligation += (mCostF != null) ? mCostF.intValue() : 1;  // superseded T2 COMMIT-1 2026-07-06
+//                                         maintObligation += com.gempukku.swccgo.ai.models.common.strategy
+//                                             .MaintenanceFacts.maintainCost(mBp);
+//                                     }
+//                                 }
                                 // Add maintenance for THIS card if applicable
                                 if (blueprint.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-                                    maintObligation += cost;
+                                    // maintObligation += cost;  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
+                                    maintObligation += com.gempukku.swccgo.ai.models.common.strategy
+                                        .MaintenanceFacts.maintainCost(blueprint);
                                 }
                                 // Only reserve for interrupts when opponent has Draw Their Fire
-                                int interruptReserve = 0;
-                                String dtfOpId = gameState.getOpponent(playerId);
-                                for (PhysicalCard dtfChk : gameState.getAllPermanentCards()) {
-                                    if (dtfChk == null) continue;
-                                    if (dtfOpId != null && dtfOpId.equals(dtfChk.getOwner())
-                                        && dtfChk.getBlueprint() != null
-                                        && dtfChk.getBlueprint().getTitle() != null
-                                        && dtfChk.getBlueprint().getTitle().toLowerCase(Locale.ROOT).contains("draw their fire")) {
-                                        com.gempukku.swccgo.common.Zone dtfChkZ = dtfChk.getZone();
-                                        if (dtfChkZ != null && dtfChkZ.isInPlay()) {
-                                            interruptReserve = 1; // 1 Force tax per interrupt
-                                            break;
-                                        }
-                                    }
-                                }
+                                // T2 MOVE #1 COMMIT-2 (2026-07-06): DTF from the shared
+                                // per-decision cache (same detection, 1 Force tax per
+                                // interrupt). Old scan commented out per
+                                // feedback_comment_out_old_rules.
+                                int interruptReserve = context.getForceReserveFacts().dtfActive ? 1 : 0;
+//                                 int interruptReserve = 0;
+//                                 String dtfOpId = gameState.getOpponent(playerId);
+//                                 for (PhysicalCard dtfChk : gameState.getAllPermanentCards()) {
+//                                     if (dtfChk == null) continue;
+//                                     if (dtfOpId != null && dtfOpId.equals(dtfChk.getOwner())
+//                                         && dtfChk.getBlueprint() != null
+//                                         && dtfChk.getBlueprint().getTitle() != null
+//                                         && dtfChk.getBlueprint().getTitle().toLowerCase(Locale.ROOT).contains("draw their fire")) {
+//                                         com.gempukku.swccgo.common.Zone dtfChkZ = dtfChk.getZone();
+//                                         if (dtfChkZ != null && dtfChkZ.isInPlay()) {
+//                                             interruptReserve = 1; // 1 Force tax per interrupt
+//                                             break;
+//                                         }
+//                                     }
+//                                 }
                                 // V53: Reserve 1 force per undercover spy for movement next turn.
                                 // If opponent moves away from our spy, we need force to follow them.
-                                int spyMoveReserve = 0;
-                                try {
-                                    for (PhysicalCard spyChk : gameState.getAllPermanentCards()) {
-                                        if (spyChk == null || !playerId.equals(spyChk.getOwner())) continue;
-                                        if (spyChk.isUndercover()) {
-                                            spyMoveReserve++;
-                                        }
-                                    }
-                                    if (spyMoveReserve > 0) {
-                                        LOG.info("V53 SPY RESERVE: Reserving {} force for {} undercover spy movement(s)",
-                                            spyMoveReserve, spyMoveReserve);
-                                    }
-                                } catch (Exception e) { /* ignore */ }
+                                // T2 MOVE #1 COMMIT-2 (2026-07-06): undercover spy count (V53)
+                                // from the shared per-decision cache. The shared fact is
+                                // Zone-gated — a no-op difference: isUndercover() is only ever
+                                // true in play. Old scan commented out per
+                                // feedback_comment_out_old_rules.
+                                int spyMoveReserve = context.getForceReserveFacts().undercoverSpyCount;
+                                if (spyMoveReserve > 0) {
+                                    LOG.info("V53 SPY RESERVE: Reserving {} force for {} undercover spy movement(s)",
+                                        spyMoveReserve, spyMoveReserve);
+                                }
+//                                 int spyMoveReserve = 0;
+//                                 try {
+//                                     for (PhysicalCard spyChk : gameState.getAllPermanentCards()) {
+//                                         if (spyChk == null || !playerId.equals(spyChk.getOwner())) continue;
+//                                         if (spyChk.isUndercover()) {
+//                                             spyMoveReserve++;
+//                                         }
+//                                     }
+//                                     if (spyMoveReserve > 0) {
+//                                         LOG.info("V53 SPY RESERVE: Reserving {} force for {} undercover spy movement(s)",
+//                                             spyMoveReserve, spyMoveReserve);
+//                                     }
+//                                 } catch (Exception e) { /* ignore */ }
 
                                 int forceReserveNeeded = maintObligation + interruptReserve + spyMoveReserve;
 
@@ -3445,36 +3504,50 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     } catch (Exception e) { LOG.debug("V67i error: {}", e.getMessage()); }
 
+                    // V67ai Tier 1-3 DE COPY ABSORBED by V192 pull scorer 2026-07-06 (T4.2
+                    // merge, ds-2, mirrored from rando): the tier lives in ActionTextEvaluator
+                    // where V131's deck-aware gate covers it — this ungated DE copy
+                    // DOUBLE-COUNTED with the ATE copy on every location pull (boundary row 2:
+                    // the +8000 pile). The V67i detection above is KEPT LIVE as a predicate —
+                    // the weapon-gate routing below (V67ar/V67ao/V149 need !v67iAddsLocation)
+                    // still uses it. The V162/V67ai-Tier4-HAND block above (bare "deploy" of a
+                    // LOCATION from hand, +1900 total) is NOT touched — it is the anchor the
+                    // pull scorer must stay below (the V179 lesson).
+                    // Commented out per feedback_comment_out_old_rules:
+                    // if (v67iAddsLocation) {
+                    //     // V67ai Tier 1-3 (Steve, 2026-05-07): When DeployEvaluator scores
+                    //     // a card-action pull, classify by source-card category for the
+                    //     // tiered location-deploy order: Objective → Effect → Interrupt → Hand.
+                    //     int v67aiTier = 0;
+                    //     String v67aiTierName = "unclassified";
+                    //     if (card != null && card.getBlueprint() != null) {
+                    //         CardCategory srcCat = card.getBlueprint().getCardCategory();
+                    //         if (srcCat == CardCategory.OBJECTIVE) {
+                    //             v67aiTier = 1; v67aiTierName = "OBJECTIVE";
+                    //         } else if (srcCat == CardCategory.EFFECT) {
+                    //             v67aiTier = 2; v67aiTierName = "EFFECT";
+                    //         } else if (srcCat == CardCategory.INTERRUPT) {
+                    //             v67aiTier = 3; v67aiTierName = "INTERRUPT";
+                    //         } else if (srcCat == CardCategory.LOCATION) {
+                    //             v67aiTier = 2; v67aiTierName = "LOCATION-EFFECT";
+                    //         }
+                    //     }
+                    //     float v67aiBonus;
+                    //     switch (v67aiTier) {
+                    //         case 1: v67aiBonus = 2000.0f; break;
+                    //         case 2: v67aiBonus = 1800.0f; break;
+                    //         case 3: v67aiBonus = 1600.0f; break;
+                    //         default: v67aiBonus = 1500.0f; break;
+                    //     }
+                    //     action.addReasoning(
+                    //         String.format("V67ai LOCATION DEPLOY ORDER [Tier %d %s]: %s — Objective → Effect → Interrupt → Hand!",
+                    //             v67aiTier, v67aiTierName, v67iReason), v67aiBonus);
+                    //     LOG.warn("V67ai LOCATION TIER {} [{}]: '{}' → +{} ({})",
+                    //         v67aiTier, v67aiTierName, actionText, (int) v67aiBonus, v67iReason);
+                    // }
                     if (v67iAddsLocation) {
-                        // V67ai Tier 1-3 (Steve, 2026-05-07): When DeployEvaluator scores
-                        // a card-action pull, classify by source-card category for the
-                        // tiered location-deploy order: Objective → Effect → Interrupt → Hand.
-                        int v67aiTier = 0;
-                        String v67aiTierName = "unclassified";
-                        if (card != null && card.getBlueprint() != null) {
-                            CardCategory srcCat = card.getBlueprint().getCardCategory();
-                            if (srcCat == CardCategory.OBJECTIVE) {
-                                v67aiTier = 1; v67aiTierName = "OBJECTIVE";
-                            } else if (srcCat == CardCategory.EFFECT) {
-                                v67aiTier = 2; v67aiTierName = "EFFECT";
-                            } else if (srcCat == CardCategory.INTERRUPT) {
-                                v67aiTier = 3; v67aiTierName = "INTERRUPT";
-                            } else if (srcCat == CardCategory.LOCATION) {
-                                v67aiTier = 2; v67aiTierName = "LOCATION-EFFECT";
-                            }
-                        }
-                        float v67aiBonus;
-                        switch (v67aiTier) {
-                            case 1: v67aiBonus = 2000.0f; break;
-                            case 2: v67aiBonus = 1800.0f; break;
-                            case 3: v67aiBonus = 1600.0f; break;
-                            default: v67aiBonus = 1500.0f; break;
-                        }
-                        action.addReasoning(
-                            String.format("V67ai LOCATION DEPLOY ORDER [Tier %d %s]: %s — Objective → Effect → Interrupt → Hand!",
-                                v67aiTier, v67aiTierName, v67iReason), v67aiBonus);
-                        LOG.warn("V67ai LOCATION TIER {} [{}]: '{}' → +{} ({})",
-                            v67aiTier, v67aiTierName, actionText, (int) v67aiBonus, v67iReason);
+                        LOG.info("V67i location-pull detected for '{}' ({}) — tier owned by V192 (ActionTextEvaluator)",
+                            actionText, v67iReason);
                     }
 
                     // === V67m UNIVERSAL WEAPON-PULL PRIORITY ===
@@ -3616,11 +3689,20 @@ public class DeployEvaluator extends ActionEvaluator {
                             LOG.warn("V149 NO LIGHTSABER WIELDER (DeployEvaluator): '{}' — 0 unarmed [Warrior] ability-4+ chars → -2000",
                                 actionText);
                         } else {
-                            action.addReasoning(String.format(
-                                "V67am WEAPON PULL (universal, tier 1): %d unarmed character(s) — pull weapon from reserve! %s",
-                                v67arUnarmed, v67mReason), 600.0f);
-                            LOG.warn("V67am WEAPON PULL (DeployEvaluator): '{}' adds weapon ({}) → +600 ({} unarmed)",
-                                actionText, v67mReason, v67arUnarmed);
+                            // V67am +600 DE GRANT ABSORBED by V192 pull scorer 2026-07-06
+                            // (T4.2 merge, mirrored from rando): the ATE scorer's WEAPON tier
+                            // (+600) is the single owner — this DE copy DOUBLE-COUNTED
+                            // (boundary row 6: +1600 stack on one blaster pull). The
+                            // V67ar/V67ao/V149 veto mirrors above stay verbatim (duplicate
+                            // -9999s are harmless).
+                            // Commented out per feedback_comment_out_old_rules:
+                            // action.addReasoning(String.format(
+                            //     "V67am WEAPON PULL (universal, tier 1): %d unarmed character(s) — pull weapon from reserve! %s",
+                            //     v67arUnarmed, v67mReason), 600.0f);
+                            // LOG.warn("V67am WEAPON PULL (DeployEvaluator): '{}' adds weapon ({}) → +600 ({} unarmed)",
+                            //     actionText, v67mReason, v67arUnarmed);
+                            LOG.info("V67am weapon pull detected for '{}' — grant owned by V192 (ActionTextEvaluator)",
+                                actionText);
                         }
                     }
 

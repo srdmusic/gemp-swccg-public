@@ -354,9 +354,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 } catch (Exception v177E) {
                     logger.debug("V177 dead-search check error: {}", v177E.getMessage());
                 }
-                action.addReasoning(
-                    "V116 RESERVE OPTION: deploy-from-reserve always at least +100", 100.0f);
-                logger.info("V116 RESERVE FLOOR: '{}' → +100 baseline", actionText);
+                // V116 +100 floor ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge,
+                // mirrored from rando): the scorer's +150 deploy-grade base covers the
+                // floor, and it is now VETO-GATED (the old unconditional floor could
+                // resurrect pulls the V60 guards were trying to kill). V177/V183 above
+                // are untouched — their continue still runs before any positive tier.
+                // Commented out per feedback_comment_out_old_rules:
+                // action.addReasoning(
+                //     "V116 RESERVE OPTION: deploy-from-reserve always at least +100", 100.0f);
+                // logger.info("V116 RESERVE FLOOR: '{}' → +100 baseline", actionText);
             }
 
             // === V184 (Steve, 2026-06): FIRE "WHEN DEPLOYED" FREE-VALUE TRIGGERS ===
@@ -432,54 +438,60 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // scope — Effects, Epic Events, Interrupts, Objectives, but this
             // V95 check focuses specifically on interrupts since those are the
             // ones typically lost as fodder).
-            if (cardId != null && context.getGameState() != null) {
-                try {
-                    com.gempukku.swccgo.game.state.GameState v95Gs = context.getGameState();
-                    PhysicalCard v95Src = v95Gs.findCardById(Integer.parseInt(cardId));
-                    if (v95Src != null && v95Src.getBlueprint() != null
-                            && v95Src.getBlueprint().getCardCategory()
-                                == com.gempukku.swccgo.common.CardCategory.INTERRUPT) {
-                        String v95Gt = v95Src.getBlueprint().getGameText();
-                        if (v95Gt != null) {
-                            java.util.List<String> v95Targets =
-                                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
-                                    .parseSourceCardPullTargets(v95Gt);
-                            if (!v95Targets.isEmpty()) {
-                                java.util.Collection<PhysicalCard> v95Table = v95Gs.getAllPermanentCards();
-                                boolean allOnTable = true;
-                                for (String t : v95Targets) {
-                                    String tl = t.toLowerCase(java.util.Locale.ROOT);
-                                    boolean found = false;
-                                    for (PhysicalCard tc : v95Table) {
-                                        if (tc == null || tc.getTitle() == null) continue;
-                                        if (tc.getTitle().toLowerCase(java.util.Locale.ROOT).contains(tl)) {
-                                            found = true; break;
-                                        }
-                                    }
-                                    if (!found) { allOnTable = false; break; }
-                                }
-                                if (allOnTable) {
-                                    String v95Pid = context.getPlayerId();
-                                    int reserveForce = v95Gs.getForcePileSize(v95Pid)
-                                        + (v95Gs.getUsedPile(v95Pid) != null ? v95Gs.getUsedPile(v95Pid).size() : 0)
-                                        + v95Gs.getReserveDeckSize(v95Pid);
-                                    if (reserveForce >= 15) {
-                                        action.addReasoning(String.format(
-                                            "V95 DEAD INTERRUPT SAVE: '%s' pull targets %s all on table, reserves=%d — save for force-loss fodder",
-                                            v95Src.getTitle(), v95Targets, reserveForce), -2000.0f);
-                                        logger.warn("V95 DEAD INTERRUPT: blocking {} (targets on table, reserves {})",
-                                            v95Src.getTitle(), reserveForce);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (NumberFormatException nfe) {
-                    // not numeric cardId
-                } catch (Exception e) {
-                    logger.debug("V95 error: {}", e.getMessage());
-                }
-            }
+            // V95 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge,
+            // mirrored from rando): moved into the PULL-ENGINE veto chain as a hardBlock
+            // (see the V192 region) so the activate-window base (+5500) can NEVER outvote
+            // it — as an additive here, the pull pile netted the dead pull to +100 and it
+            // FIRED (boundary row 5). Logic verbatim in the new location.
+            // Commented out per feedback_comment_out_old_rules:
+            // if (cardId != null && context.getGameState() != null) {
+                // try {
+                    // com.gempukku.swccgo.game.state.GameState v95Gs = context.getGameState();
+                    // PhysicalCard v95Src = v95Gs.findCardById(Integer.parseInt(cardId));
+                    // if (v95Src != null && v95Src.getBlueprint() != null
+                            // && v95Src.getBlueprint().getCardCategory()
+                                // == com.gempukku.swccgo.common.CardCategory.INTERRUPT) {
+                        // String v95Gt = v95Src.getBlueprint().getGameText();
+                        // if (v95Gt != null) {
+                            // java.util.List<String> v95Targets =
+                                // com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                    // .parseSourceCardPullTargets(v95Gt);
+                            // if (!v95Targets.isEmpty()) {
+                                // java.util.Collection<PhysicalCard> v95Table = v95Gs.getAllPermanentCards();
+                                // boolean allOnTable = true;
+                                // for (String t : v95Targets) {
+                                    // String tl = t.toLowerCase(java.util.Locale.ROOT);
+                                    // boolean found = false;
+                                    // for (PhysicalCard tc : v95Table) {
+                                        // if (tc == null || tc.getTitle() == null) continue;
+                                        // if (tc.getTitle().toLowerCase(java.util.Locale.ROOT).contains(tl)) {
+                                            // found = true; break;
+                                        // }
+                                    // }
+                                    // if (!found) { allOnTable = false; break; }
+                                // }
+                                // if (allOnTable) {
+                                    // String v95Pid = context.getPlayerId();
+                                    // int reserveForce = v95Gs.getForcePileSize(v95Pid)
+                                        // + (v95Gs.getUsedPile(v95Pid) != null ? v95Gs.getUsedPile(v95Pid).size() : 0)
+                                        // + v95Gs.getReserveDeckSize(v95Pid);
+                                    // if (reserveForce >= 15) {
+                                        // action.addReasoning(String.format(
+                                            // "V95 DEAD INTERRUPT SAVE: '%s' pull targets %s all on table, reserves=%d — save for force-loss fodder",
+                                            // v95Src.getTitle(), v95Targets, reserveForce), -2000.0f);
+                                        // logger.warn("V95 DEAD INTERRUPT: blocking {} (targets on table, reserves {})",
+                                            // v95Src.getTitle(), reserveForce);
+                                    // }
+                                // }
+                            // }
+                        // }
+                    // }
+                // } catch (NumberFormatException nfe) {
+                    // // not numeric cardId
+                // } catch (Exception e) {
+                    // logger.debug("V95 error: {}", e.getMessage());
+                // }
+            // }
 
             // === V134 (Steve, 2026-05-25): ODIN NESLOOR 5-FORCE FLOOR (MOVE phase) ===
             //
@@ -515,11 +527,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         if (v134Lower.contains("odin nesloor") && v134ActionMatches) {
                             int v134ForcePile = context.getForcePileSize();
                             if (v134ForcePile < 5) {
+                                // V134 UPDATED 2026-07-06 T4.1 (mirrored from rando): -9999 raised to
+                                // the MOVE-ladder veto class -100000. Its "transport" text co-sums with
+                                // MoveEvaluator-scored actions (ME keyword "Transport"), so it must stay
+                                // veto-class across the new R2-R4 bands.
+                                // OLD: action.addReasoning(
+                                //     "V134 ODIN NESLOOR FLOOR: only " + v134ForcePile
+                                //         + " force in pile (need 5+) — hold the interrupt",
+                                //     -9999.0f);
                                 action.addReasoning(
                                     "V134 ODIN NESLOOR FLOOR: only " + v134ForcePile
-                                        + " force in pile (need 5+) — hold the interrupt",
-                                    -9999.0f);
-                                logger.warn("V134 ODIN NESLOOR BLOCK: forcePile={} < 5 — block in MOVE phase",
+                                        + " force in pile (need 5+) — hold the interrupt (LADDER VETO)",
+                                    -100000.0f);
+                                logger.warn("V134 ODIN NESLOOR BLOCK: forcePile={} < 5 — block in MOVE phase (-100000)",
                                     v134ForcePile);
                             }
                         }
@@ -1036,50 +1056,57 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Knowledge And Defense (pulls from stacked cards, not Reserve).
             // Excludes character / starship / vehicle pulls (those have their
             // own timing windows in Deploy Phase).
-            if (cardId != null && context.getGameState() != null
-                    && context.getPhase() == Phase.ACTIVATE) {
-                try {
-                    com.gempukku.swccgo.game.state.GameState v97Gs = context.getGameState();
-                    PhysicalCard v97Src = v97Gs.findCardById(Integer.parseInt(cardId));
-                    // V129 (Steve, 2026-05-24): Also exclude Anger, Fear, Aggression —
-                    // light-side equivalent of K&D, same stacked-pile mechanic, pulls
-                    // from stack not Reserve. Symmetric with chosenone V97.
-                    if (v97Src != null && v97Src.getBlueprint() != null
-                            && v97Src.getTitle() != null
-                            // EXCLUDE Knowledge And Defense — stacked-card pull, not Reserve.
-                            && !v97Src.getTitle().contains("Knowledge And Defense")
-                            // V129: EXCLUDE Anger, Fear, Aggression — light-side mirror
-                            && !v97Src.getTitle().contains("Anger, Fear, Aggression")) {
-                        com.gempukku.swccgo.common.CardCategory v97Cat =
-                            v97Src.getBlueprint().getCardCategory();
-                        boolean isStaticSource =
-                            v97Cat == com.gempukku.swccgo.common.CardCategory.EFFECT
-                            || v97Cat == com.gempukku.swccgo.common.CardCategory.EPIC_EVENT
-                            || v97Cat == com.gempukku.swccgo.common.CardCategory.INTERRUPT
-                            || v97Cat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE;
-                        if (isStaticSource) {
-                            // Is this action a Reserve-Deck pull? Check action text
-                            // for canonical pull phrasing.
-                            boolean isPull =
-                                textLower.contains("from reserve deck")
-                                || textLower.contains("[upload]")
-                                || textLower.contains("[download]")
-                                || textLower.contains("take") && textLower.contains("into hand");
-                            if (isPull) {
-                                action.addReasoning(String.format(
-                                    "V97 PULL BEFORE ACTIVATE: '%s' (%s) — fire pull now to preserve max Reserve search pool",
-                                    v97Src.getTitle(), v97Cat), 1500.0f);
-                                logger.warn("V97 PULL BEFORE ACTIVATE: {} from {} → +1500",
-                                    actionText, v97Src.getTitle());
-                            }
-                        }
-                    }
-                } catch (NumberFormatException nfe) {
-                    // not numeric cardId
-                } catch (Exception e) {
-                    logger.debug("V97 error: {}", e.getMessage());
-                }
-            }
+            // V97 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge,
+            // mirrored from rando): the scope predicate (Phase==ACTIVATE, static source
+            // EFFECT/EPIC_EVENT/INTERRUPT/OBJECTIVE, K&D + Anger, Fear, Aggression excluded)
+            // moved VERBATIM into the scorer as the +5500 PULL_BASE_ACTIVATE gate. +1500 was
+            // NOT enough: V168 ALWAYS ACTIVATE (+5000) outvoted the whole pull pile (+2000)
+            // and pulls fired AFTER activation with a shrunken pool (boundary row 1a,
+            // feedback_pull_before_activate). Commented out per feedback_comment_out_old_rules:
+            // if (cardId != null && context.getGameState() != null
+                    // && context.getPhase() == Phase.ACTIVATE) {
+                // try {
+                    // com.gempukku.swccgo.game.state.GameState v97Gs = context.getGameState();
+                    // PhysicalCard v97Src = v97Gs.findCardById(Integer.parseInt(cardId));
+                    // // V129 (Steve, 2026-05-24): Also exclude Anger, Fear, Aggression —
+                    // // light-side equivalent of K&D, same stacked-pile mechanic, pulls
+                    // // from stack not Reserve. Symmetric with chosenone V97.
+                    // if (v97Src != null && v97Src.getBlueprint() != null
+                            // && v97Src.getTitle() != null
+                            // // EXCLUDE Knowledge And Defense — stacked-card pull, not Reserve.
+                            // && !v97Src.getTitle().contains("Knowledge And Defense")
+                            // // V129: EXCLUDE Anger, Fear, Aggression — light-side mirror
+                            // && !v97Src.getTitle().contains("Anger, Fear, Aggression")) {
+                        // com.gempukku.swccgo.common.CardCategory v97Cat =
+                            // v97Src.getBlueprint().getCardCategory();
+                        // boolean isStaticSource =
+                            // v97Cat == com.gempukku.swccgo.common.CardCategory.EFFECT
+                            // || v97Cat == com.gempukku.swccgo.common.CardCategory.EPIC_EVENT
+                            // || v97Cat == com.gempukku.swccgo.common.CardCategory.INTERRUPT
+                            // || v97Cat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE;
+                        // if (isStaticSource) {
+                            // // Is this action a Reserve-Deck pull? Check action text
+                            // // for canonical pull phrasing.
+                            // boolean isPull =
+                                // textLower.contains("from reserve deck")
+                                // || textLower.contains("[upload]")
+                                // || textLower.contains("[download]")
+                                // || textLower.contains("take") && textLower.contains("into hand");
+                            // if (isPull) {
+                                // action.addReasoning(String.format(
+                                    // "V97 PULL BEFORE ACTIVATE: '%s' (%s) — fire pull now to preserve max Reserve search pool",
+                                    // v97Src.getTitle(), v97Cat), 1500.0f);
+                                // logger.warn("V97 PULL BEFORE ACTIVATE: {} from {} → +1500",
+                                    // actionText, v97Src.getTitle());
+                            // }
+                        // }
+                    // }
+                // } catch (NumberFormatException nfe) {
+                    // // not numeric cardId
+                // } catch (Exception e) {
+                    // logger.debug("V97 error: {}", e.getMessage());
+                // }
+            // }
 
             // === V100 (Steve, 2026-05-20): LOCATION PULL/DEPLOY BEFORE CHARACTER DEPLOY ===
             // Per Steve: "If an Effect/Interrupt/Objective/EpicEvent lets us pull
@@ -1094,89 +1121,96 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // during DEPLOY phase and is LOCATION-specific.
             //
             // EXCLUDE Knowledge And Defense (stacked-card pull, not Reserve).
-            if (cardId != null && context.getGameState() != null
-                    && context.getPhase() == Phase.DEPLOY) {
-                try {
-                    com.gempukku.swccgo.game.state.GameState v100Gs = context.getGameState();
-                    PhysicalCard v100Src = v100Gs.findCardById(Integer.parseInt(cardId));
-                    // V129 (Steve, 2026-05-24): Also exclude Anger, Fear, Aggression —
-                    // light-side equivalent of K&D. Symmetric with chosenone V100.
-                    if (v100Src != null && v100Src.getBlueprint() != null
-                            && v100Src.getTitle() != null
-                            && !v100Src.getTitle().contains("Knowledge And Defense")
-                            && !v100Src.getTitle().contains("Anger, Fear, Aggression")) {
-                        com.gempukku.swccgo.common.CardCategory v100Cat =
-                            v100Src.getBlueprint().getCardCategory();
-                        boolean isStaticSource =
-                            v100Cat == com.gempukku.swccgo.common.CardCategory.EFFECT
-                            || v100Cat == com.gempukku.swccgo.common.CardCategory.EPIC_EVENT
-                            || v100Cat == com.gempukku.swccgo.common.CardCategory.INTERRUPT
-                            || v100Cat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE;
-                        if (isStaticSource) {
-                            // Match the SOURCE card's game text for a location-pull pattern.
-                            // Detect by location nouns (docking bay/location/system/site/sector/planet)
-                            // + a Reserve-Deck verb (deploy from reserve / take into hand from reserve).
-                            String v100Gt = v100Src.getBlueprint().getGameText();
-                            String v100GtLower = v100Gt != null
-                                ? v100Gt.toLowerCase(Locale.ROOT) : "";
-                            boolean mentionsReserve = v100GtLower.contains("from reserve deck")
-                                || v100GtLower.contains("from your reserve deck");
-                            boolean mentionsLocationNoun =
-                                v100GtLower.contains("docking bay")
-                                || v100GtLower.contains(" location")
-                                || v100GtLower.contains("location ")
-                                || v100GtLower.contains(" system")
-                                || v100GtLower.contains("system ")
-                                || v100GtLower.contains(" site")
-                                || v100GtLower.contains("site ")
-                                || v100GtLower.contains(" sector")
-                                || v100GtLower.contains("sector ")
-                                || v100GtLower.contains(" planet")
-                                || v100GtLower.contains("planet ");
-                            // Verify this specific action is the pull (not a different
-                            // ability on the same card). Action text must mention deploy/take
-                            // from Reserve.
-                            boolean actionIsPull =
-                                textLower.contains("from reserve deck")
-                                || textLower.contains("[upload]")
-                                || textLower.contains("[download]")
-                                || (textLower.contains("deploy") && textLower.contains("reserve"))
-                                || (textLower.contains("take") && textLower.contains("into hand")
-                                    && textLower.contains("reserve"));
-                            if (mentionsReserve && mentionsLocationNoun && actionIsPull) {
-                                // Check we still have characters/vehicles in hand to deploy
-                                boolean haveCharOrVehicleInHand = false;
-                                java.util.List<com.gempukku.swccgo.game.PhysicalCard> v100Hand =
-                                    context.getHand();
-                                if (v100Hand != null) {
-                                    for (com.gempukku.swccgo.game.PhysicalCard hc : v100Hand) {
-                                        if (hc == null || hc.getBlueprint() == null) continue;
-                                        com.gempukku.swccgo.common.CardCategory hCat =
-                                            hc.getBlueprint().getCardCategory();
-                                        if (hCat == com.gempukku.swccgo.common.CardCategory.CHARACTER
-                                                || hCat == com.gempukku.swccgo.common.CardCategory.VEHICLE) {
-                                            haveCharOrVehicleInHand = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (haveCharOrVehicleInHand) {
-                                    action.addReasoning(String.format(
-                                        "V100 LOCATION PULL BEFORE CHARACTERS: '%s' (%s) — fire location pull"
-                                            + " now so chars can deploy to the new site this phase",
-                                        v100Src.getTitle(), v100Cat), 1500.0f);
-                                    logger.warn("V100 LOCATION PULL FIRST: {} from {} → +1500",
-                                        actionText, v100Src.getTitle());
-                                }
-                            }
-                        }
-                    }
-                } catch (NumberFormatException nfe) {
-                    // not numeric cardId
-                } catch (Exception e) {
-                    logger.debug("V100 error: {}", e.getMessage());
-                }
-            }
+            // V100 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge,
+            // mirrored from rando): its location-noun vocabulary merged into the shared
+            // isLocationPull predicate (V67l list, V192 region), and its chars-or-vehicles-
+            // in-hand check is now the scorer's +25 DEPLOY context bonus (ds-5: one tier
+            // bonus, not stacked — the old standalone +1500 double-counted with V67ai's
+            // tier on every location pull, boundary row 2's +8000 pile).
+            // Commented out per feedback_comment_out_old_rules:
+            // if (cardId != null && context.getGameState() != null
+                    // && context.getPhase() == Phase.DEPLOY) {
+                // try {
+                    // com.gempukku.swccgo.game.state.GameState v100Gs = context.getGameState();
+                    // PhysicalCard v100Src = v100Gs.findCardById(Integer.parseInt(cardId));
+                    // // V129 (Steve, 2026-05-24): Also exclude Anger, Fear, Aggression —
+                    // // light-side equivalent of K&D. Symmetric with chosenone V100.
+                    // if (v100Src != null && v100Src.getBlueprint() != null
+                            // && v100Src.getTitle() != null
+                            // && !v100Src.getTitle().contains("Knowledge And Defense")
+                            // && !v100Src.getTitle().contains("Anger, Fear, Aggression")) {
+                        // com.gempukku.swccgo.common.CardCategory v100Cat =
+                            // v100Src.getBlueprint().getCardCategory();
+                        // boolean isStaticSource =
+                            // v100Cat == com.gempukku.swccgo.common.CardCategory.EFFECT
+                            // || v100Cat == com.gempukku.swccgo.common.CardCategory.EPIC_EVENT
+                            // || v100Cat == com.gempukku.swccgo.common.CardCategory.INTERRUPT
+                            // || v100Cat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE;
+                        // if (isStaticSource) {
+                            // // Match the SOURCE card's game text for a location-pull pattern.
+                            // // Detect by location nouns (docking bay/location/system/site/sector/planet)
+                            // // + a Reserve-Deck verb (deploy from reserve / take into hand from reserve).
+                            // String v100Gt = v100Src.getBlueprint().getGameText();
+                            // String v100GtLower = v100Gt != null
+                                // ? v100Gt.toLowerCase(Locale.ROOT) : "";
+                            // boolean mentionsReserve = v100GtLower.contains("from reserve deck")
+                                // || v100GtLower.contains("from your reserve deck");
+                            // boolean mentionsLocationNoun =
+                                // v100GtLower.contains("docking bay")
+                                // || v100GtLower.contains(" location")
+                                // || v100GtLower.contains("location ")
+                                // || v100GtLower.contains(" system")
+                                // || v100GtLower.contains("system ")
+                                // || v100GtLower.contains(" site")
+                                // || v100GtLower.contains("site ")
+                                // || v100GtLower.contains(" sector")
+                                // || v100GtLower.contains("sector ")
+                                // || v100GtLower.contains(" planet")
+                                // || v100GtLower.contains("planet ");
+                            // // Verify this specific action is the pull (not a different
+                            // // ability on the same card). Action text must mention deploy/take
+                            // // from Reserve.
+                            // boolean actionIsPull =
+                                // textLower.contains("from reserve deck")
+                                // || textLower.contains("[upload]")
+                                // || textLower.contains("[download]")
+                                // || (textLower.contains("deploy") && textLower.contains("reserve"))
+                                // || (textLower.contains("take") && textLower.contains("into hand")
+                                    // && textLower.contains("reserve"));
+                            // if (mentionsReserve && mentionsLocationNoun && actionIsPull) {
+                                // // Check we still have characters/vehicles in hand to deploy
+                                // boolean haveCharOrVehicleInHand = false;
+                                // java.util.List<com.gempukku.swccgo.game.PhysicalCard> v100Hand =
+                                    // context.getHand();
+                                // if (v100Hand != null) {
+                                    // for (com.gempukku.swccgo.game.PhysicalCard hc : v100Hand) {
+                                        // if (hc == null || hc.getBlueprint() == null) continue;
+                                        // com.gempukku.swccgo.common.CardCategory hCat =
+                                            // hc.getBlueprint().getCardCategory();
+                                        // if (hCat == com.gempukku.swccgo.common.CardCategory.CHARACTER
+                                                // || hCat == com.gempukku.swccgo.common.CardCategory.VEHICLE) {
+                                            // haveCharOrVehicleInHand = true;
+                                            // break;
+                                        // }
+                                    // }
+                                // }
+                                // if (haveCharOrVehicleInHand) {
+                                    // action.addReasoning(String.format(
+                                        // "V100 LOCATION PULL BEFORE CHARACTERS: '%s' (%s) — fire location pull"
+                                            // + " now so chars can deploy to the new site this phase",
+                                        // v100Src.getTitle(), v100Cat), 1500.0f);
+                                    // logger.warn("V100 LOCATION PULL FIRST: {} from {} → +1500",
+                                        // actionText, v100Src.getTitle());
+                                // }
+                            // }
+                        // }
+                    // }
+                // } catch (NumberFormatException nfe) {
+                    // // not numeric cardId
+                // } catch (Exception e) {
+                    // logger.debug("V100 error: {}", e.getMessage());
+                // }
+            // }
 
             // V79 (Steve, 2026-05-15): VERGE — DEATH STAR PARSEC / ORBIT MULTIPLE_CHOICE
             // After picking "Move using hyperspeed" the engine fires a
@@ -3432,7 +3466,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
             }
 
             // ========== Take Card Into Hand ==========
-            else if (actionText.contains("Take") && actionText.contains("into hand")) {
+            // V192 (2026-07-06, mirrored from rando): reserve-deck takes now FALL THROUGH
+            // to the merged pull scorer branch below (single owner — the old routing sent
+            // "Take X into hand from Reserve Deck" here, so the pull branch never saw it
+            // and the V29.7 +250 fired instead of the tier table). Non-reserve takes
+            // (V29.7 BOUNCE class, lost/used/force pile) keep routing here.
+            // Old dispatch commented out:
+            // else if (actionText.contains("Take") && actionText.contains("into hand")) {
+            else if (actionText.contains("Take") && actionText.contains("into hand")
+                     && !textLower.contains("reserve deck") && !textLower.contains("[upload]")) {
                 evaluateTakeIntoHand(action, context, actionText, textLower);
             }
 
@@ -4225,14 +4267,38 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     && hpTransit.getObjectiveTitle() != null
                     && hpTransit.getObjectiveTitle().toLowerCase(Locale.ROOT).contains("hidden path");
                 if (onHiddenPath) {
-                    action.addReasoning("V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective!", 9999.0f);
-                    logger.warn("V60 HIDDEN PATH TRANSIT: '{}' — +9999 (CORRECT outward move, unlike landspeed)", actionText);
+                    // V60 UPDATED 2026-07-06 T4.1 (mirrored from rando): +9999 raised to +20000 =
+                    // the MOVE-ladder R4 MANDATORY TRANSIT band, so both transit arms (this
+                    // game-text action and MoveEvaluator's V53b landspeed arms) share one band
+                    // and beat any ME R3 stack by construction instead of by statement order.
+                    // V60 keeps ONLY this Hidden Path transit arm (ruling P3).
+                    // OLD: action.addReasoning("V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective!", 9999.0f);
+                    action.addReasoning("V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)", 20000.0f);
+                    logger.warn("V60 HIDDEN PATH TRANSIT: '{}' — +20000 (R4 band; CORRECT outward move, unlike landspeed)", actionText);
                 } else {
                     action.addReasoning("Move Jedi transit action — tactical mobility", 200.0f);
                 }
             }
 
-            // ========== V60 RESERVE DECK PULLS — always positive, always fire ==========
+            // ========== V192 RESERVE DECK PULLS — merged scorer (was V60 always-fire) ==========
+            // V192 (Steve + council, T4.2 pull-engine merge, 2026-07-06, mirrored from rando):
+            // ONE scorer for every reserve-deck pull. Vetoes run FIRST and short-circuit
+            // (hardBlocked); only then ONE positive line is emitted:
+            //   BASE (+150 deploy-grade; +5500 PULL_BASE_ACTIVATE under the old V97 scope)
+            //   + TYPE TIER (location 1500/1400/1300/1200 by source cat; weapon 600; device 400)
+            //   + CONTEXT (+50 [download]; +25 chars-in-hand during DEPLOY, the V100 rationale)
+            //   clamped 1750 deploy-grade / 7100 activate-grade.
+            // Absorbed tags (all old code commented in place — revert path, do not delete):
+            //   V60-pull baseline, V82 +2500 grant, V95 dead-interrupt (folded as hardBlock),
+            //   V97 +1500, V100 +1500, V116 +100 floor, V67l/V67ai location tiers,
+            //   V67m/V67am weapon/device grants, V29.7 generic PULL FIRST +250.
+            // V60 keeps ONLY its Hidden Path transit arm (branch above). Veto-chain lines keep
+            // their historical V-tags for replay-grep continuity.
+            // MIRROR NOTE: chosenone has NO V61c destiny buffer and NO
+            // DecisionContext.isBattlePlausibleThisTurn(), so the rando P1 stand-down
+            // (activate base drops to deploy-grade at reserve<=3 + battle plausible) is
+            // ABSENT here by design — add it if/when V61c is ever mirrored.
+            // ----------------------------------------------------------------------------
             // Steve's rule (feedback_reserve_deck_pulls.md): Reserve Deck pull effects
             // are FREE VALUE — thin the deck, bring key cards into play. Always try them.
             // Covers [Download] actions (Sai'torr Kal Fas → matching weapon, Visage of
@@ -4243,10 +4309,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
             //   1. DeckOracle confirms target NOT in Reserve (avoids deck reveal)
             //   2. Force can't cover the action cost (defer to next turn)
             //   3. This action has failed 2x in a row (shouldAvoidPulling)
+            // V192 TRIGGER WIDENED 2026-07-06 to the union of the absorbed V97/V95/V116
+            // triggers ("[upload]" + generic take-into-hand). Old trigger commented out:
+            // else if (textLower.contains("[download]")
+            //          || (textLower.contains("from reserve deck") && !textLower.contains("shuffle"))
+            //          || textLower.contains("take an effect into hand")
+            //          || textLower.contains("take a character into hand")) {
             else if (textLower.contains("[download]")
                      || (textLower.contains("from reserve deck") && !textLower.contains("shuffle"))
-                     || textLower.contains("take an effect into hand")
-                     || textLower.contains("take a character into hand")) {
+                     || textLower.contains("[upload]")
+                     || (textLower.contains("take") && textLower.contains("into hand"))) {
 
                 // === V82 (Steve, 2026-05-16): EXPLICIT SOURCE-CARD SITE-PULL TRIGGER ===
                 // Catches the case where the action text is GENERIC ("Deploy card from
@@ -4548,21 +4620,92 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     } catch (Exception e) { logger.debug("V67ac error: {}", e.getMessage()); }
                 }
 
+                // === V95 (Steve, 2026-05-20; folded into the V192 veto chain 2026-07-06):
+                // SAVE DEAD INTERRUPTS WHEN RESERVES >= 15 ===
+                // Moved from the standalone top-of-loop block (commented out near line ~430)
+                // into this chain as a hardBlock — the old ADDITIVE placement let the pull
+                // pile outvote the -2000 and the dead pull fired (boundary row 5). Mirrored
+                // from rando; logic verbatim from the old block.
+                if (!hardBlocked && cardId != null && pullGs != null) {
+                    try {
+                        PhysicalCard v95Src = pullGs.findCardById(Integer.parseInt(cardId));
+                        if (v95Src != null && v95Src.getBlueprint() != null
+                                && v95Src.getBlueprint().getCardCategory()
+                                    == com.gempukku.swccgo.common.CardCategory.INTERRUPT) {
+                            String v95Gt = v95Src.getBlueprint().getGameText();
+                            if (v95Gt != null) {
+                                java.util.List<String> v95Targets =
+                                    com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                        .parseSourceCardPullTargets(v95Gt);
+                                if (!v95Targets.isEmpty()) {
+                                    java.util.Collection<PhysicalCard> v95Table = pullGs.getAllPermanentCards();
+                                    boolean v95AllOnTable = true;
+                                    for (String t : v95Targets) {
+                                        String tl = t.toLowerCase(java.util.Locale.ROOT);
+                                        boolean found = false;
+                                        for (PhysicalCard tc : v95Table) {
+                                            if (tc == null || tc.getTitle() == null) continue;
+                                            if (tc.getTitle().toLowerCase(java.util.Locale.ROOT).contains(tl)) {
+                                                found = true; break;
+                                            }
+                                        }
+                                        if (!found) { v95AllOnTable = false; break; }
+                                    }
+                                    if (v95AllOnTable) {
+                                        String v95Pid = context.getPlayerId();
+                                        int v95ReserveForce = pullGs.getForcePileSize(v95Pid)
+                                            + (pullGs.getUsedPile(v95Pid) != null ? pullGs.getUsedPile(v95Pid).size() : 0)
+                                            + pullGs.getReserveDeckSize(v95Pid);
+                                        if (v95ReserveForce >= 15) {
+                                            action.addReasoning(String.format(
+                                                "V95 DEAD INTERRUPT SAVE: '%s' pull targets %s all on table, reserves=%d — save for force-loss fodder",
+                                                v95Src.getTitle(), v95Targets, v95ReserveForce), -2000.0f);
+                                            logger.warn("V95 DEAD INTERRUPT: blocking {} (targets on table, reserves {}) — hardBlock in V192 chain",
+                                                v95Src.getTitle(), v95ReserveForce);
+                                            hardBlocked = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (NumberFormatException nfe) {
+                        // not numeric cardId
+                    } catch (Exception e) {
+                        logger.debug("V95 error: {}", e.getMessage());
+                    }
+                }
+
                 if (!hardBlocked) {
-                    // Free download actions get higher baseline than force-cost pulls
+                    // ═══ V192 PULL SCORER (Steve + council, 2026-07-06, mirrored from rando) ═══
+                    // All positives below feed ONE addReasoning at the end of this block
+                    // (see "V192 SINGLE EMIT"). Detection predicates (V67l keywords, V82
+                    // regex, V67m/V67am keywords, V131 deck-aware gate) survive as inputs;
+                    // their old standalone grants are commented out in place.
                     boolean isFreeDownload = textLower.contains("[download]");
-                    float baseline = isFreeDownload ? 250.0f : 150.0f;
-                    action.addReasoning("V60 RESERVE PULL: '" + actionText
-                        + "' — thin deck, bring value into play!", baseline);
-                    logger.warn("V60 RESERVE PULL: '{}' scored +{} — pull every turn!",
-                        actionText, (int)baseline);
+                    float v192Tier = 0.0f;
+                    String v192TierDesc = "none";
+                    boolean v192IsLocationTier = false;
+                    // V60 baseline commented out 2026-07-06 (absorbed into V192 base —
+                    // feedback_comment_out_old_rules):
+                    // float baseline = isFreeDownload ? 250.0f : 150.0f;
+                    // action.addReasoning("V60 RESERVE PULL: '" + actionText
+                    //     + "' — thin deck, bring value into play!", baseline);
+                    // logger.warn("V60 RESERVE PULL: '{}' scored +{} — pull every turn!",
+                    //     actionText, (int)baseline);
 
                     // === V82 EXPLICIT SOURCE-CARD SITE-PULL TRIGGER ===
                     // V82 UPDATED 2026-07-06: moved here from ABOVE the V60 guards so the
                     // +2500 respects hardBlocked (Guard 1 reserve<=2 / Guard 2 fail-stop /
                     // Guard 3 target-missing / V66 / V67h / V67ac). Full rationale lives in
-                    // the original V82/V82.1/V82.2 comment block above the guards. Logic
-                    // unchanged, only the placement (mirrored from rando).
+                    // the original V82/V82.1/V82.2 comment block above the guards.
+                    // V82 UPDATED AGAIN 2026-07-06 (V192 merge, mirrored from rando): the
+                    // standalone +2500 grant is ABSORBED — the regex now only feeds the shared
+                    // isLocationPull predicate (V67l keyword list ∪ THIS regex ∪ V100's
+                    // "planet"), and the LOCATION tier value comes from the single V192 tier
+                    // table below. Old grant commented out.
+                    boolean v192LocByV82 = false;
+                    String v192V82Noun = null;
+                    String v192V82SrcTitle = null;
                     {
                         GameState v82Gs = context.getGameState();
                         if (cardId != null && v82Gs != null) {
@@ -4572,19 +4715,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     String srcGt = srcCard.getBlueprint().getGameText();
                                     if (srcGt != null) {
                                         // V82.2 (Steve, 2026-05-16): added "docking bay" and "system|sector"
-                                        // — all are LOCATION-type pulls and deserve the +2500 boost.
+                                        // — all are LOCATION-type pulls and deserve the LOCATION tier.
                                         // Begin Landing Your Troops pulls Episode I docking bays.
                                         java.util.regex.Matcher v82m = java.util.regex.Pattern.compile(
                                             "\\b(site|location|battleground|docking\\s+bay|system|sector)\\b[^.;]*?\\bfrom\\s+reserve",
                                             java.util.regex.Pattern.CASE_INSENSITIVE).matcher(srcGt);
                                         if (v82m.find()) {
-                                            String matched = v82m.group(1);
-                                            action.addReasoning(
-                                                "V82 SITE PULL: source '" + srcCard.getTitle()
-                                                + "' pulls a " + matched + " from Reserve — must take this every turn!",
-                                                2500.0f);
-                                            logger.warn("V82 SITE PULL: '{}' (src '{}', matched '{}') → +2500",
-                                                actionText, srcCard.getTitle(), matched);
+                                            v192LocByV82 = true;
+                                            v192V82Noun = v82m.group(1);
+                                            v192V82SrcTitle = srcCard.getTitle();
+                                            logger.info("V82 SITE PULL (V192 predicate): '{}' (src '{}', matched '{}') — feeds LOCATION tier",
+                                                actionText, srcCard.getTitle(), v192V82Noun);
+                                            // Old +2500 grant commented out 2026-07-06 (V192 merge):
+                                            // action.addReasoning(
+                                            //     "V82 SITE PULL: source '" + srcCard.getTitle()
+                                            //     + "' pulls a " + matched + " from Reserve — must take this every turn!",
+                                            //     2500.0f);
+                                            // logger.warn("V82 SITE PULL: '{}' (src '{}', matched '{}') → +2500",
+                                            //     actionText, srcCard.getTitle(), matched);
                                         }
                                     }
                                 }
@@ -4601,8 +4749,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     // that should be a universal positive points move. He should do this
                     // as the first part of his deploy phase."
                     // Detection: action text or source-card game text contains a location
-                    // keyword in its target list. Bonus is +1500 — dominates all other
-                    // scoring so Rando ALWAYS fires location pulls before other deploys.
+                    // keyword in its target list. V192 (2026-07-06): this detection is now
+                    // the shared isLocationPull predicate (V67l list ∪ V82 regex ∪ V100's
+                    // "planet") feeding the single LOCATION tier — no standalone bonus.
                     boolean v67lAddsLocation = false;
                     String v67lReason = null;
                     String[] v67lLocationKeywords = new String[] {
@@ -4612,7 +4761,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         "mustafar", "malachor", "mapuzo", "jabiim", "coruscant",
                         "kashyyyk", "kessel", "kamino", "geonosis", "alderaan",
                         "docking bay", "spaceport", "city", "palace", "temple",
-                        "safehouse", "corridor", "village", "outpost"
+                        "safehouse", "corridor", "village", "outpost",
+                        // V192 (2026-07-06): union with V82 regex nouns + V100 vocabulary —
+                        // "sector" (V82.2) and "planet" (V100) were detectable by the absorbed
+                        // rules but missing from this list.
+                        "sector", "planet"
                     };
                     for (String kw : v67lLocationKeywords) {
                         if (textLower.contains(kw)) {
@@ -4644,6 +4797,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
                             }
                         } catch (Exception e) { /* ignore */ }
+                    }
+                    // V192 (2026-07-06): merge the V82 regex hit into the shared predicate so
+                    // V131's deck-aware gate covers it too (before the merge, a V82-only match
+                    // bypassed V131 entirely — the +2500 fired even on satisfied targets).
+                    if (!v67lAddsLocation && v192LocByV82) {
+                        v67lAddsLocation = true;
+                        v67lReason = "V82 source-text regex: '" + v192V82SrcTitle
+                            + "' pulls a " + v192V82Noun + " from Reserve";
                     }
                     // === V131 (Steve, 2026-05-25): DECK-AWARE PULL DETECTION (three-tier) ===
                     //
@@ -4746,28 +4907,43 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             -9999.0f);
                         logger.warn("V131 DECK-AWARE HARD BLOCK: '{}' → -9999 ({})",
                             actionText, v131Reason);
-                        v131GateOpen = false;  // also suppress V67ai
+                        v131GateOpen = false;  // also suppress the LOCATION tier
+                        // V192 (2026-07-06): joins the veto chain — structurally suppresses
+                        // ALL scorer positives, not just the location tier.
+                        hardBlocked = true;
                     }
                     if (v131DowngradeBonus) {
-                        // Subtract enough to neutralize V67ai's bonus (max +2000).
-                        action.addReasoning(
-                            "V131 DECK-AWARE SOFT DOWNGRADE: " + v131Reason
-                                + " — neutralize LOCATION bonus",
-                            -2000.0f);
-                        logger.info("V131 DECK-AWARE DOWNGRADE: '{}' → -2000 ({})",
+                        // V131 Tier 2 RE-WIRED 2026-07-06 (V192 merge, mirrored from rando):
+                        // the old additive -2000 was DROWNED by the +8000 pile (boundary row
+                        // 3: downgraded pull still scored +5200..+6000 and burned the
+                        // once-per-turn download on a satisfied target). Now the downgrade
+                        // flag makes the V192 SINGLE EMIT below suppress ALL positives and
+                        // emit -200 instead — the pull loses to Pass by arithmetic, not by a
+                        // constant race. Old additive penalty commented out
+                        // (feedback_comment_out_old_rules):
+                        // action.addReasoning(
+                        //     "V131 DECK-AWARE SOFT DOWNGRADE: " + v131Reason
+                        //         + " — neutralize LOCATION bonus",
+                        //     -2000.0f);
+                        logger.info("V131 DECK-AWARE DOWNGRADE (V192 structural): '{}' → positives suppressed ({})",
                             actionText, v131Reason);
                     }
-                    if (v131GateOpen) {
-                        // V67ai (Steve, 2026-05-07): TIERED LOCATION DEPLOY ORDER.
+                    if (v131GateOpen && !hardBlocked) {
+                        // V67ai (Steve, 2026-05-07): TIERED LOCATION DEPLOY ORDER — ABSORBED
+                        // into the V192 tier table 2026-07-06 (T4.2 pull-engine merge,
+                        // mirrored from rando).
                         //
                         // Steve's rule: 'Rando should never under any circumstances avoid
-                        // deploying locations.' Location-pull cards have a strict priority
-                        // order so the cheapest source goes first and we keep the most
-                        // future flexibility:
-                        //   Tier 1: Objective pull         → +2000  (free, mandatory effect)
-                        //   Tier 2: Effect-card pull       → +1800  (already on table, low cost)
-                        //   Tier 3: Interrupt pull         → +1600  (one-shot, save for after objective/effect)
-                        //   Tier 4: Hand deploy            → +1400  (DeployEvaluator handles this)
+                        // deploying locations.' Location-pull cards keep a strict priority
+                        // order (Objective → Effect → Interrupt → Hand), but the values are
+                        // RE-SIZED so the deploy-window pull total (base 150 + tier + ctx <=
+                        // 1750) stays BELOW the hand-location anchor 1950 (DE base 50 + V162
+                        // +500 + V67ai Tier4 HAND +1400, untouched in DeployEvaluator — the
+                        // V179 lesson: never let a download outrank a held location).
+                        //   Tier 1: Objective pull   → +1500 (was +2000)
+                        //   Tier 2: Effect/Location  → +1400 (was +1800)
+                        //   Tier 3: Interrupt pull   → +1300 (was +1600)
+                        //   unknown source           → +1200 (was +1500, legacy V67l value)
                         //
                         // Determine source category from the source card's blueprint.
                         int v67aiTier = 0;
@@ -4792,18 +4968,30 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
                             } catch (Exception e) { /* fall through to default */ }
                         }
-                        float v67aiBonus;
+                        // Old V67ai magnitudes commented out 2026-07-06 (V192 re-size):
+                        // float v67aiBonus;
+                        // switch (v67aiTier) {
+                        //     case 1: v67aiBonus = 2000.0f; break;
+                        //     case 2: v67aiBonus = 1800.0f; break;
+                        //     case 3: v67aiBonus = 1600.0f; break;
+                        //     default: v67aiBonus = 1500.0f; break;  // legacy V67l score for unknown sources
+                        // }
                         switch (v67aiTier) {
-                            case 1: v67aiBonus = 2000.0f; break;
-                            case 2: v67aiBonus = 1800.0f; break;
-                            case 3: v67aiBonus = 1600.0f; break;
-                            default: v67aiBonus = 1500.0f; break;  // legacy V67l score for unknown sources
+                            case 1: v192Tier = 1500.0f; break;
+                            case 2: v192Tier = 1400.0f; break;
+                            case 3: v192Tier = 1300.0f; break;
+                            default: v192Tier = 1200.0f; break;
                         }
-                        action.addReasoning(
-                            String.format("V67ai LOCATION DEPLOY ORDER [Tier %d %s]: %s — ALWAYS pull locations FIRST, in order: Objective → Effect → Interrupt → Hand!",
-                                v67aiTier, v67aiTierName, v67lReason), v67aiBonus);
-                        logger.warn("V67ai LOCATION TIER {} [{}]: '{}' → +{} ({})",
-                            v67aiTier, v67aiTierName, actionText, (int) v67aiBonus, v67lReason);
+                        v192IsLocationTier = true;
+                        v192TierDesc = String.format("LOCATION Tier %d %s — %s",
+                            v67aiTier, v67aiTierName, v67lReason);
+                        // Old standalone emit commented out 2026-07-06 (absorbed into the
+                        // single V192 line below):
+                        // action.addReasoning(
+                        //     String.format("V67ai LOCATION DEPLOY ORDER [Tier %d %s]: %s — ALWAYS pull locations FIRST, in order: Objective → Effect → Interrupt → Hand!",
+                        //         v67aiTier, v67aiTierName, v67lReason), v67aiBonus);
+                        // logger.warn("V67ai LOCATION TIER {} [{}]: '{}' → +{} ({})",
+                        //     v67aiTier, v67aiTierName, actionText, (int) v67aiBonus, v67lReason);
                     }
 
                     // === V67m UNIVERSAL WEAPON-PULL PRIORITY ===
@@ -4927,24 +5115,32 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 v67arArmed), -9999.0f);
                             logger.warn("V67ar UNIVERSAL BLOCK (pull): '{}' — all {} chars armed, no 2nd weapon allowed",
                                 actionText, v67arArmed);
+                            hardBlocked = true;  // V192 (2026-07-06): joins the veto chain
                         } else if (v67arUnarmed == 0) {
                             action.addReasoning(
                                 "V67ao ORDER GATE: weapon pull blocked — no Rando character on table to hold the weapon. Deploy a character first!",
                                 -9999.0f);
                             logger.warn("V67ao ORDER GATE: weapon pull '{}' blocked (no chars on table)",
                                 actionText);
+                            hardBlocked = true;  // V192 (2026-07-06): joins the veto chain
                         } else if (v149IsLightsaberPull && v149AbilityCapableUnarmed == 0) {
                             action.addReasoning(
                                 "V149 NO LIGHTSABER WIELDER: no unarmed [Warrior] ability-4+ character on table — don't pull a lightsaber nobody can wield",
                                 -2000.0f);
                             logger.warn("V149 NO LIGHTSABER WIELDER (pull): '{}' — 0 unarmed [Warrior] ability-4+ chars → -2000",
                                 actionText);
+                            hardBlocked = true;  // V192 (2026-07-06): joins the veto chain
                         } else {
-                            action.addReasoning(String.format(
-                                "V67am WEAPON PULL (universal, tier 1): %d unarmed character(s) on table — pull weapon from reserve!",
-                                v67arUnarmed), 600.0f);
-                            logger.warn("V67am WEAPON PULL: '{}' adds weapon ({}) → +600 ({} unarmed targets)",
-                                actionText, v67mReason, v67arUnarmed);
+                            // V67am +600 grant ABSORBED into the V192 tier table 2026-07-06
+                            // (single emit below; value unchanged, post-gates as before):
+                            // action.addReasoning(String.format(
+                            //     "V67am WEAPON PULL (universal, tier 1): %d unarmed character(s) on table — pull weapon from reserve!",
+                            //     v67arUnarmed), 600.0f);
+                            // logger.warn("V67am WEAPON PULL: '{}' adds weapon ({}) → +600 ({} unarmed targets)",
+                            //     actionText, v67mReason, v67arUnarmed);
+                            v192Tier = 600.0f;
+                            v192TierDesc = String.format("WEAPON (V67am value, %d unarmed target(s) — %s)",
+                                v67arUnarmed, v67mReason);
                         }
                     }
 
@@ -5033,18 +5229,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 v67arDevArmed), -9999.0f);
                             logger.warn("V67ar UNIVERSAL BLOCK (device pull): '{}' — all {} chars have devices",
                                 actionText, v67arDevArmed);
+                            hardBlocked = true;  // V192 (2026-07-06): joins the veto chain
                         } else if (v67arDevUnarmed == 0) {
                             action.addReasoning(
                                 "V67ao ORDER GATE: device pull blocked — no Rando character on table to host the device. Deploy a character first!",
                                 -9999.0f);
                             logger.warn("V67ao ORDER GATE: device pull '{}' blocked (no chars on table)",
                                 actionText);
+                            hardBlocked = true;  // V192 (2026-07-06): joins the veto chain
                         } else {
-                            action.addReasoning(
-                                "V67am DEVICE PULL (universal, tier 3): pull device from reserve via card text — defensive support, fires after weapons.",
-                                400.0f);
-                            logger.warn("V67am DEVICE PULL: '{}' adds device ({}) → +400",
-                                actionText, v67amDeviceReason);
+                            // V67am DEVICE +400 grant ABSORBED into the V192 tier table
+                            // 2026-07-06 (single emit below; value unchanged, post-gates):
+                            // action.addReasoning(
+                            //     "V67am DEVICE PULL (universal, tier 3): pull device from reserve via card text — defensive support, fires after weapons.",
+                            //     400.0f);
+                            // logger.warn("V67am DEVICE PULL: '{}' adds device ({}) → +400",
+                            //     actionText, v67amDeviceReason);
+                            v192Tier = 400.0f;
+                            v192TierDesc = "DEVICE (V67am value — " + v67amDeviceReason + ")";
                         }
                     }
 
@@ -5057,7 +5259,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     //
                     // Skip if the matched character is already on table — repeated key-char
                     // pulls would be wasteful (e.g., uniqueness blocks second Vader).
-                    if (cardId != null && pullGs != null && context.getObjectiveAnalyzer() != null
+                    // V192 (2026-07-06): now also gated on !hardBlocked (a weapon-gate or V131
+                    // veto suppresses this positive too) and !v131DowngradeBonus (a downgraded
+                    // pull must lose to Pass — no +800 resurrection).
+                    if (!hardBlocked && !v131DowngradeBonus
+                            && cardId != null && pullGs != null && context.getObjectiveAnalyzer() != null
                             && context.getObjectiveAnalyzer().isAnalyzed()) {
                         try {
                             PhysicalCard srcPc = pullGs.findCardById(Integer.parseInt(cardId));
@@ -5112,11 +5318,118 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
 
                     // V67ao: Per Steve, no soft penalties for character pulls when locations
-                    // are in hand. The V67ai location tier bonuses (+1400 to +2000) already
-                    // outscore character pulls (V67ak +800, others lower), so Combined
-                    // Evaluator picks locations first naturally. The hard-block ordering
-                    // gates only apply where the action would actually FAIL (weapon/device
-                    // pull with no character host — see V67ao gates inside V67am blocks).
+                    // are in hand. The V192 location tier (+1200 to +1500) already outscores
+                    // character pulls (V67ak +800, others lower), so Combined Evaluator picks
+                    // locations first naturally. The hard-block ordering gates only apply
+                    // where the action would actually FAIL (weapon/device pull with no
+                    // character host — see V67ao gates inside V67am blocks).
+
+                    // ═══ V192 SINGLE EMIT (Steve + council, 2026-07-06, mirrored from rando) ═══
+                    // Exactly ONE positive pull-scorer line per action (acceptance test:
+                    // grep per actionId finds one). Absorbs V60-pull/V82/V95/V97/V100/V116/
+                    // V67l/V67ai/V67am/V29.7-generic.
+                    // MIRROR NOTE: the rando P1 stand-down (activate base drops to deploy
+                    // grade at reserve<=3 + isBattlePlausibleThisTurn) is ABSENT here —
+                    // chosenone has no V61c destiny buffer and no shared battle-intent
+                    // predicate. Add it if/when V61c is mirrored.
+                    if (hardBlocked) {
+                        // A veto fired inside the scorer (V131 hard block / weapon-holder
+                        // gates) — its own negative line is already on the action; emit no
+                        // positives (structural suppression, boundary row 4: zero
+                        // resurrection surface).
+                        logger.info("V192 PULL SCORER: '{}' veto'd inside scorer — no positive emitted", actionText);
+                    } else if (v131DowngradeBonus) {
+                        // V131 Tier 2 structural downgrade: positives suppressed + flat -200
+                        // so the downgraded pull loses to Pass (~+6) by arithmetic
+                        // (boundary row 3; also < BAD_ACTION_THRESHOLD -100 → bucket-skipped).
+                        action.addReasoning(
+                            "V192 PULL SCORER: V131 already-satisfied → positives suppressed ("
+                                + v131Reason + ")", -200.0f);
+                        logger.warn("V192 PULL SCORER: V131 already-satisfied → positives suppressed (-200) on '{}' ({})",
+                            actionText, v131Reason);
+                    } else {
+                        // BASE: +150 deploy-grade, or +5500 PULL_BASE_ACTIVATE when the old
+                        // V97 scope holds: Phase==ACTIVATE, static source (EFFECT/EPIC_EVENT/
+                        // INTERRUPT/OBJECTIVE), title not Knowledge And Defense and not
+                        // Anger, Fear, Aggression (both pull from stacked cards, not Reserve
+                        // — V129). 5500 chains to V168 ALWAYS ACTIVATE +5000 (ACTIVATE region
+                        // above) and MUST stay strictly above it so pulls fire BEFORE
+                        // activation (feedback_pull_before_activate; boundary row 1a: the old
+                        // pile totalled +2000 and LOST to V168 by 3000).
+                        float v192Base = 150.0f;
+                        boolean v192ActivateBase = false;
+                        if (context.getPhase() == Phase.ACTIVATE && cardId != null && pullGs != null) {
+                            try {
+                                PhysicalCard v192Src = pullGs.findCardById(Integer.parseInt(cardId));
+                                if (v192Src != null && v192Src.getBlueprint() != null
+                                        && v192Src.getTitle() != null
+                                        && !v192Src.getTitle().contains("Knowledge And Defense")
+                                        && !v192Src.getTitle().contains("Anger, Fear, Aggression")) {
+                                    com.gempukku.swccgo.common.CardCategory v192Cat =
+                                        v192Src.getBlueprint().getCardCategory();
+                                    boolean v192StaticSource =
+                                        v192Cat == com.gempukku.swccgo.common.CardCategory.EFFECT
+                                        || v192Cat == com.gempukku.swccgo.common.CardCategory.EPIC_EVENT
+                                        || v192Cat == com.gempukku.swccgo.common.CardCategory.INTERRUPT
+                                        || v192Cat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE;
+                                    if (v192StaticSource) {
+                                        v192Base = 5500.0f;
+                                        v192ActivateBase = true;
+                                    }
+                                }
+                            } catch (NumberFormatException nfe) { /* not numeric cardId */ }
+                            catch (Exception e) { logger.debug("V192 base error: {}", e.getMessage()); }
+                        }
+                        // CONTEXT: [download]/free +50; chars-or-vehicles-in-hand during
+                        // DEPLOY +25 on location pulls (the old V100 rationale: land the
+                        // location first so the chars can deploy to it this phase).
+                        float v192Ctx = 0.0f;
+                        StringBuilder v192CtxDesc = new StringBuilder();
+                        if (isFreeDownload) {
+                            v192Ctx += 50.0f;
+                            v192CtxDesc.append("+50 [download]");
+                        }
+                        if (v192IsLocationTier && context.getPhase() == Phase.DEPLOY) {
+                            boolean v192CharsInHand = false;
+                            java.util.List<PhysicalCard> v192Hand = context.getHand();
+                            if (v192Hand != null) {
+                                for (PhysicalCard hc : v192Hand) {
+                                    if (hc == null || hc.getBlueprint() == null) continue;
+                                    CardCategory v192HCat = hc.getBlueprint().getCardCategory();
+                                    if (v192HCat == CardCategory.CHARACTER
+                                            || v192HCat == CardCategory.VEHICLE) {
+                                        v192CharsInHand = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (v192CharsInHand) {
+                                v192Ctx += 25.0f;
+                                if (v192CtxDesc.length() > 0) v192CtxDesc.append(", ");
+                                v192CtxDesc.append("+25 chars-in-hand (V100)");
+                            }
+                        }
+                        // CLAMP: 1750 deploy-grade / 7100 activate-grade. Safety rail only —
+                        // the tier arithmetic tops out at 1725 / 7050. A CLAMP log line means
+                        // someone fattened a constant without redoing the boundary math
+                        // (deploy anchor: hand-location 1950 MUST keep winning).
+                        float v192Total = v192Base + v192Tier + v192Ctx;
+                        float v192Clamp = v192ActivateBase ? 7100.0f : 1750.0f;
+                        if (v192Total > v192Clamp) {
+                            logger.warn("V192 CLAMP: '{}' total {} > {} — clamped (constants need rebalancing)",
+                                actionText, (int) v192Total, (int) v192Clamp);
+                            v192Total = v192Clamp;
+                        }
+                        action.addReasoning(String.format(
+                            "V192 PULL SCORER (%s): base %d + tier %d [%s] + ctx %d = %d [absorbs V60-pull/V82/V95/V97/V100/V116/V67l/V67ai/V67am/V29.7]",
+                            v192ActivateBase ? "ACTIVATE" : "DEPLOY-GRADE",
+                            (int) v192Base, (int) v192Tier, v192TierDesc, (int) v192Ctx, (int) v192Total),
+                            v192Total);
+                        logger.warn("V192 PULL SCORER ({}): base {} + tier {} [{}] + ctx {} ({}) = {} on '{}'",
+                            v192ActivateBase ? "ACTIVATE" : "DEPLOY-GRADE",
+                            (int) v192Base, (int) v192Tier, v192TierDesc, (int) v192Ctx,
+                            v192CtxDesc.length() > 0 ? v192CtxDesc : "-", (int) v192Total, actionText);
+                    }
                 }
             }
 
@@ -5702,7 +6015,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // from effects like Endor Shield, Mobilization Points, etc.
             // These should ALWAYS fire before locations (+200) and characters.
             // Getting cards into hand first = better deploy decisions.
-            action.addReasoning("V29.7 PULL FIRST: Get cards into hand before deploying!", 250.0f);
+            // V192 (2026-07-06, mirrored from rando): generic +250 ABSORBED into the V192
+            // pull scorer base — "Reserve Deck" takes now route to the PULL-ENGINE branch
+            // (dispatch gate), so this arm only sees leftover "from Reserve" phrasings
+            // without "Deck". Grant commented out (feedback_comment_out_old_rules); the
+            // TDIGWATT-specific admiral/general +250/+300 branch earlier in the chain is
+            // untouched.
+            // action.addReasoning("V29.7 PULL FIRST: Get cards into hand before deploying!", 250.0f);
+            logger.info("V29.7 PULL FIRST (absorbed by V192): '{}' — no standalone +250", actionText);
         } else if (isFromDeck && textLower.contains("from lost pile")) {
             // V63 LOST PILE GUARD: "take a character into hand from Lost Pile"
             // (Jedi Levitation etc.) needs a matching card in Lost Pile. If there
