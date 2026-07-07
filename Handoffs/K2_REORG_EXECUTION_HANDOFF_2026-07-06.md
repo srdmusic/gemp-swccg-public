@@ -177,11 +177,12 @@ Mechanical rules per extraction: carry every early-return guard above the extrac
 | T0.4 KIND column + version-table regen | ✅/⚠ 2026-07-06 | KIND DONE in manifest (113 VETO / 78 ORDERING / 149 BANDED + bands). Version-table full regen DEFERRED: 07-01 xlsx now frozen-history; today's 10 in-place updates carried by changelogs + audit col M. Regen when convenient |
 | T0.5 top-N logging | ✅ 2026-07-06 | V191 TOPN live (`b16dd8899`), logs from copies, both brains incl. fallback marker. Smoke game: 608/610 decisions logged. CAVEAT: shipped in the same deploy as behavior fixes, so no pure A/B neutrality soak exists — instrumentation code review + zero-exception game stand in |
 | T0.6 jar↔tree parity | ✅ 2026-07-06 | work-verifier: jar 14s post-commit, JVM restarted onto it, 6/6 + bonus mirror markers, HTTP 200 |
-| T1.1–T1.3 hub banners | ☐ | |
-| T2 sections (8) | ☐ | |
-| T3 sections (6, fixed order) | ☐ | |
-| T4.1 move ladder | ☐ | |
-| T4.2 pull-engine merge | ☐ | |
+| T1.1–T1.3 hub banners | ✅ 2026-07-06 | `aa22a5058`: 4 hub banners both bots, V67al lying comments fixed, CombinedEvaluator/keyword-brain ownership stamps (FROZEN until T4 note), 0 non-comment lines changed |
+| T2 sections (8) | ✅ 2026-07-06 | Banner layer in `aa22a5058`; helpers in `4c0b2919f`: maintenance family bug fix (isInPlay + maintain-cost basis, all 5 detections + v173WaveProjection) + ForceReserveService cache (MAINT CACHE MISMATCH soak assert) + ShieldFacts.occupiesBothTheaters unification. T2 HANDSHAKE honored: winnability predicate = common/MovePredicates, no fork |
+| T3 sections (6, fixed order) | ✅/⚠ 2026-07-06 | Banner + manifest layer complete (sections are logical homes per plan trap: no physical regrouping). PLAYBOOKS physical cross-ref pass = the manifest's cross_refs column; deeper per-file carves deliberately NOT done (plan's own file-motion warning) |
+| T4.1 move ladder | ✅ 2026-07-06 | `378f4b6fe`: rank bands R1-R4 + veto matrix, council sound-with-changes, all 4 rulings applied, boundary tables committed pre-build (`e84b1b788`), acceptance rows re-verified vs final code. AWAITING deploy + live soak |
+| T4.2 pull-engine merge | ✅ 2026-07-06 | `34b47ba50`: V192 hub (new tag, hub precedent), vetoes-first, ds-2 double-count killed, V61c-shared stand-down, corridor audits in changelog. AWAITING deploy + live soak |
+| DEPLOY #2 + soak | ☐ | Everything above is committed but NOT yet in the running jar. reload-ai + jar byte-verify + 2 self-play soaks (watch: LADDER BANDS OK once, zero LADDER-band inversions, V192 lines, zero MAINT CACHE MISMATCH) + work-verifier + Steve's test game |
 
 ## 12. Backlog after the ladder (do NOT bundle into reorg steps)
 
