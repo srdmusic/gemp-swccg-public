@@ -1587,6 +1587,7 @@
     },
     {
       "label": "Old Allies",
+      "loaderEnabled": true,
       "blueprintIds": [
         "204_32",
         "204_32_BACK"
@@ -1595,7 +1596,9 @@
         "old allies",
         "we need your help"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "jakku"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,
@@ -1916,6 +1919,7 @@
     },
     {
       "label": "They Have No Idea We're Coming",
+      "loaderEnabled": true,
       "blueprintIds": [
         "209_29",
         "209_29_BACK"
@@ -1924,7 +1928,9 @@
         "they have no idea we're coming",
         "until we win, or the chances are spent"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "scarif"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,

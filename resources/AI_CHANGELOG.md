@@ -4,6 +4,14 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-08 — ObjectivePlaybook: ENABLE Scarif (209_29) + Jakku (204_32) — source-verified fixed-planet (resolves a split disagreement)
+- Two more fixed-planet enables. These were flagged borderline (Codex "hold/count-refine"), so I read the actual flip clauses to decide: BOTH are pure single-planet control/occupy.
+  - They Have No Idea We're Coming (209_29, LIGHT) → `["scarif"]` — "Flip if you control two Scarif locations." Codex's caveat was code-organization (future dark-Scarif On The Verge), NOT runtime: `isObjectiveRelevantLocation` is per-active-objective, so no clobber.
+  - Old Allies (204_32, LIGHT) → `["jakku"]` — "Flip if you control Jakku system and occupy two Jakku battleground sites (or vice versa)." Codex's "Resistance/Rey alt" is deploy-SETUP (Niima Shipyard/Falcon), not in the flip condition; the flip is pure Jakku control/occupy.
+- Boundary math: same uniform pattern — the "control N <planet>" flip text defeats the generic parser, so fragment adds the standard +200/site relevance on that planet only. Enabled set now 10 objectives.
+- Verified: compiles clean both bots (MVN_EXIT=0). Codex verify requested (note the source-resolved disagreement on 204_32).
+- Revert: set `loaderEnabled:false` on either profile.
+
 ## 2026-07-08 — ObjectivePlaybook: ENABLE 4 more fixed-planet location objectives (Massassi/Zero Hour/Imperial Entanglements/Twin Suns)
 - Batch of 4, same validated pattern as Dantooine/Ralltiir (locationFragments → +200 relevance + over-stack-cap waiver → Rando contests the objective's planet). Enabled only after DOUBLE validation: Codex's fixed-vs-dynamic split doc (Handoffs/OBJECTIVE_BUCKET1_FIXED_DYNAMIC_SPLIT_2026-07-08.md) AND an independent subagent classification INTERSECTED on these exact 4 as "fixed fragment-first, enable-now". Held the caveated ones (Scarif=Verge overlap, Jakku=analyses disagree, Bespin ×2=count-refine + TDIGWATT overlap).
 - MOD `objective_playbooks.json` — set `loaderEnabled:true` + `locationFragments`:
