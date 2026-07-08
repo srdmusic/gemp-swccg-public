@@ -581,6 +581,17 @@ public interface ModifiersState {
 	boolean isSenateInSession();
 
 	/**
+	 * Records that a 'shoot' action was taken by a Tusken Raider.
+	 */
+	void shootUsedByTuskenRaider();
+
+	/**
+	 * Determines if a 'shoot' action was taken by a Tusken Raider this turn.
+	 * @return true or false
+	 */
+	boolean isShootUsedByTuskenRaiderThisTurn();
+
+	/**
 	 * Records that the specified card being played (or being deployed).
 	 * @param card the card
 	 */
