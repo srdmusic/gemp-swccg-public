@@ -4,6 +4,13 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-08 — ObjectivePlaybook Phase 1b (step 3): My Lord deploy magnitudes now read from the JSON-built playbook (behavior-neutral)
+- Completes My Lord as a JSON-driven pilot (matching Endor): its 4 deploy magnitudes now come from the active (JSON-built) playbook, not the compiled MY_LORD_PLAYBOOK static.
+- MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — in `getDeployObjectiveAdjustments`, add local `ObjectivePlaybook mlPb = activePlaybook != null ? activePlaybook : MY_LORD_PLAYBOOK` and read V83/V88/V108/V110 magnitudes from `mlPb.weights.*` instead of `MY_LORD_PLAYBOOK.weights.*`.
+- Boundary / SAFETY: behavior-neutral. When isMyLord, `activePlaybook` is the JSON build (loaderEnabled) whose weights == the compiled statics (1500 / -2000 / 500 / -2000), or the MY_LORD_PLAYBOOK fallback itself. The `?:` is defensive (activePlaybook is non-null inside the isMyLord arms). Senator/Senate DETECTION stays as the compiled Filters.senator / isSenatorCard (rules-truth, unchanged) — only the magnitude SOURCE moved. MY_LORD_PLAYBOOK static kept as the loaderEnabled=false fallback. My Lord has no hardcoded parseFlipCondition block to comment out (its scoring is the isMyLord-gated arms, which remain).
+- Verified: compiles clean both bots (MVN_EXIT=0). Codex verified the prior two 1b commits PASS (m00078 + Endor). Codex verify of this commit requested.
+- Revert: `git revert`; the fallback local reverts the reads to the static.
+
 ## 2026-07-08 — ObjectivePlaybook Phase 1b (step 2): Endor hardcoded block COMMENTED OUT — now fully JSON-driven (behavior-neutral)
 - Completes the Endor pilot as the template: the objective's data + scoring inputs now come ENTIRELY from its `objective_playbooks.json` profile; the hardcoded analyzer block is compiled out. This is the "comment out old block LAST" step of the agreed order.
 - MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — (1) `hydrateFromProfile` requiredCardsOnTable is now AUTHORITATIVE (clear-then-set) when the profile names flip cards, so it replaces the text parser's junk "…are both" conjunction exactly as the old block's `requiredCardsOnTable.clear()` did. (2) The hardcoded `contains("endor operations")` block in parseFlipCondition is wrapped in `if (false /* SUPERSEDED 2026-07-08 */ …)` (compiled-out, kept as revert path, V193 tag preserved for grep).

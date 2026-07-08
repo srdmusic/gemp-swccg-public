@@ -672,6 +672,11 @@ public class ObjectiveAnalyzer {
                 || card == null || blueprint == null || actionText == null) return notes;
         String actionLower = actionText.toLowerCase(Locale.ROOT);
         boolean isCharacter = blueprint.getCardCategory() == CardCategory.CHARACTER;
+        // My Lord DEPLOY magnitudes now read from the ACTIVE playbook (JSON-built when loaderEnabled, else the
+        // compiled MY_LORD_PLAYBOOK fallback). Inside the isMyLord arms activePlaybook is non-null (the ternary
+        // in analyze() always yields MY_LORD_PLAYBOOK or the JSON build for My Lord); the ?: is defensive only.
+        // Boundary-neutral: the JSON My Lord weights == the compiled statics (1500/-2000/500/-2000).
+        ObjectivePlaybook mlPb = (activePlaybook != null) ? activePlaybook : MY_LORD_PLAYBOOK;
 
         // === V83: MY LORD — senators only at Galactic Senate (penalize senator → non-Senate) ===
         if (analyzed && isMyLord && com.gempukku.swccgo.filters.Filters.senator.accepts(
@@ -685,7 +690,7 @@ public class ObjectiveAnalyzer {
                 boolean atSenate = com.gempukku.swccgo.filters.Filters.Galactic_Senate.accepts(
                     gameState, game.getModifiersQuerying(), mlTargetLoc);
                 if (!atSenate) {
-                    notes.add(new ScoreNote(MY_LORD_PLAYBOOK.weights.penalizeKeyCharOffKeySite,
+                    notes.add(new ScoreNote(mlPb.weights.penalizeKeyCharOffKeySite,
                         "V83 MY LORD: senator '" + card.getTitle() + "' → '" + mlTargetLoc.getTitle()
                             + "' — must deploy to Galactic Senate (dies elsewhere)"));
                     LOG.warn("V83 MY LORD: blocking senator {} → {} (only Galactic Senate is safe)",
@@ -708,7 +713,7 @@ public class ObjectiveAnalyzer {
                 }
             } catch (Exception ignore) { /* */ }
             if (!hasNonSenateSite) {
-                notes.add(new ScoreNote(MY_LORD_PLAYBOOK.weights.holdNonKeyCharNoSite,
+                notes.add(new ScoreNote(mlPb.weights.holdNonKeyCharNoSite,
                     "V110 MY LORD: HOLD non-senator '" + card.getTitle()
                         + "' — no non-Senate site on table yet, would land at Senate"));
                 LOG.warn("V110 MY LORD: HOLD deploy non-senator {} → -2000 (no non-Senate site)",
@@ -718,7 +723,7 @@ public class ObjectiveAnalyzer {
 
         // === V108: MY LORD — prioritize deploying senators from hand ===
         if (analyzed && isMyLord && isCharacter && isSenatorCard(blueprint)) {
-            notes.add(new ScoreNote(MY_LORD_PLAYBOOK.weights.prioritizeKeyCharDeploy,
+            notes.add(new ScoreNote(mlPb.weights.prioritizeKeyCharDeploy,
                 "V108 MY LORD: senator '" + card.getTitle() + "' in hand — prioritize deploy (flip target)"));
             LOG.warn("V108 MY LORD: BOOST deploy senator {} → +500", card.getTitle());
         }
@@ -766,7 +771,7 @@ public class ObjectiveAnalyzer {
         if (analyzed && isMyLord && com.gempukku.swccgo.filters.Filters.senator.accepts(
                 gameState, game.getModifiersQuerying(), card)
                 && actionLower.contains("galactic senate")) {
-            notes.add(new ScoreNote(MY_LORD_PLAYBOOK.weights.rewardKeyCharAtKeySite,
+            notes.add(new ScoreNote(mlPb.weights.rewardKeyCharAtKeySite,
                 "V88 MY LORD: senator '" + card.getTitle()
                     + "' → Galactic Senate (flip condition + weapon destiny -6 protection)"));
             LOG.warn("V88 MY LORD: BOOST senator {} → Galactic Senate → +1500", card.getTitle());
