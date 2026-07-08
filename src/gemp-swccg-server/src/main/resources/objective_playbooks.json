@@ -6,6 +6,7 @@
   "profiles": [
     {
       "label": "Dantooine Base Operations",
+      "loaderEnabled": true,
       "blueprintIds": [
         "7_135",
         "7_135_BACK"
@@ -14,7 +15,9 @@
         "dantooine base operations",
         "more dangerous than you realize"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "dantooine"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,

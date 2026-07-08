@@ -4,6 +4,13 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-08 — ObjectivePlaybook: ENABLE Dantooine Base Operations (7_135) — first location/count objective (INTENTIONAL scoring add)
+- First non-pilot objective flipped on. UNLIKE the pilots this is NOT behavior-neutral — it deliberately ADDS objective-relevance scoring the broken generic parser never produced (same class of fix as Endor). One objective only (Codex's caution: never bulk-flip the 30-objective bucket).
+- MOD `objective_playbooks.json` — Dantooine Base Operations profile: `loaderEnabled: true`, `locationFragments: ["dantooine"]`.
+- Boundary math: OLD — the objective's flip text "control at least three Dantooine sites" defeats the generic CONTROL_LOCATION parser (it captures the junk fragment "at least three dantooine sites", which substring-matches no site title), so Rando gets ZERO Dantooine objective-relevance today and does not prioritize Dantooine. NEW — `locationFragments ["dantooine"]` hydrates → isObjectiveRelevantLocation true for the Dantooine system + every "Dantooine: …" site → CharacterDeploySiteEvaluator +200/site + over-stack waiver → Rando deploys to contest Dantooine, which is exactly the flip condition (Light/Rebel objective, control 3 Dantooine sites). Standard +200 magnitude (no new number). "dantooine" over-matches nothing (only Dantooine locations contain it). Only DeployEvaluator V193 reads activePlaybook and it needs a flipGateSite (null here) so it does not fire. Flip/flip-back DETECTION is unchanged (generic updateFlipStatus; the legacy 3-site flip-back caveat Codex noted is orthogonal to deploy scoring and pre-exists).
+- Verified: compiles clean both bots (MVN_EXIT=0); only Dantooine + the 2 pilots enabled. Codex verify requested.
+- Revert: set `loaderEnabled:false` / clear locationFragments in the Dantooine profile.
+
 ## 2026-07-08 — ObjectivePlaybook Phase 1b (step 3): My Lord deploy magnitudes now read from the JSON-built playbook (behavior-neutral)
 - Completes My Lord as a JSON-driven pilot (matching Endor): its 4 deploy magnitudes now come from the active (JSON-built) playbook, not the compiled MY_LORD_PLAYBOOK static.
 - MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — in `getDeployObjectiveAdjustments`, add local `ObjectivePlaybook mlPb = activePlaybook != null ? activePlaybook : MY_LORD_PLAYBOOK` and read V83/V88/V108/V110 magnitudes from `mlPb.weights.*` instead of `MY_LORD_PLAYBOOK.weights.*`.
