@@ -576,8 +576,13 @@ public class ObjectiveAnalyzer {
         if (p == null) return;
         if (p.locationFragments != null)
             for (String f : p.locationFragments) if (f != null && !f.isEmpty()) addLocationFragment(f.toLowerCase(Locale.ROOT));
-        if (p.requiredCardsOnTable != null)
+        // AUTHORITATIVE (2026-07-08): when the profile names the flip cards, they fully specify the slot —
+        // clear-then-set, replacing any parser output (e.g. Endor's junk "...are both" conjunction). This is
+        // what lets the hardcoded Endor block (which did requiredCardsOnTable.clear()) be commented out.
+        if (p.requiredCardsOnTable != null && !p.requiredCardsOnTable.isEmpty()) {
+            requiredCardsOnTable.clear();
             for (String c : p.requiredCardsOnTable) if (c != null && !c.isEmpty()) requiredCardsOnTable.add(c.toLowerCase(Locale.ROOT));
+        }
         // DEFERRED (2026-07-08): pullableCards hydration ADDS pull targets the text parser did not (e.g.
         // Endor: biker scout / bunker / endor system / landing platform), which CHANGES pull behavior.
         // Not behavior-neutral → needs per-objective boundary math before enabling. Kept off for now.
@@ -1269,7 +1274,14 @@ public class ObjectiveAnalyzer {
         // src/.../set207/dark/Card207_025.java): the deck plays Establish Secret Base (V) =
         // "Deploy on Bunker if you control that site" — the flip gate is simply CONTROLLING
         // Endor: Bunker with ANY of Rando's cards. No biker scouts / AT-STs are involved.
-        if (objectiveTitle != null
+        // SUPERSEDED 2026-07-08: this hardcoded Endor block is now REPLACED by the loaderEnabled Endor
+        // profile in objective_playbooks.json (hydrateFromProfile sets the identical slots: locationFragment
+        // "endor", requiredCardsOnTable {ominous rumors, establish secret base} via AUTHORITATIVE clear-then-set,
+        // flipCriticalControlSite "endor: bunker", flipCriticalControlCard "establish secret base", and
+        // flipGateCardIds {207_25,207_025,601_260}). Byte-identical (boundary-verified). Kept compiled-out
+        // (if(false)) as the revert path per comment-out-superseded discipline. V193 tag preserved for grep.
+        if (false /* SUPERSEDED 2026-07-08 — Endor now JSON-hydrated (loaderEnabled profile) */
+                && objectiveTitle != null
                 && objectiveTitle.toLowerCase(Locale.ROOT).contains("endor operations")) {
             // (a) make all Endor sites objective-relevant (Bunker, Landing Platform, Dark Forest,
             //     Endor system) so v136ObjRelevant -> +100 BG / +200 obj in CharacterDeploySiteEvaluator.
