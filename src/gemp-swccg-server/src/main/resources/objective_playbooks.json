@@ -1259,6 +1259,7 @@
     },
     {
       "label": "Massassi Base Operations",
+      "loaderEnabled": true,
       "blueprintIds": [
         "111_4",
         "111_4_BACK"
@@ -1267,7 +1268,9 @@
         "massassi base operations",
         "one in a million"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "yavin 4"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,
@@ -2303,6 +2306,7 @@
     },
     {
       "label": "Zero Hour",
+      "loaderEnabled": true,
       "blueprintIds": [
         "219_48",
         "219_48_BACK"
@@ -2311,7 +2315,9 @@
         "zero hour",
         "liberation of lothal"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "lothal"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,
@@ -4465,6 +4471,7 @@
     },
     {
       "label": "Imperial Entanglements",
+      "loaderEnabled": true,
       "blueprintIds": [
         "201_39",
         "201_39_BACK"
@@ -4473,7 +4480,9 @@
         "imperial entanglements",
         "no one to stop us this time"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "tatooine"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,
@@ -5539,6 +5548,7 @@
     },
     {
       "label": "Twin Suns Of Tatooine",
+      "loaderEnabled": true,
       "blueprintIds": [
         "301_4",
         "301_4_BACK"
@@ -5547,7 +5557,9 @@
         "twin suns of tatooine",
         "well trained in the jedi arts"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "tatooine"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,

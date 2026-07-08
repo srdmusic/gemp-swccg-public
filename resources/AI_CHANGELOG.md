@@ -4,6 +4,24 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-08 — ObjectivePlaybook: ENABLE 4 more fixed-planet location objectives (Massassi/Zero Hour/Imperial Entanglements/Twin Suns)
+- Batch of 4, same validated pattern as Dantooine/Ralltiir (locationFragments → +200 relevance + over-stack-cap waiver → Rando contests the objective's planet). Enabled only after DOUBLE validation: Codex's fixed-vs-dynamic split doc (Handoffs/OBJECTIVE_BUCKET1_FIXED_DYNAMIC_SPLIT_2026-07-08.md) AND an independent subagent classification INTERSECTED on these exact 4 as "fixed fragment-first, enable-now". Held the caveated ones (Scarif=Verge overlap, Jakku=analyses disagree, Bespin ×2=count-refine + TDIGWATT overlap).
+- MOD `objective_playbooks.json` — set `loaderEnabled:true` + `locationFragments`:
+  - Massassi Base Operations (111_4) → ["yavin 4"] — "control three Yavin 4 sites".
+  - Zero Hour (219_48) → ["lothal"] — "control three Lothal locations, opponent controls none".
+  - Imperial Entanglements (201_39) → ["tatooine"] — "control three Tatooine sites".
+  - Twin Suns Of Tatooine (301_4) → ["tatooine"] — "control two Tatooine battleground sites (one w/ a Dark Jedi), occupy Tatooine system".
+- Boundary math (uniform): each objective's "control N <planet> sites" flip text defeats the generic CONTROL_LOCATION parser (junk fragment), so today Rando gets ZERO relevance for that planet. The fragment adds the standard +200/site relevance on that planet only (over-matches nothing) → Rando contests it = the flip condition. Enabled set now {My Lord, Endor, Dantooine, Ralltiir, Massassi, Zero Hour, Imperial Entanglements, Twin Suns}. The two Tatooine objectives (201_39, 301_4) don't clobber each other — `isObjectiveRelevantLocation` is scoped to the ACTIVE objective (analyzer rehydrated per objective). Count-exactness / Dark-Jedi-site steering are future refinements (Codex's flipLocationRules[]), not needed for correct fragment-relevance play.
+- Verified: compiles clean both bots (MVN_EXIT=0); 8 objectives enabled. Codex verify requested.
+- Revert: set `loaderEnabled:false` on any of the 4 profiles.
+
+## 2026-07-08: ObjectivePlaybook JSON cleanup, one live enable flag (`loaderEnabled`)
+- Removes the duplicate inert rollout fields from the objective profile data. The live loader gate is now unambiguous: `loaderEnabled`.
+- MOD `objective_playbooks.json`: delete `rolloutEnabled`, `rolloutStage`, and `rolloutNote` from all profiles. Keep `loaderEnabled:true` only on the four verified/enabled profiles: Dantooine `7_135`, Ralltiir `7_300`, Endor `8_167`, and My Lord `12_179`.
+- Boundary / SAFETY: behavior-neutral cleanup. `ObjectiveAnalyzer` never read the rollout fields, only `loaderEnabled`; deleting them removes a misleading audit flag without changing runtime hydration.
+- Verified: JSON parses; enabled set is exactly `{7_135, 7_300, 8_167, 12_179}`; compile/resource byte-check performed by Codex.
+- Revert: restore the removed rollout fields from git if a reader still needs them. Runtime will still ignore them.
+
 ## 2026-07-08 — ObjectivePlaybook: ENABLE Ralltiir Operations (7_300) — second fixed-planet location objective
 - Structurally identical to Dantooine BO (below): DARK/Imperial mirror. "Flip if Imperials control at least three Ralltiir sites and opponent controls no Ralltiir locations." Same generic-parser failure on "control at least three ralltiir sites" → zero Ralltiir relevance today.
 - MOD `objective_playbooks.json` — Ralltiir Operations profile: `loaderEnabled: true`, `locationFragments: ["ralltiir"]`.
