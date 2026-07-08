@@ -78,10 +78,7 @@
           "runtimeFilter": "Filters.and(Filters.Dantooine_system)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Hidden Base",
@@ -168,10 +165,7 @@
           "runtimeFilter": "Filters.and(Filters.planet_system, Filters.planetSystemInParsecRange(1, 8))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Local Uprising",
@@ -240,10 +234,7 @@
           "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to selected systemName"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Mind What You Have Learned",
@@ -309,10 +300,7 @@
           "runtimeFilter": "Filters.Dagobah_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Rescue The Princess",
@@ -470,10 +458,7 @@
           "runtimeFilter": "Filters.Yavin_4_War_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Rebel Strike Team",
@@ -588,10 +573,7 @@
           "runtimeFilter": "Filters.Rebel_Landing_Site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "There Is Good In Him",
@@ -683,10 +665,7 @@
           "runtimeFilter": "Filters.Landing_Platform"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Watch Your Step",
@@ -836,10 +815,7 @@
           "runtimeFilter": "Filters.Tatooine_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Plead My Case To The Senate",
@@ -912,10 +888,7 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "The Hyperdrive Generator's Gone",
@@ -1046,10 +1019,7 @@
           "runtimeFilter": "Filters.City_Outskirts"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "We'll Handle This",
@@ -1108,10 +1078,7 @@
           "runtimeFilter": "Filters.interior_Theed_Palace_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "We Have A Plan",
@@ -1164,10 +1131,7 @@
           "runtimeFilter": "Filters.interior_Naboo_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Quiet Mining Colony",
@@ -1232,10 +1196,7 @@
           "runtimeFilter": "Filters.docking_bay"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "You Can Either Profit By This...",
@@ -1294,10 +1255,7 @@
           "runtimeFilter": "Filters.exterior_Tatooine_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Massassi Base Operations",
@@ -1371,10 +1329,7 @@
           "titleFragments": []
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Agents In The Court",
@@ -1472,10 +1427,7 @@
           "runtimeFilter": "Filters.Jabbas_Palace_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Diplomatic Mission To Alderaan",
@@ -1628,10 +1580,7 @@
           "runtimeFilter": "Filters.Dune_Sea"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Old Allies",
@@ -1753,10 +1702,7 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_VII, Filters.Falcon)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "He Is The Chosen One",
@@ -1855,10 +1801,7 @@
           "runtimeFilter": "Filters.Ewok_Village"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Yavin 4 Base Operations",
@@ -1966,10 +1909,7 @@
           "runtimeFilter": "Filters.Massassi_War_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "They Have No Idea We're Coming",
@@ -2081,10 +2021,7 @@
           "runtimeFilter": "Filters.Massassi_War_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "The Hyperdrive Generator's Gone",
@@ -2176,10 +2113,7 @@
           "runtimeFilter": "Filters.City_Outskirts"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "The Galaxy May Need A Legend",
@@ -2259,10 +2193,7 @@
           "runtimeFilter": "Filters.and(Filters.battleground, Icon.EPISODE_VII)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Rescue The Princess",
@@ -2368,10 +2299,7 @@
           "runtimeFilter": "Filters.Detention_Block_Corridor"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Zero Hour",
@@ -2460,10 +2388,7 @@
           "runtimeFilter": "Filters.Lothal_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Hunt For The Droid General",
@@ -2534,10 +2459,7 @@
           "runtimeFilter": "Filters.Clone_Command_Center"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "The Empire Knows We're Here",
@@ -2649,10 +2571,7 @@
           "runtimeFilter": "Filters.Main_Power_Generators"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Mind What You Have Learned",
@@ -2752,10 +2671,7 @@
           "runtimeFilter": "Filters.Yodas_Hut"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "The Hidden Path",
@@ -2873,10 +2789,7 @@
           "runtimeFilter": "Filters.Underground_Corridor"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "City In The Clouds",
@@ -2965,10 +2878,7 @@
           "runtimeFilter": "Filters.and(Filters.Cloud_City_site, Filters.battleground)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Carbon Chamber Testing",
@@ -3097,10 +3007,7 @@
           "runtimeFilter": "Filters.Security_Tower"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Hunt Down And Destroy The Jedi",
@@ -3183,10 +3090,7 @@
           "runtimeFilter": "Filters.Meditation_Chamber"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Imperial Occupation",
@@ -3255,10 +3159,7 @@
           "runtimeFilter": "Filters.and(Filters.generic, Filters.site)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "ISB Operations",
@@ -3319,10 +3220,7 @@
           "runtimeFilter": "Filters.Coruscant_location"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Ralltiir Operations",
@@ -3399,10 +3297,7 @@
           "runtimeFilter": "Filters.Ralltiir_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Endor Operations",
@@ -3561,10 +3456,7 @@
           "runtimeFilter": "Filters.Landing_Platform"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": true,
-      "rolloutStage": "pilot",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Bring Him Before Me",
@@ -3620,10 +3512,7 @@
           "runtimeFilter": "Filters.Throne_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Agents Of Black Sun",
@@ -3712,10 +3601,7 @@
           "runtimeFilter": "Filters.Coruscant_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "My Lord, Is That Legal?",
@@ -3816,10 +3702,7 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": true,
-      "rolloutStage": "pilot",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "No Money, No Parts, No Deal!",
@@ -3914,10 +3797,7 @@
           "runtimeFilter": "Filters.Mos_Espa"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Let Them Make The First Move",
@@ -4011,10 +3891,7 @@
           "runtimeFilter": "Filters.Theed_Palace_Generator"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Invasion",
@@ -4119,10 +3996,7 @@
           "runtimeFilter": "Filters.Naboo_Swamp"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "This Deal Is Getting Worse All The Time",
@@ -4215,10 +4089,7 @@
           "runtimeFilter": "Filters.Cloud_City_battleground_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Court Of The Vile Gangster",
@@ -4349,10 +4220,7 @@
           "runtimeFilter": "Filters.Dungeon"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Set Your Course For Alderaan",
@@ -4512,10 +4380,7 @@
           "runtimeFilter": "Filters.Docking_Bay_327"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "My Kind Of Scum",
@@ -4596,10 +4461,7 @@
           "runtimeFilter": "Filters.Jabbas_Palace_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Imperial Entanglements",
@@ -4675,10 +4537,7 @@
           "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.battleground)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "I Want That Map",
@@ -4785,10 +4644,7 @@
           "runtimeFilter": "Filters.title(Title.Starkiller_Base) and Filters.system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "A Stunning Move",
@@ -4882,10 +4738,7 @@
           "runtimeFilter": "Filters.Private_Platform"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Hunt Down And Destroy The Jedi",
@@ -4973,10 +4826,7 @@
           "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.site, Filters.iconCount(Icon.DARK_FORCE, 1))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Shadow Collective",
@@ -5065,10 +4915,7 @@
           "runtimeFilter": "Filters.Maul"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "On The Verge Of Greatness",
@@ -5177,10 +5024,7 @@
           "runtimeFilter": "Filters.title(Title.Scarif_Citadel_Tower)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "A Great Tactician Creates Plans",
@@ -5288,10 +5132,7 @@
           "runtimeFilter": "Filters.title(Title.Lothal_Imperial_Complex)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "The Shield Will Be Down in Moments",
@@ -5402,10 +5243,7 @@
           "runtimeFilter": "Filters.First_Marker"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "The Shield Will Be Down in Moments",
@@ -5510,10 +5348,7 @@
           "runtimeFilter": "Filters.First_Marker"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "The First Order Reigns",
@@ -5636,10 +5471,7 @@
           "runtimeFilter": "Filters.Crait_Salt_Plateau"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "This Deal Is Getting Worse All The Time",
@@ -5703,10 +5535,7 @@
           "runtimeFilter": "Filters.Cloud_City_battleground_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
       "label": "Twin Suns Of Tatooine",
@@ -5790,10 +5619,7 @@
           "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
-      "rolloutEnabled": false,
-      "rolloutStage": "data_only",
-      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     }
   ],
   "validation": {
