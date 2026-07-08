@@ -3326,6 +3326,7 @@
     },
     {
       "label": "Ralltiir Operations",
+      "loaderEnabled": true,
       "blueprintIds": [
         "7_300",
         "7_300_BACK"
@@ -3334,7 +3335,9 @@
         "ralltiir operations",
         "in the hands of the empire"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "ralltiir"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,

@@ -4,6 +4,13 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-08 — ObjectivePlaybook: ENABLE Ralltiir Operations (7_300) — second fixed-planet location objective
+- Structurally identical to Dantooine BO (below): DARK/Imperial mirror. "Flip if Imperials control at least three Ralltiir sites and opponent controls no Ralltiir locations." Same generic-parser failure on "control at least three ralltiir sites" → zero Ralltiir relevance today.
+- MOD `objective_playbooks.json` — Ralltiir Operations profile: `loaderEnabled: true`, `locationFragments: ["ralltiir"]`.
+- Boundary math: identical to Dantooine — `locationFragments ["ralltiir"]` → +200/site + over-stack waiver on Ralltiir system + "Ralltiir: …" sites → Rando contests Ralltiir = the flip condition. Standard magnitude; "ralltiir" over-matches nothing. This is the 2nd of "one or two" pre-validation enables (Codex's cap); further Bucket-1 flips wait for Codex's pattern-verify + fixed-planet/dynamic split.
+- Verified: compiles clean both bots (MVN_EXIT=0); enabled set = {My Lord, Endor, Dantooine, Ralltiir}. Codex verify requested.
+- Revert: set `loaderEnabled:false` / clear locationFragments in the Ralltiir profile.
+
 ## 2026-07-08 — ObjectivePlaybook: ENABLE Dantooine Base Operations (7_135) — first location/count objective (INTENTIONAL scoring add)
 - First non-pilot objective flipped on. UNLIKE the pilots this is NOT behavior-neutral — it deliberately ADDS objective-relevance scoring the broken generic parser never produced (same class of fix as Endor). One objective only (Codex's caution: never bulk-flip the 30-objective bucket).
 - MOD `objective_playbooks.json` — Dantooine Base Operations profile: `loaderEnabled: true`, `locationFragments: ["dantooine"]`.
