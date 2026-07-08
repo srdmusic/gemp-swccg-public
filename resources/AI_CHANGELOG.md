@@ -4,6 +4,14 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-08 — ObjectivePlaybook loader FIX: gate hydration to VERIFIED profiles + defer pullableCards (restore behavior-neutrality)
+- Follow-up to the Phase 0 loader below. Codex delivered the full 58-profile canonical `objective_playbooks.json` to the runtime path (it landed in commit 814ad6664, replacing the 2-entry pilot file). That made the loader hydrate ALL 58 objectives, not just My Lord + Endor — an UNVERIFIED behavior change for 56 objectives (the "centralized regression generator" risk). Also Endor's profile carries `pullableCards` (biker scout / bunker / endor system / landing platform) the text parser did not, which would change pull behavior.
+- MOD `objective_playbooks.json` — ADD `"loaderEnabled": true` to the My Lord + Endor profiles ONLY (the two boundary-math-verified equivalents). The other 56 omit it → treated as disabled.
+- MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — `JsonProfile` gains `Boolean loaderEnabled`; analyze() hydrates only when `Boolean.TRUE.equals(loaderEnabled)`. `pullableCards` hydration COMMENTED OUT (deferred — adds pull targets, not neutral, needs per-objective boundary math).
+- Boundary / SAFETY: restores true behavior-neutrality. Only My Lord (all hydrated lists empty → no-op) and Endor (locationFragments/requiredCardsOnTable/flipGateSite/flipGateCardIds byte-identical to the hardcoded Endor block → idempotent; new setup slots have no consumers) hydrate. Every other objective: profile found but disabled → no hydration → text parser stands. flip the flag per objective as each passes boundary math.
+- Verified: only Endor + My Lord report loaderEnabled; compiles clean both bots (MVN_EXIT=0); canonical file id-check 58 profiles / 288 ids / 0 unresolved.
+- Revert: `git revert`; remove the two flags + the gate.
+
 ## 2026-07-08 — ObjectivePlaybook: JSON loader (single runtime objective-data source) — Phase 0, behavior-neutral (both bots)
 - Steve's ruling: all objective data lives in ONE place (a JSON file) and ObjectiveAnalyzer is just a pointer that reads it. This lands the loader; it does NOT yet replace any hardcoded scoring (per the agreed order: wire slot → boundary math → comment old block LAST).
 - ADD `src/gemp-swccg-server/src/main/resources/objective_playbooks.json` — the single runtime source, bundled into the jar. Pilots My Lord + Endor; Codex delivers the full 58. Field contract (per profile): label, blueprintIds, titleFragments, locationFragments, requiredCardsOnTable, pullableCards, flipGateSite, flipGateCardIds, startingLocations/Effects/Interrupts ({blueprintIds,titleFragments}), keyCharacterFilter, keySiteFilter, weights (named floats reusing existing V-tags).

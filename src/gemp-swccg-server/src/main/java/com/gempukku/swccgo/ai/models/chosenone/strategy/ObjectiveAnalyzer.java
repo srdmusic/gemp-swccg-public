@@ -221,8 +221,12 @@ public class ObjectiveAnalyzer {
             // runtime source (objective_playbooks.json) for the active objective. ADDITIVE + idempotent
             // — runs AFTER the text parser / hardcoded blocks, so where both fill a slot the values are
             // identical. Hard fallback: no profile / empty registry → parser output stands unchanged.
+            // GATED per-objective by loaderEnabled: the canonical file carries all 58 profiles, but only
+            // objectives whose profile is boundary-math-VERIFIED equivalent are hydrated (My Lord + Endor
+            // today). This prevents the 56 un-verified profiles from silently altering behavior.
             JsonProfile jsonProfile = findProfile(bpId, title);
-            if (jsonProfile != null) hydrateFromProfile(jsonProfile);
+            if (jsonProfile != null && Boolean.TRUE.equals(jsonProfile.loaderEnabled))
+                hydrateFromProfile(jsonProfile);
             updateFlipStatus(objectiveCard);
             this.analyzed = true;
 
@@ -490,6 +494,7 @@ public class ObjectiveAnalyzer {
     }
     static final class JsonProfile {
         String label;
+        Boolean loaderEnabled;   // hydrate ONLY when true — per-objective migration switch (verified equivalent)
         List<String> blueprintIds;
         List<String> titleFragments;
         List<String> locationFragments;
@@ -567,8 +572,11 @@ public class ObjectiveAnalyzer {
             for (String f : p.locationFragments) if (f != null && !f.isEmpty()) addLocationFragment(f.toLowerCase(Locale.ROOT));
         if (p.requiredCardsOnTable != null)
             for (String c : p.requiredCardsOnTable) if (c != null && !c.isEmpty()) requiredCardsOnTable.add(c.toLowerCase(Locale.ROOT));
-        if (p.pullableCards != null)
-            for (String c : p.pullableCards) if (c != null && !c.isEmpty()) pullableCards.add(c.toLowerCase(Locale.ROOT));
+        // DEFERRED (2026-07-08): pullableCards hydration ADDS pull targets the text parser did not (e.g.
+        // Endor: biker scout / bunker / endor system / landing platform), which CHANGES pull behavior.
+        // Not behavior-neutral → needs per-objective boundary math before enabling. Kept off for now.
+        // if (p.pullableCards != null)
+        //     for (String c : p.pullableCards) if (c != null && !c.isEmpty()) pullableCards.add(c.toLowerCase(Locale.ROOT));
         if (p.flipGateSite != null && !p.flipGateSite.isEmpty() && flipCriticalControlSite == null)
             flipCriticalControlSite = p.flipGateSite.toLowerCase(Locale.ROOT);
         if (p.flipGateCardIds != null) flipCriticalControlCardIds.addAll(p.flipGateCardIds);

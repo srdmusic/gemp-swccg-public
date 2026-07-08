@@ -14,28 +14,12 @@
         "dantooine base operations",
         "more dangerous than you realize"
       ],
-      "locationFragments": [
-        "dantooine"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "dantooine system",
-        "site or non-unique rebel to dantooine"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Dantooine system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "dantooine system"
-          ],
-          "runtimeFilter": "Filters.and(Filters.Dantooine_system)",
-          "sourceEvidence": "Card7_135.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.and(Filters.Dantooine_system))",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -91,7 +75,10 @@
           "runtimeFilter": "Filters.and(Filters.Dantooine_system)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Hidden Base",
@@ -103,40 +90,12 @@
         "hidden base",
         "systems will slip through your fingers"
       ],
-      "locationFragments": [
-        "planet",
-        "space"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "hidden base indicator",
-        "rendezvous point",
-        "system"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Rendezvous Point",
-          "blueprintIds": [],
-          "titleFragments": [
-            "rendezvous point"
-          ],
-          "runtimeFilter": "Filters.and(Filters.Rendezvous_Point)",
-          "sourceEvidence": "Card7_136.java DeployCardFromReserveDeckEffect(Filters.and(Filters.Rendezvous_Point))",
-          "enablesFlip": false
-        },
-        {
-          "label": "Hidden Base indicator",
-          "blueprintIds": [],
-          "titleFragments": [
-            "hidden base indicator"
-          ],
-          "runtimeFilter": "Filters.and(Filters.planet_system, Filters.planetSystemInParsecRange(1, 8))",
-          "sourceEvidence": "Card7_136.java StackCardFromOutsideDeckEffect",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -206,7 +165,10 @@
           "runtimeFilter": "Filters.and(Filters.planet_system, Filters.planetSystemInParsecRange(1, 8))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Local Uprising",
@@ -218,39 +180,12 @@
         "local uprising",
         "liberation"
       ],
-      "locationFragments": [
-        "runtime",
-        "selected"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "generic site to subjugated planet",
-        "subjugated planet"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Subjugated planet",
-          "blueprintIds": [],
-          "titleFragments": [
-            "subjugated planet"
-          ],
-          "runtimeFilter": "Filters.planet_system",
-          "sourceEvidence": "Card7_137.java DeployCardFromReserveDeckEffect(Filters.planet_system); cardDeployed stores gameState.setSubjugatedPlanet(systemName)",
-          "enablesFlip": true
-        },
-        {
-          "label": "generic site to Subjugated planet",
-          "blueprintIds": [],
-          "titleFragments": [
-            "generic site to subjugated planet"
-          ],
-          "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to selected systemName",
-          "sourceEvidence": "Card7_137.java nested DeployCardToSystemFromReserveDeckEffect(Filters.and(Filters.generic, Filters.site), systemName)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -302,7 +237,10 @@
           "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to selected systemName"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Mind What You Have Learned",
@@ -314,35 +252,12 @@
         "mind what you have learned",
         "save you it can"
       ],
-      "locationFragments": [
-        "dagobah"
-      ],
-      "requiredCardsOnTable": [
-        "jedi test #5"
-      ],
-      "pullableCards": [
-        "at peace",
-        "dagobah system",
-        "daughter of skywalker",
-        "luke",
-        "luke's backpack",
-        "yoda",
-        "yoda's hope"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Dagobah system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "dagobah system"
-          ],
-          "runtimeFilter": "Filters.Dagobah_system",
-          "sourceEvidence": "Card7_138.java DeployCardFromReserveDeckEffect(Filters.Dagobah_system)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -391,7 +306,10 @@
           "runtimeFilter": "Filters.Dagobah_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Rescue The Princess",
@@ -403,68 +321,12 @@
         "rescue the princess",
         "sometimes i amaze even myself"
       ],
-      "locationFragments": [
-        "4",
-        "death",
-        "death star: detention block corridor",
-        "death star: docking bay 327",
-        "star",
-        "yavin",
-        "yavin 4: docking bay",
-        "yavin 4: war room"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "detention block corridor",
-        "docking bay 327",
-        "leia of ability < 4",
-        "yavin 4: docking bay",
-        "yavin 4: war room"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Detention Block Corridor",
-          "blueprintIds": [],
-          "titleFragments": [
-            "detention block corridor"
-          ],
-          "runtimeFilter": "Filters.Detention_Block_Corridor",
-          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Detention_Block_Corridor)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Docking Bay 327",
-          "blueprintIds": [],
-          "titleFragments": [
-            "docking bay 327"
-          ],
-          "runtimeFilter": "Filters.Docking_Bay_327",
-          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Docking_Bay_327)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Yavin 4: Docking Bay",
-          "blueprintIds": [],
-          "titleFragments": [
-            "yavin 4: docking bay"
-          ],
-          "runtimeFilter": "Filters.Yavin_4_Docking_Bay",
-          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Yavin_4_Docking_Bay)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Yavin 4: War Room",
-          "blueprintIds": [],
-          "titleFragments": [
-            "yavin 4: war room"
-          ],
-          "runtimeFilter": "Filters.Yavin_4_War_Room",
-          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Yavin_4_War_Room)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -605,7 +467,10 @@
           "runtimeFilter": "Filters.Yavin_4_War_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Rebel Strike Team",
@@ -617,46 +482,12 @@
         "rebel strike team",
         "garrison destroyed"
       ],
-      "locationFragments": [
-        "endor",
-        "endor location",
-        "endor system",
-        "exterior endor sites"
-      ],
-      "requiredCardsOnTable": [
-        "bunker"
-      ],
-      "pullableCards": [
-        "bunker",
-        "deactivate the shield generator",
-        "endor system",
-        "rebel landing site",
-        "rebel scout of ability < 3"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Endor system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "endor system"
-          ],
-          "runtimeFilter": "Filters.Endor_system",
-          "sourceEvidence": "Card8_078.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Endor_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Rebel Landing Site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "rebel landing site"
-          ],
-          "runtimeFilter": "Filters.Rebel_Landing_Site",
-          "sourceEvidence": "Card8_078.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Rebel_Landing_Site)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -754,7 +585,10 @@
           "runtimeFilter": "Filters.Rebel_Landing_Site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "There Is Good In Him",
@@ -766,54 +600,13 @@
         "there is good in him",
         "i can save him"
       ],
-      "locationFragments": [
-        "endor",
-        "endor: landing platform"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "chief chirpa's hut",
-        "death star ii luke",
-        "endor: landing platform",
-        "i feel the conflict",
-        "luke's lightsaber"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Chief Chirpa's Hut",
-          "blueprintIds": [],
-          "titleFragments": [
-            "chief chirpa's hut"
-          ],
-          "runtimeFilter": "Filters.Chief_Chirpas_Hut",
-          "sourceEvidence": "Card9_061.java DeployCardFromReserveDeckEffect(Filters.Chief_Chirpas_Hut)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Endor: Landing Platform",
-          "blueprintIds": [],
-          "titleFragments": [
-            "endor: landing platform"
-          ],
-          "runtimeFilter": "Filters.Landing_Platform",
-          "sourceEvidence": "Card9_061.java DeployCardFromReserveDeckEffect(Filters.Landing_Platform)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "I Feel The Conflict",
-          "blueprintIds": [],
-          "titleFragments": [
-            "i feel the conflict"
-          ],
-          "runtimeFilter": "Filters.I_Feel_The_Conflict",
-          "sourceEvidence": "Card9_061.java DeployCardFromReserveDeckEffect(Filters.I_Feel_The_Conflict)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -887,7 +680,10 @@
           "runtimeFilter": "Filters.Landing_Platform"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Watch Your Step",
@@ -899,55 +695,12 @@
         "watch your step",
         "this place can be a little rough"
       ],
-      "locationFragments": [
-        "tatooine",
-        "tatooine system"
-      ],
-      "requiredCardsOnTable": [
-        "kessel run"
-      ],
-      "pullableCards": [
-        "cantina",
-        "corellia system",
-        "docking bay 94",
-        "interrupt from lost pile",
-        "kessel system",
-        "tatooine system"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Cantina",
-          "blueprintIds": [],
-          "titleFragments": [
-            "cantina"
-          ],
-          "runtimeFilter": "Filters.Cantina",
-          "sourceEvidence": "Card10_026.java checks existing Cantina conversion; either DeployCardFromReserveDeckEffect(Filters.Cantina) or PlaceCardOutOfPlayFromReserveDeckEffect(Filters.Cantina)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Docking Bay 94",
-          "blueprintIds": [],
-          "titleFragments": [
-            "docking bay 94"
-          ],
-          "runtimeFilter": "Filters.Docking_Bay_94",
-          "sourceEvidence": "Card10_026.java DeployCardFromReserveDeckEffect(Filters.Docking_Bay_94)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Tatooine system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "tatooine system"
-          ],
-          "runtimeFilter": "Filters.Tatooine_system",
-          "sourceEvidence": "Card10_026.java DeployCardFromReserveDeckEffect(Filters.Tatooine_system)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -1080,7 +833,10 @@
           "runtimeFilter": "Filters.Tatooine_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Plead My Case To The Senate",
@@ -1092,39 +848,12 @@
         "plead my case to the senate",
         "sanity and compassion"
       ],
-      "locationFragments": [
-        "coruscant"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "any other episode i location",
-        "galactic senate",
-        "political effect"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Galactic Senate",
-          "blueprintIds": [],
-          "titleFragments": [
-            "galactic senate"
-          ],
-          "runtimeFilter": "Filters.Galactic_Senate",
-          "sourceEvidence": "Card12_088.java DeployCardFromReserveDeckEffect(Filters.Galactic_Senate)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Any other Episode I location",
-          "blueprintIds": [],
-          "titleFragments": [
-            "any other episode i location"
-          ],
-          "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))",
-          "sourceEvidence": "Card12_088.java DeployCardFromReserveDeckEffect(Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate)))",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -1180,7 +909,10 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "The Hyperdrive Generator's Gone",
@@ -1192,57 +924,13 @@
         "the hyperdrive generator's gone",
         "we'll need a new one"
       ],
-      "locationFragments": [
-        "coruscant and/or tatooine system",
-        "tatooine"
-      ],
-      "requiredCardsOnTable": [
-        "credits will do fine"
-      ],
-      "pullableCards": [
-        "1 force, may be taken into hand",
-        "city outskirts",
-        "coruscant system",
-        "credits will do fine",
-        "tatooine system",
-        "watto's junkyard"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Watto's Junkyard",
-          "blueprintIds": [],
-          "titleFragments": [
-            "watto's junkyard"
-          ],
-          "runtimeFilter": "Filters.Wattos_Junkyard",
-          "sourceEvidence": "Card12_089.java DeployCardFromReserveDeckEffect(Filters.Wattos_Junkyard)",
-          "enablesFlip": false
-        },
-        {
-          "label": "City Outskirts",
-          "blueprintIds": [],
-          "titleFragments": [
-            "city outskirts"
-          ],
-          "runtimeFilter": "Filters.City_Outskirts",
-          "sourceEvidence": "Card12_089.java DeployCardFromReserveDeckEffect(Filters.City_Outskirts)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Credits Will Do Fine",
-          "blueprintIds": [],
-          "titleFragments": [
-            "credits will do fine"
-          ],
-          "runtimeFilter": "Filters.Credits_Will_Do_Fine",
-          "sourceEvidence": "Card12_089.java DeployCardFromReserveDeckEffect(Filters.Credits_Will_Do_Fine)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -1355,7 +1043,10 @@
           "runtimeFilter": "Filters.City_Outskirts"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "We'll Handle This",
@@ -1414,7 +1105,10 @@
           "runtimeFilter": "Filters.interior_Theed_Palace_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "We Have A Plan",
@@ -1467,7 +1161,10 @@
           "runtimeFilter": "Filters.interior_Naboo_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Quiet Mining Colony",
@@ -1532,7 +1229,10 @@
           "runtimeFilter": "Filters.docking_bay"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "You Can Either Profit By This...",
@@ -1591,7 +1291,10 @@
           "runtimeFilter": "Filters.exterior_Tatooine_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Massassi Base Operations",
@@ -1665,7 +1368,10 @@
           "titleFragments": []
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Agents In The Court",
@@ -1677,54 +1383,13 @@
         "agents in the court",
         "no love for the empire"
       ],
-      "locationFragments": [
-        "tatooine",
-        "tatooine location"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "hutt trade route",
-        "jabba's palace site",
-        "non-unique alien of rep's species",
-        "rep",
-        "yarna d'al' gargan"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Hutt Trade Route",
-          "blueprintIds": [],
-          "titleFragments": [
-            "hutt trade route"
-          ],
-          "runtimeFilter": "Filters.Hutt_Trade_Route",
-          "sourceEvidence": "Card112_001.java:55 DeployCardFromReserveDeckEffect(Filters.Hutt_Trade_Route)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Jabba's Palace site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "jabba's palace site"
-          ],
-          "runtimeFilter": "Filters.Jabbas_Palace_site",
-          "sourceEvidence": "Card112_001.java:62 DeployCardFromReserveDeckEffect(Filters.Jabbas_Palace_site)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Yarna d'al' Gargan",
-          "blueprintIds": [],
-          "titleFragments": [
-            "yarna d'al' gargan"
-          ],
-          "runtimeFilter": "Filters.Yarna_dal_Gargan",
-          "sourceEvidence": "Card112_001.java:85 DeployCardsFromReserveDeckEffect(Filters.Yarna_dal_Gargan, 0, 1, ...)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -1804,7 +1469,10 @@
           "runtimeFilter": "Filters.Jabbas_Palace_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Diplomatic Mission To Alderaan",
@@ -1816,77 +1484,12 @@
         "diplomatic mission to alderaan",
         "a weakness can be found"
       ],
-      "locationFragments": [
-        "alderaan",
-        "tatooine",
-        "tatooine battleground site",
-        "tatooine system"
-      ],
-      "requiredCardsOnTable": [
-        "delivered stolen data tapes"
-      ],
-      "pullableCards": [
-        "alderaan or tatooine battleground site",
-        "dune sea",
-        "non-[reflections ii] r2-d2 to tatooine system",
-        "stolen data tapes to tatooine system",
-        "tantive iv to tatooine system",
-        "tatooine system"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Tatooine system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "tatooine system"
-          ],
-          "runtimeFilter": "Filters.Tatooine_system",
-          "sourceEvidence": "Card203_019.java:55 DeployCardFromReserveDeckEffect(Filters.Tatooine_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Tantive IV to Tatooine system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "tantive iv to tatooine system"
-          ],
-          "runtimeFilter": "Filters.Tantive_IV",
-          "sourceEvidence": "Card203_019.java:62 DeployCardToLocationFromReserveDeckEffect(Filters.Tantive_IV, Filters.Tatooine_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "non-[Reflections II] R2-D2 to Tatooine system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "non-[reflections ii] r2-d2 to tatooine system"
-          ],
-          "runtimeFilter": "Filters.and(Filters.R2D2, Filters.not(Icon.REFLECTIONS_II))",
-          "sourceEvidence": "Card203_019.java:69 DeployCardToLocationFromReserveDeckEffect(non-RefII R2D2, Tatooine_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Stolen Data Tapes to Tatooine system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "stolen data tapes to tatooine system"
-          ],
-          "runtimeFilter": "Filters.Stolen_Data_Tapes",
-          "sourceEvidence": "Card203_019.java:76 DeployCardToLocationFromReserveDeckEffect(Filters.Stolen_Data_Tapes, Filters.Tatooine_system)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Dune Sea",
-          "blueprintIds": [],
-          "titleFragments": [
-            "dune sea"
-          ],
-          "runtimeFilter": "Filters.Dune_Sea",
-          "sourceEvidence": "Card203_019.java:83 DeployCardFromReserveDeckEffect(Filters.Dune_Sea)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -2022,7 +1625,10 @@
           "runtimeFilter": "Filters.Dune_Sea"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Old Allies",
@@ -2034,67 +1640,13 @@
         "old allies",
         "we need your help"
       ],
-      "locationFragments": [
-        "jakku",
-        "jakku battleground",
-        "jakku battleground site",
-        "jakku location",
-        "jakku system"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "episode vii falcon to niima outpost shipyard",
-        "graveyard of giants",
-        "jakku location",
-        "jakku system",
-        "niima outpost shipyard"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Jakku system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "jakku system"
-          ],
-          "runtimeFilter": "Filters.Jakku_system",
-          "sourceEvidence": "Card204_032.java:56 DeployCardFromReserveDeckEffect(Filters.Jakku_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Niima Outpost Shipyard",
-          "blueprintIds": [],
-          "titleFragments": [
-            "niima outpost shipyard"
-          ],
-          "runtimeFilter": "Filters.Niima_Outpost_Shipyard",
-          "sourceEvidence": "Card204_032.java:63 DeployCardFromReserveDeckEffect(Filters.Niima_Outpost_Shipyard)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Episode VII Falcon to Niima Outpost Shipyard",
-          "blueprintIds": [],
-          "titleFragments": [
-            "episode vii falcon to niima outpost shipyard"
-          ],
-          "runtimeFilter": "Filters.and(Icon.EPISODE_VII, Filters.Falcon)",
-          "sourceEvidence": "Card204_032.java:70 DeployCardToLocationFromReserveDeckEffect(Episode VII Falcon, Niima_Outpost_Shipyard)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Graveyard Of Giants",
-          "blueprintIds": [],
-          "titleFragments": [
-            "graveyard of giants"
-          ],
-          "runtimeFilter": "Filters.Graveyard_Of_Giants",
-          "sourceEvidence": "Card204_032.java:77 DeployCardsFromReserveDeckEffect(Filters.Graveyard_Of_Giants, 0, 1, ...)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -2198,7 +1750,10 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_VII, Filters.Falcon)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "He Is The Chosen One",
@@ -2210,63 +1765,13 @@
         "he is the chosen one",
         "he will bring balance"
       ],
-      "locationFragments": [
-        "endor"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "anakin's funeral pyre",
-        "any one card",
-        "ewok village",
-        "i feel the conflict",
-        "prophecy of the force to anakin's funeral pyre"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Anakin's Funeral Pyre",
-          "blueprintIds": [],
-          "titleFragments": [
-            "anakin's funeral pyre"
-          ],
-          "runtimeFilter": "Filters.title(Title.Anakins_Funeral_Pyre)",
-          "sourceEvidence": "Card208_025.java:55 DeployCardFromReserveDeckEffect(Filters.title(Title.Anakins_Funeral_Pyre))",
-          "enablesFlip": false
-        },
-        {
-          "label": "Prophecy Of The Force to Anakin's Funeral Pyre",
-          "blueprintIds": [],
-          "titleFragments": [
-            "prophecy of the force to anakin's funeral pyre"
-          ],
-          "runtimeFilter": "Filters.Prophecy_Of_The_Force",
-          "sourceEvidence": "Card208_025.java:62 DeployCardToTargetFromReserveDeckEffect(Filters.Prophecy_Of_The_Force, Filters.title(Title.Anakins_Funeral_Pyre))",
-          "enablesFlip": false
-        },
-        {
-          "label": "Ewok Village",
-          "blueprintIds": [],
-          "titleFragments": [
-            "ewok village"
-          ],
-          "runtimeFilter": "Filters.Ewok_Village",
-          "sourceEvidence": "Card208_025.java:69 DeployCardFromReserveDeckEffect(Filters.Ewok_Village)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "I Feel The Conflict",
-          "blueprintIds": [],
-          "titleFragments": [
-            "i feel the conflict"
-          ],
-          "runtimeFilter": "Filters.I_Feel_The_Conflict",
-          "sourceEvidence": "Card208_025.java:76 DeployCardFromReserveDeckEffect(Filters.I_Feel_The_Conflict)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -2347,7 +1852,10 @@
           "runtimeFilter": "Filters.Ewok_Village"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Yavin 4 Base Operations",
@@ -2359,43 +1867,12 @@
         "yavin 4 base operations",
         "the time to fight is now"
       ],
-      "locationFragments": [
-        "4",
-        "yavin",
-        "yavin 4 system"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "battleground system",
-        "massassi war room",
-        "restore freedom to the galaxy",
-        "retrieve 1 force if a system is liberated",
-        "yavin 4 system"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Yavin 4 system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "yavin 4 system"
-          ],
-          "runtimeFilter": "Filters.Yavin_4_system",
-          "sourceEvidence": "Card208_026.java:47 DeployCardFromReserveDeckEffect(Filters.Yavin_4_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Massassi War Room",
-          "blueprintIds": [],
-          "titleFragments": [
-            "massassi war room"
-          ],
-          "runtimeFilter": "Filters.Massassi_War_Room",
-          "sourceEvidence": "Card208_026.java:54 DeployCardFromReserveDeckEffect(Filters.Massassi_War_Room)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -2486,7 +1963,10 @@
           "runtimeFilter": "Filters.Massassi_War_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "They Have No Idea We're Coming",
@@ -2498,63 +1978,13 @@
         "they have no idea we're coming",
         "until we win, or the chances are spent"
       ],
-      "locationFragments": [
-        "scarif"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "data vault",
-        "massassi war room",
-        "rogue one, a corvette, or a scarif site",
-        "scarif system",
-        "stardust"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Scarif system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "scarif system"
-          ],
-          "runtimeFilter": "Filters.Scarif_system",
-          "sourceEvidence": "Card209_029.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Scarif_system)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Data Vault",
-          "blueprintIds": [],
-          "titleFragments": [
-            "data vault"
-          ],
-          "runtimeFilter": "Filters.DataVault",
-          "sourceEvidence": "Card209_029.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.DataVault)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Massassi War Room",
-          "blueprintIds": [],
-          "titleFragments": [
-            "massassi war room"
-          ],
-          "runtimeFilter": "Filters.Massassi_War_Room",
-          "sourceEvidence": "Card209_029.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Massassi_War_Room)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Stardust",
-          "blueprintIds": [],
-          "titleFragments": [
-            "stardust"
-          ],
-          "runtimeFilter": "Filters.Stardust",
-          "sourceEvidence": "Card209_029.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Stardust)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -2648,7 +2078,10 @@
           "runtimeFilter": "Filters.Massassi_War_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "The Hyperdrive Generator's Gone",
@@ -2660,55 +2093,13 @@
         "the hyperdrive generator's gone",
         "we'll need a new one"
       ],
-      "locationFragments": [
-        "tatooine",
-        "tatooine location"
-      ],
-      "requiredCardsOnTable": [
-        "credits will do fine"
-      ],
-      "pullableCards": [
-        "city outskirts",
-        "credits will do fine",
-        "episode i system",
-        "watto's junkyard"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Watto's Junkyard",
-          "blueprintIds": [],
-          "titleFragments": [
-            "watto's junkyard"
-          ],
-          "runtimeFilter": "Filters.Wattos_Junkyard",
-          "sourceEvidence": "Card210_025.java DeployCardFromReserveDeckEffect(Filters.Wattos_Junkyard)",
-          "enablesFlip": false
-        },
-        {
-          "label": "City Outskirts",
-          "blueprintIds": [],
-          "titleFragments": [
-            "city outskirts"
-          ],
-          "runtimeFilter": "Filters.City_Outskirts",
-          "sourceEvidence": "Card210_025.java DeployCardFromReserveDeckEffect(Filters.City_Outskirts)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Credits Will Do Fine",
-          "blueprintIds": [],
-          "titleFragments": [
-            "credits will do fine"
-          ],
-          "runtimeFilter": "Filters.Credits_Will_Do_Fine",
-          "sourceEvidence": "Card210_025.java DeployCardFromReserveDeckEffect(Filters.Credits_Will_Do_Fine)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -2782,7 +2173,10 @@
           "runtimeFilter": "Filters.City_Outskirts"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "The Galaxy May Need A Legend",
@@ -2794,42 +2188,12 @@
         "the galaxy may need a legend",
         "we need luke skywalker"
       ],
-      "locationFragments": [
-        "ahch",
-        "ahch-to: saddle",
-        "to"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "ahch-to location or episode vii battleground",
-        "ahch-to: saddle",
-        "any one card",
-        "episode vii battleground"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Ahch-To: Saddle",
-          "blueprintIds": [],
-          "titleFragments": [
-            "ahch-to: saddle"
-          ],
-          "runtimeFilter": "Filters.AhchTo_Saddle",
-          "sourceEvidence": "Card211_036.java DeployCardFromReserveDeckEffect(Filters.AhchTo_Saddle)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Episode VII battleground",
-          "blueprintIds": [],
-          "titleFragments": [
-            "episode vii battleground"
-          ],
-          "runtimeFilter": "Filters.and(Filters.battleground, Icon.EPISODE_VII)",
-          "sourceEvidence": "Card211_036.java DeployCardFromReserveDeckEffect(Filters.and(Filters.battleground, Icon.EPISODE_VII))",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -2892,7 +2256,10 @@
           "runtimeFilter": "Filters.and(Filters.battleground, Icon.EPISODE_VII)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Rescue The Princess",
@@ -2904,55 +2271,12 @@
         "rescue the princess",
         "sometimes i amaze even myself"
       ],
-      "locationFragments": [
-        "death",
-        "star"
-      ],
-      "requiredCardsOnTable": [
-        "a power loss"
-      ],
-      "pullableCards": [
-        "a new hope leia",
-        "a power loss",
-        "death star site",
-        "death star: central core",
-        "detention block corridor",
-        "trash compactor"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Death Star: Central Core",
-          "blueprintIds": [],
-          "titleFragments": [
-            "death star: central core"
-          ],
-          "runtimeFilter": "Filters.Death_Star_Central_Core",
-          "sourceEvidence": "Card215_017.java DeployCardFromReserveDeckEffect(Filters.Death_Star_Central_Core)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Trash Compactor",
-          "blueprintIds": [],
-          "titleFragments": [
-            "trash compactor"
-          ],
-          "runtimeFilter": "Filters.Trash_Compactor",
-          "sourceEvidence": "Card215_017.java DeployCardFromReserveDeckEffect(Filters.Trash_Compactor)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Detention Block Corridor",
-          "blueprintIds": [],
-          "titleFragments": [
-            "detention block corridor"
-          ],
-          "runtimeFilter": "Filters.Detention_Block_Corridor",
-          "sourceEvidence": "Card215_017.java DeployCardFromReserveDeckEffect(Filters.Detention_Block_Corridor)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -3041,7 +2365,10 @@
           "runtimeFilter": "Filters.Detention_Block_Corridor"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Zero Hour",
@@ -3053,38 +2380,12 @@
         "zero hour",
         "liberation of lothal"
       ],
-      "locationFragments": [
-        "lothal"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "lothal site",
-        "lothal system"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Lothal system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "lothal system"
-          ],
-          "runtimeFilter": "Filters.Lothal_system",
-          "sourceEvidence": "Card219_048.java DeployCardFromReserveDeckEffect(Filters.Lothal_system)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Lothal site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "lothal site"
-          ],
-          "runtimeFilter": "Filters.Lothal_site",
-          "sourceEvidence": "Card219_048.java DeployCardFromReserveDeckEffect(Filters.Lothal_site)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -3156,7 +2457,10 @@
           "runtimeFilter": "Filters.Lothal_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Hunt For The Droid General",
@@ -3168,69 +2472,13 @@
         "hunt for the droid general",
         "he's a coward"
       ],
-      "locationFragments": [
-        "as",
-        "location",
-        "same",
-        "setup",
-        "system"
-      ],
-      "requiredCardsOnTable": [
-        "grievous will run and hide"
-      ],
-      "pullableCards": [
-        "clone army battleground",
-        "clone army card",
-        "clone command center",
-        "cloning cylinders",
-        "grievous will run and hide"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Clone Army battleground",
-          "blueprintIds": [],
-          "titleFragments": [
-            "clone army battleground"
-          ],
-          "runtimeFilter": "Filters.and(Icon.CLONE_ARMY, Filters.battleground, Filters.location)",
-          "sourceEvidence": "Card221_067.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(locationFilter)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Clone Command Center",
-          "blueprintIds": [],
-          "titleFragments": [
-            "clone command center"
-          ],
-          "runtimeFilter": "Filters.Clone_Command_Center",
-          "sourceEvidence": "Card221_067.java deploys Filters.Clone_Command_Center to chosen Clone Army location system",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Cloning Cylinders",
-          "blueprintIds": [],
-          "titleFragments": [
-            "cloning cylinders"
-          ],
-          "runtimeFilter": "Filters.Cloning_Cylinders",
-          "sourceEvidence": "Card221_067.java DeployCardFromReserveDeckEffect(Filters.Cloning_Cylinders)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Grievous Will Run And Hide",
-          "blueprintIds": [],
-          "titleFragments": [
-            "grievous will run and hide"
-          ],
-          "runtimeFilter": "Filters.Grievous_Will_Run_And_Hide",
-          "sourceEvidence": "Card221_067.java DeployCardFromReserveDeckEffect(Filters.Grievous_Will_Run_And_Hide)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -3283,7 +2531,10 @@
           "runtimeFilter": "Filters.Clone_Command_Center"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "The Empire Knows We're Here",
@@ -3295,43 +2546,12 @@
         "the empire knows we're here",
         "prepare for ground assault"
       ],
-      "locationFragments": [
-        "hoth",
-        "hoth battleground marker site",
-        "hoth system"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "1 force",
-        "echo command center or marker site",
-        "hoth system",
-        "main power generators",
-        "one card from top x used pile cards"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Hoth system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "hoth system"
-          ],
-          "runtimeFilter": "Filters.Hoth_system",
-          "sourceEvidence": "Card222_027.java DeployCardFromReserveDeckEffect(Filters.Hoth_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Main Power Generators",
-          "blueprintIds": [],
-          "titleFragments": [
-            "main power generators"
-          ],
-          "runtimeFilter": "Filters.Main_Power_Generators",
-          "sourceEvidence": "Card222_027.java DeployCardFromReserveDeckEffect(Filters.Main_Power_Generators)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -3426,7 +2646,10 @@
           "runtimeFilter": "Filters.Main_Power_Generators"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Mind What You Have Learned",
@@ -3438,62 +2661,13 @@
         "mind what you have learned",
         "save you it can"
       ],
-      "locationFragments": [
-        "bespin",
-        "bespin system or cloud city site",
-        "city",
-        "cloud",
-        "cloud city",
-        "dagobah"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "beldon's corridor",
-        "bespin system or cloud city site",
-        "cloud city no disintegrations!",
-        "cloud city rebel",
-        "dagobah location",
-        "dagobah yoda",
-        "patience",
-        "wise advice or yoda's hope",
-        "yoda's hut"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Beldon's Corridor",
-          "blueprintIds": [],
-          "titleFragments": [
-            "beldon's corridor"
-          ],
-          "runtimeFilter": "Filters.Beldons_Corridor",
-          "sourceEvidence": "Card225_053.java DeployCardFromReserveDeckEffect(Filters.Beldons_Corridor)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Yoda's Hut",
-          "blueprintIds": [],
-          "titleFragments": [
-            "yoda's hut"
-          ],
-          "runtimeFilter": "Filters.Yodas_Hut",
-          "sourceEvidence": "Card225_053.java DeployCardFromReserveDeckEffect(Filters.Yodas_Hut)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Cloud City No Disintegrations!",
-          "blueprintIds": [],
-          "titleFragments": [
-            "cloud city no disintegrations!"
-          ],
-          "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.No_Disintegrations)",
-          "sourceEvidence": "Card225_053.java DeployCardFromReserveDeckEffect(Filters.and(Icon.CLOUD_CITY, Filters.No_Disintegrations))",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -3575,7 +2749,10 @@
           "runtimeFilter": "Filters.Yodas_Hut"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "The Hidden Path",
@@ -3587,56 +2764,12 @@
         "the hidden path",
         "gather allies and train"
       ],
-      "locationFragments": [
-        "battleground",
-        "jabiim",
-        "mapuzo",
-        "non",
-        "or"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "fallen order",
-        "holocron",
-        "jabiim location",
-        "mining village",
-        "safehouse",
-        "underground corridor"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Mining Village",
-          "blueprintIds": [],
-          "titleFragments": [
-            "mining village"
-          ],
-          "runtimeFilter": "Filters.Mining_Village",
-          "sourceEvidence": "Card226_028.java DeployCardFromReserveDeckEffect(Filters.Mining_Village)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Safehouse",
-          "blueprintIds": [],
-          "titleFragments": [
-            "safehouse"
-          ],
-          "runtimeFilter": "Filters.Safehouse",
-          "sourceEvidence": "Card226_028.java DeployCardFromReserveDeckEffect(Filters.Safehouse)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Underground Corridor",
-          "blueprintIds": [],
-          "titleFragments": [
-            "underground corridor"
-          ],
-          "runtimeFilter": "Filters.Underground_Corridor",
-          "sourceEvidence": "Card226_028.java DeployCardFromReserveDeckEffect(Filters.Underground_Corridor)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -3737,7 +2870,10 @@
           "runtimeFilter": "Filters.Underground_Corridor"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "City In The Clouds",
@@ -3749,61 +2885,13 @@
         "city in the clouds",
         "you truly belong here with us"
       ],
-      "locationFragments": [
-        "bespin",
-        "bespin system",
-        "city",
-        "cloud",
-        "cloud city",
-        "cloud city battleground site",
-        "cloud city location",
-        "cloud city sites"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "bespin system",
-        "cloud city battleground location",
-        "cloud city battleground site",
-        "cloud city celebration",
-        "interrupt",
-        "weather vane"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Bespin system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "bespin system"
-          ],
-          "runtimeFilter": "Filters.Bespin_system",
-          "sourceEvidence": "Card301_002.java DeployCardFromReserveDeckEffect(Filters.Bespin_system)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Cloud City battleground site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "cloud city battleground site"
-          ],
-          "runtimeFilter": "Filters.and(Filters.Cloud_City_site, Filters.battleground)",
-          "sourceEvidence": "Card301_002.java DeployCardFromReserveDeckEffect(Filters.Cloud_City_site, Filters.battleground, false)",
-          "enablesFlip": true
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Weather Vane",
-          "blueprintIds": [],
-          "titleFragments": [
-            "weather vane"
-          ],
-          "runtimeFilter": "Filters.Weather_Vane",
-          "sourceEvidence": "Card301_002.java optional DeployCardsFromReserveDeckEffect(Filters.Weather_Vane, 0, 1, true, false)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -3874,7 +2962,10 @@
           "runtimeFilter": "Filters.and(Filters.Cloud_City_site, Filters.battleground)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Carbon Chamber Testing",
@@ -3886,76 +2977,12 @@
         "carbon chamber testing",
         "my favorite decoration"
       ],
-      "locationFragments": [
-        "bespin",
-        "city",
-        "cloud",
-        "cloud city",
-        "cloud city setup package",
-        "jabbas",
-        "palace",
-        "tatooine"
-      ],
-      "requiredCardsOnTable": [
-        "audience chamber"
-      ],
-      "pullableCards": [
-        "1 force",
-        "audience chamber",
-        "carbonite chamber",
-        "carbonite chamber console",
-        "docking bay 94",
-        "east platform",
-        "jabba's prize or opponent rebel captive",
-        "scum and villainy",
-        "security tower"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Carbonite Chamber",
-          "blueprintIds": [
-            "225_41",
-            "5_166",
-            "5_78"
-          ],
-          "titleFragments": [
-            "cloud city: carbonite chamber",
-            "carbonite chamber"
-          ],
-          "runtimeFilter": "Filters.Carbonite_Chamber",
-          "sourceEvidence": "Card7_296.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        },
-        {
-          "label": "Carbonite Chamber Console",
-          "blueprintIds": [
-            "211_8",
-            "5_107"
-          ],
-          "titleFragments": [
-            "carbonite chamber console"
-          ],
-          "runtimeFilter": "Filters.Carbonite_Chamber_Console",
-          "sourceEvidence": "Card7_296.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        },
-        {
-          "label": "Security Tower",
-          "blueprintIds": [
-            "200_126",
-            "5_172"
-          ],
-          "titleFragments": [
-            "cloud city: security tower",
-            "security tower"
-          ],
-          "runtimeFilter": "Filters.Security_Tower",
-          "sourceEvidence": "Card7_296.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -4067,7 +3094,10 @@
           "runtimeFilter": "Filters.Security_Tower"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Hunt Down And Destroy The Jedi",
@@ -4079,61 +3109,13 @@
         "hunt down and destroy the jedi",
         "their fire has gone out of the universe"
       ],
-      "locationFragments": [
-        "executor"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "epic duel",
-        "holotheatre",
-        "meditation chamber",
-        "visage of the emperor"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Holotheatre",
-          "blueprintIds": [
-            "4_161"
-          ],
-          "titleFragments": [
-            "executor: holotheatre",
-            "holotheatre"
-          ],
-          "runtimeFilter": "Filters.Holotheatre",
-          "sourceEvidence": "Card7_297.java required DeployCardFromReserveDeckEffect for Holotheatre and Visage Of The Emperor",
-          "enablesFlip": false
-        },
-        {
-          "label": "Meditation Chamber",
-          "blueprintIds": [
-            "4_163"
-          ],
-          "titleFragments": [
-            "executor: meditation chamber",
-            "meditation chamber"
-          ],
-          "runtimeFilter": "Filters.Meditation_Chamber",
-          "sourceEvidence": "Card7_297.java optional DeployCardsFromReserveDeckEffect for Meditation Chamber and Epic Duel",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Visage Of The Emperor",
-          "blueprintIds": [
-            "213_16",
-            "4_135"
-          ],
-          "titleFragments": [
-            "visage of the emperor"
-          ],
-          "runtimeFilter": "Filters.Visage_Of_The_Emperor",
-          "sourceEvidence": "Card7_297.java required DeployCardFromReserveDeckEffect for Holotheatre and Visage Of The Emperor",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -4198,7 +3180,10 @@
           "runtimeFilter": "Filters.Meditation_Chamber"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Imperial Occupation",
@@ -4212,34 +3197,10 @@
       ],
       "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "any planet system",
-        "generic site"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "any planet system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "any planet system"
-          ],
-          "runtimeFilter": "Filters.planet_system",
-          "sourceEvidence": "Card7_298.java DeployCardFromReserveDeckEffect(Filters.planet_system) sets Renegade planet",
-          "enablesFlip": true
-        },
-        {
-          "label": "generic site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "generic site"
-          ],
-          "runtimeFilter": "Filters.and(Filters.generic, Filters.site)",
-          "sourceEvidence": "Card7_298.java DeployCardToSystemFromReserveDeckEffect generic site to selected system",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -4291,7 +3252,10 @@
           "runtimeFilter": "Filters.and(Filters.generic, Filters.site)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "ISB Operations",
@@ -4303,33 +3267,12 @@
         "isb operations",
         "empire's sinister agents"
       ],
-      "locationFragments": [
-        "4",
-        "coruscant",
-        "coruscant location",
-        "hoth",
-        "or",
-        "yavin"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "coruscant location",
-        "isb agent"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Coruscant location",
-          "blueprintIds": [],
-          "titleFragments": [
-            "coruscant location"
-          ],
-          "runtimeFilter": "Filters.Coruscant_location",
-          "sourceEvidence": "Card7_299.java DeployCardFromReserveDeckEffect(Filters.Coruscant_location)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -4373,7 +3316,10 @@
           "runtimeFilter": "Filters.Coruscant_location"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Ralltiir Operations",
@@ -4385,29 +3331,12 @@
         "ralltiir operations",
         "in the hands of the empire"
       ],
-      "locationFragments": [
-        "ralltiir"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "any one card",
-        "ralltiir system",
-        "site or non-unique imperial"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Ralltiir system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "ralltiir system"
-          ],
-          "runtimeFilter": "Filters.Ralltiir_system",
-          "sourceEvidence": "Card7_300.java DeployCardFromReserveDeckEffect(Filters.Ralltiir_system)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -4464,10 +3393,14 @@
           "runtimeFilter": "Filters.Ralltiir_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Endor Operations",
+      "loaderEnabled": true,
       "blueprintIds": [
         "8_167",
         "8_167_BACK"
@@ -4483,13 +3416,7 @@
         "ominous rumors",
         "establish secret base"
       ],
-      "pullableCards": [
-        "biker scout",
-        "bunker",
-        "endor system",
-        "landing platform",
-        "ominous rumors or establish secret base"
-      ],
+      "pullableCards": [],
       "flipGateSite": "endor: bunker",
       "flipGateCardIds": [
         "207_25",
@@ -4627,7 +3554,10 @@
           "runtimeFilter": "Filters.Landing_Platform"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": true,
+      "rolloutStage": "pilot",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Bring Him Before Me",
@@ -4639,55 +3569,13 @@
         "bring him before me",
         "take your father's place"
       ],
-      "locationFragments": [
-        "death",
-        "ii",
-        "star"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "emperor",
-        "insignificant rebellion",
-        "luke or retargeted leia/kanan",
-        "throne room",
-        "your destiny"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Throne Room",
-          "blueprintIds": [],
-          "titleFragments": [
-            "throne room"
-          ],
-          "runtimeFilter": "Filters.Throne_Room",
-          "sourceEvidence": "Card9_151.java lines 63-69 DeployCardFromReserveDeckEffect(Filters.Throne_Room)",
-          "enablesFlip": true
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Insignificant Rebellion",
-          "blueprintIds": [],
-          "titleFragments": [
-            "insignificant rebellion"
-          ],
-          "runtimeFilter": "Filters.Insignificant_Rebellion",
-          "sourceEvidence": "Card9_151.java lines 70-76 DeployCardFromReserveDeckEffect(Filters.Insignificant_Rebellion)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Your Destiny",
-          "blueprintIds": [],
-          "titleFragments": [
-            "your destiny"
-          ],
-          "runtimeFilter": "Filters.Your_Destiny",
-          "sourceEvidence": "Card9_151.java lines 77-83 DeployCardFromReserveDeckEffect(Filters.Your_Destiny)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -4725,7 +3613,10 @@
           "runtimeFilter": "Filters.Throne_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Agents Of Black Sun",
@@ -4737,52 +3628,13 @@
         "agents of black sun",
         "vengeance of the dark prince"
       ],
-      "locationFragments": [
-        "coruscant"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "coruscant system",
-        "imperial city",
-        "no bargain",
-        "xizor or legacy shada"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Imperial City",
-          "blueprintIds": [],
-          "titleFragments": [
-            "imperial city"
-          ],
-          "runtimeFilter": "Filters.Imperial_City",
-          "sourceEvidence": "Card10_029.java lines 69-75 DeployCardFromReserveDeckEffect(Filters.Imperial_City)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Coruscant system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "coruscant system"
-          ],
-          "runtimeFilter": "Filters.Coruscant_system",
-          "sourceEvidence": "Card10_029.java lines 110-116 DeployCardFromReserveDeckEffect(Filters.Coruscant_system)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "No Bargain",
-          "blueprintIds": [],
-          "titleFragments": [
-            "no bargain"
-          ],
-          "runtimeFilter": "Filters.and(Icon.LEGACY_BLOCK_4, Filters.No_Bargain)",
-          "sourceEvidence": "Card10_029.java lines 88-96 deploys Legacy No Bargain if Legacy Shada is chosen",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -4853,10 +3705,14 @@
           "runtimeFilter": "Filters.Coruscant_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "My Lord, Is That Legal?",
+      "loaderEnabled": true,
       "blueprintIds": [
         "12_179",
         "12_179_BACK"
@@ -4953,7 +3809,10 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": true,
+      "rolloutStage": "pilot",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "No Money, No Parts, No Deal!",
@@ -4965,39 +3824,12 @@
         "no money, no parts, no deal!",
         "you're a slave?"
       ],
-      "locationFragments": [
-        "tatooine",
-        "tatooine sites"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "mos espa",
-        "watto's junkyard"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Watto's Junkyard",
-          "blueprintIds": [],
-          "titleFragments": [
-            "watto's junkyard"
-          ],
-          "runtimeFilter": "Filters.Wattos_Junkyard",
-          "sourceEvidence": "Card12_180.java lines 62-68 DeployCardFromReserveDeckEffect(Filters.Wattos_Junkyard)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Mos Espa",
-          "blueprintIds": [],
-          "titleFragments": [
-            "mos espa"
-          ],
-          "runtimeFilter": "Filters.Mos_Espa",
-          "sourceEvidence": "Card12_180.java lines 69-75 DeployCardFromReserveDeckEffect(Filters.Mos_Espa)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -5075,7 +3907,10 @@
           "runtimeFilter": "Filters.Mos_Espa"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Let Them Make The First Move",
@@ -5087,41 +3922,12 @@
         "let them make the first move",
         "at last we will have revenge"
       ],
-      "locationFragments": [
-        "interior naboo battleground site",
-        "naboo",
-        "naboo site"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "deep hatred",
-        "naboo: theed palace generator",
-        "naboo: theed palace generator core"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Naboo: Theed Palace Generator Core",
-          "blueprintIds": [],
-          "titleFragments": [
-            "naboo: theed palace generator core"
-          ],
-          "runtimeFilter": "Filters.Theed_Palace_Generator_Core",
-          "sourceEvidence": "Card13_073.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Theed_Palace_Generator_Core)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Naboo: Theed Palace Generator",
-          "blueprintIds": [],
-          "titleFragments": [
-            "naboo: theed palace generator"
-          ],
-          "runtimeFilter": "Filters.Theed_Palace_Generator",
-          "sourceEvidence": "Card13_073.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Theed_Palace_Generator)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -5198,7 +4004,10 @@
           "runtimeFilter": "Filters.Theed_Palace_Generator"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Invasion",
@@ -5210,56 +4019,13 @@
         "invasion",
         "in complete control"
       ],
-      "locationFragments": [
-        "naboo",
-        "naboo site",
-        "naboo system",
-        "naboo: theed palace throne room"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "blockade flagship",
-        "droid racks",
-        "naboo site",
-        "naboo system",
-        "naboo: swamp"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Naboo system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "naboo system"
-          ],
-          "runtimeFilter": "Filters.Naboo_system",
-          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Naboo_system)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Naboo: Swamp",
-          "blueprintIds": [],
-          "titleFragments": [
-            "naboo: swamp"
-          ],
-          "runtimeFilter": "Filters.Naboo_Swamp",
-          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Naboo_Swamp)",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Droid Racks",
-          "blueprintIds": [],
-          "titleFragments": [
-            "droid racks"
-          ],
-          "runtimeFilter": "Filters.Droid_Racks",
-          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Droid_Racks)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -5346,7 +4112,10 @@
           "runtimeFilter": "Filters.Naboo_Swamp"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "This Deal Is Getting Worse All The Time",
@@ -5358,59 +4127,13 @@
         "this deal is getting worse all the time",
         "pray i don't alter it any further"
       ],
-      "locationFragments": [
-        "bespin",
-        "bespin location",
-        "bespin system",
-        "bespin: cloud city",
-        "cloud city",
-        "cloud city battleground site"
-      ],
-      "requiredCardsOnTable": [
-        "dark deal on table"
-      ],
-      "pullableCards": [
-        "all wrapped up",
-        "bespin system, bespin: cloud city, dark deal, or cloud city occupation",
-        "cloud city battleground site",
-        "secret plans"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Cloud City battleground site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "cloud city battleground site"
-          ],
-          "runtimeFilter": "Filters.Cloud_City_battleground_site",
-          "sourceEvidence": "Card109_012.java DeployCardFromReserveDeckEffect(Filters.and(Filters.Cloud_City_battleground_site))",
-          "enablesFlip": true
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Secret Plans",
-          "blueprintIds": [],
-          "titleFragments": [
-            "secret plans"
-          ],
-          "runtimeFilter": "Filters.Secret_Plans",
-          "sourceEvidence": "Card109_012.java optional DeployCardsFromReserveDeckEffect(Filters.Secret_Plans, 0, 1)",
-          "enablesFlip": false
-        },
-        {
-          "label": "All Wrapped Up",
-          "blueprintIds": [],
-          "titleFragments": [
-            "all wrapped up"
-          ],
-          "runtimeFilter": "Filters.All_Wrapped_Up",
-          "sourceEvidence": "Card109_012.java optional DeployCardsFromReserveDeckEffect(Filters.All_Wrapped_Up, 0, 1)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -5485,7 +4208,10 @@
           "runtimeFilter": "Filters.Cloud_City_battleground_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Court Of The Vile Gangster",
@@ -5497,53 +4223,12 @@
         "court of the vile gangster",
         "i shall enjoy watching you die"
       ],
-      "locationFragments": [
-        "tatooine",
-        "tatooine battleground site",
-        "tatooine site"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "docking bay or [independent] starship",
-        "jabba's palace: audience chamber",
-        "jabba's palace: dungeon",
-        "sarlacc, rancor, or rancor pit",
-        "tatooine: great pit of carkoon"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Jabba's Palace: Audience Chamber",
-          "blueprintIds": [],
-          "titleFragments": [
-            "jabba's palace: audience chamber"
-          ],
-          "runtimeFilter": "Filters.Audience_Chamber",
-          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Audience_Chamber)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Tatooine: Great Pit Of Carkoon",
-          "blueprintIds": [],
-          "titleFragments": [
-            "tatooine: great pit of carkoon"
-          ],
-          "runtimeFilter": "Filters.Great_Pit_Of_Carkoon",
-          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Great_Pit_Of_Carkoon)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Jabba's Palace: Dungeon",
-          "blueprintIds": [],
-          "titleFragments": [
-            "jabba's palace: dungeon"
-          ],
-          "runtimeFilter": "Filters.Dungeon",
-          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Dungeon)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -5657,7 +4342,10 @@
           "runtimeFilter": "Filters.Dungeon"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Set Your Course For Alderaan",
@@ -5669,59 +4357,12 @@
         "set your course for alderaan",
         "the ultimate power in the universe"
       ],
-      "locationFragments": [
-        "alderaan",
-        "death",
-        "death star: docking bay 327",
-        "hoth",
-        "jedha",
-        "or",
-        "star",
-        "subjugated",
-        "yavin4"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "alderaan system or jedha city",
-        "battleground system",
-        "card with death star in title",
-        "death star system",
-        "death star: docking bay 327"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Death Star system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "death star system"
-          ],
-          "runtimeFilter": "Filters.Death_Star_system",
-          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Death_Star_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Alderaan system or Jedha City",
-          "blueprintIds": [],
-          "titleFragments": [
-            "alderaan system or jedha city"
-          ],
-          "runtimeFilter": "Filters.Deployable_By_SYCFA",
-          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Deployable_By_SYCFA)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Death Star: Docking Bay 327",
-          "blueprintIds": [],
-          "titleFragments": [
-            "death star: docking bay 327"
-          ],
-          "runtimeFilter": "Filters.Docking_Bay_327",
-          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Docking_Bay_327)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -5864,7 +4505,10 @@
           "runtimeFilter": "Filters.Docking_Bay_327"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "My Kind Of Scum",
@@ -5876,53 +4520,13 @@
         "my kind of scum",
         "fearless and inventive"
       ],
-      "locationFragments": [
-        "tatooine"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "desert heart",
-        "jabba's palace site",
-        "non-unique alien of rep's species",
-        "rep",
-        "well guarded"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Desert Heart",
-          "blueprintIds": [],
-          "titleFragments": [
-            "desert heart"
-          ],
-          "runtimeFilter": "Filters.Desert_Heart",
-          "sourceEvidence": "Card112_015.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Desert_Heart)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Jabba's Palace site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "jabba's palace site"
-          ],
-          "runtimeFilter": "Filters.Jabbas_Palace_site",
-          "sourceEvidence": "Card112_015.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Jabbas_Palace_site)",
-          "enablesFlip": true
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Well Guarded",
-          "blueprintIds": [],
-          "titleFragments": [
-            "well guarded"
-          ],
-          "runtimeFilter": "Filters.Well_Guarded",
-          "sourceEvidence": "Card112_015.java optional DeployCardsFromReserveDeckEffect(Filters.Well_Guarded, 0, 1)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -5985,7 +4589,10 @@
           "runtimeFilter": "Filters.Jabbas_Palace_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Imperial Entanglements",
@@ -5997,42 +4604,12 @@
         "imperial entanglements",
         "no one to stop us this time"
       ],
-      "locationFragments": [
-        "tatooine",
-        "tatooine battleground site",
-        "tatooine system"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "devastator",
-        "tatooine battleground site",
-        "tatooine system",
-        "trooper"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Tatooine system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "tatooine system"
-          ],
-          "runtimeFilter": "Filters.Tatooine_system",
-          "sourceEvidence": "Card201_039.java DeployCardFromReserveDeckEffect(Filters.Tatooine_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Tatooine battleground site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "tatooine battleground site"
-          ],
-          "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.battleground)",
-          "sourceEvidence": "Card201_039.java DeployCardFromReserveDeckEffect(Filters.Tatooine_site, Filters.battleground, false)",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -6091,7 +4668,10 @@
           "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.battleground)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "I Want That Map",
@@ -6103,85 +4683,13 @@
         "i want that map",
         "and now you'll give it to me"
       ],
-      "locationFragments": [
-        "jakku",
-        "starkiller base"
-      ],
-      "requiredCardsOnTable": [
-        "the first order was just the beginning"
-      ],
-      "pullableCards": [
-        "i will finish what you started",
-        "interrupt",
-        "other episode vii location",
-        "resistance agent",
-        "the first order was just the beginning",
-        "tuanul village"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Tuanul Village",
-          "blueprintIds": [],
-          "titleFragments": [
-            "tuanul village"
-          ],
-          "runtimeFilter": "Filters.Tuanul_Village",
-          "sourceEvidence": "Card208_057.java DeployCardFromReserveDeckEffect(Filters.Tuanul_Village)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Other Episode VII location",
-          "blueprintIds": [],
-          "titleFragments": [
-            "other episode vii location"
-          ],
-          "runtimeFilter": "Filters.and(Icon.EPISODE_VII, Filters.location, Filters.not(Filters.Tuanul_Village))",
-          "sourceEvidence": "Card208_057.java DeployCardFromReserveDeckEffect for Episode VII location",
-          "enablesFlip": true
-        },
-        {
-          "label": "Starkiller Base system",
-          "blueprintIds": [
-            "208_51"
-          ],
-          "titleFragments": [
-            "starkiller base",
-            "starkiller base system"
-          ],
-          "runtimeFilter": "Filters.title(Title.Starkiller_Base) and Filters.system",
-          "sourceVtag": "V186",
-          "score": 400,
-          "sourceEvidence": "ObjectiveAnalyzer.java lines 192-202 and CardSelectionEvaluator V186",
-          "enablesFlip": true
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "I Will Finish What You Started",
-          "blueprintIds": [],
-          "titleFragments": [
-            "i will finish what you started"
-          ],
-          "runtimeFilter": "Filters.I_Will_Finish_What_You_Started",
-          "sourceEvidence": "Card208_057.java DeployCardFromReserveDeckEffect(Filters.I_Will_Finish_What_You_Started)",
-          "enablesFlip": false
-        },
-        {
-          "label": "The First Order Was Just The Beginning",
-          "blueprintIds": [
-            "214_12"
-          ],
-          "titleFragments": [
-            "the first order was just the beginning"
-          ],
-          "sourceVtag": "V186",
-          "score": 1000,
-          "sourceEvidence": "ObjectiveAnalyzer.java lines 192-202 and CardSelectionEvaluator V186",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -6270,7 +4778,10 @@
           "runtimeFilter": "Filters.title(Title.Starkiller_Base) and Filters.system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "A Stunning Move",
@@ -6282,45 +4793,12 @@
         "a stunning move",
         "a valuable hostage"
       ],
-      "locationFragments": [
-        "coruscant",
-        "or",
-        "starship",
-        "vehicle"
-      ],
-      "requiredCardsOnTable": [
-        "insidious prisoner"
-      ],
-      "pullableCards": [
-        "500 republica",
-        "insidious prisoner",
-        "invisible hand site or separatist droid",
-        "private platform"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "500 Republica",
-          "blueprintIds": [],
-          "titleFragments": [
-            "500 republica"
-          ],
-          "runtimeFilter": "Filters._500_Republica",
-          "sourceEvidence": "Card211_026.java getDeployCardFromReserveDeckEffect(Filters._500_Republica)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Private Platform",
-          "blueprintIds": [],
-          "titleFragments": [
-            "private platform"
-          ],
-          "runtimeFilter": "Filters.Private_Platform",
-          "sourceEvidence": "Card211_026.java getDeployCardFromReserveDeckEffect(Filters.Private_Platform)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -6397,7 +4875,10 @@
           "runtimeFilter": "Filters.Private_Platform"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Hunt Down And Destroy The Jedi",
@@ -6409,58 +4890,13 @@
         "hunt down and destroy the jedi",
         "their fire has gone out of the universe"
       ],
-      "locationFragments": [
-        "city",
-        "cloud",
-        "cloud city or malachor battleground site",
-        "cloud city site with exactly one dark side icon",
-        "malachor",
-        "mustafar",
-        "or"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "cloud city or malachor battleground site",
-        "cloud city site with one dark side icon",
-        "vader's castle",
-        "visage of the emperor [set 13]"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Vader's Castle",
-          "blueprintIds": [],
-          "titleFragments": [
-            "vader's castle"
-          ],
-          "runtimeFilter": "Filters.title(Title.Vaders_Castle)",
-          "sourceEvidence": "Card213_031.java DeployCardFromReserveDeckEffect(Filters.title(Title.Vaders_Castle))",
-          "enablesFlip": false
-        },
-        {
-          "label": "Cloud City site with one Dark Side icon",
-          "blueprintIds": [],
-          "titleFragments": [
-            "cloud city site with one dark side icon"
-          ],
-          "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.site, Filters.iconCount(Icon.DARK_FORCE, 1))",
-          "sourceEvidence": "Card213_031.java DeployCardFromReserveDeckEffect(Filters.and(Icon.CLOUD_CITY, Filters.site, Filters.iconCount(Icon.DARK_FORCE, 1)))",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Visage Of The Emperor [Set 13]",
-          "blueprintIds": [],
-          "titleFragments": [
-            "visage of the emperor [set 13]"
-          ],
-          "runtimeFilter": "Filters.and(Filters.Visage_Of_The_Emperor, Filters.icon(Icon.VIRTUAL_SET_13))",
-          "sourceEvidence": "Card213_031.java DeployCardFromReserveDeckEffect(Filters.and(Filters.Visage_Of_The_Emperor, Filters.icon(Icon.VIRTUAL_SET_13)))",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -6530,7 +4966,10 @@
           "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.site, Filters.iconCount(Icon.DARK_FORCE, 1))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Shadow Collective",
@@ -6542,39 +4981,12 @@
         "shadow collective",
         "you know who i answer to"
       ],
-      "locationFragments": [
-        "dathomir"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "dathomir: maul's chambers",
-        "maul",
-        "non-unique blaster or first light title card"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Dathomir: Maul's Chambers",
-          "blueprintIds": [],
-          "titleFragments": [
-            "dathomir: maul's chambers"
-          ],
-          "runtimeFilter": "Filters.title(Title.Dathomir_Mauls_Chambers)",
-          "sourceEvidence": "Card213_032.java getGameTextWhenDeployedAction",
-          "enablesFlip": false
-        },
-        {
-          "label": "Maul",
-          "blueprintIds": [],
-          "titleFragments": [
-            "maul"
-          ],
-          "runtimeFilter": "Filters.Maul",
-          "sourceEvidence": "Card213_032.java optional DeployCardsToLocationFromReserveDeckEffect",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -6646,7 +5058,10 @@
           "runtimeFilter": "Filters.Maul"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "On The Verge Of Greatness",
@@ -6658,52 +5073,12 @@
         "on the verge of greatness",
         "taking control of the weapon"
       ],
-      "locationFragments": [
-        "scarif"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "[set 16] death star system",
-        "non-unique card with ability",
-        "scarif battleground",
-        "scarif system",
-        "scarif: citadel tower",
-        "shield gate"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "[Set 16] Death Star system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "[set 16] death star system"
-          ],
-          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_16, Filters.Death_Star_system)",
-          "sourceEvidence": "Card216_011.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        },
-        {
-          "label": "Scarif system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "scarif system"
-          ],
-          "runtimeFilter": "Filters.Scarif_system",
-          "sourceEvidence": "Card216_011.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        },
-        {
-          "label": "Scarif: Citadel Tower",
-          "blueprintIds": [],
-          "titleFragments": [
-            "scarif: citadel tower"
-          ],
-          "runtimeFilter": "Filters.title(Title.Scarif_Citadel_Tower)",
-          "sourceEvidence": "Card216_011.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -6795,7 +5170,10 @@
           "runtimeFilter": "Filters.title(Title.Scarif_Citadel_Tower)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "A Great Tactician Creates Plans",
@@ -6807,64 +5185,13 @@
         "a great tactician creates plans",
         "the result is often resentment"
       ],
-      "locationFragments": [
-        "lothal"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "battleground system or site to lothal",
-        "card with ability",
-        "lothal system",
-        "lothal: advanced projects laboratory",
-        "lothal: imperial complex",
-        "thrawn's art collection"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Lothal system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "lothal system"
-          ],
-          "runtimeFilter": "Filters.Lothal_system",
-          "sourceEvidence": "Card219_001.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        },
-        {
-          "label": "Lothal: Advanced Projects Laboratory",
-          "blueprintIds": [],
-          "titleFragments": [
-            "lothal: advanced projects laboratory"
-          ],
-          "runtimeFilter": "Filters.title(Title.Lothal_Advanced_Projects_Laboratory)",
-          "sourceEvidence": "Card219_001.java getGameTextWhenDeployedAction",
-          "enablesFlip": false
-        },
-        {
-          "label": "Lothal: Imperial Complex",
-          "blueprintIds": [],
-          "titleFragments": [
-            "lothal: imperial complex"
-          ],
-          "runtimeFilter": "Filters.title(Title.Lothal_Imperial_Complex)",
-          "sourceEvidence": "Card219_001.java getGameTextWhenDeployedAction",
-          "enablesFlip": false
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "Thrawn's Art Collection",
-          "blueprintIds": [],
-          "titleFragments": [
-            "thrawn's art collection"
-          ],
-          "runtimeFilter": "Filters.Thrawns_Art_Collection",
-          "sourceEvidence": "Card219_001.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -6954,7 +5281,10 @@
           "runtimeFilter": "Filters.title(Title.Lothal_Imperial_Complex)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "The Shield Will Be Down in Moments",
@@ -6966,75 +5296,13 @@
         "the shield will be down in moments",
         "imperial troops have entered the base"
       ],
-      "locationFragments": [
-        "hoth",
-        "hoth location",
-        "hoth: defensive perimeter",
-        "hoth: ice plains",
-        "hoth: main power generators",
-        "occupied hoth site"
-      ],
-      "requiredCardsOnTable": [
-        "target the main generator"
-      ],
-      "pullableCards": [
-        "1st marker / main power generators",
-        "5th marker",
-        "[set 17] 4th marker",
-        "[set 9] prepare for a surface attack",
-        "at-at cannon",
-        "bottom lost pile card or opponent reserve top x",
-        "hoth location",
-        "prepare for a surface attack",
-        "snowtrooper",
-        "target the main generator"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "5th Marker",
-          "blueprintIds": [],
-          "titleFragments": [
-            "5th marker"
-          ],
-          "runtimeFilter": "Filters.Fifth_Marker",
-          "sourceEvidence": "Card222_014.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        },
-        {
-          "label": "[Set 17] 4th Marker",
-          "blueprintIds": [],
-          "titleFragments": [
-            "[set 17] 4th marker"
-          ],
-          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)",
-          "sourceEvidence": "Card222_014.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        },
-        {
-          "label": "1st Marker / Main Power Generators",
-          "blueprintIds": [],
-          "titleFragments": [
-            "1st marker / main power generators"
-          ],
-          "runtimeFilter": "Filters.First_Marker",
-          "sourceEvidence": "Card222_014.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "[Set 9] Prepare For A Surface Attack",
-          "blueprintIds": [],
-          "titleFragments": [
-            "[set 9] prepare for a surface attack"
-          ],
-          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack)",
-          "sourceEvidence": "Card222_014.java getGameTextWhenDeployedAction",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -7127,7 +5395,10 @@
           "runtimeFilter": "Filters.First_Marker"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "The Shield Will Be Down in Moments",
@@ -7139,75 +5410,13 @@
         "the shield will be down in moments",
         "imperial troops have entered the base"
       ],
-      "locationFragments": [
-        "hoth",
-        "hoth location",
-        "hoth site occupied by durable occupier",
-        "hoth: defensive perimeter",
-        "hoth: ice plains",
-        "hoth: main power generators"
-      ],
-      "requiredCardsOnTable": [
-        "main power generators",
-        "target the main generator"
-      ],
-      "pullableCards": [
-        "1st marker / main power generators",
-        "5th marker",
-        "[set 17] 4th marker",
-        "[set 9] prepare for a surface attack",
-        "at-at cannon",
-        "hoth location",
-        "prepare for a surface attack",
-        "snowtrooper",
-        "target the main generator"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "5th Marker",
-          "blueprintIds": [],
-          "titleFragments": [
-            "5th marker"
-          ],
-          "runtimeFilter": "Filters.Fifth_Marker",
-          "sourceEvidence": "Card222_030.java lines 55-63 DeployCardFromReserveDeckEffect(Filters.Fifth_Marker)",
-          "enablesFlip": true
-        },
-        {
-          "label": "[Set 17] 4th Marker",
-          "blueprintIds": [],
-          "titleFragments": [
-            "[set 17] 4th marker"
-          ],
-          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)",
-          "sourceEvidence": "Card222_030.java lines 64-70 DeployCardFromReserveDeckEffect(Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker))",
-          "enablesFlip": true
-        },
-        {
-          "label": "1st Marker / Main Power Generators",
-          "blueprintIds": [],
-          "titleFragments": [
-            "1st marker / main power generators"
-          ],
-          "runtimeFilter": "Filters.First_Marker",
-          "sourceEvidence": "Card222_030.java lines 72-78 DeployCardFromReserveDeckEffect(Filters.First_Marker)",
-          "enablesFlip": true
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "[Set 9] Prepare For A Surface Attack",
-          "blueprintIds": [],
-          "titleFragments": [
-            "[set 9] prepare for a surface attack"
-          ],
-          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack)",
-          "sourceEvidence": "Card222_030.java lines 80-86 DeployCardFromReserveDeckEffect(Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack))",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -7294,7 +5503,10 @@
           "runtimeFilter": "Filters.First_Marker"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "The First Order Reigns",
@@ -7306,58 +5518,12 @@
         "the first order reigns",
         "the resistance is doomed"
       ],
-      "locationFragments": [
-        "crait",
-        "crait location",
-        "crait: salt plateau",
-        "episode",
-        "vii"
-      ],
-      "requiredCardsOnTable": [
-        "tracked fleet"
-      ],
-      "pullableCards": [
-        "crait system",
-        "crait: salt plateau",
-        "d'qar system",
-        "non-unique trooper or non-unique first order vehicle",
-        "supremacy-title card or episode vii battleground",
-        "tracked fleet"
-      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "D'Qar system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "d'qar system"
-          ],
-          "runtimeFilter": "Filters.Dqar_system",
-          "sourceEvidence": "Card225_032.java lines 48-54 DeployCardFromReserveDeckEffect(Filters.Dqar_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Crait system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "crait system"
-          ],
-          "runtimeFilter": "Filters.Crait_system",
-          "sourceEvidence": "Card225_032.java lines 55-61 DeployCardFromReserveDeckEffect(Filters.Crait_system)",
-          "enablesFlip": false
-        },
-        {
-          "label": "Crait: Salt Plateau",
-          "blueprintIds": [],
-          "titleFragments": [
-            "crait: salt plateau"
-          ],
-          "runtimeFilter": "Filters.Crait_Salt_Plateau",
-          "sourceEvidence": "Card225_032.java lines 62-68 DeployCardFromReserveDeckEffect(Filters.Crait_Salt_Plateau)",
-          "enablesFlip": false
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -7463,7 +5629,10 @@
           "runtimeFilter": "Filters.Crait_Salt_Plateau"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "This Deal Is Getting Worse All The Time",
@@ -7475,46 +5644,13 @@
         "this deal is getting worse all the time",
         "pray i don't alter it any further"
       ],
-      "locationFragments": [
-        "bespin",
-        "bespin location",
-        "city",
-        "cloud",
-        "cloud city",
-        "cloud city battleground site"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "[cloud city] i'm sorry",
-        "cloud city battleground site",
-        "dark deal, vader's bounty, or [special edition] bespin"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Cloud City battleground site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "cloud city battleground site"
-          ],
-          "runtimeFilter": "Filters.Cloud_City_battleground_site",
-          "sourceEvidence": "Card226_012.java lines 50-59 DeployCardFromReserveDeckEffect(Filters.Cloud_City_battleground_site)",
-          "enablesFlip": true
-        }
-      ],
-      "startingEffects": [
-        {
-          "label": "[Cloud City] I'm Sorry",
-          "blueprintIds": [],
-          "titleFragments": [
-            "[cloud city] i'm sorry"
-          ],
-          "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.Im_Sorry)",
-          "sourceEvidence": "Card226_012.java lines 60-66 DeployCardFromReserveDeckEffect(Filters.and(Icon.CLOUD_CITY, Filters.Im_Sorry))",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
+      "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -7560,7 +5696,10 @@
           "runtimeFilter": "Filters.Cloud_City_battleground_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     },
     {
       "label": "Twin Suns Of Tatooine",
@@ -7572,44 +5711,12 @@
         "twin suns of tatooine",
         "well trained in the jedi arts"
       ],
-      "locationFragments": [
-        "non-jabba's palace tatooine site",
-        "tatooine",
-        "tatooine battleground site",
-        "tatooine system"
-      ],
+      "locationFragments": [],
       "requiredCardsOnTable": [],
-      "pullableCards": [
-        "non-jabba's palace tatooine site",
-        "one of top two reserve deck cards",
-        "tatooine battleground site",
-        "tatooine occupation",
-        "tatooine system"
-      ],
+      "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [
-        {
-          "label": "Tatooine system",
-          "blueprintIds": [],
-          "titleFragments": [
-            "tatooine system"
-          ],
-          "runtimeFilter": "Filters.Tatooine_system",
-          "sourceEvidence": "Card301_004.java lines 45-53 DeployCardFromReserveDeckEffect(Filters.Tatooine_system)",
-          "enablesFlip": true
-        },
-        {
-          "label": "Non-Jabba's Palace Tatooine site",
-          "blueprintIds": [],
-          "titleFragments": [
-            "non-jabba's palace tatooine site"
-          ],
-          "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site))",
-          "sourceEvidence": "Card301_004.java lines 54-60 DeployCardFromReserveDeckEffect(Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site)))",
-          "enablesFlip": true
-        }
-      ],
+      "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
@@ -7676,7 +5783,10 @@
           "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "rolloutEnabled": false,
+      "rolloutStage": "data_only",
+      "rolloutNote": "Hydrate at runtime only after boundary math. My Lord and Endor are current pilots."
     }
   ],
   "validation": {
