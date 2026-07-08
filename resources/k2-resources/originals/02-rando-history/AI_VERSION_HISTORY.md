@@ -9,6 +9,13 @@ keySite Filters.Bunker, weight deployFlipGateSite = the existing V193 +400. Depl
 weight instead of the literal. No behavior change (V193 fires only for Endor, which selects ENDOR_PLAYBOOK, weight
 == old literal). Same typed shape as MY_LORD_PLAYBOOK. Flip-gate CARD V-scoping (8_124 base vs 207_25 V) is a
 separate follow-up. See AI_CHANGELOG.md 2026-07-07.
+  ════ ObjectivePlaybook JSON loader (2026-07-08): single runtime objective-data source, Phase 0 behavior-neutral ════
+objective_playbooks.json bundled as a jar resource = the ONE place for objective scoring inputs; ObjectiveAnalyzer
+(both bots) parses it once (Gson) and hydrates its scoring/setup slots from the active objective's profile (id then
+title match). ADDITIVE + idempotent + hard fallback to the text parser. No hardcode replaced yet (comment-out is LAST,
+after boundary math). New setup slots: startingLocations/Effects/Interrupts. Pilots My Lord + Endor; Codex delivers 58.
+See AI_CHANGELOG.md 2026-07-08.
+
 V193 FIX (same day): Bunker flip-gate steer scoped to Bunker-GATED Establish Secret Base ids {207_25,601_260}
 only (base 8_124 gates on 3 Endor sites, not Bunker). New flipCriticalControlCardIds set; DeployEvaluator detects
 by id, falls back to title. Behavior-narrowing, both bots. See AI_CHANGELOG.md 2026-07-07.

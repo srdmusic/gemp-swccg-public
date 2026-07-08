@@ -53,6 +53,17 @@ public class ObjectiveAnalyzer {
     private final Set<String> flipConditionLocationFragments = new HashSet<>();
     private final Set<String> requiredCardsOnTable = new HashSet<>();
     private final Set<String> pullableCards = new HashSet<>();
+    // NEW setup slots (2026-07-08, JSON playbook): starting locations/effects/interrupts NAMED by the
+    // objective (e.g. Luke Saga starting location, IWTM preferred starting effect). Hydrated from
+    // objective_playbooks.json; consumers (CardSelection starting-chooser) wire per objective. Ids +
+    // title fragments, virtual-reprint proof. Empty until a profile populates them.
+    private final Set<String> startingLocationIds = new HashSet<>();
+    private final Set<String> startingLocationFragments = new HashSet<>();
+    private final Set<String> startingEffectIds = new HashSet<>();
+    private final Set<String> startingEffectFragments = new HashSet<>();
+    private final Set<String> startingInterruptIds = new HashSet<>();
+    private final Set<String> startingInterruptFragments = new HashSet<>();
+    private boolean hydratedFromJson = false;   // true once a JSON profile hydrated this objective
     // V22.2: Back side / flip-back protection
     private final Set<String> flipBackLocations = new HashSet<>();
     private final Set<String> flipBackLocationFragments = new HashSet<>();
@@ -206,6 +217,12 @@ public class ObjectiveAnalyzer {
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Game text: {}", gameText);
 
             parseGameText(gameText);
+            // ObjectivePlaybook JSON hydration (2026-07-08): pull scoring-slot data from the single
+            // runtime source (objective_playbooks.json) for the active objective. ADDITIVE + idempotent
+            // — runs AFTER the text parser / hardcoded blocks, so where both fill a slot the values are
+            // identical. Hard fallback: no profile / empty registry → parser output stands unchanged.
+            JsonProfile jsonProfile = findProfile(bpId, title);
+            if (jsonProfile != null) hydrateFromProfile(jsonProfile);
             updateFlipStatus(objectiveCard);
             this.analyzed = true;
 
@@ -286,6 +303,14 @@ public class ObjectiveAnalyzer {
     public String getFlipCriticalControlCard() { return flipCriticalControlCard; }
     // FIX 2026-07-07: the exact Bunker-gated Establish Secret Base ids (empty → detect by title).
     public Set<String> getFlipCriticalControlCardIds() { return Collections.unmodifiableSet(flipCriticalControlCardIds); }
+    // NEW setup slots (2026-07-08, JSON playbook) — starting cards named by the objective.
+    public Set<String> getStartingLocationIds() { return Collections.unmodifiableSet(startingLocationIds); }
+    public Set<String> getStartingLocationFragments() { return Collections.unmodifiableSet(startingLocationFragments); }
+    public Set<String> getStartingEffectIds() { return Collections.unmodifiableSet(startingEffectIds); }
+    public Set<String> getStartingEffectFragments() { return Collections.unmodifiableSet(startingEffectFragments); }
+    public Set<String> getStartingInterruptIds() { return Collections.unmodifiableSet(startingInterruptIds); }
+    public Set<String> getStartingInterruptFragments() { return Collections.unmodifiableSet(startingInterruptFragments); }
+    public boolean isHydratedFromJson() { return hydratedFromJson; }
     public Set<String> getRequiredCardsOnTable() { return Collections.unmodifiableSet(requiredCardsOnTable); }
     public Set<String> getPullableCards() { return Collections.unmodifiableSet(pullableCards); }
     public boolean requiresOccupy() { return requiresOccupy; }
@@ -449,6 +474,122 @@ public class ObjectiveAnalyzer {
 
     /** The active objective's playbook, or null. Analyzer-owned API for evaluators/planners to consult. */
     public ObjectivePlaybook getActivePlaybook() { return activePlaybook; }
+
+    // ═══ JSON PLAYBOOK LOADER (2026-07-08, Steve's ruling: ONE runtime data source) ═══
+    // objective_playbooks.json (bundled jar resource) is the single source of objective scoring
+    // inputs. Parsed ONCE (lazy, thread-safe). analyze() looks up the active objective's profile
+    // by blueprint id (then title fragment) and hydrates the analyzer's existing scoring slots +
+    // the new setup slots from it. HARD FALLBACK: missing/malformed file or unlisted objective →
+    // registry is empty / findProfile null → the existing text parser output stands unchanged.
+    // Descriptive fact fields in the JSON (sourceEvidence/notes/resolvedSample/…) are ignored;
+    // Gson binds only the prescriptive fields below.
+    static final class JsonCardRef {
+        List<String> blueprintIds;
+        List<String> titleFragments;
+        String sourceVtag;
+    }
+    static final class JsonProfile {
+        String label;
+        List<String> blueprintIds;
+        List<String> titleFragments;
+        List<String> locationFragments;
+        List<String> requiredCardsOnTable;
+        List<String> pullableCards;
+        String flipGateSite;
+        List<String> flipGateCardIds;
+        List<JsonCardRef> startingLocations;
+        List<JsonCardRef> startingEffects;
+        List<JsonCardRef> startingInterrupts;
+        String keyCharacterFilter;
+        String keySiteFilter;
+        Map<String, Float> weights;
+    }
+    static final class JsonRoot {
+        List<JsonProfile> profiles;
+    }
+
+    private static volatile List<JsonProfile> PROFILES = null;
+    private static final Object PROFILES_LOCK = new Object();
+
+    private static List<JsonProfile> profiles() {
+        List<JsonProfile> p = PROFILES;
+        if (p == null) {
+            synchronized (PROFILES_LOCK) {
+                p = PROFILES;
+                if (p == null) { p = loadProfiles(); PROFILES = p; }
+            }
+        }
+        return p;
+    }
+
+    private static List<JsonProfile> loadProfiles() {
+        try (java.io.InputStream in =
+                 ObjectiveAnalyzer.class.getResourceAsStream("/objective_playbooks.json")) {
+            if (in == null) {
+                LOG.warn("[ObjectiveAnalyzer] objective_playbooks.json NOT on classpath — JSON hydration disabled, text-parser fallback active.");
+                return Collections.emptyList();
+            }
+            JsonRoot root = new com.google.gson.Gson().fromJson(
+                new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8), JsonRoot.class);
+            if (root == null || root.profiles == null) return Collections.emptyList();
+            LOG.warn("[ObjectiveAnalyzer] loaded {} objective playbook profile(s) from objective_playbooks.json", root.profiles.size());
+            return root.profiles;
+        } catch (Exception e) {
+            LOG.warn("[ObjectiveAnalyzer] failed to load objective_playbooks.json ({}) — text-parser fallback active.", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /** Active objective's JSON profile, matched by blueprint id first then title fragment. null if none. */
+    private JsonProfile findProfile(String bpId, String title) {
+        List<JsonProfile> profs = profiles();
+        if (profs.isEmpty()) return null;
+        if (bpId != null) {
+            for (JsonProfile p : profs) {
+                if (p.blueprintIds != null && p.blueprintIds.contains(bpId)) return p;
+            }
+        }
+        if (title != null) {
+            String tl = title.toLowerCase(Locale.ROOT);
+            for (JsonProfile p : profs) {
+                if (p.titleFragments == null) continue;
+                for (String f : p.titleFragments) if (f != null && !f.isEmpty() && tl.contains(f)) return p;
+            }
+        }
+        return null;
+    }
+
+    /** Hydrate the analyzer's scoring/setup slots from a JSON profile. ADDITIVE + idempotent: never
+     *  clears a slot; where the text parser already filled one, the same value is written again. */
+    private void hydrateFromProfile(JsonProfile p) {
+        if (p == null) return;
+        if (p.locationFragments != null)
+            for (String f : p.locationFragments) if (f != null && !f.isEmpty()) addLocationFragment(f.toLowerCase(Locale.ROOT));
+        if (p.requiredCardsOnTable != null)
+            for (String c : p.requiredCardsOnTable) if (c != null && !c.isEmpty()) requiredCardsOnTable.add(c.toLowerCase(Locale.ROOT));
+        if (p.pullableCards != null)
+            for (String c : p.pullableCards) if (c != null && !c.isEmpty()) pullableCards.add(c.toLowerCase(Locale.ROOT));
+        if (p.flipGateSite != null && !p.flipGateSite.isEmpty() && flipCriticalControlSite == null)
+            flipCriticalControlSite = p.flipGateSite.toLowerCase(Locale.ROOT);
+        if (p.flipGateCardIds != null) flipCriticalControlCardIds.addAll(p.flipGateCardIds);
+        addRefs(p.startingLocations, startingLocationIds, startingLocationFragments);
+        addRefs(p.startingEffects, startingEffectIds, startingEffectFragments);
+        addRefs(p.startingInterrupts, startingInterruptIds, startingInterruptFragments);
+        hydratedFromJson = true;
+        LOG.warn("[ObjectiveAnalyzer] JSON hydrate '{}': locFrags={}, reqCards={}, flipGateSite={}, flipGateIds={}, startLoc={}, startEff={}, startInt={}",
+            p.label, flipConditionLocationFragments, requiredCardsOnTable, flipCriticalControlSite,
+            flipCriticalControlCardIds, startingLocationFragments, startingEffectFragments, startingInterruptFragments);
+    }
+
+    private void addRefs(List<JsonCardRef> refs, Set<String> ids, Set<String> frags) {
+        if (refs == null) return;
+        for (JsonCardRef r : refs) {
+            if (r == null) continue;
+            if (r.blueprintIds != null) ids.addAll(r.blueprintIds);
+            if (r.titleFragments != null)
+                for (String f : r.titleFragments) if (f != null && !f.isEmpty()) frags.add(f.toLowerCase(Locale.ROOT));
+        }
+    }
 
     /**
      * Objective-driven DEPLOY adjustments for one candidate card. Returns the score notes the
@@ -802,6 +943,14 @@ public class ObjectiveAnalyzer {
         flipCriticalControlSite = null;
         flipCriticalControlCard = null;
         flipCriticalControlCardIds.clear();
+        // NEW setup slots (2026-07-08, JSON playbook): clear with the rest of the analysis.
+        startingLocationIds.clear();
+        startingLocationFragments.clear();
+        startingEffectIds.clear();
+        startingEffectFragments.clear();
+        startingInterruptIds.clear();
+        startingInterruptFragments.clear();
+        hydratedFromJson = false;
         objectiveTitle = null;
         objectiveBlueprintId = null;
         // V29 UPDATED 2026-07-06: clear stored game text with the rest of the analysis
