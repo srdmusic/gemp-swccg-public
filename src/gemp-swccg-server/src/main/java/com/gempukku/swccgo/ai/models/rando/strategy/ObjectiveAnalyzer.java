@@ -514,9 +514,60 @@ public class ObjectiveAnalyzer {
         String keyCharacterFilter;
         String keySiteFilter;
         Map<String, Float> weights;
+        // Loader EXTENSION (2026-07-08, Codex schema OBJECTIVE_LOADER_EXTENSION_SCHEMA_2026-07-08.md).
+        // PARSE-ONLY for now (step 1): DTOs bind from JSON; NO consumer reads them yet → behavior-neutral.
+        // The count-refine/relation/dynamic sub-buckets will use these once the scorer is wired (step 3+).
+        List<FlipLocationRule> flipLocationRules;
+        List<ActorLocationRule> actorLocationRules;
+        List<DynamicLocationRule> dynamicLocationRules;
     }
     static final class JsonRoot {
         List<JsonProfile> profiles;
+    }
+
+    // ─── Loader-extension rule DTOs (parse-only step 1; Gson-bound; no runtime consumer yet) ───
+    static final class RuleCount { String comparator; Integer value; }
+    static final class RuleOpponentConstraint {
+        String relation; String locationFilterKey; RuleCount count;
+    }
+    static final class FlipLocationAlternative {
+        String relation;              // control | occupy | presentAt | controlWith | occupyWith
+        String controller;            // self | opponent
+        String locationFilterKey;     // registry key or dynamic ref
+        List<String> locationFragments;
+        RuleCount count;
+        String actorFilterKey;
+        String requiredSide;          // LIGHT | DARK | null
+        RuleOpponentConstraint opponentConstraint;
+        String scoreRole;             // setupLocation | flipProgress | flipGate | stayFlipped
+        String sourceText;            // audit only — runtime must not parse this
+    }
+    static final class FlipLocationRule {
+        String id;
+        String phase;                 // preFlip | postFlip
+        String purpose;               // flip | stayFlipped | flipBack
+        String mode;                  // allOf | anyOf
+        List<FlipLocationAlternative> alternatives;
+    }
+    static final class ActorLocationRule {
+        String id;
+        String phase;
+        String purpose;
+        String relation;              // presentAt | absentFrom | controlsWith | occupiesWith | sameSiteAs
+        String actorFilterKey;
+        String locationFilterKey;
+        String coActorFilterKey;
+        String opponentActorFilterKey;
+        RuleCount count;
+        String scoreRole;             // keyActor | actorToSite | denyOpponentActor
+        String sourceText;
+    }
+    static final class DynamicLocationRule {
+        String id;
+        String source;                // subjugatedPlanet | renegadePlanet | repSpecies | setupChoice
+        String derivedLocationFilterKey;
+        String matchingActorFilterKey;
+        String sourceText;
     }
 
     private static volatile List<JsonProfile> PROFILES = null;
