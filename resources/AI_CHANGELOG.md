@@ -4,6 +4,13 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-08 — ObjectivePlaybook loader EXTENSION step 3a: coarse relevance from flipLocationRules (behavior-neutral)
+- Makes the rule DTOs functional at the coarse-steer level: `hydrateFromProfile` now feeds each `flipLocationRules[].alternatives[].locationFragments` into the existing +200 objective-relevance mechanism (the same proven lever as profile `locationFragments`).
+- MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — loop flipLocationRules → alternatives → locationFragments → `addLocationFragment`.
+- Boundary / SAFETY: behavior-NEUTRAL. No profile carries `flipLocationRules` yet (all 58 empty), so the loop is a no-op. Reuses the validated relevance path; no new evaluator wiring, no registry needed for this coarse pass. The count/actor/opponent-aware SCORER (registry-filter based, step 3b) is the next increment and will DOMINATE (not replace) this coarse relevance — old rules dominated, not erased.
+- Verified: compiles clean both bots (MVN_EXIT=0).
+- Revert: `git revert`; the loop is additive and no-ops on empty rules.
+
 ## 2026-07-08 — ObjectivePlaybook loader EXTENSION step 1: parse-only rule DTOs (behavior-neutral)
 - First step of the loader extension for the count-refine/relation/dynamic sub-buckets (Codex schema `Handoffs/OBJECTIVE_LOADER_EXTENSION_SCHEMA_2026-07-08.md`, build order step 1: "add JSON fields + Gson DTOs with no consumers, verify parse").
 - MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — ADD Gson DTOs `FlipLocationRule` / `FlipLocationAlternative` / `RuleOpponentConstraint` / `RuleCount` / `ActorLocationRule` / `DynamicLocationRule`, and 3 fields on `JsonProfile`: `flipLocationRules[]`, `actorLocationRules[]`, `dynamicLocationRules[]`. These model count-aware/key-site/opponent-control flip conditions, key-actor/target-absence relations, and runtime-selected (Renegade/Subjugated/Rep-species) planets.

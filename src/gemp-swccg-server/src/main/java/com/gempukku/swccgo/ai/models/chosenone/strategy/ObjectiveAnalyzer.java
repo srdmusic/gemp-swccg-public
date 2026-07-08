@@ -647,6 +647,21 @@ public class ObjectiveAnalyzer {
         addRefs(p.startingLocations, startingLocationIds, startingLocationFragments);
         addRefs(p.startingEffects, startingEffectIds, startingEffectFragments);
         addRefs(p.startingInterrupts, startingInterruptIds, startingInterruptFragments);
+        // Loader-extension step 3a (2026-07-08): COARSE relevance from flipLocationRules — each rule
+        // alternative's locationFragments feed the EXISTING +200 objective-relevance mechanism (same proven
+        // lever as profile locationFragments). This makes the rule DTOs functional at the coarse-steer level.
+        // The count/actor/opponent-aware SCORER (registry-filter based, step 3b) is the next increment and will
+        // dominate, not replace, this coarse pass. Neutral until a profile carries flipLocationRules (none yet).
+        if (p.flipLocationRules != null) {
+            for (FlipLocationRule rule : p.flipLocationRules) {
+                if (rule == null || rule.alternatives == null) continue;
+                for (FlipLocationAlternative alt : rule.alternatives) {
+                    if (alt == null || alt.locationFragments == null) continue;
+                    for (String f : alt.locationFragments)
+                        if (f != null && !f.isEmpty()) addLocationFragment(f.toLowerCase(Locale.ROOT));
+                }
+            }
+        }
         hydratedFromJson = true;
         LOG.warn("[ObjectiveAnalyzer] JSON hydrate '{}': locFrags={}, reqCards={}, flipGateSite={}, flipGateIds={}, startLoc={}, startEff={}, startInt={}",
             p.label, flipConditionLocationFragments, requiredCardsOnTable, flipCriticalControlSite,
