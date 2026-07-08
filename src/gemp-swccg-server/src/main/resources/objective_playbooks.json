@@ -1135,6 +1135,7 @@
     },
     {
       "label": "Quiet Mining Colony",
+      "loaderEnabled": true,
       "blueprintIds": [
         "109_4",
         "109_4_BACK"
@@ -1143,7 +1144,10 @@
         "quiet mining colony",
         "independent operation"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "bespin",
+        "cloud city"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,
@@ -2805,6 +2809,7 @@
     },
     {
       "label": "City In The Clouds",
+      "loaderEnabled": true,
       "blueprintIds": [
         "301_2",
         "301_2_BACK"
@@ -2813,7 +2818,10 @@
         "city in the clouds",
         "you truly belong here with us"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "bespin",
+        "cloud city"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,

@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-08 — ObjectivePlaybook: ENABLE Bespin pair — Quiet Mining Colony (109_4) + City In The Clouds (301_2). Fixed-planet subset COMPLETE.
+- Final 2 fixed-planet enables. Source-verified flip clauses (both LIGHT, pure Bespin/Cloud City control/occupy):
+  - Quiet Mining Colony (109_4): "control Bespin: Cloud City and at least two Cloud City sites (opponent controls no Bespin locations)."
+  - City In The Clouds (301_2): "control two Cloud City battleground sites and occupy Bespin system (opponent controls no Cloud City sites)."
+- MOD `objective_playbooks.json` — `loaderEnabled:true` + `locationFragments:["bespin","cloud city"]` on both. Note: `addLocationFragment` already auto-couples bespin↔cloud city (ObjectiveAnalyzer:1428-1434), so listing both is explicit-and-redundant (clear in the data). Cloud City sites are titled "Cloud City: …" (no "bespin"), so "cloud city" is REQUIRED to mark them relevant.
+- Boundary math: same fixed-planet pattern (+200/site relevance on Bespin+Cloud City → Rando contests them = the flip condition). The TDIGWATT Bespin overlap Codex flagged is FUTURE code-organization (the deferred side-aware base-vs-V bucket), NOT a runtime clobber — `isObjectiveRelevantLocation` is scoped to the ACTIVE objective, and TDIGWATT is disabled. 12 objectives enabled total; the CLEAN FIXED-PLANET SUBSET IS COMPLETE.
+- Verified: compiles clean both bots (MVN_EXIT=0). Codex verify requested.
+- Revert: set `loaderEnabled:false` on either profile.
+
 ## 2026-07-08 — ObjectivePlaybook: ENABLE Scarif (209_29) + Jakku (204_32) — source-verified fixed-planet (resolves a split disagreement)
 - Two more fixed-planet enables. These were flagged borderline (Codex "hold/count-refine"), so I read the actual flip clauses to decide: BOTH are pure single-planet control/occupy.
   - They Have No Idea We're Coming (209_29, LIGHT) → `["scarif"]` — "Flip if you control two Scarif locations." Codex's caveat was code-organization (future dark-Scarif On The Verge), NOT runtime: `isObjectiveRelevantLocation` is per-active-objective, so no clobber.
