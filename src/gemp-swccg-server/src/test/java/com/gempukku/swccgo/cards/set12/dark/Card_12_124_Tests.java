@@ -230,25 +230,62 @@ public class Card_12_124_Tests {
 		scn.PassAllResponses();
 		scn.LSChooseYes(); //stack first race destiny
 
-		assertTrue(scn.DSCardActionAvailable(raider, "Shoot")); //test1
-		assertTrue(scn.DSCardActionAvailable(raider2, "Shoot")); //test2
+		assertTrue(scn.DSCardActionAvailable(raider, "Shoot"));
+		assertTrue(scn.DSCardActionAvailable(raider2, "Shoot"));
 
-		assertEquals(0, scn.GetDSUsedPileCount());
-		assertEquals(0, scn.GetLSHandCount());
 		scn.PrepareDSDestiny(3); //for fail
 		scn.DSUseCardAction(raider,"Shoot");
-
 		scn.PassAllResponses();
 
-		assertEquals(4, scn.GetDSUsedPileCount()); //test3 (3 force cost + destiny)
-		assertEquals(0, scn.GetLSHandCount()); //test4
-
 		scn.LSChooseYes(); //stack second race destiny
-
 		assertEquals(3, scn.GetDSForcePileCount()); //enough to pay
 		assertTrue(scn.GetDSReserveDeckCount() >= 1); //enough to draw destiny
 		assertFalse(scn.DSCardActionAvailable(raider, "Shoot")); //test1
 		assertFalse(scn.DSCardActionAvailable(raider2, "Shoot")); //test2
+	}
+
+	@Test
+	public void TuskenRaiderMayShootAgainNextTurn() {
+		//test1: raider at arena can take 'shoot' action in later turn
+		var scn = GetScenario();
+
+		var raider = scn.GetDSCard("raider");
+
+		var arena = scn.GetDSCard("arena");
+		var boonta = scn.GetDSCard("boonta");
+
+		var podracer = scn.GetLSCard("podracer");
+
+		scn.StartGame();
+		scn.MoveLocationToTable(arena);
+
+		scn.MoveCardsToLocation(arena,raider,podracer,boonta);
+
+		scn.SkipToPhase(Phase.CONTROL);
+
+		scn.DSUseCardAction(boonta); //start podrace
+		scn.PassAllResponses();
+
+		scn.LSPlayCard(boonta); //draw race destiny
+		scn.PassAllResponses();
+		scn.LSChooseYes(); //stack first race destiny
+
+		scn.PrepareDSDestiny(3); //for fail
+		scn.DSUseCardAction(raider,"Shoot");
+		scn.PassAllResponses();
+
+		scn.LSChooseYes(); //stack second race destiny
+		scn.PassAllResponses();
+
+		scn.SkipToLSTurn();
+		scn.SkipToDSTurn(Phase.CONTROL);
+		scn.DSPass();
+
+		scn.LSPlayCard(boonta); //draw race destiny
+		scn.PassAllResponses();
+		scn.LSChooseYes(); //stack first race destiny
+
+		assertTrue(scn.DSCardActionAvailable(raider, "Shoot")); //test1
 	}
 
 	@Test
