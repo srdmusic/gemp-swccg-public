@@ -196,8 +196,15 @@ public class ObjectiveAnalyzer {
             this.isInvasion = titleLowerId.contains("invasion");
             this.isMyLord = titleLowerId.contains("my lord") || titleLowerId.contains("make it legal");
             this.isEndor = titleLowerId.contains("endor operations");
-            // ObjectivePlaybook pilot: select the active objective profile (My Lord + Endor so far; more as they land).
-            this.activePlaybook = this.isMyLord ? MY_LORD_PLAYBOOK
+            // ObjectivePlaybook (2026-07-08): when the objective has a loaderEnabled JSON profile, the ACTIVE
+            // playbook is BUILT FROM THE JSON (analyzer = pointer to the data). Otherwise fall back to the
+            // compiled statics (My Lord/Endor) — the loaderEnabled=false path. prof/loaderOn reused post-parse
+            // for slot hydration (one lookup). buildPlaybookFromProfile weights == the compiled statics for the
+            // two enabled pilots (boundary-verified), so this is behavior-neutral today.
+            JsonProfile prof = findProfile(bpId, title);
+            boolean loaderOn = prof != null && Boolean.TRUE.equals(prof.loaderEnabled);
+            this.activePlaybook = loaderOn ? buildPlaybookFromProfile(prof)
+                                : this.isMyLord ? MY_LORD_PLAYBOOK
                                 : this.isEndor ? ENDOR_PLAYBOOK
                                 : null;
             // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + typed steer data (title-derived).
@@ -221,12 +228,10 @@ public class ObjectiveAnalyzer {
             // runtime source (objective_playbooks.json) for the active objective. ADDITIVE + idempotent
             // — runs AFTER the text parser / hardcoded blocks, so where both fill a slot the values are
             // identical. Hard fallback: no profile / empty registry → parser output stands unchanged.
-            // GATED per-objective by loaderEnabled: the canonical file carries all 58 profiles, but only
-            // objectives whose profile is boundary-math-VERIFIED equivalent are hydrated (My Lord + Endor
-            // today). This prevents the 56 un-verified profiles from silently altering behavior.
-            JsonProfile jsonProfile = findProfile(bpId, title);
-            if (jsonProfile != null && Boolean.TRUE.equals(jsonProfile.loaderEnabled))
-                hydrateFromProfile(jsonProfile);
+            // GATED per-objective by loaderEnabled (computed above): the canonical file carries all 58
+            // profiles, but only boundary-math-VERIFIED objectives (My Lord + Endor today) hydrate. This
+            // prevents the 56 un-verified profiles from silently altering behavior.
+            if (loaderOn) hydrateFromProfile(prof);
             updateFlipStatus(objectiveCard);
             this.analyzed = true;
 
@@ -501,6 +506,7 @@ public class ObjectiveAnalyzer {
         List<String> requiredCardsOnTable;
         List<String> pullableCards;
         String flipGateSite;
+        String flipGateCardName;
         List<String> flipGateCardIds;
         List<JsonCardRef> startingLocations;
         List<JsonCardRef> startingEffects;
@@ -579,6 +585,8 @@ public class ObjectiveAnalyzer {
         //     for (String c : p.pullableCards) if (c != null && !c.isEmpty()) pullableCards.add(c.toLowerCase(Locale.ROOT));
         if (p.flipGateSite != null && !p.flipGateSite.isEmpty() && flipCriticalControlSite == null)
             flipCriticalControlSite = p.flipGateSite.toLowerCase(Locale.ROOT);
+        if (p.flipGateCardName != null && !p.flipGateCardName.isEmpty() && flipCriticalControlCard == null)
+            flipCriticalControlCard = p.flipGateCardName.toLowerCase(Locale.ROOT);
         if (p.flipGateCardIds != null) flipCriticalControlCardIds.addAll(p.flipGateCardIds);
         addRefs(p.startingLocations, startingLocationIds, startingLocationFragments);
         addRefs(p.startingEffects, startingEffectIds, startingEffectFragments);
@@ -597,6 +605,47 @@ public class ObjectiveAnalyzer {
             if (r.titleFragments != null)
                 for (String f : r.titleFragments) if (f != null && !f.isEmpty()) frags.add(f.toLowerCase(Locale.ROOT));
         }
+    }
+
+    // Curated string→Filter registry for JSON keyCharacterFilter/keySiteFilter keys. Keys are the exact
+    // Filters.* constant names used by objective profiles (rules-truth, search-by-type). Expand as new
+    // objectives are enabled. Unknown key → null + warn (playbook stores null; consumers null-guard).
+    private static com.gempukku.swccgo.filters.Filter resolveFilter(String key) {
+        if (key == null || key.isEmpty()) return null;
+        switch (key) {
+            case "senator":          return com.gempukku.swccgo.filters.Filters.senator;
+            case "Galactic_Senate":  return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
+            case "biker_scout":      return com.gempukku.swccgo.filters.Filters.biker_scout;
+            case "Bunker":           return com.gempukku.swccgo.filters.Filters.Bunker;
+            default:
+                LOG.warn("[ObjectiveAnalyzer] unknown Filter key '{}' in objective_playbooks.json — playbook Filter left null.", key);
+                return null;
+        }
+    }
+
+    private static float weight(Map<String, Float> w, String key) {
+        if (w == null) return 0.0f;
+        Float v = w.get(key);
+        return v != null ? v : 0.0f;
+    }
+
+    /** Build an ObjectivePlaybook from a JSON profile: identity + registry-resolved Filters + weights.
+     *  This is how a loaderEnabled objective becomes the active playbook (analyzer = pointer to the data). */
+    private ObjectivePlaybook buildPlaybookFromProfile(JsonProfile p) {
+        String[] ids = (p.blueprintIds != null) ? p.blueprintIds.toArray(new String[0]) : new String[0];
+        String[] frags = (p.titleFragments != null) ? p.titleFragments.toArray(new String[0]) : new String[0];
+        ObjectiveWeights w = new ObjectiveWeights(
+            weight(p.weights, "rewardKeyCharAtKeySite"),
+            weight(p.weights, "penalizeKeyCharOffKeySite"),
+            weight(p.weights, "prioritizeKeyCharDeploy"),
+            weight(p.weights, "holdNonKeyCharNoSite"),
+            weight(p.weights, "deployFlipGateSite"));
+        return new ObjectivePlaybook(
+            p.label != null ? p.label : "(json)",
+            new NamedCardRef(ids, frags),
+            resolveFilter(p.keyCharacterFilter),
+            resolveFilter(p.keySiteFilter),
+            w);
     }
 
     /**
