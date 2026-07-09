@@ -1,13 +1,3 @@
-  ════ V194 (2026-07-09): HOLD EMPEROR FOR THE SHUTTLE (Endor Operations only) ════
-For EOps, don't strand Palpatine, Galactic Emperor (222_12, cost 5) on Endor ground. HOLD him until Emperor's
-Personal Shuttle (9_156, "Emperor deploys for free aboard") is in hand or play, then deploy aboard for free.
-Added public isEndor() to {rando,chosenone} ObjectiveAnalyzer + a V194 block in {rando,chosenone}
-CardSelectionEvaluator (after V193 CS): when isEndor + deploying card is Filters.Emperor + no shuttle in
-hand/play, add -3000 to every candidate site → trips the V190 Done/cancel cancel-loop → Emperor held. Once the
-shuttle is in play the hold lifts and he deploys aboard free. New tag (new behavior). Both bots, MVN_EXIT=0.
-BUILT but deploy held (a game was live at build time). Follow-up: prefer aboard-over-ground once shuttle in play.
-See AI_CHANGELOG.md 2026-07-09.
-
   ════ V193 (CS) EXTENSION (2026-07-09): Endor Bunker flip-gate steer onto the CardSelection deploy route ════
 V193 (Bunker-control +400) was DeployEvaluator-only, but Endor deploys route through CardSelectionEvaluator
 (V136 CS), so it fired 0 times and Endor Operations never flipped (replay somykkwjy449xul4). Added a V193 (CS)
