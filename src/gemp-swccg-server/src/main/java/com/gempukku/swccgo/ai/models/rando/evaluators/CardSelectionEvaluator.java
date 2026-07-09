@@ -2083,6 +2083,86 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             logger.info("V136 CS [{}]: {} → {} score={}",
                                                 context.getPlayerId(), v136DeployingCard.getTitle(), title, v136Score);
                                         }
+
+                                        // === V193 (CS) (Steve, 2026-07-09): FLIP-GATE CONTROL STEER on the CardSelection route ===
+                                        // V193 (see DeployEvaluator) steers ONE body to the objective's flip-gate
+                                        // control site (Endor: Bunker for Endor Operations) so the control-gated
+                                        // flip card (Establish Secret Base (V) 207_25, "Deploy on Bunker if you
+                                        // control that site") becomes a legal deploy and the objective can flip.
+                                        // The original V193 lives ONLY in DeployEvaluator, but Endor character
+                                        // deploys resolve through THIS CardSelection route (logged "V136 CS"), so
+                                        // V193 fired 0 times in replay somykkwjy449xul4 and the objective never
+                                        // flipped. This mirror puts the steer where the deploys actually are.
+                                        //
+                                        // TWO CORRECTIONS vs the DeployEvaluator copy, both evidence-backed:
+                                        //  1. ABILITY GATE. Control needs presence; presence needs ability >= 1.
+                                        //     That game put 4-LOM With Concussion Rifle (V) (a DROID, ability 0) on
+                                        //     Bunker turn 5 — no presence, no control, ESB stayed illegal. So only
+                                        //     steer a real character with ability >= 1 (droids have
+                                        //     hasAbilityAttribute()==false and are skipped) and prefer a CHEAP spare
+                                        //     body (deployCost <= 3, e.g. Admiral Ozzel (V) cost 2) so a bomber
+                                        //     (Thrawn) is not wasted on a 0-drain site. Endor Shield (V) uploads an
+                                        //     Imperial admiral twice per game, so a cheap legal body is available.
+                                        //  2. MAGNITUDE. The CS route stacks anti-hold penalties the DeployEvaluator
+                                        //     boundary never saw: V67ah NON-BG -350, V113 SOLO -300, V24.15
+                                        //     ZERO-DRAIN ~-80 (~-730) — because Bunker is a non-battleground 0-drain
+                                        //     site held solo, which IS the objective's win condition, not a mistake.
+                                        //     Replay turn 3: Thrawn->Bunker netted 135 vs Thrawn->Landing Platform
+                                        //     905 (gap 770); the DeployEvaluator +400 would reach 535 and still lose.
+                                        //     So the CS steer DOMINATES (does not delete) that stack: playbook weight
+                                        //     (400) + CS penalty offset (730) = ~1130, lifting Bunker to ~1265 > the
+                                        //     905-1050 realistic drain competitors by ~200. Self-limiting: fires only
+                                        //     while (a) analyzer named a flip-gate site, (b) Rando does NOT control
+                                        //     it, (c) Rando holds the gate card. Once one body lands Rando controls
+                                        //     Bunker -> guard (b) closes -> no per-body stacking; the rest of the
+                                        //     pile reverts to drain sites and the lone body holds.
+                                        if (v136Obj != null && v136Obj.isAnalyzed() && title != null) {
+                                            String v193csGateSite = v136Obj.getFlipCriticalControlSite();
+                                            if (v193csGateSite != null && v193csGateSite.equalsIgnoreCase(title)) {
+                                                Float v193csAbility = v136DepBp.hasAbilityAttribute() ? v136DepBp.getAbility() : null;
+                                                Float v193csCost = v136DepBp.getDeployCost();
+                                                boolean v193csGoodBody = v193csAbility != null && v193csAbility >= 1f
+                                                    && v193csCost != null && v193csCost <= 3f;
+                                                if (v193csGoodBody) {
+                                                    boolean v193csControls = com.gempukku.swccgo.cards.GameConditions.controls(
+                                                        context.getGame(), context.getPlayerId(), location);
+                                                    java.util.Set<String> v193csGateIds = v136Obj.getFlipCriticalControlCardIds();
+                                                    String v193csGateCard = v136Obj.getFlipCriticalControlCard();
+                                                    com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v193csOracle = context.getDeckOracle();
+                                                    boolean v193csHoldsGate = false;
+                                                    if (v193csOracle != null) {
+                                                        if (v193csGateIds != null && !v193csGateIds.isEmpty()) {
+                                                            for (String v193csId : v193csGateIds) {
+                                                                if (v193csOracle.isCardInHand(v193csId)
+                                                                        || v193csOracle.isCardInReserve(v193csId)) {
+                                                                    v193csHoldsGate = true;
+                                                                    break;
+                                                                }
+                                                            }
+                                                        } else if (v193csGateCard != null) {
+                                                            v193csHoldsGate = v193csOracle.isCardInHand(v193csGateCard)
+                                                                || v193csOracle.isCardInReserve(v193csGateCard);
+                                                        }
+                                                    }
+                                                    if (!v193csControls && v193csHoldsGate) {
+                                                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.ObjectivePlaybook
+                                                            v193csPlaybook = v136Obj.getActivePlaybook();
+                                                        float v193csWeight = (v193csPlaybook != null)
+                                                            ? v193csPlaybook.weights.deployFlipGateSite : 400.0f;
+                                                        // CS penalty offset dominates V67ah(-350)+V113(-300)+V24.15(~-80)
+                                                        // ~= -730 (boundary math, replay somykkwjy449xul4 turn 3).
+                                                        float v193csBonus = v193csWeight + 730.0f;
+                                                        action.addReasoning(
+                                                            "V193 (CS) FLIP-GATE CONTROL: steer one ability body to '"
+                                                                + title + "' to enable '" + v193csGateCard
+                                                                + "' (objective flip gate)",
+                                                            v193csBonus);
+                                                        logger.warn("V193 (CS) FLIP-GATE CONTROL [{}]: {} → {} +{} (seize flip-gate, card={})",
+                                                            context.getPlayerId(), v136DeployingCard.getTitle(), title, v193csBonus, v193csGateCard);
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             } catch (Exception e) {

@@ -1,3 +1,14 @@
+  ════ V193 (CS) EXTENSION (2026-07-09): Endor Bunker flip-gate steer onto the CardSelection deploy route ════
+V193 (Bunker-control +400) was DeployEvaluator-only, but Endor deploys route through CardSelectionEvaluator
+(V136 CS), so it fired 0 times and Endor Operations never flipped (replay somykkwjy449xul4). Added a V193 (CS)
+mirror in {rando,chosenone}/evaluators/CardSelectionEvaluator.java after the V136 CS score, with TWO corrections
+from that replay: (1) ability gate — only steer a real character ability>=1 (droids/ability-0 like 4-LOM give no
+presence → no control → Establish Secret Base stays illegal) AND deployCost<=3 (cheap body, e.g. Ozzel, not a
+wasted bomber); (2) magnitude — playbook deployFlipGateSite 400 + CS penalty offset 730 = ~1130 to DOMINATE the
+CS-route anti-hold stack (V67ah -350 + V113 -300 + V24.15 ~-80). Self-limiting (holds gate card, does not control
+yet); one body seizes Bunker then guard closes. Extends V193 (no new tag). Both bots, MVN_EXIT=0, DEPLOYED.
+See AI_CHANGELOG.md 2026-07-09.
+
   ════ SIX ENDOR-GAME FIXES (2026-07-07): maintenance floor, thin-reserve, effective-drain, Endor Bunker plan ════
 V58/V67w maintenance floor hardened (DrawEvaluator); V153 THIN RESERVE guard (reserve<=10 → lose hand not
 reserve); V24.15 EFFECTIVE DRAIN arm CONSOLIDATED (was V189b, folded in — no contradictory new version);
@@ -19,6 +30,11 @@ See AI_CHANGELOG.md 2026-07-08.
 V193 FIX (same day): Bunker flip-gate steer scoped to Bunker-GATED Establish Secret Base ids {207_25,601_260}
 only (base 8_124 gates on 3 Endor sites, not Bunker). New flipCriticalControlCardIds set; DeployEvaluator detects
 by id, falls back to title. Behavior-narrowing, both bots. See AI_CHANGELOG.md 2026-07-07.
+
+  ════ ObjectivePlaybook JSON cleanup (2026-07-08): one live enable flag, loaderEnabled ════
+Removed the duplicate inert rollout fields from objective_playbooks.json. ObjectiveAnalyzer only reads
+loaderEnabled, so runtime behavior is unchanged. Enabled profiles remain exactly Dantooine 7_135, Ralltiir
+7_300, Endor 8_167, and My Lord 12_179. See AI_CHANGELOG.md 2026-07-08.
 
 Rando Cal / Chosen One AI — Version History
 =================================================================
