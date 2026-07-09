@@ -484,6 +484,10 @@ public class ObjectiveAnalyzer {
     /** The active objective's playbook, or null. Analyzer-owned API for evaluators/planners to consult. */
     public ObjectivePlaybook getActivePlaybook() { return activePlaybook; }
 
+    /** True iff the active objective is Endor Operations (title contains "endor operations").
+     *  Used by V194 (HOLD EMPEROR FOR SHUTTLE) to scope the Emperor deploy-hold to EOps only. */
+    public boolean isEndor() { return isEndor; }
+
     // ═══ JSON PLAYBOOK LOADER (2026-07-08, Steve's ruling: ONE runtime data source) ═══
     // objective_playbooks.json (bundled jar resource) is the single source of objective scoring
     // inputs. Parsed ONCE (lazy, thread-safe). analyze() looks up the active objective's profile

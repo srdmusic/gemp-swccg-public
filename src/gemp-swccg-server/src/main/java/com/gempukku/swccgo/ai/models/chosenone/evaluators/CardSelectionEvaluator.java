@@ -2173,6 +2173,52 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 }
                                             }
                                         }
+
+                                        // === V194 (Steve, 2026-07-09): HOLD EMPEROR FOR THE SHUTTLE (Endor Operations only) ===
+                                        // Palpatine, Galactic Emperor (222_12) costs 5 to deploy, but Emperor's
+                                        // Personal Shuttle (9_156) "Emperor deploys for free aboard" (+ immune to
+                                        // attrition, +1 battle destiny while aboard). In replays somykkwjy449xul4 and
+                                        // vugpape5lw1bc7rq Rando paid full 5 to STRAND him on Endor: Landing Platform
+                                        // on turn 1 while the shuttle was still in the deck. Steve's rule: for EOps,
+                                        // HOLD the Emperor until we have the shuttle, then deploy him aboard for free.
+                                        // Implemented like V190 (starship-to-site): drive EVERY candidate site strongly
+                                        // negative so the CardSelection sub-decision resolves to Done/cancel and the
+                                        // cancel-loop holds him in hand. Fires only while (a) the active objective is
+                                        // Endor Operations, (b) the deploying card is the Emperor (Filters.Emperor =
+                                        // SIDIOUS + title "Emperor"), and (c) NO Emperor's Personal Shuttle is in our
+                                        // hand OR in play. Once the shuttle is in hand, Rando deploys it (own logic) →
+                                        // it enters play → this hold lifts → the Emperor deploys aboard for free.
+                                        if (v136Obj != null && v136Obj.isEndor()
+                                                && context.getGame() != null
+                                                && com.gempukku.swccgo.filters.Filters.Emperor.accepts(
+                                                    gameState, context.getGame().getModifiersQuerying(), v136DeployingCard)) {
+                                            boolean v194ShuttleAvail = false;
+                                            for (PhysicalCard v194h : gameState.getHand(context.getPlayerId())) {
+                                                if (v194h == null || v194h.getBlueprint() == null) continue;
+                                                if ("Emperor's Personal Shuttle".equals(v194h.getBlueprint().getTitle())) {
+                                                    v194ShuttleAvail = true; break;
+                                                }
+                                            }
+                                            if (!v194ShuttleAvail) {
+                                                for (PhysicalCard v194p : gameState.getAllPermanentCards()) {
+                                                    if (v194p == null || v194p.getBlueprint() == null) continue;
+                                                    if (!context.getPlayerId().equals(v194p.getOwner())) continue;
+                                                    if ("Emperor's Personal Shuttle".equals(v194p.getBlueprint().getTitle())) {
+                                                        v194ShuttleAvail = true; break;
+                                                    }
+                                                }
+                                            }
+                                            if (!v194ShuttleAvail) {
+                                                // -3000 dominates the hottest observed Emperor deploy-site (~1350),
+                                                // driving every site well below the Done/cancel threshold (cf. V190
+                                                // -1500). All sites negative → sub-decision cancels → Emperor held.
+                                                action.addReasoning(
+                                                    "V194 HOLD EMPEROR: no Emperor's Personal Shuttle in hand/play — hold for the free deploy aboard (don't strand on Endor ground)",
+                                                    -3000.0f);
+                                                logger.warn("V194 HOLD EMPEROR [{}]: {} → {} -3000 (EOps: wait for Emperor's Personal Shuttle, free aboard)",
+                                                    context.getPlayerId(), v136DeployingCard.getTitle(), title);
+                                            }
+                                        }
                                     }
                                 }
                             } catch (Exception e) {
