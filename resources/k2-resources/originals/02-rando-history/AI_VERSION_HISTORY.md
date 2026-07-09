@@ -7,7 +7,10 @@ presence → no control → Establish Secret Base stays illegal) AND deployCost<
 wasted bomber); (2) magnitude — playbook deployFlipGateSite 400 + CS penalty offset 730 = ~1130 to DOMINATE the
 CS-route anti-hold stack (V67ah -350 + V113 -300 + V24.15 ~-80). Self-limiting (holds gate card, does not control
 yet); one body seizes Bunker then guard closes. Extends V193 (no new tag). Both bots, MVN_EXIT=0, DEPLOYED.
-See AI_CHANGELOG.md 2026-07-09.
+RE-TUNE (same day, replay vugpape5lw1bc7rq): first cut steered Ozzel→Bunker but lost by 10 (1240 vs a
+REINFORCE-hot Landing Platform 1250, + Ozzel V29 GROUND/CONCENTRATE penalties); cost≤3 also excluded Xizor
+(cost 4). Fixed: offset 730→1600 (total steer ~2000, dominates ~1430-1555 competitors) + cost gate ≤3→≤4.
+Objective DID flip that game (turn 6); re-tune makes the seizure early/clean. See AI_CHANGELOG.md 2026-07-09.
 
   ════ SIX ENDOR-GAME FIXES (2026-07-07): maintenance floor, thin-reserve, effective-drain, Endor Bunker plan ════
 V58/V67w maintenance floor hardened (DrawEvaluator); V153 THIN RESERVE guard (reserve<=10 → lose hand not

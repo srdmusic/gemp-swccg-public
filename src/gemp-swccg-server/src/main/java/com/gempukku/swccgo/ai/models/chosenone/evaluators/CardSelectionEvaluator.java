@@ -2105,13 +2105,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         //     Imperial admiral twice per game, so a cheap legal body is available.
                                         //  2. MAGNITUDE. The CS route stacks anti-hold penalties the DeployEvaluator
                                         //     boundary never saw: V67ah NON-BG -350, V113 SOLO -300, V24.15
-                                        //     ZERO-DRAIN ~-80 (~-730) — because Bunker is a non-battleground 0-drain
-                                        //     site held solo, which IS the objective's win condition, not a mistake.
-                                        //     Replay turn 3: Thrawn->Bunker netted 135 vs Thrawn->Landing Platform
-                                        //     905 (gap 770); the DeployEvaluator +400 would reach 535 and still lose.
-                                        //     So the CS steer DOMINATES (does not delete) that stack: playbook weight
-                                        //     (400) + CS penalty offset (730) = ~1130, lifting Bunker to ~1265 > the
-                                        //     905-1050 realistic drain competitors by ~200. Self-limiting: fires only
+                                        //     ZERO-DRAIN ~-80, plus (for a Star-Destroyer pilot like Ozzel) V29
+                                        //     GROUND -200 and V29 CONCENTRATE -100 — all fighting a hold that IS the
+                                        //     objective's win condition, not a mistake. And the competing drain site
+                                        //     runs HOT when a friendly is already there to REINFORCE (+150). Two
+                                        //     replays: somykkwjy449xul4 t3 Thrawn->Bunker 135 vs Landing 905; the
+                                        //     RE-TUNE replay vugpape5lw1bc7rq t2 Ozzel->Bunker 1240 vs Landing 1250 —
+                                        //     the first +730-offset steer LOST BY 10. So the steer must DOMINATE (not
+                                        //     merely nudge): playbook weight (400) + CS penalty offset (1600) = ~2000
+                                        //     (V136 §A team-viability scale — seizing the flip gate unlocks the whole
+                                        //     objective flip, a game-deciding tempo swing worth more than any single
+                                        //     drain). That lifts Bunker to ~2100 > the ~1430-1555 hottest observed
+                                        //     drain competitors by ~550. The large magnitude is safe because the guard
+                                        //     is narrow (Endor flip-gate + holds ESB + Bunker uncontrolled + cheap
+                                        //     ability body) and self-limiting: fires only
                                         //     while (a) analyzer named a flip-gate site, (b) Rando does NOT control
                                         //     it, (c) Rando holds the gate card. Once one body lands Rando controls
                                         //     Bunker -> guard (b) closes -> no per-body stacking; the rest of the
@@ -2122,7 +2129,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 Float v193csAbility = v136DepBp.hasAbilityAttribute() ? v136DepBp.getAbility() : null;
                                                 Float v193csCost = v136DepBp.getDeployCost();
                                                 boolean v193csGoodBody = v193csAbility != null && v193csAbility >= 1f
-                                                    && v193csCost != null && v193csCost <= 3f;
+                                                    && v193csCost != null && v193csCost <= 4f;
                                                 if (v193csGoodBody) {
                                                     boolean v193csControls = com.gempukku.swccgo.cards.GameConditions.controls(
                                                         context.getGame(), context.getPlayerId(), location);
@@ -2149,9 +2156,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                             v193csPlaybook = v136Obj.getActivePlaybook();
                                                         float v193csWeight = (v193csPlaybook != null)
                                                             ? v193csPlaybook.weights.deployFlipGateSite : 400.0f;
-                                                        // CS penalty offset dominates V67ah(-350)+V113(-300)+V24.15(~-80)
-                                                        // ~= -730 (boundary math, replay somykkwjy449xul4 turn 3).
-                                                        float v193csBonus = v193csWeight + 730.0f;
+                                                        // CS penalty offset: total steer ~= 2000 to DOMINATE the anti-hold
+                                                        // stack (V67ah -350 + V113 -300 + V24.15 -80 + Ozzel V29 GROUND
+                                                        // -200 + CONCENTRATE -100) AND a REINFORCED hot drain competitor.
+                                                        // +730 lost Ozzel->Bunker by 10 (1240 vs 1250) in replay
+                                                        // vugpape5lw1bc7rq t2; +1600 (total ~2000) wins by ~550.
+                                                        float v193csBonus = v193csWeight + 1600.0f;
                                                         action.addReasoning(
                                                             "V193 (CS) FLIP-GATE CONTROL: steer one ability body to '"
                                                                 + title + "' to enable '" + v193csGateCard
