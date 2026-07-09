@@ -694,6 +694,49 @@ public class ObjectiveAnalyzer {
         }
     }
 
+    // Loader-EXTENSION location-filter registry (step 2, 2026-07-08). Maps flipLocationRules/actorLocationRules
+    // locationFilterKey strings → real Filters.* (rules-truth, search-by-type; source-verified vs Filters.java +
+    // Codex table Handoffs/OBJECTIVE_FILTER_REGISTRY_KEYS_2026-07-08.md). DYNAMIC (Subjugated/Renegade/Rep) and
+    // STATE (blown-away/delivered/Kessel) keys are NOT here — they need their own runtime hooks (step 3b). Unknown
+    // key → null + warn (FAIL-CLOSED: no guessed score, per Steve's no-fabrication rule). CONSUMED by the step-3b
+    // flipLocationRules/actorLocationRules scorer; unused until then.
+    private static com.gempukku.swccgo.filters.Filter resolveLocationFilter(String key, String playerId) {
+        if (key == null || key.isEmpty()) return null;
+        switch (key) {
+            // DIRECT constants
+            case "Endor_location":               return com.gempukku.swccgo.filters.Filters.Endor_location;
+            case "Bunker":                       return com.gempukku.swccgo.filters.Filters.Bunker;
+            case "Bespin_system":                return com.gempukku.swccgo.filters.Filters.Bespin_system;
+            case "Cloud_City_site":              return com.gempukku.swccgo.filters.Filters.Cloud_City_site;
+            case "Cloud_City_battleground_site": return com.gempukku.swccgo.filters.Filters.Cloud_City_battleground_site;
+            case "Tatooine_location":            return com.gempukku.swccgo.filters.Filters.Tatooine_location;
+            case "Yavin_4_location":             return com.gempukku.swccgo.filters.Filters.Yavin_4_location;
+            case "Hoth_location":                return com.gempukku.swccgo.filters.Filters.Hoth_location;
+            case "Theed_Palace_Throne_Room":     return com.gempukku.swccgo.filters.Filters.Theed_Palace_Throne_Room;
+            case "Naboo_system":                 return com.gempukku.swccgo.filters.Filters.Naboo_system;
+            case "Galactic_Senate":              return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
+            case "Rebel_Base_location":          return com.gempukku.swccgo.filters.Filters.Rebel_Base_location;
+            case "Wattos_Junkyard":              return com.gempukku.swccgo.filters.Filters.Wattos_Junkyard;
+            // ALIAS (schema spelling → runtime constant)
+            case "Ahch_To_location":             return com.gempukku.swccgo.filters.Filters.AhchTo_location;
+            // COMPOSITE
+            case "Alderaan_location":
+                return com.gempukku.swccgo.filters.Filters.partOfSystem(com.gempukku.swccgo.common.Title.Alderaan);
+            case "interior_Naboo_battleground_site":
+                return com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.filters.Filters.interior_Naboo_site,
+                    com.gempukku.swccgo.filters.Filters.battleground_site);
+            // CONTEXT-COMPOSITE (needs player ownership)
+            case "your_Hoth_location":
+                return (playerId == null) ? null : com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.filters.Filters.your(playerId),
+                    com.gempukku.swccgo.filters.Filters.Hoth_location);
+            default:
+                LOG.warn("[ObjectiveAnalyzer] unknown/dynamic location filter key '{}' — fail-closed (no score).", key);
+                return null;
+        }
+    }
+
     private static float weight(Map<String, Float> w, String key) {
         if (w == null) return 0.0f;
         Float v = w.get(key);

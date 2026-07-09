@@ -4,6 +4,13 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-09 — ObjectivePlaybook loader EXTENSION step 2: fail-closed location-filter registry (behavior-neutral, NOT deployed)
+- Codex build-order step 2: the string→Filters.* resolver the step-3b flipLocationRules/actorLocationRules scorer will consume. Source-verified vs Filters.java + Codex's `Handoffs/OBJECTIVE_FILTER_REGISTRY_KEYS_2026-07-08.md`.
+- MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — ADD `resolveLocationFilter(key, playerId)`: DIRECT constants (Endor_location, Bunker, Bespin_system, Cloud_City_site/battleground_site, Tatooine/Yavin_4/Hoth_location, Theed_Palace_Throne_Room, Naboo_system, Galactic_Senate, Rebel_Base_location, Wattos_Junkyard), ALIAS (Ahch_To_location→AhchTo_location), COMPOSITE (Alderaan_location=partOfSystem(Title.Alderaan); interior_Naboo_battleground_site=and(interior_Naboo_site,battleground_site)), CONTEXT (your_Hoth_location=and(your(playerId),Hoth_location)). DYNAMIC/STATE keys return null (own hooks later). Unknown → null + warn (FAIL-CLOSED, no guessed score).
+- Boundary / SAFETY: behavior-NEUTRAL. The method has NO consumer yet (step 3b wires it). Compiler validates every Filters.* reference (MVN_EXIT=0). NOT redeployed — the running web.jar is the 15-objective set (2b4f0450c); this is code-only scaffolding.
+- Verified: compiles clean both bots (MVN_EXIT=0). Filter constants spot-checked live against Filters.java.
+- Revert: `git revert`; the method is additive and unconsumed.
+
 ## 2026-07-09 — ObjectivePlaybook: ENABLE 3 coarse-safe count-refine objectives (RST/DMTA/Invasion). 15 objectives live.
 - The 3 objectives Codex's source-verified split (`Handoffs/OBJECTIVE_COUNT_REFINE_COARSE_SAFE_2026-07-08.md`) marked COARSE-SAFE: their flip geography is fixed named planets/sites, so profile `locationFragments` is a correct deploy steer (the other 13 count-refine rows stay dormant — they need the actor/count/dynamic scorer).
 - MOD `objective_playbooks.json` — `loaderEnabled:true` + `locationFragments`:
