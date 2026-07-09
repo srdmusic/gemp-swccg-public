@@ -4,6 +4,16 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-09 — ObjectivePlaybook: ENABLE 3 coarse-safe count-refine objectives (RST/DMTA/Invasion). 15 objectives live.
+- The 3 objectives Codex's source-verified split (`Handoffs/OBJECTIVE_COUNT_REFINE_COARSE_SAFE_2026-07-08.md`) marked COARSE-SAFE: their flip geography is fixed named planets/sites, so profile `locationFragments` is a correct deploy steer (the other 13 count-refine rows stay dormant — they need the actor/count/dynamic scorer).
+- MOD `objective_playbooks.json` — `loaderEnabled:true` + `locationFragments`:
+  - Rebel Strike Team (8_78, LIGHT) → ["endor"] — "control three exterior Endor sites (2 Rebel scouts each), or Bunker blown away". Different objective from the dark Endor Operations; per-objective scoping = no clobber.
+  - Diplomatic Mission To Alderaan (203_19) → ["tatooine","alderaan","dune sea"] — "deliver Stolen Data Tapes; Rebels control a Tatooine site + Alderaan system".
+  - Invasion (14_113) → ["naboo","theed palace throne room"] — "control Theed Palace Throne Room (Neimoidian there) + Naboo system". Site title is "Naboo: Theed Palace Throne Room", so BOTH fragments match. INV's existing V86/V121 (Neimoidian→capital-ship, isInvasion-gated, reads Filters directly) is orthogonal to ground relevance — additive, no interaction.
+- Boundary math: same coarse fixed-geography relevance pattern (+200/site on the objective's planets/sites; over-matches nothing among locations). Exact flip conditions (scout counts, delivered-tapes state, Neimoidian-at-site) are later scorer refinements — dominated, not needed for a correct coarse steer. 15 objectives enabled.
+- Verified: compiles clean both bots (MVN_EXIT=0). Codex source-verified the geography; INV fragment/title + V86 interaction independently re-verified.
+- Revert: set `loaderEnabled:false` on any of the 3 profiles.
+
 ## 2026-07-08 — ObjectivePlaybook loader EXTENSION step 3a: coarse relevance from flipLocationRules (behavior-neutral)
 - Makes the rule DTOs functional at the coarse-steer level: `hydrateFromProfile` now feeds each `flipLocationRules[].alternatives[].locationFragments` into the existing +200 objective-relevance mechanism (the same proven lever as profile `locationFragments`).
 - MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — loop flipLocationRules → alternatives → locationFragments → `addLocationFragment`.

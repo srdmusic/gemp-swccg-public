@@ -462,6 +462,7 @@
     },
     {
       "label": "Rebel Strike Team",
+      "loaderEnabled": true,
       "blueprintIds": [
         "8_78",
         "8_78_BACK"
@@ -470,7 +471,9 @@
         "rebel strike team",
         "garrison destroyed"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "endor"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,
@@ -1446,7 +1449,12 @@
         "diplomatic mission to alderaan",
         "a weakness can be found"
       ],
-      "locationFragments": [],
+      "loaderEnabled": true,
+      "locationFragments": [
+        "tatooine",
+        "alderaan",
+        "dune sea"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,
@@ -3915,6 +3923,7 @@
     },
     {
       "label": "Invasion",
+      "loaderEnabled": true,
       "blueprintIds": [
         "14_113",
         "14_113_BACK"
@@ -3923,7 +3932,10 @@
         "invasion",
         "in complete control"
       ],
-      "locationFragments": [],
+      "locationFragments": [
+        "naboo",
+        "theed palace throne room"
+      ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
       "flipGateSite": null,
