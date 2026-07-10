@@ -64,6 +64,11 @@ public class ObjectiveAnalyzer {
     private final Set<String> startingInterruptIds = new HashSet<>();
     private final Set<String> startingInterruptFragments = new HashSet<>();
     private boolean hydratedFromJson = false;   // true once a JSON profile hydrated this objective
+    // Loader-extension step 3b (2026-07-10): the active loaderEnabled profile's rules, stored so the
+    // filter-based objective-relevance overload can evaluate them against real location cards at runtime.
+    // Null unless a loaderEnabled profile carried rules (none do yet → behavior-neutral).
+    private List<FlipLocationRule> activeFlipLocationRules = null;
+    private List<ActorLocationRule> activeActorLocationRules = null;
     // V22.2: Back side / flip-back protection
     private final Set<String> flipBackLocations = new HashSet<>();
     private final Set<String> flipBackLocationFragments = new HashSet<>();
@@ -252,6 +257,38 @@ public class ObjectiveAnalyzer {
             if (titleLower.contains(fragment)) return true;
         }
 
+        return false;
+    }
+
+    // Loader-extension step 3b (2026-07-10): FILTER-based objective-relevance. Returns true if the location
+    // matches the existing title/fragment path OR any of the active objective's flipLocationRules/
+    // actorLocationRules resolved location filters (via the fail-closed resolveLocationFilter registry). This
+    // is what count-refine/relation objectives whose relevant geography is NOT a simple title fragment
+    // (generic battlegrounds, ownership-scoped, composite sites) need. Behavior-neutral for objectives with
+    // no rules (activeFlipLocationRules/activeActorLocationRules null → same result as the title overload).
+    public boolean isObjectiveRelevantLocation(PhysicalCard loc, SwccgGame game, String playerId) {
+        if (!analyzed || loc == null) return false;
+        if (loc.getTitle() != null && isObjectiveRelevantLocation(loc.getTitle())) return true;
+        if (game == null) return false;
+        GameState gs = game.getGameState();
+        if (gs == null) return false;
+        if (activeFlipLocationRules != null) {
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (rule == null || rule.alternatives == null) continue;
+                for (FlipLocationAlternative alt : rule.alternatives) {
+                    if (alt == null || alt.locationFilterKey == null) continue;
+                    com.gempukku.swccgo.filters.Filter f = resolveLocationFilter(alt.locationFilterKey, playerId);
+                    if (f != null && f.accepts(gs, game.getModifiersQuerying(), loc)) return true;
+                }
+            }
+        }
+        if (activeActorLocationRules != null) {
+            for (ActorLocationRule rule : activeActorLocationRules) {
+                if (rule == null || rule.locationFilterKey == null) continue;
+                com.gempukku.swccgo.filters.Filter f = resolveLocationFilter(rule.locationFilterKey, playerId);
+                if (f != null && f.accepts(gs, game.getModifiersQuerying(), loc)) return true;
+            }
+        }
         return false;
     }
 
@@ -662,6 +699,9 @@ public class ObjectiveAnalyzer {
                 }
             }
         }
+        // step 3b: store the rules for the filter-based relevance overload (runtime filter eval).
+        activeFlipLocationRules = p.flipLocationRules;
+        activeActorLocationRules = p.actorLocationRules;
         hydratedFromJson = true;
         LOG.warn("[ObjectiveAnalyzer] JSON hydrate '{}': locFrags={}, reqCards={}, flipGateSite={}, flipGateIds={}, startLoc={}, startEff={}, startInt={}",
             p.label, flipConditionLocationFragments, requiredCardsOnTable, flipCriticalControlSite,
@@ -1127,6 +1167,8 @@ public class ObjectiveAnalyzer {
         startingInterruptIds.clear();
         startingInterruptFragments.clear();
         hydratedFromJson = false;
+        activeFlipLocationRules = null;
+        activeActorLocationRules = null;
         objectiveTitle = null;
         objectiveBlueprintId = null;
         // V29 UPDATED 2026-07-06: clear stored game text with the rest of the analysis

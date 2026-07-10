@@ -2063,9 +2063,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         int v136ForceAvail = gameState.getForcePileSize(context.getPlayerId());
                                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v136Obj =
                                             context.getObjectiveAnalyzer();
+                                        // step 3b (2026-07-10): filter-based relevance overload (rules) — for
+                                        // objectives WITHOUT rules this equals the old title check (neutral).
                                         boolean v136ObjRelevant = v136Obj != null && v136Obj.isAnalyzed()
                                             && title != null
-                                            && v136Obj.isObjectiveRelevantLocation(title);
+                                            && v136Obj.isObjectiveRelevantLocation(location, context.getGame(), context.getPlayerId());
                                         float v136Score = com.gempukku.swccgo.ai.models.common.strategy
                                             .CharacterDeploySiteEvaluator.evaluateSite(
                                                 context.getGame(), v136DeployingCard, location,

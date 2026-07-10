@@ -4,6 +4,14 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-10 — ObjectivePlaybook loader EXTENSION step 3b: filter-based objective-relevance scorer (behavior-neutral)
+- The core enabler for the 43 dormant objectives whose relevant geography is NOT a simple title fragment (generic battlegrounds, ownership-scoped `your_Hoth_location`, composite `interior_Naboo_battleground_site`, etc.). Consumes the step-2 fail-closed registry + the rule DTOs.
+- MOD `.../{rando,chosenone}/strategy/ObjectiveAnalyzer.java` — ADD overload `isObjectiveRelevantLocation(PhysicalCard loc, SwccgGame game, String playerId)`: returns true if the title/fragment path matches OR any of the active objective's `flipLocationRules`/`actorLocationRules` resolved location filters (`resolveLocationFilter`) `.accepts()` the location card. Store the active profile's rules (`activeFlipLocationRules`/`activeActorLocationRules`) in hydrate (loaderEnabled only); clear in reset().
+- MOD `.../{rando,chosenone}/evaluators/DeployEvaluator.java` (~1881) + `CardSelectionEvaluator.java` (~2068) — the two main deploy-siting `v136ObjRelevant` computations now call the PhysicalCard overload (both routes), so rule-based relevance drives the shared `CharacterDeploySiteEvaluator` +200 / over-stack waiver on BOTH deploy routes.
+- Boundary / SAFETY: behavior-NEUTRAL. The overload first does the exact old title/fragment check (== old result), THEN the rule path — and `activeFlipLocationRules`/`activeActorLocationRules` are null for EVERY current objective (0 profiles carry rules; verified). So for all 58 objectives today the overload returns exactly what the title check did. Rule-based relevance activates only when (a) Codex populates a profile's rules AND (b) I flip loaderEnabled AND (c) boundary-math the specific objective. Fail-closed: unknown filter key → null → no match (no guessed score).
+- Verified: compiles clean both bots (MVN_EXIT=0); 0 profiles have rules; JSON clean. NOT redeployed (running jar unchanged).
+- Revert: `git revert`; the overload is additive and the 2 call sites revert to the title overload.
+
 ## 2026-07-09 — V193 (CS): extend the Endor Bunker flip-gate steer to the CardSelection deploy route (DEPLOYED, Steve-approved)
 - Diagnosis from replay `replays/asdf/somykkwjy449xul4.xml.gz` + `logs/gemp-swccg.log` (2026-07-09 05:59–06:12): Rando ran Endor Operations, Steve left the Endor sites unmolested ~5 turns, objective NEVER flipped. Root cause corrects the prior handoff:
   - Establish Secret Base (V) 207_25 deploys only `GameConditions.controls(Bunker)`. Control needs presence; presence needs ability ≥ 1.
