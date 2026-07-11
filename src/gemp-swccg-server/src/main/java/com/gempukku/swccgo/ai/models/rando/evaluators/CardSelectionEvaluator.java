@@ -899,8 +899,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     SwccgCardBlueprint v166Bp = getBlueprintFromId(context, deployingBlueprintId);
                                     if (v166Bp != null && v166Bp.hasPowerAttribute() && v166Bp.getPower() != null)
                                         v166ThisPow = v166Bp.getPower();
-                                    float v166Wave = v173WaveProjection(gameState, playerId, deployingBlueprintId)[0];
-                                    boolean v166Survivable = (v166OurPow + v166ThisPow + v166Wave) >= v166TheirPower - 2f;
+                                    // V177 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, T2 Yoda solo into
+                                    // Kylo+Mara+saber): the gate passed on OPTIMISTIC self math vs DISCOUNTED
+                                    // enemy math — it counted a lightsaber-in-hand wave (+5) with ZERO affordable
+                                    // character buddies, and used raw enemy power blind to their weapons (raw 10,
+                                    // armed ~15). Two in-place corrections: (a) only count the wave when it has at
+                                    // least one AFFORDABLE BUDDY (wave[1]>=1 — the same standard V172 uses);
+                                    // (b) weapon-adjust their power (V29.7 heuristic: lightsaber +5, other +3,
+                                    // attached or permanent). Boundary: T2 case now 0+3+0 vs (10+10)-2=18 → GATED
+                                    // (was 8 vs 8 → "survivable" → +350 lure → Yoda died, 8 battle damage).
+                                    float[] v166WaveArr = v173WaveProjection(gameState, playerId, deployingBlueprintId);
+                                    float v166Wave = (v166WaveArr[1] >= 1f) ? v166WaveArr[0] : 0f;
+                                    float v166OppWeapons = v177OppWeaponBonus(gameState, location, v166Opp);
+                                    boolean v166Survivable = (v166OurPow + v166ThisPow + v166Wave)
+                                        >= (v166TheirPower + v166OppWeapons) - 2f;
                                     if (v166Survivable) {
                                         int v166OppCards = 0;
                                         for (PhysicalCard c : gameState.getCardsAtLocation(location))
@@ -2732,10 +2744,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         // V22.3: Contested penalty SCALES with how badly we're losing
                                         // Must be strong enough to override objective bonus (+200)
                                         // when deploying would just feed the opponent cards
+                                        // V22.3 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c): tier
+                                        // boundaries were exclusive (>), so a gap of EXACTLY 10 (0 vs 10,
+                                        // Yoda into Kylo+Mara) only drew -150 while the contest-bonus stack
+                                        // (+830) dwarfed it. Boundaries now inclusive (>=): gap 10 → -250.
                                         float contestPenalty = -80.0f;
-                                        if (powerDiff > 5) contestPenalty = -150.0f;   // Significantly outgunned
-                                        if (powerDiff > 10) contestPenalty = -250.0f;  // Massively outgunned — overrides obj bonus
-                                        if (powerDiff > 15) contestPenalty = -350.0f;  // Suicide — hard no
+                                        if (powerDiff >= 5) contestPenalty = -150.0f;   // Significantly outgunned
+                                        if (powerDiff >= 10) contestPenalty = -250.0f;  // Massively outgunned — overrides obj bonus
+                                        if (powerDiff >= 15) contestPenalty = -350.0f;  // Suicide — hard no
 
                                         // Check if deploying THIS card would actually close the gap meaningfully
                                         Float deployPower = (blueprint != null && blueprint.hasPowerAttribute()) ? blueprint.getPower() : null;
@@ -5855,6 +5871,38 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      * also Zone.isInPlay()-gated (getAllPermanentCards returns reserve-deck cards too).
      * Returns {wavePower, buddiesTaken, reservedForce}.
      */
+    /** V177 helper (2026-07-10): estimate the opponent's WEAPON power at a location — the raw power
+     *  totals are blind to weapons/hits, which is how Rando kept walking Jedi into armed stacks
+     *  (Rey replay rbujmoc90br3uu4c). Same heuristic as BattleEvaluator V29.7: lightsaber +5,
+     *  other weapon +3; counts ATTACHED WEAPON cards and PERMANENT weapons (game text). */
+    private static float v177OppWeaponBonus(GameState gs, PhysicalCard location, String oppId) {
+        float bonus = 0f;
+        if (gs == null || location == null || oppId == null) return 0f;
+        try {
+            for (PhysicalCard c : gs.getCardsAtLocation(location)) {
+                if (c == null || c.getBlueprint() == null) continue;
+                if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                if (!oppId.equals(c.getOwner())) continue;
+                java.util.List<PhysicalCard> atts = gs.getAttachedCards(c);
+                if (atts != null) {
+                    for (PhysicalCard att : atts) {
+                        if (att == null || att.getBlueprint() == null) continue;
+                        if (att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
+                            String wt = att.getTitle() != null ? att.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                            bonus += wt.contains("lightsaber") ? 5.0f : 3.0f;
+                        }
+                    }
+                }
+                String gt = c.getBlueprint().getGameText();
+                if (gt != null && gt.toLowerCase(java.util.Locale.ROOT).contains("permanent weapon")) {
+                    String ct = c.getTitle() != null ? c.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                    bonus += ct.contains("lightsaber") ? 5.0f : 3.0f;
+                }
+            }
+        } catch (Exception e) { /* fail-open: 0 bonus */ }
+        return bonus;
+    }
+
     private static float[] v173WaveProjection(GameState gs, String playerId, String deployingBpId) {
         try {
             float thisCost = 0f;

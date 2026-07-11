@@ -1,3 +1,10 @@
+  ════ REY-GAME FIXES WAVE 1 (2026-07-10, replay rbujmoc90br3uu4c, both bots) ════
+V177/V166 survivability gate: wave needs >=1 affordable buddy + weapon-adjusted enemy power (v177OppWeaponBonus);
+V22.3 contested tiers inclusive (>=); V148 deploy-cancel bar 0 for where-to-deploy prompts; V67s+V185 possessive/
+fuzzy pull-match guards (isPossessiveTypeTarget); V82.1 parser +'search your Reserve Deck…into hand' pattern
+(Clash Of Sabers dead search); V82.2 all-words-recognized + partial→UNKNOWN + V82.2b persona rescue (Chewie
+false-blocks). All adjust-in-place. See AI_CHANGELOG 2026-07-10.
+
   ════ SAFETY CLAMP + V22.7 ADJUST (2026-07-10): "Any Methods Necessary" setup hang fixed (both bots) ════
 AMN (109_7) iterative take-combination decision was misrouted by the V22.7 matching+starship catch-all to
 evaluatePilotSelection (ignores selectable[]), answered a non-selectable card; engine rejected, mediator swallowed,

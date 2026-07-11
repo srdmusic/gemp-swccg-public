@@ -280,7 +280,16 @@ public class CombinedEvaluator {
 
         // OWNED BY: SVC-SAFETY. Additive sum per actionId: score-neutral = IDENTICAL SCORES.
         // If ALL actions are terrible, consider passing
-        if (bestAction.getScore() < BAD_ACTION_THRESHOLD) {
+        // V148 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, T2: Luke TLJ deployed to a −10 site
+        // when ALL offered sites scored negative and Done was available): for "where to deploy"
+        // selections the cancel bar was −100, so mildly-negative best sites still got committed.
+        // Deploying a character to a NEGATIVE-value site is strictly worse than holding the card
+        // (deploy is optional) — for deploy-location prompts the bar is now < 0. Everything else
+        // keeps BAD_ACTION_THRESHOLD (−100) unchanged.
+        float v148PassBar = BAD_ACTION_THRESHOLD;
+        String v148Dtext = context.getDecisionText() != null ? context.getDecisionText().toLowerCase() : "";
+        if (v148Dtext.contains("where to deploy")) v148PassBar = 0.0f;
+        if (bestAction.getScore() < v148PassBar) {
             // V148 (Steve, 2026-05-28): "Rando should always have the option to hit
             // Done/Cancel if he scores something and finds it not favorable. That's
             // what a real player would do."

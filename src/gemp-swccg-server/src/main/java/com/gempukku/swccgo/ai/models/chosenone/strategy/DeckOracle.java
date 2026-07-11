@@ -484,21 +484,36 @@ public class DeckOracle {
             if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
             String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
             boolean hit = false;
+            boolean lastWordHit = false;  // V185 ADJUSTED 2026-07-10: track fuzzy type-word matches
             for (String kw : targets) {
                 if (kw == null) continue;
                 String kwLower = kw.toLowerCase(Locale.ROOT);
                 if (titleLower.contains(kwLower)) { hit = true; break; }
                 String kwStripped = kwLower.replaceAll("\\[[^\\]]*\\]", " ").replaceAll("\\s+", " ").trim();
                 if (!kwStripped.isEmpty() && !kwStripped.equals(kwLower) && titleLower.contains(kwStripped)) { hit = true; break; }
-                if (!kwStripped.isEmpty() && kwStripped.contains(" ")) {
+                // V185 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, incidents 2-4): the last-word
+                // fallback made "leia's lightsaber" match Ahsoka Tano With Lightsabers (a CHARACTER in
+                // Reserve), and the non-weapon early-exit below then declared the pull good — silencing
+                // the V185 no-holder gate for three dead pulls. (a) possessives name ONE card: skip the
+                // fallback (Codex m00118: only genuine "X's <type>" shapes, not icon remnants);
+                // (b) a fallback hit is fuzzy — a NON-weapon fuzzy match may not stand the
+                // gate down (only an exact/stripped title match may).
+                if (!kwStripped.isEmpty() && kwStripped.contains(" ")
+                        && !isPossessiveTypeTarget(kwStripped)) {
                     String lastWord = kwStripped.substring(kwStripped.lastIndexOf(' ') + 1);
-                    if (lastWord.length() >= 4 && titleLower.contains(lastWord)) { hit = true; break; }
+                    if (lastWord.length() >= 4 && titleLower.contains(lastWord)) { hit = true; lastWordHit = true; break; }
                 }
             }
             if (!hit) continue;
             anyMatched = true;
             // A non-weapon target still in Reserve (location/epic event) — Rando has a good pull.
-            if (dc.getCategory() != CardCategory.WEAPON) return false;
+            // V185 ADJUSTED 2026-07-10: only an EXACT/stripped title match may stand the gate down;
+            // a fuzzy last-word hit on a non-weapon (e.g. a character containing "lightsabers") is
+            // not evidence the real target is pullable.
+            if (dc.getCategory() != CardCategory.WEAPON) {
+                if (!lastWordHit) return false;
+                continue;
+            }
             // getMatchingCharacterFilter() is safe to call only on weapons (base blueprint throws).
             com.gempukku.swccgo.filters.Filter matching =
                 (dc.getBlueprint() != null) ? dc.getBlueprint().getMatchingCharacterFilter() : null;
@@ -950,7 +965,14 @@ public class DeckOracle {
                 // 3. V67s: Also try the last word of the stripped keyword (often the
                 // card type: "lightsaber", "site", "starship", "weapon"). This catches
                 // multi-word targets where only the type word matches a title.
-                if (!kwStripped.isEmpty() && kwStripped.contains(" ")) {
+                // V67s ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c): skip this fallback for
+                // POSSESSIVE keywords ("leia's lightsaber", "anakin's lightsaber") — a possessive
+                // names ONE specific card, and the type-word fallback made "leia's lightsaber"
+                // match Anakin's Lightsaber still in Reserve, green-lighting a pull whose real
+                // target was in the Force Pile (incident 5: dead pull fired at 1890).
+                // Codex m00118 refinement: only genuine "X's <type>" shapes, not icon remnants.
+                if (!kwStripped.isEmpty() && kwStripped.contains(" ")
+                        && !isPossessiveTypeTarget(kwStripped)) {
                     String lastWord = kwStripped.substring(kwStripped.lastIndexOf(' ') + 1);
                     if (lastWord.length() >= 4 && titleLower.contains(lastWord)) {
                         return true;
@@ -1171,6 +1193,15 @@ public class DeckOracle {
             java.util.regex.Pattern.compile(
                 "[^.;]*\\b(?:take|deploy|download|upload|reveal|retrieve|use|search\\s+for|add|put|choose)\\b\\s+([^.;]*?)\\s+from\\s+reserve\\s+deck",
                 java.util.regex.Pattern.CASE_INSENSITIVE),
+            // V82.1 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, incident 1: Clash Of Sabers):
+            // "search your Reserve Deck, take one Uncontrollable Fury into hand and reshuffle" has
+            // no trailing "from Reserve Deck", so NO pattern above matched → V177 saw zero targets
+            // and never checked the deck → Rando burned 1 Force + the interrupt searching for a card
+            // that was never in the deck. This pattern captures the "search your Reserve Deck …
+            // take/choose X into hand" shape (also You Are Beaten / Fall Of The Legend texts).
+            java.util.regex.Pattern.compile(
+                "search\\s+your\\s+reserve\\s+deck,?\\s*(?:and\\s+)?(?:take|choose)\\s+([^.;]+?)\\s+into\\s+hand",
+                java.util.regex.Pattern.CASE_INSENSITIVE),
         };
 
         for (java.util.regex.Pattern p : patterns) {
@@ -1281,6 +1312,7 @@ public class DeckOracle {
         // spaces and AND together the per-word checks (Icon/Keyword/Species)
         // against each card blueprint in the zone. Catches Icon/Species/Keyword
         // targets that don't map to a single CardCategory.
+        boolean v822PartialRecognition = false;  // Codex m00118: partial-predicate targets → UNKNOWN, not WILL_FAIL
         for (String t : targets) {
             String[] words = t.toLowerCase(Locale.ROOT).trim().split("\\s+");
             // Count how many of the words have a known predicate. If none, we
@@ -1288,6 +1320,17 @@ public class DeckOracle {
             int recognizedWords = 0;
             for (String w : words) if (wordHasPredicate(w)) recognizedWords++;
             if (recognizedWords == 0) continue;
+            // V82.2 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, incident 6): require ALL
+            // words recognized before this fallback may declare WILL_SUCCEED. With partial
+            // recognition, "jedi village" (a LOCATION title) split into "jedi" (predicate) +
+            // "village" (unrecognized → didn't constrain) and matched 'Rey, All Of The Jedi' in
+            // Reserve — overriding V177's correct DEAD verdict on a gone-forever pull. The
+            // designed cases ("neimoidian pilot", "jedi pilot", "imperial leader") have every
+            // word recognized and still pass. Codex corpus check (m00118): partially-recognized
+            // targets must NOT fall through to authoritative WILL_FAIL (would false-block valid
+            // generic pulls like "maintenance droid" / "non-unique Rebel") — flag them and
+            // downgrade the tail verdict to UNKNOWN below.
+            if (recognizedWords < words.length) { v822PartialRecognition = true; continue; }
             for (DeckCard dc : allCards) {
                 if (!sourceZone.equals(dc.getCurrentZone())) continue;
                 SwccgCardBlueprint bp = dc.getBlueprint();
@@ -1301,6 +1344,46 @@ public class DeckOracle {
                     return new PullValidation(PullOutcome.WILL_SUCCEED,
                         "blueprint-predicate match for '" + t + "' on '" + dc.getTitle()
                             + "' in " + sourceZone + " (V82.2 fallback)");
+                }
+            }
+        }
+        // V82.2b PERSONA RESCUE (2026-07-10, Rey replay rbujmoc90br3uu4c bonus defect): pull filters
+        // like Filters.and(Persona.CHEWIE, Icon.REFLECTIONS_II) parse to targets like "reflections ii
+        // chewie" — no title in the deck contains "chewie" (the card is 'Chewbacca, Protector'), so
+        // V177 false-blocked a LIVE power-6 pull 40+ times this game. Resolve persona nicknames via
+        // the engine's Persona enum (search-by-type rule, never title text) against blueprints in the
+        // zone. Possessive tokens ("leia's") are NOT persona references — they name a different card.
+        for (String t : targets) {
+            String[] tWords = t.toLowerCase(Locale.ROOT).trim().split("\\s+");
+            for (com.gempukku.swccgo.common.Persona per : com.gempukku.swccgo.common.Persona.values()) {
+                String pn;
+                try { pn = per.getHumanReadable(); } catch (Exception e) { continue; }
+                if (pn == null || pn.length() < 3) continue;
+                String pnl = pn.toLowerCase(Locale.ROOT);
+                boolean personaWord = false;
+                for (String w : tWords) if (w.equals(pnl)) { personaWord = true; break; }
+                if (!personaWord) continue;
+                for (DeckCard dc : allCards) {
+                    if (!sourceZone.equals(dc.getCurrentZone())) continue;
+                    SwccgCardBlueprint bp = dc.getBlueprint();
+                    if (bp == null) continue;
+                    boolean hasPersona = false;
+                    try {
+                        java.util.Set<com.gempukku.swccgo.common.Persona> ps = bp.getPersonas();
+                        hasPersona = ps != null && ps.contains(per);
+                    } catch (Exception e) { /* some blueprints throw — skip */ }
+                    if (!hasPersona) continue;
+                    // Any OTHER predicate words in the target must also match this blueprint.
+                    boolean othersOk = true;
+                    for (String w : tWords) {
+                        if (w.equals(pnl) || !wordHasPredicate(w)) continue;
+                        if (!blueprintMatchesWord(bp, w)) { othersOk = false; break; }
+                    }
+                    if (othersOk) {
+                        return new PullValidation(PullOutcome.WILL_SUCCEED,
+                            "V82.2b persona match: '" + pn + "' → '" + dc.getTitle()
+                                + "' in " + sourceZone);
+                    }
                 }
             }
         }
@@ -1331,9 +1414,27 @@ public class DeckOracle {
                         + "] unparseable (>25 chars or has digit) — not blocking (mirror V177)");
             }
         }
+        // V82.2 ADJUSTED 2026-07-10 (Codex m00118): a partially-recognized target ("maintenance
+        // droid", "non-unique rebel") was NOT authoritatively validated once the all-words gate
+        // above skips it — WILL_FAIL here would false-block valid generic pulls. Fail OPEN.
+        if (v822PartialRecognition) {
+            return new PullValidation(PullOutcome.UNKNOWN,
+                "V82.2 partial-recognition pass-through: target(s) [" + String.join(", ", targets)
+                    + "] not fully validated — not blocking");
+        }
         return new PullValidation(PullOutcome.WILL_FAIL,
             "no parsed target [" + String.join(", ", targets)
                 + "] in " + sourceZone + " — search will FAIL and reveal zone");
+    }
+
+    /** V67s/V185 helper (2026-07-10, Codex m00118 refinement): true only for genuine possessive
+     *  card-name targets — "X's <type>" where the word DIRECTLY before the last (type) word is
+     *  possessive ("leia's lightsaber", "anakin's lightsaber"). Icon remnants with a possessive
+     *  earlier in the phrase ("jabba's palace lando") are NOT possessive-type targets — their
+     *  last-word rescue must keep working. */
+    private static boolean isPossessiveTypeTarget(String stripped) {
+        String[] w = stripped.trim().split("\\s+");
+        return w.length >= 2 && w[w.length - 2].endsWith("'s");
     }
 
     /** V82.2: Does this single word have a recognized predicate? */
