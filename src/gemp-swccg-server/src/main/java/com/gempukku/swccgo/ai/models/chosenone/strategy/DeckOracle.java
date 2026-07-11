@@ -1200,7 +1200,7 @@ public class DeckOracle {
             // that was never in the deck. This pattern captures the "search your Reserve Deck …
             // take/choose X into hand" shape (also You Are Beaten / Fall Of The Legend texts).
             java.util.regex.Pattern.compile(
-                "search\\s+your\\s+reserve\\s+deck,?\\s*(?:and\\s+)?(?:take|choose)\\s+([^.;]+?)\\s+into\\s+hand",
+                "search\\s+your\\s+reserve\\s+deck[,.]?\\s*(?:and\\s+)?(?:take|choose)\\s+([^.;]+?)\\s+into\\s+(?:your\\s+)?hand",
                 java.util.regex.Pattern.CASE_INSENSITIVE),
         };
 
