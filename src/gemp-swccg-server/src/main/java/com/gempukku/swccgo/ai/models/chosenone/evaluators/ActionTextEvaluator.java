@@ -312,6 +312,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
                                 boolean v177WordHit = false;
                                 for (String v177W : v177T.split("[^a-zA-Z']+")) {
+                                    // V177 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, incident 5):
+                                    // skip GENERIC TYPE WORDS in the word-rescue — "lightsaber" from
+                                    // "leia's lightsaber" matched Anakin's Lightsaber in Reserve and
+                                    // revived a pull whose real target was in the Force Pile. A type
+                                    // word alone is not evidence the NAMED card is pullable.
+                                    if (com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                            .mapTypeWordToCategory(v177W) != null) continue;
                                     if (v177W.length() >= 6 && v177Oracle.hasTargetInZone(
                                             com.gempukku.swccgo.common.Zone.RESERVE_DECK, v177W)) {
                                         v177WordHit = true; break;
@@ -3653,11 +3660,46 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             } catch (Exception e) { /* ignore */ }
 
                             if (destOppIcons == 0) {
-                                action.addReasoning(String.format(
-                                    "V67ae MOVE-TO-NON-DRAIN: '%s' destination has 0 opp icons — losing drain pressure for a 'safe' retreat!",
-                                    srcLoc.getTitle()), -300.0f);
-                                logger.warn("V67ae MOVE-TO-NON-DRAIN: action='{}' dest={} 0-drain — penalize free retreat (-300)",
-                                    actionText, srcLoc.getTitle());
+                                // V67ae ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, T5: Lando
+                                // trapped at 6v11-armed Lower Corridor; the only escape was taxed -300
+                                // and Pass won): mirror V33 BUDDY BREAK's "hopelessly outgunned →
+                                // allow retreat" exemption (MoveEvaluator: gap >= 6 = site doomed).
+                                // Location-sourced move actions never reach MoveEvaluator's threat
+                                // tiers, so the exemption must live HERE: if ANY friendly-occupied
+                                // location (other than this destination) is doomed, a retreat to a
+                                // 0-drain site is legitimate — skip the penalty.
+                                boolean v67aeRetreatExempt = false;
+                                String v67aeDoomedLoc = null;
+                                try {
+                                    if (context.getGame() != null) {
+                                        for (PhysicalCard rl : gameState.getTopLocations()) {
+                                            if (rl == null || rl.getCardId() == srcLoc.getCardId()) continue;
+                                            float rOur = context.getGame().getModifiersQuerying()
+                                                .getTotalPowerAtLocation(gameState, rl, context.getPlayerId(), false, false);
+                                            if (rOur <= 0) continue;
+                                            float rOpp = context.getGame().getModifiersQuerying()
+                                                .getTotalPowerAtLocation(gameState, rl, oppId, false, false);
+                                            if (rOpp - rOur >= 6f) {
+                                                v67aeRetreatExempt = true;
+                                                v67aeDoomedLoc = rl.getTitle();
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) { /* fail-open: no exemption */ }
+                                if (v67aeRetreatExempt) {
+                                    action.addReasoning(String.format(
+                                        "V67ae RETREAT EXEMPT: '%s' hopelessly outgunned (gap >= 6, V33 standard) — retreat to non-drain allowed",
+                                        v67aeDoomedLoc), 0.0f);
+                                    logger.warn("V67ae RETREAT EXEMPT: doomed={} dest={} — skipping -300",
+                                        v67aeDoomedLoc, srcLoc.getTitle());
+                                } else {
+                                    action.addReasoning(String.format(
+                                        "V67ae MOVE-TO-NON-DRAIN: '%s' destination has 0 opp icons — losing drain pressure for a 'safe' retreat!",
+                                        srcLoc.getTitle()), -300.0f);
+                                    logger.warn("V67ae MOVE-TO-NON-DRAIN: action='{}' dest={} 0-drain — penalize free retreat (-300)",
+                                        actionText, srcLoc.getTitle());
+                                }
                             }
                         }
                     } catch (Exception e) { logger.debug("V67ae error: {}", e.getMessage()); }
@@ -4665,8 +4707,32 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                             hardBlocked = true;
                                         } else if (v67hRes.outcome ==
                                             com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
-                                            logger.info("V67h MEMORY OK: source={} — {}",
-                                                sourceCard.getTitle(), v67hRes.reason);
+                                            // V185 MIRROR (ADJUSTED 2026-07-10, Rey replay rbujmoc90br3uu4c):
+                                            // twin drift — DeployEvaluator's V185 no-holder weapon veto had NO
+                                            // counterpart here, so V192's additive bonus (+1575) diluted the
+                                            // Deploy-side -2000 to net -375 and a vetoed dead saber pull nearly
+                                            // fired. Run the SAME gate on this route: a WILL_SUCCEED whose
+                                            // Reserve targets are all unattachable weapons is a dead pull.
+                                            boolean v185Mirror = false;
+                                            try {
+                                                java.util.List<String> v185T =
+                                                    com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
+                                                        .parseSourceCardPullTargets(v67hGT);
+                                                v185Mirror = v67hZone == com.gempukku.swccgo.common.Zone.RESERVE_DECK
+                                                    && context.getGame() != null && context.getPlayerId() != null
+                                                    && pullOracle.reserveTargetsAreAllUnattachableWeapons(
+                                                        context.getGame(), context.getPlayerId(), v185T);
+                                            } catch (Exception v185E) { /* fail-open */ }
+                                            if (v185Mirror) {
+                                                action.addReasoning("V185 (ATE mirror): all Reserve targets are "
+                                                    + "weapons with no legal holder — dead pull", -9999.0f);
+                                                logger.warn("V185 ATE MIRROR: source={} — blocking dead weapon pull",
+                                                    sourceCard.getTitle());
+                                                hardBlocked = true;
+                                            } else {
+                                                logger.info("V67h MEMORY OK: source={} — {}",
+                                                    sourceCard.getTitle(), v67hRes.reason);
+                                            }
                                         }
                                     }
                                 }

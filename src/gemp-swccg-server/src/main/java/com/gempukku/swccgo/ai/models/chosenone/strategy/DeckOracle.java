@@ -1508,7 +1508,8 @@ public class DeckOracle {
      * "site", "location", "battleground" → LOCATION
      * "character" → CHARACTER, etc.
      */
-    private static CardCategory mapTypeWordToCategory(String target) {
+    // Visibility widened 2026-07-10: ATE's V177 word-rescue needs the type-word check (see V177 ADJUSTED).
+    public static CardCategory mapTypeWordToCategory(String target) {
         if (target == null) return null;
         // Last word is usually the type if it's generic (e.g., "naboo site",
         // "tatooine battleground", "blaster weapon"). Check last word first,

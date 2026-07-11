@@ -1,3 +1,10 @@
+  ════ REY-GAME FIXES WAVE 2 (2026-07-10, replay rbujmoc90br3uu4c, both bots) ════
+Battle + retreat weapon/hit awareness: V29.7/V76 count OPPONENT weapons (predictor gets theirPower+oppWeaponBonus);
+V76 hit-economics now runs on the V22.4 fallback route (armed-opp × avg-forfeit >= 10 → -500 pyrrhic, never
+"favorable"); V47+V37.1 threat tiers weapon-adjusted (oppWeaponBonusAt); V67ae mirrors V33's gap>=6 retreat
+exemption; V177 word-rescue skips generic type words; V185 no-holder veto mirrored into ATE V67h (-9999, ends the
++1575 dilution). All adjust-in-place. See AI_CHANGELOG 2026-07-10.
+
   ════ REY-GAME FIXES WAVE 1 (2026-07-10, replay rbujmoc90br3uu4c, both bots) ════
 V177/V166 survivability gate: wave needs >=1 affordable buddy + weapon-adjusted enemy power (v177OppWeaponBonus);
 V22.3 contested tiers inclusive (>=); V148 deploy-cancel bar 0 for where-to-deploy prompts; V67s+V185 possessive/

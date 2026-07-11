@@ -208,6 +208,10 @@ public class BattleEvaluator extends ActionEvaluator {
                                 // IHYN in hand adds 2-3 more battle destiny draws.
                                 // Check our characters for weapons and adjust effective power.
                                 float weaponBonus = 0;
+                                // V29.7/V76 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c): count the
+                                // OPPONENT's weapons too — the predictor got our sabers (+wb) but raw
+                                // enemy power, systematically underestimating armed defenders.
+                                float oppWeaponBonus = 0;
                                 boolean ourVaderHere = false;
                                 boolean lukeHere = false;
                                 boolean hasIHYN = false;
@@ -241,6 +245,22 @@ public class BattleEvaluator extends ActionEvaluator {
                                         } else if (opponentId != null && opponentId.equals(cardOwner)) {
                                             // Opponent character — check for key targets
                                             if (locCardTitle.contains("luke")) lukeHere = true;
+                                            // V29.7/V76 ADJUSTED 2026-07-10: opponent weapons (attached
+                                            // + permanent), same +5/+3 heuristic as ours.
+                                            java.util.List<PhysicalCard> oppAtts = gameState.getAttachedCards(locCard);
+                                            if (oppAtts != null) {
+                                                for (PhysicalCard att : oppAtts) {
+                                                    if (att == null || att.getBlueprint() == null) continue;
+                                                    if (att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
+                                                        String wepTitle = att.getTitle() != null ? att.getTitle().toLowerCase(Locale.ROOT) : "";
+                                                        oppWeaponBonus += wepTitle.contains("lightsaber") ? 5.0f : 3.0f;
+                                                    }
+                                                }
+                                            }
+                                            String oppGt = locCard.getBlueprint().getGameText();
+                                            if (oppGt != null && oppGt.toLowerCase(Locale.ROOT).contains("permanent weapon")) {
+                                                oppWeaponBonus += locCardTitle.contains("lightsaber") ? 5.0f : 3.0f;
+                                            }
                                         }
                                     }
 
@@ -427,9 +447,10 @@ public class BattleEvaluator extends ActionEvaluator {
                                             context.getDeckOracle();
                                         com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker v76OppTracker =
                                             context.getOpponentDeckTracker();
+                                        // V76 ADJUSTED 2026-07-10: opponent side weapon-adjusted (was raw).
                                         BattlePredictor.BattleOutcome v76Outcome = BattlePredictor.predictBattle(
                                             (int) (ourPower + weaponBonus), myDraws,
-                                            (int) theirPower, oppDraws,
+                                            (int) (theirPower + oppWeaponBonus), oppDraws,
                                             v76DeckOracle, v76OppTracker);
 
                                         logger.warn("V76 BATTLE PREDICT at {}: winRate={} avgDamageTaken={} avgDamageDealt={} (myPow={}+wb{} draws={} vs oppPow={} draws={})",
@@ -537,9 +558,68 @@ public class BattleEvaluator extends ActionEvaluator {
                                         float abilityDiff = ourAbility - theirAbility;
                                         float effectiveDiff = powerDiff + (abilityDiff * 2.5f);
 
-                                        logger.info("[BattleEvaluator] Checking {}: power={}/{} (diff={}), ability={}/{} (diff={})",
+                                        // V76 (V22.4 fallback) ADJUSTED 2026-07-10 (Rey replay
+                                        // rbujmoc90br3uu4c, T5: "Initiate battle for free" had no
+                                        // location data, skipped the specific branch — the ONLY place
+                                        // V76 ran — and got "+40 Favorable 19v13" while 2-3 armed
+                                        // opponents hit Ben Solo + Yoda + 3 sabers: won the power, lost
+                                        // 6 cards to 2). The fallback now (a) counts opponent WEAPONS
+                                        // into the power math (V29.7 heuristic) and (b) prices the HIT
+                                        // economics: each armed opponent character ≈ one of our
+                                        // characters forfeited at 0 (avg forfeit). Ruinous economics →
+                                        // -500 pyrrhic (same bar as V76's specific branch) and never
+                                        // "favorable".
+                                        float v76fOppWeap = 0f; int v76fOppArmed = 0;
+                                        int v76fOurChars = 0; float v76fOurForfeit = 0f;
+                                        try {
+                                            for (PhysicalCard fc : gameState.getCardsAtLocation(location)) {
+                                                if (fc == null || fc.getBlueprint() == null) continue;
+                                                if (fc.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                                if (playerId.equals(fc.getOwner())) {
+                                                    v76fOurChars++;
+                                                    Float ff = fc.getBlueprint().hasForfeitAttribute() ? fc.getBlueprint().getForfeit() : null;
+                                                    v76fOurForfeit += (ff != null) ? ff : 2f;
+                                                } else if (opponentId != null && opponentId.equals(fc.getOwner())) {
+                                                    boolean fArmed = false;
+                                                    java.util.List<PhysicalCard> fAtts = gameState.getAttachedCards(fc);
+                                                    if (fAtts != null) {
+                                                        for (PhysicalCard att : fAtts) {
+                                                            if (att == null || att.getBlueprint() == null) continue;
+                                                            if (att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
+                                                                String wt = att.getTitle() != null ? att.getTitle().toLowerCase(Locale.ROOT) : "";
+                                                                v76fOppWeap += wt.contains("lightsaber") ? 5f : 3f;
+                                                                fArmed = true;
+                                                            }
+                                                        }
+                                                    }
+                                                    String fgt = fc.getBlueprint().getGameText();
+                                                    if (fgt != null && fgt.toLowerCase(Locale.ROOT).contains("permanent weapon")) {
+                                                        String fct = fc.getTitle() != null ? fc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                                        v76fOppWeap += fct.contains("lightsaber") ? 5f : 3f;
+                                                        fArmed = true;
+                                                    }
+                                                    if (fArmed) v76fOppArmed++;
+                                                }
+                                            }
+                                        } catch (Exception e) { /* fail-open */ }
+                                        float v76fHitLoss = 0f;
+                                        if (v76fOppArmed > 0 && v76fOurChars > 0) {
+                                            float v76fAvgF = v76fOurForfeit / v76fOurChars;
+                                            v76fHitLoss = Math.min(v76fOppArmed, v76fOurChars) * v76fAvgF;
+                                        }
+                                        effectiveDiff -= v76fOppWeap;
+                                        boolean v76fPyrrhic = v76fHitLoss >= 10f;
+                                        if (v76fPyrrhic) {
+                                            action.addReasoning(String.format(
+                                                "V76 (fallback) HIT ECONOMICS at %s: %d armed opponents, expected card loss %.1f — pyrrhic, don't initiate!",
+                                                location.getTitle(), v76fOppArmed, v76fHitLoss), -500.0f);
+                                            logger.warn("V76 FALLBACK PYRRHIC at {}: armed={} hitLoss={} oppWeap=+{}",
+                                                location.getTitle(), v76fOppArmed, v76fHitLoss, v76fOppWeap);
+                                        }
+
+                                        logger.info("[BattleEvaluator] Checking {}: power={}/{} (diff={}), ability={}/{} (diff={}), oppWeap=+{}",
                                             location.getTitle(), ourPower, theirPower, powerDiff,
-                                            ourAbility, theirAbility, abilityDiff);
+                                            ourAbility, theirAbility, abilityDiff, v76fOppWeap);
 
                                         // V22.4: Check for any suicidal locations — if ANY location
                                         // has our power < 50% of theirs, add strong warning
@@ -548,12 +628,12 @@ public class BattleEvaluator extends ActionEvaluator {
                                                 location.getTitle(), ourPower, theirPower), -80.0f);
                                         }
 
-                                        if (effectiveDiff >= MARGINAL_THRESHOLD) {
+                                        if (effectiveDiff >= MARGINAL_THRESHOLD && !v76fPyrrhic) {
                                             foundFavorableBattle = true;
                                             action.addReasoning(String.format("Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
                                                 location.getTitle(), ourPower, theirPower, ourAbility, theirAbility), 40.0f);
                                             break;
-                                        } else if (abilityDiff >= 0
+                                        } else if (!v76fPyrrhic && abilityDiff >= 0
                                                    && powerDiff >= -ABILITY_BATTLE_MAX_POWER_DEFICIT
                                                    && !(theirPower > ourPower * 2 && theirPower > 6)) {
                                             // V164a (Steve): equal-or-greater ability -> initiate even without a

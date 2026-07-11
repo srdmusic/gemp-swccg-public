@@ -694,6 +694,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                 gameState, currentLoc, playerId, false, false);
                             float v47Their = game.getModifiersQuerying().getTotalPowerAtLocation(
                                 gameState, currentLoc, v47Opp, false, false);
+                                                        // V47 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, T5 Lando):
+                            // survivability said powerDiff=-2 (6v8 raw) while the armed reality was
+                            // 6v11+ — weapon-adjust their power (V29.7 heuristic) so the RETREAT
+                            // threshold sees the real fight. Threshold itself unchanged.
+                            v47Their += oppWeaponBonusAt(gameState, currentLoc, v47Opp);
                             v47PowerDiff = v47Our - v47Their;
                             v47Survivable = v47PowerDiff >= RandoConfig.BATTLE_DANGER_THRESHOLD;
                         } catch (Exception e) {
@@ -2183,6 +2188,30 @@ public class MoveEvaluator extends ActionEvaluator {
             } else if (opponentId != null && opponentId.equals(owner)) {
                 theirPower += power;
                 theirCardCount++;
+                // V37.1 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, T5: Lando held at
+                // 6v8 raw vs 6v11 armed — hit + forfeited + 5 damage next turn): the threat
+                // tiers were blind to opponent WEAPONS. Weapon-adjust their power with the
+                // V29.7 heuristic (lightsaber +5, other +3; attached or permanent) so
+                // calculateThreatLevel sees the real fight. Thresholds themselves unchanged.
+                if (bp.getCardCategory() == com.gempukku.swccgo.common.CardCategory.CHARACTER) {
+                    try {
+                        List<PhysicalCard> wAtts = gameState.getAttachedCards(card);
+                        if (wAtts != null) {
+                            for (PhysicalCard att : wAtts) {
+                                if (att == null || att.getBlueprint() == null) continue;
+                                if (att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
+                                    String wt = att.getTitle() != null ? att.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                    theirPower += wt.contains("lightsaber") ? 5.0f : 3.0f;
+                                }
+                            }
+                        }
+                        String wgt = bp.getGameText();
+                        if (wgt != null && wgt.toLowerCase(java.util.Locale.ROOT).contains("permanent weapon")) {
+                            String wct = card.getTitle() != null ? card.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                            theirPower += wct.contains("lightsaber") ? 5.0f : 3.0f;
+                        }
+                    } catch (Exception e) { /* fail-open: raw power */ }
+                }
             }
         }
 
@@ -2976,6 +3005,37 @@ public class MoveEvaluator extends ActionEvaluator {
      * Calculate threat level based on power differential.
      * Ported from Python move_evaluator.py threat level logic.
      */
+    /** V47/V37.1 helper (2026-07-10, Rey replay rbujmoc90br3uu4c): opponent WEAPON power at a
+     *  location — raw power totals are blind to weapons/hits. V29.7 heuristic: lightsaber +5,
+     *  other weapon +3; counts attached WEAPON cards and permanent weapons (game text). */
+    private static float oppWeaponBonusAt(GameState gs, PhysicalCard location, String oppId) {
+        float bonus = 0f;
+        if (gs == null || location == null || oppId == null) return 0f;
+        try {
+            for (PhysicalCard c : gs.getCardsAtLocation(location)) {
+                if (c == null || c.getBlueprint() == null) continue;
+                if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                if (!oppId.equals(c.getOwner())) continue;
+                List<PhysicalCard> atts = gs.getAttachedCards(c);
+                if (atts != null) {
+                    for (PhysicalCard att : atts) {
+                        if (att == null || att.getBlueprint() == null) continue;
+                        if (att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
+                            String wt = att.getTitle() != null ? att.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                            bonus += wt.contains("lightsaber") ? 5.0f : 3.0f;
+                        }
+                    }
+                }
+                String gt = c.getBlueprint().getGameText();
+                if (gt != null && gt.toLowerCase(java.util.Locale.ROOT).contains("permanent weapon")) {
+                    String ct = c.getTitle() != null ? c.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                    bonus += ct.contains("lightsaber") ? 5.0f : 3.0f;
+                }
+            }
+        } catch (Exception e) { /* fail-open: 0 bonus */ }
+        return bonus;
+    }
+
     private ThreatLevel calculateThreatLevel(float powerDiff) {
         int favorable = RandoConfig.BATTLE_FAVORABLE_THRESHOLD;
         int danger = RandoConfig.BATTLE_DANGER_THRESHOLD;
