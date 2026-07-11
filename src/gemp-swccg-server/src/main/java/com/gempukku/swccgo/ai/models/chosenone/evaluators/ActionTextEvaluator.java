@@ -3672,13 +3672,43 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 String v67aeDoomedLoc = null;
                                 try {
                                     if (context.getGame() != null) {
+                                        // ADJUSTED 2026-07-10b (Codex m00137 hole 2 + m00128): (a) scope the
+                                        // scan to the DESTINATION's system — the mover of a location-sourced
+                                        // "move to here" comes from a related site, so an unrelated doomed
+                                        // site must not exempt this move; (b) weapon-adjust the enemy side
+                                        // (raw 6v8 hid the armed 6v11+ reality — same V29.7 heuristic).
+                                        String v67aeDestSys = srcLoc.getPartOfSystem();
                                         for (PhysicalCard rl : gameState.getTopLocations()) {
                                             if (rl == null || rl.getCardId() == srcLoc.getCardId()) continue;
+                                            if (v67aeDestSys != null && rl.getPartOfSystem() != null
+                                                    && !v67aeDestSys.equals(rl.getPartOfSystem())) continue;
                                             float rOur = context.getGame().getModifiersQuerying()
                                                 .getTotalPowerAtLocation(gameState, rl, context.getPlayerId(), false, false);
                                             if (rOur <= 0) continue;
                                             float rOpp = context.getGame().getModifiersQuerying()
                                                 .getTotalPowerAtLocation(gameState, rl, oppId, false, false);
+                                            try {
+                                                for (PhysicalCard rc : gameState.getCardsAtLocation(rl)) {
+                                                    if (rc == null || rc.getBlueprint() == null) continue;
+                                                    if (rc.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                                    if (!oppId.equals(rc.getOwner())) continue;
+                                                    java.util.List<PhysicalCard> rAtts = gameState.getAttachedCards(rc);
+                                                    if (rAtts != null) {
+                                                        for (PhysicalCard att : rAtts) {
+                                                            if (att == null || att.getBlueprint() == null) continue;
+                                                            if (att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
+                                                                String wt = att.getTitle() != null ? att.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                                                rOpp += wt.contains("lightsaber") ? 5.0f : 3.0f;
+                                                            }
+                                                        }
+                                                    }
+                                                    String rgt = rc.getBlueprint().getGameText();
+                                                    if (rgt != null && rgt.toLowerCase(java.util.Locale.ROOT).contains("permanent weapon")) {
+                                                        String rct = rc.getTitle() != null ? rc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                                        rOpp += rct.contains("lightsaber") ? 5.0f : 3.0f;
+                                                    }
+                                                }
+                                            } catch (Exception we) { /* raw power */ }
                                             if (rOpp - rOur >= 6f) {
                                                 v67aeRetreatExempt = true;
                                                 v67aeDoomedLoc = rl.getTitle();

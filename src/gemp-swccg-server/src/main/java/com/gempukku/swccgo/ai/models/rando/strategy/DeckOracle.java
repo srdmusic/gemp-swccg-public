@@ -1301,6 +1301,10 @@ public class DeckOracle {
         // search by CardCategory, not substring. Map known type-words to
         // categories and check the zone by category.
         for (String t : targets) {
+            // V82.1 ADJUSTED 2026-07-10b (Codex m00137 hole 3): a POSSESSIVE target ("leia's
+            // lightsaber") names ONE card — its last word must not validate via generic
+            // category presence (any weapon in Reserve made it WILL_SUCCEED).
+            if (isPossessiveTypeTarget(t.toLowerCase(Locale.ROOT).trim())) continue;
             CardCategory cat = mapTypeWordToCategory(t);
             if (cat != null && !getCardsByCategory(cat, sourceZone).isEmpty()) {
                 return new PullValidation(PullOutcome.WILL_SUCCEED,
@@ -1380,6 +1384,23 @@ public class DeckOracle {
                     for (String w : tWords) {
                         if (w.equals(pnl) || !wordHasPredicate(w)) continue;
                         if (!blueprintMatchesWord(bp, w)) { othersOk = false; break; }
+                    }
+                    // ADJUSTED 2026-07-10b (Codex m00127/m00136): ICON phrases in the target
+                    // constrain too — "reflections ii chewie" must require Icon.REFLECTIONS_II
+                    // via bp.hasIcon (typed, no card-name branch), else any Chewie validates.
+                    if (othersOk) {
+                        String tNorm = " " + String.join(" ", tWords) + " ";
+                        for (com.gempukku.swccgo.common.Icon ic : com.gempukku.swccgo.common.Icon.values()) {
+                            String ihr;
+                            try { ihr = ic.getHumanReadable(); } catch (Exception e) { continue; }
+                            if (ihr == null || ihr.length() < 4) continue;
+                            String ihrl = " " + ihr.toLowerCase(Locale.ROOT) + " ";
+                            if (tNorm.contains(ihrl)) {
+                                boolean hasIc = false;
+                                try { hasIc = bp.hasIcon(ic); } catch (Exception e) { /* skip */ }
+                                if (!hasIc) { othersOk = false; break; }
+                            }
+                        }
                     }
                     if (othersOk) {
                         return new PullValidation(PullOutcome.WILL_SUCCEED,

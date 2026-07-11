@@ -283,8 +283,11 @@ public class BattleEvaluator extends ActionEvaluator {
                                 }
 
                                 // Adjust effective diff with weapon bonus
-                                float weaponEffectiveDiff = effectiveDiff + weaponBonus;
-                                if (weaponBonus > 0) {
+                                // V29.7 ADJUSTED 2026-07-10b (Codex m00137 hole 1): subtract the OPPONENT's
+                                // weapon bonus too — it previously reached only the V76 predictor input,
+                                // so favorable-battle SCORING still ignored enemy weapons.
+                                float weaponEffectiveDiff = effectiveDiff + weaponBonus - oppWeaponBonus;
+                                if (weaponBonus > 0 || oppWeaponBonus > 0) {
                                     logger.info("V29.7 WEAPON AWARENESS at {}: base effectiveDiff={}, weaponBonus=+{}, adjusted={}{}{}",
                                         targetLocation.getTitle(), effectiveDiff, weaponBonus, weaponEffectiveDiff,
                                         ourVaderHere ? " [VADER]" : "", hasIHYN ? " [IHYN]" : "");
