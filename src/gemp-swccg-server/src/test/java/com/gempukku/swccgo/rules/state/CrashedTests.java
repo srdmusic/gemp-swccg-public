@@ -3,7 +3,6 @@ package com.gempukku.swccgo.rules.state;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -228,9 +227,9 @@ public class CrashedTests {
 		assertFalse(scn.LSHasCardChoiceAvailable(speeder));
 	}
 
-	@Test @Ignore
+	@Test
 	public void CrashedEnclosedVehiclePermanentAboardProvidesPresence_ForceDrain() {
-		//demonstrates: https://github.com/PlayersCommittee/gemp-swccg-public/issues/977
+		//demonstrates fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/977
 		var scn = GetScenario();
 
 		var speeder = scn.GetLSCard("speeder");
@@ -246,9 +245,9 @@ public class CrashedTests {
 		assertTrue(scn.LSCardActionAvailable(site, "Force drain"));
 	}
 
-	@Test @Ignore
+	@Test
 	public void CrashedEnclosedVehiclePermanentAboardProvidesPresence_Battle() {
-		//demonstrates: https://github.com/PlayersCommittee/gemp-swccg-public/issues/977
+		//demonstrates fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/977
 		var scn = GetScenario();
 
 		var speeder = scn.GetLSCard("speeder");
@@ -285,7 +284,7 @@ public class CrashedTests {
 
 		assertEquals(4, scn.GetLSAbilityAtLocation(site));
 		scn.CrashCard(speeder);
-		//assertEquals(4, scn.GetLSAbilityAtLocation(site));
+		assertEquals(4, scn.GetLSAbilityAtLocation(site));
 
 		scn.SkipToPhase(Phase.BATTLE);
 		assertTrue(scn.DSCardActionAvailable(site, "Initiate battle"));
@@ -459,16 +458,25 @@ public class CrashedTests {
 		assertFalse(scn.LSCardActionAvailable(cannon, "Fire"));
 	}
 
+	///other tests to add:
 	//card orientation:
 		// crashed card is inverted
 		// crashed + hit is ? (sideways?)
 		// hit + crashed is ? (sideways?)
-	//gametext suspended
-		//ideas for suspended gametext cases:
+
+	//movement
+		//cannot use sector movement (crashed cloud car?)
+		//cannot use docking bay transit?
+
+	//crashed creature vehicles / lift tube (cannot be unpiloted?)
+		//see order of testing in isPiloted() - currently crashed is checked before creature/lift_tube...
+
+	//gametext suspended (ideas?)
 		//forfeit bonus on sandcrawler?
 		//attrition immunity on Rogue X
-	//gametext not suspended
-		//ideas for not suspended gametext cases:
+
+	//gametext not suspended (ideas?)
 		//deploy reduction on Sail Barge?
+			//suspect isGameTextCanceled is preventing the deploy reduction from working correctly?
 
 }
