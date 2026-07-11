@@ -14,6 +14,16 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Verified: compiles clean both bots (MVN_EXIT=0); mirrored; REDEPLOYED. Codex re-verify requested.
 - Revert: `git revert`; each change tagged "ADJUSTED 2026-07-10b".
 
+## 2026-07-10 — Rey-game fixes wave 2b: Codex-verified hole closures (both bots)
+- Codex adversarial verification (m00127/m00128/m00136/m00137) found 4 residual holes in waves 1-2; all closed, adjust-in-place:
+- **V29.7 scoring** (`BattleEvaluator` specific branch): `weaponEffectiveDiff` now SUBTRACTS `oppWeaponBonus` (it previously reached only the V76 predictor input — favorable-battle scoring still ignored enemy weapons).
+- **V67ae exemption** (`ActionTextEvaluator`): the doomed-site scan is now (a) scoped to the DESTINATION's system (`getPartOfSystem` — the mover of a location-sourced move comes from a related site; an unrelated doomed site no longer false-exempts) and (b) weapon-adjusted (raw 6v8 hid the armed reality; V29.7 heuristic).
+- **V82.1 category fallback** (`DeckOracle.validatePullFromSourceCard`): POSSESSIVE targets skip the generic-category validation — "leia's lightsaber" no longer WILL_SUCCEEDs off ANY weapon in Reserve (the V177→V67h revival path Codex proved).
+- **V82.2b icon constraint** (`DeckOracle` persona rescue): ICON phrases in the target now constrain via `bp.hasIcon` (typed, Icon.getHumanReadable phrase match) — "reflections ii chewie" requires Persona.CHEWIE AND Icon.REFLECTIONS_II, not any Chewie.
+- KNOWN REMAINING (parked to Codex follow-up queue, pre-existing): Card10_013-class OR-mode target contamination in the pull parser (mode-aware parsing needed, m00138); engine-side mediator swallow (needs Steve's OK).
+- Verified: compiles clean both bots (MVN_EXIT=0); mirrored; REDEPLOYED. Codex re-verify requested.
+- Revert: `git revert`; each change tagged "ADJUSTED 2026-07-10b".
+
 ## 2026-07-10 — Rey-game fixes wave 2 (replay rbujmoc90br3uu4c, both bots): battle weapon/hit economics + retreat unblocking + pull-veto integrity
 - ALL adjust-in-place. Completes the Rey-game fix set (wave 1 below). Common thread: every power comparison was blind to opponent WEAPONS and the hit mechanic while Rando's own projections counted his sabers.
 - **V29.7/V76 opponent weapons** (`BattleEvaluator` specific branch): the V29.7 loop now also sums the OPPONENT's weapon bonus (lightsaber +5/other +3, attached + permanent) and V76's `predictBattle` receives `theirPower + oppWeaponBonus` (was raw). The predictor no longer sees our sabers but not theirs.
