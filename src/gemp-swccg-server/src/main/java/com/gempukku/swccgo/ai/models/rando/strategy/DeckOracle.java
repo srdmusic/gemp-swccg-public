@@ -1349,33 +1349,6 @@ public class DeckOracle {
                 }
             }
         }
-        // V82.2: Decide WILL_FAIL vs UNKNOWN.
-        // - If ANY target had a recognized type-word (category OR predicate),
-        //   we DID validate authoritatively → WILL_FAIL is safe.
-        // - If NO target had any recognized type-word AND substring also
-        //   failed, target is fully proper-noun → WILL_FAIL is safe (substring
-        //   would have matched if title were in zone).
-        // So WILL_FAIL is correct in both cases.
-        // V67h FIX (2026-06-28, Steve): JUNK-TARGET PASS-THROUGH, mirror V177.
-        // A multi-clause OR interrupt (e.g. We Must Accelerate Our Plans) has its
-        // whole game-text collapsed by the parser into ONE garbage "target" (a long
-        // phrase / a string with digits). That junk is never literally "in Reserve",
-        // so the old WILL_FAIL made the V67h call sites (DeployEvaluator:789,
-        // ActionTextEvaluator:4318) slap -9999 on a genuinely valid location pull —
-        // forensics caught Rando passing 'Deploy a Blockade Flagship site' while
-        // Blockade Flagship: Bridge sat in his Reserve. V177 already flags this exact
-        // junk (length > 25 OR contains a digit) and stands down; V67h must agree, or
-        // the two dead-search detectors disagree on the same card and the meaner one
-        // (-9999) wins. If ANY parsed target is junk the parse is untrustworthy, so
-        // return UNKNOWN (let the existing weights handle it) instead of WILL_FAIL.
-        for (String v67hJunkT : targets) {
-            if (v67hJunkT != null
-                    && (v67hJunkT.length() > 25 || v67hJunkT.matches(".*\\d.*"))) {
-                return new PullValidation(PullOutcome.UNKNOWN,
-                    "V67h PARSE-JUNK pass-through: target [" + v67hJunkT
-                        + "] unparseable (>25 chars or has digit) — not blocking (mirror V177)");
-            }
-        }
         // V82.2b PERSONA RESCUE (2026-07-10, Rey replay rbujmoc90br3uu4c bonus defect): pull filters
         // like Filters.and(Persona.CHEWIE, Icon.REFLECTIONS_II) parse to targets like "reflections ii
         // chewie" — no title in the deck contains "chewie" (the card is 'Chewbacca, Protector'), so
@@ -1414,6 +1387,33 @@ public class DeckOracle {
                                 + "' in " + sourceZone);
                     }
                 }
+            }
+        }
+        // V82.2: Decide WILL_FAIL vs UNKNOWN.
+        // - If ANY target had a recognized type-word (category OR predicate),
+        //   we DID validate authoritatively → WILL_FAIL is safe.
+        // - If NO target had any recognized type-word AND substring also
+        //   failed, target is fully proper-noun → WILL_FAIL is safe (substring
+        //   would have matched if title were in zone).
+        // So WILL_FAIL is correct in both cases.
+        // V67h FIX (2026-06-28, Steve): JUNK-TARGET PASS-THROUGH, mirror V177.
+        // A multi-clause OR interrupt (e.g. We Must Accelerate Our Plans) has its
+        // whole game-text collapsed by the parser into ONE garbage "target" (a long
+        // phrase / a string with digits). That junk is never literally "in Reserve",
+        // so the old WILL_FAIL made the V67h call sites (DeployEvaluator:789,
+        // ActionTextEvaluator:4318) slap -9999 on a genuinely valid location pull —
+        // forensics caught Rando passing 'Deploy a Blockade Flagship site' while
+        // Blockade Flagship: Bridge sat in his Reserve. V177 already flags this exact
+        // junk (length > 25 OR contains a digit) and stands down; V67h must agree, or
+        // the two dead-search detectors disagree on the same card and the meaner one
+        // (-9999) wins. If ANY parsed target is junk the parse is untrustworthy, so
+        // return UNKNOWN (let the existing weights handle it) instead of WILL_FAIL.
+        for (String v67hJunkT : targets) {
+            if (v67hJunkT != null
+                    && (v67hJunkT.length() > 25 || v67hJunkT.matches(".*\\d.*"))) {
+                return new PullValidation(PullOutcome.UNKNOWN,
+                    "V67h PARSE-JUNK pass-through: target [" + v67hJunkT
+                        + "] unparseable (>25 chars or has digit) — not blocking (mirror V177)");
             }
         }
         // V82.2 ADJUSTED 2026-07-10 (Codex m00118): a partially-recognized target ("maintenance
