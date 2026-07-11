@@ -414,9 +414,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluateSimultaneousPilotSelection(context);
         } else if (textLower.contains("choose a pilot") ||
                    (textLower.contains("pilot") && (textLower.contains("choose") || textLower.contains("select"))) ||
-                   (textLower.contains("matching") && textLower.contains("starship"))) {
+                   (textLower.contains("matching") && textLower.contains("starship")
+                        && !textLower.contains("into hand") && !textLower.contains("prison"))) {
             // V22.7: Broadened to catch AMSD pilot selection — GEMP text may say
             // "Choose a unique pilot character" which doesn't match "choose a pilot"
+            // V22.7 ADJUSTED 2026-07-10 (AMN hang, replay 2jg1sj0l3qrlgy6a): the matching/starship
+            // catch-all also matched "Choose a prison and a bounty hunter (may also choose a matching
+            // weapon and/or starship)" — a take-INTO-HAND combination from Any Methods Necessary — and
+            // routed it to pilot logic, which ignores selectable[] and answered a non-selectable card
+            // (engine rejects, mediator swallows, game hangs). Exclude into-hand/prison texts; the
+            // DecisionSafety SELECTABLE-CLAMP is the class-level backstop.
             return evaluatePilotSelection(context);
         } else if (textLower.contains("choose card to cancel")) {
             return evaluateCancelSelection(context);

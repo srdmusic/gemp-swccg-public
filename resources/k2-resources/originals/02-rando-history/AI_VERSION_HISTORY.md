@@ -1,3 +1,10 @@
+  ════ SAFETY CLAMP + V22.7 ADJUST (2026-07-10): "Any Methods Necessary" setup hang fixed (both bots) ════
+AMN (109_7) iterative take-combination decision was misrouted by the V22.7 matching+starship catch-all to
+evaluatePilotSelection (ignores selectable[]), answered a non-selectable card; engine rejected, mediator swallowed,
+game hung (replay 2jg1sj0l3qrlgy6a). FIX: DecisionSafety.ensureValidResponse SELECTABLE-CLAMP (drop unknown/
+non-selectable tokens, rebuild preselected+first-selectable, one new/round when returnAnyChange) + V22.7 routing
+excludes into-hand/prison texts. Mediator swallow (engine) flagged for Steve, not edited. See AI_CHANGELOG 2026-07-10.
+
   ════ V193 (CS) EXTENSION (2026-07-09): Endor Bunker flip-gate steer onto the CardSelection deploy route ════
 V193 (Bunker-control +400) was DeployEvaluator-only, but Endor deploys route through CardSelectionEvaluator
 (V136 CS), so it fired 0 times and Endor Operations never flipped (replay somykkwjy449xul4). Added a V193 (CS)

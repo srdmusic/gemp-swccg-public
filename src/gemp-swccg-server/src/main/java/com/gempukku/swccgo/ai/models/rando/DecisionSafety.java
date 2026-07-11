@@ -160,8 +160,90 @@ public class DecisionSafety {
             }
         }
 
+        // === SAFETY LAYER 2b (2026-07-10): SELECTABLE-CLAMP for card selections ===
+        // Root cause of the 2026-07-10 setup HANG (replay 2jg1sj0l3qrlgy6a): an evaluator answered an
+        // ARBITRARY_CARDS decision with a card whose selectable=false ("Any Methods Necessary" iterative
+        // prison+bounty-hunter combination; the V22.7 matching/starship routing sent it to the pilot
+        // evaluator, which ignores the selectable[] array and picked temp33). The engine throws
+        // DecisionResultInvalidException and SwccgGameMediator.maybeLetAiPlay SWALLOWS it for AI players
+        // without re-invoking the AI -> the decision sits pending forever (silent, CPU-idle hang).
+        // Fix at the response boundary (same philosophy as the 2026-05-31 MULTI-SELECT fix upstream):
+        // drop every answer token that is not a known cardId or is not selectable; if the survivors fall
+        // below what the decision requires, rebuild as all preselected ids + the FIRST selectable
+        // non-preselected id (ONE new card per round when returnAnyChange=true — matches the engine's
+        // iterative TakeCardCombinationIntoHandFromPileEffect flow and how a human clicks; filling
+        // several at once can build an impossible combination and re-hang). Cap at max.
+        if (response != null && !response.isEmpty() && decision != null
+                && decision.getDecisionType() != null) {
+            String typeName = decision.getDecisionType().name();
+            if ("ARBITRARY_CARDS".equals(typeName) || "CARD_SELECTION".equals(typeName)) {
+                Map<String, String[]> p = decision.getDecisionParameters();
+                String[] ids = p != null ? p.get("cardId") : null;
+                String[] selectable = p != null ? p.get("selectable") : null;
+                String[] preselected = p != null ? p.get("preselected") : null;
+                if (ids != null && selectable != null && ids.length == selectable.length) {
+                    Map<String, Integer> idx = new HashMap<>();
+                    for (int i = 0; i < ids.length; i++) idx.put(ids[i], i);
+                    int min = parseIntParam(p.get("min"), 0);
+                    int max = parseIntParam(p.get("max"), ids.length);
+                    boolean returnAnyChange = "true".equalsIgnoreCase(firstOrNull(p.get("returnAnyChange")));
+                    List<String> original = new ArrayList<>();
+                    for (String tok : response.split(",")) {
+                        tok = tok.trim();
+                        if (!tok.isEmpty()) original.add(tok);
+                    }
+                    LinkedHashSet<String> kept = new LinkedHashSet<>();
+                    for (String tok : original) {
+                        Integer i = idx.get(tok);
+                        if (i == null) continue;  // unknown card id
+                        boolean sel = "true".equalsIgnoreCase(selectable[i]);
+                        boolean pre = preselected != null && i < preselected.length
+                                && "true".equalsIgnoreCase(preselected[i]);
+                        if (sel || pre) kept.add(tok);
+                    }
+                    int required = Math.max(min, mustMakeChoice ? 1 : 0);
+                    if (kept.size() < required) {
+                        // Rebuild: every preselected id first, then top up with selectable ids —
+                        // ONE new id when returnAnyChange (iterative combination), else up to min.
+                        kept.clear();
+                        if (preselected != null)
+                            for (int i = 0; i < ids.length && i < preselected.length; i++)
+                                if ("true".equalsIgnoreCase(preselected[i])) kept.add(ids[i]);
+                        int newAllowed = returnAnyChange ? 1 : Math.max(required - kept.size(), 1);
+                        for (int i = 0; i < ids.length && newAllowed > 0 && kept.size() < Math.max(max, 1); i++) {
+                            boolean pre = preselected != null && i < preselected.length
+                                    && "true".equalsIgnoreCase(preselected[i]);
+                            if (!pre && "true".equalsIgnoreCase(selectable[i]) && kept.add(ids[i])) newAllowed--;
+                        }
+                    }
+                    while (kept.size() > max && !kept.isEmpty()) {
+                        String last = null;
+                        for (String s : kept) last = s;
+                        kept.remove(last);
+                    }
+                    List<String> keptList = new ArrayList<>(kept);
+                    if (!keptList.equals(original)) {
+                        String fixed = String.join(",", keptList);
+                        String reason = "SAFETY CLAMP: '" + response
+                                + "' had non-selectable/unknown card ids → '" + fixed + "' (" + typeName + ")";
+                        LOG.error(reason);
+                        return new String[]{fixed, reason};
+                    }
+                }
+            }
+        }
+
         // Response is valid
         return new String[]{response, ""};
+    }
+
+    private static int parseIntParam(String[] vals, int dflt) {
+        if (vals == null || vals.length == 0) return dflt;
+        try { return Integer.parseInt(vals[0]); } catch (NumberFormatException e) { return dflt; }
+    }
+
+    private static String firstOrNull(String[] vals) {
+        return (vals != null && vals.length > 0) ? vals[0] : null;
     }
 
     /**
