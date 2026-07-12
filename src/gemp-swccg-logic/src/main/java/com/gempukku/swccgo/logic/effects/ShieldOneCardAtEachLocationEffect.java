@@ -97,7 +97,7 @@ public class ShieldOneCardAtEachLocationEffect extends AbstractSubActionEffect {
                 shieldCardsSubAction.appendEffect(
                             new AddUntilEndOfTurnModifierEffect(_subAction,
                                     new DestinyModifier(source, Filters.in(selectedCards), 3),
-                                    "'Shields' (adds 3 to destiny number of) " + GameUtils.getAppendedNames(selectedCards) + " until end of turn"));
+                                    "'Shields' (adds 3 to destiny number of) " + GameUtils.getAppendedNames(selectedCards)));
                 // Stack sub-action
                 _subAction.stackSubAction(shieldCardsSubAction);
 
