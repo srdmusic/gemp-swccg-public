@@ -1049,17 +1049,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     // beyond the one being deployed, and force to plausibly land it.
                                     int v171HandChars = 0;
                                     float v171ThisPower = 0f;
+                                    float v171MaxHandPower = 0f;  // V171 ADJUSTED 2026-07-10b: biggest body for hit discount
                                     String v171ThisBp = deployingBlueprintId;
                                     boolean v171SkippedSelf = false;
                                     for (PhysicalCard v171H : gameState.getHand(playerId)) {
                                         if (v171H != null && v171H.getBlueprint() != null
                                                 && v171H.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
                                             v171HandChars++;
+                                            Float v171HP = v171H.getBlueprint().hasPowerAttribute()
+                                                ? v171H.getBlueprint().getPower() : null;
+                                            if (v171HP != null && v171HP > v171MaxHandPower) v171MaxHandPower = v171HP;
                                             if (!v171SkippedSelf && v171ThisBp != null
                                                     && v171ThisBp.equals(v171H.getBlueprintId(true))) {
-                                                Float v171P = v171H.getBlueprint().hasPowerAttribute()
-                                                    ? v171H.getBlueprint().getPower() : null;
-                                                v171ThisPower = v171P != null ? v171P : 0f;
+                                                v171ThisPower = v171HP != null ? v171HP : 0f;
                                                 v171SkippedSelf = true;
                                             }
                                         }
@@ -1083,18 +1085,64 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     float v171Wave = v171WaveR[0];
                                     boolean v171WaveAffordable = v171WaveR[1] >= 1f;
                                     float v171Projected = v171OurPower + v171ThisPower + v171Wave;
-                                    if (v171HandChars >= 2 && v171WaveAffordable
-                                            && v171Projected >= v171TheirPower - 2f) {
+                                    // V171 ADJUSTED 2026-07-10b (replay f27ws5lgy0g58k5p, T4 Savage+Nute →
+                                    // Carbonite Chamber suicide): the projection was whole-hand optimistic vs
+                                    // RAW enemy power — same hole wave 1 closed in V166. (a) weapon-adjust
+                                    // their power (v177OppWeaponBonus); (b) discount the projection by expected
+                                    // HITS: each armed enemy character deletes ~one of our bodies pre-destiny
+                                    // (min(armedOpps, our wave bodies) × our biggest body). Boundary: T4 case
+                                    // 16−8=8 vs (10+3)−2=11 → GATED (was 16 vs 8 → +600 lure → board wipe).
+                                    float v171OppWeap = v177OppWeaponBonus(gameState, location, v171Opp);
+                                    int v171ArmedOpps = 0;
+                                    try {
+                                        for (PhysicalCard v171E : gameState.getCardsAtLocation(location)) {
+                                            if (v171E == null || v171E.getBlueprint() == null) continue;
+                                            if (v171E.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                            if (!v171Opp.equals(v171E.getOwner())) continue;
+                                            boolean v171EA = false;
+                                            java.util.List<PhysicalCard> v171Atts = gameState.getAttachedCards(v171E);
+                                            if (v171Atts != null) {
+                                                for (PhysicalCard att : v171Atts) {
+                                                    if (att != null && att.getBlueprint() != null
+                                                            && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) { v171EA = true; break; }
+                                                }
+                                            }
+                                            String v171EG = v171E.getBlueprint().getGameText();
+                                            if (!v171EA && v171EG != null
+                                                    && v171EG.toLowerCase(Locale.ROOT).contains("permanent weapon")) v171EA = true;
+                                            if (v171EA) v171ArmedOpps++;
+                                        }
+                                    } catch (Exception e) { /* 0 armed */ }
+                                    float v171TheirEff = v171TheirPower + v171OppWeap;
+                                    float v171Biggest = Math.max(v171ThisPower, v171MaxHandPower);
+                                    float v171HitDiscount = Math.min(v171ArmedOpps, (int) v171WaveR[1] + 1) * v171Biggest;
+                                    // V172 SOLO DOMINANCE (Steve ruling 2026-07-11, replay f27ws5lgy0g58k5p T2:
+                                    // Tyranus power 8 refused to contest a LONE Leia power 3 for lack of hand
+                                    // buddies): "Rando should be taking every opportunity to overpower my
+                                    // underpowered solo or low power sites — this should override other logic."
+                                    // When THIS deploy alone (+ our power already there) reaches 2× their
+                                    // weapon-adjusted power, the buddy/wave requirement is waived. Objective
+                                    // hold rules are untouched (they score their own sites; additive).
+                                    boolean v172SoloDominant = v171ThisPower > 0 && v171TheirEff > 0
+                                            && (v171OurPower + v171ThisPower) >= 2f * v171TheirEff;
+                                    if (v172SoloDominant) {
                                         action.addReasoning(String.format(
-                                            "V171 DEPLOY TO CONTACT: %s opponent-occupied, affordable wave projects %.0f vs %.0f (reserves held: %.0f) — deploy directly, battle THIS turn",
-                                            title, v171Projected, v171TheirPower, v171WaveR[2]), 600.0f);
-                                        logger.warn("V171 DEPLOY TO CONTACT: {} (handChars={} projected={} [wave={} buddies={} reserved={}] theirs={}) -> +600",
-                                            title, v171HandChars, (int) v171Projected, (int) v171Wave,
-                                            (int) v171WaveR[1], (int) v171WaveR[2], (int) v171TheirPower);
+                                            "V172 SOLO DOMINANCE: %s — this body alone overpowers them (%.0f vs %.0f eff, 2x) — deploy and battle",
+                                            title, v171OurPower + v171ThisPower, v171TheirEff), 600.0f);
+                                        logger.warn("V172 SOLO DOMINANCE: {} ({}+{} vs eff {}) -> +600 (buddy gate waived, Steve 2026-07-11)",
+                                            title, (int) v171OurPower, (int) v171ThisPower, (int) v171TheirEff);
+                                    } else if (v171HandChars >= 2 && v171WaveAffordable
+                                            && (v171Projected - v171HitDiscount) >= v171TheirEff - 2f) {
+                                        action.addReasoning(String.format(
+                                            "V171 DEPLOY TO CONTACT: %s opponent-occupied, affordable wave projects %.0f (hit-adj %.0f) vs %.0f eff (reserves held: %.0f) — deploy directly, battle THIS turn",
+                                            title, v171Projected, v171Projected - v171HitDiscount, v171TheirEff, v171WaveR[2]), 600.0f);
+                                        logger.warn("V171 DEPLOY TO CONTACT: {} (handChars={} projected={} hitDisc={} [wave={} buddies={} reserved={}] theirsEff={}) -> +600",
+                                            title, v171HandChars, (int) v171Projected, (int) v171HitDiscount,
+                                            (int) v171Wave, (int) v171WaveR[1], (int) v171WaveR[2], (int) v171TheirEff);
                                     } else if (v171HandChars >= 2) {
-                                        logger.warn("V172 CONTACT GATED: {} projected {} [wave={} buddies={} reserved={}] vs {} — can't match their stack (or wave unaffordable after reserves), assemble adjacent instead",
-                                            title, (int) v171Projected, (int) v171Wave, (int) v171WaveR[1],
-                                            (int) v171WaveR[2], (int) v171TheirPower);
+                                        logger.warn("V172 CONTACT GATED: {} projected {} hitDisc={} [wave={} buddies={} reserved={}] vs eff {} — can't match their stack (or wave unaffordable after reserves), assemble adjacent instead",
+                                            title, (int) v171Projected, (int) v171HitDiscount, (int) v171Wave,
+                                            (int) v171WaveR[1], (int) v171WaveR[2], (int) v171TheirEff);
                                     }
                                 }
                             } catch (Exception e) { logger.debug("V171 error: {}", e.getMessage()); }

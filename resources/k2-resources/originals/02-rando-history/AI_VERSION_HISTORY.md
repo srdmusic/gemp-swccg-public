@@ -1,3 +1,10 @@
+  ════ LOSS-ANALYSIS FIXES (2026-07-11, replay f27ws5lgy0g58k5p, both bots) ════
+V171 contact projection weapon-adjusted + hit-discounted; V172 SOLO DOMINANCE (Steve ruling: >=2x weapon-adjusted
+enemy waives the buddy gate — overpower weak solos/sites, override other logic except objective holds); V76
+fallback pyrrhic bar also RELATIVE (hitLoss > 0.5x committed forfeit); V24.10 Piett dig requires positive
+force/used-pile presence (was firing in Piett-less decks). Parked: Elis Helrot V35.4-vs-abandon dominance,
+draw-most vs drain engines. See AI_CHANGELOG 2026-07-11.
+
   ════ REY-GAME FIXES WAVE 2 (2026-07-10, replay rbujmoc90br3uu4c, both bots) ════
 Battle + retreat weapon/hit awareness: V29.7/V76 count OPPONENT weapons (predictor gets theirPower+oppWeaponBonus);
 V76 hit-economics now runs on the V22.4 fallback route (armed-opp × avg-forfeit >= 10 → -500 pyrrhic, never

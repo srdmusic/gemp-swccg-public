@@ -310,7 +310,15 @@ public class DrawEvaluator extends ActionEvaluator {
             boolean piettInPlay = drawOracle.isCardInPlay("Admiral Piett") || drawOracle.isCardInPlay("Piett");
             boolean piettLost = drawOracle.isCardLost("Admiral Piett") || drawOracle.isCardLost("Piett");
 
-            if (!piettInHand && !piettInReserve && !piettInPlay && !piettLost) {
+            // V24.10 ADJUSTED 2026-07-10b (replay f27ws5lgy0g58k5p): the old negative inference
+            // ("not in hand/reserve/play/lost => must be in force pile") fired in decks with NO
+            // PIETT AT ALL (all four checks false), distorting every draw margin in non-Piett
+            // decks. Require POSITIVE presence in the force/used pile before digging.
+            boolean piettInPiles = drawOracle.isCardInZone("Admiral Piett", com.gempukku.swccgo.common.Zone.FORCE_PILE)
+                || drawOracle.isCardInZone("Piett", com.gempukku.swccgo.common.Zone.FORCE_PILE)
+                || drawOracle.isCardInZone("Admiral Piett", com.gempukku.swccgo.common.Zone.USED_PILE)
+                || drawOracle.isCardInZone("Piett", com.gempukku.swccgo.common.Zone.USED_PILE);
+            if (piettInPiles && !piettInHand && !piettInReserve && !piettInPlay && !piettLost) {
                 // Piett is in the force pile (or used pile cycling back) — DRAW to find him!
                 float piettBonus = 0.0f;
                 if (turnNumber <= 2) {

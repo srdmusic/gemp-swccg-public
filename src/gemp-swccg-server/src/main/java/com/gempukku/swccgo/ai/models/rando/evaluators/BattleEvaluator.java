@@ -611,7 +611,12 @@ public class BattleEvaluator extends ActionEvaluator {
                                             v76fHitLoss = Math.min(v76fOppArmed, v76fOurChars) * v76fAvgF;
                                         }
                                         effectiveDiff -= v76fOppWeap;
-                                        boolean v76fPyrrhic = v76fHitLoss >= 10f;
+                                        // ADJUSTED 2026-07-10b (replay f27ws5lgy0g58k5p, T4: hitLoss 6
+                                        // didn't trip the flat >=10 bar while Rando's WHOLE force was worth
+                                        // 6): pyrrhic is also RELATIVE — losing more than half your committed
+                                        // forfeit to hits is ruinous regardless of absolute size.
+                                        boolean v76fPyrrhic = v76fHitLoss >= 10f
+                                            || (v76fOurForfeit > 0f && v76fHitLoss > 0.5f * v76fOurForfeit);
                                         if (v76fPyrrhic) {
                                             action.addReasoning(String.format(
                                                 "V76 (fallback) HIT ECONOMICS at %s: %d armed opponents, expected card loss %.1f — pyrrhic, don't initiate!",

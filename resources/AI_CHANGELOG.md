@@ -4,6 +4,16 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-11 — Loss-analysis fixes (replay f27ws5lgy0g58k5p, PRE-fix-build game; both bots): V171 hit-aware contact, V172 SOLO DOMINANCE (Steve ruling), V76 relative pyrrhic, V24.10 Piett gate
+- From the Revenge Of The Sith loss (conceded T5, 34-vs-3 life force). Two of its killers were already fixed by waves 1-2b (V166 lure, V148 cancel — verified firing correctly on T5); these close the four NEW holes.
+- **V171 DEPLOY TO CONTACT** (`CardSelectionEvaluator` ~1078): projection now uses WEAPON-ADJUSTED enemy power (`v177OppWeaponBonus`) and discounts expected HITS (min(armed opponents, wave bodies) × our biggest body). Boundary (T4 Savage+Nute → Carbonite Chamber suicide): 16−8=8 vs (10+3)−2=11 → GATED (was 16 vs 8 → +600 lure → board wipe). Unarmed stacks: discount 0, unchanged.
+- **V172 SOLO DOMINANCE** (same block; STEVE RULING 2026-07-11): when our power at the site + THIS deploy ≥ 2× their weapon-adjusted power, the buddy/wave gate is WAIVED and the +600 contact bonus applies — "take every opportunity to overpower underpowered solo/low-power sites; overrides other logic unless the objective requires holding sites". Boundary (T2): Tyranus 8 vs lone Leia 3 → 8≥6 → deploys+battles (was CONTACT GATED buddies=0); armed Leia (+3 rifle) → 8<12 → still gated. Objective hold rules untouched (additive, score their own sites). Memory: feedback_overpower_weak_sites.
+- **V76 fallback pyrrhic** (`BattleEvaluator`): the flat hitLoss≥10 bar is now ALSO relative — hitLoss > 0.5× our committed total forfeit. Boundary (T4 battle, predicted 11v10, actual 3v15): hitLoss 6 > 0.5×6 → −500 veto (was 6<10 → initiated, lost 5 attrition + 12 damage). Vader+officer vs one armed enemy (3.5 > 3.5 false) → still initiates; wave-2's 19v13 case still vetoed via the absolute bar.
+- **V24.10 DIG FOR PIETT** (`DrawEvaluator`): negative inference ("not in hand/reserve/play/lost ⇒ must be in force pile") fired in decks with NO PIETT AT ALL. Now requires POSITIVE `isCardInZone` presence in FORCE_PILE/USED_PILE. Non-Piett decks: bonus never fires; TDIGWATT digs unchanged.
+- PARKED (needs Steve): Elis Helrot-class select/cancel churn — V35.4 evacuate (+250) vs the −9999 don't-abandon blocks on the same characters; which dominates when an undercover spy blocks the drain? Also the draw-most doctrine vs drain-engine matchups (13 Force → hand → shredded).
+- Verified: compiles clean both bots (MVN_EXIT=0); mirrored rando↔chosenone; DEPLOYED. Codex verify requested.
+- Revert: `git revert`; tags "ADJUSTED 2026-07-10b"/"Steve ruling 2026-07-11".
+
 ## 2026-07-10 — Rey-game fixes wave 2b: Codex-verified hole closures (both bots)
 - Codex adversarial verification (m00127/m00128/m00136/m00137) found 4 residual holes in waves 1-2; all closed, adjust-in-place:
 - **V29.7 scoring** (`BattleEvaluator` specific branch): `weaponEffectiveDiff` now SUBTRACTS `oppWeaponBonus` (it previously reached only the V76 predictor input — favorable-battle scoring still ignored enemy weapons).
