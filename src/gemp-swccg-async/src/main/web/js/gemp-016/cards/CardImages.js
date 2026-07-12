@@ -3826,13 +3826,9 @@ const fixedImages = {
 "501_36":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/halt.gif",
 "501_41": "https://res.starwarsccg.org/cards/Tatooine-Dark/large/iwillfindthemquicklymaster.gif",
 "501_48":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/theretheyare.gif",
+
 "501_52":"https://res.starwarsccg.org/cards/Tatooine-Light/large/ajedispatience.gif",
 "501_59":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
-
-"501_60":"https://res.starwarsccg.org/cards/Virtual25-Dark/hires/thefirstorderreigns.png",
-"501_60_BACK":"https://res.starwarsccg.org/cards/Virtual25-Dark/hires/theresistanceisdoomed.png",
-"501_61":"https://res.starwarsccg.org/cards/Virtual25-Dark/hires/trackedfleet.png",
-
 "501_90":"https://res.starwarsccg.org/cards/Premiere-Light/large/deathstarplans.gif",
 "501_91":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/massassibaseoperations.gif",
 "501_91_BACK":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/oneinamillion.gif",

@@ -37,6 +37,7 @@ public class Card501_117 extends AbstractLostOrStartingInterrupt {
         setGameText("LOST: Deploy an interior Jabba's Palace site from Reserve Deck; reshuffle. STARTING: If you have deployed a Jabba's Palace site, deploy Jabba's Haven and up to two Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.");
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_24);
         setTestingText("Gangster's Paradise");
+        hideFromDeckBuilder();
     }
 
     @Override

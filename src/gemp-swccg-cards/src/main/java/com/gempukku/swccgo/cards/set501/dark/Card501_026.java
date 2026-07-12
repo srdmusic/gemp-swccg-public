@@ -38,6 +38,7 @@ public class Card501_026 extends AbstractSystem {
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_25);
         setMayNotBePlacedInReserveDeck(true);
         setTestingText("Christophsis (Republic controlled)");
+        hideFromDeckBuilder();
     }
 
     @Override

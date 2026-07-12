@@ -36,6 +36,7 @@ public class Card501_026_BACK extends AbstractSystem {
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_25);
         setTestingText("Christophsis (Separatist controlled)");
+        hideFromDeckBuilder();
     }
 
     @Override

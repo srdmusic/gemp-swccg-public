@@ -41,6 +41,7 @@ public class Card501_033 extends AbstractStarfighter {
         setPilotCapacity(1);
         setPassengerCapacity(2);
         setTestingText("CIS Transport Shuttle");
+        hideFromDeckBuilder();
     }
 
     @Override

@@ -32,6 +32,7 @@ public class Card501_027 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setTestingText("Christophsis: Separatist Encampment");
+        hideFromDeckBuilder();
     }
 
     @Override
