@@ -288,14 +288,13 @@ class PlaceCardsInCardPileFromTableSimultaneouslyEffect extends AbstractSubActio
                             SubAction putInCardPileSubAction = new SubAction(subAction);
 
                             // if cards and attached cards are all going to same destination, combine as single Effect
-                            if (!_placedInCardPile.isEmpty() && !_attachedCardsToLeaveTable.isEmpty()) {
-                                if((_cardPile == _attachedCardsGoToZone) && !_toBottomOfPile && !_lostCardsDoNotCountAsJustLost) {
+                            if (!_placedInCardPile.isEmpty() && !_attachedCardsToLeaveTable.isEmpty()
+                                && (_cardPile == _attachedCardsGoToZone) && !_toBottomOfPile && !_lostCardsDoNotCountAsJustLost) {
                                     Collection<PhysicalCard> cardsAndAttachedCards = new ArrayList<PhysicalCard>();
                                     cardsAndAttachedCards.addAll(_placedInCardPile);
                                     cardsAndAttachedCards.addAll(_attachedCardsToLeaveTable);
                                     putInCardPileSubAction.appendEffect(
                                             new PutCardsInCardPileEffect(subAction, game, cardsAndAttachedCards, _attachedCardsGoToZone));
-                                }
                             }
 
                             // otherwise, handle as separate Effects
