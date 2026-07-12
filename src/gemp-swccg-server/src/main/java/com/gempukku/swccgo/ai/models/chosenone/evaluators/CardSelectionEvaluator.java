@@ -1044,6 +1044,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         v171OppHere = true; break;
                                     }
                                 }
+                                // V171/V172 ADJUSTED 2026-07-11c (Codex audit H3: V171 fired on the
+                                // STARSHIP First Light, borrowing hand-character wave power, +600 into
+                                // Falcon+Han): contact steers are CHARACTER logic only.
+                                SwccgCardBlueprint v171DeployBp = getBlueprintFromId(context, deployingBlueprintId);
+                                if (v171DeployBp == null
+                                        || v171DeployBp.getCardCategory() != CardCategory.CHARACTER) {
+                                    v171OppHere = false;
+                                }
                                 if (v171OppHere) {
                                     // Wave check: at least one MORE deployable character in hand
                                     // beyond the one being deployed, and force to plausibly land it.
@@ -2125,6 +2133,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                     if (v136DeployingCard != null) {
+                                        // FORMATION SAFETY (2026-07-11c): L3/L4 deploy vetoes — un-outvotable.
+                                        // (Codex audit incident 1: Greedo ability 1 deployed solo at 1420 while
+                                        // two affordable buddies sat in hand; every guard was additive.)
+                                        try {
+                                            SwccgCardBlueprint fsDepBp = v136DeployingCard.getBlueprint();
+                                            if (fsDepBp != null && fsDepBp.getCardCategory() == CardCategory.CHARACTER
+                                                    && context.getGame() != null) {
+                                                float[] fsWave = v173WaveProjection(gameState, context.getPlayerId(), deployingBlueprintId);
+                                                boolean fsBuddyAffordable = fsWave[1] >= 1f;
+                                                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer fsObj =
+                                                    context.getObjectiveAnalyzer();
+                                                String fsFlipGate = (fsObj != null && fsObj.isAnalyzed())
+                                                    ? fsObj.getFlipCriticalControlSite() : null;
+                                                String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                                    .vetoCharacterDeploy(context.getGame(), gameState, context.getPlayerId(),
+                                                        v136DeployingCard,
+                                                        fsDepBp.hasPowerAttribute() ? fsDepBp.getPower() : null,
+                                                        fsDepBp.hasAbilityAttribute() ? fsDepBp.getAbility() : null,
+                                                        v136DeployingCard.isUndercover(),
+                                                        location, fsBuddyAffordable, fsFlipGate);
+                                                if (fsV != null) {
+                                                    action.hardVeto(fsV);
+                                                    logger.warn("FORMATION SAFETY (deploy-site): {}", fsV);
+                                                }
+                                            }
+                                        } catch (Exception fsE) { /* fail-open */ }
                                         int v136Turn = gameState.getPlayersLatestTurnNumber(context.getPlayerId());
                                         java.util.List<PhysicalCard> v136Hand = gameState.getHand(context.getPlayerId());
                                         int v136ForceAvail = gameState.getForcePileSize(context.getPlayerId());
@@ -6175,6 +6209,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             } catch (Exception e) { logger.debug("V156 join-mode error: {}", e.getMessage()); }
         }
 
+        // FORMATION SAFETY (2026-07-11c): resolve the ACTUAL mover once for L1/L4 vetoes below.
+        // Same extraction the V169/V156 modes use; null mover => partial info => no vetoes (council
+        // rule: never veto blind).
+        PhysicalCard fsMover = null;
+        PhysicalCard fsOrigin = null;
+        if (game != null && gameState != null && playerId != null) {
+            try {
+                String fsMoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
+                if (fsMoverBp != null) {
+                    for (PhysicalCard fsPc : gameState.getAllPermanentCards()) {
+                        if (fsPc == null || !playerId.equals(fsPc.getOwner())) continue;
+                        if (!fsMoverBp.equals(fsPc.getBlueprintId(true))) continue;
+                        fsMover = fsPc;
+                        fsOrigin = fsPc.getAtLocation();
+                        break;
+                    }
+                }
+            } catch (Exception e) { /* partial info — no veto */ }
+        }
+
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
@@ -6189,6 +6243,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     if (location != null) {
                         String title = location.getTitle();
                         action.setDisplayText("Move to " + (title != null ? title : "location"));
+
+                        // FORMATION SAFETY (2026-07-11c): L4 solo-charge + L1 abandon-solo vetoes —
+                        // un-outvotable (Codex audit: V32 -300 + V22.2 -120 lost to R2 +6000 here).
+                        if (fsMover != null && game != null) {
+                            String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                .vetoMoveDestination(game, gameState, playerId, fsMover, location);
+                            if (fsV == null && fsOrigin != null
+                                    && fsOrigin.getCardId() != location.getCardId()) {
+                                fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                    .vetoMoveOrigin(game, gameState, playerId, fsMover, fsOrigin);
+                            }
+                            if (fsV != null) {
+                                action.hardVeto(fsV);
+                                logger.warn("FORMATION SAFETY (move-dest): {}", fsV);
+                            }
+                        }
 
                         // Get power at destination
                         float ourPower = 0;

@@ -173,6 +173,7 @@ public class CombinedEvaluator {
                     continue;
                 }
                 EvaluatedAction bestInBucket = bucketActions.stream()
+                    .filter(a -> !a.isHardVetoed())  // FORMATION SAFETY 2026-07-11c
                     .max(Comparator.comparing(EvaluatedAction::getScore))
                     .orElse(null);
                 if (bestInBucket == null) continue;
@@ -270,9 +271,35 @@ public class CombinedEvaluator {
         }
 
         // Pick the best action (highest merged score)
-        EvaluatedAction bestAction = allActions.stream()
+        // FORMATION SAFETY (2026-07-11c): hard-vetoed actions are UN-SELECTABLE regardless of
+        // score — Steve's four basics can no longer be outvoted by bonus stacks. If everything
+        // is vetoed, fall back to the least-bad vetoed action ONLY when passing is impossible
+        // (never hang: a bad decision still beats no decision — DecisionSafety doctrine).
+        java.util.List<EvaluatedAction> nonVetoed = new java.util.ArrayList<>();
+        for (EvaluatedAction a : allActions) {
+            if (a.isHardVetoed()) {
+                LOG.warn("FORMATION SAFETY: '{}' vetoed — {}", a.getDisplayText(), a.getVetoReason());
+            } else {
+                nonVetoed.add(a);
+            }
+        }
+        boolean fsAllVetoed = nonVetoed.isEmpty() && !allActions.isEmpty();
+        EvaluatedAction bestAction = (fsAllVetoed ? allActions : nonVetoed).stream()
             .max(Comparator.comparing(EvaluatedAction::getScore))
             .orElse(null);
+        if (fsAllVetoed && bestAction != null) {
+            boolean fsCanPass = context.getMin() == 0 && !context.isNoPass();
+            if (fsCanPass) {
+                LOG.warn("FORMATION SAFETY: ALL actions vetoed and pass is legal — passing instead of '{}'",
+                    bestAction.getDisplayText());
+                EvaluatedAction fsPass = new EvaluatedAction("", ActionType.PASS, 0.0f,
+                    "Pass (all actions formation-vetoed)");
+                fsPass.addReasoning("FORMATION SAFETY: every action violated a basic law; passing");
+                return fsPass;
+            }
+            LOG.warn("FORMATION SAFETY: ALL actions vetoed but must choose — taking least-bad '{}'",
+                bestAction.getDisplayText());
+        }
 
         if (bestAction == null) {
             return null;

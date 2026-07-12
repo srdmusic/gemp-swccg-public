@@ -1,3 +1,11 @@
+  ════ FORMATION SAFETY (2026-07-11c, both bots): the four laws become un-outvotable vetoes ════
+Shared common/strategy/FormationSafety.java (one copy, no mirror drift) + EvaluatedAction.hardVeto (OR-merged) +
+CombinedEvaluator veto-aware selection. L1 no abandoning weak solos / L2 no destiny-less battles (engine ability>=4)
+/ L3 no weak-solo deploys with affordable buddy in hand / L4 no weak-solo charges into enemy sites. Exemptions:
+2x dominance, flip-gate steers, spies, destiny-eligible solos, doomed-origin retreat. Typed Icon.PERMANENT_WEAPON
+weapon math. V171/V172 character-gated. Wired: CS deploy-site, CS move-destination, BattleEvaluator both branches.
+Root cause: Codex audit CODEX_SOLO_ABILITY_ROOT_CAUSE_AUDIT_2026-07-11.md. See AI_CHANGELOG 2026-07-11.
+
   ════ TDIGWATT BESPIN FIXES (2026-07-11b, replay kxn8bvydcd803p2j, both bots) ════
 V185 reserveTargetsAreAllUnattachableWeapons returned anyMatched (fuzzy non-weapon hits counted as dead weapons)
 → vetoed TDIGWATT's objective upload 16x while Bespin sat in Reserve; now returns anyDeadWeaponMatched. V21

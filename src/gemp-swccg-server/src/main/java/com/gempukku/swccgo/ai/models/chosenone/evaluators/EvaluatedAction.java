@@ -23,6 +23,13 @@ public class EvaluatedAction {
     private String blueprintId = "";
     private int deployCost = 0;
     private float expectedValue = 0.0f;
+    // FORMATION SAFETY (2026-07-11c, Codex root-cause audit + Steve's four laws): a TRUE veto that
+    // survives additive merging. ~20 prior fixes coded the basics (no solos, no destiny-less battles,
+    // no buddy-less deploys, no solo charges) as -150..-500 penalties, which the R2 +6000 move band
+    // and +600/+700 bonus stacks routinely outvoted. hardVeto is OR-merged and CombinedEvaluator
+    // never selects a vetoed action regardless of score.
+    private boolean hardVeto = false;
+    private String vetoReason = null;
 
     public EvaluatedAction(String actionId, ActionType actionType, float score, String displayText) {
         this.actionId = actionId;
@@ -63,6 +70,12 @@ public class EvaluatedAction {
     public void mergeFrom(EvaluatedAction other) {
         if (other == null) return;
 
+        // FORMATION SAFETY (2026-07-11c): vetoes are OR-merged — no bonus stack can wash one out.
+        if (other.hardVeto) {
+            this.hardVeto = true;
+            if (this.vetoReason == null) this.vetoReason = other.vetoReason;
+        }
+
         // Add the other action's score to this one
         this.score += other.score;
 
@@ -80,6 +93,16 @@ public class EvaluatedAction {
             this.displayText = other.displayText;
         }
     }
+
+    /** FORMATION SAFETY (2026-07-11c): mark this action un-selectable regardless of score. */
+    public void hardVeto(String reason) {
+        this.hardVeto = true;
+        if (this.vetoReason == null) this.vetoReason = reason;
+        this.reasoning.add("HARD VETO: " + reason);
+    }
+
+    public boolean isHardVetoed() { return hardVeto; }
+    public String getVetoReason() { return vetoReason; }
 
     // Getters and setters
     public String getActionId() {

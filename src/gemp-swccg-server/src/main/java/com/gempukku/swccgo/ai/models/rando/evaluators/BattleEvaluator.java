@@ -418,6 +418,17 @@ public class BattleEvaluator extends ActionEvaluator {
                                 if (ourPower > 0 && theirPower > 0) {
                                     foundAnyContestedLocation = true;
 
+                                    // FORMATION SAFETY (2026-07-11c): L2 — never voluntarily battle with
+                                    // zero normal battle-destiny draws (engine truth: total ability >= 4;
+                                    // Codex audit: First Light ability 3 initiated vs Falcon+Han, drew
+                                    // nothing, auto-lost; V164a's parity model was wrong).
+                                    String fsL2 = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                        .vetoInitiateBattle(game, gameState, playerId, targetLocation);
+                                    if (fsL2 != null) {
+                                        action.hardVeto(fsL2);
+                                        logger.warn("FORMATION SAFETY (battle): {}", fsL2);
+                                    }
+
                                     // === V76 (Steve, 2026-05-15): BATTLE PREDICTION GATE ===
                                     // Use the Monte Carlo BattlePredictor BEFORE the power-tier
                                     // scoring. If the simulation projects bad outcomes:
@@ -665,6 +676,29 @@ public class BattleEvaluator extends ActionEvaluator {
                         } catch (Exception e) {
                             logger.warn("[BattleEvaluator] Could not check locations: {}", e.getMessage());
                         }
+                    }
+                }
+
+                // FORMATION SAFETY (2026-07-11c): L2 on the LOCATIONLESS fallback route — if no
+                // contested location gives us a normal battle-destiny draw, initiating is a
+                // guaranteed destiny deficit; veto (the specific branch handles named locations).
+                if (!checkedSpecificLocation && foundAnyContestedLocation && game != null && gameState != null) {
+                    boolean fsAnyEligible = false;
+                    try {
+                        String fsPid = context.getPlayerId();
+                        String fsOpp = gameState.getOpponent(fsPid);
+                        for (PhysicalCard fsLoc : gameState.getTopLocations()) {
+                            if (fsLoc == null) continue;
+                            float fsOur = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, fsLoc, fsPid, false, false);
+                            float fsTheir = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, fsLoc, fsOpp, false, false);
+                            if (fsOur <= 0 || fsTheir <= 0) continue;
+                            if (com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                    .battleDestinyEligible(game, gameState, fsPid, fsLoc)) { fsAnyEligible = true; break; }
+                        }
+                    } catch (Exception fsE) { fsAnyEligible = true; /* fail-open */ }
+                    if (!fsAnyEligible) {
+                        action.hardVeto("L2 NO-DESTINY BATTLE (fallback): no contested location reaches ability 4 — zero normal destiny draws everywhere");
+                        logger.warn("FORMATION SAFETY (battle-fallback): vetoed — no destiny-eligible contested location");
                     }
                 }
 
