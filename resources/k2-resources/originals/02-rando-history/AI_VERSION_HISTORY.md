@@ -1,3 +1,9 @@
+  ════ TDIGWATT BESPIN FIXES (2026-07-11b, replay kxn8bvydcd803p2j, both bots) ════
+V185 reserveTargetsAreAllUnattachableWeapons returned anyMatched (fuzzy non-weapon hits counted as dead weapons)
+→ vetoed TDIGWATT's objective upload 16x while Bespin sat in Reserve; now returns anyDeadWeaponMatched. V21
+parser gains UPLOAD_FROM_RESERVE_PATTERN ("may [upload] X, Y, or Z") so pullableCards + the objective-critical
+never-lose protection arm on V-card wording (Bespin/Dark Deal were pitched as fodder). See AI_CHANGELOG 2026-07-11.
+
   ════ LOSS-ANALYSIS FIXES (2026-07-11, replay f27ws5lgy0g58k5p, both bots) ════
 V171 contact projection weapon-adjusted + hit-discounted; V172 SOLO DOMINANCE (Steve ruling: >=2x weapon-adjusted
 enemy waives the buddy gate — overpower weak solos/sites, override other logic except objective holds); V76

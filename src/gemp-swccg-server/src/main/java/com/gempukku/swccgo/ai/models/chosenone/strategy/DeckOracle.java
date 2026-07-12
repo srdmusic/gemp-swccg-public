@@ -480,6 +480,12 @@ public class DeckOracle {
             com.gempukku.swccgo.game.SwccgGame game, String playerId, List<String> targets) {
         if (game == null || playerId == null || targets == null || targets.isEmpty()) return false;
         boolean anyMatched = false;
+        // V185 ADJUSTED 2026-07-11b (replay kxn8bvydcd803p2j): the tail returned anyMatched, which is
+        // ALSO set by fuzzy last-word NON-weapon matches — so a target set matching only non-weapons
+        // fuzzily ("special edition bespin"→'Bespin', "vader's bounty"→'Tarkin's Bounty') returned
+        // "all unattachable weapons" with ZERO weapons matched, vetoing TDIGWATT's objective pull 16x
+        // while Bespin sat in Reserve. Only a matched DEAD WEAPON may justify the block.
+        boolean anyDeadWeaponMatched = false;
         for (DeckCard dc : allCards) {
             if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
             String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
@@ -523,8 +529,10 @@ public class DeckOracle {
             // This weapon HAS a legal in-play holder — don't block.
             if (hasInPlayCharacterAccepting(game, playerId, matching)) return false;
             // else: real filter, no holder on table — keep scanning; only ALL-unattachable blocks.
+            anyDeadWeaponMatched = true;  // V185 ADJUSTED 2026-07-11b
         }
-        return anyMatched;
+        // V185 ADJUSTED 2026-07-11b: require at least one actual dead weapon (see header comment).
+        return anyDeadWeaponMatched;
     }
 
     /** V185: does {@code playerId} have an in-play CHARACTER that this weapon's matching filter accepts? */

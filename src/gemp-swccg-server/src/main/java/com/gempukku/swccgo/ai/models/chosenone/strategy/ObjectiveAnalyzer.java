@@ -160,6 +160,14 @@ public class ObjectiveAnalyzer {
     private static final Pattern TAKE_FROM_RESERVE_PATTERN = Pattern.compile(
         "may take\\s+(.+?)\\s+into hand from Reserve Deck", Pattern.CASE_INSENSITIVE);
 
+    // V21 ADJUSTED 2026-07-11b (replay kxn8bvydcd803p2j, TDIGWATT (V) 226_12): virtual objectives
+    // write the pull as "may [upload] Dark Deal, Vader's Bounty, or [Special Edition] Bespin" —
+    // the take-into-hand pattern never matched, so pullableCards stayed EMPTY, the V21 objective-
+    // critical never-lose protection never armed, and Rando pitched Bespin + Dark Deal as Force-
+    // loss fodder. [upload] = take into hand from Reserve Deck (icon shorthand).
+    private static final Pattern UPLOAD_FROM_RESERVE_PATTERN = Pattern.compile(
+        "may \\[upload\\]\\s+([^.;]+?)(?=\\.|;|$)", Pattern.CASE_INSENSITIVE);
+
     public void analyze(SwccgGame game, String playerId, Side side) {
         LOG.warn("[ObjectiveAnalyzer] analyze() CALLED - game={}, player={}, side={}", game != null, playerId, side);
         if (game == null || playerId == null) return;
@@ -1535,6 +1543,19 @@ public class ObjectiveAnalyzer {
                 if (cleaned != null && !cleaned.isEmpty() && !isGenericWord(cleaned)) {
                     pullableCards.add(cleaned.toLowerCase(Locale.ROOT));
                     LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Pullable from Reserve: '{}'", cleaned);
+                }
+            }
+        }
+        // V21 ADJUSTED 2026-07-11b: same extraction for the "[upload] X, Y, or Z" icon form.
+        Matcher uploadMatcher = UPLOAD_FROM_RESERVE_PATTERN.matcher(frontText);
+        while (uploadMatcher.find()) {
+            String cardList = uploadMatcher.group(1).trim();
+            String[] cards = cardList.split("\\s*(?:,|\\bor\\b)\\s*");
+            for (String cardName : cards) {
+                String cleaned = cleanCardName(cardName.trim());
+                if (cleaned != null && !cleaned.isEmpty() && !isGenericWord(cleaned)) {
+                    pullableCards.add(cleaned.toLowerCase(Locale.ROOT));
+                    LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Pullable from Reserve (upload): '{}'", cleaned);
                 }
             }
         }
