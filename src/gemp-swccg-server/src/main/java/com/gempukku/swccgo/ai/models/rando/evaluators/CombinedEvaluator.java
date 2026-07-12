@@ -211,6 +211,7 @@ public class CombinedEvaluator {
                 // picking Cancel here would just be PASS with extra steps.
                 if (ea.getActionType() == ActionType.PASS) continue;
                 if (ea.getActionId() == null || ea.getActionId().isEmpty()) continue;
+                if (ea.isHardVetoed()) continue;  // FORMATION SAFETY 2026-07-12 (Codex m00194 P0#1): epilogue must not resurrect vetoed actions
                 if (v67bcAllBucketIds.contains(ea.getActionId())) continue;
                 if (v67bcBestNonBucket == null || ea.getScore() > v67bcBestNonBucket.getScore()) {
                     v67bcBestNonBucket = ea;
@@ -288,7 +289,13 @@ public class CombinedEvaluator {
             .max(Comparator.comparing(EvaluatedAction::getScore))
             .orElse(null);
         if (fsAllVetoed && bestAction != null) {
-            boolean fsCanPass = context.getMin() == 0 && !context.isNoPass();
+            // ADJUSTED 2026-07-12 (Codex m00194 P0#2): use V148's cancellability semantics — optional
+            // CARD_SELECTION prompts commonly carry noPass=true with min=0 + a Done/Cancel button;
+            // the old (!noPass) test would have FORCED a vetoed destination instead of cancelling.
+            String fsDtext = context.getDecisionText() != null ? context.getDecisionText().toLowerCase() : "";
+            boolean fsTextCancel = fsDtext.contains("done") || fsDtext.contains("cancel")
+                || fsDtext.contains("if desired") || fsDtext.contains("optional");
+            boolean fsCanPass = context.getMin() == 0 && (!context.isNoPass() || fsTextCancel);
             if (fsCanPass) {
                 LOG.warn("FORMATION SAFETY: ALL actions vetoed and pass is legal — passing instead of '{}'",
                     bestAction.getDisplayText());

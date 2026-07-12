@@ -2140,8 +2140,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             SwccgCardBlueprint fsDepBp = v136DeployingCard.getBlueprint();
                                             if (fsDepBp != null && fsDepBp.getCardCategory() == CardCategory.CHARACTER
                                                     && context.getGame() != null) {
-                                                float[] fsWave = v173WaveProjection(gameState, context.getPlayerId(), deployingBlueprintId);
-                                                boolean fsBuddyAffordable = fsWave[1] >= 1f;
+                                                // ADJUSTED 2026-07-12 (Codex m00194 P0#3): pair-budget facts —
+                                                // cheapest OTHER deployable character in hand (null = no plan).
+                                                float fsForce = gameState.getForcePileSize(context.getPlayerId());
+                                                Float fsThisCost = fsDepBp.getDeployCost();
+                                                Float fsBuddyCost = null;
+                                                for (PhysicalCard fsH : gameState.getHand(context.getPlayerId())) {
+                                                    if (fsH == null || fsH.getBlueprint() == null) continue;
+                                                    if (fsH.getCardId() == v136DeployingCard.getCardId()) continue;
+                                                    if (fsH.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                                    Float fsC = fsH.getBlueprint().getDeployCost();
+                                                    if (fsC == null) continue;
+                                                    if (fsBuddyCost == null || fsC < fsBuddyCost) fsBuddyCost = fsC;
+                                                }
                                                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer fsObj =
                                                     context.getObjectiveAnalyzer();
                                                 String fsFlipGate = (fsObj != null && fsObj.isAnalyzed())
@@ -2152,10 +2163,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                         fsDepBp.hasPowerAttribute() ? fsDepBp.getPower() : null,
                                                         fsDepBp.hasAbilityAttribute() ? fsDepBp.getAbility() : null,
                                                         v136DeployingCard.isUndercover(),
-                                                        location, fsBuddyAffordable, fsFlipGate);
+                                                        location, fsForce, fsThisCost, fsBuddyCost, fsFlipGate);
                                                 if (fsV != null) {
                                                     action.hardVeto(fsV);
                                                     logger.warn("FORMATION SAFETY (deploy-site): {}", fsV);
+                                                } else if (com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                                        .weakSoloNoPlan(context.getGame(), gameState, context.getPlayerId(),
+                                                            fsDepBp.hasAbilityAttribute() ? fsDepBp.getAbility() : null,
+                                                            v136DeployingCard.isUndercover(), location, fsBuddyCost)) {
+                                                    // L3 NO-PLAN (Steve 2026-07-12): weak solo with NO buddy plan —
+                                                    // heavy penalty (holds unless it's genuinely the only useful play).
+                                                    action.addReasoning(
+                                                        "L3 NO-PLAN SOLO: weak body would land alone with no deployable buddy in hand",
+                                                        -800.0f);
+                                                    logger.warn("FORMATION SAFETY (deploy-site): L3 NO-PLAN SOLO -800 at {}", title);
                                                 }
                                             }
                                         } catch (Exception fsE) { /* fail-open */ }

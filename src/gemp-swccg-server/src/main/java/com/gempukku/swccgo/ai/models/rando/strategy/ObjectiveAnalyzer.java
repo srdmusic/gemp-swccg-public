@@ -1611,7 +1611,14 @@ public class ObjectiveAnalyzer {
         if (name == null) return null;
         name = name.trim();
         name = name.replace("\u2022", "").trim();
+        // V21 ADJUSTED 2026-07-12 (Codex m00177 blocker c): strip bracketed ICON tokens —
+        // "[Special Edition] Bespin" must normalize to "Bespin" or isPullableCard("Bespin")
+        // misses and the objective-critical never-lose protection stays unarmed (the exact
+        // hole that let Bespin be pitched as Force-loss fodder in replay kxn8bvydcd803p2j).
+        name = name.replaceAll("\\[[^\\]]*\\]", " ").replaceAll("\\s+", " ").trim();
         name = name.replaceFirst("^(?:a |an |the )(?=[A-Z])", "");
+        // "one Ominous Rumors" style quantifiers survive some paths — strip a leading count word.
+        name = name.replaceFirst("^(?:one|two|three) (?=[A-Z\\[])", "");
         return name;
     }
 

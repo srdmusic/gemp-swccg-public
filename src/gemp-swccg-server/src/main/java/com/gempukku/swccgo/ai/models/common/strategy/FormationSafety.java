@@ -186,12 +186,21 @@ public final class FormationSafety {
     }
 
     /** L3/L4-deploy: veto reason for deploying a character to a site, or null.
-     *  flipGateSiteTitle: the objective flip-gate control site (V193-class steer) — exempt.
-     *  affordableBuddyInHand: caller-computed (route knows hand + force). */
+     *  flipGateSiteTitle: objective flip-gate control site (V193-class steer) — exempt.
+     *  forceAvailable/thisDeployCost/cheapestBuddyCost: pair-budget facts from the caller
+     *  (cheapestBuddyCost null = NO other deployable character in hand).
+     *  L3 SEMANTICS (ADJUSTED 2026-07-12, Codex m00194 P0#3 — old version deadlocked a
+     *  two-weak-body pair and inverted Steve's no-plan rule):
+     *   - buddy affordable AND budget after this deploy still affords the buddy → ALLOW
+     *     (the pair is formable this phase; deploy-first-body is the plan).
+     *   - buddy exists but THIS deploy starves the pair budget → VETO (wrong order/turn).
+     *   - NO buddy at all ("no plan") → NOT a veto here; caller applies the heavy
+     *     weakSoloNoPlan penalty (Steve: 'more negative', not un-playable). */
     public static String vetoCharacterDeploy(SwccgGame game, GameState gs, String playerId,
                                              PhysicalCard cardBeingDeployed, /* may be null pre-table */
                                              Float deployPower, Float deployAbility, boolean deployIsUndercover,
-                                             PhysicalCard destination, boolean affordableBuddyInHand,
+                                             PhysicalCard destination,
+                                             float forceAvailable, Float thisDeployCost, Float cheapestBuddyCost,
                                              String flipGateSiteTitle) {
         if (game == null || gs == null || playerId == null || destination == null) return null;
         try {
@@ -212,18 +221,36 @@ public final class FormationSafety {
                 if (ourEff >= DOMINANCE_MULTIPLE * oppEff) return null;  // Steve's dominance rule
                 if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD) {
                     return String.format(
-                        "L4 WEAK SOLO INTO CONTESTED: %s (ability %.0f) alone into %s (their eff %.0f)",
-                        destination.getTitle(), ability, destination.getTitle(), oppEff);
+                        "L4 WEAK SOLO INTO CONTESTED: ability %.0f alone into %s (their eff %.0f)",
+                        ability, destination.getTitle(), oppEff);
                 }
-            } else if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD && affordableBuddyInHand) {
-                // L3 (Steve): a weak first body with an affordable buddy in hand must not be left
-                // planning-free. Veto the SOLO landing; the buddy deploy (or a stronger body /
-                // pass) remains selectable. Destiny-eligible solos (ability >= 4) are exempt.
+            } else if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD
+                    && cheapestBuddyCost != null && thisDeployCost != null
+                    && forceAvailable - thisDeployCost < cheapestBuddyCost) {
+                // L3: the buddy exists but deploying THIS body now leaves too little Force to
+                // complete the pair this phase — hold for the turn the pair fits.
                 return String.format(
-                    "L3 WEAK SOLO WITH BUDDY IN HAND: ability %.0f body would land alone at %s while an affordable buddy waits in hand",
-                    ability, destination.getTitle());
+                    "L3 PAIR-BUDGET: deploying this ability-%.0f body (cost %.0f) leaves %.0f Force < buddy cost %.0f — pair unformable this phase",
+                    ability, thisDeployCost, forceAvailable - thisDeployCost, cheapestBuddyCost);
             }
         } catch (Exception e) { /* fail-open */ }
         return null;
+    }
+
+    /** L3 'no plan' check (Steve 2026-07-12): weak solo landing with NO other deployable character
+     *  in hand — not vetoed (may be the only play) but callers apply a heavy penalty. */
+    public static boolean weakSoloNoPlan(SwccgGame game, GameState gs, String playerId,
+                                         Float deployAbility, boolean deployIsUndercover,
+                                         PhysicalCard destination, Float cheapestBuddyCost) {
+        if (game == null || gs == null || playerId == null || destination == null) return false;
+        try {
+            if (deployIsUndercover) return false;
+            float ability = deployAbility != null ? deployAbility : 0f;
+            if (ability >= DESTINY_ABILITY_THRESHOLD) return false;
+            if (cheapestBuddyCost != null) return false;  // a plan exists
+            boolean landsSolo = game.getModifiersQuerying()
+                .getTotalAbilityAtLocation(gs, playerId, destination) <= 0f;
+            return landsSolo;
+        } catch (Exception e) { return false; }
     }
 }
