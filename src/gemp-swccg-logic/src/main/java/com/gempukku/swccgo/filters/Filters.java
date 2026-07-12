@@ -19110,6 +19110,7 @@ public class Filters {
     public static final Filter Restricted_Deployment = Filters.title(Title.Restricted_Deployment);
     public static final Filter Retract_The_Bridge = Filters.title(Title.Retract_The_Bridge);
     public static final Filter Return_Of_A_Jedi = Filters.title(Title.Return_Of_A_Jedi);
+    public static final Filter Return_Of_The_Jedi = Filters.title(Title.Return_Of_The_Jedi);
     public static final Filter Revenge_Of_The_Sith = Filters.title(Title.Revenge_Of_The_Sith);
     public static final Filter Revolution = Filters.title(Title.Revolution);
     public static final Filter Rex = Filters.title(Title.Rex);
