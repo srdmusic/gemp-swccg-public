@@ -10,6 +10,7 @@ import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.timing.AbstractSubActionEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.results.CardsShieldedResult;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +59,6 @@ public class ShieldOneCardAtEachLocationEffect extends AbstractSubActionEffect {
                     }
                 }
         );
-
         return subAction;
     }
 
@@ -110,7 +110,7 @@ public class ShieldOneCardAtEachLocationEffect extends AbstractSubActionEffect {
                             new PassthruEffect(_subAction) {
                                 @Override
                                 protected void doPlayEffect(SwccgGame game) {
-                                    // Filter for cards that are still on the table and attached to a card
+                                    // Filter for cards that are still on the table and at a location
                                     _remainingCards = Filters.filter(_remainingCards, game, Filters.and(Filters.onTable, Filters.at(Filters.location)));
 
                                     if (!_remainingCards.isEmpty()) {
@@ -119,6 +119,17 @@ public class ShieldOneCardAtEachLocationEffect extends AbstractSubActionEffect {
                                     }
                                 }
                             }
+                    );
+                }
+                //emit result (no cards left to shield)
+                else {
+                    _subAction.appendEffect(
+                        new PassthruEffect(_subAction) {
+                            @Override
+                            protected void doPlayEffect(SwccgGame game) {
+                                game.getActionsEnvironment().emitEffectResult(new CardsShieldedResult(_action.getPerformingPlayer()));
+                            }
+                        }
                     );
                 }
             }

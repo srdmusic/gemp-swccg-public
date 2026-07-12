@@ -45,7 +45,7 @@ public class Card8_110 extends AbstractImperial {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("'Shield' characters");
             // Perform result(s)
-            Collection<PhysicalCard> toShield = Filters.filterAllOnTable(game, Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.location), Filters.canBeTargetedBy(self)));
+            Collection<PhysicalCard> toShield = Filters.filterActive(game, self, Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.location), Filters.canBeTargetedBy(self)));
             action.appendEffect(
                     new ShieldOneCardAtEachLocationEffect(action, toShield));
             return Collections.singletonList(action);

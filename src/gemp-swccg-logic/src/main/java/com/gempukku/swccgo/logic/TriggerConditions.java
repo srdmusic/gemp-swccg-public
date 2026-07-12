@@ -404,7 +404,8 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.PARASITE_DETACHED
                 || effectResult.getType() == EffectResult.Type.RETARGETED_EFFECT
                 || effectResult.getType() == EffectResult.Type.DARK_HOURS_EFFECT
-                || effectResult.getType() == EffectResult.Type.CHARACTER_ENSLAVED);
+                || effectResult.getType() == EffectResult.Type.CHARACTER_ENSLAVED
+                || effectResult.getType() == EffectResult.Type.CARDS_SHIELDED);
 
         // TODO: Just checking EffectResult.getType() would be faster???
 
