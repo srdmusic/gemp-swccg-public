@@ -54,7 +54,7 @@ public class Card6_036 extends AbstractAlien {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeploysFreeToTargetModifier(self, Filters.Jawa_weapon, Filters.R_kik_D_nec));
-        modifiers.add(new WinsDoubleAtSabaccModifier(self, Filters.R_kik_D_nec, new DuringSabaccCondition(Filters.Dune_Sea_Sabacc)));
+        modifiers.add(new WinsDoubleAtSabaccModifier(self, self, new DuringSabaccCondition(Filters.Dune_Sea_Sabacc)));
         return modifiers;
     }
 
