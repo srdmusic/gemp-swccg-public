@@ -16,9 +16,9 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_211 extends AbstractRebel {
     public Card501_211() {
         super(Side.LIGHT, 0, 6, 3, 6, 8, "Anakin Skywalker, Redeemed", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While 'communing': You may not deploy Jedi Masters or any characters of ability < 4 (except for droids); your Force drains are -1; while Return Of The Jedi on table, may [DOWNLOAD] a Death Star II site.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_27);
+        setLore("'You were right about me. Tell your sister ... you were right.'");
+        setGameText("While 'communing': You may not deploy Jedi Masters or characters of ability < 4 (except droids); your Force drains are -1; once per turn, if Return Of The Jedi on table, may [download] a Death Star II site.");
+        addIcons(Icon.DEATH_STAR_II, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_27);
         setTestingText("Anakin Skywalker, Redeemed");
-        hideFromDeckBuilder();
     }
 }
