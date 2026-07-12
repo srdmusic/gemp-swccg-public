@@ -18,6 +18,7 @@ public class CrashedTests {
 				{{
 					put("speeder", "104_003"); //rebel snowspeeder (enclosed vehicle)
 					put("skiff", "6_088"); //(open vehicle)
+					put("ronto", "7_155"); //(creature vehicle)
 					put("pilot", "1_027"); //rebel pilot
 					put("lars", "1_132"); //tatooine: lars' moisture farm
 					put("cannon", "3_074"); //dual laser cannon
@@ -83,6 +84,25 @@ public class CrashedTests {
 
 		scn.SkipToPhase(Phase.MOVE);
 		assertFalse(scn.LSCardActionAvailable(skiff, "landspeed"));
+	}
+
+	@Test
+	public void CrashedCreatureVehicleCanUseLandspeed() {
+		//creature vehicles are never unpiloted
+		var scn = GetScenario();
+
+		var ronto = scn.GetLSCard("ronto");
+		var lars = scn.GetLSCard("lars");
+
+		scn.StartGame();
+
+		scn.MoveLocationToTable(lars); //exterior location adjacent to DS starting location
+		scn.MoveCardsToLocation(lars, ronto);
+
+		scn.CrashCard(ronto);
+
+		scn.SkipToLSTurn(Phase.MOVE);
+		assertFalse(scn.LSCardActionAvailable(ronto, "landspeed"));
 	}
 
 	@Test
@@ -294,7 +314,7 @@ public class CrashedTests {
 	}
 
 	@Test
-	public void CrashedOpenVehicleDriverAbilityDoesNotCountTowardBattleDestiny() {
+	public void CrashedOpenVehicleDriverAbilityCountsTowardBattleDestiny() {
 		//put 2 LS ability + crashed skiff with an ability 2 driver and confirm battle destiny could be drawn
 		var scn = GetScenario();
 
@@ -326,11 +346,11 @@ public class CrashedTests {
 		scn.LSInitiateBattle(site);
 		assertEquals(3, scn.GetLSUsedPileCount());
 		scn.SkipToEndOfPowerSegment(true); //draw destiny if option provided
-		assertEquals(3, scn.GetLSUsedPileCount());
+		assertEquals(4, scn.GetLSUsedPileCount());
 	}
 
 	@Test
-	public void CrashedOpenVehiclePassengerAbilityDoesNotCountTowardBattleDestiny() {
+	public void CrashedOpenVehiclePassengerAbilityCountsTowardBattleDestiny() {
 		//put 2 LS ability + crashed skiff with an ability 2 passenger and confirm battle destiny could be drawn
 		var scn = GetScenario();
 
@@ -362,7 +382,7 @@ public class CrashedTests {
 		scn.LSInitiateBattle(site);
 		assertEquals(3, scn.GetLSUsedPileCount());
 		scn.SkipToEndOfPowerSegment(true); //draw destiny if option provided
-		assertEquals(3, scn.GetLSUsedPileCount());
+		assertEquals(4, scn.GetLSUsedPileCount());
 	}
 
 	@Test
@@ -467,9 +487,6 @@ public class CrashedTests {
 	//movement
 		//cannot use sector movement (crashed cloud car?)
 		//cannot use docking bay transit?
-
-	//crashed creature vehicles / lift tube (cannot be unpiloted?)
-		//see order of testing in isPiloted() - currently crashed is checked before creature/lift_tube...
 
 	//gametext suspended (ideas?)
 		//forfeit bonus on sandcrawler?
