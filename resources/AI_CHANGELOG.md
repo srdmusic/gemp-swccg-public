@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-12 — FORMATION SAFETY pull-route: the "[download] X here" door closed (Krennic x3; both bots)
+- Replay ocffe8duo7yxh7fh: Krennic (power 3/ability 3) was pulled SOLO to Scarif: Command Center THREE times via the location's own "[download] Krennic here" game text and died each time (24v3 then 14v3; ~20+ cards of losses). This pull route FORCES the destination and never passes the CS deploy-site guard — L3/L4 never ran; winning scores were 330/350 via the V67bc epilogue (floor 50). V47's legacy "RESERVE SOLO BLOCK" fired but with WRONG facts (hardcoded Cloud City scan) on a forced node.
+- MOD `.../{rando,chosenone}/evaluators/ActionTextEvaluator.java` (V192 pull block, after the scorer emit) — when the pull SOURCE is a LOCATION whose text pulls a CHARACTER "here": resolve the pulled character from Reserve, then run the SAME FormationSafety deploy checks with destination = the source location (L4 contested veto, L3 pair-budget veto, −800 NO-PLAN penalty).
+- EXEMPTION (Steve's objective caveat): the pull is ALLOWED when the objective is NOT yet flipped AND the pulled character is named in the flip condition — the pull IS the flip plan (Krennic's FIRST pull flipped 216_11; the T4/T5 re-pulls bought nothing since another leader already held the site post-flip).
+- Boundary: T4/T5 re-pull case → no flip exemption (already flipped) → lands solo, ability 3 < 4, no buddy in hand → −800 → 350−800 loses to the epilogue floor/PASS → held. T3 first pull → flip-plan exemption → fires (flips the objective). Dominance/contested cases handled by the shared vetoCharacterDeploy.
+- KNOWN REMAINING (queued, from the same forensics): V47 RESERVE SOLO BLOCK facts wrong (legacy Cloud City hardcode — retire or re-point); weak-solo relocation to EMPTY opponent-icon battleground unguarded (optional −800 in move-dest); post-strand REINFORCE gap (no rebuddy/retreat logic when a solo is stranded). Plus Codex's Court class (V192 mixed-union, V61c viability, V67ak grounding).
+- Verified: compiles clean both bots (MVN_EXIT=0); mirrored; DEPLOYED + byte-verified. Codex verify requested.
+- Revert: `git revert`; the guard is one self-contained block after the V192 emit.
+
 ## 2026-07-12 — FORMATION SAFETY P0 patch (Codex m00194/m00177 review; both bots): epilogue veto leak, V148 cancellability, L3 semantics, V21 icon-strip
 - Codex's post-deploy review of a25026c9c found 3 live defects + 1 leftover; all fixed:
 - **P0#1 epilogue veto leak** (`CombinedEvaluator` V67bc non-bucket epilogue): never filtered `isHardVetoed()` — a vetoed action could be returned before final selection. Now skipped.

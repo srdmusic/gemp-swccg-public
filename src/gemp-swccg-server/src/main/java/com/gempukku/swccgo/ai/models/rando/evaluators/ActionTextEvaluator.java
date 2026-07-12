@@ -5668,6 +5668,91 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             v192ActivateBase ? "ACTIVATE" : "DEPLOY-GRADE",
                             (int) v192Base, (int) v192Tier, v192TierDesc, (int) v192Ctx,
                             v192CtxDesc.length() > 0 ? v192CtxDesc : "-", (int) v192Total, actionText);
+
+                        // FORMATION SAFETY pull-route (2026-07-12b, replay ocffe8duo7yxh7fh):
+                        // Krennic was pulled SOLO to Scarif: Command Center THREE times via the
+                        // location's own "[download] Krennic here" game text and died each time —
+                        // this pull route forces the destination and never passes the CS deploy-site
+                        // guard, so L3/L4 never ran (winning scores 330/350 vs epilogue floor 50).
+                        // When the SOURCE is a LOCATION pulling a CHARACTER "here", run the same
+                        // deploy safety with destination = the source location.
+                        // EXEMPTION (Steve's objective caveat): allow when the objective is NOT yet
+                        // flipped AND the pulled character is named in the flip condition — the pull
+                        // IS the flip plan (Krennic's FIRST pull flipped it; the re-pulls after his
+                        // death bought nothing because another leader already held the site).
+                        try {
+                            if (cardId != null && gameState != null && context.getGame() != null
+                                    && context.getPlayerId() != null) {
+                                PhysicalCard fsSrc = gameState.findCardById(Integer.parseInt(cardId));
+                                if (fsSrc != null && fsSrc.getBlueprint() != null
+                                        && fsSrc.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.LOCATION) {
+                                    String fsGt = fsSrc.getBlueprint().getGameText();
+                                    String fsGtl = fsGt != null ? fsGt.toLowerCase(java.util.Locale.ROOT) : "";
+                                    if (fsGtl.matches("(?s).*(?:\\[download\\]|deploy|take)[^.;]*\\bhere\\b.*")) {
+                                        // Resolve the pulled CHARACTER from Reserve via the parsed targets.
+                                        java.util.List<String> fsT = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                            .parseSourceCardPullTargets(fsGt);
+                                        PhysicalCard fsPulled = null;
+                                        for (PhysicalCard rc : gameState.getReserveDeck(context.getPlayerId())) {
+                                            if (rc == null || rc.getBlueprint() == null || rc.getTitle() == null) continue;
+                                            if (rc.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                            String rt = rc.getTitle().toLowerCase(java.util.Locale.ROOT);
+                                            for (String t : fsT) {
+                                                if (t == null || t.isEmpty()) continue;
+                                                if (rt.contains(t) || t.contains(rt)) { fsPulled = rc; break; }
+                                            }
+                                            if (fsPulled != null) break;
+                                        }
+                                        if (fsPulled != null) {
+                                            // Flip-plan exemption check.
+                                            boolean fsFlipPlan = false;
+                                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer fsOa =
+                                                context.getObjectiveAnalyzer();
+                                            if (fsOa != null && fsOa.isAnalyzed() && !fsOa.isFlipped()
+                                                    && fsOa.getFlipConditionText() != null) {
+                                                String fsFlip = fsOa.getFlipConditionText().toLowerCase(java.util.Locale.ROOT);
+                                                for (String w : fsPulled.getTitle().toLowerCase(java.util.Locale.ROOT).split("[^a-z]+")) {
+                                                    if (w.length() >= 4 && fsFlip.contains(w)) { fsFlipPlan = true; break; }
+                                                }
+                                            }
+                                            if (!fsFlipPlan) {
+                                                SwccgCardBlueprint fsBp = fsPulled.getBlueprint();
+                                                float fsForce = gameState.getForcePileSize(context.getPlayerId());
+                                                Float fsCost = fsBp.getDeployCost();
+                                                Float fsBuddy = null;
+                                                for (PhysicalCard fsH : gameState.getHand(context.getPlayerId())) {
+                                                    if (fsH == null || fsH.getBlueprint() == null) continue;
+                                                    if (fsH.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                                    Float c = fsH.getBlueprint().getDeployCost();
+                                                    if (c == null) continue;
+                                                    if (fsBuddy == null || c < fsBuddy) fsBuddy = c;
+                                                }
+                                                String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                                    .vetoCharacterDeploy(context.getGame(), gameState, context.getPlayerId(),
+                                                        fsPulled,
+                                                        fsBp.hasPowerAttribute() ? fsBp.getPower() : null,
+                                                        fsBp.hasAbilityAttribute() ? fsBp.getAbility() : null,
+                                                        false, fsSrc, fsForce, fsCost, fsBuddy, null);
+                                                if (fsV != null) {
+                                                    action.hardVeto(fsV);
+                                                    logger.warn("FORMATION SAFETY (pull-route): {}", fsV);
+                                                } else if (com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                                        .weakSoloNoPlan(context.getGame(), gameState, context.getPlayerId(),
+                                                            fsBp.hasAbilityAttribute() ? fsBp.getAbility() : null,
+                                                            false, fsSrc, fsBuddy)) {
+                                                    action.addReasoning(
+                                                        "L3 NO-PLAN SOLO (pull-route): weak character would be pulled alone to "
+                                                            + fsSrc.getTitle() + " with no buddy plan", -800.0f);
+                                                    logger.warn("FORMATION SAFETY (pull-route): L3 NO-PLAN SOLO -800 at {}", fsSrc.getTitle());
+                                                }
+                                            } else {
+                                                logger.warn("FORMATION SAFETY (pull-route): flip-plan exemption — '{}' named in unflipped objective flip condition", fsPulled.getTitle());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Exception fsPe) { /* fail-open */ }
                     }
                 }
             }
