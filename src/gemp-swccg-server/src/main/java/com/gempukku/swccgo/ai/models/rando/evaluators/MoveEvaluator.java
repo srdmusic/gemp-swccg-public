@@ -405,21 +405,12 @@ public class MoveEvaluator extends ActionEvaluator {
                 } catch (Exception ignore) { }
                 if (v169EndangeredMover) {
                     // V169 UPDATED 2026-07-06 (audit cross-brain-1): no penalty here, no 'continue'.
-                    // EvaluatedAction softBlockedMove = new EvaluatedAction(actionId, ActionType.MOVE, -400.0f, actionText);
-                    // softBlockedMove.addReasoning("CANCEL-LOOP BLOCK — soft (V169: endangered mover, retreat must stay possible)", -400.0f);
-                    // logger.warn("V169 MoveEvaluator: endangered mover '{}' soft-blocked (-400) instead of -9999", actionText);
-                    // actions.add(softBlockedMove);
-                    // continue;
                     logger.warn("V169 MoveEvaluator: endangered mover '{}' blocked-but-excused; soft penalty owned by ActionTextEvaluator (-250), falling through to retreat scoring", actionText);
                 } else {
                     // V169 UPDATED 2026-07-06: hard block unchanged, wrapped in else so the
                     // endangered-mover path above falls through instead of hitting it.
-                    // V160 UPDATED 2026-07-06 T4.1: -9999 raised to the ladder veto class
-                    // -100000 (ruling L3: the cancel-loop veto beats everything, including
-                    // R4 transit bands). Old lines kept for revert:
-                    // EvaluatedAction blockedMove = new EvaluatedAction(actionId, ActionType.MOVE, -9999.0f, actionText);
-                    // blockedMove.addReasoning("CANCEL-LOOP BLOCK: this move led to repeated Done-cancels — try something else", -9999.0f);
-                    // logger.warn("MoveEvaluator: actionId='{}' is in blockedResponses → -9999 (cancel-loop block)", actionId);
+                    // V160 UPDATED 2026-07-06 T4.1: cancel-loop veto raised from -9999 to
+                    // ladder class -100000, above all score bands including R4 transit.
                     EvaluatedAction blockedMove = new EvaluatedAction(actionId, ActionType.MOVE, 0.0f, actionText);
                     blockedMove.addReasoning("CANCEL-LOOP BLOCK: this move led to repeated Done-cancels — try something else (LADDER VETO)", -100000.0f);
                     logger.warn("MoveEvaluator: actionId='{}' is in blockedResponses → -100000 (V160 cancel-loop LADDER VETO)", actionId);
@@ -503,11 +494,6 @@ public class MoveEvaluator extends ActionEvaluator {
                     // own orbit primitive instead: getSystemOrbited() holds the orbited system's
                     // TITLE ("Scarif"), the exact check the flip condition itself uses
                     // (Filters.isOrbiting(Title.Scarif), Card216_011:122).
-                    // PhysicalCard currentLoc = cardToMove.getAtLocation();
-                    // if (currentLoc != null && currentLoc.getTitle() != null
-                    //         && currentLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) {
-                    //     v79AtScarif = true;
-                    // }
                     String v79Orbited = cardToMove.getSystemOrbited();
                     if (v79Orbited != null && v79Orbited.toLowerCase(Locale.ROOT).contains("scarif")) {
                         v79AtScarif = true;

@@ -6237,3 +6237,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     COMBINED_EVALUATOR sentinels; route/wire-shape cross-validation (phase never implies
     route, per amended route map). 112 tests green. Stages 4-5 still open. Capture DISABLED.
     NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ CLEANUP BATCH 1.9 (2026-07-13, Codex packet): MoveEvaluator −28 comment lines, both bots ════
+    V169 soft-block / V160 old −9999 / V79 getAtLocation predecessors deleted per manifest
+    (ranges hash-verified to the packet's SHA-256). javap identical, 46/46 fixtures green,
+    live successors confirmed. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
