@@ -101,7 +101,16 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
   tail (~/claude-codex-mailbox/mailbox.jsonl) beyond the watermark, then continue the ACTIVE lane exactly.
   All discipline sections below remain binding.
 - 4B1 COMMITTED (agent report reconciled, 842 module tests green). F1/F2 agent RUNNING (relaunched on Steve reconfirmed blanket go-ahead). Next: Codex 4B1 clean gate; F1/F2 report, then two separate commits, then his gates.
-- Mailbox watermark: m00479.
+- SESSION END STATE (K-2 at 4pct tokens; OPUS SWITCH-OVER): 4B1 committed ec886934b; F1 committed
+  5bd89ac68; F2 committed a095db834. Both engine fixes Steve-approved. NO agent lanes running. Tree CLEAN.
+- OPUS FIRST ACTIONS: (1) read this file fully; (2) mailbox check --as claude --mark + raw store past
+  m00481; (3) tell Codex "K-2 resumed on Opus, same protocol"; (4) his gate queue: ec886934b, 5bd89ac68,
+  a095db834; on ADVANCE dispatch his next packet's embedded Agent-Ready Brief VERBATIM as a background
+  agent; (5) every discipline section in this file binds; agents never commit; changelogs constructed
+  per-commit; engine files beyond F1/F2 still need Steve.
+- Remaining released queue: Codex packet stream (4B2+, route repairs per frozen order; K-2 tasks #13-#24).
+  Deploy of EVERYTHING stays HOLD until the aggregate gate.
+- Mailbox watermark: m00481.
 
 ## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture
