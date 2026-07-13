@@ -17,6 +17,12 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — CLEANUP BATCH 2.5 (Codex packet; both bots) — comment-only, NO behavior change
+- V38/V53 diagnostic predecessor comments in DeployEvaluator: four ranges (V38 maintenance scan ×15, V38 one-liner, V38 DTF scan ×15, V53 spy scan ×13) = 44 corpse lines + 11 preface replacements per bot (11 insertions / 55 deletions per bot, −88 net). All six SHA pins matched (per-bot 65a1987d…, two-bot 5bb4259f…, four per-range pins).
+- Live successors proven both bots: ForceReserveService.Facts maintenanceObligation/dtfActive/undercoverSpyCount consumers, MaintenanceFacts.maintainCost under the icon gate, forceReserveNeeded/pairedDeployPossible, live V53 SPY RESERVE log — 12 live-line matches per bot.
+- RAW javap identical parent vs candidate both bots (13,704 lines each); 60/60 fixtures.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — CLEANUP BATCH 2.4 (Codex packet; both bots) — comment-only, NO behavior change
 - Force-economy comment corpse in DeployEvaluator: four ranges (commented V22.3/V59 maintenanceCost line, V24.5 inline maintenance scan ×19, V29.13 deploy-cost threshold line, V29.13 DTF/grabber scans ×31) + five specified preface lines = 5 insertions / 57 deletions per bot, −104 total. All four per-range SHAs + the group SHA matched the packet (group pin = the single-bot 52-line stream; both bots hash to it independently — method clarification recorded).
 - Live successors proven intact both bots: MaintenanceFacts.maintainCost sites, getForceReserveFacts().maintenanceObligation/dtfActive/grabberUnused, the live conditions, weights −50/−500/−50/−50/−30 and V59 −2000 tiers, the MAINTENANCE icon gate. Held 2.5/2.6 candidates untouched.

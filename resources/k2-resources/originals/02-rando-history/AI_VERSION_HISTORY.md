@@ -6278,3 +6278,7 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Four SHA-gated comment ranges + five preface lines per bot. Live MaintenanceFacts/
     ForceReserveService successors + weights proven intact. RAW javap identical (equal to the
     2.3 gate record). 60/60 fixtures. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ CLEANUP BATCH 2.5 (2026-07-13, Codex packet): DE V38/V53 diagnostics, −88 net ════
+    Four SHA-gated ranges + 11 preface lines per bot. Live ForceReserveService.Facts
+    successors proven. RAW javap identical. 60/60 fixtures. NOT deployed. Details in AI_CHANGELOG.

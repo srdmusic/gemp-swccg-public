@@ -2093,76 +2093,32 @@ public class DeployEvaluator extends ActionEvaluator {
                                 // T2 MOVE #1 COMMIT-2 (2026-07-06): on-table maintenance
                                 // obligation from the shared per-decision ForceReserveService
                                 // cache; THIS card's own maintain cost stays a local add
-                                // below (per-candidate, not a shared fact). Old inline scan
-                                // commented out per feedback_comment_out_old_rules.
+                                // below. V67bl removed the paired solo exception, so these facts now
+                                // affect diagnostics only. Superseded inline scan removed; see git.
                                 int maintObligation = context.getForceReserveFacts().maintenanceObligation;
-//                                 int maintObligation = 0;
-//                                 for (PhysicalCard mCard : gameState.getAllPermanentCards()) {
-//                                     if (mCard == null) continue;
-//                                     if (!playerId.equals(mCard.getOwner())) continue;
-//                                     com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
-//                                     if (mZone == null || !mZone.isInPlay()) continue;
-//                                     SwccgCardBlueprint mBp = mCard.getBlueprint();
-//                                     if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-//                                         // T2 COMMIT-1 (2026-07-06): engine maintain cost, not deploy cost
-//                                         // Float mCostF = mBp.getDeployCost();  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
-//                                         // maintObligation += (mCostF != null) ? mCostF.intValue() : 1;  // superseded T2 COMMIT-1 2026-07-06
-//                                         maintObligation += com.gempukku.swccgo.ai.models.common.strategy
-//                                             .MaintenanceFacts.maintainCost(mBp);
-//                                     }
-//                                 }
                                 // Add maintenance for THIS card if applicable
                                 if (blueprint.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-                                    // maintObligation += cost;  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
                                     maintObligation += com.gempukku.swccgo.ai.models.common.strategy
                                         .MaintenanceFacts.maintainCost(blueprint);
                                 }
                                 // Only reserve for interrupts when opponent has Draw Their Fire
-                                // T2 MOVE #1 COMMIT-2 (2026-07-06): DTF from the shared
-                                // per-decision cache (same detection, 1 Force tax per
-                                // interrupt). Old scan commented out per
-                                // feedback_comment_out_old_rules.
+                                // T2 MOVE #1 COMMIT-2 (2026-07-06): ForceReserveService preserves
+                                // exact-opponent, in-play detection and the 1 Force fact. V67bl means
+                                // pairedDeployPossible has no score consumer. Superseded scan removed;
+                                // git preserves it.
                                 int interruptReserve = context.getForceReserveFacts().dtfActive ? 1 : 0;
-//                                 int interruptReserve = 0;
-//                                 String dtfOpId = gameState.getOpponent(playerId);
-//                                 for (PhysicalCard dtfChk : gameState.getAllPermanentCards()) {
-//                                     if (dtfChk == null) continue;
-//                                     if (dtfOpId != null && dtfOpId.equals(dtfChk.getOwner())
-//                                         && dtfChk.getBlueprint() != null
-//                                         && dtfChk.getBlueprint().getTitle() != null
-//                                         && dtfChk.getBlueprint().getTitle().toLowerCase(Locale.ROOT).contains("draw their fire")) {
-//                                         com.gempukku.swccgo.common.Zone dtfChkZ = dtfChk.getZone();
-//                                         if (dtfChkZ != null && dtfChkZ.isInPlay()) {
-//                                             interruptReserve = 1; // 1 Force tax per interrupt
-//                                             break;
-//                                         }
-//                                     }
-//                                 }
                                 // V53: Reserve 1 force per undercover spy for movement next turn.
                                 // If opponent moves away from our spy, we need force to follow them.
-                                // T2 MOVE #1 COMMIT-2 (2026-07-06): undercover spy count (V53)
-                                // from the shared per-decision cache. The shared fact is
-                                // Zone-gated — a no-op difference: isUndercover() is only ever
-                                // true in play. Old scan commented out per
-                                // feedback_comment_out_old_rules.
+                                // T2 MOVE #1 COMMIT-2 (2026-07-06): ForceReserveService owns the
+                                // count. Its in-play gate is behavior-neutral because GameState clears
+                                // the undercover flag off table. V67bl leaves no score consumer.
+                                // Superseded inline scan removed 2026-07-13; git preserves it.
+                                // The diagnostic V53 log remains live.
                                 int spyMoveReserve = context.getForceReserveFacts().undercoverSpyCount;
                                 if (spyMoveReserve > 0) {
                                     LOG.info("V53 SPY RESERVE: Reserving {} force for {} undercover spy movement(s)",
                                         spyMoveReserve, spyMoveReserve);
                                 }
-//                                 int spyMoveReserve = 0;
-//                                 try {
-//                                     for (PhysicalCard spyChk : gameState.getAllPermanentCards()) {
-//                                         if (spyChk == null || !playerId.equals(spyChk.getOwner())) continue;
-//                                         if (spyChk.isUndercover()) {
-//                                             spyMoveReserve++;
-//                                         }
-//                                     }
-//                                     if (spyMoveReserve > 0) {
-//                                         LOG.info("V53 SPY RESERVE: Reserving {} force for {} undercover spy movement(s)",
-//                                             spyMoveReserve, spyMoveReserve);
-//                                     }
-//                                 } catch (Exception e) { /* ignore */ }
 
                                 int forceReserveNeeded = maintObligation + interruptReserve + spyMoveReserve;
 
