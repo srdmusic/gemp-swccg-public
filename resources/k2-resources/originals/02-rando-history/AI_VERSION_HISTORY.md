@@ -6213,3 +6213,9 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Observation-only hooks in RandoCalAi/TheChosenOneAi/DecisionSafety, zero control-flow change.
     91 tests green. m00290/m00291 closed. Stage 4/5 (inner mutation observation, real-decide
     fixtures) deferred. Capture DISABLED. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ B2 CONSISTENCY GAPS (2026-07-13, Codex m00277): four validation fixes, snapshot types ════
+    NOT a V-tag. Builder.turn unset = failure (no fabricated 0); RouteSelectionEvidence carries +
+    cross-validates selectedRoute; KNOWN obligation flags checked against KNOWN noPass/minimum;
+    CandidateShape tied to actual ActionFacts rows (ghost rows lawful). TraceSnapshots one-line
+    adaptation. 97 tests green. Zero consumers. NOT deployed. Details in AI_CHANGELOG 2026-07-13.

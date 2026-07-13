@@ -10,6 +10,11 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — B2 CONSISTENCY GAPS closed (Codex gate m00277; shared types) — still zero consumers
+- Four internal consistency gaps from the fa0f254ac gate: Builder.turn boxed Integer, unset = construction failure (explicit turn 0 stays legal); RouteSelectionEvidence now CARRIES selectedRoute and DecisionFacts rejects route/evidence mismatch; KNOWN obligationFlags cross-validated against KNOWN noPass/minimum (UNKNOWN imposes nothing — trace shadow paths intact); DecisionSnapshot validates CandidateShape against actual ActionFacts rows (ghost-row surplus stays lawful for the honest-INCOMPLETE trace case); the inconsistent 3+3-claim test data fixed.
+- TraceSnapshots adapted (one line: evidence carries route); zero bot-file edits. 97 tests green (91 + 6 new).
+- NOT deployed; zero production consumers.
+
 ## 2026-07-13 — TRACE INCREMENT 2 (Codex V2 oracle contract; both bots) — capture still DISABLED
 - The V2 envelope per CODEX_TRACE_ORACLE_V2_CONTRACT: schema v2, botModel, shadow-built DecisionSnapshot from raw params (UNKNOWN where unobserved), typed route (all five direct interceptors + chaos/evaluator/fallback/emergency), RAW candidate order (complete arrays; duplicates/unreturned/invented ids all visible) separate from merge order, typed operations, TraceFinalization (pre-safety winner, V148 pass eligibility + facts, multi-select, ordered typed DecisionSafety corrections, final response, skipped-finalizer flag), intended state events (observed, never applied), COMPLETE/INCOMPLETE status where EVERY swallowed error is a typed failure — no silent truncation.
 - Typed ids: TraceRuleId (validated, LEGACY_UNTAGGED kept), TraceDomainId (the 22 registry domains), TraceOutputKind. Free strings no longer compile.

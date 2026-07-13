@@ -12,7 +12,9 @@ import java.util.TreeSet;
 // ═══ SECTION: FACTS-MODEL / DECISION FACTS (2026-07-13) ═══
 // Batch-2 typed-facts foundation, increment 1 (no production consumer yet).
 // Contract: Handoffs/CODEX_RANDO_FACTS_ASSESSMENTS_CONTRACT_2026-07-13.md §"Minimal shared model".
-// Gate deltas applied: Handoffs/CODEX_B2_INCREMENT1_GATE_E4E0AA213_2026-07-13.md items 1-4, 6.
+// Gate deltas applied: Handoffs/CODEX_B2_INCREMENT1_GATE_E4E0AA213_2026-07-13.md items 1-4, 6;
+// Handoffs/CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md items 1-3 (explicit builder
+// turn, selectedRoute inside the checked evidence, obligation/source-fact cross-validation).
 //
 // What the engine offered for ONE decision plus what can be OBSERVED from game
 // state. Records what is — never whether an action is good: no scores, ranks,
@@ -112,6 +114,26 @@ public record DecisionFacts(
                     + " < minimum " + minimum.value());
         }
 
+        // Obligation/source-fact cross-validation (B2 type-hardening gate
+        // Handoffs/CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md item 3):
+        // obligationFlags DERIVE from noPass/minimum, so a KNOWN flag set may never
+        // contradict a KNOWN source fact. An UNKNOWN fact on either side imposes no
+        // constraint — lawful partial-unknown construction stays possible.
+        if (obligationFlags.isKnown()) {
+            boolean hasNoPassFlag = obligationFlags.value().contains(ObligationFlag.NO_PASS);
+            if (noPass.isKnown() && hasNoPassFlag != noPass.value()) {
+                throw new IllegalArgumentException("obligationFlags "
+                        + (hasNoPassFlag ? "contain" : "omit") + " NO_PASS but known noPass="
+                        + noPass.value() + " — derived flags may not contradict their source fact");
+            }
+            boolean hasMandatoryFlag = obligationFlags.value().contains(ObligationFlag.MANDATORY_SELECTION);
+            if (minimum.isKnown() && hasMandatoryFlag != (minimum.value() > 0)) {
+                throw new IllegalArgumentException("obligationFlags "
+                        + (hasMandatoryFlag ? "contain" : "omit") + " MANDATORY_SELECTION but known minimum="
+                        + minimum.value() + " — derived flags may not contradict their source fact");
+            }
+        }
+
         // Count/size range validation (gate item 6: negative counts rejected).
         requireNonNegativeWhenKnown(forcePileSize, "forcePileSize");
         requireNonNegativeWhenKnown(lifeForceCardCount, "lifeForceCardCount");
@@ -151,6 +173,14 @@ public record DecisionFacts(
         if (!routeSelectionEvidence.obligations().equals(obligationFlags)) {
             throw new IllegalArgumentException(
                     "routeSelectionEvidence.obligations does not match obligationFlags");
+        }
+        // B2 type-hardening gate item 2: the route the evidence claims to support
+        // must BE the selected route; a CARD_ACTION_CHOICE decision can no longer
+        // smuggle in evidence for DecisionRoute.INTEGER.
+        if (routeSelectionEvidence.selectedRoute() != selectedRoute) {
+            throw new IllegalArgumentException("routeSelectionEvidence.selectedRoute "
+                    + routeSelectionEvidence.selectedRoute() + " does not match selectedRoute "
+                    + selectedRoute);
         }
     }
 
@@ -230,7 +260,11 @@ public record DecisionFacts(
             Phase phase,                     // nullable, mirrors DecisionFacts.phase
             String window,                   // nullable, nonblank when present, mirrors DecisionFacts.window
             FactValue<Set<ObligationFlag>> obligations,
-            CandidateShape candidateShape) {
+            CandidateShape candidateShape,
+            // B2 type-hardening gate item 2 (CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md):
+            // the route this evidence supports is PART of the evidence, and DecisionFacts'
+            // compact constructor rejects evidence whose route disagrees with selectedRoute.
+            DecisionRoute selectedRoute) {
 
         public RouteSelectionEvidence {
             Objects.requireNonNull(decisionType, "decisionType");
@@ -239,6 +273,7 @@ public record DecisionFacts(
             }
             Objects.requireNonNull(obligations, "obligations");
             Objects.requireNonNull(candidateShape, "candidateShape");
+            Objects.requireNonNull(selectedRoute, "selectedRoute");
             if (obligations.isKnown()) {
                 obligations = FactValue.known(Set.copyOf(obligations.value()),
                         obligations.producerId(), obligations.provenance());
@@ -256,7 +291,8 @@ public record DecisionFacts(
                     + " window=" + (window != null ? window : "n/a")
                     + " obligations=" + obligationText
                     + " candidates[actions=" + candidateShape.actionCandidateCount()
-                    + " cards=" + candidateShape.cardCandidateCount() + "]";
+                    + " cards=" + candidateShape.cardCandidateCount() + "]"
+                    + " -> route=" + selectedRoute;
         }
     }
 
@@ -275,7 +311,11 @@ public record DecisionFacts(
         private String decisionText;
         private Phase phase;
         private String window;
-        private int turn;
+        // Boxed on purpose (B2 type-hardening gate item 1,
+        // CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md): a primitive int here
+        // silently fabricated turn 0 — a KNOWN pre-game turn — when the caller forgot
+        // to supply it. Unset now fails build() instead.
+        private Integer turn;
         private String currentPlayer;
         private Side side;
         private FactValue<Set<ObligationFlag>> obligationFlags;
@@ -317,6 +357,10 @@ public record DecisionFacts(
         public Builder routeSelectionEvidence(RouteSelectionEvidence v) { this.routeSelectionEvidence = v; return this; }
 
         public DecisionFacts build() {
+            // Gate item 1: reject an unset turn BEFORE the record constructor would
+            // auto-unbox — the NPE must say what was forgotten, not fabricate 0.
+            Objects.requireNonNull(turn,
+                    "turn must be set explicitly — an unset turn is not a known pre-game turn 0");
             return new DecisionFacts(decisionId, decisionType, decisionText, phase, window, turn,
                     currentPlayer, side, obligationFlags, noPass, minimum, maximum, blockedResponses,
                     forcePileSize, lifeForceCardCount, handSize, reserveDeckSize, objectiveIdentity,

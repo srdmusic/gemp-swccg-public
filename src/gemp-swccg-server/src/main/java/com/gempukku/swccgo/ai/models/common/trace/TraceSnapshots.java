@@ -165,11 +165,14 @@ public final class TraceSnapshots {
                 .build());
         }
 
-        // ── route selection: one route per engine decision shape (increment-1 taxonomy) ──
+        // ── route selection: one route per engine decision shape (increment-1 taxonomy).
+        // B2 type-hardening gate item 2 (CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md):
+        // the evidence record now carries the selected route itself, and DecisionFacts
+        // rejects evidence whose route disagrees with selectedRoute. ──
         DecisionFacts.DecisionRoute route = DecisionFacts.DecisionRoute.valueOf(type.name());
         DecisionFacts.RouteSelectionEvidence evidence = new DecisionFacts.RouteSelectionEvidence(
             type, in.phase, null, obligations,
-            new DecisionFacts.CandidateShape(size(in.actionIds), size(in.cardIds)));
+            new DecisionFacts.CandidateShape(size(in.actionIds), size(in.cardIds)), route);
 
         DecisionFacts decisionFacts = DecisionFacts.builder()
             .decisionId(in.decisionId)

@@ -7,6 +7,8 @@ import java.util.Objects;
 // ═══ SECTION: FACTS-MODEL / DECISION SNAPSHOT (2026-07-13) ═══
 // Batch-2 typed-facts foundation, increment 1 (no production consumer yet).
 // Contract: Handoffs/CODEX_RANDO_FACTS_ASSESSMENTS_CONTRACT_2026-07-13.md §"Minimal shared model".
+// Gate delta applied: Handoffs/CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md item 4
+// (evidence CandidateShape is validated against the actual ActionFacts rows).
 //
 // One immutable, ordered snapshot per decision:
 //  - one DecisionFacts,
@@ -43,11 +45,38 @@ public record DecisionSnapshot(
             throw new IllegalArgumentException("snapshotVersion must be >= 1, was " + snapshotVersion);
         }
         actionFacts = List.copyOf(actionFacts);
+        // Candidate-shape/rows cross-validation (B2 type-hardening gate
+        // Handoffs/CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md item 4): the
+        // evidence's CandidateShape must be POSSIBLE given the frozen rows. Rows may
+        // exceed both counts (mismatched parallel raw arrays are retained, never
+        // padded — TraceSnapshots keeps ghost rows), but evidence claiming a candidate
+        // with no row, or a row carrying a raw id at an ordinal beyond the claimed
+        // count, is a construction error, not data.
+        DecisionFacts.CandidateShape shape =
+                decisionFacts.routeSelectionEvidence().candidateShape();
+        if (actionFacts.size() < shape.actionCandidateCount()
+                || actionFacts.size() < shape.cardCandidateCount()) {
+            throw new IllegalArgumentException("candidateShape claims "
+                    + shape.actionCandidateCount() + " action / " + shape.cardCandidateCount()
+                    + " card candidates but the snapshot carries only " + actionFacts.size()
+                    + " ActionFacts rows");
+        }
         for (int i = 0; i < actionFacts.size(); i++) {
-            if (actionFacts.get(i).ordinal() != i) {
+            ActionFacts row = actionFacts.get(i);
+            if (row.ordinal() != i) {
                 throw new IllegalArgumentException("actionFacts must be ordered by original ordinal: entry at index "
-                        + i + " carries ordinal " + actionFacts.get(i).ordinal()
+                        + i + " carries ordinal " + row.ordinal()
                         + " — candidate order is never sorted or rebuilt");
+            }
+            if (row.actionId() != null && i >= shape.actionCandidateCount()) {
+                throw new IllegalArgumentException("row " + i + " carries raw actionId \""
+                        + row.actionId() + "\" beyond candidateShape.actionCandidateCount "
+                        + shape.actionCandidateCount());
+            }
+            if (row.cardId() != null && i >= shape.cardCandidateCount()) {
+                throw new IllegalArgumentException("row " + i + " carries raw cardId \""
+                        + row.cardId() + "\" beyond candidateShape.cardCandidateCount "
+                        + shape.cardCandidateCount());
             }
         }
     }

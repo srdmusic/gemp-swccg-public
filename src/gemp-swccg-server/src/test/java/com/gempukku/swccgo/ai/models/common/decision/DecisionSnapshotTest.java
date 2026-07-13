@@ -25,7 +25,10 @@ import static org.junit.Assert.fail;
  * ("Minimal shared model": immutable, ordered by original ordinal, versioned).
  * Gate deltas covered: Handoffs/CODEX_B2_INCREMENT1_GATE_E4E0AA213_2026-07-13.md
  * (engine decision-type enum, typed obligations/route/refs, UNKNOWN-capable
- * response constraints, exact measurement names, nonblank metadata, range checks).
+ * response constraints, exact measurement names, nonblank metadata, range checks)
+ * and Handoffs/CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md items 1-4
+ * (explicit builder turn, route inside the checked evidence, obligation/source-fact
+ * cross-validation, candidate shape tied to the snapshot rows).
  */
 public class DecisionSnapshotTest {
 
@@ -36,24 +39,32 @@ public class DecisionSnapshotTest {
                 PRODUCER, "decision.params[noPass,min]");
     }
 
-    private static DecisionFacts.RouteSelectionEvidence evidence() {
+    /** Evidence whose CandidateShape claims exactly {@code candidateCount} action AND
+     *  card candidates — snapshot tests pass the row count they actually build
+     *  (B2 type-hardening gate item 4: shape and rows must agree). */
+    private static DecisionFacts.RouteSelectionEvidence evidence(int candidateCount) {
         return new DecisionFacts.RouteSelectionEvidence(
                 AwaitingDecisionType.CARD_ACTION_CHOICE,
                 Phase.DEPLOY,
                 "Optional responses",
                 knownObligations(),
-                new DecisionFacts.CandidateShape(3, 3));
+                new DecisionFacts.CandidateShape(candidateCount, candidateCount),
+                DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE);
     }
 
-    /** Fully-populated valid builder; individual tests override one field to probe validation. */
-    private static DecisionFacts.Builder factsBuilder() {
+    private static DecisionFacts.RouteSelectionEvidence evidence() {
+        return evidence(3);
+    }
+
+    /** Fully-populated valid builder EXCEPT turn — the omitted-turn probe needs a
+     *  builder that never touched it (B2 type-hardening gate item 1). */
+    private static DecisionFacts.Builder factsBuilderWithoutTurn(int candidateCount) {
         return DecisionFacts.builder()
                 .decisionId("42")
                 .decisionType(AwaitingDecisionType.CARD_ACTION_CHOICE)
                 .decisionText("Optional responses")
                 .phase(Phase.DEPLOY)
                 .window("Optional responses")
-                .turn(3)
                 .currentPlayer("asdf")
                 .side(Side.DARK)
                 .obligationFlags(knownObligations())
@@ -68,11 +79,24 @@ public class DecisionSnapshotTest {
                 .objectiveIdentity(FactValue.known("200_20", PRODUCER, "objective.blueprintId"))
                 .objectiveFlipped(FactValue.known(false, PRODUCER, "objective.flipState"))
                 .selectedRoute(DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE)
-                .routeSelectionEvidence(evidence());
+                .routeSelectionEvidence(evidence(candidateCount));
+    }
+
+    /** Fully-populated valid builder; individual tests override one field to probe validation. */
+    private static DecisionFacts.Builder factsBuilder(int candidateCount) {
+        return factsBuilderWithoutTurn(candidateCount).turn(3);
+    }
+
+    private static DecisionFacts.Builder factsBuilder() {
+        return factsBuilder(3);
+    }
+
+    private static DecisionFacts decisionFacts(int candidateCount) {
+        return factsBuilder(candidateCount).build();
     }
 
     private static DecisionFacts decisionFacts() {
-        return factsBuilder().build();
+        return decisionFacts(3);
     }
 
     private static ActionFacts actionFacts(int ordinal) {
@@ -128,8 +152,11 @@ public class DecisionSnapshotTest {
         for (int i = 0; i < actionCount; i++) {
             actions.add(actionFacts(i));
         }
+        // B2 type-hardening gate item 4: the evidence's CandidateShape now states the
+        // ACTUAL row count (this helper used to claim 3/3 regardless — inconsistent
+        // evidence the snapshot now rejects).
         return new DecisionSnapshot(
-                decisionFacts(),
+                decisionFacts(actionCount),
                 actions,
                 new DecisionSnapshot.ServiceFacts(FactValue.known(3, PRODUCER, "ForceReserveService.maintenanceObligation")),
                 DecisionSnapshot.CURRENT_VERSION);
@@ -204,7 +231,8 @@ public class DecisionSnapshotTest {
                 .obligationFlags(unknown)
                 .routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
                         AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
-                        unknown, new DecisionFacts.CandidateShape(3, 3)))
+                        unknown, new DecisionFacts.CandidateShape(3, 3),
+                        DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE))
                 .build();
         assertTrue(facts.obligationFlags().isUnknown());
         assertEquals("decision carried no parameter block", facts.obligationFlags().unknownReason());
@@ -214,7 +242,17 @@ public class DecisionSnapshotTest {
 
     @Test
     public void responseConstraintsPreserveKnownFalseAndKnownZero() {
+        // Known noPass=false requires a flag set WITHOUT NO_PASS (B2 type-hardening
+        // gate item 3 — the old fixture paired noPass=false with a NO_PASS flag,
+        // a contradiction the record now rejects).
+        FactValue<Set<DecisionFacts.ObligationFlag>> noObligations =
+                FactValue.known(Set.of(), PRODUCER, "decision.params[noPass,min]");
         DecisionFacts facts = factsBuilder()
+                .obligationFlags(noObligations)
+                .routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
+                        AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
+                        noObligations, new DecisionFacts.CandidateShape(3, 3),
+                        DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE))
                 .noPass(FactValue.known(false, PRODUCER, "decision.params[noPass]"))
                 .minimum(FactValue.known(0, PRODUCER, "decision.params[min]"))
                 .maximum(FactValue.known(0, PRODUCER, "decision.params[max]"))
@@ -282,6 +320,94 @@ public class DecisionSnapshotTest {
         }
     }
 
+    // ── B2 type-hardening gate item 3: derived obligation flags may not contradict
+    //    their KNOWN source facts; UNKNOWN on either side imposes no constraint ──
+
+    @Test
+    public void noPassObligationContradictionIsRejected() {
+        // factsBuilder carries flags {NO_PASS}; known noPass=false contradicts it.
+        try {
+            factsBuilder()
+                    .noPass(FactValue.known(false, PRODUCER, "decision.params[noPass]"))
+                    .build();
+            fail("NO_PASS flag with known noPass=false must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        // The mirror contradiction: known noPass=true with a flag set omitting NO_PASS.
+        FactValue<Set<DecisionFacts.ObligationFlag>> noFlags =
+                FactValue.known(Set.of(), PRODUCER, "decision.params[noPass,min]");
+        try {
+            factsBuilder()
+                    .obligationFlags(noFlags)
+                    .routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
+                            AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
+                            noFlags, new DecisionFacts.CandidateShape(3, 3),
+                            DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE))
+                    .build(); // noPass stays known(true) from factsBuilder
+            fail("known noPass=true without the NO_PASS flag must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
+    @Test
+    public void mandatorySelectionObligationContradictionIsRejected() {
+        // MANDATORY_SELECTION flagged while the source fact says minimum=0.
+        FactValue<Set<DecisionFacts.ObligationFlag>> mandatory = FactValue.known(
+                Set.of(DecisionFacts.ObligationFlag.NO_PASS,
+                        DecisionFacts.ObligationFlag.MANDATORY_SELECTION),
+                PRODUCER, "decision.params[noPass,min]");
+        try {
+            factsBuilder()
+                    .obligationFlags(mandatory)
+                    .routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
+                            AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
+                            mandatory, new DecisionFacts.CandidateShape(3, 3),
+                            DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE))
+                    .build(); // minimum stays known(0) from factsBuilder
+            fail("MANDATORY_SELECTION with known minimum=0 must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        // The mirror contradiction: known minimum>0 without the flag
+        // (maximum raised too so the range check cannot fire first).
+        try {
+            factsBuilder()
+                    .minimum(FactValue.known(2, PRODUCER, "decision.params[min]"))
+                    .maximum(FactValue.known(3, PRODUCER, "decision.params[max]"))
+                    .build(); // flags stay {NO_PASS} only from factsBuilder
+            fail("known minimum=2 without MANDATORY_SELECTION must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
+    @Test
+    public void partiallyUnknownObligationInputsImposeNoConstraint() {
+        // KNOWN flags + UNKNOWN source facts: lawful, no cross-check possible.
+        DecisionFacts knownFlagsUnknownSources = factsBuilder()
+                .noPass(FactValue.unknown(PRODUCER, "decision.params[noPass]", "parameter absent"))
+                .minimum(FactValue.unknown(PRODUCER, "decision.params[min]", "parameter absent"))
+                .build();
+        assertTrue(knownFlagsUnknownSources.obligationFlags().isKnown());
+        assertTrue(knownFlagsUnknownSources.noPass().isUnknown());
+
+        // UNKNOWN flags + KNOWN source facts: also lawful (this is the trace shadow
+        // builder's shape when only part of the derivation input arrived).
+        FactValue<Set<DecisionFacts.ObligationFlag>> unknownFlags =
+                FactValue.unknown(PRODUCER, "decision.params[noPass,min]", "derivation input absent");
+        DecisionFacts unknownFlagsKnownSources = factsBuilder()
+                .obligationFlags(unknownFlags)
+                .routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
+                        AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
+                        unknownFlags, new DecisionFacts.CandidateShape(3, 3),
+                        DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE))
+                .build(); // noPass known(true), minimum known(0) from factsBuilder
+        assertTrue(unknownFlagsKnownSources.obligationFlags().isUnknown());
+        assertTrue(unknownFlagsKnownSources.noPass().isKnown());
+    }
+
     @Test
     public void selectableIsUnknownCapableNotDefaultedFalse() {
         ActionFacts action = allUnknownAction(0);
@@ -299,7 +425,8 @@ public class DecisionSnapshotTest {
         try {
             factsBuilder().routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
                     AwaitingDecisionType.MULTIPLE_CHOICE, Phase.DEPLOY, "Optional responses",
-                    knownObligations(), new DecisionFacts.CandidateShape(3, 3))).build();
+                    knownObligations(), new DecisionFacts.CandidateShape(3, 3),
+                    DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE)).build();
             fail("evidence with a different decisionType must be rejected");
         } catch (IllegalArgumentException expected) {
             // expected
@@ -307,7 +434,8 @@ public class DecisionSnapshotTest {
         try {
             factsBuilder().routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
                     AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.BATTLE, "Optional responses",
-                    knownObligations(), new DecisionFacts.CandidateShape(3, 3))).build();
+                    knownObligations(), new DecisionFacts.CandidateShape(3, 3),
+                    DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE)).build();
             fail("evidence with a different phase must be rejected");
         } catch (IllegalArgumentException expected) {
             // expected
@@ -316,9 +444,34 @@ public class DecisionSnapshotTest {
             factsBuilder().routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
                     AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
                     FactValue.unknown(PRODUCER, "decision.params", "params absent"),
-                    new DecisionFacts.CandidateShape(3, 3))).build();
+                    new DecisionFacts.CandidateShape(3, 3),
+                    DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE)).build();
             fail("evidence with different obligations must be rejected");
         } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
+    /** B2 type-hardening gate item 2: the route is PART of the evidence, and a
+     *  route/evidence disagreement is a construction error. A CARD_ACTION_CHOICE
+     *  decision claiming DecisionRoute.INTEGER no longer passes. */
+    @Test
+    public void routeEvidenceMustCarryTheMatchingSelectedRoute() {
+        try {
+            factsBuilder().routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
+                    AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
+                    knownObligations(), new DecisionFacts.CandidateShape(3, 3),
+                    DecisionFacts.DecisionRoute.INTEGER)).build();
+            fail("evidence whose route disagrees with selectedRoute must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            new DecisionFacts.RouteSelectionEvidence(
+                    AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
+                    knownObligations(), new DecisionFacts.CandidateShape(3, 3), null);
+            fail("evidence without a route must be rejected");
+        } catch (NullPointerException expected) {
             // expected
         }
     }
@@ -332,6 +485,7 @@ public class DecisionSnapshotTest {
         assertTrue(text.contains("NO_PASS"));
         assertTrue(text.contains("actions=3"));
         assertTrue(text.contains("cards=3"));
+        assertTrue(text.contains("route=CARD_ACTION_CHOICE"));
     }
 
     @Test
@@ -442,13 +596,46 @@ public class DecisionSnapshotTest {
     public void misorderedOrdinalsAreRejected() {
         List<ActionFacts> reversed = List.of(actionFacts(1), actionFacts(0));
         try {
-            new DecisionSnapshot(decisionFacts(), reversed,
+            new DecisionSnapshot(decisionFacts(2), reversed,
                     new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
                     DecisionSnapshot.CURRENT_VERSION);
             fail("snapshot must reject action facts not ordered by original ordinal");
         } catch (IllegalArgumentException expected) {
             // expected: candidate order is never sorted or rebuilt
         }
+    }
+
+    // ── B2 type-hardening gate item 4: evidence CandidateShape tied to the actual rows ──
+
+    @Test
+    public void candidateShapeInconsistentWithActionRowsIsRejected() {
+        // Evidence claims 3 action + 3 card candidates; the snapshot carries 1 row.
+        // (This was the old snapshot(1) helper's inconsistency, now a hard error.)
+        try {
+            new DecisionSnapshot(decisionFacts(3), List.of(actionFacts(0)),
+                    new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                    DecisionSnapshot.CURRENT_VERSION);
+            fail("evidence claiming more candidates than the snapshot has rows must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        // A row carrying a raw actionId/cardId at an ordinal beyond the claimed count.
+        try {
+            new DecisionSnapshot(decisionFacts(2),
+                    List.of(actionFacts(0), actionFacts(1), actionFacts(2)),
+                    new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                    DecisionSnapshot.CURRENT_VERSION);
+            fail("a row with a raw id beyond the claimed candidate count must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        // Rows MAY exceed the claimed counts when the extra rows carry no raw ids:
+        // mismatched parallel raw arrays are retained (ghost rows), never padded.
+        DecisionSnapshot ghostRow = new DecisionSnapshot(decisionFacts(2),
+                List.of(actionFacts(0), actionFacts(1), allUnknownAction(2)),
+                new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                DecisionSnapshot.CURRENT_VERSION);
+        assertEquals(3, ghostRow.actionFacts().size());
     }
 
     // ── runtime immutability: collections are unmodifiable, later source mutation has no effect ──
@@ -474,7 +661,7 @@ public class DecisionSnapshotTest {
     public void snapshotIsDetachedFromCallerSuppliedList() {
         List<ActionFacts> source = new ArrayList<>();
         source.add(actionFacts(0));
-        DecisionSnapshot snap = new DecisionSnapshot(decisionFacts(), source,
+        DecisionSnapshot snap = new DecisionSnapshot(decisionFacts(1), source,
                 new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
                 DecisionSnapshot.CURRENT_VERSION);
         source.add(actionFacts(9)); // mutate the source AFTER construction
@@ -494,7 +681,8 @@ public class DecisionSnapshotTest {
                 .obligationFlags(flags)
                 .routeSelectionEvidence(new DecisionFacts.RouteSelectionEvidence(
                         AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, "Optional responses",
-                        flags, new DecisionFacts.CandidateShape(3, 3)))
+                        flags, new DecisionFacts.CandidateShape(3, 3),
+                        DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE))
                 .build();
         try {
             facts.blockedResponses().add("18");
@@ -586,7 +774,8 @@ public class DecisionSnapshotTest {
             // evidence must mirror it, so probe the evidence record directly too.
             new DecisionFacts.RouteSelectionEvidence(
                     AwaitingDecisionType.CARD_ACTION_CHOICE, Phase.DEPLOY, " ",
-                    knownObligations(), new DecisionFacts.CandidateShape(3, 3));
+                    knownObligations(), new DecisionFacts.CandidateShape(3, 3),
+                    DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE);
             fail("blank window must be rejected");
         } catch (IllegalArgumentException expected) {
             // expected
@@ -683,11 +872,26 @@ public class DecisionSnapshotTest {
         }
     }
 
+    /** B2 type-hardening gate item 1: a builder that never set turn must FAIL
+     *  construction — a primitive default would fabricate turn 0, a KNOWN
+     *  pre-game turn the engine never reported. */
+    @Test
+    public void omittedTurnFailsConstructionInsteadOfFabricatingPregameZero() {
+        try {
+            factsBuilderWithoutTurn(3).build();
+            fail("unset builder turn must be rejected, not defaulted to 0");
+        } catch (NullPointerException expected) {
+            // expected: turn is an engine fact — no silent default
+        }
+        // turn 0 stays valid when SUPPLIED explicitly (pre-game setup decisions).
+        assertEquals(0, factsBuilderWithoutTurn(3).turn(0).build().turn());
+    }
+
     @Test
     public void nonPositiveSnapshotVersionIsRejected() {
         for (int version : new int[]{0, -1}) {
             try {
-                new DecisionSnapshot(decisionFacts(), List.of(actionFacts(0)),
+                new DecisionSnapshot(decisionFacts(1), List.of(actionFacts(0)),
                         new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
                         version);
                 fail("snapshotVersion " + version + " must be rejected");
