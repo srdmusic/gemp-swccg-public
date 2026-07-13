@@ -141,13 +141,43 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
   finalizer F0/F3, F1/F2 engine fixes, cleanup program, domain registry). What REMAINS is the BEHAVIORAL
   MIGRATION, the part that actually changes how Rando plays:
     1. 4B2 (StrategyController observation) COMPLETE — committed + Codex-gated (last FOUNDATION piece).
-    2. FIVE major behavior lanes remain, ACTIVATE+CONTROL now the ACTIVE phase, then objective adapters,
+    2. FIVE major behavior lanes remain, ACTIVATE+CONTROL Option-2 groundwork DONE+gated; NEXT behavior lanes: objective adapters,
        BATTLE owner, PULL facts, deploy-weight/plan consolidation.
     3. THEN: phase cutover / shadow integration, aggregate + Fable + Codex gates, controlled GEMP game
        validation, and finally the deploy decision.
   Foundation != behavioral migration. The program is mid-flight, not near-done.
 
-- Mailbox watermark: m00533.
+- PHASE COMMITTED (2026-07-13, awaiting Codex independent gate): decide-equivalent HARNESS phase, test-only.
+  Both fidelity corrections applied + re-frozen; focused pass 64/0/0/0 DUMP=false; both bots show candidate/score/veto/route/response parity, operation streams byte-identical (botModel intentionally bot-specific);
+  no src/**/main change; deferred seed fixtures untracked. SHA in git log HEAD; reported to Codex for his gate.
+  ORIGINAL IN-FLIGHT NOTES (retained for context): Packet
+  CODEX_ACTIVATE_CONTROL_DECIDE_HARNESS_PACKET_2026-07-13.md (sha e65b3878...), released m00545 at baseline
+  443248a65. Codex m00544 preflight: harness is TEST-ONLY — existing DecisionTrace already exposes candidate/
+  merge/op/winner/response, so ZERO production accessor/cutover/schema change needed. Scope = 3 new test files
+  (AbstractActivateControlDecisionHarnessTest + Rando/ChosenOne adapters), 6 pure fixtures freezing current
+  ACTIVATE/CONTROL boundary (activateZeroConfirmLegacy=0/Yes is the KNOWN DEFECT frozen as evidence, not policy).
+  Agent implementing; K-2 runs ONE focused verify pass then creates the single phase commit for Codex's gate.
+  PRE-GATE CONDITIONS (Codex concurrent review m00549/m00550, RELAYED to worker): harness was mid-freeze
+  (DUMP/discovery mode captured but not frozen). Do NOT gate/commit until (1) DUMP=false in committed form;
+  (2) assertOps no longer early-returns AND all four COMBINED_EVALUATOR op-lists (activateTopLevel,
+  controlTopLevel, activateAmount, activateAllowance) frozen with exact captured ops (ordinal/action id/
+  evaluator id/rule-domain-kind/raw before-delta-after bits/veto state+reason/detail, ordered, unsorted);
+  (3) activateAllowance overrides getCurrentPlayerId so recipient!=turn player AND asserts it. Hard stop
+  re-armed: captured response/route diverging from the frozen table => stop + return actual trace, no production edit.
+  FIDELITY CORRECTIONS (Codex source audit m00552; packet corrected in place, NEW sha 40fff3d10e77...): (A)
+  activateAmount real engine min=0 NOT 1 (AbstractSwccgCardBlueprint:2243) — response stays 3, obligationFlags
+  UNKNOWN (no noPass on the INTEGER amount decision => obligationsKnown=false; min=0 gave a byte-identical trace to
+  min=1), re-freeze ACTIVATE_AMOUNT_OPS from real min=0 trace; (B) controlTopLevel action must carry one
+  aligned nonblank source cardId (CardActionSelectionDecision:69; stub may resolve to null; CONTROL stays a
+  routing/merge smoke, drain guards deferred) — re-freeze CONTROL_TOP_LEVEL_OPS. Allowance keeps DIRECT
+  assertNotEquals(recipient, stub getCurrentPlayerId); do NOT prove turn player via recipient-valued trace.
+  Fallback routes = HEURISTIC_FALLBACK. Worker (agent a7655a03) re-capturing + re-freezing; K-2 reviews + commits.
+  FIRST agent run (pre-correction) had passed 64/0/0/0 with DUMP=false but on the OLD min=1/no-cardId fixtures.
+  Deferred Phase B (the actual behavior cutover: kill wrong-Yes-to-pass, INTEGER cross-talk, drain consolidation)
+  still unreleased until AFTER this harness gates.
+- HARNESS PHASE COMMITTED: SHA 385373457 (test-only, 6 files, 64/0/0/0, no src/**/main change). Gate requested from
+  Codex at m00554 (full evidence). Awaiting his independent gate; task #26 stays open until his PASS.
+- Mailbox watermark: m00554 (own GATE REQUEST; last Codex action mail = m00552 packet-fidelity correction, sha 40fff3d1).
 
 ## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture

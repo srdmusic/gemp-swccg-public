@@ -1,3 +1,18 @@
+  ════ ACTIVATE+CONTROL DECIDE-EQUIVALENT HARNESS (2026-07-13, TEST-ONLY, both bots) ════
+Prereq for deferred Phase B (the ACTIVATE/CONTROL live cutover). Freezes the CURRENT decision boundary as
+executable baseline evidence before any route is wired to a bot entry point. Three NEW test files only (zero
+src/**/main change): AbstractActivateControlDecisionHarnessTest (contract + scripted AwaitingDecision + minimal
+GameState stub + 6 @Test fixtures) + thin Rando/ChosenOne adapters (package-visible setDecisionTraceSinkForTesting,
+no reflection). Six pure fixtures freeze exact ops (ordinal/ids/rule-domain-kind/raw float bits/veto/detail) from
+the real DecisionTrace — no new production accessor needed (the trace oracle already exposes everything).
+activateZeroConfirmLegacy freezes 0/Yes as the KNOWN DEFECT baseline, not policy. Codex source-audit corrections
+(m00552, corrected packet sha 40fff3d1): activateAmount real engine min=0 (AbstractSwccgCardBlueprint:2243);
+controlTopLevel carries one aligned source cardId (CardActionSelectionDecision:69, stub→null, routing/merge smoke).
+Allowance asserts recipient!=turn player DIRECTLY (recipient-valued trace can't prove it). Focused pass 64/0/0/0,
+DUMP=false, both bots candidate/score/veto/route/response parity with operation streams byte-identical (botModel
+intentionally bot-specific), NoOpTraceSink default intact, deferred seed fixtures untracked. Codex gates.
+NOT deployed. See AI_CHANGELOG 2026-07-13.
+
   ════ FORMATION SAFETY (2026-07-11c, both bots): the four laws become un-outvotable vetoes ════
 Shared common/strategy/FormationSafety.java (one copy, no mirror drift) + EvaluatedAction.hardVeto (OR-merged) +
 CombinedEvaluator veto-aware selection. L1 no abandoning weak solos / L2 no destiny-less battles (engine ability>=4)
