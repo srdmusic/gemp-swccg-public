@@ -84,22 +84,23 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
   and (if he agrees to relax his read-only stance) small mechanical Java implementations that K-2 gates.
 - K-2 main loop: mailbox triage, agent dispatch, commit gate, Steve comms. Everything else = background agents.
 
-## LIVE STATUS (refreshed through m00462; Steve requires this current at every milestone)
-- HEAD 67b285d6d (doc-only TrackerOwner javadoc fix) on top of f6d00e1da (TRACE 4A2B COMMIT: shared tracker
-  PHASE_CHANGE/BLOCK_RESPONSE, all six live corrections absorbed; expanded suite 198 green + 1 expected F1
-  skip; package exit 0; Codex live gates m00448/m00455-m00458 green; formal implementer report received
-  post-commit and RECONCILED, matches gate evidence).
-- 4A2b agent lane CLOSED (report delivered). No agent lanes running.
-- F1/F2: PAUSED pre-edit (Steve stopped the original agent; approval STANDS; relaunch on Steve's word;
-  m00431 pin-retirement folded into the relaunch brief).
-- 4B1 (or whatever Codex issues next): HOLD pending his clean-commit gate on f6d00e1da/67b285d6d + his
-  next packet.
-- EXACT NEXT COMMAND: await Codex gate verdict; on his ADVANCE + packet, dispatch one background agent per
-  packet with the established discipline (packet re-read on every correction ping; no changelog edits by
-  agents; constructed-per-commit changelogs at commit).
-- m00465 doc correction applied (this commit): TRUE-block mutation proof is tracker-level, not bot-boundary.
-- EXACT NEXT COMMAND: await Codex gate on this correction SHA; 4B1 HOLD until his verdict.
-- Mailbox watermark: m00465.
+## LIVE STATUS (refreshed through m00470; K-2 at 90% weekly tokens, MAXIMUM-OFFLOAD PROTOCOL active)
+- HEAD 7098f9b33 (Codex's own em-dash doc commit) atop 02c2e5fc1/67b285d6d/f6d00e1da. 4A2b ADVANCE-INERT
+  through 7098f9b33 (m00469). Stage-4 observation arc COMPLETE and gated: 4A1 + 4A2a + 4A2b.
+- ACTIVE: 4B1 heuristic-memory preflight per m00470 — corrected packet at
+  Handoffs/CODEX_TRACE_STAGE4_4B1_HEURISTIC_MEMORY_PREFLIGHT_2026-07-13.md (parent 7098f9b33; six
+  source-audit corrections applied by Codex). K-2 dispatched: one SMALL read-only source agent verifying the
+  packet's claims + one narrow council check. Java HOLD until Codex release.
+- F1/F2: PAUSED pre-edit; Steve's approval STANDS; relaunch brief = CODEX_FINALIZER_FIXTURE_RETRY_PACKET +
+  m00431 pin retirement; needs only the dispatch.
+- MAXIMUM-OFFLOAD PROTOCOL (Steve, 90% budget): Codex authors agent-ready briefs INSIDE packets (K-2
+  dispatches verbatim); mid-flight corrections go INTO the packet file + one generic re-read ping; Codex
+  prefixes non-action mail "FYI:" (K-2's monitor drops those); handoff refreshed at COMMITS and Codex
+  requests only. K-2 main loop = dispatch, commit, gate handback, Steve comms. NOTHING else.
+- MODEL-SWITCH RESUME: read this file + AI_WORK_QUEUE.md, check `git log --oneline -5`, read raw mailbox
+  tail (~/claude-codex-mailbox/mailbox.jsonl) beyond the watermark, then continue the ACTIVE lane exactly.
+  All discipline sections below remain binding.
+- Mailbox watermark: m00470.
 
 ## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture
