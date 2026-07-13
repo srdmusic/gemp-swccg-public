@@ -6047,13 +6047,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // 3-force cost. Steve flagged 2026-05-26: "If he satisfies battle order
             // or battle plan he does not need to pay three force to drain." Adding
             // the waiver check so V104/V48 only fire when the cost is actually due.
-            // V140 (UPDATED 2026-07-04, in place): the old hand-rolled scan below
-            // treated "Battle Plan on table" as a UNIVERSAL cost waiver — factually
-            // wrong. Battle Plan (Card8_035) waives only Battle Order's (Card8_118)
-            // modifier and imposes its OWN identical 3-Force drain tax unless the
-            // occupy-BG-site-AND-BG-system test is met. That false waiver put +60 on
-            // a pay-3-to-drain-1 in game 20jqtseod148of4y (2026-07-04). Ask the
-            // engine the one true question instead: what does initiating cost HERE?
+            // V140 UPDATED 2026-07-04: engine aggregate initiate-cost is the sole
+            // waiver authority. Card8_118 stands down while Battle Plan is on table,
+            // but Card8_035 imposes its own 3-Force tax unless the player occupies
+            // a battleground site and a battleground system.
+            // A queried cost of 0 receives +60 and returns; positive cost falls
+            // through to V104/V52/V48. Query failure also falls through.
+            // The wrong hand-rolled predecessor was removed 2026-07-13 after source proof.
             boolean v140CostWaived = false;
             try {
                 if (gameState != null && locationCardId != null && context.getGame() != null) {
@@ -6066,70 +6066,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
             } catch (Exception v140e) {
                 logger.debug("V140 cost-waiver check error: {}", v140e.getMessage());
             }
-            // OLD detection commented out 2026-07-04 (feedback_comment_out_old_rules):
-            // boolean v140CostWaived = false;
-            // try {
-            //     if (gameState != null) {
-            //         // Check Battle Plan on table (waives Battle Order cost universally)   <-- the false premise
-            //         for (PhysicalCard pc : gameState.getAllPermanentCards()) {
-            //             if (pc == null || pc.getTitle() == null) continue;
-            //             if (pc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("battle plan")) {
-            //                 v140CostWaived = true;
-            //                 break;
-            //             }
-            //         }
-            //         // Check "occupies BG site AND BG system" exemption
-            //         if (!v140CostWaived && context.getGame() != null) {
-            //             boolean occupiesBGSite = false;
-            //             boolean occupiesBGSystem = false;
-            //             for (PhysicalCard loc : gameState.getTopLocations()) {
-            //                 if (loc == null || loc.getBlueprint() == null) continue;
-            //                 boolean isBG = false;
-            //                 try {
-            //                     isBG = context.getGame().getModifiersQuerying()
-            //                         .isBattleground(gameState, loc, null);
-            //                 } catch (Exception ignore) { /* false */ }
-            //                 if (!isBG) continue;
-            //                 // Holosite exemption: per Battle Order text, holosites don't count
-            //                 String locTitle = loc.getTitle() != null
-            //                     ? loc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-            //                 if (locTitle.contains("holosite")) continue;
-            //                 // Are we present at this BG?
-            //                 boolean weOccupy = false;
-            //                 java.util.List<PhysicalCard> atLoc = gameState.getCardsAtLocation(loc);
-            //                 if (atLoc != null) {
-            //                     for (PhysicalCard hc : atLoc) {
-            //                         if (hc == null) continue;
-            //                         if (!playerId.equals(hc.getOwner())) continue;
-            //                         if (hc.getBlueprint() != null
-            //                                 && hc.getBlueprint().getCardCategory()
-            //                                     == com.gempukku.swccgo.common.CardCategory.CHARACTER) {
-            //                             weOccupy = true;
-            //                             break;
-            //                         }
-            //                     }
-            //                 }
-            //                 if (!weOccupy) continue;
-            //                 // Is this a system or a site?
-            //                 boolean isSystem = false;
-            //                 try {
-            //                     if (loc.getBlueprint().getCardSubtype() != null) {
-            //                         isSystem = "SYSTEM".equalsIgnoreCase(
-            //                             loc.getBlueprint().getCardSubtype().toString());
-            //                     }
-            //                 } catch (Exception ignore) { /* */ }
-            //                 if (isSystem) occupiesBGSystem = true;
-            //                 else occupiesBGSite = true;
-            //                 if (occupiesBGSite && occupiesBGSystem) {
-            //                     v140CostWaived = true;
-            //                     break;
-            //                 }
-            //             }
-            //         }
-            //     }
-            // } catch (Exception v140e) {
-            //     logger.debug("V140 cost-waiver check error: {}", v140e.getMessage());
-            // }
             if (v140CostWaived) {
                 action.addReasoning(
                     "V140 BATTLE ORDER COST WAIVED: engine initiate-cost is 0 — drain is FREE!",

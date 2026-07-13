@@ -4,6 +4,12 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — CLEANUP BATCH 2.8 (Codex packet; both bots) — comment-only, NO behavior change
+- ActionTextEvaluator V140 corpse: the 64-line OLD-detection comment block + 7-line stale preface replaced with the manifest's 7-line preface (7 insertions / 71 deletions per bot, −128 total). All three SHA pins matched (per-bot stream, two-bot concatenation, preface).
+- Live successor proven intact both bots: getInitiateForceDrainCost engine query, the <=0f waiver, the +60 grant, and the V104/V52/V48 fallthrough.
+- RAW javap identical parent vs candidate both bots (17,699 lines each, no inner classes); 61/61 fixtures.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — CLEANUP BATCH 2.7 (Codex packet; both bots) — comment-only, NO behavior change
 - Six commented force-economy predecessor lines in CardSelectionEvaluator (0 insertions / 6 deletions per bot, −12 total): the thisIsMaint flag, the buddy maint-flag add, the deploy-cost-as-upkeep pair, the old reserved expression, and the 2× deploy-cost double-spend — each beside its live MaintenanceFacts/thisMaintCost successor. All seven SHA pins matched (five per-line, per-bot stream, two-bot concatenation).
 - RAW javap identical parent vs candidate both bots (no inner classes exist — verified by inventory, not skipped); 61/61 fixtures.

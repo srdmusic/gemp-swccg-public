@@ -6297,3 +6297,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
   ════ CLEANUP BATCH 2.7 (2026-07-13, Codex packet): CSE force-economy predecessors, −12 total ════
     Six SHA-pinned comment lines per bot beside their live MaintenanceFacts successors.
     RAW javap identical. 61/61 fixtures. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ CLEANUP BATCH 2.8 (2026-07-13, Codex packet): ATE V140 corpse, −128 total ════
+    64-line OLD-detection block + preface swap (all three SHA pins matched). Live drain-cost
+    waiver successor intact. RAW javap identical. 61/61 fixtures. NOT deployed. Details in
+    AI_CHANGELOG 2026-07-13.
