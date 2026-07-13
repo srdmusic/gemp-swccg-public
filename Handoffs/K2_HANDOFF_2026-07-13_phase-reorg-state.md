@@ -84,7 +84,30 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
   and (if he agrees to relax his read-only stance) small mechanical Java implementations that K-2 gates.
 - K-2 main loop: mailbox triage, agent dispatch, commit gate, Steve comms. Everything else = background agents.
 
-## LIVE STATUS (updated on-disk per m00427; may be dirty until next material commit)
+## LIVE STATUS (updated per m00434; may be dirty until next material commit)
+- HEAD 08e544f50 (4A2a ADVANCE-INERT, gate doc CODEX_TRACE_STAGE4_4A2A_GATE_08E544F50; pinned debt before
+  capture enablement: inject snapshot/append failures + prove the legacy mutator runs exactly once).
+- F1/F2: PAUSED — Steve stopped the agent pre-edit (tree never had engine edits); approval STANDS; relaunch
+  needs Steve's word; m00431 pin-retirement requirement queued into the relaunch brief.
+- ACTIVE lane: 4A2b (shared/heuristic tracker) dispatching from CODEX_TRACE_STAGE4_4A2B_SHARED_TRACKER_
+  PREFLIGHT_2026-07-13.md as one isolated K-2-owned commit.
+- Next command after its report: focused suite in-container -> constructed per-commit changelogs -> commit ->
+  SHA to Codex.
+- 4A2b EDITS IN PROGRESS (agent lane): packet corrected three times mid-flight, all relayed and binding —
+  (m00436) hooks on DIRECT HeuristicAiBase call sites only, nested blockLastActionOnCancel stays folded into
+  RECORD_RESPONSE, no nested hook; (m00437) fault fixtures via TraceSession.openForTesting + throwing
+  TraceCollector.recordStateEvent, NOT a throwing sink; (m00438) Codex landed fixture support in the test
+  tree — agent instructed to consume, not duplicate. Dirty test-tree files may be Codex's fixtures.
+- m00441 pre-commit corrections relayed and BINDING on the 4A2b lane: TrackerPhaseChangeEvent rejects
+  after.lastPhase()!=phase; TrackerBlockResponseEvent enforces blocked==(outcome==CHANGED) biconditional,
+  negative tests both; the commented-out HEURISTIC_SHARED rejection blocks DELETED (no new comment corpses —
+  comment-out convention suspended inside program packets). Codex fixture support verified green (m00442).
+- 4A2b focused state/fault suite GREEN per Codex live read (m00445); agent report imminent.
+- m00446 test corrections relayed BINDING: finally-close on the fault fixture (thread-local leak) + a direct BLOCK_RESPONSE append-failure fixture (empty cancelable CARD_SELECTION path) or explicit gate-held debt.
+- 4A2b COMMITTED (this commit): gate-clean per Codex m00455-m00458 (mirrored gates green, expanded 198+1skip, mutator bytecode equality). Next: his formal clean-commit gate, then next packet.
+- Mailbox watermark: m00458.
+
+## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture
   authoring in test/support surfaces, council/source audits, independent gates, 4A2b research; production Java
   stays with K-2 agents unless Steve transfers exact file ownership.

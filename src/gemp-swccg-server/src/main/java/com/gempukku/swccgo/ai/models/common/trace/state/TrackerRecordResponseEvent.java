@@ -16,8 +16,15 @@ import java.util.Objects;
  * by ruling, so a history-only append is honestly NO_OP over the decision-affecting
  * state.
  *
- * Owner is one of the two OUTER trackers only; the inherited heuristic tracker is a
- * separate owner whose events land with the 4A2 tracker increment.
+ * TRACE STAGE 4A2b (Handoffs/CODEX_TRACE_STAGE4_4A2B_SHARED_TRACKER_PREFLIGHT_2026-07-13.md
+ * "Authorized implementation shape"): the 4A1 outer-owners-only invariant is
+ * INTENTIONALLY expanded: HEURISTIC_SHARED is now accepted for the one inherited
+ * HeuristicAiBase recordDecision(...) call, REUSING this record instead of minting a
+ * duplicate. The shared call records the heuristic trackingResponse while the outer
+ * call later records the bot's final result, so the two owners' response values can
+ * legitimately differ on one decision; both records are real current behavior and are
+ * never coalesced. The internal cancel-block helper recordDecision(...) can invoke
+ * stays FOLDED into this single event (no nested BLOCK_RESPONSE).
  */
 public record TrackerRecordResponseEvent(
     TrackerOwner owner,
@@ -31,11 +38,6 @@ public record TrackerRecordResponseEvent(
 
     public TrackerRecordResponseEvent {
         Objects.requireNonNull(owner, "owner");
-        if (owner == TrackerOwner.HEURISTIC_SHARED) {
-            throw new IllegalArgumentException(
-                "RECORD_RESPONSE observes the OUTER trackers only; the inherited heuristic"
-                    + " tracker is a distinct owner (4A2)");
-        }
         Objects.requireNonNull(decisionType, "decisionType");
         Objects.requireNonNull(decisionId, "decisionId");
         Objects.requireNonNull(decisionKey, "decisionKey");

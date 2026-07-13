@@ -5,14 +5,17 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCorrection;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
+import com.gempukku.swccgo.ai.models.common.trace.TraceStateEventFailureTestSupport;
 import com.gempukku.swccgo.ai.models.common.trace.TraceStatus;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
 import com.gempukku.swccgo.ai.models.common.trace.state.MutationOutcome;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerBlockResponseEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerClearEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerPhaseChangeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerUpdateStateEvent;
 import com.gempukku.swccgo.common.Phase;
@@ -37,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
  * "Route record" + "Finalization record"): scripted-flow proof of the BOT-BOUNDARY
- * hooks — a real decide() call records a direct-interceptor route with its final
+ * hooks: a real decide() call records a direct-interceptor route with its final
  * response and skipped-finalizer flag, and DecisionSafety records typed corrections.
  * No server, no game state (null GameState exercises the null-safe interceptor path).
  *
@@ -84,7 +87,7 @@ public class TheChosenOneAiTraceHookTest {
      *  snapshots). Mockito cannot instrument Java 21 class files under this build (see
      *  EngineDecisionFixtures) and reflective Proxy needs interfaces, so a plain
      *  subclass is the minimum stand-in. */
-    private static final class StubGameState extends GameState {
+    private static class StubGameState extends GameState {
         private final int turn;
 
         StubGameState(int turn) {
@@ -137,8 +140,33 @@ public class TheChosenOneAiTraceHookTest {
         }
 
         @Override
+        public List<PhysicalCard> getUsedPile(String playerId) {
+            return List.of();
+        }
+
+        @Override
         public PhysicalCard getBattleLocation() {
             return null;
+        }
+    }
+
+    /** TRACE 4A2b: no HEURISTIC_SHARED event may exist on ANY route that never reached
+     *  super.decide(...); asserted on the direct-interceptor fixtures AND on the
+     *  packet-required primary-evaluator fixture (m00447). */
+    private static void assertNoSharedOwnerEvents(List<TraceStateEvent> events) {
+        for (TraceStateEvent e : events) {
+            assertFalse("no shared PHASE_CHANGE without super.decide: " + e,
+                e instanceof TrackerPhaseChangeEvent);
+            assertFalse("no shared BLOCK_RESPONSE without super.decide: " + e,
+                e instanceof TrackerBlockResponseEvent);
+            if (e instanceof TrackerUpdateStateEvent update) {
+                assertFalse("no shared UPDATE_STATE without super.decide: " + e,
+                    update.owner() == TrackerOwner.HEURISTIC_SHARED);
+            }
+            if (e instanceof TrackerRecordResponseEvent record) {
+                assertFalse("no shared RECORD_RESPONSE without super.decide: " + e,
+                    record.owner() == TrackerOwner.HEURISTIC_SHARED);
+            }
         }
     }
 
@@ -236,11 +264,13 @@ public class TheChosenOneAiTraceHookTest {
     }
 
     // =========================================================================
-    // TRACE 4A1 (matrix "prove one legacy call with or without tracing"): the same
-    // scripted decision through a NoOp sink and a capture sink returns the identical
-    // decision result, and the capture sink sees the typed state events in order:
-    // tracker RECORD_RESPONSE (captured AFTER the legacy call), then the
-    // pending-deploy SET from the actual direct write in trackStrategicEvents.
+    // TRACE 4A1 (matrix "prove one legacy call with or without tracing") + 4A2b: the
+    // same scripted decision through a NoOp sink and a capture sink returns the
+    // identical decision result, and the capture sink sees the typed state events in
+    // source order: the SHARED tracker RECORD_RESPONSE from super.decide (4A2b), the
+    // outer tracker RECORD_RESPONSE, then the pending-deploy SET from the actual
+    // direct write in trackStrategicEvents. Null game state exercises the packet's
+    // suppression law for the other shared mutators.
     // =========================================================================
 
     @Test
@@ -277,12 +307,31 @@ public class TheChosenOneAiTraceHookTest {
         assertEquals(untracedResult, tracedResult);
         assertFalse("scripted choice must pick an option, not pass", tracedResult.isEmpty());
 
-        // the capture sink sees the typed events in list order
+        // the capture sink sees the typed events in list order.
+        // TRACE 4A2b: the fallback route ran super.decide, so the SHARED tracker's
+        // RECORD_RESPONSE now appears FIRST (source order: shared recordDecision inside
+        // super.decide, then the outer recordDecision, then the pending-deploy write).
+        // With a null GameState the packet's suppression law holds for the rest of the
+        // shared family: phase == null suppresses PHASE_CHANGE, the early
+        // updateDecisionTrackerState return suppresses the shared UPDATE_STATE, and the
+        // non-empty result suppresses BLOCK_RESPONSE; only the executed mutator emits.
         DecisionTrace trace = sink.single();
         List<TraceStateEvent> events = trace.getStateEvents();
-        assertEquals("expected tracker RECORD_RESPONSE then PENDING_DEPLOY SET: " + events,
-            2, events.size());
-        TrackerRecordResponseEvent tracker = (TrackerRecordResponseEvent) events.get(0);
+        assertEquals("expected shared RECORD_RESPONSE + outer RECORD_RESPONSE + PENDING_DEPLOY SET: "
+            + events, 3, events.size());
+        TrackerRecordResponseEvent shared = (TrackerRecordResponseEvent) events.get(0);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, shared.owner());
+        assertEquals("MULTIPLE_CHOICE", shared.decisionType());
+        assertEquals("77", shared.decisionId());
+        // the SHARED call records the heuristic trackingResponse (the lowercased choice
+        // text), while the outer call records the final result (the index); the
+        // packet's overlap law: both records are real, never coalesced
+        String expectedTracking = "0".equals(tracedResult) ? "option a" : "option b";
+        assertEquals(expectedTracking, shared.response());
+        assertEquals(0, shared.before().sequenceRows().size());
+        assertEquals(1, shared.after().sequenceRows().size());
+        assertEquals(MutationOutcome.CHANGED, shared.outcome());
+        TrackerRecordResponseEvent tracker = (TrackerRecordResponseEvent) events.get(1);
         assertEquals(TrackerOwner.OUTER_CHOSENONE, tracker.owner());
         assertEquals("MULTIPLE_CHOICE", tracker.decisionType());
         assertEquals("77", tracker.decisionId());
@@ -292,7 +341,17 @@ public class TheChosenOneAiTraceHookTest {
         assertEquals(1, tracker.after().sequenceRows().size());
         assertEquals(tracedResult, tracker.after().sequenceRows().get(0).response());
         assertEquals(MutationOutcome.CHANGED, tracker.outcome());
-        PendingDeployEvent deploySet = (PendingDeployEvent) events.get(1);
+        assertFalse("shared and outer response records legitimately differ on this decision",
+            shared.response().equals(tracker.response()));
+        for (TraceStateEvent e : events) {
+            assertFalse("null phase must suppress the shared PHASE_CHANGE: " + e,
+                e instanceof TrackerPhaseChangeEvent);
+            assertFalse("null game state must suppress the shared UPDATE_STATE: " + e,
+                e instanceof TrackerUpdateStateEvent);
+            assertFalse("non-empty result must suppress the shared BLOCK_RESPONSE: " + e,
+                e instanceof TrackerBlockResponseEvent);
+        }
+        PendingDeployEvent deploySet = (PendingDeployEvent) events.get(2);
         assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
         assertNull(deploySet.typeBefore());
         assertEquals("character", deploySet.typeAfter());
@@ -374,6 +433,11 @@ public class TheChosenOneAiTraceHookTest {
             assertFalse("V45 direct return must record no RECORD_RESPONSE: " + e,
                 e instanceof TrackerRecordResponseEvent);
         }
+        // TRACE 4A2b: the V45 direct-interceptor route never reaches super.decide, so
+        // ZERO HEURISTIC_SHARED events may exist. This covers the non-super interceptor
+        // routes only; the packet's primary-evaluator proof is the dedicated
+        // primaryEvaluatorRouteProducesZeroSharedOwnerEvents fixture (m00447).
+        assertNoSharedOwnerEvents(events1);
 
         // traced run 2: same game (same opponent/side) — no second clear, exactly one
         // update whose outcome follows lifecycle-snapshot equality (nothing moved)
@@ -390,6 +454,532 @@ public class TheChosenOneAiTraceHookTest {
         assertEquals(TrackerOwner.OUTER_CHOSENONE, repeat.owner());
         assertEquals(repeat.before(), repeat.after());
         assertEquals(MutationOutcome.NO_OP, repeat.outcome());
+        assertNoSharedOwnerEvents(events2);
+    }
+
+    // =========================================================================
+    // TRACE 4A2b (packet "Bot boundary" + "Highest overlap risk" fixtures): on a
+    // fallback route the shared events appear in EXACT source order between the
+    // outer events: outer new-game clear + outer UPDATE_STATE first, then inside
+    // super.decide the shared PHASE_CHANGE, shared UPDATE_STATE (identical call
+    // arguments to the outer one, DISTINCT owner, never coalesced), shared
+    // RECORD_RESPONSE (trackingResponse), then the outer RECORD_RESPONSE (final
+    // result) and the pending-deploy write. Untraced twin proves behavior parity.
+    // =========================================================================
+
+    @Test
+    public void sharedTrackerEventsFollowTheFallbackRouteInExactSourceOrder() {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("results", new String[]{"Option A", "Option B"});
+        params.put("min", new String[]{"0"});
+        params.put("max", new String[]{"1"});
+        params.put("noPass", new String[]{"true"});
+
+        // production default twin: identical decision, NoOp sink, no session
+        TheChosenOneAi untraced = new TheChosenOneAi();
+        String untracedResult = untraced.decide("tester",
+            decision(77, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            new StubGameState(1));
+        assertFalse(TraceSession.isActive());
+
+        TheChosenOneAi traced = new TheChosenOneAi();
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        traced.setDecisionTraceSinkForTesting(sink);
+        String tracedResult = traced.decide("tester",
+            decision(77, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            new StubGameState(1));
+        assertFalse(TraceSession.isActive());
+
+        // legacy behavior identical with or without tracing
+        assertNotNull(untracedResult);
+        assertEquals(untracedResult, tracedResult);
+        assertFalse(tracedResult.isEmpty());
+
+        DecisionTrace trace = sink.single();
+        assertEquals(TraceRoute.HEURISTIC_FALLBACK, trace.getRoute().selected());
+        List<TraceStateEvent> events = trace.getStateEvents();
+        assertEquals("expected the full outer+shared fallback stream: " + events,
+            8, events.size());
+
+        // outer events first, exactly as 4A1/4A2a landed them
+        assertTrue(events.get(0) instanceof PendingConcedeEvent);
+        TrackerClearEvent clear = (TrackerClearEvent) events.get(1);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, clear.owner());
+        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events.get(2);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, outerUpdate.owner());
+        assertEquals(MutationOutcome.CHANGED, outerUpdate.outcome());
+
+        // shared events inside super.decide, in the packet's exact order
+        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events.get(3);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, phase.owner());
+        assertEquals("DEPLOY", phase.phase());
+        assertEquals("", phase.before().lastPhase());
+        assertEquals("DEPLOY", phase.after().lastPhase());
+        assertEquals(MutationOutcome.CHANGED, phase.outcome());
+
+        TrackerUpdateStateEvent sharedUpdate = (TrackerUpdateStateEvent) events.get(4);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedUpdate.owner());
+        assertEquals(MutationOutcome.CHANGED, sharedUpdate.outcome());
+        // the packet's HIGHEST OVERLAP RISK: identical call arguments, distinct owners,
+        // both events present and ordered; the trace never coalesces equal payloads
+        assertEquals(outerUpdate.handSize(), sharedUpdate.handSize());
+        assertEquals(outerUpdate.forcePile(), sharedUpdate.forcePile());
+        assertEquals(outerUpdate.reserveDeck(), sharedUpdate.reserveDeck());
+        assertEquals(outerUpdate.turn(), sharedUpdate.turn());
+        assertEquals(outerUpdate.cardsInPlay(), sharedUpdate.cardsInPlay());
+        assertFalse("owners must stay distinct on identical arguments",
+            outerUpdate.owner() == sharedUpdate.owner());
+
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(5);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
+        assertEquals("77", sharedRecord.decisionId());
+        assertEquals(MutationOutcome.CHANGED, sharedRecord.outcome());
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(6);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
+        assertEquals(tracedResult, outerRecord.response());
+        // shared trackingResponse (choice text) vs outer final result (index)
+        assertFalse("the two owners' recorded responses legitimately differ",
+            sharedRecord.response().equals(outerRecord.response()));
+
+        PendingDeployEvent deploySet = (PendingDeployEvent) events.get(7);
+        assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
+        assertEquals("character", deploySet.typeAfter());
+    }
+
+    // =========================================================================
+    // TRACE 4A2b (packet source-order law, optional BLOCK_RESPONSE position): an
+    // empty CARD_SELECTION result on the fallback route fires the one direct
+    // blockLastActionOnCancel call between the shared UPDATE_STATE and the shared
+    // RECORD_RESPONSE; with no armed last action the legacy call returns false and
+    // the event is an honest NO_OP.
+    // =========================================================================
+
+    @Test
+    public void emptyCardSelectionFallbackRecordsTheSharedBlockResponseInOrder() {
+        // no cardId array: the evaluator lane produces nothing, the heuristic returns
+        // empty, and the decision then hits the DecisionSafety critical-no-options arm
+        Map<String, String[]> params = new HashMap<>();
+        params.put("min", new String[]{"1"});
+        params.put("noPass", new String[]{"false"});
+
+        TheChosenOneAi untraced = new TheChosenOneAi();
+        String untracedResult = untraced.decide("tester",
+            decision(61, AwaitingDecisionType.CARD_SELECTION,
+                "Choose device to steal, or click Done to cancel", params),
+            new StubGameState(1));
+        assertFalse(TraceSession.isActive());
+
+        TheChosenOneAi traced = new TheChosenOneAi();
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        traced.setDecisionTraceSinkForTesting(sink);
+        String tracedResult = traced.decide("tester",
+            decision(61, AwaitingDecisionType.CARD_SELECTION,
+                "Choose device to steal, or click Done to cancel", params),
+            new StubGameState(1));
+        assertFalse(TraceSession.isActive());
+        assertEquals(untracedResult, tracedResult);
+
+        DecisionTrace trace = sink.single();
+        List<TraceStateEvent> events = trace.getStateEvents();
+        assertEquals("expected the fallback stream with the shared BLOCK_RESPONSE: " + events,
+            8, events.size());
+        assertTrue(events.get(0) instanceof PendingConcedeEvent);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, ((TrackerClearEvent) events.get(1)).owner());
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, ((TrackerUpdateStateEvent) events.get(2)).owner());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerPhaseChangeEvent) events.get(3)).owner());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerUpdateStateEvent) events.get(4)).owner());
+
+        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events.get(5);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, block.owner());
+        assertEquals("CARD_SELECTION", block.decisionType());
+        assertEquals("Choose device to steal, or click Done to cancel", block.decisionText());
+        // absent last action: the legacy call declined: false return, honest NO_OP
+        assertFalse(block.blocked());
+        assertEquals(MutationOutcome.NO_OP, block.outcome());
+
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(6);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(7);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
+    }
+
+    // =========================================================================
+    // TRACE 4A2b (packet "Gate additions" + the 4A2a gate's pinned fault-injection
+    // debt, m00434): with Codex's prepared throwing collector installed through the
+    // TraceSession.openForTesting seam, every state-event append fails, and the
+    // legacy mutators still run EXACTLY ONCE. Run 1 proves the typed STATE_EVENT
+    // evidence and unchanged behavior; run 2 (normal capture, same bot) proves the
+    // exactly-once claim from the owners' own before-snapshots: every tracker carries
+    // precisely one decision's worth of run-1 state.
+    // =========================================================================
+
+    @Test
+    public void injectedAppendFailureNeverSkipsOrRepeatsTheLegacyMutators() {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("results", new String[]{"Option A", "Option B"});
+        params.put("min", new String[]{"0"});
+        params.put("max", new String[]{"1"});
+        params.put("noPass", new String[]{"true"});
+
+        // untraced twin: the same two decisions on a fresh bot
+        TheChosenOneAi untraced = new TheChosenOneAi();
+        String untraced1 = untraced.decide("tester",
+            decision(77, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            new StubGameState(1));
+        String untraced2 = untraced.decide("tester",
+            decision(78, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            new StubGameState(1));
+
+        TheChosenOneAi traced = new TheChosenOneAi();
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        traced.setDecisionTraceSinkForTesting(sink);
+
+        // run 1: the throwing collector owns the thread: the bot's own open is the
+        // refused nested open, every hook records into the prepared collector, and
+        // every append throws
+        TraceStateEventFailureTestSupport.openThrowingStateEventSession();
+        String run1 = null;
+        DecisionTrace failureTrace;
+        try {
+            run1 = traced.decide("tester",
+                decision(77, AwaitingDecisionType.MULTIPLE_CHOICE,
+                    "Deploy which character to your site?", params),
+                new StubGameState(1));
+            // the bot never owned the session, so it must not have closed or emitted it
+            assertTrue("the injected session must survive the decide call",
+                TraceSession.isActive());
+            assertEquals(0, sink.getTraces().size());
+        } finally {
+            // close (not abandon): the evidence envelope stays inspectable and the
+            // thread-local is always cleared, even if the decide call itself failed
+            failureTrace = TraceStateEventFailureTestSupport.close();
+        }
+        assertFalse(TraceSession.isActive());
+
+        // behavior parity: the injected failures never changed the legacy decision
+        assertEquals(untraced1, run1);
+
+        // typed evidence: INCOMPLETE, zero events, one STATE_EVENT failure per append
+        assertNotNull(failureTrace);
+        assertEquals(TraceStatus.INCOMPLETE, failureTrace.getStatus());
+        assertTrue("no event may survive an append failure",
+            failureTrace.getStateEvents().isEmpty());
+        long injected = failureTrace.getCaptureFailures().stream().filter(failure ->
+            failure.stage() == TraceCaptureFailure.Stage.STATE_EVENT
+                && failure.detail().contains("injected state-event append failure")).count();
+        // pending-concede clear, outer CLEAR, outer UPDATE_STATE, shared PHASE_CHANGE,
+        // shared UPDATE_STATE, shared RECORD_RESPONSE, pending-deploy SET = 7 appends
+        // (the outer RECORD_RESPONSE hook is traceOpened-guarded and the bot never
+        // owned this session, so its append was never attempted)
+        assertEquals("one typed failure per attempted append: " + failureTrace.getCaptureFailures(),
+            7, injected);
+
+        // run 2: normal capture on the SAME bot; the owners' before-snapshots prove
+        // every run-1 legacy mutator ran exactly once
+        String run2 = traced.decide("tester",
+            decision(78, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            new StubGameState(1));
+        assertFalse(TraceSession.isActive());
+        assertEquals(untraced2, run2);
+
+        DecisionTrace trace2 = sink.single();
+        List<TraceStateEvent> events2 = trace2.getStateEvents();
+        assertEquals("same game: no concede/clear events, full fallback stream: " + events2,
+            6, events2.size());
+
+        // outer updateState ran once in run 1: run 2's before already carries turn 1
+        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events2.get(0);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, outerUpdate.owner());
+        assertEquals(1, outerUpdate.before().lastTurn());
+        assertEquals("0:4:20:1:0", outerUpdate.before().lastStateHash());
+        assertEquals(MutationOutcome.NO_OP, outerUpdate.outcome());
+        // exactly ONE outer sequence row from run 1's outer recordDecision
+        assertEquals(1, outerUpdate.before().decisionState().sequenceRows().size());
+
+        // shared onPhaseChange ran once in run 1: run 2's repeat is an honest NO_OP
+        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events2.get(1);
+        assertEquals("DEPLOY", phase.before().lastPhase());
+        assertEquals(MutationOutcome.NO_OP, phase.outcome());
+
+        // shared updateState ran once in run 1: lifecycle state already present
+        TrackerUpdateStateEvent sharedUpdate = (TrackerUpdateStateEvent) events2.get(2);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedUpdate.owner());
+        assertEquals(1, sharedUpdate.before().lastTurn());
+        assertEquals(MutationOutcome.NO_OP, sharedUpdate.outcome());
+
+        // shared recordDecision ran EXACTLY ONCE in run 1: one row before, two after
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(3);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
+        assertEquals(1, sharedRecord.before().sequenceRows().size());
+        assertEquals(2, sharedRecord.after().sequenceRows().size());
+
+        // outer recordDecision ran EXACTLY ONCE in run 1: one row before, two after
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(4);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
+        assertEquals(1, outerRecord.before().sequenceRows().size());
+        assertEquals(2, outerRecord.after().sequenceRows().size());
+
+        // the run-1 pending-deploy write happened: run 2's rewrite is a NO_OP SET
+        PendingDeployEvent deploySet = (PendingDeployEvent) events2.get(5);
+        assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
+        assertEquals("character", deploySet.typeBefore());
+        assertEquals("character", deploySet.typeAfter());
+        assertEquals(MutationOutcome.NO_OP, deploySet.outcome());
+    }
+
+    // =========================================================================
+    // TRACE 4A2b (reviewer m00446): the injected-append-failure route above never
+    // reaches the direct BLOCK_RESPONSE boundary, so the four-mutator gate needs an
+    // injected EMPTY CANCELABLE CARD_SELECTION path too. The exact append count is
+    // the not-skipped/not-repeated evidence for the block call (the injected failure
+    // details are family-blind): 7 appends means every boundary including the block
+    // attempted exactly one append; 6 would be a skip, 8 a repeat. The armed TRUE
+    // block is NOT reachable at this boundary: arming the shared last-action pair
+    // needs a fallback CARD_ACTION_CHOICE with a non-empty heuristic pick, but any
+    // CARD_ACTION_CHOICE with candidates is consumed by the ActionTextEvaluator
+    // primary lane, so the armed mutation's exactly-once proof lives at the real
+    // tracker level in DecisionTrackerSharedTraceTest.
+    // =========================================================================
+
+    @Test
+    public void injectedAppendFailureCoversTheDirectBlockResponseBoundary() {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("min", new String[]{"1"});
+        params.put("noPass", new String[]{"false"});
+
+        TheChosenOneAi untraced = new TheChosenOneAi();
+        String untraced1 = untraced.decide("tester",
+            decision(61, AwaitingDecisionType.CARD_SELECTION,
+                "Choose device to steal, or click Done to cancel", params),
+            new StubGameState(1));
+        String untraced2 = untraced.decide("tester",
+            decision(62, AwaitingDecisionType.CARD_SELECTION,
+                "Choose device to steal, or click Done to cancel", params),
+            new StubGameState(1));
+
+        TheChosenOneAi traced = new TheChosenOneAi();
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        traced.setDecisionTraceSinkForTesting(sink);
+
+        // run 1: every append throws, including the append attempted at the direct
+        // BLOCK_RESPONSE boundary
+        TraceStateEventFailureTestSupport.openThrowingStateEventSession();
+        String run1 = null;
+        DecisionTrace failureTrace;
+        try {
+            run1 = traced.decide("tester",
+                decision(61, AwaitingDecisionType.CARD_SELECTION,
+                    "Choose device to steal, or click Done to cancel", params),
+                new StubGameState(1));
+            assertTrue("the injected session must survive the decide call",
+                TraceSession.isActive());
+            assertEquals(0, sink.getTraces().size());
+        } finally {
+            failureTrace = TraceStateEventFailureTestSupport.close();
+        }
+        assertFalse(TraceSession.isActive());
+        assertEquals(untraced1, run1);
+
+        assertNotNull(failureTrace);
+        assertEquals(TraceStatus.INCOMPLETE, failureTrace.getStatus());
+        assertTrue(failureTrace.getStateEvents().isEmpty());
+        long injected = failureTrace.getCaptureFailures().stream().filter(failure ->
+            failure.stage() == TraceCaptureFailure.Stage.STATE_EVENT
+                && failure.detail().contains("injected state-event append failure")).count();
+        // pending-concede clear, outer CLEAR, outer UPDATE_STATE, shared PHASE_CHANGE,
+        // shared UPDATE_STATE, shared BLOCK_RESPONSE, shared RECORD_RESPONSE = 7
+        // (no pending-deploy write: the decision text has no deploy subject; the outer
+        // RECORD_RESPONSE hook is traceOpened-guarded on this refused nested open)
+        assertEquals("exactly one append per boundary including the direct block: "
+            + failureTrace.getCaptureFailures(), 7, injected);
+
+        // run 2: normal capture on the SAME bot. The empty cancel response never
+        // enters sequenceRows (the owner tracks non-pass responses only), so the
+        // exactly-once proof for run 1's recordDecision is the CANCEL pair (m00449):
+        // run 1 started the streak at count 1 under the cancelable decision key, and
+        // run 2's legacy call advances exactly that streak to 2, on BOTH owners.
+        String run2 = traced.decide("tester",
+            decision(62, AwaitingDecisionType.CARD_SELECTION,
+                "Choose device to steal, or click Done to cancel", params),
+            new StubGameState(1));
+        assertFalse(TraceSession.isActive());
+        assertEquals(untraced2, run2);
+
+        String cancelKey = "CARD_SELECTION:Choose device to steal, or click Done to cancel";
+        DecisionTrace trace2 = sink.single();
+        List<TraceStateEvent> events2 = trace2.getStateEvents();
+        assertEquals("same game: full fallback stream with the block boundary: " + events2,
+            6, events2.size());
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, ((TrackerUpdateStateEvent) events2.get(0)).owner());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerPhaseChangeEvent) events2.get(1)).owner());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerUpdateStateEvent) events2.get(2)).owner());
+        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events2.get(3);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, block.owner());
+        assertFalse(block.blocked());
+        assertEquals(MutationOutcome.NO_OP, block.outcome());
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(4);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
+        assertEquals(cancelKey, sharedRecord.before().consecutiveCancelKey());
+        assertEquals(1, sharedRecord.before().consecutiveCancelCount());
+        assertEquals(cancelKey, sharedRecord.after().consecutiveCancelKey());
+        assertEquals(2, sharedRecord.after().consecutiveCancelCount());
+        assertEquals(0, sharedRecord.before().sequenceRows().size());
+        assertEquals(0, sharedRecord.after().sequenceRows().size());
+        assertEquals(MutationOutcome.CHANGED, sharedRecord.outcome());
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(5);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
+        assertEquals(cancelKey, outerRecord.before().consecutiveCancelKey());
+        assertEquals(1, outerRecord.before().consecutiveCancelCount());
+        assertEquals(cancelKey, outerRecord.after().consecutiveCancelKey());
+        assertEquals(2, outerRecord.after().consecutiveCancelCount());
+        assertEquals(0, outerRecord.before().sequenceRows().size());
+        assertEquals(0, outerRecord.after().sequenceRows().size());
+        assertEquals(MutationOutcome.CHANGED, outerRecord.outcome());
+    }
+
+    // =========================================================================
+    // TRACE 4A2b (packet suppression law, m00452): a FAILED game-state read
+    // suppresses ONLY its unexecuted shared UPDATE_STATE. HeuristicAiBase's helper
+    // catches the RuntimeException and RETURNS before its tracker call, so no shared
+    // UPDATE_STATE event may exist; the shared PHASE_CHANGE (phase was non-null) and
+    // the shared RECORD_RESPONSE still appear in source order. The OUTER helper
+    // catches the same exception and CONTINUES with zero defaults, so the outer
+    // UPDATE_STATE still appears with all-zero legacy call arguments, identified by
+    // its owner. Behavior itself is unchanged legacy code, proven by the untraced twin.
+    // =========================================================================
+
+    /** StubGameState whose hand read always throws, poisoning both bots' tracker
+     *  state helpers at the exact getter the packet names. */
+    private static final class ThrowingHandGameState extends StubGameState {
+        ThrowingHandGameState(int turn) {
+            super(turn);
+        }
+
+        @Override
+        public List<PhysicalCard> getHand(String playerId) {
+            throw new RuntimeException("injected game-state read failure");
+        }
+    }
+
+    @Test
+    public void failedGameStateReadSuppressesOnlyTheSharedUpdateStateEvent() {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("results", new String[]{"Option A", "Option B"});
+        params.put("min", new String[]{"0"});
+        params.put("max", new String[]{"1"});
+        params.put("noPass", new String[]{"true"});
+
+        TheChosenOneAi untraced = new TheChosenOneAi();
+        String untracedResult = untraced.decide("tester",
+            decision(83, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            new ThrowingHandGameState(1));
+        assertFalse(TraceSession.isActive());
+
+        TheChosenOneAi traced = new TheChosenOneAi();
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        traced.setDecisionTraceSinkForTesting(sink);
+        String tracedResult = traced.decide("tester",
+            decision(83, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            new ThrowingHandGameState(1));
+        assertFalse(TraceSession.isActive());
+        assertEquals(untracedResult, tracedResult);
+        assertFalse(tracedResult.isEmpty());
+
+        DecisionTrace trace = sink.single();
+        assertEquals(TraceRoute.HEURISTIC_FALLBACK, trace.getRoute().selected());
+        List<TraceStateEvent> events = trace.getStateEvents();
+        assertEquals("expected the fallback stream WITHOUT the shared UPDATE_STATE: " + events,
+            7, events.size());
+        assertTrue(events.get(0) instanceof PendingConcedeEvent);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, ((TrackerClearEvent) events.get(1)).owner());
+
+        // the OUTER helper survived the throw and updated with zero defaults
+        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events.get(2);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, outerUpdate.owner());
+        assertEquals(0, outerUpdate.handSize());
+        assertEquals(0, outerUpdate.forcePile());
+        assertEquals(0, outerUpdate.reserveDeck());
+        assertEquals(0, outerUpdate.turn());
+        assertEquals(0, outerUpdate.cardsInPlay());
+
+        // the shared PHASE_CHANGE still fired (phase was non-null)
+        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events.get(3);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, phase.owner());
+        assertEquals("DEPLOY", phase.phase());
+
+        // the suppressed mutator is the ONLY missing one: no shared UPDATE_STATE
+        for (TraceStateEvent e : events) {
+            if (e instanceof TrackerUpdateStateEvent update) {
+                assertFalse("the failed read must suppress the shared UPDATE_STATE: " + e,
+                    update.owner() == TrackerOwner.HEURISTIC_SHARED);
+            }
+        }
+
+        // the shared RECORD_RESPONSE still appears, in source order, before the outer's
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(4);
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(5);
+        assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
+        assertTrue(events.get(6) instanceof PendingDeployEvent);
+    }
+
+    // =========================================================================
+    // TRACE 4A2b (packet "Primary evaluator route" fixture, m00447/m00451): a REAL
+    // decide() whose selected route IS the evaluator lane produces ZERO
+    // HEURISTIC_SHARED events because super.decide(...) was never called. The
+    // deterministic carrier is an INTEGER decision: ForceActivationEvaluator handles
+    // every INTEGER and always emits an action (a CARD_ACTION_CHOICE was tried first
+    // and empirically fell back). The route is asserted from the trace before relying
+    // on it; the V45 fixture above covers the direct-interceptor (non-super) routes
+    // but is NOT this proof.
+    // =========================================================================
+
+    @Test
+    public void primaryEvaluatorRouteProducesZeroSharedOwnerEvents() {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("min", new String[]{"1"});
+        params.put("max", new String[]{"3"});
+
+        // untraced twin proves behavior parity on the evaluator lane too
+        TheChosenOneAi untraced = new TheChosenOneAi();
+        String untracedResult = untraced.decide("tester",
+            decision(91, AwaitingDecisionType.INTEGER,
+                "Choose amount to activate", params),
+            new StubGameState(1));
+        assertFalse(TraceSession.isActive());
+
+        TheChosenOneAi traced = new TheChosenOneAi();
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        traced.setDecisionTraceSinkForTesting(sink);
+        String tracedResult = traced.decide("tester",
+            decision(91, AwaitingDecisionType.INTEGER,
+                "Choose amount to activate", params),
+            new StubGameState(1));
+        assertFalse(TraceSession.isActive());
+        assertEquals(untracedResult, tracedResult);
+
+        DecisionTrace trace = sink.single();
+        // the packet's premise, asserted rather than assumed: this IS the evaluator lane
+        assertEquals(TraceRoute.COMBINED_EVALUATOR, trace.getRoute().selected());
+        List<TraceStateEvent> events = trace.getStateEvents();
+        // primary evaluator routes do not mutate the inherited tracker: zero shared events
+        assertNoSharedOwnerEvents(events);
+        // the outer owner still observed ITS decision normally on this route
+        boolean outerRecordSeen = false;
+        for (TraceStateEvent e : events) {
+            if (e instanceof TrackerRecordResponseEvent record) {
+                assertEquals(TrackerOwner.OUTER_CHOSENONE, record.owner());
+                outerRecordSeen = true;
+            }
+        }
+        assertTrue("the outer tracker must still record on the evaluator lane", outerRecordSeen);
     }
 
     // =========================================================================

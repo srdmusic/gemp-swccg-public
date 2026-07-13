@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando;
 
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerLifecycleSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerPhaseSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
 
 import org.apache.logging.log4j.Logger;
@@ -558,5 +559,21 @@ public class DecisionTracker {
      */
     DecisionTrackerLifecycleSnapshot traceLifecycleSnapshot() {
         return new DecisionTrackerLifecycleSnapshot(traceSnapshot(), lastTurn, lastStateHash);
+    }
+
+    /**
+     * PURE, package-local trace seam (TRACE STAGE 4A2b,
+     * Handoffs/CODEX_TRACE_STAGE4_4A2B_SHARED_TRACKER_PREFLIGHT_2026-07-13.md): the
+     * phase-owner snapshot of this tracker: the decision-affecting traceSnapshot()
+     * above plus the exact lastPhase field the legacy onPhaseChange(...) call reads and
+     * writes. lastTurn and lastStateHash are EXCLUDED by the same ownership rule that
+     * excluded lastPhase from traceLifecycleSnapshot(): they are updateState-owned and
+     * carry no onPhaseChange claim. Reads only; mutates nothing. Reached from
+     * HeuristicAiBase (a different package) ONLY through the public read-only
+     * DecisionTrackerTraceAccess bridge. DISABLED capture must never call this: the
+     * hooks build snapshots only under their active-session guard.
+     */
+    DecisionTrackerPhaseSnapshot tracePhaseSnapshot() {
+        return new DecisionTrackerPhaseSnapshot(traceSnapshot(), lastPhase);
     }
 }

@@ -6313,3 +6313,9 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     UPDATE_STATE/CLEAR records w/ wrapped lifecycle snapshot (lastPhase excluded by ownership);
     one event per legacy call proven at real decide(); pure seam; mirrors exact. 143 tests green.
     Capture DISABLED. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ TRACE 4A2B (2026-07-13, Codex packet + 6 live corrections): shared tracker events ════
+    PHASE_CHANGE/BLOCK_RESPONSE families w/ snapshot-consistency invariants; direct-call-site
+    hooks only; failure injection proves exactly-once legacy mutation on all four boundaries;
+    COMBINED_EVALUATOR route fixture; mutator bytecode equality verified. 198 green + 1 skip.
+    Capture DISABLED. NOT deployed. Details in AI_CHANGELOG 2026-07-13.

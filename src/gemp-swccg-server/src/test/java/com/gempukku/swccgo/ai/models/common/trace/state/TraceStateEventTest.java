@@ -31,14 +31,14 @@ public class TraceStateEventTest {
     }
 
     // =========================================================================
-    // Sealed hierarchy: exactly the 4A1 + 4A2a families, nothing else constructible
+    // Sealed hierarchy: exactly the 4A1 + 4A2a + 4A2b families, nothing else
     // =========================================================================
 
     @Test
     public void hierarchyIsSealedToThePermittedFamilies() {
         assertTrue(TraceStateEvent.class.isSealed());
         Class<?>[] permitted = TraceStateEvent.class.getPermittedSubclasses();
-        assertEquals(6, permitted.length);
+        assertEquals(8, permitted.length);
         List<String> names = new ArrayList<>();
         for (Class<?> c : permitted) {
             names.add(c.getSimpleName());
@@ -50,6 +50,9 @@ public class TraceStateEventTest {
         // TRACE STAGE 4A2a: the two outer tracker lifecycle families
         assertTrue(names.contains("TrackerUpdateStateEvent"));
         assertTrue(names.contains("TrackerClearEvent"));
+        // TRACE STAGE 4A2b: the two inherited shared-tracker families
+        assertTrue(names.contains("TrackerPhaseChangeEvent"));
+        assertTrue(names.contains("TrackerBlockResponseEvent"));
     }
 
     // =========================================================================
@@ -138,7 +141,7 @@ public class TraceStateEventTest {
     }
 
     @Test
-    public void trackerEventRejectsInconsistentOutcomeAndHeuristicOwner() {
+    public void trackerEventRejectsInconsistentOutcomeAndAcceptsTheExpandedOwner() {
         try {
             new TrackerRecordResponseEvent(TrackerOwner.OUTER_RANDO, "T", "1", "k", "r",
                 emptySnapshot(), emptySnapshot(), MutationOutcome.CHANGED);
@@ -153,13 +156,12 @@ public class TraceStateEventTest {
         } catch (IllegalArgumentException expected) {
             // required
         }
-        try {
-            TrackerRecordResponseEvent.of(TrackerOwner.HEURISTIC_SHARED, "T", "1", "k", "r",
-                emptySnapshot(), emptySnapshot());
-            fail("HEURISTIC_SHARED owner must be rejected in 4A1 (4A2 family)");
-        } catch (IllegalArgumentException expected) {
-            // required
-        }
+        // TRACE STAGE 4A2b intentionally expands the 4A1 owner invariant: the shared
+        // recordDecision call reuses this record with HEURISTIC_SHARED
+        TrackerRecordResponseEvent shared = TrackerRecordResponseEvent.of(
+            TrackerOwner.HEURISTIC_SHARED, "T", "1", "k", "r",
+            emptySnapshot(), emptySnapshot());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, shared.owner());
         try {
             TrackerRecordResponseEvent.of(TrackerOwner.OUTER_RANDO, "T", "1", "k", "r",
                 null, emptySnapshot());

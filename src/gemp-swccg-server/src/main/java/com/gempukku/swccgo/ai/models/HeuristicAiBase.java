@@ -1,8 +1,15 @@
 package com.gempukku.swccgo.ai.models;
 import com.gempukku.swccgo.ai.SwccgAiController;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
+import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerLifecycleSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerPhaseSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.ai.models.rando.DecisionSafety;
 import com.gempukku.swccgo.ai.models.rando.DecisionTracker;
+import com.gempukku.swccgo.ai.models.rando.DecisionTrackerTraceAccess;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.Keyword;
@@ -71,8 +78,40 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         String decisionText = decision.getText() != null ? decision.getText() : "";
         Phase phase = gameState != null ? gameState.getCurrentPhase() : null;
 
+        // TRACE 4A2b (Handoffs/CODEX_TRACE_STAGE4_4A2B_SHARED_TRACKER_PREFLIGHT_2026-07-13.md
+        // "Exact reachable mutator sites"): observe the one direct shared-tracker
+        // PHASE_CHANGE call. The outer bot session is already active on fallback routes
+        // (only they reach super.decide), so the guard is TraceSession.isActive();
+        // owner is always HEURISTIC_SHARED: this is the THIRD tracker instance,
+        // distinct from both outer bot trackers. Snapshots come from the public
+        // read-only DecisionTrackerTraceAccess bridge (the pure rando-package seams are
+        // package-local and unreachable from here), each under an instrumentation-only
+        // try/catch that converts failure into a typed STATE_EVENT capture failure; the
+        // legacy mutator is byte-for-byte unchanged and runs exactly once either way.
+        // No event when phase == null: the call did not run.
         if (phase != null) {
+            DecisionTrackerPhaseSnapshot tracePhaseBefore = null;
+            if (TraceSession.isActive()) {
+                try {
+                    tracePhaseBefore = DecisionTrackerTraceAccess.phaseSnapshot(decisionTracker);
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "shared PHASE_CHANGE before-snapshot failed; legacy onPhaseChange unaffected");
+                }
+            }
             decisionTracker.onPhaseChange(phase.name());
+            if (tracePhaseBefore != null) {
+                try {
+                    TraceSession.recordTrackerPhaseChange(TrackerOwner.HEURISTIC_SHARED,
+                        phase.name(), tracePhaseBefore,
+                        DecisionTrackerTraceAccess.phaseSnapshot(decisionTracker));
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "shared PHASE_CHANGE after-snapshot/record failed; legacy onPhaseChange already ran");
+                }
+            }
         }
         updateDecisionTrackerState(gameState, playerId);
 
@@ -106,7 +145,34 @@ public abstract class HeuristicAiBase implements SwccgAiController {
 
         if ((result == null || result.isEmpty())
                 && ("CARD_SELECTION".equals(decisionType) || "ARBITRARY_CARDS".equals(decisionType))) {
-            decisionTracker.blockLastActionOnCancel(decisionType, decisionText);
+            // TRACE 4A2b: observe the one DIRECT shared-tracker BLOCK_RESPONSE call:
+            // exact call subject, the EXACT legacy boolean return (captured by
+            // assignment; the call expression itself is unchanged and runs exactly
+            // once), and before/after decision-affecting snapshots. The INTERNAL
+            // cancel-block call inside DecisionTracker.recordDecision(...) stays FOLDED
+            // into that call's single RECORD_RESPONSE event; no nested hook.
+            DecisionTrackerSnapshot traceBlockBefore = null;
+            if (TraceSession.isActive()) {
+                try {
+                    traceBlockBefore = DecisionTrackerTraceAccess.decisionSnapshot(decisionTracker);
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "shared BLOCK_RESPONSE before-snapshot failed; legacy blockLastActionOnCancel unaffected");
+                }
+            }
+            boolean traceBlockReturned = decisionTracker.blockLastActionOnCancel(decisionType, decisionText);
+            if (traceBlockBefore != null) {
+                try {
+                    TraceSession.recordTrackerBlockResponse(TrackerOwner.HEURISTIC_SHARED,
+                        decisionType, decisionText, traceBlockReturned, traceBlockBefore,
+                        DecisionTrackerTraceAccess.decisionSnapshot(decisionTracker));
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "shared BLOCK_RESPONSE after-snapshot/record failed; legacy blockLastActionOnCancel already ran");
+                }
+            }
         }
 
         String[] actionIds = params != null ? params.get("actionId") : null;
@@ -129,8 +195,39 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         recordRecentDecisionResponse(decision, trackingResponse);
         recordRecentReassignment(decision, params, result);
 
+        // TRACE 4A2b: observe the one direct shared-tracker RECORD_RESPONSE call,
+        // reusing the accepted 4A1 record with the intentionally expanded
+        // HEURISTIC_SHARED owner. The shared call records the heuristic
+        // trackingResponse; the outer bot later records its final result on ITS own
+        // tracker; both are real current behavior, never coalesced. Captured AFTER
+        // the legacy call; the exact decision key comes from the tracker's own seam
+        // through the bridge, never reconstructed.
+        DecisionTrackerSnapshot traceRecordBefore = null;
+        if (TraceSession.isActive()) {
+            try {
+                traceRecordBefore = DecisionTrackerTraceAccess.decisionSnapshot(decisionTracker);
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "shared RECORD_RESPONSE before-snapshot failed; legacy recordDecision unaffected");
+            }
+        }
         decisionTracker.recordDecision(decisionType, decisionText,
             String.valueOf(decision.getAwaitingDecisionId()), trackingResponse != null ? trackingResponse : "");
+        if (traceRecordBefore != null) {
+            try {
+                TraceSession.recordTrackerRecordResponse(TrackerOwner.HEURISTIC_SHARED,
+                    decisionType, String.valueOf(decision.getAwaitingDecisionId()),
+                    DecisionTrackerTraceAccess.decisionKey(decisionTracker, decisionType, decisionText),
+                    trackingResponse != null ? trackingResponse : "",
+                    traceRecordBefore,
+                    DecisionTrackerTraceAccess.decisionSnapshot(decisionTracker));
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "shared RECORD_RESPONSE after-snapshot/record failed; legacy recordDecision already ran");
+            }
+        }
         return result;
     }
 
@@ -1024,7 +1121,35 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         }
         pruneReassignmentHistory(turn);
 
+        // TRACE 4A2b: observe the one shared-tracker UPDATE_STATE call, reusing the
+        // accepted 4A2a record with the intentionally expanded HEURISTIC_SHARED owner.
+        // The five ints are the EXACT legacy call arguments. Both outer bots update
+        // THEIR own trackers before this shared call with possibly identical
+        // arguments: distinct owners, never coalesced (the packet's highest overlap
+        // risk). No event when this helper returned early above: the call did not run.
+        DecisionTrackerLifecycleSnapshot traceUpdateBefore = null;
+        if (TraceSession.isActive()) {
+            try {
+                traceUpdateBefore = DecisionTrackerTraceAccess.lifecycleSnapshot(decisionTracker);
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "shared UPDATE_STATE before-snapshot failed; legacy updateState unaffected");
+            }
+        }
         decisionTracker.updateState(handSize, forcePile, reserveDeck, turn, cardsInPlay);
+        if (traceUpdateBefore != null) {
+            try {
+                TraceSession.recordTrackerUpdateState(TrackerOwner.HEURISTIC_SHARED,
+                    handSize, forcePile, reserveDeck, turn, cardsInPlay,
+                    traceUpdateBefore,
+                    DecisionTrackerTraceAccess.lifecycleSnapshot(decisionTracker));
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "shared UPDATE_STATE after-snapshot/record failed; legacy updateState already ran");
+            }
+        }
         currentStateHash = handSize + ":" + forcePile + ":" + reserveDeck + ":" + turn + ":" + cardsInPlay;
         if (!currentStateHash.equals(blockStateHash)) {
             localBlockedResponses.clear();

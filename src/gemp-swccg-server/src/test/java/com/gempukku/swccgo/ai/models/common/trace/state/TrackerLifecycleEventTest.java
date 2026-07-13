@@ -150,7 +150,8 @@ public class TrackerLifecycleEventTest {
     }
 
     // =========================================================================
-    // Both events: inconsistent outcomes and the heuristic owner are rejected
+    // Both events: inconsistent outcomes rejected; UPDATE_STATE accepts the 4A2b
+    // expanded shared owner while CLEAR keeps rejecting it (no shared clear call)
     // =========================================================================
 
     @Test
@@ -185,17 +186,15 @@ public class TrackerLifecycleEventTest {
         } catch (IllegalArgumentException expected) {
             // required
         }
-        try {
-            TrackerUpdateStateEvent.of(TrackerOwner.HEURISTIC_SHARED, 3, 4, 20, 1, 7,
-                turnOne(), turnOne());
-            fail("HEURISTIC_SHARED owner must be rejected in 4A2a (4A2b family)");
-        } catch (IllegalArgumentException expected) {
-            // required
-        }
+        // TRACE STAGE 4A2b intentionally expands the 4A2a owner invariant: the shared
+        // updateState call reuses this record with HEURISTIC_SHARED
+        TrackerUpdateStateEvent sharedUpdate = TrackerUpdateStateEvent.of(
+            TrackerOwner.HEURISTIC_SHARED, 3, 4, 20, 1, 7, turnOne(), turnOne());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedUpdate.owner());
         try {
             TrackerClearEvent.of(TrackerOwner.HEURISTIC_SHARED,
                 TrackerClearEvent.ClearCause.NEW_GAME_RESET, pristine(), pristine());
-            fail("HEURISTIC_SHARED owner must be rejected in 4A2a (4A2b family)");
+            fail("HEURISTIC_SHARED owner must stay rejected on CLEAR (no shared clear call)");
         } catch (IllegalArgumentException expected) {
             // required
         }

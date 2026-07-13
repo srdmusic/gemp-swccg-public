@@ -2,13 +2,16 @@ package com.gempukku.swccgo.ai.models.common.trace;
 
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerLifecycleSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerPhaseSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
 import com.gempukku.swccgo.ai.models.common.trace.state.EnginePlayerLostEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerBlockResponseEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerClearEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerPhaseChangeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerUpdateStateEvent;
 import com.gempukku.swccgo.common.GameEndReason;
@@ -504,6 +507,46 @@ public final class TraceSession {
         if (c == null) return;
         try {
             c.recordStateEvent(TrackerClearEvent.of(owner, cause, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** TRACE STAGE 4A2b (Handoffs/CODEX_TRACE_STAGE4_4A2B_SHARED_TRACKER_PREFLIGHT_2026-07-13.md
+     *  "Authorized implementation shape"): the inherited shared-tracker
+     *  onPhaseChange(...) call at the HeuristicAiBase.decide(...) boundary, observed
+     *  AFTER the legacy call ran, with the exact phase argument and the complete
+     *  phase-owner before/after snapshots (decision state + exact lastPhase) from the
+     *  public read-only DecisionTrackerTraceAccess bridge. Exactly one event per direct
+     *  legacy call; no event when phase == null (the call did not run). */
+    public static void recordTrackerPhaseChange(TrackerOwner owner, String phase,
+                                                DecisionTrackerPhaseSnapshot before,
+                                                DecisionTrackerPhaseSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(TrackerPhaseChangeEvent.of(owner, phase, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** TRACE STAGE 4A2b: the one DIRECT inherited shared-tracker
+     *  blockLastActionOnCancel(...) call at the HeuristicAiBase.decide(...) empty
+     *  CARD_SELECTION/ARBITRARY_CARDS boundary, observed AFTER the legacy call ran,
+     *  with the exact call subject, the EXACT legacy boolean return, and the complete
+     *  decision-affecting before/after snapshots. The INTERNAL cancel-block call inside
+     *  DecisionTracker.recordDecision(...) stays FOLDED into that call's single
+     *  RECORD_RESPONSE event and never reaches this method. */
+    public static void recordTrackerBlockResponse(TrackerOwner owner, String decisionType,
+                                                  String decisionText, boolean blocked,
+                                                  DecisionTrackerSnapshot before,
+                                                  DecisionTrackerSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(TrackerBlockResponseEvent.of(owner, decisionType, decisionText,
+                blocked, before, after));
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
         }

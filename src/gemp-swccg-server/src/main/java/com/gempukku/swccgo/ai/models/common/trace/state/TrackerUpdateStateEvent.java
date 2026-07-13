@@ -15,8 +15,14 @@ import java.util.Objects;
  * derived from and constructor-validated against exact snapshot equality: CHANGED iff
  * before != after.
  *
- * Owner is one of the two OUTER trackers only; the inherited HeuristicAiBase tracker's
- * updateState call is a distinct owner reserved for 4A2b.
+ * TRACE STAGE 4A2b (Handoffs/CODEX_TRACE_STAGE4_4A2B_SHARED_TRACKER_PREFLIGHT_2026-07-13.md
+ * "Authorized implementation shape"): the 4A2a outer-owners-only invariant is
+ * INTENTIONALLY expanded: HEURISTIC_SHARED is now accepted for the one inherited
+ * HeuristicAiBase updateDecisionTrackerState(...) tracker call, REUSING this record
+ * instead of minting a duplicate. The three tracker instances remain distinct owners
+ * and are never coalesced even when their call arguments are identical (the packet's
+ * highest overlap risk); the shared owner's lifecycle snapshot still makes no
+ * lastPhase claim (onPhaseChange-owned, TrackerPhaseChangeEvent).
  */
 public record TrackerUpdateStateEvent(
     TrackerOwner owner,
@@ -31,11 +37,6 @@ public record TrackerUpdateStateEvent(
 
     public TrackerUpdateStateEvent {
         Objects.requireNonNull(owner, "owner");
-        if (owner == TrackerOwner.HEURISTIC_SHARED) {
-            throw new IllegalArgumentException(
-                "UPDATE_STATE observes the OUTER trackers only; the inherited heuristic"
-                    + " tracker is a distinct owner (4A2b)");
-        }
         Objects.requireNonNull(before, "before");
         Objects.requireNonNull(after, "after");
         Objects.requireNonNull(outcome, "outcome");

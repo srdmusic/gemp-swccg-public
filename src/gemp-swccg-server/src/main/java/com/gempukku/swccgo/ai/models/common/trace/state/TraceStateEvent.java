@@ -16,11 +16,17 @@ package com.gempukku.swccgo.ai.models.common.trace.state;
  * (Handoffs/CODEX_TRACE_STAGE4_4A2A_OUTER_TRACKER_LIFECYCLE_2026-07-13.md) adds the two
  * outer tracker lifecycle families beside their real hooks: UPDATE_STATE and CLEAR
  * (separate records, never one nullable Cartesian lifecycle record) — more of schema
- * 3's typed union, no envelope change, no schema bump. Later families (inherited
- * heuristic tracker, heuristic memory, strategy, objective, deck, shield, opponent
- * intel, deploy plan, retry budget, barrier memory) land beside their first real owner
- * hook per the matrix's corrected landing order (4A2b, 4B, 4C); no complete type
- * algebra lands ahead of reachable hooks.
+ * 3's typed union, no envelope change, no schema bump. TRACE STAGE 4A2b
+ * (Handoffs/CODEX_TRACE_STAGE4_4A2B_SHARED_TRACKER_PREFLIGHT_2026-07-13.md "Authorized
+ * implementation shape") adds the two inherited shared-tracker families beside their
+ * real HeuristicAiBase hooks: PHASE_CHANGE and BLOCK_RESPONSE (owner fixed to
+ * HEURISTIC_SHARED); the shared UPDATE_STATE and RECORD_RESPONSE calls REUSE the
+ * accepted records, whose owner invariant is intentionally expanded to accept
+ * HEURISTIC_SHARED; still schema 3, no envelope change. Later families (heuristic
+ * memory, strategy, objective, deck, shield, opponent intel, deploy plan, retry
+ * budget, barrier memory) land beside their first real owner hook per the matrix's
+ * corrected landing order (4B, 4C); no complete type algebra lands ahead of reachable
+ * hooks.
  *
  * Records contain immutable data only: no callback, no apply, no game/service reference,
  * no timestamp, no RNG value. List position in the envelope is the authoritative event
@@ -29,5 +35,6 @@ package com.gempukku.swccgo.ai.models.common.trace.state;
  */
 public sealed interface TraceStateEvent
     permits TrackerRecordResponseEvent, PendingConcedeEvent, EnginePlayerLostEvent,
-            PendingDeployEvent, TrackerUpdateStateEvent, TrackerClearEvent {
+            PendingDeployEvent, TrackerUpdateStateEvent, TrackerClearEvent,
+            TrackerPhaseChangeEvent, TrackerBlockResponseEvent {
 }
