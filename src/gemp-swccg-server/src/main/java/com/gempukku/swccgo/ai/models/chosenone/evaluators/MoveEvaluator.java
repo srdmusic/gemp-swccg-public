@@ -693,9 +693,7 @@ public class MoveEvaluator extends ActionEvaluator {
                         if (v47ObjectiveWantsLandoHere && v47Survivable) {
                             // V47 UPDATED 2026-07-06 T4.1: -9999 addReasoning converted to the ladder
                             // hard-veto class (-100000 at the finalizer). Today's gates (a)+(b) kept
-                            // unchanged — semantics identical, magnitude now band-proof. Old line:
-                            // action.addReasoning("V47 LANDO STAY: Lando at " + currentLoc.getTitle()
-                            //     + " — stay for occupation! Don't move!", -9999.0f);
+                            // unchanged — semantics identical, magnitude now band-proof.
                             ladderVetoHard = true;
                             ladderVetoHardReason = "V47 LANDO STAY: Lando at " + currentLoc.getTitle()
                                 + " — stay for occupation! Don't move!";
@@ -1223,10 +1221,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                         if (v135FriendlyAtDest == 0) {
                                             // V135 UPDATED 2026-07-06 T4.1: -2000 (outbiddable by +2000+ stacks)
                                             // strengthened to the ladder hard-veto class — a self-move-to-friend
-                                            // that lands ALONE is absolutely blocked. Old lines kept for revert:
-                                            // action.addReasoning(String.format(
-                                            //     "V135 SELF-MOVE-TO-FRIEND ALONE: '%s' would land alone at %s — no friendly characters there",
-                                            //     cardToMove.getTitle(), destLoc37.getTitle()), -2000.0f);
+                                            // that lands ALONE is absolutely blocked.
                                             ladderVetoHard = true;
                                             ladderVetoHardReason = String.format(
                                                 "V135 SELF-MOVE-TO-FRIEND ALONE: '%s' would land alone at %s — no friendly characters there",
@@ -1457,8 +1452,6 @@ public class MoveEvaluator extends ActionEvaluator {
                                     // old -800/-1500 magnitudes are RETAINED below as R1-band weights so
                                     // non-battle-seeking paths (R4 transit / R3 survival / non-battle R2 /
                                     // plain R1) keep today's deterrent instead of going unprotected.
-                                    // OLD (inline clean-win only):
-                                    // boolean v137CanWin = v137OurPower >= v137OppPower && v137OurAbility >= 4f;
                                     boolean v137CanWin = MovePredicates.canWinAt(game, gameState, playerId,
                                         v137Dest, v137OurPower, v137OurAbility, v137OurForfeit);
                                     if (!v137CanWin) {
@@ -2040,8 +2033,6 @@ public class MoveEvaluator extends ActionEvaluator {
                             // any rule appended after it silently re-decided the pick. Replaced by an
                             // R4 MANDATORY TRANSIT claim (+20000 band at the finalizer, order-independent)
                             // plus a +800 fine (matches the Mapuzo-exit arm; move-3c boundary = +20800).
-                            // OLD: action.setScore(9999.0f);
-                            // OLD: action.addReasoning("V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!", 9999.0f);
                             action.addReasoning("V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!", 800.0f);
                             ladderClaimR4Transit("V53b SAFEHOUSE→CORRIDOR");
                             logger.warn("V53b HIDDEN PATH: {} MUST landspeed Safehouse → Corridor (R4 transit +800 fine)!", charName);
@@ -2054,8 +2045,6 @@ public class MoveEvaluator extends ActionEvaluator {
                                 // V60 UPDATED 2026-07-06 T4.1: setScore(-9999) ordering hack replaced by
                                 // the ladder hard-veto class (-100000 at the finalizer, veto-class per
                                 // move-3d boundary). Same trigger, band-proof magnitude.
-                                // OLD: action.setScore(-9999.0f);
-                                // OLD: action.addReasoning("V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!", -9999.0f);
                                 ladderVetoHard = true;
                                 ladderVetoHardReason = "V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!";
                                 logger.warn("V60 HIDDEN PATH: {} BLOCKED landspeed from Corridor (LADDER VETO) — must use 'Move Jedi Survivor here to a site'!", charName);
@@ -2188,8 +2177,6 @@ public class MoveEvaluator extends ActionEvaluator {
                     // forever at a FAVORABLE Mining Village). Now an R1-internal weight (-1500,
                     // no return): still buries every same-band R1 move (V37.1-protect boundary:
                     // -1550 < Pass), but an R2+ claim outranks it by band.
-                    // OLD: action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them! HARD BLOCK!",
-                    //                    -9999.0f); return;
                     action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them!",
                                        -1500.0f);
                     logger.warn("V37.1 STAY AND CRUSH at {}: power +{} — -1500 (weight)",
@@ -2198,8 +2185,6 @@ public class MoveEvaluator extends ActionEvaluator {
 
                 case FAVORABLE:
                     // V37.1 UPDATED 2026-07-06 T4.1: same conversion as CRUSH (-9999+return → -1500 weight).
-                    // OLD: action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — HARD BLOCK!",
-                    //                    -9999.0f); return;
                     action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — hold position!",
                                        -1500.0f);
                     logger.warn("V37.1 STAY AND FIGHT at {}: power +{} — -1500 (weight)",
@@ -2259,7 +2244,6 @@ public class MoveEvaluator extends ActionEvaluator {
                         // Now an R1-internal weight (-800, NO return): still blocks every
                         // same-band R1 wander (V85-protect boundary: Rey stays at -720 < Pass),
                         // while an R2+ doctrine claim (V73 shuttle, V35 hunt…) outranks it by band.
-                        // OLD: action.addReasoning(..., -2000.0f); return;
                         action.addReasoning(String.format(
                             "V85 UNCONTESTED: at %s (drain %.0f) with no opponent — "
                                 + "best adjacent %s only drains %.0f. STAY for the better drain!",
@@ -2889,10 +2873,6 @@ public class MoveEvaluator extends ActionEvaluator {
                             // claim identities can suppress it (ruling L3 carve-out; move-3f
                             // boundary: a Mapuzo exit to an EMPTY site must fire — the old code
                             // stalled at ~-9199). Non-transit movers still get the full veto.
-                            // OLD: float wrongDirPenalty = -9999.0f; // V38.3: Raised from -400 — HARD BLOCK
-                            // OLD: action.addReasoning(String.format(
-                            // OLD:     "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s — HARD BLOCK!",
-                            // OLD:     v34Dest.getTitle(), opUncontestedLoc), wrongDirPenalty);
                             ladderWrongDirVeto = true;
                             ladderWrongDirVetoReason = String.format(
                                 "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s",
@@ -2923,8 +2903,6 @@ public class MoveEvaluator extends ActionEvaluator {
                             // ladder hard-veto class (-100000 at the finalizer). NO transit
                             // carve-out here — the carve-out is keyed to the V53b transit claim
                             // identities and a Mapuzo exit never targets Mustafar Castle.
-                            // OLD: action.addReasoning("V38.3 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!",
-                            //     -9999.0f);
                             ladderVetoHard = true;
                             ladderVetoHardReason = "V38.3 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!";
                             logger.warn("V38.3 CASTLE RETREAT BLOCKED (LADDER VETO): {} trying to flee to Mustafar Castle!",
@@ -2939,7 +2917,6 @@ public class MoveEvaluator extends ActionEvaluator {
         // Moves cost force and can leave positions vulnerable
         // T4.1 (2026-07-06): moved to the ladder finalizer — applied there only when
         // rank==R1 (no accepted claim) so R2+ claims are not double-taxed.
-        // OLD: action.addReasoning("No strategic reason to move", -50.0f);
     }
 
     /**
@@ -3265,9 +3242,6 @@ public class MoveEvaluator extends ActionEvaluator {
         if (isStarship && !hasPassengers) {
             // V49 UPDATED 2026-07-06 T4.1: -9999 addReasoning converted to the ladder
             // hard-veto class (-100000 at the finalizer). Same gates, band-proof magnitude.
-            // OLD: action.addReasoning(String.format(
-            //     "V49 BLOCKED: Landing %s at a site with NO passengers = power 0 = instant death from overflow! NEVER land unprotected!",
-            //     cardName), -9999.0f);
             ladderVetoHard = true;
             ladderVetoHardReason = String.format(
                 "V49 BLOCKED: Landing %s at a site with NO passengers = power 0 = instant death from overflow! NEVER land unprotected!",

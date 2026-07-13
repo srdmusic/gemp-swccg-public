@@ -6254,3 +6254,7 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     V29 DTF/grabber + V27 maintenance commented predecessor scans deleted (SHA-gated ranges);
     live cache reads + weights untouched; javap identical in detached worktrees; 60/60 fixtures.
     NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ CLEANUP BATCH 2.1 (2026-07-13, Codex packet): MoveEvaluator T4.1 predecessors, −52 total ════
+    12 mirrored comment regions (SHA-gated streams both bots), 2 preface corrections. RAW javap
+    byte-identical. 60/60 fixtures. NOT deployed. Details in AI_CHANGELOG 2026-07-13.

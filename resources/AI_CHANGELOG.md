@@ -17,6 +17,11 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — CLEANUP BATCH 2.1 (Codex packet; both bots) — comment-only, NO behavior change
+- 12 mirrored T4.1 predecessor comment regions in MoveEvaluator, +2/−28 per bot (net −26/bot, −52 total): V47 Lando stay, V135 self-move-alone, V137 winnability, V53b Safehouse transit, V60 Corridor landspeed, V37.1 CRUSH + FAVORABLE, V85 uncontested drain, V38.3 wrong-direction + Castle retreat, default MOVE tax, V49 unprotected landing. Two line-count-neutral preface corrections (dangling phrases stripped).
+- Deletion streams SHA-matched the manifest in both bots; RAW javap dumps byte-identical parent vs candidate (no normalization needed); 60/60 focused fixtures green.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — CLEANUP BATCH 2.0 (Codex packet; both bots) — comment-only, NO behavior change
 - 106 deleted / 16 added comment lines (net −45/bot, −90 total) in MoveEvaluator per Handoffs/CODEX_CLEANUP_BATCH20_CANDIDATES_2026-07-13.md: V29 DTF/grabber and V27 maintenance deploy-cost commented predecessor scans (the live ForceReserveService cache reads untouched; V29 −100/−150/−60 and V27 −80 weights unchanged). Prefaces rewritten to state the cache semantics without the corpses.
 - Deletion streams SHA-matched the manifest in both bots; dual-layer comment assertions PASS; detached-worktree javap byte-identical parent vs candidate both bots; 60/60 focused fixtures green.
