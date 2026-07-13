@@ -27,13 +27,21 @@ public record DecisionSnapshot(
         ServiceFacts serviceFacts,
         int snapshotVersion) {
 
-    /** Version stamped on snapshots built by this increment of the model. */
-    public static final int CURRENT_VERSION = 1;
+    /** Version stamped on snapshots built by this increment of the model.
+     *  Version 1 was the e4e0aa213 scaffold shape (string-typed, never
+     *  serialized to any fixture); version 2 is the post-gate typed shape
+     *  (Handoffs/CODEX_B2_INCREMENT1_GATE_E4E0AA213_2026-07-13.md deltas). */
+    public static final int CURRENT_VERSION = 2;
 
     public DecisionSnapshot {
         Objects.requireNonNull(decisionFacts, "decisionFacts");
         Objects.requireNonNull(actionFacts, "actionFacts");
         Objects.requireNonNull(serviceFacts, "serviceFacts");
+        if (snapshotVersion < 1) {
+            // Gate item 6: positive snapshot versions only. Zero/negative would
+            // let a fixture trace silently claim an unversioned shape.
+            throw new IllegalArgumentException("snapshotVersion must be >= 1, was " + snapshotVersion);
+        }
         actionFacts = List.copyOf(actionFacts);
         for (int i = 0; i < actionFacts.size(); i++) {
             if (actionFacts.get(i).ordinal() != i) {
@@ -56,6 +64,11 @@ public record DecisionSnapshot(
 
         public ServiceFacts {
             Objects.requireNonNull(forceObligations, "forceObligations");
+            // Gate item 6: negative counts rejected.
+            if (forceObligations.isKnown() && forceObligations.value() < 0) {
+                throw new IllegalArgumentException("forceObligations must be >= 0 when known, was "
+                        + forceObligations.value());
+            }
         }
     }
 }

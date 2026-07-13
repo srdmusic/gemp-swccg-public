@@ -23,6 +23,11 @@ import java.util.Objects;
 // CONSERVATIVE_ALLOW / TEST_ERROR) — none of that policy lives here.
 // Optional<T> is permitted internally by the contract but is NOT the public
 // surface; this class needs no Optional at all.
+//
+// B2-GATE (Handoffs/CODEX_B2_INCREMENT1_GATE_E4E0AA213_2026-07-13.md item 6):
+// producerId, provenance, and unknownReason are validated NONBLANK, not merely
+// non-null. A whitespace producer id is unattributable metadata; reject it at
+// construction (null -> NPE, blank -> IllegalArgumentException).
 // ═══════════════════════════════════════════════════════════
 public final class FactValue<T> {
 
@@ -31,16 +36,24 @@ public final class FactValue<T> {
 
     private final State state;
     private final T value;              // non-null iff state == KNOWN
-    private final String producerId;    // never null
-    private final String provenance;    // never null: source evidence / stable provenance key
-    private final String unknownReason; // non-null iff state == UNKNOWN
+    private final String producerId;    // never null or blank
+    private final String provenance;    // never null or blank: source evidence / stable provenance key
+    private final String unknownReason; // non-null (and nonblank) iff state == UNKNOWN
 
     private FactValue(State state, T value, String producerId, String provenance, String unknownReason) {
         this.state = state;
         this.value = value;
-        this.producerId = Objects.requireNonNull(producerId, "producerId");
-        this.provenance = Objects.requireNonNull(provenance, "provenance");
-        this.unknownReason = unknownReason;
+        this.producerId = requireNonBlank(producerId, "producerId");
+        this.provenance = requireNonBlank(provenance, "provenance");
+        this.unknownReason = (state == State.UNKNOWN) ? requireNonBlank(unknownReason, "unknownReason") : null;
+    }
+
+    private static String requireNonBlank(String s, String name) {
+        Objects.requireNonNull(s, name);
+        if (s.isBlank()) {
+            throw new IllegalArgumentException(name + " must be nonblank, was \"" + s + "\"");
+        }
+        return s;
     }
 
     /** A known observation. Known false and known zero are valid values here. */

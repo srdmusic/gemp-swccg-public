@@ -4,6 +4,12 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — B2 TYPE HARDENING (Codex gate m00263 deltas; shared types) — still zero consumers
+- All required deltas on the increment-1 snapshot scaffold: engine `AwaitingDecisionType` enum (no string type); typed `ObligationFlag` set FactValue-wrapped (absent params = UNKNOWN, distinct from known-empty); minimal structural `DecisionRoute` enum + machine-checkable `RouteSelectionEvidence` record (constructor REJECTS evidence inconsistent with the facts); distinct non-cross-assignable refs (`ActionRef`/`CardRef` positive-int/sealed `SourceRef`/`DestinationRef` over engine `Zone`); noPass/min/max/selectable FactValue-wrapped with NO defaults; exact names (`forcePileSize`, `lifeForceCardCount`, `friendlyNonUndercoverCharacterCount`/opposing, `basePower`+`weaponBonus` components); failed power resolution = UNKNOWN never 0 (test-proven); blank/range/version validation throughout. snapshotVersion 1→2.
+- Tests 22→43, all green. Record-equality test explicitly annotated: NOT Rando/ChosenOne builder parity — that gate stays open until increment 2's shadow builders.
+- Verified: compiles clean (MVN_EXIT=0); zero production consumers re-verified by grep. NOT deployed.
+- Revert: `git revert` of the single commit.
+
 ## 2026-07-13 — B2 TRACE HOOKS (Codex m00243 design; both bots) — no-op by default, zero behavior change
 - Toward the exact-fixture oracle the log harvester can never be (Codex m00268: this increment is the inert plumbing, NOT yet the oracle — candidate order still derives from evaluator merge output rather than complete raw decision arrays; capture/oracle enablement stays HOLD until the next trace increment): `ai/models/common/trace/` (TraceOp, TraceOperation with raw-float-bit before/delta/after, DecisionTrace, TraceSink + NoOpTraceSink, TraceCollector, thread-local TraceSession with swallow-all guards — instrumentation can NEVER throw into the decision path).
 - `EvaluatedAction` (both bots): constructor/addReasoning/setScore/hardVeto record INITIAL/ADD/SET/HARD_VETO as `LEGACY_UNTAGGED`; mergeFrom records the MERGE boundary only. Tagged overloads (ruleId/domainId/kind) ready for migrated arms. No V-tag prose parsing.

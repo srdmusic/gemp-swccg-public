@@ -6169,7 +6169,7 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     DeckOracle.personaNamedInText, FormationSafety.countFriendlyNonUndercoverCharacters (logic
     unmoved). Record fixes: ATE consumer count 12/bot, "Deployed" wording, wrong power-0 Ozzel
     example dropped (Ozzel printed power 3 — m00225's own example was wrong). Also corrected
-    the prior entry's Ozzel mention below. NOT deployed. Full details in resources/AI_CHANGELOG.md.
+    the prior entry's Ozzel mention above (the BATCH 1 CORRECTIONS entry; m00271 wording fix). NOT deployed. Full details in resources/AI_CHANGELOG.md.
 
   ════ B2 TRACE HOOKS (2026-07-13, Codex m00243 spec): choke-point instrumentation, no-op default ════
     NOT a V-tag. Shared ai/models/common/trace/ (TraceOp/TraceOperation raw-float-bits/DecisionTrace/
@@ -6179,4 +6179,14 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     evaluator+sink seam for pure JUnit; core records evaluator binding, first-seen candidate index,
     RANK/SELECT/FINALIZE, synthetic-pass markers. Tie-determinism semantics untouched. 12 tests green
     (6/bot, all six Codex gate cases). RandoCalAi/DecisionSafety hooks = next increment. NOT deployed.
+    Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.
+
+  ════ B2 TYPE HARDENING (2026-07-13, Codex m00263 deltas): typed snapshot contract v2 ════
+    NOT a V-tag. common/decision types hardened per the B2 increment-1 gate: engine
+    AwaitingDecisionType; FactValue-wrapped ObligationFlag set / noPass / min / max / selectable
+    (no fabricated defaults); minimal DecisionRoute enum + machine-checked RouteSelectionEvidence;
+    sealed ActionRef/CardRef/SourceRef/DestinationRef; exact field names (forcePileSize,
+    lifeForceCardCount, friendly/opposingNonUndercoverCharacterCount, basePower+weaponBonus);
+    UNKNOWN-never-zero on failed power components; blank/range/version validation. Version 2.
+    43 tests green (was 22). Zero production consumers. Builder parity = increment 2. NOT deployed.
     Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.

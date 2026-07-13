@@ -101,6 +101,52 @@ public class FactValueTest {
         }
     }
 
+    // ── B2 gate item 6: producer/provenance/reason must be NONBLANK, not merely non-null ──
+
+    @Test
+    public void blankProducerIdIsRejected() {
+        for (String blank : new String[]{"", "   ", "\t"}) {
+            try {
+                FactValue.known(1, blank, "k");
+                fail("known(...) with blank producerId must be rejected");
+            } catch (IllegalArgumentException expected) {
+                // expected
+            }
+            try {
+                FactValue.unknown(blank, "k", "reason");
+                fail("unknown(...) with blank producerId must be rejected");
+            } catch (IllegalArgumentException expected) {
+                // expected
+            }
+        }
+    }
+
+    @Test
+    public void blankProvenanceIsRejected() {
+        try {
+            FactValue.known(1, "p", "  ");
+            fail("known(...) with blank provenance must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            FactValue.unknown("p", "", "reason");
+            fail("unknown(...) with blank provenance must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
+    @Test
+    public void blankUnknownReasonIsRejected() {
+        try {
+            FactValue.unknown("p", "k", "   ");
+            fail("unknown(...) with blank reason must be rejected; unknown is data and needs a real reason");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
     @Test
     public void equalityIsByValue() {
         assertEquals(FactValue.known(5, "p", "k"), FactValue.known(5, "p", "k"));
