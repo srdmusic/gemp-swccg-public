@@ -1,5 +1,8 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.trace.TraceOperation;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +40,11 @@ public class EvaluatedAction {
         this.score = score;
         this.displayText = displayText;
         this.reasoning = new ArrayList<>();
+        // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): INITIAL score op,
+        // LEGACY_UNTAGGED until arms migrate to the tagged overloads. No-op (cheap
+        // thread-local guard) unless CombinedEvaluator opened a trace session.
+        TraceSession.recordInitial(this, actionId, score,
+            TraceOperation.RULE_LEGACY_UNTAGGED, null, null, displayText);
     }
 
     /**
@@ -46,12 +54,26 @@ public class EvaluatedAction {
      * @param scoreDelta score adjustment (can be 0)
      */
     public void addReasoning(String reason, float scoreDelta) {
+        // TRACE HOOK (2026-07-13): legacy arm, records ADD as LEGACY_UNTAGGED.
+        addReasoning(reason, scoreDelta, TraceOperation.RULE_LEGACY_UNTAGGED, null, null);
+    }
+
+    /**
+     * TRACE HOOK (2026-07-13): tagged overload for migrated arms. Identical score and
+     * reasoning behavior to addReasoning(reason, delta); additionally stamps explicit
+     * rule/domain/kind identity on the trace ADD op. NEVER parse V-tags out of reason
+     * prose; supply them here instead (reason text stays diagnostic).
+     */
+    public void addReasoning(String reason, float scoreDelta, String ruleId, String domainId, String outputKind) {
+        float traceBefore = score;
         if (scoreDelta != 0) {
             reasoning.add(String.format("%s (%+.1f)", reason, scoreDelta));
             score += scoreDelta;
         } else {
             reasoning.add(reason);
         }
+        TraceSession.recordAdd(this, actionId, traceBefore, scoreDelta, score,
+            ruleId, domainId, outputKind, reason);
     }
 
     /**
@@ -69,6 +91,9 @@ public class EvaluatedAction {
      */
     public void mergeFrom(EvaluatedAction other) {
         if (other == null) return;
+
+        // TRACE HOOK (2026-07-13): capture the boundary's before-score (primitive, free).
+        float traceBefore = this.score;
 
         // FORMATION SAFETY (2026-07-11c): vetoes are OR-merged — no bonus stack can wash one out.
         if (other.hardVeto) {
@@ -92,13 +117,29 @@ public class EvaluatedAction {
             other.displayText != null && !other.displayText.isEmpty()) {
             this.displayText = other.displayText;
         }
+
+        // TRACE HOOK (2026-07-13): MERGE records the boundary ONLY. The merged source's own
+        // INITIAL/ADD/SET ops already explain the value, so no synthetic delta is recorded.
+        // isActive() guard keeps the detail string from being built in production.
+        if (TraceSession.isActive()) {
+            TraceSession.recordMerge(this, actionId, traceBefore, this.score, this.hardVeto,
+                this.vetoReason, "mergeFrom actionId=" + other.actionId + " score=" + other.score);
+        }
     }
 
     /** FORMATION SAFETY (2026-07-11c): mark this action un-selectable regardless of score. */
     public void hardVeto(String reason) {
+        // TRACE HOOK (2026-07-13): legacy arm, records HARD_VETO as LEGACY_UNTAGGED.
+        hardVeto(reason, TraceOperation.RULE_LEGACY_UNTAGGED, null, null);
+    }
+
+    /** TRACE HOOK (2026-07-13): tagged overload for migrated veto arms, identical behavior. */
+    public void hardVeto(String reason, String ruleId, String domainId, String outputKind) {
         this.hardVeto = true;
         if (this.vetoReason == null) this.vetoReason = reason;
         this.reasoning.add("HARD VETO: " + reason);
+        TraceSession.recordHardVeto(this, actionId, this.vetoReason, reason,
+            ruleId, domainId, outputKind);
     }
 
     public boolean isHardVetoed() { return hardVeto; }
@@ -126,7 +167,19 @@ public class EvaluatedAction {
     }
 
     public void setScore(float score) {
+        // TRACE HOOK (2026-07-13): legacy arm, records SET as LEGACY_UNTAGGED.
+        setScore(score, TraceOperation.RULE_LEGACY_UNTAGGED, null, null);
+    }
+
+    /**
+     * TRACE HOOK (2026-07-13): tagged overload for migrated arms, identical behavior.
+     * A SET records before and after; it never masquerades as an additive delta.
+     */
+    public void setScore(float score, String ruleId, String domainId, String outputKind) {
+        float traceBefore = this.score;
         this.score = score;
+        TraceSession.recordSet(this, actionId, traceBefore, this.score,
+            ruleId, domainId, outputKind, null);
     }
 
     public List<String> getReasoning() {

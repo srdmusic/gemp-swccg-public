@@ -6170,3 +6170,13 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     unmoved). Record fixes: ATE consumer count 12/bot, "Deployed" wording, wrong power-0 Ozzel
     example dropped (Ozzel printed power 3 — m00225's own example was wrong). Also corrected
     the prior entry's Ozzel mention below. NOT deployed. Full details in resources/AI_CHANGELOG.md.
+
+  ════ B2 TRACE HOOKS (2026-07-13, Codex m00243 spec): choke-point instrumentation, no-op default ════
+    NOT a V-tag. Shared ai/models/common/trace/ (TraceOp/TraceOperation raw-float-bits/DecisionTrace/
+    TraceSink/NoOpTraceSink/TraceCollector/TraceSession thread-local, swallow-all guards). Both bots'
+    EvaluatedAction records INITIAL/ADD/SET/HARD_VETO as LEGACY_UNTAGGED (+tagged overloads for
+    migrated arms); mergeFrom = MERGE boundary only. CombinedEvaluator: package-visible scripted-
+    evaluator+sink seam for pure JUnit; core records evaluator binding, first-seen candidate index,
+    RANK/SELECT/FINALIZE, synthetic-pass markers. Tie-determinism semantics untouched. 12 tests green
+    (6/bot, all six Codex gate cases). RandoCalAi/DecisionSafety hooks = next increment. NOT deployed.
+    Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.

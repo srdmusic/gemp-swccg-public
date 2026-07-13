@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — B2 TRACE HOOKS (Codex m00243 design; both bots) — no-op by default, zero behavior change
+- The exact-fixture oracle the log harvester can never be: `ai/models/common/trace/` (TraceOp, TraceOperation with raw-float-bit before/delta/after, DecisionTrace, TraceSink + NoOpTraceSink, TraceCollector, thread-local TraceSession with swallow-all guards — instrumentation can NEVER throw into the decision path).
+- `EvaluatedAction` (both bots): constructor/addReasoning/setScore/hardVeto record INITIAL/ADD/SET/HARD_VETO as `LEGACY_UNTAGGED`; mergeFrom records the MERGE boundary only. Tagged overloads (ruleId/domainId/kind) ready for migrated arms. No V-tag prose parsing.
+- `CombinedEvaluator` (both bots): package-visible seam `CombinedEvaluator(orderedEvaluators, traceSink)` for pure JUnit scripted evaluators; production no-arg ctor keeps the normal list + no-op sink. Core records evaluator binding, candidate first-seen registration, RANK/SELECT through the DPS walk/epilogues/V148 gate, FINALIZE; synthetic passes get explicit markers (V67BC_DPS_PASS, FORMATION_SAFETY_PASS, V148_ALL_BAD_PASS...). Merge/winner semantics from the tie-determinism delta UNTOUCHED.
+- Tests: 12 green (6 per bot, identical scenarios = unit-level bot parity), covering all six Codex gate cases: no-op preservation, candidate reordering, one-bit float change, veto-reason change, SET-vs-ADD distinction, FINALIZE divergence.
+- RandoCalAi/DecisionSafety route/finalize hooks deliberately deferred to the next increment (spec section 7); schema needs no change for them.
+- Verified: compiles clean both bots (MVN_EXIT=0); mirrors byte-identical (normalized). NOT deployed.
+- Revert: `git revert` of the single commit.
+
 ## 2026-07-13 — BATCH 1 CORRECTION 2 (Codex gate FAIL m00262; both bots) — title-case grammar strip + fixtures
 - Codex's independent gate on c497a5df6 FAILED one item: the central suffix strip removed terminal `here`/`there` from LEGITIMATE card titles — "I've Got A Problem Here" parsed to "i've got a problem", "The Empire Knows We're Here" to "empire knows we're" (real cards, blueprint-DB verified). Everything else passed (side-aware owner + 18 consumers/bot, both Krennic personas, friendly count, mirrors, compile).
 - **Fix — grammar, not guesswork**: Decipher game text writes card TITLES in Title Case but the location-forcing adverb LOWERCASE ("[download] Krennic here" vs "…I've Got A Problem Here"). The strip now runs CASE-SENSITIVELY on the raw captured text BEFORE lowercasing: lowercase `here/there/at that location` suffixes are grammar and stripped; Title-Case `Here/There` endings are titles and survive.

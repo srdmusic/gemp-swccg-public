@@ -1,6 +1,10 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
+import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSink;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
@@ -27,10 +31,27 @@ public class CombinedEvaluator {
 
     private final List<ActionEvaluator> evaluators;
     private final Random random = new Random();
+    // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): per-decision trace sink.
+    // Production default = NoOpTraceSink: no session is opened, EvaluatedAction's guards
+    // short-circuit on the absent thread-local, and behavior/score bits/winner/V191 output
+    // are byte-identical to the un-instrumented code.
+    private final TraceSink traceSink;
 
     public CombinedEvaluator() {
+        this.traceSink = NoOpTraceSink.INSTANCE;
         this.evaluators = new ArrayList<>();
         initializeEvaluators();
+    }
+
+    /**
+     * TRACE HOOK (2026-07-13): package-visible pure-harness seam. JUnit injects scripted
+     * evaluators (in order) plus a capture sink; no server, log parsing, or replay files.
+     * Production never calls this; the public constructor keeps the normal evaluator list
+     * and the no-op sink.
+     */
+    CombinedEvaluator(List<ActionEvaluator> orderedEvaluators, TraceSink traceSink) {
+        this.traceSink = (traceSink != null) ? traceSink : NoOpTraceSink.INSTANCE;
+        this.evaluators = new ArrayList<>(orderedEvaluators);
     }
 
     /**
@@ -61,6 +82,44 @@ public class CombinedEvaluator {
      * @return Best evaluated action, or null if no evaluators apply
      */
     public EvaluatedAction evaluateDecision(DecisionContext context) {
+        // TRACE HOOK (2026-07-13): open a per-decision session only when the sink is enabled.
+        // The sink receives ONE complete record, only after finalization. Instrumentation
+        // must never throw into the decision path, hence the blanket guards.
+        boolean traced = false;
+        try {
+            if (traceSink.isEnabled()) {
+                traced = TraceSession.open(context.getDecisionId(), context.getDecisionType(),
+                    context.getDecisionText());
+            }
+        } catch (Throwable t) {
+            traced = false;
+        }
+        if (!traced) {
+            return evaluateDecisionCore(context, false);
+        }
+        EvaluatedAction traceResult = null;
+        try {
+            traceResult = evaluateDecisionCore(context, true);
+            return traceResult;
+        } finally {
+            try {
+                TraceSession.recordFinalize(traceResult,
+                    (traceResult != null) ? traceResult.getActionId() : null,
+                    (traceResult != null) ? Float.valueOf(traceResult.getScore()) : null,
+                    traceResult != null && traceResult.isHardVetoed(),
+                    (traceResult != null) ? traceResult.getVetoReason() : null,
+                    "CombinedEvaluator pre-final winner");
+                DecisionTrace trace = TraceSession.close();
+                if (trace != null) {
+                    traceSink.accept(trace);
+                }
+            } catch (Throwable t) {
+                TraceSession.abandon();
+            }
+        }
+    }
+
+    private EvaluatedAction evaluateDecisionCore(DecisionContext context, boolean traced) {
         // ═══════════════════════════════════════════════════════════
         // ═══ SECTION: SVC-SAFETY (reorg 2026-07-06) ═══
         // Owns: the score-merge loop below + the all-bad/V148 pass gate + BAD_ACTION_THRESHOLD.
@@ -88,6 +147,9 @@ public class CombinedEvaluator {
 
             if (evaluator.canEvaluate(context)) {
                 LOG.debug("Running evaluator: {}", evaluator.getName());
+                // TRACE HOOK (2026-07-13): bind this evaluator's id to every op recorded during
+                // its evaluate() call (and the merges of its returned actions) before moving on.
+                if (traced) TraceSession.beginEvaluator(evaluator.getName());
                 List<EvaluatedAction> actions = evaluator.evaluate(context);
 
                 for (EvaluatedAction action : actions) {
@@ -101,11 +163,15 @@ public class CombinedEvaluator {
                         LOG.debug("Merged scores for '{}': now {}", actionId, existing.getScore());
                     } else {
                         actionMap.put(actionId, action);
+                        // TRACE HOOK (2026-07-13): freeze the candidate's first-seen ordinal,
+                        // straight from this LinkedHashMap insertion (B0-TIE-DETERMINISM order).
+                        if (traced) TraceSession.registerCandidate(actionId);
                     }
 
                     // Log this evaluator's contribution
                     evaluator.logEvaluation(action);
                 }
+                if (traced) TraceSession.endEvaluator();
             }
         }
 
@@ -185,12 +251,24 @@ public class CombinedEvaluator {
                         bestInBucket = ba;
                     }
                 }
-                if (bestInBucket == null) continue;
+                if (bestInBucket == null) {
+                    // TRACE HOOK (2026-07-13): empty rank, bucket had no eligible action.
+                    if (traced) TraceSession.recordRank(null, null, null,
+                        "V67bc bucket step=" + label + ": no eligible (all vetoed)");
+                    continue;
+                }
+                // TRACE HOOK (2026-07-13): bucket-walk rank.
+                if (traced) TraceSession.recordRank(bestInBucket, bestInBucket.getActionId(),
+                    Float.valueOf(bestInBucket.getScore()), "V67bc bucket step=" + label + " best");
                 LOG.warn("V67bc DPS WALK: step={} best={} score={}",
                     label, bestInBucket.getDisplayText(), bestInBucket.getScore());
                 if (bestInBucket.getScore() >= BAD_ACTION_THRESHOLD) {
                     LOG.warn("V67bc DPS WALK: step={} viable → picking '{}' (score {})",
                         label, bestInBucket.getDisplayText(), bestInBucket.getScore());
+                    // TRACE HOOK (2026-07-13): bucket winner.
+                    if (traced) TraceSession.recordSelect(bestInBucket, bestInBucket.getActionId(),
+                        Float.valueOf(bestInBucket.getScore()), false, null,
+                        "V67bc bucket winner step=" + label);
                     return bestInBucket;
                 }
                 LOG.warn("V67bc DPS WALK: step={} all bad (best score {}) → falling through to next step",
@@ -231,6 +309,10 @@ public class CombinedEvaluator {
                 LOG.warn("V67bc DPS EPILOGUE: buckets exhausted, but non-bucket action '{}' scored {} (>= floor {}) → picking it over PASS",
                     v67bcBestNonBucket.getDisplayText(), v67bcBestNonBucket.getScore(),
                     NON_BUCKET_EPILOGUE_FLOOR);
+                // TRACE HOOK (2026-07-13): epilogue winner.
+                if (traced) TraceSession.recordSelect(v67bcBestNonBucket,
+                    v67bcBestNonBucket.getActionId(), Float.valueOf(v67bcBestNonBucket.getScore()),
+                    false, null, "V67bc non-bucket epilogue winner");
                 return v67bcBestNonBucket;
             }
             if (v67bcBestNonBucket != null) {
@@ -248,6 +330,12 @@ public class CombinedEvaluator {
                 "V67bc DPS: every hierarchy step had only bad-scored actions, passing");
             passAction.addReasoning(context.getAllowedActionsReason() != null
                 ? context.getAllowedActionsReason() : "DPS hierarchy exhausted");
+            // TRACE HOOK (2026-07-13): synthetic Pass, explicit ordinal + source marker.
+            if (traced) {
+                TraceSession.markSynthetic(passAction, "V67BC_DPS_PASS");
+                TraceSession.recordSelect(passAction, passAction.getActionId(),
+                    Float.valueOf(passAction.getScore()), false, null, "V67bc DPS pass (synthetic)");
+            }
             return passAction;
         }
 
@@ -274,6 +362,12 @@ public class CombinedEvaluator {
                     "V67ax DPS: no step qualified, passing");
                 passAction.addReasoning(context.getAllowedActionsReason() != null
                     ? context.getAllowedActionsReason() : "DPS empty allowed");
+                // TRACE HOOK (2026-07-13): synthetic Pass, explicit ordinal + source marker.
+                if (traced) {
+                    TraceSession.markSynthetic(passAction, "V67AX_DPS_PASS");
+                    TraceSession.recordSelect(passAction, passAction.getActionId(),
+                        Float.valueOf(passAction.getScore()), false, null, "V67ax DPS pass (synthetic)");
+                }
                 return passAction;
             } else {
                 LOG.warn("V67ax DPS FILTER: allowed set non-empty but no scored action matched — falling back to unfiltered");
@@ -301,6 +395,12 @@ public class CombinedEvaluator {
                 bestAction = ca;
             }
         }
+        // TRACE HOOK (2026-07-13): pre-final winner rank (before the pass gates below).
+        if (traced && bestAction != null) {
+            TraceSession.recordRank(bestAction, bestAction.getActionId(),
+                Float.valueOf(bestAction.getScore()),
+                fsAllVetoed ? "pre-final best (all vetoed, least-bad)" : "pre-final best");
+        }
         if (fsAllVetoed && bestAction != null) {
             // ADJUSTED 2026-07-12 (Codex m00194 P0#2): use V148's cancellability semantics — optional
             // CARD_SELECTION prompts commonly carry noPass=true with min=0 + a Done/Cancel button;
@@ -315,6 +415,13 @@ public class CombinedEvaluator {
                 EvaluatedAction fsPass = new EvaluatedAction("", ActionType.PASS, 0.0f,
                     "Pass (all actions formation-vetoed)");
                 fsPass.addReasoning("FORMATION SAFETY: every action violated a basic law; passing");
+                // TRACE HOOK (2026-07-13): synthetic Pass, explicit ordinal + source marker.
+                if (traced) {
+                    TraceSession.markSynthetic(fsPass, "FORMATION_SAFETY_PASS");
+                    TraceSession.recordSelect(fsPass, fsPass.getActionId(),
+                        Float.valueOf(fsPass.getScore()), false, null,
+                        "formation-safety pass (synthetic)");
+                }
                 return fsPass;
             }
             LOG.warn("FORMATION SAFETY: ALL actions vetoed but must choose — taking least-bad '{}'",
@@ -371,6 +478,13 @@ public class CombinedEvaluator {
                     "Pass (all actions were bad)"
                 );
                 passAction.addReasoning(String.format("Best action was %.1f, deciding to pass instead", bestAction.getScore()));
+                // TRACE HOOK (2026-07-13): synthetic Pass, explicit ordinal + source marker.
+                if (traced) {
+                    TraceSession.markSynthetic(passAction, "V148_ALL_BAD_PASS");
+                    TraceSession.recordSelect(passAction, passAction.getActionId(),
+                        Float.valueOf(passAction.getScore()), false, null,
+                        "V148 all-bad pass (synthetic)");
+                }
                 return passAction;
             } else if (canPass) {
                 LOG.info("All actions bad (best: {}), but taking least-bad action anyway", bestAction.getScore());
@@ -383,6 +497,12 @@ public class CombinedEvaluator {
         LOG.info("Best action: {} (score: {})", bestAction.getDisplayText(), bestAction.getScore());
         LOG.info("   Reasoning: {}", bestAction.getReasoningString());
 
+        // TRACE HOOK (2026-07-13): selected winner. DecisionSafety and the router boundary
+        // are the NEXT increment; the FINALIZE recorded by evaluateDecision() above marks
+        // this method's pre-final output.
+        if (traced) TraceSession.recordSelect(bestAction, bestAction.getActionId(),
+            Float.valueOf(bestAction.getScore()), bestAction.isHardVetoed(),
+            bestAction.getVetoReason(), "winner");
         return bestAction;
     }
 
