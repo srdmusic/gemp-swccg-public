@@ -17,6 +17,12 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — CLEANUP BATCH 2.3 (Codex packet; both bots) — comment-only, NO behavior change
+- THE DEPLOYEVALUATOR OBJECTIVE CORPSE (held on the danger list since Batch 1.5, now packet-sanctioned): the commented V83/V110/V108/V86/V88/V99 inline region (old 1425-1795), 371 lines per bot, net −742 total. Deletion streams hash-matched the packet's normalized SHA in both bots (method itself cross-verified by reproducing the 2.2 pin byte-for-byte). Stale two-line owner preface rewritten per manifest.
+- Live replacement proven untouched: `objDeploy.getDeployObjectiveAdjustments(...)` call intact; all six ObjectiveAnalyzer arms present (V83/V110/V108/V86/V88/V99 at their anchors); MY_LORD weights unchanged; zero JSON diff.
+- RAW javap byte-identical parent vs candidate both bots; 60/60 focused fixtures green.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — CLEANUP BATCH 2.2 (Codex packet; both bots) — comment-only, NO behavior change
 - Two commented V60 +100 baseline statements deleted at the "Passed all guards"/V192 anchor in DeployEvaluator (net −2/bot, −4 total; deletion stream SHA-matched the packet both bots); retained preface's final sentence rewritten per manifest (V192 stays live owner, all V60 guards untouched — tag-count proof in gate evidence).
 - RAW javap hashes identical parent vs candidate both bots; 55/55 focused fixtures green.

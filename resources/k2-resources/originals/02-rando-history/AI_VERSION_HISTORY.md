@@ -6268,3 +6268,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
   ════ CLEANUP BATCH 2.2 (2026-07-13, Codex packet): DeployEvaluator V60 corpse, −4 total ════
     Two commented +100 baseline lines (SHA-gated) + preface sentence rewrite; V192 live owner,
     guards untouched. RAW javap identical. 55/55 fixtures. NOT deployed. Details in AI_CHANGELOG.
+
+  ════ CLEANUP BATCH 2.3 (2026-07-13, Codex packet): the DE objective corpse, −742 both bots ════
+    The held DE 1424-1794 commented V83/V110/V108/V86/V88/V99 region deleted (SHA-gated streams;
+    method cross-verified against the 2.2 pin). Live ObjectiveAnalyzer call + six arms + weights
+    proven untouched. RAW javap identical. 60/60 fixtures. NOT deployed. Details in AI_CHANGELOG.
