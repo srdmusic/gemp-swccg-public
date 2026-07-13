@@ -6282,3 +6282,9 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
   ════ CLEANUP BATCH 2.5 (2026-07-13, Codex packet): DE V38/V53 diagnostics, −88 net ════
     Four SHA-gated ranges + 11 preface lines per bot. Live ForceReserveService.Facts
     successors proven. RAW javap identical. 60/60 fixtures. NOT deployed. Details in AI_CHANGELOG.
+  ════ STAGE 4A1 (2026-07-13, amended matrix + Option A m00372): typed state events, envelope v3 ════
+    NOT a V-tag. Four sealed families (tracker RECORD_RESPONSE w/ complete snapshot seam,
+    pending-concede, engine PLAYER_LOST w/ distinct EngineCallOutcome, pending-deploy);
+    TraceIntendedStateEvent deleted; SCHEMA_VERSION 3; 10 observation-only hooks/bot; pure
+    traceSnapshot()/traceDecisionKey() seams, mutators byte-unchanged; m00380+m00381 gate items
+    closed; council dissent on file. 153 tests green. Capture DISABLED. NOT deployed.

@@ -1,6 +1,14 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
+import com.gempukku.swccgo.ai.models.common.trace.state.EnginePlayerLostEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
+import com.gempukku.swccgo.common.GameEndReason;
 
 import java.util.List;
 
@@ -436,12 +444,74 @@ public final class TraceSession {
         }
     }
 
-    /** Typed AI-side mutation event OBSERVED at an existing legacy choke point. */
-    public static void recordIntendedStateEvent(TraceIntendedStateEvent.Kind kind, String detail) {
+    // ── TRACE STAGE 4A1 (Handoffs/CODEX_TRACE_STAGE4_4A0_MUTATOR_EVENT_MATRIX_2026-07-13.md
+    //    "First Java slice after review"): one typed recording method per state-event
+    //    family. Each checks CURRENT first, then constructs and appends the record
+    //    inside the try/catch; no event is ever constructed without an open session,
+    //    and construction/append failure marks the envelope INCOMPLETE/STATE_EVENT.
+    //    Hooks pass only already-computed values read after the legacy write or call. ──
+
+    /** Outer decision-tracker RECORD_RESPONSE (m00372 Option A, accepted m00373):
+     *  the complete decision-affecting owner snapshots before and after the legacy
+     *  recordDecision(...) call, captured AFTER the call per the matrix correction.
+     *  The hook must build snapshots ONLY under its session/enabled guard: disabled
+     *  capture calls neither pure accessor. */
+    public static void recordTrackerRecordResponse(TrackerOwner owner, String decisionType,
+                                                   String decisionId, String decisionKey,
+                                                   String response,
+                                                   DecisionTrackerSnapshot before,
+                                                   DecisionTrackerSnapshot after) {
         TraceCollector c = CURRENT.get();
         if (c == null) return;
         try {
-            c.recordIntendedStateEvent(kind, detail);
+            c.recordStateEvent(TrackerRecordResponseEvent.of(owner, decisionType, decisionId,
+                decisionKey, response, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Pending-concede SET_PENDING/CLEAR_PENDING, observed after the legacy field
+     *  writes; the outcome is derived from the exact before/after pair. */
+    public static void recordPendingConcede(PendingConcedeEvent.Operation operation,
+                                            PendingConcedeEvent.Cause cause, String playerId,
+                                            Integer myLostPileSize, Integer opponentLostPileSize,
+                                            Integer lostPileDeficit,
+                                            boolean pendingBefore, String reasonBefore,
+                                            boolean pendingAfter, String reasonAfter) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(PendingConcedeEvent.of(operation, cause, playerId,
+                myLostPileSize, opponentLostPileSize, lostPileDeficit,
+                pendingBefore, reasonBefore, pendingAfter, reasonAfter));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Engine playerLost(...) call attempt, recorded around the actual legacy call with
+     *  the DISTINCT EngineCallOutcome (SUCCESS on normal return, THREW on a caught
+     *  Exception); ordered before its CLEAR_PENDING exactly as source runs. */
+    public static void recordEnginePlayerLost(String playerId, GameEndReason reason,
+                                              EngineCallOutcome outcome) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(new EnginePlayerLostEvent(playerId, reason, outcome));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Pending-deploy SET/CLEAR at the lastPendingDeployType direct-write sites, with
+     *  the exact legacy value before/after; the outcome is derived from the pair. */
+    public static void recordPendingDeploy(PendingDeployEvent.Operation operation,
+                                           String typeBefore, String typeAfter) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(PendingDeployEvent.of(operation, typeBefore, typeAfter));
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
         }

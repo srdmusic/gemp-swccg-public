@@ -1,6 +1,16 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
+import com.gempukku.swccgo.ai.models.common.trace.state.EnginePlayerLostEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.MutationOutcome;
+import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
+import com.gempukku.swccgo.common.GameEndReason;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import org.junit.Test;
@@ -49,8 +59,8 @@ public class DecisionTraceEnvelopeTest {
             TraceRuleId.LEGACY_UNTAGGED, TraceDomainId.LEGACY_UNTAGGED,
             TraceOutputKind.LEGACY_UNTAGGED, null, null,
             Float.floatToRawIntBits(1.0f), false, null, "init"));
-        List<TraceIntendedStateEvent> events = new ArrayList<>(List.of(
-            new TraceIntendedStateEvent(TraceIntendedStateEvent.Kind.PENDING_CONCEDE, "test")));
+        List<TraceStateEvent> events = new ArrayList<>(List.of(
+            PendingDeployEvent.of(PendingDeployEvent.Operation.SET, null, "character")));
 
         DecisionTrace trace = new DecisionTrace(DecisionTrace.SCHEMA_VERSION, "test-bot",
             "d1", "CARD_ACTION_CHOICE", "Choose action", null,
@@ -67,7 +77,7 @@ public class DecisionTraceEnvelopeTest {
         assertEquals(Arrays.asList("A", "B"), trace.getRawCandidateOrder());
         assertEquals(Arrays.asList("B", "A"), trace.getMergeOrder());
         assertEquals(1, trace.getOperations().size());
-        assertEquals(1, trace.getIntendedStateEvents().size());
+        assertEquals(1, trace.getStateEvents().size());
 
         // and the exposed lists are unmodifiable
         try {
@@ -219,8 +229,25 @@ public class DecisionTraceEnvelopeTest {
             "scripted: emergency route, evaluator lane never produced a winner");
         TraceSession.recordEmergencyResponse("5", "Emergency: Choosing random action (5)");
         TraceSession.recordCorrection(TraceCorrection.Kind.SAFETY_FORCED_CHOICE, "", "5", "forced");
-        TraceSession.recordIntendedStateEvent(
-            TraceIntendedStateEvent.Kind.DECISION_TRACKER_RECORD, "recordDecision response='5'");
+        // TRACE 4A1: typed state events in the exact source order of the concede-fire
+        // path: SET_PENDING, PLAYER_LOST(SUCCESS), then CLEAR_PENDING after the catch,
+        // plus a pending-deploy SET (scripted through the same one-per-family API).
+        TraceSession.recordPendingConcede(PendingConcedeEvent.Operation.SET_PENDING,
+            PendingConcedeEvent.Cause.LOST_PILE_DEFICIT, "tester", 33, 2, 31,
+            false, null, true, "Lost Pile deficit 31 (mine=33, opponent=2)");
+        TraceSession.recordEnginePlayerLost("tester", GameEndReason.LOSS__CONCEDED,
+            EngineCallOutcome.SUCCESS);
+        TraceSession.recordPendingConcede(PendingConcedeEvent.Operation.CLEAR_PENDING,
+            PendingConcedeEvent.Cause.POST_PLAYER_LOST, "tester", null, null, null,
+            true, "Lost Pile deficit 31 (mine=33, opponent=2)", false, null);
+        TraceSession.recordTrackerRecordResponse(TrackerOwner.OUTER_RANDO,
+            "CARD_ACTION_CHOICE", "d9", "CARD_ACTION_CHOICE:Choose action", "5",
+            new DecisionTrackerSnapshot(List.of(), 0, 0, "", "", "", 0, List.of()),
+            new DecisionTrackerSnapshot(
+                List.of(new DecisionTrackerSnapshot.TrackerSequenceRow(
+                    "CARD_ACTION_CHOICE:Choose action", "5", "")),
+                0, 0, "CARD_ACTION_CHOICE:Choose action", "5", "", 0, List.of()));
+        TraceSession.recordPendingDeploy(PendingDeployEvent.Operation.SET, null, "character");
         TraceSession.recordFinalResponse("5", false);
 
         DecisionTrace trace = TraceSession.close();
@@ -244,10 +271,58 @@ public class DecisionTraceEnvelopeTest {
         assertEquals("5", trace.getFinalization().finalResponse());
         assertTrue(trace.getFinalization().finalResponseRecorded());
         assertFalse(trace.getFinalization().skippedCommonFinalizer());
-        // intended state events observed, never applied
-        assertEquals(1, trace.getIntendedStateEvents().size());
-        assertEquals(TraceIntendedStateEvent.Kind.DECISION_TRACKER_RECORD,
-            trace.getIntendedStateEvents().get(0).kind());
+        // typed state events observed, never applied; list position is the
+        // authoritative order: SET_PENDING, PLAYER_LOST, CLEAR_PENDING, tracker
+        // RECORD_RESPONSE, deploy SET
+        List<TraceStateEvent> stateEvents = trace.getStateEvents();
+        assertEquals(5, stateEvents.size());
+        PendingConcedeEvent set = (PendingConcedeEvent) stateEvents.get(0);
+        assertEquals(PendingConcedeEvent.Operation.SET_PENDING, set.operation());
+        assertEquals(MutationOutcome.CHANGED, set.outcome());
+        assertEquals(Integer.valueOf(31), set.lostPileDeficit());
+        EnginePlayerLostEvent lost = (EnginePlayerLostEvent) stateEvents.get(1);
+        assertEquals(GameEndReason.LOSS__CONCEDED, lost.reason());
+        assertEquals(EngineCallOutcome.SUCCESS, lost.outcome());
+        PendingConcedeEvent clear = (PendingConcedeEvent) stateEvents.get(2);
+        assertEquals(PendingConcedeEvent.Operation.CLEAR_PENDING, clear.operation());
+        assertEquals(PendingConcedeEvent.Cause.POST_PLAYER_LOST, clear.cause());
+        TrackerRecordResponseEvent tracker = (TrackerRecordResponseEvent) stateEvents.get(3);
+        assertEquals(TrackerOwner.OUTER_RANDO, tracker.owner());
+        assertEquals(MutationOutcome.CHANGED, tracker.outcome());
+        assertEquals(1, tracker.after().sequenceRows().size());
+        PendingDeployEvent deploySet = (PendingDeployEvent) stateEvents.get(4);
+        assertEquals("character", deploySet.typeAfter());
+    }
+
+    /** Gate m00380: an INVALID state-event input through the active-session recording
+     *  path is swallowed to a typed STATE_EVENT failure — the envelope is INCOMPLETE,
+     *  the bad event is never appended, and nothing throws into the decision path. */
+    @Test
+    public void invalidStateEventInputMarksTraceIncompleteWithTypedStateEventFailure() {
+        TraceSnapshots.Result snap = testSnapshot("d25", List.of("A"));
+        assertTrue(TraceSession.open("bot", "d25", "CARD_ACTION_CHOICE", "Choose action",
+            List.of("A"), snap.snapshot(), snap.issues(), false));
+        TraceSession.recordRoute(TraceRoute.COMBINED_EVALUATOR, "scripted", null);
+        TraceSession.recordPassEligibility(true, "min=0 noPass=false (scripted)");
+        TraceSession.recordPreSafetyWinner("A", 1.0f, false, null);
+        TraceSession.recordSelect(new Object(), "A", 1.0f, false, null, "winner");
+        // a PendingDeploy SET with a null after value violates the constructor
+        // invariant (SET requires an after value); the recording path must swallow it
+        TraceSession.recordPendingDeploy(PendingDeployEvent.Operation.SET, "starship", null);
+
+        DecisionTrace trace = TraceSession.close();
+        assertNotNull(trace);
+        assertEquals(TraceStatus.INCOMPLETE, trace.getStatus());
+        assertTrue("the rejected event must never be appended", trace.getStateEvents().isEmpty());
+        boolean stateEventFailure = false;
+        for (TraceCaptureFailure f : trace.getCaptureFailures()) {
+            if (f.stage() == TraceCaptureFailure.Stage.STATE_EVENT) {
+                stateEventFailure = true;
+            }
+        }
+        assertTrue("invalid state-event input must be a typed STATE_EVENT capture failure",
+            stateEventFailure);
+        assertFalse(TraceSession.isActive());
     }
 
     @Test

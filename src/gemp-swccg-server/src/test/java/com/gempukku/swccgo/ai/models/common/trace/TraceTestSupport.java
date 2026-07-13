@@ -107,10 +107,10 @@ public final class TraceTestSupport {
         if (!Objects.equals(a.getFinalization(), b.getFinalization())) {
             return "finalization: " + a.getFinalization() + " != " + b.getFinalization();
         }
-        // ── intended state events ──
-        if (!a.getIntendedStateEvents().equals(b.getIntendedStateEvents())) {
-            return "intendedStateEvents: " + a.getIntendedStateEvents()
-                + " != " + b.getIntendedStateEvents();
+        // ── typed state events (records: deep equals via components, ordered) ──
+        if (!a.getStateEvents().equals(b.getStateEvents())) {
+            return "stateEvents: " + a.getStateEvents()
+                + " != " + b.getStateEvents();
         }
         // ── ordered operations, raw float bits exact ──
         List<TraceOperation> opsA = a.getOperations();

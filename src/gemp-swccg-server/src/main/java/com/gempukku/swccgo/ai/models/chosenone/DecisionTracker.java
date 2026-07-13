@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone;
 
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
+
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
@@ -499,5 +501,46 @@ public class DecisionTracker {
      */
     public int getSequenceRepeatCount() {
         return sequenceRepeatCount;
+    }
+
+    // =========================================================================
+    // TRACE STAGE 4A1 pure seams (m00372 Option A, accepted m00373)
+    // =========================================================================
+
+    /**
+     * PURE, package-local trace seam: the complete decision-affecting snapshot of this
+     * tracker (ordered sequence rows, repeat/loop counts, last-action pair, cancel
+     * key/count, canonical turn blocks). Reads only; mutates nothing; every collection
+     * is copied into the immutable snapshot record. EXCLUDED by ruling: history
+     * (diagnostic only), blockedResponses (no active population path), lastTurn and
+     * lastPhase (updateState/onPhaseChange-owned, 4A2 UPDATE_STATE family), standalone
+     * lastStateHash (recordDecision only READS it; visible inside sequence rows).
+     * DISABLED capture must never call this: the bot hook builds snapshots only under
+     * its trace-session guard.
+     */
+    DecisionTrackerSnapshot traceSnapshot() {
+        List<DecisionTrackerSnapshot.TrackerSequenceRow> sequenceRows = new ArrayList<>(sequence.size());
+        for (String[] entry : sequence) {
+            sequenceRows.add(new DecisionTrackerSnapshot.TrackerSequenceRow(
+                entry[0], entry[1], entry[2]));
+        }
+        List<DecisionTrackerSnapshot.TrackerTurnBlockRow> turnBlockRows =
+            new ArrayList<>(turnBlockedActions.size());
+        for (Map.Entry<String, Set<String>> entry : turnBlockedActions.entrySet()) {
+            turnBlockRows.add(new DecisionTrackerSnapshot.TrackerTurnBlockRow(
+                entry.getKey(), new ArrayList<>(entry.getValue())));
+        }
+        return new DecisionTrackerSnapshot(sequenceRows, sequenceRepeatCount,
+            detectedLoopLength, lastActionChoiceKey, lastActionChoiceResponse,
+            consecutiveCancelKey, consecutiveCancelCount, turnBlockRows);
+    }
+
+    /**
+     * PURE, package-local trace seam: the exact decision key recordDecision(...) uses,
+     * exposed so the RECORD_RESPONSE event carries real key identity instead of
+     * reconstructing it. Delegates to the private decisionKey; mutates nothing.
+     */
+    String traceDecisionKey(String decisionType, String decisionText) {
+        return decisionKey(decisionType, decisionText);
     }
 }

@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +23,9 @@ import java.util.Objects;
  *     (null ONLY with a ROUTE capture failure + INCOMPLETE status).
  *  6. operations — append-only typed score/veto/merge/rank/select events, raw float bits.
  *  7. finalization — pre-safety winner, pass eligibility, corrections, final response.
- *  8. intendedStateEvents — ordered typed AI-side mutation events observed (never applied).
+ *  8. stateEvents — ordered typed sealed TraceStateEvent records: completed legacy state
+ *     mutations observed at their owner sites (never applied by the trace). Stage 4A1
+ *     (Handoffs/CODEX_TRACE_STAGE4_4A0_MUTATOR_EVENT_MATRIX_2026-07-13.md).
  *
  * Candidate order: rawCandidateOrder is the COMPLETE raw decision id array, verbatim
  * (duplicates preserved, unreturned candidates included); every operation's ordinal binds
@@ -36,8 +39,11 @@ import java.util.Objects;
  */
 public final class DecisionTrace {
 
-    /** V2 envelope schema (V1 was the 55c22fdde merge-order shape, never captured). */
-    public static final int SCHEMA_VERSION = 2;
+    /** V3 envelope schema: typed sealed stateEvents replaced the prose intended-event
+     *  list (Stage 4A1). V2 was the prose TraceIntendedStateEvent shape; V1 was the
+     *  55c22fdde merge-order shape, never captured. This is the ENVELOPE version;
+     *  DecisionSnapshot.CURRENT_VERSION tracks the snapshot separately. */
+    public static final int SCHEMA_VERSION = 3;
 
     private final int schemaVersion;
     private final String botModel;
@@ -52,7 +58,7 @@ public final class DecisionTrace {
     private final List<String> mergeOrder;
     private final List<TraceOperation> operations;
     private final TraceFinalization finalization;
-    private final List<TraceIntendedStateEvent> intendedStateEvents;
+    private final List<TraceStateEvent> stateEvents;
 
     public DecisionTrace(int schemaVersion, String botModel,
                          String decisionId, String decisionType, String decisionText,
@@ -62,7 +68,7 @@ public final class DecisionTrace {
                          List<String> rawCandidateOrder, List<String> mergeOrder,
                          List<TraceOperation> operations,
                          TraceFinalization finalization,
-                         List<TraceIntendedStateEvent> intendedStateEvents) {
+                         List<TraceStateEvent> stateEvents) {
         if (schemaVersion < 1) {
             throw new IllegalArgumentException("schemaVersion must be >= 1, was " + schemaVersion);
         }
@@ -79,7 +85,7 @@ public final class DecisionTrace {
         this.mergeOrder = deepCopyNullTolerant(mergeOrder);
         this.operations = List.copyOf(operations);
         this.finalization = Objects.requireNonNull(finalization, "finalization");
-        this.intendedStateEvents = List.copyOf(intendedStateEvents);
+        this.stateEvents = List.copyOf(stateEvents);
         // Status/failure consistency: INCOMPLETE iff there are typed failures. A trace
         // can never silently claim completion, and can never carry failures as COMPLETE.
         if ((status == TraceStatus.INCOMPLETE) != !this.captureFailures.isEmpty()) {
@@ -114,7 +120,7 @@ public final class DecisionTrace {
         augmented.add(failure);
         return new DecisionTrace(schemaVersion, botModel, decisionId, decisionType,
             decisionText, snapshot, TraceStatus.INCOMPLETE, augmented, route,
-            rawCandidateOrder, mergeOrder, operations, finalization, intendedStateEvents);
+            rawCandidateOrder, mergeOrder, operations, finalization, stateEvents);
     }
 
     public int getSchemaVersion() { return schemaVersion; }
@@ -143,6 +149,7 @@ public final class DecisionTrace {
 
     public TraceFinalization getFinalization() { return finalization; }
 
-    /** Ordered typed AI-side mutation events observed during the one legacy run. */
-    public List<TraceIntendedStateEvent> getIntendedStateEvents() { return intendedStateEvents; }
+    /** Ordered typed state events: completed legacy mutations observed during the one
+     *  legacy run (list position is the authoritative event order). */
+    public List<TraceStateEvent> getStateEvents() { return stateEvents; }
 }

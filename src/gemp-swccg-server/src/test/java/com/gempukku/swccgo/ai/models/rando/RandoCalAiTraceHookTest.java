@@ -7,6 +7,11 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.TraceStatus;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
+import com.gempukku.swccgo.ai.models.common.trace.state.MutationOutcome;
+import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
 import org.junit.Test;
@@ -19,6 +24,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -157,6 +163,70 @@ public class RandoCalAiTraceHookTest {
             TraceSession.abandon();
         }
         assertFalse(TraceSession.isActive());
+    }
+
+    // =========================================================================
+    // TRACE 4A1 (matrix "prove one legacy call with or without tracing"): the same
+    // scripted decision through a NoOp sink and a capture sink returns the identical
+    // decision result, and the capture sink sees the typed state events in order:
+    // tracker RECORD_RESPONSE (captured AFTER the legacy call), then the
+    // pending-deploy SET from the actual direct write in trackStrategicEvents.
+    // =========================================================================
+
+    @Test
+    public void legacyDecisionIsIdenticalWithOrWithoutTracingAndTypedEventsAreOrdered() {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("results", new String[]{"Option A", "Option B"});
+        params.put("min", new String[]{"0"});
+        params.put("max", new String[]{"1"});
+        // noPass=true keeps this deterministic end-to-end: the evaluator lane cannot
+        // synthesize a winning pass, so the decision falls to the keyword heuristic's
+        // deterministic index pick (no emergency randomness: the pick is non-empty).
+        params.put("noPass", new String[]{"true"});
+
+        // run 1: production default NoOp sink — no session opens
+        RandoCalAi untraced = new RandoCalAi();
+        String untracedResult = untraced.decide("tester",
+            decision(77, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            null);
+        assertFalse(TraceSession.isActive());
+
+        // run 2: identical fresh bot + identical decision with a capture sink
+        RandoCalAi traced = new RandoCalAi();
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        traced.setDecisionTraceSinkForTesting(sink);
+        String tracedResult = traced.decide("tester",
+            decision(77, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Deploy which character to your site?", params),
+            null);
+        assertFalse(TraceSession.isActive());
+
+        // identical legacy decision result with or without tracing
+        assertNotNull(untracedResult);
+        assertEquals(untracedResult, tracedResult);
+        assertFalse("scripted choice must pick an option, not pass", tracedResult.isEmpty());
+
+        // the capture sink sees the typed events in list order
+        DecisionTrace trace = sink.single();
+        List<TraceStateEvent> events = trace.getStateEvents();
+        assertEquals("expected tracker RECORD_RESPONSE then PENDING_DEPLOY SET: " + events,
+            2, events.size());
+        TrackerRecordResponseEvent tracker = (TrackerRecordResponseEvent) events.get(0);
+        assertEquals(TrackerOwner.OUTER_RANDO, tracker.owner());
+        assertEquals("MULTIPLE_CHOICE", tracker.decisionType());
+        assertEquals("77", tracker.decisionId());
+        assertEquals(tracedResult, tracker.response());
+        // captured AFTER the legacy call: the after snapshot gained the sequence row
+        assertEquals(0, tracker.before().sequenceRows().size());
+        assertEquals(1, tracker.after().sequenceRows().size());
+        assertEquals(tracedResult, tracker.after().sequenceRows().get(0).response());
+        assertEquals(MutationOutcome.CHANGED, tracker.outcome());
+        PendingDeployEvent deploySet = (PendingDeployEvent) events.get(1);
+        assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
+        assertNull(deploySet.typeBefore());
+        assertEquals("character", deploySet.typeAfter());
+        assertEquals(MutationOutcome.CHANGED, deploySet.outcome());
     }
 
     // =========================================================================

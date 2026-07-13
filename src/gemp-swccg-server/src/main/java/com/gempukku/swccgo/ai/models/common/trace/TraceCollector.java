@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.trace;
 
 import com.gempukku.swccgo.ai.models.common.decision.DecisionFacts;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,7 +99,7 @@ class TraceCollector {
     private final List<Staged> staged = new ArrayList<>();
     private final List<RouteObservation> routeObservations = new ArrayList<>();
     private final List<TraceCaptureFailure> failures = new ArrayList<>();
-    private final List<TraceIntendedStateEvent> stateEvents = new ArrayList<>();
+    private final List<TraceStateEvent> stateEvents = new ArrayList<>();
 
     private String currentEvaluatorId;
     private int nextSeq;
@@ -248,8 +249,11 @@ class TraceCollector {
         this.skippedCommonFinalizer = skippedCommonFinalizer;
     }
 
-    void recordIntendedStateEvent(TraceIntendedStateEvent.Kind kind, String detail) {
-        stateEvents.add(new TraceIntendedStateEvent(kind, detail));
+    /** TRACE STAGE 4A1: append one typed, already-constructed state event (TraceSession
+     *  constructs it after the CURRENT check, inside its own try/catch). Immutable
+     *  records; list position is the authoritative order. */
+    void recordStateEvent(TraceStateEvent event) {
+        stateEvents.add(event);
     }
 
     /** Typed capture failure: the emitted record will be INCOMPLETE, never plausibly truncated. */

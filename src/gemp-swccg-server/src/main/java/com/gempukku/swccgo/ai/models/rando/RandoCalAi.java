@@ -16,11 +16,15 @@ import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
-import com.gempukku.swccgo.ai.models.common.trace.TraceIntendedStateEvent;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSnapshots;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
+import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -571,16 +575,23 @@ public class RandoCalAi extends HeuristicAiBase {
                         int opponentLostPile = gameState.getLostPile(opponentId).size();
                         int lostPileDeficit = myLostPile - opponentLostPile;
                         if (lostPileDeficit >= 30) {
+                            boolean tracePendingBefore = pendingConcede;  // structurally false (!pendingConcede guard)
+                            String traceReasonBefore = pendingConcedeReason;
                             pendingConcede = true;
                             pendingConcedeReason = String.format(
                                 "Lost Pile deficit %d (mine=%d, opponent=%d)",
                                 lostPileDeficit, myLostPile, opponentLostPile);
                             LOG.warn("V67aw CONCEDE PENDING: {} — will concede after next battle phase ends",
                                 pendingConcedeReason);
-                            // TRACE ORACLE V2: typed intended-mutation observation (outer choke point).
+                            // TRACE 4A1: typed SET_PENDING observed AFTER the legacy writes,
+                            // with the lost-pile inputs and exact before/after.
                             if (traceOpened) {
-                                TraceSession.recordIntendedStateEvent(
-                                    TraceIntendedStateEvent.Kind.PENDING_CONCEDE, pendingConcedeReason);
+                                TraceSession.recordPendingConcede(
+                                    PendingConcedeEvent.Operation.SET_PENDING,
+                                    PendingConcedeEvent.Cause.LOST_PILE_DEFICIT, playerId,
+                                    myLostPile, opponentLostPile, lostPileDeficit,
+                                    tracePendingBefore, traceReasonBefore,
+                                    pendingConcede, pendingConcedeReason);
                             }
                         }
                     }
@@ -1032,23 +1043,30 @@ public class RandoCalAi extends HeuristicAiBase {
             result = validated[0];
 
             // Record the decision for loop tracking
-            // TRACE ORACLE V2: typed intended-mutation observation (outer tracker choke point).
-            if (traceOpened) {
-                TraceSession.recordIntendedStateEvent(
-                    TraceIntendedStateEvent.Kind.DECISION_TRACKER_RECORD,
-                    "decisionTracker.recordDecision type=" + decisionType
-                        + " response='" + (result != null ? result : "") + "'");
-            }
+            // TRACE 4A1 (m00372 Option A, accepted m00373; matrix correction): the
+            // RECORD_RESPONSE observation is captured AFTER the legacy call, with the
+            // complete decision-affecting owner snapshots before/after from the pure
+            // traceSnapshot() seam. DISABLED capture calls NEITHER pure accessor: both
+            // snapshot builds sit under the traceOpened guard. The legacy call itself
+            // is byte-for-byte unchanged and runs exactly once either way.
+            DecisionTrackerSnapshot traceTrackerBefore =
+                traceOpened ? decisionTracker.traceSnapshot() : null;
             decisionTracker.recordDecision(decisionType, decisionText,
                 String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "");
+            if (traceOpened) {
+                TraceSession.recordTrackerRecordResponse(TrackerOwner.OUTER_RANDO,
+                    decisionType, String.valueOf(decision.getAwaitingDecisionId()),
+                    decisionTracker.traceDecisionKey(decisionType, decisionText),
+                    result != null ? result : "",
+                    traceTrackerBefore, decisionTracker.traceSnapshot());
+            }
 
             // Track strategic events for learning
-            // TRACE ORACLE V2: typed intended-mutation observation (strategic memory choke point).
-            if (traceOpened) {
-                TraceSession.recordIntendedStateEvent(
-                    TraceIntendedStateEvent.Kind.STRATEGIC_EVENT_RECORD,
-                    "trackStrategicEvents response='" + (result != null ? result : "") + "'");
-            }
+            // TRACE 4A1: the wrapper-level strategic-intent event is REMOVED. State
+            // events are emitted only at the actual direct writes inside
+            // trackStrategicEvents (pending-deploy SET) and trackGameState (its CLEAR);
+            // the wrapper's StrategyController calls stay unobserved until that owner's
+            // increment (4B).
             trackStrategicEvents(decision, decisionText, result);
 
             LOG.info("[RandoCalAi] decide() result: '{}' ✅", result != null ? result : "(pass)");
@@ -1921,8 +1939,16 @@ public class RandoCalAi extends HeuristicAiBase {
         if (mySide == null || !newOpponent.equals(opponentName)) {
             lastTurn = -1;
             lastPhase = null;  // Reset phase tracking for new game
+            boolean tracePendingBefore = pendingConcede;
+            String traceReasonBefore = pendingConcedeReason;
             pendingConcede = false;  // V67aw: Reset concede defer flag for new game
             pendingConcedeReason = null;
+            // TRACE 4A1: typed CLEAR_PENDING (new-game clear cause) observed after the
+            // legacy writes. The clear runs unconditionally, so a NO_OP is a real
+            // observation. TraceSession self-guards: no open session, no event.
+            TraceSession.recordPendingConcede(PendingConcedeEvent.Operation.CLEAR_PENDING,
+                PendingConcedeEvent.Cause.NEW_GAME_RESET, playerId,
+                null, null, null, tracePendingBefore, traceReasonBefore, false, null);
             battleMessageSentThisBattle = false;  // Reset battle message tracking
             gameEndMessageSent = false;  // Reset game end message tracking
             mySide = newSide;
@@ -2022,7 +2048,13 @@ public class RandoCalAi extends HeuristicAiBase {
             // Confirm any pending deploy from last turn succeeded (strategy learning)
             if (lastPendingDeployType != null) {
                 strategyController.onSuccessfulDeploy(lastPendingDeployType);
+                String traceDeployTypeBefore = lastPendingDeployType;
                 lastPendingDeployType = null;
+                // TRACE 4A1: typed PENDING_DEPLOY CLEAR at the direct-write site. The
+                // onSuccessfulDeploy call above stays unobserved until the
+                // StrategyController owner increment (4B).
+                TraceSession.recordPendingDeploy(PendingDeployEvent.Operation.CLEAR,
+                    traceDeployTypeBefore, null);
             }
         }
 
@@ -2048,14 +2080,33 @@ public class RandoCalAi extends HeuristicAiBase {
             if (pendingConcede && currentGame != null) {
                 LOG.warn("V67aw CONCEDE FIRE: battle phase ended — conceding now ({})",
                     pendingConcedeReason);
+                // TRACE 4A1 (m00381 consolidation): ONE post-try/catch recorder — the
+                // outcome variable captures SUCCESS (call returned; playerLost is
+                // internally idempotent, so this is call-outcome not state-proof) or
+                // THREW (caught Exception; the legacy catch is Exception, not
+                // Throwable, so an escaping Error skips both the event and the clear,
+                // exactly as source does). TraceSession never throws.
+                EngineCallOutcome traceLostOutcome;
                 try {
                     currentGame.playerLost(playerId,
                         com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED);
+                    traceLostOutcome = EngineCallOutcome.SUCCESS;
                 } catch (Exception e) {
                     LOG.warn("V67aw CONCEDE FIRE: error during concede: {}", e.getMessage());
+                    traceLostOutcome = EngineCallOutcome.THREW;
                 }
+                TraceSession.recordEnginePlayerLost(playerId,
+                    com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED,
+                    traceLostOutcome);
+                boolean tracePendingBefore = pendingConcede;  // structurally true on this branch
+                String traceReasonBefore = pendingConcedeReason;
                 pendingConcede = false;
                 pendingConcedeReason = null;
+                // TRACE 4A1: CLEAR_PENDING recorded after the catch, preserving the real
+                // source order PLAYER_LOST(SUCCESS|THREW) then CLEAR_PENDING.
+                TraceSession.recordPendingConcede(PendingConcedeEvent.Operation.CLEAR_PENDING,
+                    PendingConcedeEvent.Cause.POST_PLAYER_LOST, playerId,
+                    null, null, null, tracePendingBefore, traceReasonBefore, false, null);
             }
         }
 
@@ -2309,22 +2360,35 @@ public class RandoCalAi extends HeuristicAiBase {
 
         // Track deploy decisions - we'll confirm success on next turn
         if (textLower.contains("deploy")) {
+            // TRACE 4A1: PENDING_DEPLOY SET is recorded at each actual direct write
+            // (exact legacy value before/after); no branch write means no event. A
+            // same-value rewrite is a real NO_OP SET.
+            String traceDeployTypeBefore = lastPendingDeployType;
             // Determine card type from decision text
             if (textLower.contains("starship") || textLower.contains("capital ship")) {
                 lastPendingDeployType = "starship";
+                TraceSession.recordPendingDeploy(PendingDeployEvent.Operation.SET,
+                    traceDeployTypeBefore, lastPendingDeployType);
             } else if (textLower.contains("vehicle")) {
                 lastPendingDeployType = "vehicle";
+                TraceSession.recordPendingDeploy(PendingDeployEvent.Operation.SET,
+                    traceDeployTypeBefore, lastPendingDeployType);
             } else if (textLower.contains("character") || textLower.contains("alien") ||
                        textLower.contains("droid") || textLower.contains("jedi") ||
                        textLower.contains("imperial") || textLower.contains("rebel")) {
                 lastPendingDeployType = "character";
+                TraceSession.recordPendingDeploy(PendingDeployEvent.Operation.SET,
+                    traceDeployTypeBefore, lastPendingDeployType);
             } else if (textLower.contains("site") || textLower.contains("system")) {
                 lastPendingDeployType = "location";
+                TraceSession.recordPendingDeploy(PendingDeployEvent.Operation.SET,
+                    traceDeployTypeBefore, lastPendingDeployType);
             }
         }
 
         // Track battle results from decision text
         // Battle result prompts typically contain "won" or "lost"
+        // TRACE 4A1: strategyController.onBattleResult stays UNOBSERVED here; its event lands with the StrategyController owner increment (4B).
         if (textLower.contains("battle")) {
             if (textLower.contains("you won") || textLower.contains("you have won")) {
                 strategyController.onBattleResult(true);
