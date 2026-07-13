@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-12 — PHASE-REORG BATCH 1.5: dead-code purge, CSE+DE (both bots) — NO behavior change
+- Second deletion wave under Steve's migration ruling (backup `gemp-swccg-public-backup-20260712-221311` byte-verified + git history = the undo path). Every deleted range was compiled-out (`if (false ...)`) or fully commented; live behavior is bit-identical, MVN_EXIT=0 both bots, perfect rando/chosenone symmetry (CSE +10/−498, DE +9/−345 each).
+- **CardSelectionEvaluator** (9966 → 9478 lines/bot): all 11 `if (false /* V159 SUPERSEDED */)` taped-off branches; V127 + V29.8 commented corpses; the V37/V139 dead block INCLUDING its nested trapped V21 copy (verified redundant — the 4 live V21 call sites at ~4370/4500/4633/4962 untouched). V67t: the dead if-arm deleted, its LIVE else body (`zero forfeit −80`) kept behavior-identical, now unconditional.
+- **DeployEvaluator** (6206 → 5870 lines/bot): V33/V67aq/V115 commented corpse; V67aj + nested V67al `if(false)` (the dead block a prior K-2 lost a day editing); V90 `if(false)`.
+- **Artifacts removed**: `game_log2.txt`, `game_log_latest.txt`, CSE `.bak`/`.v13.backup`/`.v24.11.fix` (~745KB), stray `.DS_Store` ×3. All retained in git history.
+- **HELD (danger list, untouched)**: V122 + V67as `if(false)` blocks (batch-6/7 owners), DeployEvaluator 1424-1794 objective-consolidation corpse, Endor V193 dead block, ObjectiveHandler, ActionAudit — batch 11.
+- Tombstone comments mark each deletion site; revert path = git history (`git revert` restores everything).
+- Gate: local commit only; Codex byte-parity gate (jar) BEFORE any deploy, per m00222 sequence.
+
 ## 2026-07-12 — PHASE-REORG BATCH 1: four live-defect hotfixes (both bots) — program start
 - The phase-reorg program (Codex coordinates/gates, K-2 executes; plan reconciled m00214/m00215) begins. Batch 1 = the Codex-verified live defects, shipped concurrent with the batch-0 baseline (fixtures harvest from pre-existing replays).
 - **1a pull-target normalization** (`ActionTextEvaluator` pull-route guard): forced-location texts parse as "krennic here" — strip the `here/there/at that location` suffix before Reserve title matching. The d92bc3a3c guard was INERT without this (Codex m00202, JShell-proven).

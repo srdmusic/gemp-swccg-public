@@ -1982,58 +1982,7 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === V90 SUPERSEDED 2026-05-26: see V136 CharacterDeploySiteEvaluator §A ===
-                    // Original: NO SOLO DEPLOY TO SITE WITH ENEMY WEAPON. Replay
-                    // d483o8y8rjen117p Phasma-Shield-Control case now handled by
-                    // V136's team viability check (ability ≥4 + body count + opp
-                    // weapon). Block kept inert below for easy revert.
-                    if (false /* V90 SUPERSEDED V136 */ && card != null && blueprint != null
-                            && blueprint.getCardCategory() == CardCategory.CHARACTER
-                            && gameState != null && game != null) {
-                        // Find target location from action text.
-                        PhysicalCard v90TargetLoc = null;
-                        String v90ActionLower = actionText.toLowerCase(Locale.ROOT);
-                        for (PhysicalCard loc : gameState.getTopLocations()) {
-                            if (loc == null || loc.getTitle() == null) continue;
-                            if (v90ActionLower.contains(loc.getTitle().toLowerCase(Locale.ROOT))) {
-                                v90TargetLoc = loc;
-                                break;
-                            }
-                        }
-                        if (v90TargetLoc != null) {
-                            boolean enemyArmedAtTarget = false;
-                            boolean friendlyArmedAtTarget = false;
-                            String opponentId = game.getOpponent(playerId);
-                            for (PhysicalCard pCard : gameState.getAllPermanentCards()) {
-                                if (pCard == null || pCard == card) continue;
-                                PhysicalCard pCardLoc = null;
-                                try {
-                                    pCardLoc = game.getModifiersQuerying().getLocationThatCardIsAt(gameState, pCard);
-                                } catch (Exception ignore) { /* skip */ }
-                                if (pCardLoc != v90TargetLoc) continue;
-                                boolean armed = false;
-                                try {
-                                    armed = com.gempukku.swccgo.filters.Filters.character_with_a_weapon.accepts(
-                                        gameState, game.getModifiersQuerying(), pCard);
-                                } catch (Exception ignore) { /* */ }
-                                if (!armed) continue;
-                                if (opponentId != null && opponentId.equals(pCard.getOwner())) {
-                                    enemyArmedAtTarget = true;
-                                } else if (playerId.equals(pCard.getOwner())) {
-                                    friendlyArmedAtTarget = true;
-                                }
-                            }
-                            if (enemyArmedAtTarget && !friendlyArmedAtTarget) {
-                                action.addReasoning(
-                                    "V90 NO SUICIDE DEPLOY: '" + card.getTitle()
-                                        + "' → '" + v90TargetLoc.getTitle()
-                                        + "' has enemy armed char + no friendly weapon — will be sniped on weapons segment",
-                                    -1500.0f);
-                                LOG.warn("V90 NO SUICIDE DEPLOY: blocking {} → {} (enemy weapon present, no friendly weapon)",
-                                    card.getTitle(), v90TargetLoc.getTitle());
-                            }
-                        }
-                    }
+                    // V90 if(false) NO-SUICIDE-DEPLOY block DELETED 2026-07-12 batch 1.5 (V136 §A owns team viability) — see git history.
 
                     // === V96 (Steve, 2026-05-20): CONCENTRATE AT CONTESTED SITES ===
                     // Per Steve: "I basically bombard characters. When it comes to
@@ -2042,10 +1991,10 @@ public class DeployEvaluator extends ActionEvaluator {
                     // to overpower me. Overpowering is a quick way to win because
                     // that causes overflow damage."
                     //
-                    // NOTE (comment corrected 2026-07-06): V67al is DEAD — superseded by
-                    // V136 §B; its code (~3900 in this file) sits inside the dead
-                    // `if (false /* V67aj SUPERSEDED V136 */)` block, retained as the
-                    // revert path only. Historical context: V67al penalized ANY deploy
+                    // NOTE (updated 2026-07-12 batch 1.5): V67al is DEAD — superseded by
+                    // V136 §B; its code (the old `if (false /* V67aj SUPERSEDED V136 */)`
+                    // block in this file) was DELETED in batch 1.5 — revert path = git
+                    // history. Historical context: V67al penalized ANY deploy
                     // when friendly power at a site exceeded 20, regardless of opponent
                     // power. That was wrong when opponent has comparable power: we should
                     // CONCENTRATE for overflow battle, not spread.
@@ -4016,131 +3965,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     // Combined with V51 OBJ FIRST (+300) and V29.7 (+80 for BG), an empty
                     // objective-required BG can score +880 across rules.
                     //
-                    // === V67aj SUPERSEDED 2026-05-26: see V136 CharacterDeploySiteEvaluator §B ===
-                    // Block kept inert below for easy revert.
-                    if (false /* V67aj SUPERSEDED V136 */ && category == CardCategory.CHARACTER && card != null && gameState != null
-                            && game != null && context.getPlayerId() != null) {
-                        try {
-                            String v67ajPid = context.getPlayerId();
-                            for (PhysicalCard ajLoc : gameState.getTopLocations()) {
-                                if (ajLoc == null || ajLoc.getTitle() == null) continue;
-                                String ajLocLower = ajLoc.getTitle().toLowerCase(Locale.ROOT);
-                                if (!actionLower.contains(ajLocLower)) continue;
-
-                                // Count current friendly characters at this site
-                                int v67ajStack = 0;
-                                for (PhysicalCard c : gameState.getCardsAtLocation(ajLoc)) {
-                                    if (c == null || c.getBlueprint() == null) continue;
-                                    if (!v67ajPid.equals(c.getOwner())) continue;
-                                    if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                    v67ajStack++;
-                                }
-
-                                boolean v67ajIsBg;
-                                try {
-                                    v67ajIsBg = game.getModifiersQuerying().isBattleground(gameState, ajLoc, null);
-                                } catch (Exception e) { v67ajIsBg = false; }
-
-                                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer ajObj =
-                                    context.getObjectiveAnalyzer();
-                                boolean v67ajIsObjReq = ajObj != null && ajObj.isAnalyzed()
-                                    && !ajObj.isFlipped()
-                                    && ajObj.isObjectiveRelevantLocation(ajLoc.getTitle());
-
-                                String v67ajLabel;
-                                float v67ajBonus;
-                                if (v67ajIsObjReq && v67ajIsBg) {
-                                    if (v67ajStack == 0) {
-                                        v67ajLabel = "OBJ-REQ + BG, EMPTY"; v67ajBonus = 500f;
-                                    } else if (v67ajStack <= 2) {
-                                        v67ajLabel = "OBJ-REQ + BG, REINFORCE"; v67ajBonus = 250f;
-                                    } else {
-                                        v67ajLabel = "OBJ-REQ + BG, SUFFICIENT"; v67ajBonus = 0f;
-                                    }
-                                } else if (v67ajIsObjReq) {
-                                    if (v67ajStack == 0) {
-                                        v67ajLabel = "OBJ-REQ, EMPTY"; v67ajBonus = 400f;
-                                    } else if (v67ajStack <= 2) {
-                                        v67ajLabel = "OBJ-REQ, REINFORCE"; v67ajBonus = 200f;
-                                    } else {
-                                        v67ajLabel = "OBJ-REQ, SUFFICIENT"; v67ajBonus = 0f;
-                                    }
-                                } else if (v67ajIsBg) {
-                                    if (v67ajStack == 0) {
-                                        v67ajLabel = "BG, OPEN-FRONT"; v67ajBonus = 300f;
-                                    } else if (v67ajStack <= 2) {
-                                        v67ajLabel = "BG, REINFORCE"; v67ajBonus = 100f;
-                                    } else {
-                                        v67ajLabel = "BG, OVER-STACK"; v67ajBonus = -300f;
-                                    }
-                                } else {
-                                    // Non-BG: leave V67ah / V67ag in CardSelectionEvaluator to handle.
-                                    v67ajLabel = null; v67ajBonus = 0f;
-                                }
-
-                                if (v67ajLabel != null && v67ajBonus != 0f) {
-                                    action.addReasoning(String.format(
-                                        "V67aj DEPLOY DEST [%s, stack=%d]: %s",
-                                        v67ajLabel, v67ajStack, ajLoc.getTitle()), v67ajBonus);
-                                    LOG.warn("V67aj [{}]: {} → {} stack={} → {}{}",
-                                        v67ajLabel, card.getTitle(), ajLoc.getTitle(), v67ajStack,
-                                        v67ajBonus > 0 ? "+" : "", (int) v67ajBonus);
-                                }
-
-                                // === V67al (Steve, 2026-05-07): POWER-STACK SPREAD PENALTY ===
-                                // Steve's rule: 'In the last games he had a site with like
-                                // 25-40 or so power, way more than enough to protect and spread.'
-                                //
-                                // Beyond ability/character-count stacking, RAW POWER stacking
-                                // is the clearer signal: once a site has 20+ power of friendly
-                                // characters, you have plenty for any battle there. Adding
-                                // more to that site is sub-optimal — those characters could
-                                // be opening new fronts elsewhere.
-                                //
-                                // Tiered power-stack penalty:
-                                //    20-24 friendly power: -200 (already strong, prefer spread)
-                                //    25-34 friendly power: -400 (heavily over-stacked)
-                                //    35+   friendly power: -700 (catastrophically over-stacked)
-                                //
-                                // Skipped if location is objective-required (V67aj already
-                                // tapers obj-req at stack 3+ to 0 — power doesn't override
-                                // flip requirement).
-                                try {
-                                    if (!v67ajIsObjReq) {
-                                        float v67alFriendlyPower = 0f;
-                                        for (PhysicalCard pc : gameState.getCardsAtLocation(ajLoc)) {
-                                            if (pc == null || pc.getBlueprint() == null) continue;
-                                            if (!v67ajPid.equals(pc.getOwner())) continue;
-                                            if (pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                            if (pc.getBlueprint().hasPowerAttribute()) {
-                                                Float p = pc.getBlueprint().getPower();
-                                                if (p != null) v67alFriendlyPower += p;
-                                            }
-                                        }
-                                        float v67alPenalty = 0f;
-                                        String v67alLabel = null;
-                                        if (v67alFriendlyPower >= 35f) {
-                                            v67alPenalty = -700f; v67alLabel = "POWER-STACK CATASTROPHIC";
-                                        } else if (v67alFriendlyPower >= 25f) {
-                                            v67alPenalty = -400f; v67alLabel = "POWER-STACK HEAVY";
-                                        } else if (v67alFriendlyPower >= 20f) {
-                                            v67alPenalty = -200f; v67alLabel = "POWER-STACK MILD";
-                                        }
-                                        if (v67alLabel != null) {
-                                            action.addReasoning(String.format(
-                                                "V67al %s: %s already has %.0f friendly power — spread to threaten elsewhere!",
-                                                v67alLabel, ajLoc.getTitle(), v67alFriendlyPower), v67alPenalty);
-                                            LOG.warn("V67al {}: site={} friendlyPower={} → {}",
-                                                v67alLabel, ajLoc.getTitle(), (int) v67alFriendlyPower, (int) v67alPenalty);
-                                        }
-                                    }
-                                } catch (Exception e) { /* ignore */ }
-                                break;
-                            }
-                        } catch (Exception e) {
-                            LOG.debug("V67aj DEPLOY DEST: error: {}", e.getMessage());
-                        }
-                    }
+                    // V67aj + nested V67al if(false) block DELETED 2026-07-12 batch 1.5 (V136 §B owns site-stack scoring) — see git history.
 
                     // === V22.7: CLOUD CITY OCCUPATION GUARD ===
                     // Cloud City Occupation self-cancels if we don't occupy Bespin system.
@@ -4208,9 +4033,9 @@ public class DeployEvaluator extends ActionEvaluator {
                     // magnitudes: VETO-heavy (-9999 one-weapon gate, V185 -2000 pull block) +
                     // ORDERING (V67m/V67am +600 weapon pulls, V33 named-weapon-first) + BANDED
                     // (V30 ±1000 pilot+ship, V86/V121 -1500/+300, V158 +300 arm-unarmed).
-                    // Absorbs (dead, commented below/nearby — revert path, do not delete):
-                    // V33-block, V67aq, V115 (V180 persona-scan fix lives inside V158's
-                    // NO-WIELDER guard).
+                    // Absorbed (V33-block, V67aq, V115): the old commented blocks were DELETED
+                    // 2026-07-12 batch 1.5 — revert path = git history. (V180 persona-scan
+                    // fix lives inside V158's NO-WIELDER guard.)
                     // Cross-refs: DEPLOY-2 (character siting), SVC-ORACLE (V185 attach gate),
                     // CardSelectionEvaluator wielder-pick (decides WHICH character gets the
                     // weapon). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 +
@@ -4321,167 +4146,6 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // ===================================================================
-                    // OLD RULES SUPERSEDED BY V158 (unified weapon gate, above).
-                    // Steve 2026-05-28: comment out superseded logic, do NOT delete it.
-                    // Changelogs represent these rules, but devs need to see the old logic
-                    // inline. A future clean build can strip these comment blocks so Rando
-                    // parses less text. Below is the EXACT prior V33 one-weapon block plus
-                    // V67aq/V115, fully commented out.
-                    // ===================================================================
-//                     // === V33: ONE WEAPON PER CHARACTER (HARD BLOCK) ===
-//                     // A character should only ever have one weapon. If the target character
-//                     // already has ANY weapon attached, hard-block this deploy (-9999).
-//                     // This is universal — applies to all weapons, not just lightsabers.
-//                     if (category == CardCategory.WEAPON && gameState != null) {
-//                         try {
-//                             String v33PlayerId = context.getPlayerId();
-//                             // Parse target character from action text (format: "on <Character Name>")
-//                             for (PhysicalCard tableCard : gameState.getAllPermanentCards()) {
-//                                 if (tableCard == null || !v33PlayerId.equals(tableCard.getOwner())) continue;
-//                                 com.gempukku.swccgo.common.Zone v33Zone = tableCard.getZone();
-//                                 if (v33Zone == null || !v33Zone.isInPlay()) continue;
-//                                 if (tableCard.getBlueprint() == null || tableCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-//                                 String v33CharTitle = tableCard.getTitle() != null ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
-//                                 if (v33CharTitle.isEmpty() || !actionLower.contains(v33CharTitle)) continue;
-// 
-//                                 // Found likely target character — check for existing weapons
-//                                 java.util.List<PhysicalCard> v33Attachments = gameState.getAttachedCards(tableCard);
-//                                 if (v33Attachments != null) {
-//                                     for (PhysicalCard att : v33Attachments) {
-//                                         if (att != null && att.getBlueprint() != null
-//                                             && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
-//                                             action.addReasoning(String.format(
-//                                                 "V33 ONE WEAPON: %s already has a weapon — BLOCKED!",
-//                                                 tableCard.getTitle()), -9999.0f);
-//                                             LOG.warn("V33 ONE WEAPON: {} on {} BLOCKED — character already armed!",
-//                                                 card.getTitle(), tableCard.getTitle());
-//                                             break;
-//                                         }
-//                                     }
-//                                 }
-//                                 break; // Only check first matching character
-//                             }
-//                         } catch (Exception e) {
-//                             LOG.debug("V33 ONE WEAPON: Error: {}", e.getMessage());
-//                         }
-//                     }
-// 
-//                     // === V67aq (Steve, 2026-05-08): UNIVERSAL ONE-WEAPON RULE ===
-//                     //
-//                     // Replaces the entire V29.11/V29.9/V67ad/V67ap stack of hardcoded
-//                     // character-name detection. Steve's rule, full stop:
-//                     //   "No second weapon should deploy on ANY character. Period."
-//                     //
-//                     // Universal logic, no hardcoded names, no faction filters, no persona
-//                     // matching for the BLOCK side:
-//                     //   1. Iterate every Rando character in play.
-//                     //   2. Count how many are unarmed (no WEAPON attached).
-//                     //   3. If at least one unarmed Rando character exists → allow the
-//                     //      weapon deploy and give +300 (someone good can take it).
-//                     //   4. If ZERO unarmed characters AND at least one armed character →
-//                     //      hard-block (-9999): every character would be a 2nd-weapon
-//                     //      stack or the weapon would orphan.
-//                     //   5. If zero characters at all → V67ao gate elsewhere blocks.
-//                     //
-//                     // CardSelectionEvaluator handles which specific character to attach
-//                     // to (target-pick layer, V67an handles persona-matching for swaps).
-//                     if (category == CardCategory.WEAPON && gameState != null) {
-//                         try {
-//                             String wepPlayerId = context.getPlayerId();
-// 
-//                             // V115 (Steve, 2026-05-22): CRITERIA-AWARE WEAPON BLOCK.
-//                             // V67aq's previous logic counted ALL armed/unarmed friendlies regardless of
-//                             // whether the weapon could legally deploy on them. That let the 2nd Dark
-//                             // Jedi Lightsaber land on Vader (the only eligible target, already armed)
-//                             // because Tarkin was unarmed — even though Tarkin isn't a "warrior of
-//                             // ability > 4" so the weapon would have to land on Vader anyway.
-//                             // Steve has asked for "hard block any character from getting 2 weapons"
-//                             // four times. Symptoms keep recurring because every prior fix lived in a
-//                             // different code path that the actual decision bypassed. V115 collapses
-//                             // the criteria-aware logic from V70's helper (CardSelectionEvaluator) into
-//                             // V67aq itself so the deploy-action score is wrong at the FIRST gate.
-//                             //
-//                             // ALSO catches Vader's-Lightsaber-when-Vader-not-on-table: criteria parsed
-//                             // ("Vader"), matchingUnarmed == 0 because Vader isn't on the table at all,
-//                             // → BLOCK. No more pulling/deploying weapons whose target character isn't
-//                             // ready.
-//                             String v115Criteria = null;
-//                             int v115MatchArmed = 0, v115MatchUnarmed = 0;
-//                             int v67aqUnarmed = 0, v67aqArmed = 0;
-//                             try {
-//                                 v115Criteria = com.gempukku.swccgo.ai.models.chosenone.evaluators
-//                                     .CardSelectionEvaluator.v70ExtractDeployCriteria(card.getBlueprint().getGameText());
-//                             } catch (Exception ignore) { /* leave null */ }
-// 
-//                             for (PhysicalCard tc : gameState.getAllPermanentCards()) {
-//                                 if (tc == null || !wepPlayerId.equals(tc.getOwner())) continue;
-//                                 if (tc.getBlueprint() == null
-//                                         || tc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-//                                 com.gempukku.swccgo.common.Zone z = tc.getZone();
-//                                 if (z == null || !z.isInPlay()) continue;
-//                                 boolean armed = false;
-//                                 java.util.List<PhysicalCard> atts = gameState.getAttachedCards(tc);
-//                                 if (atts != null) {
-//                                     for (PhysicalCard a : atts) {
-//                                         if (a != null && a.getBlueprint() != null
-//                                                 && a.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
-//                                             armed = true;
-//                                             break;
-//                                         }
-//                                     }
-//                                 }
-//                                 if (armed) v67aqArmed++; else v67aqUnarmed++;
-// 
-//                                 if (v115Criteria != null) {
-//                                     boolean matchesCriteria = false;
-//                                     try {
-//                                         matchesCriteria = com.gempukku.swccgo.ai.models.chosenone.evaluators
-//                                             .CardSelectionEvaluator.v70CharacterMatchesCriteria(
-//                                                 context.getGame(), gameState, tc, v115Criteria);
-//                                     } catch (Exception ignore) { /* leave false */ }
-//                                     if (matchesCriteria) {
-//                                         if (armed) v115MatchArmed++; else v115MatchUnarmed++;
-//                                     }
-//                                 }
-//                             }
-// 
-//                             // V115 BLOCK 1: criteria parsed AND no criteria-matching UNARMED target.
-//                             // Covers (a) every eligible target already armed, AND
-//                             //        (b) no eligible target on table at all (deploy would fail).
-//                             if (v115Criteria != null && v115MatchUnarmed == 0) {
-//                                 String why = v115MatchArmed > 0
-//                                     ? String.format("every '%s' friendly (%d) already armed", v115Criteria, v115MatchArmed)
-//                                     : String.format("no '%s' friendly on table — deploy would fail", v115Criteria);
-//                                 action.addReasoning(
-//                                     "V115 WEAPON BLOCK: " + why + " — no legal target!", -9999.0f);
-//                                 LOG.warn("V115 WEAPON BLOCK: {} (criteria '{}') — matchArmed={} matchUnarmed={} → HARD BLOCK (-9999)",
-//                                     card.getTitle(), v115Criteria, v115MatchArmed, v115MatchUnarmed);
-//                             }
-//                             // V67aq legacy paths (kept for weapons with no parseable criteria):
-//                             else if (v67aqUnarmed > 0) {
-//                                 // At least one unarmed character — weapon deploy is useful.
-//                                 action.addReasoning(String.format(
-//                                     "V67aq WEAPON DEPLOY: %d unarmed character(s) on table — deploy weapon to arm them!",
-//                                     v67aqUnarmed), 300.0f);
-//                                 LOG.info("V67aq WEAPON DEPLOY: {} → unarmed={}, armed={} → +300",
-//                                     card.getTitle(), v67aqUnarmed, v67aqArmed);
-//                             } else if (v67aqArmed > 0) {
-//                                 // All characters armed — second weapon would stack (illegal/wasteful).
-//                                 action.addReasoning(String.format(
-//                                     "V67aq UNIVERSAL BLOCK: every Rando character (%d) is already armed — second weapon on ANY character is forbidden!",
-//                                     v67aqArmed), -9999.0f);
-//                                 LOG.warn("V67aq UNIVERSAL BLOCK: {} — all {} chars armed, no 2nd weapon allowed (HARD BLOCK)",
-//                                     card.getTitle(), v67aqArmed);
-//                             } else {
-//                                 // No characters at all — V67ao ORDER GATE handles this elsewhere.
-//                                 LOG.info("V67aq WEAPON DEPLOY: {} — no chars on table, V67ao order gate applies",
-//                                     card.getTitle());
-//                             }
-//                         } catch (Exception e) {
-//                             LOG.debug("V67aq/V115 error: {}", e.getMessage());
-//                         }
-//                     }
 
                     // === V33: NAMED WEAPON PRIORITY ===
                     // Unique character-specific weapons (Vader's Lightsaber, Mara's Lightsaber, etc.)

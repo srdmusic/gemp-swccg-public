@@ -6107,3 +6107,18 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     instead of inline literals. Behavior byte-identical (weights == old literals; V99/V86 untouched).
     Facts from Codex batch resources/Objective_Playbook_Facts_2026-07-07.json, source-verified (My Lord=GO).
     Compiles both bots; chosenone mirrored. Full details in resources/AI_CHANGELOG.md 2026-07-07 entry.
+
+  ════ PHASE-REORG BATCH 1.5 (2026-07-12): dead-code purge — CSE + DE, both bots, NO behavior ════
+    NOT a new V-tag. Second deletion wave under Steve's migration ruling (byte-verified backup
+    gemp-swccg-public-backup-20260712-221311 + git history = undo). Deleted ONLY compiled-out
+    (`if (false ...)`) or fully-commented code: CSE all 11 V159-superseded taped-off branches,
+    V127 + V29.8 commented corpses, the V37/V139 dead block incl. its nested trapped V21 copy
+    (redundant — 4 live V21 call sites survive at ~4370/4500/4633/4962); V67t dead if-arm removed,
+    live else body (zero-forfeit −80) now unconditional, behavior-identical. DE: V33/V67aq/V115
+    corpse, V67aj + nested V67al if(false) (the dead block a prior K-2 lost a day on), V90 if(false).
+    Artifacts: game_log2/game_log_latest, CSE .bak/.v13.backup/.v24.11.fix, .DS_Store x3 removed.
+    HELD on danger list: V122 + V67as if(false) (batch-6/7 owners), DE 1424-1794 objective corpse,
+    Endor V193 dead block, ObjectiveHandler, ActionAudit (batch 11). CSE 9966→9478, DE 6206→5870
+    lines per bot; +10/−498 and +9/−345 each, perfectly mirrored. MVN_EXIT=0 both bots. Tombstones
+    at every deletion site. Local commit only — Codex jar byte-parity gate BEFORE deploy (m00222).
+    Full details in resources/AI_CHANGELOG.md 2026-07-12 entry.

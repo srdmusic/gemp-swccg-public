@@ -4014,8 +4014,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     // (Draw Their Fire force-pile protect), V21/V25 protections. Hub: V153 LIVE.
     // KIND mix + key magnitudes: ORDERING via zone bands; HAND FLOOR -700,
     // PRIORITY CARD -100, V21 hard bans on flip-required/objective-pullable cards.
-    // Absorbs (dead, commented below/nearby — revert path, do not delete): V127,
-    // V101, V119, V29.8-zone (the old //-commented zone-scoring blocks).
+    // Absorbed (V127, V101, V119, V29.8-zone): the old //-commented zone-scoring
+    // blocks were DELETED 2026-07-12 batch 1.5 — revert path = git history.
     // NOTE: the zone order is DUPLICATED in evaluateForceLossOrForfeit (battle
     // handler, further down this file) — byte-identical parity pair, EDIT BOTH
     // TOGETHER until an extract-method pass.
@@ -4141,88 +4141,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // ================================================================
-// ===================================================================
-// OLD V127/V29.8 ZONE SCORING (regular evaluateForceLoss) — SUPERSEDED by V153 below.
-// Steve's comment-out rule (2026-05-28): kept inline & commented for dev
-// reference, not deleted. This is the EXACT pre-V153 logic (the inverted
-// healthy/low zone magnitudes V153 fixed). A future clean build may strip it.
-// ===================================================================
-//                         // === V127 V29.8 ZONE SCORING — restores V13 priority order ===
-//                         //   Healthy (reserves > 10): Used +400 > Reserve +300 > Force Pile +100 > Hand -300
-//                         //   Low (reserves <= 10):    Hand +400 > Force Pile -100 > Used -200 > Reserve -250
-//                         //   DUPLICATE in hand: +800 bonus applied separately below
-//                         // Used > Reserve ordering (was V101's +500/+300 contribution) baked in here.
-//                         if (isFromUsedPile) {
-//                             if (lifeForceHealthy) {
-//                                 action.addReasoning("V29.8 USED PILE (healthy): already-spent cards lost first +400", 400.0f);
-//                             } else {
-//                                 action.addReasoning("V29.8 LIFE FORCE LOW (" + totalReserves + "): mild protect Used Pile -200", -200.0f);
-//                                 logger.warn("V29.8 USED PROTECT: {} lifeForce={} — protect (-200)", title, totalReserves);
-//                             }
-//                         } else if (isFromReserve) {
-//                             if (lifeForceHealthy) {
-//                                 action.addReasoning("V29.8 RESERVE (healthy): second pile preference +300", 300.0f);
-//                             } else {
-//                                 action.addReasoning("V29.8 LIFE FORCE LOW (" + totalReserves + "): PROTECT Reserve — biggest source -250", -250.0f);
-//                                 logger.warn("V29.8 RESERVE PROTECT: {} lifeForce={} — protect (-250)", title, totalReserves);
-//                             }
-//                         } else if (isFromForcePile) {
-//                             // V28: Check if Draw Their Fire is active — Force pile = interrupt ability!
-//                             boolean dtfActive = false;
-//                             try {
-//                                 String dtfOpId = gameState.getOpponent(playerId);
-//                                 for (PhysicalCard dtfC : gameState.getAllPermanentCards()) {
-//                                     if (dtfC != null && dtfOpId != null && dtfOpId.equals(dtfC.getOwner())
-//                                         && dtfC.getBlueprint() != null && dtfC.getBlueprint().getTitle() != null
-//                                         && dtfC.getBlueprint().getTitle().toLowerCase(java.util.Locale.ROOT).contains("draw their fire")
-//                                         && dtfC.getZone() != null && dtfC.getZone().isInPlay()) {
-//                                         dtfActive = true;
-//                                         break;
-//                                     }
-//                                 }
-//                             } catch (Exception e) { }
-// 
-//                             if (dtfActive) {
-//                                 int forcePileSize = 0;
-//                                 try { forcePileSize = gameState.getForcePileSize(playerId); } catch (Exception e) { }
-//                                 float dtfForcePenalty = (forcePileSize <= 3) ? -400.0f : -200.0f;
-//                                 action.addReasoning(String.format("V28 DTF FORCE PILE PROTECT: Force pile=%d, DTF active — lose from reserve instead!", forcePileSize), dtfForcePenalty);
-//                                 logger.warn("V28 DTF FORCE PILE PROTECT: {} from Force pile, DTF active, pile={} — HEAVY PENALTY ({})", title, forcePileSize, dtfForcePenalty);
-//                             } else if (lifeForceHealthy) {
-//                                 // V127: Force pile is LAST positive pile preference — force is precious for activation
-//                                 action.addReasoning("V29.8 FORCE PILE (healthy): last positive pile preference +100", 100.0f);
-//                             } else {
-//                                 // Low — force pile losses still OK if we have to, slight protect
-//                                 action.addReasoning("V29.8 LIFE FORCE LOW (" + totalReserves + "): protect force pile -100", -100.0f);
-//                             }
-//                         } else if (isFromHand) {
-//                             if (lifeForceHealthy) {
-//                                 // V127: Hand penalty reduced from -500 (V29.8 old + V101) to -300.
-//                                 // Smaller penalty lets duplicate (+800 below) and type bonuses
-//                                 // (interrupt +50) influence the decision properly.
-//                                 action.addReasoning("V29.8 HAND PROTECT (healthy " + totalReserves + " life force): hand cards are deploy options -300", -300.0f);
-//                                 logger.warn("V29.8 HAND PROTECT (healthy): {} lifeForce={} → -300", title, totalReserves);
-//                             } else {
-//                                 // V127: Life force LOW (Steve's ≤10 threshold) — hand losses STRONGLY preferred.
-//                                 // Was +80 in old code, dominated by V101's -500. Now +400 so reserves≤10 actually flips preference to hand.
-//                                 action.addReasoning("V29.8 LIFE FORCE LOW (" + totalReserves + "): prefer Hand loss — preserve piles +400", 400.0f);
-//                                 logger.warn("V29.8 HAND PREFERRED (low life force): {} lifeForce={} → +400", title, totalReserves);
-//                             }
-// 
-//                             // V25: CHARACTER PROTECTION IN HAND (only applies to hand cards)
-//                             if (blueprint != null) {
-//                                 CardCategory handCardCategory = blueprint.getCardCategory();
-//                                 if (handCardCategory == CardCategory.CHARACTER) {
-//                                     action.addReasoning("V29.8 HAND PROTECT: CHARACTER — needs to be deployed!", -150.0f);
-//                                 } else if (handCardCategory == CardCategory.STARSHIP || handCardCategory == CardCategory.VEHICLE) {
-//                                     action.addReasoning("V29.8 HAND PROTECT: Ship/vehicle needs deploying", -80.0f);
-//                                 } else if (handCardCategory == CardCategory.INTERRUPT) {
-//                                     // Interrupts are the least bad to lose from hand
-//                                     action.addReasoning("V29.8 HAND: Interrupt — least bad hand loss", 50.0f);
-//                                 }
-//                             }
-//                         }
                         // === V153 (Steve, 2026-05-28): UNIFIED FORCE-LOSS ORDER (char/life-force tiers) ==
                         // Replaces the old V127/V29.8 healthy/low zone scoring, which was
                         // INVERTED from Steve's intended order (it dumped HAND first when low,
@@ -4569,95 +4487,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     fv, card.isHit(), v159);
                             }
 
-                            // === V143 (Steve, 2026-05-26): HARD BLOCK SMALL-DAMAGE FORFEIT ===
-                            // Steve's rule: "If there is 2 or less force to lose from battle
-                            // damage and no needed attrition (because either immune or 0 left),
-                            // NEVER lose character from site. Bypass all other forfeit scoring."
-                            //
-                            // This is a HARD BLOCK that dominates V67bd FORFEIT COVERS ALL,
-                            // V22.3 FORFEIT FIRST, and any other forfeit-encouraging signals.
-                            // Force loss from pile/hand/reserve is always preferred over
-                            // forfeiting a character to satisfy ≤2 force of battle damage
-                            // when no attrition is owed.
-                            if (false /* V159 SUPERSEDED — step 3 handles damage<3 */
-                                    && optionalAttritionRemaining == 0 && optionalDamageRemaining > 0
-                                    && optionalDamageRemaining <= 2) {
-                                action.addReasoning(String.format(
-                                    "V143 HARD BLOCK: only %d battle damage, no attrition — NEVER forfeit a character, lose from pile instead",
-                                    optionalDamageRemaining), -9999.0f);
-                                logger.warn("V143 HARD BLOCK SMALL-DMG FORFEIT: {} dmg={} attr={} → -9999",
-                                    card.getTitle(), optionalDamageRemaining, optionalAttritionRemaining);
-                                actions.add(action);
-                                continue;  // skip all other forfeit scoring for this card
-                            }
 
-                            if (false /* V159 SUPERSEDED — step 3 handles fv-based forfeit scoring */ && fv > 0) {
-                                // V67t WASTE-AWARE FORFEIT SCORING:
-                                // Steve's rule: "if only need to lose 2 or less force from a battle,
-                                // keep characters on location and just lose force from reserves."
-                                //
-                                // Old formula: efficiencyBonus = fv * 20  (gave Sidious fv=7 a +140
-                                // bonus for satisfying 1 damage — wasted 6 forfeit. Lost Sidious to
-                                // pay 1 damage instead of losing 1 reserve card.)
-                                //
-                                // New formula: net = savings*20 - waste*50
-                                //   savings = min(fv, damage_remaining)  — efficient damage covered
-                                //   waste   = max(0, fv - damage_remaining) — over-payment
-                                // Heavy waste penalty (-50/pt) outweighs savings (+20/pt) so high-fv
-                                // characters never forfeit for tiny damage.
-                                int savings = (int) Math.min(fv, optionalDamageRemaining);
-                                int waste = (int) Math.max(0f, fv - optionalDamageRemaining);
-                                float efficiencyBonus = savings * 20.0f - waste * 50.0f;
-                                if (optionalDamageRemaining > 8 && waste == 0) efficiencyBonus += 50.0f;
-
-                                // V67bh (Steve, 2026-05-10): SMALL-DAMAGE PROTECTION FOR
-                                // VALUABLE UN-HIT CHARACTERS.
-                                //
-                                // Steve's rule: damage 1-3 with a high-value (fv ≥ 4)
-                                // un-hit character → keep the char, lose from reserve/hand
-                                // instead. A hit char already had its fv reset to 0 by the
-                                // weapon hit — forfeit costs nothing strategic, no protection.
-                                //
-                                // Supersedes the earlier V67t SMALL DAMAGE rule (≤2 / fv≥2).
-                                // Lower the bar to "fv ≥ 2 / damage ≤ 2" still applies as a
-                                // secondary milder discouragement so even cheap chars aren't
-                                // wasted on 1 damage.
-                                boolean v67bhSmallDmg = optionalDamageRemaining <= 3;
-                                boolean v67bhValuable = fv >= 4;
-                                boolean v67bhNotHit   = !card.isHit();
-                                if (v67bhSmallDmg && v67bhValuable && v67bhNotHit) {
-                                    efficiencyBonus -= 400.0f;
-                                    action.addReasoning(String.format(
-                                        "V67bh PROTECT VALUABLE: %s (fv=%d, not hit) — only %d damage, lose from reserve/hand instead!",
-                                        card.getTitle(), (int)fv, optionalDamageRemaining), 0.0f);
-                                    logger.warn("V67bh PROTECT VALUABLE: {} fv={} damage={} not-hit → -400",
-                                        card.getTitle(), (int)fv, optionalDamageRemaining);
-                                } else if (optionalDamageRemaining <= 2 && fv >= 2) {
-                                    // V67t secondary backstop for low-value chars vs ≤2 damage
-                                    efficiencyBonus -= 250.0f;
-                                    action.addReasoning("V67t SMALL DAMAGE: ≤2 damage — keep character on table, lose from reserve!", 0.0f);
-                                    logger.warn("V67t SMALL DAMAGE: {} fv={} damage={} → -250 (prefer reserve loss)",
-                                        card.getTitle(), (int)fv, optionalDamageRemaining);
-                                }
-
-                                action.addReasoning("V22.4/V67t OPTIONAL FORFEIT (savings=" + savings
-                                    + " waste=" + waste + " of " + optionalDamageRemaining + " damage)",
-                                    efficiencyBonus);
-                                logger.info("V67t OPTIONAL FORFEIT: {} fv={} damage={} → savings={} waste={} bonus={}",
-                                    card.getTitle(), (int)fv, optionalDamageRemaining, savings, waste, efficiencyBonus);
-
-                                // V67t: Apply V37 PROTECT here too (was only in non-optional path)
-                                Float charPower = bp != null && bp.hasPowerAttribute() ? bp.getPower() : null;
-                                Float charAbility = bp != null && bp.hasAbilityAttribute() ? bp.getAbility() : null;
-                                if (charPower != null && charPower >= 6 && charAbility != null && charAbility >= 4) {
-                                    action.addReasoning(String.format(
-                                        "V37/V67t PROTECT: %s (power %.0f, ability %.0f) — keep alive!",
-                                        card.getTitle(), charPower, charAbility), -150.0f);
-                                }
-                            } else {
-                                // Zero forfeit value — not worth it
-                                action.addReasoning("Optional forfeit but zero forfeit value", -80.0f);
-                            }
+                            // V67t/V67bh dead branch deleted 2026-07-12 batch 1.5; the always-taken else body kept:
+                            // Zero forfeit value — not worth it
+                            action.addReasoning("Optional forfeit but zero forfeit value", -80.0f);
 
                             // V22.4: Check objective-critical protection even for optional forfeits
                             String fTitle = card.getTitle();
@@ -4689,14 +4522,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             action.setDisplayText("Forfeit " + title);
                         }
 
-                        // =======================================================
-                        // CRITICAL: Hit cards should ALWAYS be forfeited first!
-                        // They're already damaged - no reason to keep them around
-                        // =======================================================
-                        if (false /* V159 SUPERSEDED — step 1 handles hit cards */ && card.isHit()) {
-                            action.addReasoning("ALREADY HIT - forfeit first!", 150.0f);
-                            logger.info("🎯 {} is HIT - prioritizing for forfeit", title);
-                        }
 
                         // =======================================================
                         // CRITICAL: Dead cards (persona already deployed) should
@@ -4758,40 +4583,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // === V37: HIGH-VALUE CHARACTER PROTECTION ===
-                        // Characters with high power/ability should be protected from
-                        // unnecessary forfeiting. Vader, Emperor, etc. are expendable in
-                        // Hunt Down but only when there's actual damage to absorb.
-                        // If a character "may not be used to satisfy attrition" (hit by weapon),
-                        // the game forces them to be forfeited to battle damage instead.
-                        // High-power unique characters that AREN'T hit should be kept alive.
-                        // V139 (Steve, 2026-05-26): BUMP HIGH-VALUE CHARACTER PROTECTION
-                        //
-                        // Steve's standing rule: "Rando should always choose the LEAST
-                        // VALUE characters to satisfy battle damage first." Previous
-                        // magnitudes were too weak — Tyranus (power 6, ability 5, forfeit
-                        // 5) was forfeited because +50 forfeit-efficiency bonus dominated
-                        // -25 valuable-unique protection. New magnitudes ensure key
-                        // characters are essentially never picked unless they're the
-                        // ONLY option.
-                        if (false /* V159 SUPERSEDED — step 3 (damage>=3) makes V139 yield; step 2 has release valve */
-                                && blueprint != null && !card.isHit()) {
-                            Float charPower = blueprint.hasPowerAttribute() ? blueprint.getPower() : null;
-                            Float charAbility = blueprint.hasAbilityAttribute() ? blueprint.getAbility() : null;
-                            if (charPower != null && charPower >= 6 && charAbility != null && charAbility >= 4) {
-                                action.addReasoning(String.format(
-                                    "V37/V139 PROTECT: %s (power %.0f, ability %.0f) — never forfeit unless only option!",
-                                    title, charPower, charAbility), -400.0f);
-                            } else if (charPower != null && charPower >= 5) {
-                                action.addReasoning(String.format(
-                                    "V139 PROTECT: %s (power %.0f) — high-power fighter, save for battle",
-                                    title, charPower), -200.0f);
-                            } else if (charAbility != null && charAbility >= 4) {
-                                action.addReasoning(String.format(
-                                    "V139 PROTECT: %s (ability %.0f) — destiny draw value, save",
-                                    title, charAbility), -200.0f);
-                            }
-                        }
 
                         if (blueprint != null) {
                             // Forfeit value scoring - lower forfeit = better to forfeit (cheap loss).
@@ -5080,96 +4871,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     } catch (NumberFormatException e) { /* ignore */ }
                 }
 
-// ===================================================================
-// OLD V127/V29.8 ZONE SCORING (battle evaluateForceLossOrForfeit) — SUPERSEDED by V153 below.
-// Steve's comment-out rule (2026-05-28): kept inline & commented for dev
-// reference, not deleted. This is the EXACT pre-V153 logic (the inverted
-// healthy/low zone magnitudes V153 fixed). A future clean build may strip it.
-// ===================================================================
-//                 // === V127 (Steve, 2026-05-22): V29.8 MIRRORED INTO COMBINED HANDLER ===
-//                 // V119 (V101's mirror) deleted. V101's blanket Used+500/Reserve+300/Hand-500
-//                 // silently dominated V29.8's duplicate + life-force-low logic in the standalone
-//                 // handler — same regression would hit here. V127 mirrors V29.8's full conditional
-//                 // tiered scoring instead, restoring V13 priority (Duplicate Hand > Used > Reserve
-//                 // > Hand > Force Pile) with Steve's ≤10 reserves life-force-low threshold.
-//                 if (gameState != null) {
-//                     try {
-//                         PhysicalCard v127Card = gameState.findCardById(Integer.parseInt(cardId));
-//                         if (v127Card != null) {
-//                             com.gempukku.swccgo.common.Zone v127Zone = v127Card.getZone();
-//                             String v127ZoneName = v127Zone != null ? v127Zone.name() : "";
-//                             String v127Title = v127Card.getTitle();
-//                             SwccgCardBlueprint v127Bp = v127Card.getBlueprint();
-//                             boolean v127FromUsed = v127ZoneName.contains("USED");
-//                             boolean v127FromReserve = v127ZoneName.contains("RESERVE");
-//                             boolean v127FromForcePile = v127ZoneName.contains("FORCE_PILE");
-//                             boolean v127FromHand = v127ZoneName.contains("HAND");
-// 
-//                             // Zone scoring (same magnitudes as evaluateForceLoss V29.8)
-//                             if (v127FromUsed) {
-//                                 if (lifeForceHealthyV127) {
-//                                     action.addReasoning("V29.8 USED PILE (healthy combined): already-spent cards lost first +400", 400.0f);
-//                                 } else {
-//                                     action.addReasoning("V29.8 LIFE FORCE LOW (" + totalReservesV127 + " combined): mild protect Used -200", -200.0f);
-//                                 }
-//                             } else if (v127FromReserve) {
-//                                 if (lifeForceHealthyV127) {
-//                                     action.addReasoning("V29.8 RESERVE (healthy combined): second pile preference +300", 300.0f);
-//                                 } else {
-//                                     action.addReasoning("V29.8 LIFE FORCE LOW (" + totalReservesV127 + " combined): PROTECT Reserve -250", -250.0f);
-//                                 }
-//                             } else if (v127FromForcePile) {
-//                                 if (lifeForceHealthyV127) {
-//                                     action.addReasoning("V29.8 FORCE PILE (healthy combined): last positive pile +100", 100.0f);
-//                                 } else {
-//                                     action.addReasoning("V29.8 LIFE FORCE LOW (" + totalReservesV127 + " combined): protect force pile -100", -100.0f);
-//                                 }
-//                             } else if (v127FromHand) {
-//                                 if (lifeForceHealthyV127) {
-//                                     action.addReasoning("V29.8 HAND PROTECT (healthy combined " + totalReservesV127 + " life force): deploy options -300", -300.0f);
-//                                 } else {
-//                                     action.addReasoning("V29.8 LIFE FORCE LOW (" + totalReservesV127 + " combined): prefer Hand loss +400", 400.0f);
-//                                 }
-// 
-//                                 // Duplicate detection (mirror of evaluateForceLoss block) — applies to hand only
-//                                 try {
-//                                     int v127CopiesInHand = 0;
-//                                     boolean v127CopyOnTable = false;
-//                                     java.util.List<PhysicalCard> v127Hand = gameState.getHand(playerId);
-//                                     if (v127Hand != null && v127Title != null) {
-//                                         for (PhysicalCard hc : v127Hand) {
-//                                             if (hc != null && v127Title.equals(hc.getTitle())) v127CopiesInHand++;
-//                                         }
-//                                     }
-//                                     if (v127Title != null) {
-//                                         for (PhysicalCard tc : gameState.getAllPermanentCards()) {
-//                                             if (tc != null && playerId.equals(tc.getOwner())
-//                                                 && v127Title.equals(tc.getTitle())
-//                                                 && tc.getZone() != null && tc.getZone().isInPlay()) {
-//                                                 v127CopyOnTable = true;
-//                                                 break;
-//                                             }
-//                                         }
-//                                     }
-//                                     boolean v127IsDuplicate = (v127CopiesInHand >= 2 || v127CopyOnTable);
-//                                     if (v127IsDuplicate) {
-//                                         action.addReasoning("V29.8 DUPLICATE (combined): another copy available — lose FIRST +800", 800.0f);
-//                                         logger.warn("V29.8 DUPLICATE (combined): {} is a duplicate — PREFERRED loss (+800)", v127Title);
-//                                     } else if (v127Bp != null) {
-//                                         CardCategory v127Cat = v127Bp.getCardCategory();
-//                                         if (v127Cat == CardCategory.CHARACTER) {
-//                                             action.addReasoning("V29.8 HAND PROTECT (combined): CHARACTER — needs deploying -150", -150.0f);
-//                                         } else if (v127Cat == CardCategory.STARSHIP || v127Cat == CardCategory.VEHICLE) {
-//                                             action.addReasoning("V29.8 HAND PROTECT (combined): Ship/vehicle needs deploying -80", -80.0f);
-//                                         } else if (v127Cat == CardCategory.INTERRUPT) {
-//                                             action.addReasoning("V29.8 HAND (combined): Interrupt — least bad hand loss +50", 50.0f);
-//                                         }
-//                                     }
-//                                 } catch (Exception dupE) { /* ignore */ }
-//                             }
-//                         }
-//                     } catch (NumberFormatException e) { /* ignore */ }
-//                 }
                 // === V153 (Steve, 2026-05-28): UNIFIED FORCE-LOSS ORDER — mirrored from
                 // evaluateForceLoss into the battle handler's force-loss side. Replaces the
                 // OLD inverted V127/V29.8 mirror. Same char/life-force tiers:
@@ -5320,45 +5021,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             String title = card.getTitle();
                             action.setDisplayText("Forfeit " + (title != null ? title : cardId));
 
-                            // V146 (Steve, 2026-05-27): HIT cards MUST forfeit first
-                            //
-                            // Steve: "Rando lost force from piles when he had 4 force to lose
-                            // but one of his characters was hit. He has to lose hit characters
-                            // first."
-                            //
-                            // Original ALREADY HIT bonus was +200 — pile loss at ~+360 still
-                            // beat it. Bumped to +1500 so hit characters always dominate over
-                            // pile loss AND V139 protections for non-hit alternatives.
-                            // Hit characters have fv=0 effective and are already wasted; forfeit
-                            // is essentially free.
-                            if (false /* V159 SUPERSEDED — step 1 handles hit cards */ && card.isHit()) {
-                                action.addReasoning("V146 ALREADY HIT - forfeit immediately, hit chars are dead weight!", 1500.0f);
-                                logger.info("🎯 V146 Prioritizing HIT card for forfeit: {} → +1500", title);
-                            }
 
-                            // Dead cards (persona already deployed) - high priority to forfeit!
-                            if (false /* V159 SUPERSEDED — step 1 handles dead cards */
-                                && game != null && playerId != null &&
-                                AiCardHelper.isDeadCard(card, game, playerId)) {
-                                action.addReasoning("☠️ V146 DEAD CARD - persona on table, forfeit!", 1200.0f);
-                                logger.info("☠️ V146 Prioritizing DEAD CARD for forfeit: {} → +1200", title);
-                            }
 
-                            // === V143 (Steve, 2026-05-26): HARD BLOCK SMALL-DAMAGE FORFEIT (FLoF mirror) ===
-                            // Steve's rule: "If there is 2 or less force to lose from battle
-                            // damage and no needed attrition, NEVER lose character from site.
-                            // Bypass all other forfeit scoring." Dominates V67bd FORFEIT
-                            // COVERS ALL (+960) and any other forfeit-encouraging signal.
-                            if (false /* V159 SUPERSEDED — step 3 (damage<3 -> protect) */
-                                    && attritionRemaining == 0 && damageRemaining > 0 && damageRemaining <= 2) {
-                                action.addReasoning(String.format(
-                                    "V143 HARD BLOCK (FLoF): only %d battle damage, no attrition — NEVER forfeit, lose from pile",
-                                    damageRemaining), -9999.0f);
-                                logger.warn("V143 HARD BLOCK (FLoF): {} dmg={} attr={} → -9999",
-                                    card.getTitle(), damageRemaining, attritionRemaining);
-                                actions.add(action);
-                                continue;
-                            }
 
                             // FORFEIT EFFICIENCY: A character that covers attrition AND/OR battle damage
                             // in a single forfeit is far more efficient than losing one reserve card
@@ -5399,163 +5063,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             } catch (Exception ignore) { /* false */ }
 
-                            if (false /* V159 SUPERSEDED — step 2 handles attrition-mandatory forfeit */
-                                    && attritionRemaining > 0 && fv > 0 && !v145ImmuneToAttrition) {
-                                // V67bd (Steve, 2026-05-09): Attrition can ONLY be paid by
-                                // forfeiting — reserve force cannot cover it. Effective
-                                // coverage = min(fv, attrition+damage).
-                                int coverage = (int) Math.min(fv, totalRemaining);
-                                float attritionBonus = 200.0f + (coverage * 80.0f);
-                                if (fv >= totalRemaining) {
-                                    attritionBonus += 200.0f;  // Single forfeit wipes ALL — huge win
-                                    action.addReasoning("V67bd FORFEIT COVERS ALL: attrition+" +
-                                        "damage in one shot — forfeit before reserve! (fv=" + (int)fv
-                                        + ", total=" + totalRemaining + ")", attritionBonus);
-                                    logger.warn("🎯 V67bd FORFEIT WIPES ALL: {} fv={} covers {}/{} total damage → +{}",
-                                        title, (int)fv, (int)fv, totalRemaining, attritionBonus);
-                                } else {
-                                    action.addReasoning("V67bd FORFEIT FOR ATTRITION: fv=" + (int)fv
-                                        + " covers " + coverage + " of " + totalRemaining
-                                        + " owed (attrition+damage) — must forfeit before losing force!",
-                                        attritionBonus);
-                                    logger.warn("🎯 V67bd FORFEIT-FIRST: {} fv={} coverage={}/{} → +{}",
-                                        title, (int)fv, coverage, totalRemaining, attritionBonus);
-                                }
-                            } else if (false /* V159 SUPERSEDED — step 4 handles immune */
-                                    && v145ImmuneToAttrition && damageRemaining > 0 && fv > 0) {
-                                // V145 path: immune to attrition, score damage coverage ONLY.
-                                int savings = (int) Math.min(fv, damageRemaining);
-                                int waste = (int) Math.max(0f, fv - damageRemaining);
-                                float v145Bonus = savings * 20.0f - waste * 50.0f;
-                                action.addReasoning(String.format(
-                                    "V145 IMMUNE-TO-ATTRITION FORFEIT: '%s' can't satisfy attrition — only damage %d of %d",
-                                    title, savings, damageRemaining), v145Bonus);
-                                logger.warn("V145 IMMUNE-TO-ATTRITION: {} fv={} dmg={} savings={} waste={} → {}",
-                                    title, (int)fv, damageRemaining, savings, waste, v145Bonus);
-                            } else if (false /* V159 SUPERSEDED — step 3 handles pure damage */
-                                    && damageRemaining > 0 && fv > 0) {
-                                // V67t WASTE-AWARE: same formula as evaluateForfeit.
-                                int savings = (int) Math.min(fv, damageRemaining);
-                                int waste = (int) Math.max(0f, fv - damageRemaining);
-                                float efficiencyBonus = savings * 20.0f - waste * 50.0f;
-                                if (damageRemaining > 5 && waste == 0) efficiencyBonus += 50.0f;
-
-                                // V67bh: SMALL-DAMAGE PROTECTION FOR VALUABLE UN-HIT CHARS.
-                                // (See evaluateForfeit V67bh comment for full rationale.)
-                                boolean v67bhSmallDmg = damageRemaining <= 3;
-                                boolean v67bhValuable = fv >= 4;
-                                boolean v67bhNotHit   = !card.isHit();
-                                if (v67bhSmallDmg && v67bhValuable && v67bhNotHit) {
-                                    efficiencyBonus -= 400.0f;
-                                    action.addReasoning(String.format(
-                                        "V67bh PROTECT VALUABLE: %s (fv=%d, not hit) — only %d damage, lose from reserve/hand!",
-                                        title, (int)fv, damageRemaining), 0.0f);
-                                    logger.warn("V67bh PROTECT VALUABLE: {} fv={} damage={} not-hit → -400",
-                                        title, (int)fv, damageRemaining);
-                                } else if (damageRemaining <= 2 && fv >= 2) {
-                                    efficiencyBonus -= 250.0f;
-                                    action.addReasoning("V67t SMALL DAMAGE: ≤2 damage — keep character, lose from reserve!", 0.0f);
-                                    logger.warn("V67t SMALL DAMAGE: {} fv={} damage={} → -250 (prefer reserve loss)",
-                                        title, (int)fv, damageRemaining);
-                                }
-
-                                action.addReasoning("V67t FORFEIT (savings=" + savings + " waste=" + waste
-                                    + " of " + damageRemaining + " damage)", efficiencyBonus);
-                                logger.info("V67t FORFEIT: {} fv={} damage={} → savings={} waste={} bonus={}",
-                                    title, (int)fv, damageRemaining, savings, waste, efficiencyBonus);
-                            }
+                            // V67bd/V145/V67t all-false forfeit chain (V159 SUPERSEDED) DELETED 2026-07-12 batch 1.5 — see git history.
 
                             // Apply standard forfeit scoring
                             SwccgCardBlueprint blueprint = card.getBlueprint();
-                            if (false /* V159 SUPERSEDED — step 3 (damage>=3) makes V139 yield; step 2 has release valve */
-                                    && blueprint != null) {
-                                // V139 (Steve, 2026-05-26): HIGH-VALUE CHARACTER PROTECTION
-                                // (mirror of V139 in evaluateForfeit path).
-                                // Replay etoxkyignk4dfmmj T2: Sidious forfeited for 1 battle
-                                // damage because V67bd +960 dominated the old -10 unique
-                                // protection. New magnitudes ensure Sidious-tier characters
-                                // are essentially never forfeited unless they're the only
-                                // option at the site.
-                                // V139 v3 (Steve 2026-05-27): DAMAGE-AWARE PROTECTION SCALE
-                                //
-                                // v2 protections (-500 to -1200) were too aggressive at high
-                                // damage. Steve: "in the last game two times, Rando lost a ton
-                                // of force during a battle when he could have forfeited his
-                                // characters to cover. It's only when the damage is 2 or less."
-                                //
-                                // New behavior: heavy V139 protections fire ONLY when damage
-                                // (or total attrition+damage) is LOW (≤ 3). For higher damage,
-                                // milder protections allow forfeit-efficiency (V67bd) to win
-                                // when forfeit is genuinely more efficient than burning 5+
-                                // reserve cards.
-                                int v139DamageBurden = attritionRemaining + damageRemaining;
-                                boolean v139LowDamage = v139DamageBurden <= 3;
-                                Float charPower = blueprint.hasPowerAttribute() ? blueprint.getPower() : null;
-                                Float charAbility = blueprint.hasAbilityAttribute() ? blueprint.getAbility() : null;
-                                if (!card.isHit()) {
-                                    float protectScale = v139LowDamage ? 1.0f : 0.25f;
-                                    if (charPower != null && charPower >= 6 && charAbility != null && charAbility >= 4) {
-                                        action.addReasoning(String.format(
-                                            "V139 PROTECT (FLoF): %s (power %.0f, ability %.0f) — %s",
-                                            title, charPower, charAbility,
-                                            v139LowDamage ? "low damage, never forfeit unless only option" : "mild protection (damage > 3, efficiency may win)"),
-                                            -1200.0f * protectScale);
-                                    } else if (charPower != null && charPower >= 5) {
-                                        action.addReasoning(String.format(
-                                            "V139 PROTECT (FLoF): %s (power %.0f) — %s",
-                                            title, charPower,
-                                            v139LowDamage ? "high-power, save for battle" : "mild high-power protection"),
-                                            -500.0f * protectScale);
-                                    } else if (charAbility != null && charAbility >= 4) {
-                                        action.addReasoning(String.format(
-                                            "V139 PROTECT (FLoF): %s (ability %.0f) — %s",
-                                            title, charAbility,
-                                            v139LowDamage ? "destiny draw value, save" : "mild ability protection"),
-                                            -500.0f * protectScale);
-                                    }
-                                }
-
-                                // CRITICAL: Check hasForfeitAttribute() first - weapons throw exception!
-                                // V146: All V139 penalties skipped when card.isHit() — hit
-                                // characters get NO protection. They've already been broken
-                                // by a weapon hit and must forfeit first.
-                                Float forfeit = blueprint.hasForfeitAttribute() ? blueprint.getForfeit() : null;
-                                if (forfeit != null && !card.isHit()) {
-                                    if (forfeit <= 2) {
-                                        action.addReasoning("V139 Low forfeit - cheap loss, forfeit first", 50.0f);
-                                    } else if (forfeit >= 6) {
-                                        // High forfeit penalty scales by damage burden too
-                                        float fhVal = v139LowDamage ? -200.0f : -50.0f;
-                                        action.addReasoning("V139 High forfeit character - prefer keeping", fhVal);
-                                    }
-                                }
-
-                                if (blueprint.getUniqueness() == Uniqueness.UNIQUE && !card.isHit()) {
-                                    if ((charAbility != null && charAbility >= 5)
-                                            || (charPower != null && charPower >= 5)) {
-                                        float vuVal = v139LowDamage ? -800.0f : -200.0f;
-                                        action.addReasoning("V139 VALUABLE UNIQUE (FLoF) - " +
-                                            (v139LowDamage ? "never forfeit unless forced" : "mild protection at high damage"),
-                                            vuVal);
-                                    } else {
-                                        float guVal = v139LowDamage ? -250.0f : -50.0f;
-                                        action.addReasoning("V139 Unique (FLoF) - avoid forfeiting", guVal);
-                                    }
-                                }
-
-                            // V21: OBJECTIVE-CRITICAL CARD PROTECTION
-                            com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer objAnalyzer =
-                                context.getObjectiveAnalyzer();
-                            if (objAnalyzer != null && objAnalyzer.isAnalyzed() && title != null) {
-                                if (objAnalyzer.isRequiredCardForFlip(title)) {
-                                    action.addReasoning("OBJECTIVE CRITICAL - NEVER LOSE!", -9999.0f);
-                                    logger.warn("V21 HARD BAN: {} is REQUIRED for flip!", title);
-                                } else if (objAnalyzer.isPullableCard(title)) {
-                                    action.addReasoning("OBJECTIVE PULLABLE - NEVER LOSE!", -9999.0f);
-                                    logger.warn("V21 HARD BAN: {} is objective pullable!", title);
-                                }
-                            }
-                            }
+                            // V139 forfeit block + duplicate V21 copy DELETED 2026-07-12 batch 1.5 (V159 owns forfeit; live V21 copies remain) — see git history.
                         }
                     } catch (NumberFormatException e) {
                         // Ignore
@@ -9727,9 +9239,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     // deliberately-strong additive bands — V154 lose-attached-weapon +2000/+2200,
     // hit-forfeit +1500 tier, V161 immune-forfeit 1500+savings*80-waste*30,
     // V118 +200/-500 small-damage, V178 -10 armed tiebreaker.
-    // Absorbs (dead, commented near the two call sites — revert path, do not delete):
-    // V67t, V67bd, V67bh, V143, V145, V146, V139-heavy (the eleven
-    // `if (false /* V159 SUPERSEDED */)` taped-off branches).
+    // Absorbed (V67t, V67bd, V67bh, V143, V145, V146, V139-heavy): the eleven
+    // `if (false /* V159 SUPERSEDED */)` taped-off branches were DELETED in
+    // batch 1.5 (2026-07-12) — revert path = git history.
     // Cross-refs: FORCE-LOSS (V153 owns the lose-Force side of the combined prompt),
     // BATTLE-1/BATTLE-2 (upstream), RESPONSE router.
     // See resources/RANDO_REORG_PLAN_2026-07-02.md §3 +
