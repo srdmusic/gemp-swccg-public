@@ -6,17 +6,22 @@ position within each game. A decisionType/phase mismatch at an aligned slot is
 reported as MISALIGNED and further checks for that pair are skipped.
 
 Divergence kinds:
-  WINNER      chosen action differs
-  TOP5-SET    top-5 candidate id sets differ
-  VETO-COUNT  number of veto lines differs
-  SCORE-DRIFT |baseline - shadow| > tolerance for an actionId present in both top-5s
-  MISALIGNED  decisionType/phase differ at the same slot (sequence skew)
-  MISSING     baseline record with no shadow counterpart (and vice versa: EXTRA)
+  WINNER         chosen action differs
+  DECISION-TEXT  engine decisionText differs
+  TOP5-SET       top-5 candidate id sets differ
+  TOP5-ORDER     same top-5 id set but different sequence (order is behavioral)
+  VETO-COUNT     number of veto lines differs
+  VETO-REASON    ordered veto reason lists differ (even when counts match)
+  SCORE-DRIFT    |baseline - shadow| > tolerance for a top-5 score
+                 (default tolerance 0 = EXACT float equality; per Codex review
+                 e5b393955, intentional deltas need an explicit --tolerance)
+  MISALIGNED     decisionType/phase differ at the same slot (sequence skew)
+  MISSING        baseline record with no shadow counterpart (and vice versa: EXTRA)
 
 Exit codes: 0 = parity, 1 = divergences found, 2 = usage/load error.
 
 Usage:
-  python3 compare_fixtures.py baseline.jsonl shadow.jsonl [--tolerance 0.01] [--max-rows 50]
+  python3 compare_fixtures.py baseline.jsonl shadow.jsonl [--tolerance 0.001] [--max-rows 50]
 """
 
 import argparse
@@ -51,6 +56,11 @@ def top5_ids(rec):
     return [aid for aid, _ in rec.get("top5", [])]
 
 
+def _short(s, n=60):
+    s = str(s)
+    return s if len(s) <= n else s[: n - 3] + "..."
+
+
 def compare_pair(b, s, tolerance):
     """Return list of (kind, detail) divergences for one aligned pair."""
     if b.get("decisionType") != s.get("decisionType") or b.get("phase") != s.get("phase"):
@@ -62,25 +72,51 @@ def compare_pair(b, s, tolerance):
     if b.get("chosen") != s.get("chosen"):
         divs.append(("WINNER", "'%s' vs '%s'" % (b.get("chosen"), s.get("chosen"))))
 
-    b_ids, s_ids = set(top5_ids(b)), set(top5_ids(s))
-    if b_ids != s_ids:
-        only_b = sorted(b_ids - s_ids)
-        only_s = sorted(s_ids - b_ids)
-        divs.append(("TOP5-SET", "base-only=%s shadow-only=%s" % (only_b, only_s)))
+    if b.get("decisionText") != s.get("decisionText"):
+        divs.append(("DECISION-TEXT", "'%s' vs '%s'" %
+                     (_short(b.get("decisionText")), _short(s.get("decisionText")))))
 
+    # Top-5 candidates: order is behavioral (Codex review e5b393955), so the
+    # id SEQUENCE must match, not just the membership set.
+    b_top, s_top = b.get("top5", []), s.get("top5", [])
+    b_ids, s_ids = top5_ids(b), top5_ids(s)
+    if set(b_ids) != set(s_ids):
+        only_b = sorted(set(b_ids) - set(s_ids))
+        only_s = sorted(set(s_ids) - set(b_ids))
+        divs.append(("TOP5-SET", "base-only=%s shadow-only=%s" % (only_b, only_s)))
+    elif b_ids != s_ids:
+        divs.append(("TOP5-ORDER", "base=%s shadow=%s" % (b_ids, s_ids)))
+
+    # Veto reasons: full ordered list, not just the count. Counts can match
+    # while the vetoed action or reason changed.
     bv, sv = b.get("vetoCount", 0), s.get("vetoCount", 0)
     if bv != sv:
         divs.append(("VETO-COUNT", "%d vs %d" % (bv, sv)))
+    bv_list, sv_list = b.get("vetoes", []), s.get("vetoes", [])
+    if bv_list != sv_list:
+        common = min(len(bv_list), len(sv_list))
+        idx = next((i for i in range(common) if bv_list[i] != sv_list[i]), common)
+        b_at = bv_list[idx] if idx < len(bv_list) else "<none>"
+        s_at = sv_list[idx] if idx < len(sv_list) else "<none>"
+        divs.append(("VETO-REASON", "first diff at [%d]: '%s' vs '%s'" %
+                     (idx, _short(b_at), _short(s_at))))
 
-    b_scores = dict(b.get("top5", []))
-    s_scores = dict(s.get("top5", []))
+    # Scores: exact by default (tolerance 0). Positional when the id
+    # sequences match (handles duplicate ids); id-keyed otherwise so a
+    # reordered pair still gets its score checked.
+    if b_ids == s_ids:
+        pairs = [(b_ids[i], b_top[i][1], s_top[i][1]) for i in range(len(b_ids))]
+    else:
+        b_scores, s_scores = dict(b_top), dict(s_top)
+        pairs = [(aid, b_scores[aid], s_scores[aid])
+                 for aid in b_scores if aid in s_scores]
     worst = None
-    for aid in b_ids & s_ids:
-        delta = abs(b_scores[aid] - s_scores[aid])
+    for aid, b_sc, s_sc in pairs:
+        delta = abs(b_sc - s_sc)
         if delta > tolerance and (worst is None or delta > worst[1]):
-            worst = (aid, delta, b_scores[aid], s_scores[aid])
+            worst = (aid, delta, b_sc, s_sc)
     if worst is not None:
-        divs.append(("SCORE-DRIFT", "id='%s' base=%s shadow=%s (delta=%.3f)" %
+        divs.append(("SCORE-DRIFT", "id='%s' base=%s shadow=%s (delta=%.6g)" %
                      (worst[0], worst[2], worst[3], worst[1])))
     return divs
 
@@ -89,8 +125,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("baseline")
     ap.add_argument("shadow")
-    ap.add_argument("--tolerance", type=float, default=0.01,
-                    help="allowed absolute score drift per actionId (default 0.01)")
+    ap.add_argument("--tolerance", type=float, default=0.0,
+                    help="allowed absolute score drift per actionId "
+                         "(default 0 = exact float equality; pass explicitly "
+                         "only for a reviewed intentional delta)")
     ap.add_argument("--max-rows", type=int, default=50,
                     help="max divergence rows to print (default 50)")
     args = ap.parse_args(argv)
@@ -136,8 +174,8 @@ def main(argv=None):
 
     if rows:
         header = ("seq", "game", "type", "phase", "kind", "detail")
-        widths = [5, 12, 20, 16, 11]
-        fmt = "%-5s %-12s %-20s %-16s %-11s %s"
+        widths = [5, 12, 20, 16, 13]
+        fmt = "%-5s %-12s %-20s %-16s %-13s %s"
         print(fmt % header)
         print(fmt % tuple("-" * w for w in widths + [30]))
         for row in rows[: args.max_rows]:
@@ -150,7 +188,7 @@ def main(argv=None):
           % (compared, len(game_pairs)), file=sys.stderr)
     if kind_counts:
         for kind in sorted(kind_counts):
-            print("  %-11s %d" % (kind, kind_counts[kind]), file=sys.stderr)
+            print("  %-13s %d" % (kind, kind_counts[kind]), file=sys.stderr)
         print("DIVERGENT", file=sys.stderr)
         return 1
     print("PARITY: no divergences", file=sys.stderr)

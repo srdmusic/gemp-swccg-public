@@ -6117,6 +6117,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     live else body (zero-forfeit −80) now unconditional, behavior-identical. DE: V33/V67aq/V115
     corpse, V67aj + nested V67al if(false) (the dead block a prior K-2 lost a day on), V90 if(false).
     Artifacts: game_log2/game_log_latest, CSE .bak/.v13.backup/.v24.11.fix, .DS_Store x3 removed.
+    (2026-07-13: game_log_latest.txt content restored to resources/evidence/game_log_latest.txt —
+    the AMN/Rey audits cite it by line number. game_log2.txt uncited, history-only.)
     HELD on danger list: V122 + V67as if(false) (batch-6/7 owners), DE 1424-1794 objective corpse,
     Endor V193 dead block, ObjectiveHandler, ActionAudit (batch 11). CSE 9966→9478, DE 6206→5870
     lines per bot; +10/−498 and +9/−345 each, perfectly mirrored. MVN_EXIT=0 both bots. Tombstones

@@ -91,7 +91,7 @@ The other K-2 owns the 4 gameplay bugs (`resources/Rando_Issues_2026-06-29.xlsx`
 - **The scratchpad gets cleaned between turns** — re-extract game slices from the archives each time; don't assume `scratchpad/*.log` persists.
 - **The deploy "structure"** = the DPS hierarchy walk in `evaluators/CombinedEvaluator.java:97` (walks LOCATIONS → CHARACTERS → WEAPONS buckets, ordered by `strategy/DeployPhasePlanner.java`, first good bucket wins). ~100+ point-rules live OUTSIDE it and can override a step (that's the sprawl you're consolidating).
 - **Council status:** local `deepseek-r1:70b` is UP — query direct at `http://127.0.0.1:11434/api/generate` (the FastAPI bridge on `:8000` is DOWN, only deepseek is loaded). **Alfred/Codex** (`mcp__codex__codex`, read-only sandbox, approval never) is a strong different-family voice but was **usage-capped until ~Jul 29 2026** — retry then.
-- **5 untracked junk files to delete** (confirmed untracked, none compiled): `evaluators/CardSelectionEvaluator.java.bak`, `.v13.backup`, `.v24.11.fix`, `rando/game_log2.txt`, `rando/game_log_latest.txt`. They pollute greps. Under `src/` so get Steve's OK first.
+- **5 untracked junk files to delete** (confirmed untracked, none compiled): `evaluators/CardSelectionEvaluator.java.bak`, `.v13.backup`, `.v24.11.fix`, `rando/game_log2.txt`, `rando/game_log_latest.txt`. They pollute greps. Under `src/` so get Steve's OK first. (DONE at e5b393955; `game_log_latest.txt` is cited by the AMN audits, so its content was preserved at `resources/evidence/game_log_latest.txt` on 2026-07-13. `game_log2.txt` is cited nowhere and lives in git history only.)
 
 ---
 

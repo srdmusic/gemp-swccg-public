@@ -70,7 +70,8 @@ CLAMP_MARKERS = ("SAFETY CLAMP",)
 TEXT_TRUNC = 200
 REASONING_TRUNC = 500
 VETO_TRUNC = 300
-VETO_LIST_CAP = 40
+# VETO_LIST_CAP = 40  # removed per Codex review e5b393955: the comparator now
+# checks the FULL ordered veto reason list, so capping it would blind the gate.
 
 
 def _trunc(s, n):
@@ -267,8 +268,7 @@ def extract_from_log(path, seq_start, emit):
 
             if any(k in msg for k in VETO_MARKERS):
                 rec["vetoCount"] += 1
-                if len(rec["vetoes"]) < VETO_LIST_CAP:
-                    rec["vetoes"].append(_trunc(msg, VETO_TRUNC))
+                rec["vetoes"].append(_trunc(msg, VETO_TRUNC))
                 continue
 
             if any(k in msg for k in CLAMP_MARKERS):
