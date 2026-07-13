@@ -8,9 +8,10 @@ package com.gempukku.swccgo.ai.models.common.trace.state;
  * observed; owners are never merged in the trace.
  *
  * 4A1 records the two OUTER owners only (the bot-boundary RECORD_RESPONSE hook, full
- * payload per the accepted m00372 Option A contract). HEURISTIC_SHARED is declared here
- * because the owner set is closed by the matrix, but its events land with the
- * tracker-owner increment (4A2); TrackerRecordResponseEvent rejects it.
+ * payload per the accepted m00372 Option A contract). HEURISTIC_SHARED landed with the
+ * 4A2b shared-tracker increment: RECORD_RESPONSE and UPDATE_STATE accept it,
+ * PHASE_CHANGE and BLOCK_RESPONSE require it, and TrackerClearEvent still rejects it
+ * (no shared clear call exists in source).
  */
 public enum TrackerOwner {
     OUTER_RANDO,
