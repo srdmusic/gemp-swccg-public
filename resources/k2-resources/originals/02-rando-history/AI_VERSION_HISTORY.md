@@ -6316,6 +6316,6 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
 
   ════ TRACE 4A2B (2026-07-13, Codex packet + 6 live corrections): shared tracker events ════
     PHASE_CHANGE/BLOCK_RESPONSE families w/ snapshot-consistency invariants; direct-call-site
-    hooks only; failure injection proves exactly-once legacy mutation on all four boundaries;
+    hooks only; failure injection proves all four call/append boundaries execute once (armed TRUE block proven at tracker level only, per m00465);
     COMBINED_EVALUATOR route fixture; mutator bytecode equality verified. 198 green + 1 skip.
     Capture DISABLED. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
