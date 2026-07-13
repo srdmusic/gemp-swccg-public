@@ -17,6 +17,12 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — CLEANUP BATCH 2.4 (Codex packet; both bots) — comment-only, NO behavior change
+- Force-economy comment corpse in DeployEvaluator: four ranges (commented V22.3/V59 maintenanceCost line, V24.5 inline maintenance scan ×19, V29.13 deploy-cost threshold line, V29.13 DTF/grabber scans ×31) + five specified preface lines = 5 insertions / 57 deletions per bot, −104 total. All four per-range SHAs + the group SHA matched the packet (group pin = the single-bot 52-line stream; both bots hash to it independently — method clarification recorded).
+- Live successors proven intact both bots: MaintenanceFacts.maintainCost sites, getForceReserveFacts().maintenanceObligation/dtfActive/grabberUnused, the live conditions, weights −50/−500/−50/−50/−30 and V59 −2000 tiers, the MAINTENANCE icon gate. Held 2.5/2.6 candidates untouched.
+- RAW javap byte-identical parent vs candidate both bots (SHAs equal the 2.3 gate record — bytecode unchanged since the last gated commit); 60/60 fixtures.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — CLEANUP BATCH 2.3 (Codex packet; both bots) — comment-only, NO behavior change
 - THE DEPLOYEVALUATOR OBJECTIVE CORPSE (held on the danger list since Batch 1.5, now packet-sanctioned): the commented V83/V110/V108/V86/V88/V99 inline region (old 1425-1795), 371 lines per bot, net −742 total. Deletion streams hash-matched the packet's normalized SHA in both bots (method itself cross-verified by reproducing the 2.2 pin byte-for-byte). Stale two-line owner preface rewritten per manifest.
 - Live replacement proven untouched: `objDeploy.getDeployObjectiveAdjustments(...)` call intact; all six ObjectiveAnalyzer arms present (V83/V110/V108/V86/V88/V99 at their anchors); MY_LORD weights unchanged; zero JSON diff.

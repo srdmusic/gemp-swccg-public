@@ -1808,7 +1808,6 @@ public class DeployEvaluator extends ActionEvaluator {
                             int totalForce = context.getGameState() != null ?
                                 context.getGameState().getForcePileSize(context.getPlayerId()) : 0;
                             int forceAfterDeploy = totalForce - cost;
-                            // int maintenanceCost = cost;  // superseded T2 COMMIT-1 2026-07-06 ("maintenance cost = deploy cost" refuted)
                             int maintenanceCost = com.gempukku.swccgo.ai.models.common.strategy
                                 .MaintenanceFacts.maintainCost(blueprint);
 
@@ -1889,29 +1888,10 @@ public class DeployEvaluator extends ActionEvaluator {
                         try {
                             // T2 MOVE #1 COMMIT-2 (2026-07-06): maintenance obligation from
                             // the shared per-decision ForceReserveService cache (same
-                            // in-play gate + MaintenanceFacts basis). Old inline scan
-                            // commented out below per feedback_comment_out_old_rules;
-                            // V24.5 weights (-50/-50) untouched.
+                            // owner, in-play, maintenance-icon, and MaintenanceFacts guards).
+                            // V24.5 weights (-50/-50) are unchanged. Superseded inline scan
+                            // removed 2026-07-13; git preserves it.
                             int existingMaintenanceCost = context.getForceReserveFacts().maintenanceObligation;
-//                             int existingMaintenanceCost = 0;
-//                             java.util.List<PhysicalCard> allInPlay = gameState.getAllPermanentCards();
-//                             if (allInPlay != null) {
-//                                 for (PhysicalCard mCard : allInPlay) {
-//                                     if (mCard == null) continue;
-//                                     if (!context.getPlayerId().equals(mCard.getOwner())) continue;
-//                                     com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
-//                                     if (mZone == null || !mZone.isInPlay()) continue;
-//                                     SwccgCardBlueprint mBp = mCard.getBlueprint();
-//                                     if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-//                                         // T2 COMMIT-1 (2026-07-06): engine maintain cost, not deploy cost
-//                                         // Float mCost = mBp.getDeployCost();  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
-//                                         // int cardMaint = (mCost != null) ? mCost.intValue() : 1;  // superseded T2 COMMIT-1 2026-07-06
-//                                         int cardMaint = com.gempukku.swccgo.ai.models.common.strategy
-//                                             .MaintenanceFacts.maintainCost(mBp);
-//                                         existingMaintenanceCost += cardMaint;
-//                                     }
-//                                 }
-//                             }
                             if (existingMaintenanceCost > 0) {
                                 int totalForceNow = gameState.getForcePileSize(context.getPlayerId());
                                 int forceAfterThisDeploy = totalForceNow - cost;
@@ -2035,7 +2015,6 @@ public class DeployEvaluator extends ActionEvaluator {
                                 : 0;
 
                             // --- Only apply maintenance awareness to maintenance card deploys ---
-                            // if (thisCardHasMaint && forceAfterThisDeploy < cost) {  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
                             if (thisCardHasMaint && forceAfterThisDeploy < thisCardMaint) {
                                 // Deploying a maintenance card but won't have enough Force to pay
                                 // its own maintenance at end of turn. Small tiebreaker — NOT a blocker.
@@ -2059,41 +2038,10 @@ public class DeployEvaluator extends ActionEvaluator {
                             // unification: the old scan below broke on the FIRST grabber card
                             // found regardless of state; the shared fact counts ANY unused
                             // grabber (MoveEvaluator V29 semantic) — identical unless a deck
-                            // fields 2+ grabbers with mixed state (no current deck does). Old
-                            // scans commented out per feedback_comment_out_old_rules; -30 untouched.
+                            // fields 2+ grabbers with mixed state. Superseded inline scans were
+                            // removed 2026-07-13; the -30 weight is unchanged; git preserves them.
                             boolean dtfOnTable = context.getForceReserveFacts().dtfActive;
                             boolean grabberUnused = context.getForceReserveFacts().grabberUnused;
-//                             String dtfOpponentId = gameState.getOpponent(context.getPlayerId());
-//                             boolean dtfOnTable = false;
-//                             for (PhysicalCard dtfCard : gameState.getAllPermanentCards()) {
-//                                 if (dtfCard == null) continue;
-//                                 if (dtfOpponentId != null && dtfOpponentId.equals(dtfCard.getOwner())
-//                                     && dtfCard.getBlueprint() != null
-//                                     && dtfCard.getBlueprint().getTitle() != null) {
-//                                     String dtfT = dtfCard.getBlueprint().getTitle().toLowerCase(Locale.ROOT);
-//                                     if (dtfT.contains("draw their fire")) {
-//                                         com.gempukku.swccgo.common.Zone dtfZ = dtfCard.getZone();
-//                                         if (dtfZ != null && dtfZ.isInPlay()) {
-//                                             dtfOnTable = true;
-//                                             break;
-//                                         }
-//                                     }
-//                                 }
-//                             }
-//                             boolean grabberUnused = false;
-//                             for (PhysicalCard gCard : gameState.getAllPermanentCards()) {
-//                                 if (gCard == null || gCard.getBlueprint() == null) continue;
-//                                 if (!context.getPlayerId().equals(gCard.getOwner())) continue;
-//                                 com.gempukku.swccgo.common.Zone gZ = gCard.getZone();
-//                                 if (gZ == null || !gZ.isInPlay()) continue;
-//                                 if (gCard.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.GRABBER)) {
-//                                     java.util.List<PhysicalCard> stacked = gameState.getStackedCards(gCard);
-//                                     if (stacked == null || stacked.isEmpty()) {
-//                                         grabberUnused = true;
-//                                     }
-//                                     break;
-//                                 }
-//                             }
                             if ((dtfOnTable || grabberUnused) && forceAfterThisDeploy <= 0) {
                                 action.addReasoning(
                                     String.format("V29.13 INTERRUPT RESERVE: %s%s but 0 Force left for them after deploy",

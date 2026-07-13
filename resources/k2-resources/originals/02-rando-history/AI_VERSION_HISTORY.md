@@ -6273,3 +6273,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     The held DE 1424-1794 commented V83/V110/V108/V86/V88/V99 region deleted (SHA-gated streams;
     method cross-verified against the 2.2 pin). Live ObjectiveAnalyzer call + six arms + weights
     proven untouched. RAW javap identical. 60/60 fixtures. NOT deployed. Details in AI_CHANGELOG.
+
+  ════ CLEANUP BATCH 2.4 (2026-07-13, Codex packet): DE force-economy corpse, −104 total ════
+    Four SHA-gated comment ranges + five preface lines per bot. Live MaintenanceFacts/
+    ForceReserveService successors + weights proven intact. RAW javap identical (equal to the
+    2.3 gate record). 60/60 fixtures. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
