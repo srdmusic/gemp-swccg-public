@@ -77,7 +77,7 @@ public class Card501_212 extends AbstractNormalEffect {
         // Check condition(s)
         if (TriggerConditions.justLost(game, effectResult, opponent, Filters.and(Filters.character, Filters.hasAbility))
                 && GameConditions.isDuringBattle(game)
-                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+                && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText(opponent + " loses 1 Force");

@@ -46,7 +46,7 @@ public class Card501_211 extends AbstractRebel {
         
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.Jedi_Master, Filters.and(Filters.character, Filters.abilityLessThan(4), Filters.not(Filters.droid))), whileAnakinCommuning, playerId));
-        modifiers.add(new ForceDrainModifier(self, whileAnakinCommuning, -1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.location, whileAnakinCommuning, -1, playerId));
         return modifiers;
     }
 
