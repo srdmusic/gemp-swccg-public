@@ -6288,3 +6288,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     TraceIntendedStateEvent deleted; SCHEMA_VERSION 3; 10 observation-only hooks/bot; pure
     traceSnapshot()/traceDecisionKey() seams, mutators byte-unchanged; m00380+m00381 gate items
     closed; council dissent on file. 153 tests green. Capture DISABLED. NOT deployed.
+  ════ CLEANUP BATCH 2.6 (2026-07-13, Codex packet): DE V67ai/V67am duplicate scorers, −76 net ════
+    Two SHA-gated ranges + 9 preface lines per bot. V192 (ActionTextEvaluator) proven sole live
+    owner of the location tier + weapon +600; V67i/V67m detection, V67ar/V67ao/V149 vetoes, and
+    the V162 hand anchor retained. RAW javap identical. 60/60 fixtures. NOT deployed. Details in
+    AI_CHANGELOG.

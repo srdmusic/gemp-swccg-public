@@ -3161,47 +3161,15 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     } catch (Exception e) { LOG.debug("V67i error: {}", e.getMessage()); }
 
-                    // V67ai Tier 1-3 DE COPY ABSORBED by V192 pull scorer 2026-07-06 (T4.2
-                    // merge, ds-2): the tier lives in ActionTextEvaluator where V131's
-                    // deck-aware gate covers it — this ungated DE copy DOUBLE-COUNTED with
-                    // the ATE copy on every location pull (boundary row 2: the +8000 pile).
+                    // V67ai Tier 1-3 DE scorer was removed 2026-07-13. V192 in
+                    // ActionTextEvaluator is the sole live owner, with V131 gating and
+                    // one resized tier emit. Git preserves the superseded
+                    // +2000/+1800/+1600/+1500 DeployEvaluator copy.
                     // The V67i detection above is KEPT LIVE as a predicate — the weapon-gate
                     // routing below (V67ar/V67ao/V149 need !v67iAddsLocation) still uses it.
                     // The V162/V67ai-Tier4-HAND block above (bare "deploy" of a LOCATION from
                     // hand, +1900 total) is NOT touched — it is the anchor the pull scorer
                     // must stay below (the V179 lesson).
-                    // Commented out per feedback_comment_out_old_rules:
-                    // if (v67iAddsLocation) {
-                    //     // V67ai Tier 1-3 (Steve, 2026-05-07): When DeployEvaluator scores
-                    //     // a card-action pull, classify by source-card category for the
-                    //     // tiered location-deploy order: Objective → Effect → Interrupt → Hand.
-                    //     int v67aiTier = 0;
-                    //     String v67aiTierName = "unclassified";
-                    //     if (card != null && card.getBlueprint() != null) {
-                    //         CardCategory srcCat = card.getBlueprint().getCardCategory();
-                    //         if (srcCat == CardCategory.OBJECTIVE) {
-                    //             v67aiTier = 1; v67aiTierName = "OBJECTIVE";
-                    //         } else if (srcCat == CardCategory.EFFECT) {
-                    //             v67aiTier = 2; v67aiTierName = "EFFECT";
-                    //         } else if (srcCat == CardCategory.INTERRUPT) {
-                    //             v67aiTier = 3; v67aiTierName = "INTERRUPT";
-                    //         } else if (srcCat == CardCategory.LOCATION) {
-                    //             v67aiTier = 2; v67aiTierName = "LOCATION-EFFECT";
-                    //         }
-                    //     }
-                    //     float v67aiBonus;
-                    //     switch (v67aiTier) {
-                    //         case 1: v67aiBonus = 2000.0f; break;
-                    //         case 2: v67aiBonus = 1800.0f; break;
-                    //         case 3: v67aiBonus = 1600.0f; break;
-                    //         default: v67aiBonus = 1500.0f; break;
-                    //     }
-                    //     action.addReasoning(
-                    //         String.format("V67ai LOCATION DEPLOY ORDER [Tier %d %s]: %s — Objective → Effect → Interrupt → Hand!",
-                    //             v67aiTier, v67aiTierName, v67iReason), v67aiBonus);
-                    //     LOG.warn("V67ai LOCATION TIER {} [{}]: '{}' → +{} ({})",
-                    //         v67aiTier, v67aiTierName, actionText, (int) v67aiBonus, v67iReason);
-                    // }
                     if (v67iAddsLocation) {
                         LOG.info("V67i location-pull detected for '{}' ({}) — tier owned by V192 (ActionTextEvaluator)",
                             actionText, v67iReason);
@@ -3347,17 +3315,11 @@ public class DeployEvaluator extends ActionEvaluator {
                             LOG.warn("V149 NO LIGHTSABER WIELDER (DeployEvaluator): '{}' — 0 unarmed [Warrior] ability-4+ chars → -2000",
                                 actionText);
                         } else {
-                            // V67am +600 DE GRANT ABSORBED by V192 pull scorer 2026-07-06
-                            // (T4.2 merge): the ATE scorer's WEAPON tier (+600) is the single
-                            // owner — this DE copy DOUBLE-COUNTED (boundary row 6: +1600
-                            // stack on one blaster pull). The V67ar/V67ao/V149 veto mirrors
-                            // above stay verbatim (duplicate -9999s are harmless).
-                            // Commented out per feedback_comment_out_old_rules:
-                            // action.addReasoning(String.format(
-                            //     "V67am WEAPON PULL (universal, tier 1): %d unarmed character(s) — pull weapon from reserve! %s",
-                            //     v67arUnarmed, v67mReason), 600.0f);
-                            // LOG.warn("V67am WEAPON PULL (DeployEvaluator): '{}' adds weapon ({}) → +600 ({} unarmed)",
-                            //     actionText, v67mReason, v67arUnarmed);
+                            // V67am +600 pull grant is owned by V192 in ActionTextEvaluator.
+                            // The former DeployEvaluator grant double-counted weapon pulls and was
+                            // removed 2026-07-13; git preserves it. Live V67ar/V67ao/V149
+                            // vetoes above remain unchanged, and V192 repeats them structurally
+                            // before emitting the same +600 weapon tier.
                             LOG.info("V67am weapon pull detected for '{}' — grant owned by V192 (ActionTextEvaluator)",
                                 actionText);
                         }

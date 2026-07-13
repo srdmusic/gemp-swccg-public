@@ -4,6 +4,12 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — CLEANUP BATCH 2.6 (Codex packet; both bots) — comment-only, NO behavior change
+- V67ai/V67am commented duplicate pull scorers in DeployEvaluator: two ranges (V67ai Tier 1-3 DE copy ×32, V67am +600 weapon grant ×6) = 38 corpse lines + 9 preface replacements per bot (9 insertions / 47 deletions per bot, −76 total). All four SHA pins matched (per-bot ab6710a2…, two-bot 8f510b1b…, per-range 91d10cf4… / 4ac26eca…).
+- Live successors proven both bots: V192 pull scorer in ActionTextEvaluator is sole owner of the resized location tier (+1500/+1400/+1300/+1200 after V131 gating) and the +600 weapon tier; V67i/V67m detection, the DeployEvaluator V67ar/V67ao/V149 vetoes, and the V162/V67ai Tier4-HAND anchor all retained. Held V192/V82/V60/V131/V67l ActionText predecessors untouched.
+- RAW javap identical parent vs candidate both bots (13,704 lines each); 60/60 fixtures.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — STAGE 4A1 (Codex amended matrix + m00372 Option A; both bots) — capture still DISABLED
 - **Sealed state-event slice** (`common/trace/state/`): TraceStateEvent permits exactly four records — TrackerRecordResponseEvent (Option-A complete payload: before/after DecisionTrackerSnapshot with ordered sequence rows, repeat/loop counts, last-action pair, cancel pair, canonical turn-block rows; outcome constructor-validated against snapshot equality), PendingConcedeEvent (SET_PENDING/CLEAR_PENDING; causes LOST_PILE_DEFICIT/NEW_GAME_RESET/POST_PLAYER_LOST — no FIRE_PENDING per matrix), EnginePlayerLostEvent (DISTINCT EngineCallOutcome SUCCESS/THREW per council), PendingDeployEvent (SET/CLEAR). MutationOutcome CHANGED/NO_OP; TrackerOwner closed set.
 - **Envelope v3**: TraceIntendedStateEvent DELETED (with its 9 placeholder Kinds); stateEvents typed list; SCHEMA_VERSION 3; one CURRENT-guarded typed recorder per family, swallow-to-INCOMPLETE/STATE_EVENT (test-proven per Codex m00380).
