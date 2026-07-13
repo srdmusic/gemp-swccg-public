@@ -6219,3 +6219,13 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     cross-validates selectedRoute; KNOWN obligation flags checked against KNOWN noPass/minimum;
     CandidateShape tied to actual ActionFacts rows (ghost rows lawful). TraceSnapshots one-line
     adaptation. 97 tests green. Zero consumers. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ CLEANUP BATCH 1.8 (2026-07-13, Codex packet, AMENDED): 24 comment-only lines, both bots ════
+    ActionTextEvaluator V35.4 OLD ownership-inverted undercover-spy detection block (12/bot):
+    flagged OUR undercover card as the drain-blocker; the live 2026-07-06 scan (opponent-owner
+    check before isUndercover) is the sole valid implementation, so the predecessor is not a
+    rollback path. Packet author WITHDREW the originally-proposed V192 old take-dispatch line
+    mid-implementation (PULL audit: absorbed V192 predecessors stay held as rollback evidence);
+    V192 region restored verbatim, byte-identical to pre-batch HEAD. Dual-layer comment-only
+    assertions PASS; isolated same-JDK javap normalized dumps identical pre/post both classes.
+    NOT deployed. Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.

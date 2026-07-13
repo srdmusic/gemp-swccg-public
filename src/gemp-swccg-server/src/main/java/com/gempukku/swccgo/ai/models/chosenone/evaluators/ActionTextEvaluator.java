@@ -3810,18 +3810,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                         }
                                     }
                                 }
-                                // OLD ownership-inverted detection commented out 2026-07-06
-                                // (feedback_comment_out_old_rules) — flagged OUR undercover card:
-                                // if (context.getPlayerId().equals(card.getOwner())) {
-                                //     weHavePresence = true;
-                                //     // V35.4: Check if this is actually an opponent's undercover spy
-                                //     // Undercover spies appear on our side but are opponent cards
-                                //     if (card.isUndercover()) {
-                                //         oppHasUndercoverSpy = true;
-                                //     }
-                                // } else if (opponentId != null && opponentId.equals(card.getOwner())) {
-                                //     oppHasPresence = true;
-                                // }
 
                                 // If opponent has presence (or undercover spy) at our location, drain is blocked
                                 if (weHavePresence && (oppHasPresence || oppHasUndercoverSpy)) {

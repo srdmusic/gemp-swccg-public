@@ -4,6 +4,13 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — CLEANUP BATCH 1.8 (Codex packet, AMENDED; both bots) — comment-only, NO behavior change
+- 24 mirrored comment-only lines deleted per Handoffs/CODEX_CLEANUP_BATCH18_CANDIDATES_2026-07-13.md (12/bot): ActionTextEvaluator OLD ownership-inverted V35.4 undercover-spy detection block. It flagged OUR undercover card as the drain-blocker; the live 2026-07-06 scan (opponent-owner check before `isUndercover()`) is the sole valid implementation, so the predecessor was never a usable rollback path.
+- Packet AMENDED mid-implementation: the originally-proposed V192 old take-dispatch corpse line was WITHDRAWN by the packet author after the PULL audit (all absorbed V192 predecessors remain held as transaction rollback evidence). The V192 region was restored verbatim and verified byte-identical to pre-batch HEAD in both bots.
+- Dual-layer comment-only assertions PASS (every deleted line `//`-comment pre-delete AND in the -U0 diff; zero added lines); mirror hunks byte-identical between bots; `git diff --check` clean. Bytecode proof: isolated same-JDK (container javac 21.0.11) compile against web.jar + normalized `javap -p -c -s -constants` IDENTICAL pre/post for both classes; verbose-javap residue is LineNumberTable-only. V35.4 movement-decision parity holds trivially — no executable change exists.
+- Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794, and the trace lane (common/trace, common/decision, RandoCalAi, TheChosenOneAi, DecisionSafety, CombinedEvaluator, EvaluatedAction).
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — CLEANUP BATCH 1.6 (Codex packet; both bots) — comment-only, NO behavior change
 - 194 mirrored comment-only lines deleted per Handoffs/CODEX_CLEANUP_BATCH16_CANDIDATES_2026-07-13.md (97/bot): DeckOracle V185 first-pass block (43), DeployPhasePlanner commented V22.3 inline maintenance scan (26), ShieldStrategy superseded power-based theater scan + weOccupyAnyBg (28+1). Every deleted line verified `//`-comment or blank pre-delete AND in the diff post-edit; bytecode identical by construction; compile clean.
 - Surviving comments rewritten to stop claiming the dead blocks are retained inline (revert path = git history): DeckOracle SVC-ORACLE banner, DeployPhasePlanner V22.3 note (ForceReserveService = sole live scan), ShieldStrategy V105 note (ShieldFacts predicates named directly; power-basis DIVERGENCE NOTE kept per manifest).
