@@ -31,14 +31,14 @@ public class TraceStateEventTest {
     }
 
     // =========================================================================
-    // Sealed hierarchy: exactly the 4A1 families, nothing else constructible
+    // Sealed hierarchy: exactly the 4A1 + 4A2a families, nothing else constructible
     // =========================================================================
 
     @Test
-    public void hierarchyIsSealedToTheFourSliceFamilies() {
+    public void hierarchyIsSealedToThePermittedFamilies() {
         assertTrue(TraceStateEvent.class.isSealed());
         Class<?>[] permitted = TraceStateEvent.class.getPermittedSubclasses();
-        assertEquals(4, permitted.length);
+        assertEquals(6, permitted.length);
         List<String> names = new ArrayList<>();
         for (Class<?> c : permitted) {
             names.add(c.getSimpleName());
@@ -47,6 +47,9 @@ public class TraceStateEventTest {
         assertTrue(names.contains("PendingConcedeEvent"));
         assertTrue(names.contains("EnginePlayerLostEvent"));
         assertTrue(names.contains("PendingDeployEvent"));
+        // TRACE STAGE 4A2a: the two outer tracker lifecycle families
+        assertTrue(names.contains("TrackerUpdateStateEvent"));
+        assertTrue(names.contains("TrackerClearEvent"));
     }
 
     // =========================================================================

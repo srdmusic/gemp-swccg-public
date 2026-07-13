@@ -4,6 +4,12 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — TRACE 4A2A (Codex packet m00417/m00426; both bots) — capture still DISABLED
+- Outer DecisionTracker lifecycle observation: TrackerUpdateStateEvent (exact legacy call args + before/after DecisionTrackerLifecycleSnapshot) and TrackerClearEvent (closed ClearCause NEW_GAME_RESET), sealed union 4→6, NO envelope/schema change. Lifecycle snapshot wraps DecisionTrackerSnapshot + lastTurn + lastStateHash ONLY — lastPhase excluded by ownership ruling (onPhaseChange is heuristic-path, 4A2b) with a reflection test pinning the record shape.
+- Hooks at exactly the four verified call sites (one event per legacy call, proven at the real decide() boundary: clear-before-update ordering, NO_OP on fresh/repeat, CHANGED with exact stub args); pure traceLifecycleSnapshot() seam both trackers; mutators byte-unchanged; mirrors byte-identical normalized.
+- 143 tests green. Packet line-63 prose was stale vs its own corrected model (named lastPhase); implemented per the correction — flagged to the author.
+- NOT deployed; capture off.
+
 ## 2026-07-13 — FACTUAL COMMENT REPAIR (Codex packet + m00410 correction; 3 files) — comment-only
 - The final sanctioned comment pass: comments that LIED about the code fixed. (A) MaintenanceFacts shared header: the Blizzard 4 / Stormtrooper Garrison card-id attributions were swapped (Card13_056 IS Blizzard 4, Card13_087 IS Stormtrooper Garrison — card-source verified). (B) Both CardSelectionEvaluators, Battle Order comment: the old "costs Rando 1 Force per drain — net negative" claim replaced with the card-accurate two lines (3 Force per drain, occupation waives, Battle Plan suppresses the Battle Order modifier; Card8_118/Card13_054 anchors verified) — the packet's own first replacement wording was ALSO corrected mid-flight by its author (m00410).
 - +6/−4 across 3 files, every line a comment; SHA pins matched pre-edit; RAW javap identical on all three classes; 61/61 fixtures. Comment deletion now STOPS by coordinator ruling: 24 pairs / 840 lines remain held as revert evidence.

@@ -6308,3 +6308,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Battle Order comment corrected to card truth (3 Force/drain; occupation waives; Battle Plan
     suppresses the modifier). Packet's own wording corrected mid-flight by author. javap
     identical. 61/61 fixtures. Comment deletion STOPS here (24 pairs/840 lines held). NOT deployed.
+
+  ════ TRACE 4A2A (2026-07-13, Codex m00417/m00426): outer tracker lifecycle events ════
+    UPDATE_STATE/CLEAR records w/ wrapped lifecycle snapshot (lastPhase excluded by ownership);
+    one event per legacy call proven at real decide(); pure seam; mirrors exact. 143 tests green.
+    Capture DISABLED. NOT deployed. Details in AI_CHANGELOG 2026-07-13.

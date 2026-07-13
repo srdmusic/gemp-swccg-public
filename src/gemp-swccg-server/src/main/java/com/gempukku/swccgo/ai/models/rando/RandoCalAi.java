@@ -16,14 +16,17 @@ import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
+import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSnapshots;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerLifecycleSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerClearEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
@@ -1205,7 +1208,37 @@ public class RandoCalAi extends HeuristicAiBase {
             // Ignore errors in state tracking
         }
 
+        // TRACE 4A2a (Handoffs/CODEX_TRACE_STAGE4_4A2A_OUTER_TRACKER_LIFECYCLE_2026-07-13.md
+        // "Hook law"): observe the one outer UPDATE_STATE lifecycle call. Snapshots are
+        // built only when a session is active, each under an instrumentation-only
+        // try/catch that converts failure into a typed STATE_EVENT capture failure; the
+        // legacy mutator below is byte-for-byte unchanged and runs exactly once either
+        // way. The five ints are the EXACT legacy call arguments (zero defaults after a
+        // caught getter exception above), recorded as call args, not asserted board truth.
+        DecisionTrackerLifecycleSnapshot traceLifecycleBefore = null;
+        if (TraceSession.isActive()) {
+            try {
+                traceLifecycleBefore = decisionTracker.traceLifecycleSnapshot();
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "UPDATE_STATE before-snapshot failed; legacy updateState unaffected");
+            }
+        }
+
         decisionTracker.updateState(handSize, forcePile, reserveDeck, turn, cardsInPlay);
+
+        if (traceLifecycleBefore != null) {
+            try {
+                TraceSession.recordTrackerUpdateState(TrackerOwner.OUTER_RANDO,
+                    handSize, forcePile, reserveDeck, turn, cardsInPlay,
+                    traceLifecycleBefore, decisionTracker.traceLifecycleSnapshot());
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "UPDATE_STATE after-snapshot/record failed; legacy updateState already ran");
+            }
+        }
     }
 
     /**
@@ -1956,7 +1989,34 @@ public class RandoCalAi extends HeuristicAiBase {
             currentGameId = playerId + "_" + System.currentTimeMillis();
 
             chatManager.resetForGame(currentGameId);
+            // TRACE 4A2a ("Hook law" + "For CLEAR"): observe the one outer new-game
+            // tracker CLEAR without moving it — source order preserved (pending-concede
+            // clear above, outer new-game writes, chat reset, THIS tracker clear,
+            // seen-set clears, then strategy-component resets). Snapshot builds are
+            // instrumentation-only; failure marks STATE_EVENT and never skips, repeats,
+            // or alters the legacy clear. Fresh-tracker NO_OP is a real observation.
+            DecisionTrackerLifecycleSnapshot traceClearBefore = null;
+            if (TraceSession.isActive()) {
+                try {
+                    traceClearBefore = decisionTracker.traceLifecycleSnapshot();
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "CLEAR before-snapshot failed; legacy clear unaffected");
+                }
+            }
             decisionTracker.clear();  // Clear loop tracking for new game
+            if (traceClearBefore != null) {
+                try {
+                    TraceSession.recordTrackerClear(TrackerOwner.OUTER_RANDO,
+                        TrackerClearEvent.ClearCause.NEW_GAME_RESET,
+                        traceClearBefore, decisionTracker.traceLifecycleSnapshot());
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "CLEAR after-snapshot/record failed; legacy clear already ran");
+                }
+            }
             seenOpponentCards.clear();  // Clear opponent card tracking
             seenOwnShields.clear();  // Clear own shield tracking for pacing
 

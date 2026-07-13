@@ -1,13 +1,16 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerLifecycleSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
 import com.gempukku.swccgo.ai.models.common.trace.state.EnginePlayerLostEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerClearEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerUpdateStateEvent;
 import com.gempukku.swccgo.common.GameEndReason;
 
 import java.util.List;
@@ -466,6 +469,41 @@ public final class TraceSession {
         try {
             c.recordStateEvent(TrackerRecordResponseEvent.of(owner, decisionType, decisionId,
                 decisionKey, response, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** TRACE STAGE 4A2a (Handoffs/CODEX_TRACE_STAGE4_4A2A_OUTER_TRACKER_LIFECYCLE_2026-07-13.md
+     *  "Recording API"): outer decision-tracker UPDATE_STATE lifecycle call, observed
+     *  AFTER the legacy updateState(...) ran, with the EXACT legacy call arguments and
+     *  the complete lifecycle before/after snapshots from the tracker's pure
+     *  traceLifecycleSnapshot() seam. Exactly one event per legacy call; the hook
+     *  builds snapshots ONLY under its active-session guard. */
+    public static void recordTrackerUpdateState(TrackerOwner owner, int handSize, int forcePile,
+                                                int reserveDeck, int turn, int cardsInPlay,
+                                                DecisionTrackerLifecycleSnapshot before,
+                                                DecisionTrackerLifecycleSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(TrackerUpdateStateEvent.of(owner, handSize, forcePile,
+                reserveDeck, turn, cardsInPlay, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** TRACE STAGE 4A2a: outer decision-tracker new-game CLEAR lifecycle call, observed
+     *  AFTER the legacy clear() ran at its unchanged source position; ClearCause is
+     *  closed to NEW_GAME_RESET. Exactly one event per legacy call. */
+    public static void recordTrackerClear(TrackerOwner owner, TrackerClearEvent.ClearCause cause,
+                                          DecisionTrackerLifecycleSnapshot before,
+                                          DecisionTrackerLifecycleSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(TrackerClearEvent.of(owner, cause, before, after));
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
         }

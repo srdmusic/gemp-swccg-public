@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.rando;
 
+import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerLifecycleSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
 
 import org.apache.logging.log4j.Logger;
@@ -542,5 +543,20 @@ public class DecisionTracker {
      */
     String traceDecisionKey(String decisionType, String decisionText) {
         return decisionKey(decisionType, decisionText);
+    }
+
+    /**
+     * PURE, package-local trace seam (TRACE STAGE 4A2a,
+     * Handoffs/CODEX_TRACE_STAGE4_4A2A_OUTER_TRACKER_LIFECYCLE_2026-07-13.md): the
+     * complete lifecycle snapshot of this OUTER tracker — the decision-affecting
+     * traceSnapshot() above plus the exact lastTurn and lastStateHash fields the outer
+     * updateState(...)/clear() lifecycle calls write. lastPhase is EXCLUDED by the
+     * accepted preflight correction: only onPhaseChange(...) writes it, and that path
+     * is the inherited HeuristicAiBase owner reserved for 4A2b. Reads only; mutates
+     * nothing. DISABLED capture must never call this: the bot hooks build snapshots
+     * only under their trace-session guard.
+     */
+    DecisionTrackerLifecycleSnapshot traceLifecycleSnapshot() {
+        return new DecisionTrackerLifecycleSnapshot(traceSnapshot(), lastTurn, lastStateHash);
     }
 }

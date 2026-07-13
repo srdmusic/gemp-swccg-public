@@ -84,6 +84,21 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
   and (if he agrees to relax his read-only stance) small mechanical Java implementations that K-2 gates.
 - K-2 main loop: mailbox triage, agent dispatch, commit gate, Steve comms. Everything else = background agents.
 
+## LIVE STATUS (updated on-disk per m00427; may be dirty until next material commit)
+- HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture
+  authoring in test/support surfaces, council/source audits, independent gates, 4A2b research; production Java
+  stays with K-2 agents unless Steve transfers exact file ownership.
+- Agent lane 1 (running): F1/F2 engine fixes per CODEX_FINALIZER_FIXTURE_RETRY_PACKET, Steve-approved;
+  commits as TWO separate gated commits when it reports.
+- Agent lane 2 (running): 4A2a per the m00426-UPDATED packet — DecisionTrackerLifecycleSnapshot wraps
+  DecisionTrackerSnapshot + lastTurn + lastStateHash ONLY; lastPhase EXCLUDED (gate rejects it; onPhaseChange
+  is heuristic-path, 4A2b); exactly one event per direct outer updateState/clear call. One isolated commit.
+- Council CPU note (Steve 2026-07-13): pass "num_thread": 4 in ollama options on council calls; consider
+  taskpolicy -b on the ollama pid; q4_K_M quant recommended over q8 for the 70B.
+- Next commands after agent reports: verify focused suite in-container -> construct per-commit changelog
+  content -> commit (F1, then F2, then 4A2a separately) -> send each SHA to Codex -> he gates.
+- Mailbox watermark at this update: m00427.
+
 ## Landmines
 - 24 held comment pairs are REVERT EVIDENCE — no more deletion.
 - Capture stays disabled until Codex's enablement gate; V192/PULL predecessors held as rollback evidence.
