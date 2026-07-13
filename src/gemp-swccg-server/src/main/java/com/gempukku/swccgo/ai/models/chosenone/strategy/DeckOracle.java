@@ -1180,6 +1180,28 @@ public class DeckOracle {
     }
 
     /**
+     * BATCH1-CORR (2026-07-13, extracted for m00262 fixtures): does any of the card's
+     * typed Personas appear (word-boundary) in the given lowercased text? Used by the
+     * pull-route flip-plan exemption — persona names are how objective flip conditions
+     * identify characters ('Director Orson Krennic' carries Persona.KRENNIC, matching
+     * flip text "Krennic" regardless of title word order). Word boundary blocks
+     * substring false positives ("krennicity").
+     */
+    public static boolean personaNamedInText(java.util.Set<com.gempukku.swccgo.common.Persona> personas, String lowerText) {
+        if (personas == null || personas.isEmpty() || lowerText == null || lowerText.isEmpty()) return false;
+        for (com.gempukku.swccgo.common.Persona p : personas) {
+            String pn;
+            try { pn = p.getHumanReadable(); } catch (Exception e) { continue; }
+            if (pn == null || pn.length() < 3) continue;
+            if (lowerText.matches("(?s).*\\b"
+                    + java.util.regex.Pattern.quote(pn.toLowerCase(Locale.ROOT)) + "\\b.*")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Parse a source card's game text to extract the list of pull targets.
      * Returns keyword groups suitable for hasTargetInZone(...).
      *
@@ -1252,7 +1274,16 @@ public class DeckOracle {
                                   .replaceAll(",\\s*,", ",")
                                   .replaceAll("\\s+", " ");
                 for (String part : norm.split(",")) {
-                    String t = part.trim().toLowerCase(Locale.ROOT);
+                    // BATCH1a-CENTRAL CORRECTED (2026-07-13, Codex m00262): forced-location
+                    // grammar vs title tokens. Decipher game text writes card TITLES in Title
+                    // Case ("I've Got A Problem Here", "The Empire Knows We're Here") but the
+                    // location-forcing adverb LOWERCASE ("[download] Krennic here"). Strip the
+                    // suffix CASE-SENSITIVELY on the raw text, BEFORE lowercasing, so real
+                    // titles keep their final Here/There. One normalization owner for every
+                    // consumer (V82, V177, pull-route guard).
+                    String rawPart = part.trim()
+                        .replaceFirst("\\s+(?:here|there|at\\s+that\\s+location)\\s*$", "");
+                    String t = rawPart.toLowerCase(Locale.ROOT);
                     if (t.isEmpty()) continue;
                     // V82.1: aggressively peel known verb/article prefixes
                     // until the string stabilizes. Wide capture above means
@@ -1278,11 +1309,7 @@ public class DeckOracle {
                     t = t.replaceFirst("\\s+into\\s+hand$", "");
                     t = t.replaceFirst("\\s+aboard\\b.*$", "");
                     t = t.replaceFirst("\\s+(card|cards)$", "");
-                    // BATCH1a-CENTRAL (2026-07-13, Codex m00225 #3): forced-location pull
-                    // texts ("[download] Krennic here") carry a location-forcing suffix —
-                    // strip it HERE so every consumer (V82, V177, pull-route guard) shares
-                    // one normalization owner instead of consumer-local copies.
-                    t = t.replaceFirst("\\s+(?:here|there|at\\s+that\\s+location)$", "");
+                    // (m00262: the here/there strip moved ABOVE, case-sensitive pre-lowercase.)
                     // V82.3 (Steve, 2026-05-16): strip leftover parens and
                     // brackets. Begin Landing's text is "(or Coruscant) docking
                     // bay" — after or→comma split we get "[episode i] (" and

@@ -5805,16 +5805,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         String fsOpp = gameState.getOpponent(playerId);
                                         float fsDestOpp = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, location, fsOpp, false, false);
                                         // BATCH1b-CORR (2026-07-13, Codex m00225 #2): power<=0 misreads a
-                                        // PRESENT power-0 friendly (e.g. Ozzel Card3_082) as an empty site
-                                        // and still fires -800 — count friendly non-undercover characters.
-                                        int fsDestOurChars = 0;
-                                        for (PhysicalCard fsDc : gameState.getCardsAtLocation(location)) {
-                                            if (fsDc == null || fsDc.getBlueprint() == null) continue;
-                                            if (fsDc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                            if (!playerId.equals(fsDc.getOwner())) continue;
-                                            if (fsDc.isUndercover()) continue;
-                                            fsDestOurChars++;
-                                        }
+                                        // PRESENT power-0 friendly as an empty site and still fires -800 —
+                                        // count friendly non-undercover characters instead (shared helper,
+                                        // pure-tested; extracted per m00262 fixture requirement).
+                                        int fsDestOurChars = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                            .countFriendlyNonUndercoverCharacters(gameState.getCardsAtLocation(location), playerId);
                                         if (fsDestOpp <= 0 && fsDestOurChars == 0) {
                                             int fsRemain = 0; float fsRemainMaxAb = 0f;
                                             for (PhysicalCard oc : gameState.getCardsAtLocation(fsOrigin)) {

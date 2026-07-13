@@ -52,6 +52,23 @@ public final class FormationSafety {
     /** Doomed-origin gap (V33 BUDDY BREAK standard) for the survival-retreat exemption. */
     public static final float DOOMED_GAP = 6.0f;
 
+    /** BATCH1b-CORR (2026-07-13, Codex m00225 #2 / m00262 fixtures): count friendly
+     *  non-undercover CHARACTERS among the cards at a location. Presence test for the
+     *  empty-site gates — total power misreads a present power-0 friendly as absence.
+     *  Takes the card collection directly so pure JUnit can drive it without a GameState. */
+    public static int countFriendlyNonUndercoverCharacters(Iterable<PhysicalCard> cardsAtLocation, String playerId) {
+        int n = 0;
+        if (cardsAtLocation == null || playerId == null) return 0;
+        for (PhysicalCard c : cardsAtLocation) {
+            if (c == null || c.getBlueprint() == null) continue;
+            if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+            if (!playerId.equals(c.getOwner())) continue;
+            if (c.isUndercover()) continue;
+            n++;
+        }
+        return n;
+    }
+
     /** TYPED weapon bonus for one character: attached WEAPON cards + Icon.PERMANENT_WEAPON.
      *  Lightsaber +5 / other +3 (V29.7 heuristic). Never reads game text. */
     public static float weaponBonusOf(GameState gs, PhysicalCard character) {

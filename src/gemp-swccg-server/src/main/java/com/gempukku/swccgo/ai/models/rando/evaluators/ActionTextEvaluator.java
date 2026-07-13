@@ -5733,24 +5733,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                                 // BATCH1-CORR (2026-07-13, Codex m00225 #1): first-name token
                                                 // regressed 'Director Orson Krennic' (first token = 'director').
                                                 // Match the blueprint's TYPED Personas against the flip text —
-                                                // persona names are how flip conditions identify characters.
+                                                // shared helper, pure-tested (m00262 fixture requirement).
                                                 String fsFlip = fsOa.getFlipConditionText().toLowerCase(java.util.Locale.ROOT);
                                                 try {
-                                                    java.util.Set<com.gempukku.swccgo.common.Persona> fsPs =
-                                                        fsPulled.getBlueprint().getPersonas();
-                                                    if (fsPs != null) {
-                                                        for (com.gempukku.swccgo.common.Persona fsP : fsPs) {
-                                                            String fsPn;
-                                                            try { fsPn = fsP.getHumanReadable(); } catch (Exception e) { continue; }
-                                                            if (fsPn == null || fsPn.length() < 3) continue;
-                                                            if (fsFlip.matches("(?s).*\\b"
-                                                                    + java.util.regex.Pattern.quote(fsPn.toLowerCase(java.util.Locale.ROOT))
-                                                                    + "\\b.*")) {
-                                                                fsFlipPlan = true;
-                                                                break;
-                                                            }
-                                                        }
-                                                    }
+                                                    fsFlipPlan = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                                        .personaNamedInText(fsPulled.getBlueprint().getPersonas(), fsFlip);
                                                 } catch (Exception fsPex) { /* no personas — no exemption */ }
                                             }
                                             if (!fsFlipPlan) {

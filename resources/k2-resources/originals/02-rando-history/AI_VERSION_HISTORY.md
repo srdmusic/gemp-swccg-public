@@ -6146,7 +6146,7 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     parseSourceCardPullTargets (ATE-local copy removed). Flip exemption now matches typed
     blueprint Personas (getHumanReadable, word-boundary) against flip text — fixes 'Director
     Orson Krennic'. Batch-1b no-overpenalty gate counts friendly non-undercover characters at
-    destination (power<=0 misread power-0 Ozzel as empty site). Compiles clean both bots
+    destination (power<=0 misread a present power-0 friendly as an empty site). Compiles clean both bots
     (MVN_EXIT=0), mirrored. NOT deployed — awaiting Codex re-gate. Full details in
     resources/AI_CHANGELOG.md 2026-07-13 entry.
 
@@ -6157,3 +6157,16 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     with strict Float.compare(candidate,best)>0 — ties keep the earlier candidate, both bots
     identical. Non-tied decisions bit-identical. NOT deployed pending Codex gate. Full details in
     resources/AI_CHANGELOG.md 2026-07-13 entry.
+
+  ════ BATCH 1 CORRECTION 2 (2026-07-13, Codex gate FAIL m00262): title-case grammar strip ════
+    The central here/there suffix strip (correction 1) removed terminal Here/There from REAL card
+    titles ("I've Got A Problem Here" -> "i've got a problem"). Fix: Decipher writes titles in
+    Title Case but the location-forcing adverb lowercase — strip now runs CASE-SENSITIVELY on the
+    raw captured text BEFORE lowercasing in parseSourceCardPullTargets. Fixtures added per the
+    gate (28 green): DeckOraclePullTargetParseTest x11 in BOTH bot test packages (strip vs title
+    preservation, mixed list, persona exemption pos/neg/substring) + FormationSafetyCountTest x6
+    (power-0 friendly presence, undercover-only, exclusions). Helpers extracted for pure tests:
+    DeckOracle.personaNamedInText, FormationSafety.countFriendlyNonUndercoverCharacters (logic
+    unmoved). Record fixes: ATE consumer count 12/bot, "Deployed" wording, wrong power-0 Ozzel
+    example dropped (Ozzel printed power 3 — m00225's own example was wrong). Also corrected
+    the prior entry's Ozzel mention below. NOT deployed. Full details in resources/AI_CHANGELOG.md.
