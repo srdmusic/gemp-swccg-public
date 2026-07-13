@@ -21,7 +21,16 @@ import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerPhaseChangeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerUpdateStateEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyBattleOrderRefreshEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyBattleResultRecordEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerOwner;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyFocusDeployRecordEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyResetEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategySideSetEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyStartTurnEvent;
 import com.gempukku.swccgo.common.GameEndReason;
+import com.gempukku.swccgo.common.Side;
 
 import java.util.List;
 
@@ -715,6 +724,103 @@ public final class TraceSession {
         if (c == null) return;
         try {
             c.recordStateEvent(HeuristicReassignmentRecordEvent.of(key, turn, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    // ── TRACE STAGE 4B2 (Handoffs/CODEX_TRACE_STAGE4_4B2_STRATEGY_CONTROLLER_PREFLIGHT_2026-07-13.md
+    //    "Source-Complete Owner Table"): one typed recording method per StrategyController
+    //    family, following the same STATE_EVENT error law. With no active session every
+    //    call immediately returns. Each hook passes only already-computed values plus the
+    //    before/after snapshots captured under its own active-session guard; event
+    //    construction or append failure marks the envelope INCOMPLETE/STATE_EVENT and
+    //    never alters or throws into the legacy decision path. The controller mutators
+    //    themselves stay byte-for-byte unchanged; hooks land at the outer call sites. ──
+
+    /** Strategy SIDE_SET at the new-game setSide(...) call: the exact nullable side
+     *  argument plus the complete before/after controller snapshots. */
+    public static void recordStrategySideSet(StrategyControllerOwner owner, Side side,
+                                             StrategyControllerSnapshot before,
+                                             StrategyControllerSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(StrategySideSetEvent.of(owner, side, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Strategy RESET at the new-game reset() call immediately after setSide: no call
+     *  argument, complete before/after controller snapshots. */
+    public static void recordStrategyReset(StrategyControllerOwner owner,
+                                           StrategyControllerSnapshot before,
+                                           StrategyControllerSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(StrategyResetEvent.of(owner, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Strategy START_TURN at the turn-changed startNewTurn(...) call: the exact int turn
+     *  argument plus the complete before/after controller snapshots. */
+    public static void recordStrategyStartTurn(StrategyControllerOwner owner, int turnNumber,
+                                               StrategyControllerSnapshot before,
+                                               StrategyControllerSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(StrategyStartTurnEvent.of(owner, turnNumber, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Strategy FOCUS_DEPLOY_RECORD at the optional onSuccessfulDeploy(...) call, recorded
+     *  before the outer pending-deploy CLEAR: the exact non-null card-type argument plus
+     *  the complete before/after controller snapshots. */
+    public static void recordStrategyFocusDeployRecord(StrategyControllerOwner owner, String cardType,
+                                                       StrategyControllerSnapshot before,
+                                                       StrategyControllerSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(StrategyFocusDeployRecordEvent.of(owner, cardType, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Strategy BATTLE_ORDER_REFRESH at the once-per-decision
+     *  updateBattleOrderFromGameState(...) call: no GameState or service reference, only
+     *  the complete before/after controller snapshots (the internal
+     *  setUnderBattleOrderRules write stays folded in). */
+    public static void recordStrategyBattleOrderRefresh(StrategyControllerOwner owner,
+                                                        StrategyControllerSnapshot before,
+                                                        StrategyControllerSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(StrategyBattleOrderRefreshEvent.of(owner, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Strategy BATTLE_RESULT_RECORD at either the win or the loss onBattleResult(...)
+     *  lexical hook (two hooks, one operation kind): the exact boolean won argument plus
+     *  the complete before/after controller snapshots. */
+    public static void recordStrategyBattleResultRecord(StrategyControllerOwner owner, boolean won,
+                                                        StrategyControllerSnapshot before,
+                                                        StrategyControllerSnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(StrategyBattleResultRecordEvent.of(owner, won, before, after));
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
         }

@@ -6,6 +6,13 @@ all apply — especially: check-replays-not-logs, one-change-at-a-time, changelo
 comment-out-not-delete (EXCEPT inside Codex-sanctioned cleanup packets), verify-before-done.
 
 ## Steve's operating directives (2026-07-13, latest first — these override older habits)
+-1. **PROCESS RESET (Steve m00501, effective next behavioral phase; 4B2 finishes old-style):** NO more
+    micro-commit/micro-gate. Each remaining behavioral phase = ONE coherent implementation tranche -> ONE
+    phase commit -> ONE mandatory independent phase verification. Do NOT reread/restate full session history
+    per edit; resume from THIS handoff + AI_WORK_QUEUE + the active phase packet + exact source files only.
+    Update ONE durable ledger at PHASE boundaries (this file), not overlapping docs. Mailbox Codex ONLY at a
+    phase boundary, a real blocker, or a material finding. The 30-min heartbeat is deleted; Codex checks
+    manually at meaningful boundaries.
 0. **FINAL FABLE GATE before ANY deploy** (Steve via Codex m00497): after Opus completes this consolidation
    tranche, a FRESH FABLE session must independently re-verify Opus's exact committed diff, phase/trace
    invariants, focused + aggregate tests, and capture-disabled state, then report findings to Codex for the
@@ -122,9 +129,18 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
   + raw store past the watermark below; (3) tell Codex K-2 resumed, same protocol; (4) act on his latest
   released brief only. Discipline sections below all bind; agents never commit; changelogs per-commit;
   engine files beyond F1/F2 need Steve.
-- Remaining released queue: Codex packet stream (4B2+ once released, route repairs per frozen order;
-  K-2 tasks #13-#24). Deploy of EVERYTHING stays HOLD until the aggregate gate.
-- Mailbox watermark: m00494.
+- PROGRAM SCOPE — ACCURATE FRAMING (Codex m00499, do NOT describe as almost done): what is COMPLETE is the
+  ARCHITECTURAL / TRACE / FINALIZER FOUNDATION (trace observation 4A1-4B2, snapshot/fact types, pure
+  finalizer F0/F3, F1/F2 engine fixes, cleanup program, domain registry). What REMAINS is the BEHAVIORAL
+  MIGRATION, the part that actually changes how Rando plays:
+    1. 4B2 (StrategyController observation) COMPLETE — committed + Codex-gated (last FOUNDATION piece).
+    2. FIVE major behavior lanes remain, ACTIVATE+CONTROL now the ACTIVE phase, then objective adapters,
+       BATTLE owner, PULL facts, deploy-weight/plan consolidation.
+    3. THEN: phase cutover / shadow integration, aggregate + Fable + Codex gates, controlled GEMP game
+       validation, and finally the deploy decision.
+  Foundation != behavioral migration. The program is mid-flight, not near-done.
+
+- Mailbox watermark: m00508.
 
 ## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture

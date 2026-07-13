@@ -29,7 +29,14 @@ package com.gempukku.swccgo.ai.models.common.trace.state;
  * FAILED_SEARCH_ADD, SINGLE_RESPONSE_RECORD (the internal local-block mutation stays
  * folded in), RECENT_RESPONSE_APPEND, and REASSIGNMENT_RECORD (the count increment
  * stays folded in); no seventh local-block or nested-count family exists, still
- * schema 3, no envelope change. Later families (strategy, objective, deck, shield,
+ * schema 3, no envelope change. TRACE STAGE 4B2
+ * (Handoffs/CODEX_TRACE_STAGE4_4B2_STRATEGY_CONTROLLER_PREFLIGHT_2026-07-13.md
+ * "Source-Complete Owner Table") adds the six closed StrategyController families beside
+ * their real per-bot owner hooks: SIDE_SET, RESET, and START_TURN (lifecycle);
+ * FOCUS_DEPLOY_RECORD, BATTLE_ORDER_REFRESH (the internal setUnderBattleOrderRules
+ * write stays folded in), and BATTLE_RESULT_RECORD (its two win/loss lexical hooks
+ * share one operation kind); StrategyControllerOwner is closed to RANDO and CHOSENONE,
+ * still schema 3, no envelope change. Later families (objective, deck, shield,
  * opponent intel, deploy plan, retry budget, barrier memory) land beside their first
  * real owner hook per the matrix's corrected landing order (4B, 4C); no complete type
  * algebra lands ahead of reachable hooks.
@@ -45,5 +52,8 @@ public sealed interface TraceStateEvent
             TrackerPhaseChangeEvent, TrackerBlockResponseEvent,
             HeuristicStateUpdateEvent, HeuristicActionChoiceRememberEvent,
             HeuristicFailedSearchAddEvent, HeuristicSingleResponseRecordEvent,
-            HeuristicRecentResponseAppendEvent, HeuristicReassignmentRecordEvent {
+            HeuristicRecentResponseAppendEvent, HeuristicReassignmentRecordEvent,
+            StrategySideSetEvent, StrategyResetEvent, StrategyStartTurnEvent,
+            StrategyFocusDeployRecordEvent, StrategyBattleOrderRefreshEvent,
+            StrategyBattleResultRecordEvent {
 }

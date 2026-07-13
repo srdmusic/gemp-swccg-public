@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando.strategy;
 
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerSnapshot;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.common.Side;
@@ -644,5 +645,34 @@ public class StrategyController {
         status.put("battles_won", battlesWon);
         status.put("battles_lost", battlesLost);
         return status;
+    }
+
+    // =========================================================================
+    // TRACE STAGE 4B2 pure seam
+    // =========================================================================
+
+    /**
+     * PURE, package-local trace seam (TRACE STAGE 4B2,
+     * Handoffs/CODEX_TRACE_STAGE4_4B2_STRATEGY_CONTROLLER_PREFLIGHT_2026-07-13.md
+     * "Snapshot Boundary"): the complete immutable snapshot of every retained instance
+     * field, used by the six observed owner boundaries. Reads only; mutates nothing.
+     * getStatus() is deliberately NOT reused: it omits retained fields. phase and focus
+     * serialize as their exact lowercase getValue() strings so the common snapshot does
+     * not depend on either bot package; confidence rides as raw float bits; both location
+     * lists are copied in order; the seen-reserve HashSet is handed to the snapshot, which
+     * sorts it into a stable list. DISABLED capture must never call this: the bot hooks
+     * build snapshots only under their active-session guard.
+     */
+    StrategyControllerSnapshot traceSnapshot() {
+        return new StrategyControllerSnapshot(
+            mySide,
+            underBattleOrderRules, hasShieldsToPlay, offeredConcedeThisGame,
+            phase.getValue(), turnNumber,
+            myForceGeneration, forceGenerationTarget, forceDeficit,
+            currentFocus.getValue(), Float.floatToRawIntBits(focusConfidence),
+            turnsWithFocus, focusDeployments,
+            new ArrayList<>(contestedLocations), new ArrayList<>(dangerousLocations),
+            reserveChecksThisTurn, new ArrayList<>(cardsSeenInReserve), lastReserveCheckTurn,
+            battlesWon, battlesLost, lastDecisionReason);
     }
 }

@@ -6333,3 +6333,9 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
   ════ F2 (2026-07-13, ENGINE, Steve-approved): mediator AI retry/clock/visible terminal ════
     One retry then visible failure (object-identity budget); AI clock credited on success;
     human path untouched. 5/5 + 128 combined green. NOT deployed. Details in AI_CHANGELOG.
+
+  ════ TRACE 4B2 (2026-07-13, Codex released packet): StrategyController observation ════
+    21-field canonical snapshot + six operation records (two-family) + seven lexical hooks/bot
+    (onBattleResult win/loss split); read-only bridges; setUnderBattleOrderRules folded. 58
+    focused + 883 module green; seven-method javap identity; parity faithful. Capture DISABLED.
+    NOT deployed. Details in AI_CHANGELOG 2026-07-13.

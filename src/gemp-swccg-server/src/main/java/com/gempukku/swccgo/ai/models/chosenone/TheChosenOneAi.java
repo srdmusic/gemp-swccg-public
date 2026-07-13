@@ -15,6 +15,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyControllerTraceAccess;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -26,6 +27,8 @@ import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerOwner;
+import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerClearEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.common.CardCategory;
@@ -1876,8 +1879,53 @@ public class TheChosenOneAi extends HeuristicAiBase {
             seenOwnShields.clear();  // Clear own shield tracking for pacing
 
             // Reset and update strategy components with new side
+            // TRACE 4B2 (Handoffs/CODEX_TRACE_STAGE4_4B2_STRATEGY_CONTROLLER_PREFLIGHT_2026-07-13.md
+            // "Exact Reachability, Guards, and Order" item 4): observe the new-game
+            // controller SIDE_SET then RESET, each at its unchanged source position, each
+            // its own event. Snapshots build only under an active session; failure marks
+            // STATE_EVENT and never skips, repeats, or alters the legacy call.
+            StrategyControllerSnapshot traceSideBefore = null;
+            if (TraceSession.isActive()) {
+                try {
+                    traceSideBefore = StrategyControllerTraceAccess.snapshot(strategyController);
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "SIDE_SET before-snapshot failed; legacy setSide unaffected");
+                }
+            }
             strategyController.setSide(mySide);
+            if (traceSideBefore != null) {
+                try {
+                    TraceSession.recordStrategySideSet(StrategyControllerOwner.CHOSENONE, mySide,
+                        traceSideBefore, StrategyControllerTraceAccess.snapshot(strategyController));
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "SIDE_SET after-snapshot/record failed; legacy setSide already ran");
+                }
+            }
+            StrategyControllerSnapshot traceResetBefore = null;
+            if (TraceSession.isActive()) {
+                try {
+                    traceResetBefore = StrategyControllerTraceAccess.snapshot(strategyController);
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "RESET before-snapshot failed; legacy reset unaffected");
+                }
+            }
             strategyController.reset();
+            if (traceResetBefore != null) {
+                try {
+                    TraceSession.recordStrategyReset(StrategyControllerOwner.CHOSENONE,
+                        traceResetBefore, StrategyControllerTraceAccess.snapshot(strategyController));
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "RESET after-snapshot/record failed; legacy reset already ran");
+                }
+            }
             objectiveHandler.reset();
             objectiveAnalyzer.reset();
             shieldStrategy.setSide(mySide);
@@ -1931,7 +1979,29 @@ public class TheChosenOneAi extends HeuristicAiBase {
         if (currentTurn > lastTurn) {
             lastTurn = currentTurn;
             chatManager.setCurrentTurn(currentTurn);
+            // TRACE 4B2 (packet item 5): observe the controller START_TURN at its
+            // unchanged source position; snapshots build only under an active session.
+            StrategyControllerSnapshot traceStartTurnBefore = null;
+            if (TraceSession.isActive()) {
+                try {
+                    traceStartTurnBefore = StrategyControllerTraceAccess.snapshot(strategyController);
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "START_TURN before-snapshot failed; legacy startNewTurn unaffected");
+                }
+            }
             strategyController.startNewTurn(currentTurn);
+            if (traceStartTurnBefore != null) {
+                try {
+                    TraceSession.recordStrategyStartTurn(StrategyControllerOwner.CHOSENONE, currentTurn,
+                        traceStartTurnBefore, StrategyControllerTraceAccess.snapshot(strategyController));
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "START_TURN after-snapshot/record failed; legacy startNewTurn already ran");
+                }
+            }
 
             LOG.info("🎲 Turn changed to {} (was {})", currentTurn, lastTurn - 1);
 
@@ -1962,7 +2032,32 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
             // Confirm any pending deploy from last turn succeeded (strategy learning)
             if (lastPendingDeployType != null) {
+                // TRACE 4B2 (packet item 5): observe the optional controller
+                // FOCUS_DEPLOY_RECORD at its unchanged source position, BEFORE the outer
+                // pending-deploy CLEAR below; the exact card-type argument is captured
+                // while lastPendingDeployType is still non-null.
+                StrategyControllerSnapshot traceFocusBefore = null;
+                if (TraceSession.isActive()) {
+                    try {
+                        traceFocusBefore = StrategyControllerTraceAccess.snapshot(strategyController);
+                    } catch (Throwable traceT) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            traceT.getClass().getName(),
+                            "FOCUS_DEPLOY_RECORD before-snapshot failed; legacy onSuccessfulDeploy unaffected");
+                    }
+                }
                 strategyController.onSuccessfulDeploy(lastPendingDeployType);
+                if (traceFocusBefore != null) {
+                    try {
+                        TraceSession.recordStrategyFocusDeployRecord(StrategyControllerOwner.CHOSENONE,
+                            lastPendingDeployType, traceFocusBefore,
+                            StrategyControllerTraceAccess.snapshot(strategyController));
+                    } catch (Throwable traceT) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            traceT.getClass().getName(),
+                            "FOCUS_DEPLOY_RECORD after-snapshot/record failed; legacy onSuccessfulDeploy already ran");
+                    }
+                }
                 String traceDeployTypeBefore = lastPendingDeployType;
                 lastPendingDeployType = null;
                 // TRACE 4A1: typed PENDING_DEPLOY CLEAR at the direct-write site. The
@@ -1981,7 +2076,31 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
         // Check for Battle Order/Plan cards in play and update strategy
         // This enables proper force drain cost calculation (+3 when under Battle Order rules)
+        // TRACE 4B2 (packet item 6): observe the once-per-decision controller
+        // BATTLE_ORDER_REFRESH at its unchanged source position. No GameState reference is
+        // ever stored; the internal setUnderBattleOrderRules write stays folded into this
+        // single event, whose outcome follows controller-snapshot equality.
+        StrategyControllerSnapshot traceBattleOrderBefore = null;
+        if (TraceSession.isActive()) {
+            try {
+                traceBattleOrderBefore = StrategyControllerTraceAccess.snapshot(strategyController);
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "BATTLE_ORDER_REFRESH before-snapshot failed; legacy updateBattleOrderFromGameState unaffected");
+            }
+        }
         strategyController.updateBattleOrderFromGameState(gameState);
+        if (traceBattleOrderBefore != null) {
+            try {
+                TraceSession.recordStrategyBattleOrderRefresh(StrategyControllerOwner.CHOSENONE,
+                    traceBattleOrderBefore, StrategyControllerTraceAccess.snapshot(strategyController));
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "BATTLE_ORDER_REFRESH after-snapshot/record failed; legacy updateBattleOrderFromGameState already ran");
+            }
+        }
 
         // Track phase changes for battle message
         Phase currentPhase = gameState.getCurrentPhase();
@@ -2303,13 +2422,55 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
         // Track battle results from decision text
         // Battle result prompts typically contain "won" or "lost"
-        // TRACE 4A1: strategyController.onBattleResult stays UNOBSERVED here; its event lands with the StrategyController owner increment (4B).
+        // TRACE 4B2 (packet item 9): the two win/loss lexical hooks share one operation
+        // kind; each observes onBattleResult at its unchanged source position AFTER the
+        // outer pending-deploy SET above, snapshots built only under an active session.
         if (textLower.contains("battle")) {
             if (textLower.contains("you won") || textLower.contains("you have won")) {
+                StrategyControllerSnapshot traceBattleWonBefore = null;
+                if (TraceSession.isActive()) {
+                    try {
+                        traceBattleWonBefore = StrategyControllerTraceAccess.snapshot(strategyController);
+                    } catch (Throwable traceT) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            traceT.getClass().getName(),
+                            "BATTLE_RESULT_RECORD before-snapshot failed; legacy onBattleResult unaffected");
+                    }
+                }
                 strategyController.onBattleResult(true);
+                if (traceBattleWonBefore != null) {
+                    try {
+                        TraceSession.recordStrategyBattleResultRecord(StrategyControllerOwner.CHOSENONE, true,
+                            traceBattleWonBefore, StrategyControllerTraceAccess.snapshot(strategyController));
+                    } catch (Throwable traceT) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            traceT.getClass().getName(),
+                            "BATTLE_RESULT_RECORD after-snapshot/record failed; legacy onBattleResult already ran");
+                    }
+                }
                 LOG.debug("Battle won - updating strategy controller");
             } else if (textLower.contains("you lost") || textLower.contains("you have lost")) {
+                StrategyControllerSnapshot traceBattleLostBefore = null;
+                if (TraceSession.isActive()) {
+                    try {
+                        traceBattleLostBefore = StrategyControllerTraceAccess.snapshot(strategyController);
+                    } catch (Throwable traceT) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            traceT.getClass().getName(),
+                            "BATTLE_RESULT_RECORD before-snapshot failed; legacy onBattleResult unaffected");
+                    }
+                }
                 strategyController.onBattleResult(false);
+                if (traceBattleLostBefore != null) {
+                    try {
+                        TraceSession.recordStrategyBattleResultRecord(StrategyControllerOwner.CHOSENONE, false,
+                            traceBattleLostBefore, StrategyControllerTraceAccess.snapshot(strategyController));
+                    } catch (Throwable traceT) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            traceT.getClass().getName(),
+                            "BATTLE_RESULT_RECORD after-snapshot/record failed; legacy onBattleResult already ran");
+                    }
+                }
                 LOG.debug("Battle lost - updating strategy controller");
             }
         }
