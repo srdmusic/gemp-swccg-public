@@ -974,6 +974,7 @@ public interface Title {
     String Restricted_Deployment = "Restricted Deployment";
     String Retract_The_Bridge = "Retract The Bridge";
     String Return_Of_A_Jedi = "Return Of A Jedi";
+    String Return_Of_The_Jedi = "Return Of The Jedi";
     String Revealed = "Revealed";
     String Revenge_Of_The_Sith = "Revenge Of The Sith";
     String Revolution = "Revolution";
