@@ -215,10 +215,11 @@ public class DeployPhasePlanner {
         // claim — it OVER-reserved 2-5x and starved the deploy budget.
         // T2 MOVE #1 COMMIT-2 (2026-07-06): the planner has no DecisionContext, so it
         // calls the shared ForceReserveService directly (plan creation is already
-        // once-per-turn). Same in-play-gated scan + MaintenanceFacts basis as the old
-        // inline loop, commented out below per feedback_comment_out_old_rules (note:
-        // the old loop's `if (allCards != null)` guard tested the WRONG variable —
-        // retired with the block). V22.3 updated in place; effectiveForce math unchanged.
+        // once-per-turn). The service is the sole live scan: in-play-gated, on the
+        // MaintenanceFacts basis, replacing the old inline loop's deploy-cost basis
+        // and its incorrect `if (allCards != null)` guard, which tested the WRONG
+        // variable (loop removed in cleanup batch 1.6, 2026-07-13).
+        // V22.3 updated in place; effectiveForce math unchanged.
         int maintenanceReserve = 0;
         try {
             maintenanceReserve = com.gempukku.swccgo.ai.models.common.strategy
@@ -229,32 +230,6 @@ public class DeployPhasePlanner {
         } catch (Exception e) {
             LOG.debug("V22.3 MAINTENANCE: Error counting maintenance cards: {}", e.getMessage());
         }
-//         int maintenanceReserve = 0;
-//         try {
-//             java.util.List<PhysicalCard> maintenanceCards = gameState.getAllPermanentCards();
-//             if (allCards != null) {
-//                 for (PhysicalCard mCard : maintenanceCards) {
-//                     if (mCard == null) continue;
-//                     if (!playerId.equals(mCard.getOwner())) continue;
-//                     com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
-//                     if (mZone == null || !mZone.isInPlay()) continue;
-//                     SwccgCardBlueprint mBp = mCard.getBlueprint();
-//                     if (mBp != null && mBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-//                         // Float mCost = mBp.getDeployCost();  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
-//                         // int cardMaintenance = (mCost != null) ? mCost.intValue() : 1;  // superseded T2 COMMIT-1 2026-07-06
-//                         int cardMaintenance = com.gempukku.swccgo.ai.models.common.strategy
-//                             .MaintenanceFacts.maintainCost(mBp);
-//                         maintenanceReserve += cardMaintenance;
-//                         LOG.info("V22.3 MAINTENANCE: {} requires {} Force upkeep", mBp.getTitle(), cardMaintenance);
-//                     }
-//                 }
-//             }
-//             if (maintenanceReserve > 0) {
-//                 LOG.warn("V22.3 MAINTENANCE: Reserving {} total Force for maintenance upkeep", maintenanceReserve);
-//             }
-//         } catch (Exception e) {
-//             LOG.debug("V22.3 MAINTENANCE: Error counting maintenance cards: {}", e.getMessage());
-//         }
         int effectiveForce = forceAvailable - battleForceReserve - maintenanceReserve;
 
         // Track location deploys (apply to all plans)

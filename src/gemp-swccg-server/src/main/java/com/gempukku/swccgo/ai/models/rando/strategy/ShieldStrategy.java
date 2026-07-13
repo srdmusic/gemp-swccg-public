@@ -482,33 +482,6 @@ public class ShieldStrategy {
         boolean occupyBothTheaters =
             com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts
                 .occupiesBothTheaters(game, playerId);
-        // --- SUPERSEDED 2026-07-06 (T2 MOVE #3): old power-based theater scan.
-        // --- Kept per feedback_comment_out_old_rules; revert path only.
-        // boolean weOccupySystemBg = false;
-        // boolean weOccupySiteBg = false;
-        // try {
-        //     com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mods =
-        //         game.getModifiersQuerying();
-        //     for (com.gempukku.swccgo.game.PhysicalCard loc : gs.getTopLocations()) {
-        //         if (loc == null || loc.getBlueprint() == null) continue;
-        //         // Friendly power > 0 = we occupy
-        //         float myPower = 0f;
-        //         try {
-        //             myPower = mods.getTotalPowerAtLocation(gs, loc, playerId, false, false);
-        //         } catch (Exception ignore) { /* */ }
-        //         if (myPower <= 0f) continue;
-        //         if (!com.gempukku.swccgo.filters.Filters.battleground.accepts(gs, mods, loc)) continue;
-        //         com.gempukku.swccgo.common.CardSubtype sub = loc.getBlueprint().getCardSubtype();
-        //         if (sub == com.gempukku.swccgo.common.CardSubtype.SYSTEM) {
-        //             weOccupySystemBg = true;
-        //         } else if (sub == com.gempukku.swccgo.common.CardSubtype.SITE) {
-        //             weOccupySiteBg = true;
-        //         }
-        //     }
-        // } catch (Exception e) {
-        //     LOG.debug("V105 occupancy scan error: {}", e.getMessage());
-        // }
-        // boolean triggerA = weOccupySystemBg && weOccupySiteBg;
         boolean triggerA = occupyBothTheaters;
 
         // ---------- Trigger B: V106 — CHYBC / Simple Tricks ----------
@@ -522,7 +495,6 @@ public class ShieldStrategy {
         boolean weOccupyAnyBg =
             com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts
                 .occupiesAnyBattleground(game, playerId);
-        // boolean weOccupyAnyBg = weOccupySystemBg || weOccupySiteBg;  // SUPERSEDED 2026-07-06 (T2 MOVE #3)
         // DIVERGENCE NOTE 2026-07-06 (T2 MOVE #3, T4 candidate): oppBgCount below
         // and myBgCount in trigger C stay POWER-based (getTotalPowerAtLocation > 0)
         // — deliberately NOT swapped to the occupies predicate this wave; only the
@@ -633,7 +605,8 @@ public class ShieldStrategy {
             return pick;
         }
         // V105 UPDATED 2026-07-06 (T2 MOVE #3): sysBg/siteBg placeholders replaced by
-        // the unified predicates (old power-scan variables are commented out above).
+        // the unified ShieldFacts predicates (occupiesBothTheaters / occupiesAnyBattleground);
+        // the old power-based theater scan was removed in cleanup batch 1.6, 2026-07-13.
         LOG.info("V105/V107: no 4th-slot trigger — HOLD indefinitely (myBg={} oppBg={} bothTheaters={} anyBg={}"
             + " drain3+={})",
             myBgCount, oppBgCount, occupyBothTheaters, weOccupyAnyBg, oppCanDrain3Plus);

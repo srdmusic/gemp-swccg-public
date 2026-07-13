@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 // verdict chain (V177 dead-pull + V82.1/V82.2/V82.3 rescue), V185 weapon-attach gate, V187 duplicate
 // counts, V66/V67h zone presence, V29.4/V29.7 pull-validation data, V190/V130/V131 facts. Hub: none.
 // KIND: verdicts feed VETOes, but every magnitude lives in the PULL-ENGINE consumers (ATE/DeployEvaluator).
-// Absorbs (dead, commented below/nearby — revert path, do not delete): V185 first pass
-// (superseded same-session 2026-06-23, commented ~line 412).
+// Absorbs: V185 first pass (superseded same-session 2026-06-23; dead first-pass code removed
+// in cleanup batch 1.6, 2026-07-13; history in git and AI_VERSION_HISTORY.md).
 // Cross-refs: PULL-ENGINE (all scoring), DEPLOY-3 (V185/V120 weapon gates), SETUP (V187). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
 // ═══════════════════════════════════════════════════════════
 /**
@@ -419,49 +419,6 @@ public class DeckOracle {
             .collect(Collectors.toList());
     }
 
-    // === V185 first pass (Steve, 2026-06-22) — SUPERSEDED same-session 2026-06-23 ===
-    // First cut gated on "Rando has ZERO characters of ANY kind in play". Too crude: a weapon
-    // attaches only to the SPECIFIC characters its own matching-character filter accepts
-    // (Leia's Lightsaber -> Leia/Ben Solo/Rey ability>4), so Rando could have bodies on the
-    // table yet none able to hold THIS weapon, and the pull still dead-fails. Replaced by
-    // reserveTargetsAreAllUnattachableWeapons() below. Kept commented per the project's
-    // comment-out-superseded-logic rule; see AI_CHANGELOG 2026-06-23.
-    //
-    // public boolean hasCharacterInPlay() {
-    //     for (DeckCard dc : allCards) {
-    //         if (dc.getCategory() == CardCategory.CHARACTER
-    //                 && dc.getCurrentZone() != null && dc.getCurrentZone().isInPlay()) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
-    //
-    // public boolean reserveTargetsAreAllWeapons(List<String> targets) {
-    //     if (targets == null || targets.isEmpty()) return false;
-    //     boolean anyMatched = false;
-    //     for (DeckCard dc : allCards) {
-    //         if (!Zone.RESERVE_DECK.equals(dc.getCurrentZone())) continue;
-    //         String titleLower = dc.getTitle().toLowerCase(Locale.ROOT);
-    //         boolean hit = false;
-    //         for (String kw : targets) {
-    //             if (kw == null) continue;
-    //             String kwLower = kw.toLowerCase(Locale.ROOT);
-    //             if (titleLower.contains(kwLower)) { hit = true; break; }
-    //             String kwStripped = kwLower.replaceAll("\\[[^\\]]*\\]", " ").replaceAll("\\s+", " ").trim();
-    //             if (!kwStripped.isEmpty() && !kwStripped.equals(kwLower) && titleLower.contains(kwStripped)) { hit = true; break; }
-    //             if (!kwStripped.isEmpty() && kwStripped.contains(" ")) {
-    //                 String lastWord = kwStripped.substring(kwStripped.lastIndexOf(' ') + 1);
-    //                 if (lastWord.length() >= 4 && titleLower.contains(lastWord)) { hit = true; break; }
-    //             }
-    //         }
-    //         if (hit) {
-    //             anyMatched = true;
-    //             if (dc.getCategory() != CardCategory.WEAPON) return false;
-    //         }
-    //     }
-    //     return anyMatched;
-    // }
 
     /**
      * V185 (Steve, 2026-06-23): of the pull targets, are ALL the copies still in the Reserve

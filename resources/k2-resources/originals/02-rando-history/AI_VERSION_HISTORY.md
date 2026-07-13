@@ -6190,3 +6190,10 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     UNKNOWN-never-zero on failed power components; blank/range/version validation. Version 2.
     43 tests green (was 22). Zero production consumers. Builder parity = increment 2. NOT deployed.
     Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.
+
+  ════ CLEANUP BATCH 1.6 (2026-07-13, Codex packet): 194 comment-only lines, both bots ════
+    Per CODEX_CLEANUP_BATCH16_CANDIDATES manifest: DeckOracle V185 first-pass comment block,
+    DeployPhasePlanner commented V22.3 inline scan (ForceReserveService is the sole live scan),
+    ShieldStrategy superseded power-theater scan comments. Comment-only assertions dual-layer
+    PASS; bytecode identical; surviving banners rewritten (revert path = git history). Held
+    items untouched. NOT deployed. Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.

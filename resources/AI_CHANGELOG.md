@@ -4,6 +4,12 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — CLEANUP BATCH 1.6 (Codex packet; both bots) — comment-only, NO behavior change
+- 194 mirrored comment-only lines deleted per Handoffs/CODEX_CLEANUP_BATCH16_CANDIDATES_2026-07-13.md (97/bot): DeckOracle V185 first-pass block (43), DeployPhasePlanner commented V22.3 inline maintenance scan (26), ShieldStrategy superseded power-based theater scan + weOccupyAnyBg (28+1). Every deleted line verified `//`-comment or blank pre-delete AND in the diff post-edit; bytecode identical by construction; compile clean.
+- Surviving comments rewritten to stop claiming the dead blocks are retained inline (revert path = git history): DeckOracle SVC-ORACLE banner, DeployPhasePlanner V22.3 note (ForceReserveService = sole live scan), ShieldStrategy V105 note (ShieldFacts predicates named directly; power-basis DIVERGENCE NOTE kept per manifest).
+- Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — B2 TYPE HARDENING (Codex gate m00263 deltas; shared types) — still zero consumers
 - All required deltas on the increment-1 snapshot scaffold: engine `AwaitingDecisionType` enum (no string type); typed `ObligationFlag` set FactValue-wrapped (absent params = UNKNOWN, distinct from known-empty); minimal structural `DecisionRoute` enum + machine-checkable `RouteSelectionEvidence` record (constructor REJECTS evidence inconsistent with the facts); distinct non-cross-assignable refs (`ActionRef`/`CardRef` positive-int/sealed `SourceRef`/`DestinationRef` over engine `Zone`); noPass/min/max/selectable FactValue-wrapped with NO defaults; exact names (`forcePileSize`, `lifeForceCardCount`, `friendlyNonUndercoverCharacterCount`/opposing, `basePower`+`weaponBonus` components); failed power resolution = UNKNOWN never 0 (test-proven); blank/range/version validation throughout. snapshotVersion 1→2.
 - Tests 22→43, all green. Record-equality test explicitly annotated: NOT Rando/ChosenOne builder parity — that gate stays open until increment 2's shadow builders.
