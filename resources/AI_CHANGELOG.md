@@ -4,6 +4,12 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — F1: MultipleChoice checked bounds (ENGINE FILE, Steve-approved; Codex packet + m00431)
+- MultipleChoiceAwaitingDecision.decisionMade: ordinal range-checked AFTER parse and BEFORE indexing; out-of-range now throws the checked DecisionResultInvalidException (same type/message as the existing non-numeric path) instead of an unchecked ArrayIndexOutOfBounds that escaped the mediator catch and could strand the game.
+- m00431 disposition in the same commit: the checked-contract target un-@Ignored and GREEN; the old unchecked-AIOOBE defect pin CONVERTED to a positive mapping/non-numeric test (no contradictory active contracts; 8/8 active in EngineAwaitingDecisionContractTest).
+- New MultipleChoiceAwaitingDecisionTest (first test in the logic module, JUnit 5): 6/6 packet cases green.
+- NOT deployed (aggregate gate).
+
 ## 2026-07-13 — TRACE 4B1 (Codex released packet, verbatim agent brief; shared HeuristicAiBase) — capture still DISABLED
 - Heuristic owner-memory observation: HeuristicMemorySnapshot (canonical: sorted failed-search sets/map keys/HashSet values/reassignment maps, deque insertion order preserved) + six closed event families (STATE_UPDATE, ACTION_CHOICE_REMEMBER, FAILED_SEARCH_ADD, SINGLE_RESPONSE_RECORD with local-block folded, RECENT_RESPONSE_APPEND, REASSIGNMENT_RECORD with count folded, no seventh family). Sealed union 8 to 14.
 - Hooks at exactly the six direct owner boundaries; guard-return suppression vs executed-write NO_OP law enforced; retention/rollback/prune/FIFO/key-precedence/reserve-throw semantics fixture-proven; the uncaught getReserveDeck throw preserved exactly.

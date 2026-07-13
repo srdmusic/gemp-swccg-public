@@ -6324,3 +6324,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Canonical HeuristicMemorySnapshot + six closed families; six direct owner hooks; suppression
     vs NO_OP law; insert-only guarded diff; 842 module tests green; parity OK. Capture DISABLED.
     NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ F1 (2026-07-13, ENGINE, Steve-approved): MultipleChoice checked ordinal bounds ════
+    Range check before indexing; checked DecisionResultInvalidException replaces the escaping
+    AIOOBE; red contract test flipped green; old defect pin converted (m00431). 6+8 tests green.
+    NOT deployed. Details in AI_CHANGELOG 2026-07-13.
