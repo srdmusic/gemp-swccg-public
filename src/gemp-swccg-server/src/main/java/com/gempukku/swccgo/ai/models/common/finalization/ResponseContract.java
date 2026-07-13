@@ -53,8 +53,10 @@ public record ResponseContract(
          *  DecisionSafety.java:77-84 variant, not CombinedEvaluator's unstripped
          *  inline copy). ABSENT noPass counts as no prohibition (engine truth) —
          *  deliberately NOT DecisionContext's fabricated noPass=true default the
-         *  audit flags. Advisory for strategy and comparison; wire legality is
-         *  emptyWireAccepted. */
+         *  audit flags. CONSUMED by ResponseFinalizer (m00336 gate P0 #1 on
+         *  92965934b): a Pass intent is judged by THIS flag — a policy-denied
+         *  pass is never silently sent as an empty wire, even where
+         *  emptyWireAccepted is true. Wire legality alone is emptyWireAccepted. */
         boolean policyPassAllowed,
         /** Engine cardinality minimum; null = the engine sent no min param. */
         Integer minimum,

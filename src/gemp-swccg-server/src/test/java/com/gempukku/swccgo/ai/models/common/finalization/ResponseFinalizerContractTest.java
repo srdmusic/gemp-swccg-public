@@ -128,9 +128,13 @@ public class ResponseFinalizerContractTest {
         // MULTIPLE_CHOICE rejects "" — a Pass intent needs a fallback. The shadow
         // consumes EXACTLY ONE seeded draw (recorded), always in bounds — unlike the
         // legacy emergency's blind "0"/"1" text guess (DecisionSafety.java:300-311).
+        // No min/noPass params → policy ALLOWS the pass; the wire cannot encode it
+        // (m00336 P0 #2: the FORCED reason is typed).
         FinalizedResponse response = finalizeTwiceDeterministic(
                 EngineDecisionFixtures::freshMultipleChoice, new ResponseIntent.Pass(), 1);
         assertEquals(FinalizedResponse.Status.FORCED, response.status());
+        assertEquals(FinalizedResponse.ForceReason.PASS_NOT_WIRE_ENCODABLE,
+                response.forcedChoice().reason());
         assertNotNull("draw metadata recorded for replay", response.randomDraw());
         assertEquals(2, response.randomDraw().bound());
         EngineDecisionFixtures.RecordingMultipleChoice engine =
@@ -167,10 +171,13 @@ public class ResponseFinalizerContractTest {
     @Test
     public void actionChoicePassIsSeededForcedBecauseEmptyIsWireRejected() throws Exception {
         // ACTION_CHOICE rejects "" ALWAYS (ActionSelectionDecision.java:130-132) —
-        // pass policy cannot make empty legal here; the shadow forces a seeded pick.
+        // pass policy ALLOWS the decline (no min/noPass) but cannot make empty legal
+        // here; the shadow forces a seeded pick with the typed reason (m00336 P0 #2).
         FinalizedResponse response = finalizeTwiceDeterministic(
                 EngineDecisionFixtures::freshActionChoice, new ResponseIntent.Pass(), 1);
         assertEquals(FinalizedResponse.Status.FORCED, response.status());
+        assertEquals(FinalizedResponse.ForceReason.PASS_NOT_WIRE_ENCODABLE,
+                response.forcedChoice().reason());
         assertNotNull(response.randomDraw());
         EngineDecisionFixtures.RecordingActionChoice engine =
                 EngineDecisionFixtures.freshActionChoice();
@@ -182,42 +189,65 @@ public class ResponseFinalizerContractTest {
     //     the raw-noPass-vs-V148 divergence pair (audit P0 #2) ═══
 
     @Test
-    public void cardActionChoicePassAcceptedDespiteRawNoPass_thePreservedContradiction() throws Exception {
-        // Engine truth: "" is accepted as "no selected action" EVEN with raw
-        // noPass=true (CardActionSelectionDecision.java:167-169). ResponseContract
-        // preserves the contradiction (emptyWireAccepted=true, packet F3 rule);
-        // the shadow ACCEPTS the pass instead of overwriting it.
+    public void cardActionChoiceRawNoPassPass_policyDeniedForcedPick_acknowledgeKeepsTheContradiction() throws Exception {
+        // VERDICT CHANGED per the m00336 gate on 92965934b (P0 #1). This row
+        // previously expected Pass → ACCEPTED "" on emptyWireAccepted alone,
+        // collapsing strategy Pass into Acknowledge and leaving policyPassAllowed
+        // with zero consumers. Corrected contract: a Pass intent is judged by the
+        // ONE V148 semantic — this shape (min absent, raw noPass=true, no
+        // Done/Cancel text) DENIES the pass, so the shadow forces a seeded
+        // in-bounds pick with the typed reason instead of silently sending the
+        // policy-illegal empty.
         FinalizedResponse response = finalizeTwiceDeterministic(
                 EngineDecisionFixtures::freshCardActionChoiceNoPassNoCancelText,
-                new ResponseIntent.Pass(), 0);
-        assertEquals(FinalizedResponse.Status.ACCEPTED, response.status());
-        assertEquals("", response.wireResponse());
+                new ResponseIntent.Pass(), 1);
+        assertEquals(FinalizedResponse.Status.FORCED, response.status());
+        assertEquals(FinalizedResponse.ForceReason.POLICY_PASS_DENIED,
+                response.forcedChoice().reason());
+        assertNotNull("seeded draw recorded for replay", response.randomDraw());
+        assertEquals(2, response.randomDraw().bound());
         EngineDecisionFixtures.RecordingCardActionChoice engine =
                 EngineDecisionFixtures.freshCardActionChoiceNoPassNoCancelText();
         engine.decisionMade(response.wireResponse());
-        assertTrue(engine.decided);
-        assertNull("engine-accepted 'no selected action'", engine.selected);
+        assertEquals(1, engine.callbackCount);
+        assertNotNull("the forced pick selects a real offered action", engine.selected);
 
-        // Acknowledge (explicit empty for engine types that use it) is equivalent wire.
+        // The preserved contradiction stays VISIBLE through its DECLARED shape:
+        // Acknowledge on CARD_ACTION_CHOICE is the engine-truth "" =
+        // "no selected action" (CardActionSelectionDecision.java:167-169), accepted
+        // EVEN under raw noPass=true — recorded, not normalized away (packet F3
+        // rule). Pass policy does not apply to Acknowledge (ResponseIntent doc).
         FinalizedResponse ack = finalizeTwiceDeterministic(
                 EngineDecisionFixtures::freshCardActionChoiceNoPassNoCancelText,
                 new ResponseIntent.Acknowledge(), 0);
         assertEquals(FinalizedResponse.Status.ACCEPTED, ack.status());
         assertEquals("", ack.wireResponse());
+        EngineDecisionFixtures.RecordingCardActionChoice ackEngine =
+                EngineDecisionFixtures.freshCardActionChoiceNoPassNoCancelText();
+        ackEngine.decisionMade(ack.wireResponse());
+        assertTrue(ackEngine.decided);
+        assertNull("engine-accepted 'no selected action'", ackEngine.selected);
     }
 
     @Test
     public void expectedDivergence_legacySafetyForcesPickOverEngineLegalEmpty() {
-        // THE raw-noPass-vs-V148 divergence pair, executable half. Same decision as
-        // above: min absent, raw noPass=true, prompt offers no Done/Cancel wording.
-        //  - ENGINE truth: "" accepted (proven in the test above).
-        //  - SHADOW: ACCEPTED "" (proven above).
-        //  - LEGACY DecisionSafety.mustChoose: the V148 exemption needs cancel text;
-        //    without it, raw noPass=true returns must-choose
-        //    (DecisionSafety.java:87-93), so ensureValidResponse REPLACES the legal
-        //    "" with a RANDOM pick (unseeded static Random, DecisionSafety.java:147-164)
-        //    — audit P0 #2: "A valid ... pass can therefore be replaced by emergency
-        //    selection", P1: "Randomness has multiple owners".
+        // The raw-noPass shape, legacy half. Same decision as above: min absent,
+        // raw noPass=true, prompt offers no Done/Cancel wording.
+        // ROW UPDATED per the m00336 gate on 92965934b (P0 #1): the shadow now
+        // consumes policyPassAllowed, so for a PASS intent the two paths AGREE in
+        // family — both force a pick (V148 denies the decline). The remaining
+        // divergences on this shape:
+        //  - MECHANISM: legacy's pick is an UNSEEDED static-Random overwrite
+        //    (DecisionSafety.java:87-93 must-choose + 147-164 replacement; audit
+        //    P1 "Randomness has multiple owners"); the shadow's is ONE seeded
+        //    recorded draw with a typed POLICY_PASS_DENIED reason (proven above).
+        //  - ACKNOWLEDGE: the engine-legal "" ("no selected action",
+        //    CardActionSelectionDecision.java:167-169 — the preserved
+        //    contradiction) is still REPLACED by legacy, which cannot distinguish
+        //    an acknowledgement from a decline on the raw wire; the shadow accepts
+        //    it through the DECLARED Acknowledge shape (proven above). Audit
+        //    P0 #2: "A valid ... pass can therefore be replaced by emergency
+        //    selection".
         //  - The outer bots' raw-noPass emergency (RandoCalAi.java:996-1010 and the
         //    chosenone mirror) does the same overwrite BEFORE DecisionSafety even
         //    runs; it is not unit-invokable here — documented as the same divergence
@@ -273,10 +303,13 @@ public class ResponseFinalizerContractTest {
 
     @Test
     public void expectedDivergence_blankWhereMin2_shadowForcesLegalFill_legacyPassesBlankThrough() throws Exception {
-        // Shadow: Pass against min==2 → deterministic first-sendable fill (no RNG).
+        // Shadow: Pass against min==2 → V148 policy denies the decline (min>0);
+        // deterministic first-sendable fill (no RNG), typed reason (m00336 P0 #2).
         FinalizedResponse response = finalizeTwiceDeterministic(
                 EngineDecisionFixtures::freshCardSelectionMin2, new ResponseIntent.Pass(), 0);
         assertEquals(FinalizedResponse.Status.FORCED, response.status());
+        assertEquals(FinalizedResponse.ForceReason.POLICY_PASS_DENIED,
+                response.forcedChoice().reason());
         assertNull("deterministic fill consumes no draw", response.randomDraw());
         assertEquals("101,102", response.wireResponse());
         EngineDecisionFixtures.RecordingCardSelection engine =
@@ -399,6 +432,31 @@ public class ResponseFinalizerContractTest {
         }
     }
 
+    @Test
+    public void passOnArbitraryReturnAnyChange_policyDeniedForcedSingleDeltaFill() throws Exception {
+        // NEW ROW under the m00336 gate on 92965934b (P0 #1): this shape
+        // (min==2, returnAnyChange=true) has emptyWireAccepted=true, so the old
+        // finalizer would have silently ACCEPTED a Pass as "" — but V148 policy
+        // DENIES the decline (min>0, no cancel text). Corrected verdict: FORCED.
+        // Fallback: under returnAnyChange ONE selectable delta returns before
+        // normal cardinality (engine truth, packet F0 fcArbitraryReturnAnyChange),
+        // so the deterministic fill is the single sendable id temp1 — never the
+        // locked preselected temp0 (packet F3 delta-only rule). No draw.
+        FinalizedResponse response = finalizeTwiceDeterministic(
+                EngineDecisionFixtures::freshArbitraryLockedPreselection,
+                new ResponseIntent.Pass(), 0);
+        assertEquals(FinalizedResponse.Status.FORCED, response.status());
+        assertEquals(FinalizedResponse.ForceReason.POLICY_PASS_DENIED,
+                response.forcedChoice().reason());
+        assertNull("deterministic fill consumes no draw", response.randomDraw());
+        assertEquals("temp1", response.wireResponse());
+        EngineDecisionFixtures.RecordingArbitraryCards engine =
+                EngineDecisionFixtures.freshArbitraryLockedPreselection();
+        engine.decisionMade(response.wireResponse());
+        assertEquals(1, engine.callbackCount);
+        assertEquals("engine accepts the single-delta fill", 1, engine.selected.size());
+    }
+
     // ═══ INTEGER: bounds + the illegal legacy emergency (audit P1) ═══
 
     @Test
@@ -421,10 +479,15 @@ public class ResponseFinalizerContractTest {
                     rejectedValue.rejection().reason());
         }
 
-        // Pass against INTEGER: deterministic engine-default fallback "3" — no draw.
+        // Pass against INTEGER min==1: V148 policy denies the decline (min>0);
+        // deterministic engine-default fallback "3" — no draw, typed reason
+        // (m00336 P0 #2: the deterministic INTEGER fill was FORCED with no
+        // correction, rejection, RNG draw, or reason before this row was gated).
         FinalizedResponse forced = finalizeTwiceDeterministic(
                 EngineDecisionFixtures::freshInteger1to5Default3, new ResponseIntent.Pass(), 0);
         assertEquals(FinalizedResponse.Status.FORCED, forced.status());
+        assertEquals(FinalizedResponse.ForceReason.POLICY_PASS_DENIED,
+                forced.forcedChoice().reason());
         assertEquals("3", forced.wireResponse());
         assertNull(forced.randomDraw());
         EngineDecisionFixtures.RecordingInteger engine2 =
@@ -467,6 +530,66 @@ public class ResponseFinalizerContractTest {
         assertEquals(FinalizedResponse.Status.REJECTED, response.status());
         assertEquals(FinalizedResponse.RejectReason.INTENT_TYPE_MISMATCH,
                 response.rejection().reason());
+    }
+
+    @Test
+    public void acknowledgeRestrictedToDeclaredShapes_notAGeneralEmptyWireEscapeHatch() {
+        // VERDICT CHANGED per the m00336 gate on 92965934b (P0 #1): the old
+        // finalizer accepted Acknowledge wherever emptyWireAccepted was true —
+        // a general escape hatch that would have accepted it on CARD_SELECTION
+        // min==0. Corrected contract: Acknowledge applies ONLY to its DECLARED
+        // shapes (EMPTY terminal acknowledgements + the recorded
+        // CARD_ACTION_CHOICE noPass contradiction, asserted in the contradiction
+        // test above). Declining any other decision is a Pass and faces V148.
+        FinalizedResponse cardSelection = finalizeTwiceDeterministic(
+                EngineDecisionFixtures::freshCardSelectionMin0,
+                new ResponseIntent.Acknowledge(), 0);
+        assertEquals("Acknowledge on CARD_SELECTION min==0 must be typed-rejected even"
+                        + " though its empty wire is engine-legal (that decline is a Pass)",
+                FinalizedResponse.Status.REJECTED, cardSelection.status());
+        assertEquals(FinalizedResponse.RejectReason.INTENT_TYPE_MISMATCH,
+                cardSelection.rejection().reason());
+
+        FinalizedResponse multipleChoice = finalizeTwiceDeterministic(
+                EngineDecisionFixtures::freshMultipleChoice,
+                new ResponseIntent.Acknowledge(), 0);
+        assertEquals(FinalizedResponse.Status.REJECTED, multipleChoice.status());
+        assertEquals(FinalizedResponse.RejectReason.INTENT_TYPE_MISMATCH,
+                multipleChoice.rejection().reason());
+    }
+
+    @Test
+    public void forcedReasonInvariantHoldsBothWays() {
+        // m00336 gate P0 #2: construction INVARIANT both directions — FORCED
+        // requires a typed reason, non-FORCED forbids one.
+        ResponseIntent pass = new ResponseIntent.Pass();
+        FinalizedResponse.TrackerMutationRequest mutation =
+                new FinalizedResponse.TrackerMutationRequest("1", "0");
+        try {
+            new FinalizedResponse(pass, FinalizedResponse.Status.FORCED, "0",
+                    List.of(), null, null, null, mutation, 0);
+            fail("FORCED without a typed forced-choice reason must not construct");
+        } catch (NullPointerException expected) {
+            assertTrue(expected.getMessage().contains("typed forced-choice reason"));
+        }
+        FinalizedResponse.ForcedChoice force = new FinalizedResponse.ForcedChoice(
+                FinalizedResponse.ForceReason.POLICY_PASS_DENIED, null);
+        try {
+            new FinalizedResponse(pass, FinalizedResponse.Status.ACCEPTED, "0",
+                    List.of(), null, force, null, mutation, 0);
+            fail("ACCEPTED carrying a forced-choice reason must not construct");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("only FORCED"));
+        }
+        try {
+            new FinalizedResponse(pass, FinalizedResponse.Status.REJECTED, null,
+                    List.of(), new FinalizedResponse.Rejection(
+                            FinalizedResponse.RejectReason.NO_LEGAL_FALLBACK, "x"),
+                    force, null, null, 0);
+            fail("REJECTED carrying a forced-choice reason must not construct");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("only FORCED"));
+        }
     }
 
     @Test

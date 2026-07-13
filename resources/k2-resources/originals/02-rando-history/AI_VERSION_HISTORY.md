@@ -6258,3 +6258,9 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
   ════ CLEANUP BATCH 2.1 (2026-07-13, Codex packet): MoveEvaluator T4.1 predecessors, −52 total ════
     12 mirrored comment regions (SHA-gated streams both bots), 2 preface corrections. RAW javap
     byte-identical. 60/60 fixtures. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ F3 CORRECTION (2026-07-13, Codex m00336): pass policy governs, typed ForceReason ════
+    NOT a V-tag. ResponseFinalizer: Pass judged by policyPassAllowed FIRST (was inert — the
+    gate's P0); Acknowledge caged to declared shapes; FinalizedResponse.ForceReason with
+    both-direction FORCED invariant on every forced path. 139 green + 1 named skip. Inert.
+    NOT deployed. Details in AI_CHANGELOG 2026-07-13.

@@ -27,6 +27,10 @@ public record FinalizedResponse(
         List<Correction> corrections,
         /** Typed rejection; non-null iff status == REJECTED. */
         Rejection rejection,
+        /** Typed forced-choice reason; non-null iff status == FORCED (m00336 gate
+         *  P0 #2 on 92965934b: no FORCED result may exist without saying WHY the
+         *  intent was unsendable — the audit's "veto or forced-choice reason"). */
+        ForcedChoice forcedChoice,
         /** Deterministic random draw metadata; non-null iff a draw was consumed
          *  (only the FORCED status may consume one, and at most one). */
         RandomDraw randomDraw,
@@ -77,6 +81,25 @@ public record FinalizedResponse(
         MANDATORY_REBUILD
     }
 
+    /** Typed reason a FORCED fallback replaced the proposed intent (m00336 gate
+     *  P0 #2). Exactly the two ways a Pass intent can be unsendable; every
+     *  FORCED-producing path in ResponseFinalizer supplies one. */
+    public enum ForceReason {
+        /** The V148 pass-legality semantic (ResponseContract.policyPassAllowed —
+         *  min==0 AND (!noPass OR cancel text)) DENIES the strategy decline, so a
+         *  legal choice was made instead — even where the concrete engine decision
+         *  would have accepted the empty wire (the CARD_ACTION_CHOICE
+         *  contradiction shape). The seeded/deterministic analog of legacy
+         *  must-choose (DecisionSafety.java:87-93 + 147-164). */
+        POLICY_PASS_DENIED,
+        /** Policy ALLOWS the decline (policyPassAllowed=true) but the concrete
+         *  engine decision rejects the empty wire response
+         *  (ACTION_CHOICE/MULTIPLE_CHOICE/INTEGER), so the least-commitment legal
+         *  fallback encodes it: seeded candidate draw, engine default, or nearest
+         *  bound. */
+        PASS_NOT_WIRE_ENCODABLE
+    }
+
     /** Typed reason for a rejection. */
     public enum RejectReason {
         /** The concrete engine decision rejects an empty wire response
@@ -112,6 +135,17 @@ public record FinalizedResponse(
             Objects.requireNonNull(detail, "detail");
             if (detail.isBlank()) {
                 throw new IllegalArgumentException("correction detail must be nonblank");
+            }
+        }
+    }
+
+    /** Typed forced-choice reason + optional human detail (m00336 gate P0 #2:
+     *  "typed ForceReason (enum + optional detail)"). */
+    public record ForcedChoice(ForceReason reason, String detail) {
+        public ForcedChoice {
+            Objects.requireNonNull(reason, "reason");
+            if (detail != null && detail.isBlank()) {
+                throw new IllegalArgumentException("forced-choice detail must be null or nonblank");
             }
         }
     }
@@ -171,6 +205,13 @@ public record FinalizedResponse(
             if (!wireResponse.equals(trackerMutation.wireResponse())) {
                 throw new IllegalArgumentException("tracker mutation must record the exact wire response");
             }
+        }
+        // m00336 gate P0 #2 INVARIANT, both directions: a FORCED result cannot
+        // exist without its typed reason, and no other status may carry one.
+        if (status == Status.FORCED) {
+            Objects.requireNonNull(forcedChoice, "FORCED requires a typed forced-choice reason");
+        } else if (forcedChoice != null) {
+            throw new IllegalArgumentException("only FORCED carries a forced-choice reason");
         }
         if (randomDraw != null && status != Status.FORCED) {
             throw new IllegalArgumentException("only FORCED may consume a random draw");

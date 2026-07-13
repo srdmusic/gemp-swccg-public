@@ -32,9 +32,17 @@ import java.util.random.RandomGenerator;
 //    where a set of equally-legal fallback candidates exists. Draw metadata is
 //    recorded (FinalizedResponse.RandomDraw) so a fixed seed reproduces it.
 //  - ResponseContract preserves the CARD_ACTION_CHOICE empty contradiction as
-//    engine truth (empty accepted even under raw noPass=true) — so a legal
-//    Pass/Acknowledge is ACCEPTED here, never overwritten the way the outer
-//    bots' raw-noPass emergency does (RandoCalAi.java:996-1010, audit P0 #2).
+//    engine truth (empty accepted even under raw noPass=true). CORRECTED per the
+//    m00336 gate on 92965934b (P0 #1): a Pass intent is judged by
+//    contract.policyPassAllowed — the ONE V148 semantic — not by emptyWireAccepted
+//    alone. A POLICY-legal pass whose empty wire the engine accepts is ACCEPTED
+//    as-is (never overwritten the way the outer bots' raw-noPass emergency does,
+//    RandoCalAi.java:996-1010, audit P0 #2); a policy-DENIED pass is never
+//    silently sent as an empty wire — it becomes a FORCED fallback with a typed
+//    ForceReason, or a typed REJECTED where no legal fallback exists.
+//    Acknowledge is restricted to its DECLARED shapes (EMPTY terminal
+//    acknowledgements + the recorded CARD_ACTION_CHOICE noPass contradiction),
+//    not a general empty-wire escape hatch.
 //  - ARBITRARY output contains only selectable delta ids. It never resends
 //    locked preselected ids (engine truth: ArbitraryCardsSelectionDecision
 //    .java:255 rejects non-selectable ids; the LEGACY clamp resends them —
@@ -74,12 +82,22 @@ public final class ResponseFinalizer {
             return finalizePass(contract, intent, random, decisionId, prior);
         }
         if (intent instanceof ResponseIntent.Acknowledge) {
-            if (contract.emptyWireAccepted()) {
-                return accepted(intent, "", decisionId, prior);
+            // m00336 gate P0 #1 (92965934b): Acknowledge stays restricted to its
+            // DECLARED shapes — EMPTY terminal acknowledgements and the recorded
+            // CARD_ACTION_CHOICE noPass contradiction ("" = "no selected action",
+            // CardActionSelectionDecision.java:167-169). It is NOT a general
+            // empty-wire escape hatch: declining any other decision is a Pass and
+            // must face the V148 pass policy above.
+            switch (contract.decisionType()) {
+                case EMPTY:
+                case CARD_ACTION_CHOICE:
+                    return accepted(intent, "", decisionId, prior);
+                default:
+                    return rejected(intent, FinalizedResponse.RejectReason.INTENT_TYPE_MISMATCH,
+                            "Acknowledge applies only to EMPTY and CARD_ACTION_CHOICE, not "
+                                    + contract.decisionType() + " — a decline here is a Pass intent",
+                            prior);
             }
-            return rejected(intent, FinalizedResponse.RejectReason.EMPTY_WIRE_REJECTED,
-                    contract.decisionType() + " rejects an empty wire response — Acknowledge does not apply",
-                    prior);
         }
         if (intent instanceof ResponseIntent.CandidateOrdinal ordinal) {
             return finalizeCandidateOrdinal(contract, ordinal, decisionId, prior);
@@ -95,35 +113,54 @@ public final class ResponseFinalizer {
                 "unhandled intent variant " + intent.getClass().getSimpleName(), prior);
     }
 
-    // ── Pass: legal empty, or a typed/deterministic/seeded fallback — never the
-    // legacy unseeded random overwrite (audit P1 "Randomness has multiple owners"). ──
+    // ── Pass: judged by contract.policyPassAllowed — the ONE V148 semantic —
+    // per the m00336 gate on 92965934b (P0 #1). ACCEPTED empty only when policy
+    // AND wire both allow it; otherwise a typed/deterministic/seeded fallback —
+    // never the legacy unseeded random overwrite (audit P1 "Randomness has
+    // multiple owners") and never a silently-sent policy-illegal empty. ──
     private static FinalizedResponse finalizePass(ResponseContract contract, ResponseIntent intent,
                                                   RandomGenerator random, String decisionId, int prior) {
-        if (contract.emptyWireAccepted()) {
-            // Engine truth wins: a legal pass is ACCEPTED as-is. This is the exact
-            // case the outer raw-noPass emergency wrongly overwrites today
-            // (RandoCalAi.java:996-1010; audit P0 #2 "Can overwrite a legal empty
-            // response for some engine decision types"). contract.policyPassAllowed
-            // (the ONE V148 semantic) is advisory data for the strategy lane.
+        if (contract.policyPassAllowed() && contract.emptyWireAccepted()) {
+            // Policy-legal pass with an engine-legal empty wire: ACCEPTED as-is.
+            // This is the exact case the outer raw-noPass emergency wrongly
+            // overwrites today (RandoCalAi.java:996-1010; audit P0 #2 "Can
+            // overwrite a legal empty response for some engine decision types").
             return accepted(intent, "", decisionId, prior);
+        }
+        // The pass is unsendable — record WHY (m00336 P0 #2), then pick the
+        // fallback family. Policy denial is checked FIRST: V148 owns pass
+        // legality, so a policy-denied pass is forced even where the engine
+        // would accept "" (the CARD_ACTION_CHOICE contradiction shape).
+        FinalizedResponse.ForcedChoice force;
+        if (!contract.policyPassAllowed()) {
+            force = new FinalizedResponse.ForcedChoice(
+                    FinalizedResponse.ForceReason.POLICY_PASS_DENIED,
+                    "V148 pass policy denies the decline: "
+                            + (contract.minimum() != null && contract.minimum() > 0
+                                    ? "engine minimum " + contract.minimum() + " > 0"
+                                    : "raw noPass=true without Done/Cancel/optional text"));
+        } else {
+            force = new FinalizedResponse.ForcedChoice(
+                    FinalizedResponse.ForceReason.PASS_NOT_WIRE_ENCODABLE,
+                    contract.decisionType() + " rejects the empty wire a policy-legal pass would need");
         }
         switch (contract.decisionType()) {
             case ACTION_CHOICE:
+            case CARD_ACTION_CHOICE:
             case MULTIPLE_CHOICE: {
                 // A set of equally-legal candidates: ONE seeded draw, recorded.
+                // CARD_ACTION_CHOICE reaches here only on POLICY_PASS_DENIED
+                // (its empty wire is always engine-legal).
                 List<String> candidates = contract.candidateWireIds();
                 if (candidates.isEmpty()) {
                     return rejected(intent, FinalizedResponse.RejectReason.NO_LEGAL_FALLBACK,
-                            contract.decisionType() + " rejects empty and offers no candidates"
+                            contract.decisionType() + " cannot pass and offers no candidates"
                                     + " — where legacy guesses '0' blind (DecisionSafety.java:166-174)",
                             prior);
                 }
                 int draw = random.nextInt(candidates.size());
-                return new FinalizedResponse(intent, FinalizedResponse.Status.FORCED,
-                        candidates.get(draw), List.of(), null,
-                        new FinalizedResponse.RandomDraw(candidates.size(), draw),
-                        new FinalizedResponse.TrackerMutationRequest(decisionId, candidates.get(draw)),
-                        prior);
+                return forced(intent, candidates.get(draw), force,
+                        new FinalizedResponse.RandomDraw(candidates.size(), draw), decisionId, prior);
             }
             case INTEGER: {
                 // Deterministic canonical fallback: engine default, else the nearest
@@ -138,31 +175,31 @@ public final class ResponseFinalizer {
                     return rejected(intent, FinalizedResponse.RejectReason.NO_LEGAL_FALLBACK,
                             "no engine default and no usable bound for a forced INTEGER answer", prior);
                 }
-                String wire = String.valueOf(value);
-                return new FinalizedResponse(intent, FinalizedResponse.Status.FORCED, wire,
-                        List.of(), null, null,
-                        new FinalizedResponse.TrackerMutationRequest(decisionId, wire), prior);
+                return forced(intent, String.valueOf(value), force, null, decisionId, prior);
             }
             case CARD_SELECTION:
             case ARBITRARY_CARDS: {
-                // Empty is wire-rejected here only when min>0 (and not bypassed):
-                // deterministic first-N sendable fill, no draw.
+                // Deterministic first-N sendable fill, no draw. The target is at
+                // least ONE id: a policy-denied pass must select something even
+                // where the engine would take "" (never a silent empty). Under
+                // returnAnyChange ONE selectable delta returns before normal
+                // cardinality (engine truth, packet F0 fcArbitraryReturnAnyChange),
+                // so one id is the legal fill there regardless of min.
                 int min = contract.minimum() != null ? contract.minimum() : 0;
-                List<String> fill = firstSendable(contract, min, new LinkedHashSet<>());
-                if (fill.size() < min) {
+                int target = contract.returnAnyChange() ? 1 : Math.max(1, min);
+                List<String> fill = firstSendable(contract, target, new LinkedHashSet<>());
+                if (fill.size() < target) {
                     return rejected(intent, FinalizedResponse.RejectReason.BELOW_MINIMUM_UNCORRECTABLE,
-                            "only " + fill.size() + " sendable ids exist but the engine minimum is " + min,
-                            prior);
+                            "only " + fill.size() + " sendable ids exist but the forced fill needs "
+                                    + target, prior);
                 }
-                String wire = String.join(",", fill);
-                return new FinalizedResponse(intent, FinalizedResponse.Status.FORCED, wire,
-                        List.of(), null, null,
-                        new FinalizedResponse.TrackerMutationRequest(decisionId, wire), prior);
+                return forced(intent, String.join(",", fill), force, null, decisionId, prior);
             }
             default:
+                // EMPTY cannot reach here (policy and wire both allow its pass);
+                // typed rejection rather than silence for any future shape.
                 return rejected(intent, FinalizedResponse.RejectReason.EMPTY_WIRE_REJECTED,
-                        contract.decisionType() + " rejects an empty wire response and no fallback"
-                                + " family exists", prior);
+                        contract.decisionType() + " cannot pass and no fallback family exists", prior);
         }
     }
 
@@ -283,7 +320,7 @@ public final class ResponseFinalizer {
             return accepted(intent, wire, decisionId, prior);
         }
         return new FinalizedResponse(intent, FinalizedResponse.Status.CORRECTED, wire,
-                corrections, null, null,
+                corrections, null, null, null,
                 new FinalizedResponse.TrackerMutationRequest(decisionId, wire), prior);
     }
 
@@ -328,7 +365,18 @@ public final class ResponseFinalizer {
     private static FinalizedResponse accepted(ResponseIntent intent, String wire,
                                               String decisionId, int prior) {
         return new FinalizedResponse(intent, FinalizedResponse.Status.ACCEPTED, wire,
-                List.of(), null, null,
+                List.of(), null, null, null,
+                new FinalizedResponse.TrackerMutationRequest(decisionId, wire), prior);
+    }
+
+    /** FORCED always carries its typed reason (m00336 gate P0 #2); draw is
+     *  non-null only for the seeded candidate family. */
+    private static FinalizedResponse forced(ResponseIntent intent, String wire,
+                                            FinalizedResponse.ForcedChoice force,
+                                            FinalizedResponse.RandomDraw draw,
+                                            String decisionId, int prior) {
+        return new FinalizedResponse(intent, FinalizedResponse.Status.FORCED, wire,
+                List.of(), null, force, draw,
                 new FinalizedResponse.TrackerMutationRequest(decisionId, wire), prior);
     }
 
@@ -336,6 +384,6 @@ public final class ResponseFinalizer {
                                               FinalizedResponse.RejectReason reason,
                                               String detail, int prior) {
         return new FinalizedResponse(intent, FinalizedResponse.Status.REJECTED, null,
-                List.of(), new FinalizedResponse.Rejection(reason, detail), null, null, prior);
+                List.of(), new FinalizedResponse.Rejection(reason, detail), null, null, null, prior);
     }
 }
