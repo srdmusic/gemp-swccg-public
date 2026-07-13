@@ -10,6 +10,11 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — CLEANUP BATCH 1.7 (Codex packet; both bots) — comment-only, NO behavior change
+- 226 mirrored comment-only lines deleted per Handoffs/CODEX_CLEANUP_BATCH17_CANDIDATES_2026-07-13.md (113/bot): DrawEvaluator old inline DTF/First Strike/IAO/maintenance/Verge scan (78), PassEvaluator old DTF + maintenance scans (35) — all superseded by the live shared ForceReserveService cache. Dual-layer comment-only assertions PASS; three surviving-comment rewrites per manifest (claims now point at git history).
+- Bytecode proof: isolated same-JDK compile + normalized `javap -p -c -s -constants` IDENTICAL pre/post for all four classes (module-level maven build was unavailable mid-verification due to a concurrent trace-lane dirty state; the isolated gate is the stronger oracle for a comment-only change). V191 DRAW/PASS parity holds trivially — no executable change exists.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — B2 TYPE HARDENING (Codex gate m00263 deltas; shared types) — still zero consumers
 - All required deltas on the increment-1 snapshot scaffold: engine `AwaitingDecisionType` enum (no string type); typed `ObligationFlag` set FactValue-wrapped (absent params = UNKNOWN, distinct from known-empty); minimal structural `DecisionRoute` enum + machine-checkable `RouteSelectionEvidence` record (constructor REJECTS evidence inconsistent with the facts); distinct non-cross-assignable refs (`ActionRef`/`CardRef` positive-int/sealed `SourceRef`/`DestinationRef` over engine `Zone`); noPass/min/max/selectable FactValue-wrapped with NO defaults; exact names (`forcePileSize`, `lifeForceCardCount`, `friendlyNonUndercoverCharacterCount`/opposing, `basePower`+`weaponBonus` components); failed power resolution = UNKNOWN never 0 (test-proven); blank/range/version validation throughout. snapshotVersion 1→2.
 - Tests 22→43, all green. Record-equality test explicitly annotated: NOT Rando/ChosenOne builder parity — that gate stays open until increment 2's shadow builders.

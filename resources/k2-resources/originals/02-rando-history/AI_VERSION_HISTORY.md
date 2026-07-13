@@ -6197,3 +6197,10 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     ShieldStrategy superseded power-theater scan comments. Comment-only assertions dual-layer
     PASS; bytecode identical; surviving banners rewritten (revert path = git history). Held
     items untouched. NOT deployed. Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.
+
+  ════ CLEANUP BATCH 1.7 (2026-07-13, Codex packet): 226 comment-only lines, both bots ════
+    DrawEvaluator (78/bot) + PassEvaluator (35/bot) old inline scans superseded by the live
+    ForceReserveService cache. Dual-layer comment assertions PASS; isolated javap normalized
+    dumps byte-identical pre/post (module maven blocked by concurrent trace-lane dirty state;
+    isolated gate is stronger for comment-only). Surviving comments point at git history.
+    NOT deployed. Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.

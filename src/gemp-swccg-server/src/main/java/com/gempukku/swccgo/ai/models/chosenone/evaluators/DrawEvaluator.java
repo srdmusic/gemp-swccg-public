@@ -529,7 +529,7 @@ public class DrawEvaluator extends ActionEvaluator {
             // title/icon detection, MaintenanceFacts basis. See the
             // ForceReserveService header for the 3 documented unifications
             // (exact-opponent owner match, any-unused-grabber, gated spy count).
-            // Old inline scan commented out below per feedback_comment_out_old_rules;
+            // Old inline scan removed in cleanup batch 1.7 (see git history);
             // updates V58/V67w/V78/V79 in place (weights unchanged).
             com.gempukku.swccgo.ai.models.common.strategy.ForceReserveService.Facts rsvFacts =
                 context.getForceReserveFacts();
@@ -538,84 +538,6 @@ public class DrawEvaluator extends ActionEvaluator {
             opponentHasIAO = rsvFacts.iaoActive;
             maintenanceCost = rsvFacts.maintenanceObligation;
             ourVergeNeedsDeathStarMove = rsvFacts.vergeNeedsDeathStarMove;
-//             // Scan ALL permanent cards for opponent's DTF / First Strike and
-//             // our maintenance costs. Title-based detection keeps this robust
-//             // across V-sets and variants.
-//             for (PhysicalCard pc : gameState.getAllPermanentCards()) {
-//                 if (pc == null) continue;
-//                 // T2 COMMIT-1 (2026-07-06, audit force-economy-5): in-play gate covering
-//                 // ALL FIVE detections in this scan (DTF/First Strike/IAO/maintenance/
-//                 // Verge) — same gate PassEvaluator/MoveEvaluator/DeployEvaluator already
-//                 // apply. Without it, cards still in Reserve Deck phantom-reserved here.
-//                 com.gempukku.swccgo.common.Zone pcZone = pc.getZone();
-//                 if (pcZone == null || !pcZone.isInPlay()) continue;
-//                 String title = pc.getTitle();
-//                 if (title == null) continue;
-//                 String titleLower = title.toLowerCase(java.util.Locale.ROOT);
-//                 boolean isOurs = pc.getOwner() != null && pc.getOwner().equals(playerId);
-//
-//                 if (!isOurs) {
-//                     if (titleLower.contains("draw their fire"))  opponentHasDTF = true;
-//                     if (titleLower.contains("first strike"))     opponentHasFirstStrike = true;
-//                     // V78 (Steve, 2026-05-15): Imperial Arrest Order & Secret Plans
-//                     // forces opponent to "use 1 Force OR retrieval canceled" every
-//                     // retrieval attempt. Reserve +2 to absorb the tax and keep
-//                     // retrieval interrupts viable.
-//                     if (titleLower.contains("imperial arrest")
-//                             || titleLower.contains("secret plans")) opponentHasIAO = true;
-//                 } else {
-//                     // V67w (Steve, 2026-05-03): Use the engine's Icon.MAINTENANCE
-//                     // instead of hand-rolled title matching. SWCCG marks every
-//                     // maintenance character with this icon on the blueprint.
-//                     // OLD code only matched "lando calrissian, scoundrel" — missed
-//                     // every other maintenance card in the deck (Lando With Vibro-Ax,
-//                     // Han With Heavy Blaster Pistol, etc.). Steve: 'on light side
-//                     // he is still not saving enough force for maintenance cards
-//                     // like lando.'
-//                     try {
-//                         if (pc.getBlueprint() != null
-//                                 && pc.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-//                             // T2 COMMIT-1 (2026-07-06, audit force-economy-1): reserve the
-//                             // ENGINE's card-specific maintain cost (parsed from game text,
-//                             // e.g. Falcon 3, Lando 1), not a flat +1 — V67w was UNDER-
-//                             // reserving for maintain-2/3 cards. Basis updates V67w in place.
-//                             // maintenanceCost += 1;  // superseded T2 COMMIT-1 2026-07-06 (V67w flat basis)
-//                             maintenanceCost += com.gempukku.swccgo.ai.models.common.strategy
-//                                 .MaintenanceFacts.maintainCost(pc.getBlueprint());
-//                         }
-//                     } catch (Exception e) { /* ignore */ }
-//                     // V79: detect Verge of Greatness on Rando's table + Death Star not at Scarif
-//                     if (titleLower.contains("on the verge of greatness")
-//                             || titleLower.contains("taking control of the weapon")) {
-//                         // Verge active — check if Death Star is at Scarif yet
-//                         boolean dsAtScarif = false;
-//                         PhysicalCard rDeathStar = null;
-//                         for (PhysicalCard pc2 : gameState.getAllPermanentCards()) {
-//                             if (pc2 == null || !playerId.equals(pc2.getOwner())) continue;
-//                             // T2 COMMIT-1 (2026-07-06): same in-play gate for the nested
-//                             // Death Star scan — a Death Star system still in Reserve Deck
-//                             // cannot be moved, so it must not trigger the V79 move reserve.
-//                             com.gempukku.swccgo.common.Zone pc2Zone = pc2.getZone();
-//                             if (pc2Zone == null || !pc2Zone.isInPlay()) continue;
-//                             String t2 = pc2.getTitle() != null ? pc2.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-//                             if (t2.contains("death star")
-//                                     && pc2.getBlueprint() != null
-//                                     && pc2.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
-//                                 rDeathStar = pc2;
-//                                 PhysicalCard loc = pc2.getAtLocation();
-//                                 if (loc != null && loc.getTitle() != null
-//                                         && loc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("scarif")) {
-//                                     dsAtScarif = true;
-//                                 }
-//                                 break;
-//                             }
-//                         }
-//                         if (rDeathStar != null && !dsAtScarif) {
-//                             ourVergeNeedsDeathStarMove = true;
-//                         }
-//                     }
-//                 }
-//             }
 
             if (opponentHasDTF)        forceToReserve += 1;
             if (opponentHasFirstStrike) forceToReserve += 1;
