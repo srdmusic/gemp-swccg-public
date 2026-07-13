@@ -6249,3 +6249,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     + F3 ResponseFinalizer pure seam (one V148 pass semantic, typed corrections, one recorded
     RNG draw max). Seven engine-verified divergences where legacy strands and shadow's answer
     is engine-accepted. F1/F2 = engine files, HELD FOR STEVE. 137 tests green. NOT deployed.
+
+  ════ CLEANUP BATCH 2.0 (2026-07-13, Codex packet): MoveEvaluator −90 comment lines, both bots ════
+    V29 DTF/grabber + V27 maintenance commented predecessor scans deleted (SHA-gated ranges);
+    live cache reads + weights untouched; javap identical in detached worktrees; 60/60 fixtures.
+    NOT deployed. Details in AI_CHANGELOG 2026-07-13.

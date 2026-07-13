@@ -17,6 +17,11 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — CLEANUP BATCH 2.0 (Codex packet; both bots) — comment-only, NO behavior change
+- 106 deleted / 16 added comment lines (net −45/bot, −90 total) in MoveEvaluator per Handoffs/CODEX_CLEANUP_BATCH20_CANDIDATES_2026-07-13.md: V29 DTF/grabber and V27 maintenance deploy-cost commented predecessor scans (the live ForceReserveService cache reads untouched; V29 −100/−150/−60 and V27 −80 weights unchanged). Prefaces rewritten to state the cache semantics without the corpses.
+- Deletion streams SHA-matched the manifest in both bots; dual-layer comment assertions PASS; detached-worktree javap byte-identical parent vs candidate both bots; 60/60 focused fixtures green.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — FINALIZER LANE F0+F3 (Codex packet m00328; shared) — pure shadow, zero production consumers
 - **F0 real-engine fixture corpus** (`ai/models/common/finalization/` tests): fresh REAL engine decision instances driven through actual decisionMade — empty-wire acceptance per decision type (incl. the CARD_ACTION_CHOICE empty-under-noPass contradiction, recorded), min/max exactness, ARBITRARY returnAnyChange delta semantics (locked-preselected resend REJECTED by the engine — packet red contract), MULTIPLE_CHOICE out-of-bounds ordinal = UNCHECKED ArrayIndexOutOfBounds today (audit P0 pinned executable), INTEGER inclusive bounds. Mediator P0 evidence (AI success never credits the clock; checked rejection requeues without retry) pinned as source-anchored doc + exception-type fixtures.
 - **F3 pure shadow finalizer** (`ResponseFinalizer.finalize(snapshot, contract, intent, rng, history)` per the packet seam): sealed ResponseIntent; ResponseContract derived from RawDecision with the ONE V148 pass-legality semantic; FinalizedResponse with typed corrections, at most one RECORDED RNG draw, exactly one tracker mutation request. Shadow-vs-legacy table: agreement on V148-legal pass; SEVEN engine-verified EXPECTED_DIVERGENCEs where legacy strands (blank-under-min passthrough, skipped max-clamp, blind INTEGER "0", MC AIOOBE) and the shadow's response is ENGINE-ACCEPTED.

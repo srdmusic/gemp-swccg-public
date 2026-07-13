@@ -720,40 +720,12 @@ public class MoveEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.common.Zone.FORCE_PILE, false);
                     if (fpCards != null) forcePile = fpCards.size();
 
-                    // T2 MOVE #1 COMMIT-2 (2026-07-06): DTF + grabber facts from the
-                    // shared per-decision ForceReserveService cache (same in-play-gated
-                    // detection; grabberUnused keeps THIS block's any-unused-grabber
-                    // semantic — see ForceReserveService header). Old inline scan
-                    // commented out below per feedback_comment_out_old_rules; V29
-                    // weights (-100/-150/-60) untouched.
+                    // T2 MOVE #1 COMMIT-2 (2026-07-06): DTF + grabber facts from the shared
+                    // per-decision ForceReserveService cache, which preserves this block's
+                    // in-play-gated DTF detection and any-unused-grabber semantics. V29 weights
+                    // (-100/-150/-60) unchanged. Old inline scan removed 2026-07-13; see git.
                     boolean dtfActive = context.getForceReserveFacts().dtfActive;
                     boolean grabberNeedsForce = context.getForceReserveFacts().grabberUnused;
-//                     // Check if opponent has Draw Their Fire (makes interrupts cost +1)
-//                     boolean dtfActive = false;
-//                     String opponentId = game.getOpponent(playerId);
-//                     // Check for grabber shield (Allegations Of Corruption / A Tragedy Has Occurred)
-//                     boolean grabberNeedsForce = false;
-//                     for (PhysicalCard pCard : gameState.getAllPermanentCards()) {
-//                         if (pCard == null || pCard.getBlueprint() == null) continue;
-//                         com.gempukku.swccgo.common.Zone pZ = pCard.getZone();
-//                         if (pZ == null || !pZ.isInPlay()) continue;
-//
-//                         // DTF check (opponent's card)
-//                         if (!dtfActive && opponentId != null && opponentId.equals(pCard.getOwner())
-//                             && pCard.getBlueprint().getTitle() != null
-//                             && pCard.getBlueprint().getTitle().toLowerCase(Locale.ROOT).contains("draw their fire")) {
-//                             dtfActive = true;
-//                         }
-//
-//                         // Grabber check (our card, unused)
-//                         if (!grabberNeedsForce && playerId.equals(pCard.getOwner())
-//                             && pCard.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.GRABBER)) {
-//                             java.util.List<PhysicalCard> stacked = gameState.getStackedCards(pCard);
-//                             if (stacked == null || stacked.isEmpty()) {
-//                                 grabberNeedsForce = true; // Hasn't grabbed yet — needs 1 Force
-//                             }
-//                         }
-//                     }
 
                     // Calculate total Force we should reserve
                     int reserveNeeded = 0;
@@ -1953,28 +1925,11 @@ public class MoveEvaluator extends ActionEvaluator {
                 // for maintenance payment at end of turn.
                 if (gameState != null) {
                     try {
-                        // T2 MOVE #1 COMMIT-2 (2026-07-06): maintenance obligation from
-                        // the shared per-decision ForceReserveService cache. NOTE: this
-                        // block was the one COMMIT-1 site still on the deploy-cost basis
-                        // (missed in wave 1) — the cache applies the MaintenanceFacts
-                        // engine basis here too (V27 basis updated in place, audit
-                        // force-economy-1). Old inline scan commented out below per
-                        // feedback_comment_out_old_rules; -80 weight untouched.
+                        // T2 MOVE #1 COMMIT-2 (2026-07-06): maintenance obligation from the
+                        // shared per-decision ForceReserveService cache (authoritative). This
+                        // site formerly used deploy cost; the consolidated MaintenanceFacts
+                        // engine basis is intentional. -80 weight unchanged. History in git.
                         int maintenanceCost = context.getForceReserveFacts().maintenanceObligation;
-//                         int maintenanceCost = 0;
-//                         java.util.List<PhysicalCard> allCards = gameState.getAllPermanentCards();
-//                         if (allCards != null) {
-//                             for (PhysicalCard mCard : allCards) {
-//                                 if (mCard == null || !playerId.equals(mCard.getOwner())) continue;
-//                                 com.gempukku.swccgo.common.Zone mZone = mCard.getZone();
-//                                 if (mZone == null || !mZone.isInPlay()) continue;
-//                                 SwccgCardBlueprint mBp = mCard.getBlueprint();
-//                                 if (mBp != null && mBp.hasIcon(Icon.MAINTENANCE)) {
-//                                     Float mCostVal = mBp.getDeployCost();
-//                                     maintenanceCost += (mCostVal != null) ? mCostVal.intValue() : 1;
-//                                 }
-//                             }
-//                         }
                         if (maintenanceCost > 0) {
                             int forcePile = gameState.getForcePileSize(playerId);
                             if (forcePile <= maintenanceCost + 1) {
