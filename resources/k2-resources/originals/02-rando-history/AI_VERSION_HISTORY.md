@@ -6339,3 +6339,9 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     (onBattleResult win/loss split); read-only bridges; setUnderBattleOrderRules folded. 58
     focused + 883 module green; seven-method javap identity; parity faithful. Capture DISABLED.
     NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ ACTIVATE+CONTROL OPTION-2 SHADOW (2026-07-13, Codex packet 3a2edded): groundwork, no behavior ════
+    DecisionOrigin enum + 5 engine stamps + pure shadow six-route resolver (LEGACY_UNOWNED bypass, no
+    production consumer) + ActivateControlRouteInput carrying recipient AND turn-player as distinct fields
+    (no trace-schema expansion). clean-tree gate 900 server / 906 reactor (deferred untracked fixtures excluded; K-2 in-tree 909 was contaminated, corrected per Codex m00538). Live cutover/owners/drain/finalizer/deletion
+    DEFERRED to Phase B (needs a verification harness, no sandbox). Capture off. NOT deployed.

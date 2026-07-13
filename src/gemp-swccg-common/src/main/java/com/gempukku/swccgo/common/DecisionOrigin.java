@@ -1,0 +1,65 @@
+package com.gempukku.swccgo.common;
+
+// ═══════════════════════════════════════════════════════════
+// ═══ SECTION: ACTIVATE/CONTROL OPTION 2 / DECISION ORIGIN SEAM (2026-07-13) ═══
+// Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_PACKET_2026-07-13.md §1.
+//
+// The engine-owned identity of WHY a decision was created. The five values below
+// name the five exact ACTIVATE/CONTROL decision creation sites the engine stamps
+// (PlayersPlayPhaseActionsInOrderGameProcess top-level + zero-activation confirm;
+// AbstractSwccgCardBlueprint.getCardPilePhaseActions amount + opponent allowance +
+// interruption acknowledgement). This is stamped as the single wire parameter
+// "decisionOrigin" (name() serialized), so a route resolver never has to infer the
+// origin from prompt text.
+//
+// Each origin declares its REQUIRED wire type. It is held as the AwaitingDecisionType
+// name STRING, not the enum, because AwaitingDecisionType lives in gemp-swccg-logic
+// and gemp-swccg-common must not depend on logic (dependency runs logic -> common).
+// The shadow resolver validates the stamped decision's real wire type against this
+// name; a resolver-side fixture asserts every name parses back to a real
+// AwaitingDecisionType, so a rename cannot drift silently.
+//
+// This enum is a CLOSED set: it names only the five in-scope creation sites. Nothing
+// in a live decide() path reads it in this phase (shadow only).
+// ═══════════════════════════════════════════════════════════
+public enum DecisionOrigin {
+    PHASE_ACTION("CARD_ACTION_CHOICE"),
+    ACTIVATE_AMOUNT("INTEGER"),
+    ACTIVATE_ALLOWANCE("INTEGER"),
+    ACTIVATE_ZERO_CONFIRM("MULTIPLE_CHOICE"),
+    ACTIVATE_INTERRUPTION_ACK("MULTIPLE_CHOICE");
+
+    /** The single wire parameter key the engine stamps the origin name into. */
+    public static final String WIRE_PARAMETER = "decisionOrigin";
+
+    private final String requiredWireTypeName;
+
+    DecisionOrigin(String requiredWireTypeName) {
+        this.requiredWireTypeName = requiredWireTypeName;
+    }
+
+    /**
+     * The AwaitingDecisionType name this origin must appear as on the wire. Held as a
+     * string only because of the common/logic module boundary (see class header).
+     */
+    public String requiredWireTypeName() {
+        return requiredWireTypeName;
+    }
+
+    /**
+     * Parse a wire value into a typed origin. Returns null when the value is absent or
+     * is not one of the five closed values (the resolver's "unowned" state). Never
+     * throws on an unrecognized value.
+     */
+    public static DecisionOrigin fromWire(String wireValue) {
+        if (wireValue == null) {
+            return null;
+        }
+        for (DecisionOrigin origin : values()) {
+            if (origin.name().equals(wireValue)) {
+                return origin;
+            }
+        }
+        return null;
+    }
+}

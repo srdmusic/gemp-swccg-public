@@ -2241,6 +2241,8 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
             action.appendTargeting(
                     new PlayoutDecisionEffect(action, playerId,
                             new IntegerAwaitingDecision("Choose amount of Force to activate", 0, maxToActivate, maxToActivate) {
+                                // ACTIVATE/CONTROL Option 2 seam (2026-07-13): activation amount.
+                                { setDecisionOrigin(DecisionOrigin.ACTIVATE_AMOUNT); }
                                 @Override
                                 public void decisionMade(final int result) throws DecisionResultInvalidException {
                                     if (result == 0) {
@@ -2256,6 +2258,8 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
                                         action.appendTargeting(
                                                 new PlayoutDecisionEffect(action, game.getOpponent(playerId),
                                                         new IntegerAwaitingDecision("Choose amount of Force to allow opponent to activate without you performing a top-level action", 1, maxToActivate, maxToActivate) {
+                                                            // ACTIVATE/CONTROL Option 2 seam (2026-07-13): opponent allowance.
+                                                            { setDecisionOrigin(DecisionOrigin.ACTIVATE_ALLOWANCE); }
                                                             @Override
                                                             public void decisionMade(int result2) throws DecisionResultInvalidException {
                                                                 final int result3 = (result2 > 0) ? Math.min(result, result2) : result;
@@ -2270,6 +2274,8 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
                                                                                 protected void doPlayEffect(SwccgGame game) {
                                                                                     game.getUserFeedback().sendAwaitingDecision(playerId,
                                                                                             new MultipleChoiceAwaitingDecision("Opponent chose to interrupt Force activation to have an opportunity to perform a top-level action after " + result3 + " Force was activated", new String[]{"OK"}) {
+                                                                                                // ACTIVATE/CONTROL Option 2 seam (2026-07-13): interruption acknowledgement.
+                                                                                                { setDecisionOrigin(DecisionOrigin.ACTIVATE_INTERRUPTION_ACK); }
                                                                                                 @Override
                                                                                                 protected void validDecisionMade(int index, String result) {
                                                                                                 }

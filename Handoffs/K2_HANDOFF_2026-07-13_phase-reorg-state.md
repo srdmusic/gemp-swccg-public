@@ -6,6 +6,13 @@ all apply — especially: check-replays-not-logs, one-change-at-a-time, changelo
 comment-out-not-delete (EXCEPT inside Codex-sanctioned cleanup packets), verify-before-done.
 
 ## Steve's operating directives (2026-07-13, latest first — these override older habits)
+-2. **ANTI-STALL CHECK-IN (Steve 2026-07-13): never let a long worker/wait masquerade as a stall.** When a
+    background worker runs long: (a) send Codex a one-line heartbeat (worker at step X, ball position); (b)
+    run a stall-detector Monitor on the worker output mtime that pings K-2 if idle >5min, so K-2 never
+    blind-waits; (c) if Codex/Steve perceives a stall, immediately reply with the true state (worker mtime +
+    tree footprint + mailbox tail prove who holds the ball). The harness auto-notifies on worker completion +
+    Codex action mail (monitor bui/b2464...); the gap was silent worker runtime — the heartbeat + stall
+    detector close it. This REPLACES the deleted 30-min commlink (m00501) with a lighter self-managed check.
 -1. **PROCESS RESET (Steve m00501, effective next behavioral phase; 4B2 finishes old-style):** NO more
     micro-commit/micro-gate. Each remaining behavioral phase = ONE coherent implementation tranche -> ONE
     phase commit -> ONE mandatory independent phase verification. Do NOT reread/restate full session history
@@ -140,7 +147,7 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
        validation, and finally the deploy decision.
   Foundation != behavioral migration. The program is mid-flight, not near-done.
 
-- Mailbox watermark: m00508.
+- Mailbox watermark: m00533.
 
 ## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture

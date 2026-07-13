@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.logic.decisions;
 
+import com.gempukku.swccgo.common.DecisionOrigin;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +42,21 @@ public abstract class AbstractAwaitingDecision implements AwaitingDecision {
      */
     protected void setParam(String name, String[] value) {
         _params.put(name, value);
+    }
+
+    // ═══ ACTIVATE/CONTROL Option 2 decision-origin seam (2026-07-13) ═══
+    // Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_PACKET_2026-07-13.md §1.
+    // The minimum stamp helper: it stamps the engine-owned DecisionOrigin as the
+    // single "decisionOrigin" wire parameter. protected + final so only decision
+    // creation sites (including anonymous subclasses via instance-initializer
+    // blocks) stamp an origin, and no arbitrary public parameter mutation is
+    // exposed. Nothing in a live decide() path reads this in the shadow phase.
+    /**
+     * Stamps the engine-owned decision origin onto this decision.
+     * @param origin the origin of this decision
+     */
+    protected final void setDecisionOrigin(DecisionOrigin origin) {
+        setParam(DecisionOrigin.WIRE_PARAMETER, origin.name());
     }
 
     @Override
