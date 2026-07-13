@@ -264,7 +264,8 @@ public final class ActionAudit {
     private static void checkAffordabilityForCardActionPull(DecisionContext ctx, ActionDescriptor desc,
                                                             AuditReport report) {
         if (desc.sourceCard == null || desc.sourceCard.getBlueprint() == null) return;
-        String gt = desc.sourceCard.getBlueprint().getGameText();
+        // BATCH1-CORR (2026-07-13, Codex m00229): side-aware owner.
+        String gt = DeckOracle.getSourceCardFullGameText(desc.sourceCard.getBlueprint(), ctx.getSide());
         if (gt == null) return;
 
         List<String> targets = DeckOracle.parseSourceCardPullTargets(gt);
@@ -320,7 +321,8 @@ public final class ActionAudit {
      */
     private static void checkZonePresence(DecisionContext ctx, ActionDescriptor desc, AuditReport report) {
         if (desc.sourceCard == null || desc.sourceCard.getBlueprint() == null) return;
-        String gt = desc.sourceCard.getBlueprint().getGameText();
+        // BATCH1-CORR (2026-07-13, Codex m00229): side-aware owner.
+        String gt = DeckOracle.getSourceCardFullGameText(desc.sourceCard.getBlueprint(), ctx.getSide());
         if (gt == null) return;
 
         Zone srcZone = (desc.kind == ActionDescriptor.Kind.DEPLOY_FROM_LOST_VIA_CARD_TEXT)

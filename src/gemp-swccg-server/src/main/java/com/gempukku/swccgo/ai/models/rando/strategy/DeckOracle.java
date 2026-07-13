@@ -1152,6 +1152,36 @@ public class DeckOracle {
     // =========================================================================
 
     /**
+     * BATCH1-CORR (2026-07-13, Codex m00229): single side-aware owner for a source
+     * card's FULL game text. LOCATION cards keep their per-side text in
+     * getLocationDarkSideGameText()/getLocationLightSideGameText() and often have
+     * NULL getGameText() — Card216_016 stores "May [download] Krennic here." on the
+     * dark side only, so any pull consumer reading getGameText() alone is blind to
+     * location pulls (JShell-proven on the deployed jar). Returns base text plus the
+     * ACTING player's own side text (never the opponent side). ALL pull-text
+     * consumers must fetch source text through this method.
+     */
+    public static String getSourceCardFullGameText(SwccgCardBlueprint bp, com.gempukku.swccgo.common.Side actingSide) {
+        if (bp == null) return null;
+        StringBuilder sb = new StringBuilder();
+        try {
+            String g = bp.getGameText();
+            if (g != null && !g.isEmpty()) sb.append(g);
+        } catch (Exception ignored) { }
+        if (actingSide != null) {
+            try {
+                String side = actingSide == com.gempukku.swccgo.common.Side.DARK
+                    ? bp.getLocationDarkSideGameText() : bp.getLocationLightSideGameText();
+                if (side != null && !side.isEmpty()) {
+                    if (sb.length() > 0) sb.append(' ');
+                    sb.append(side);
+                }
+            } catch (Exception ignored) { }
+        }
+        return sb.length() == 0 ? null : sb.toString();
+    }
+
+    /**
      * Parse a source card's game text to extract the list of pull targets.
      * Returns keyword groups suitable for hasTargetInZone(...).
      *
@@ -1250,6 +1280,11 @@ public class DeckOracle {
                     t = t.replaceFirst("\\s+into\\s+hand$", "");
                     t = t.replaceFirst("\\s+aboard\\b.*$", "");
                     t = t.replaceFirst("\\s+(card|cards)$", "");
+                    // BATCH1a-CENTRAL (2026-07-13, Codex m00225 #3): forced-location pull
+                    // texts ("[download] Krennic here") carry a location-forcing suffix —
+                    // strip it HERE so every consumer (V82, V177, pull-route guard) shares
+                    // one normalization owner instead of consumer-local copies.
+                    t = t.replaceFirst("\\s+(?:here|there|at\\s+that\\s+location)$", "");
                     // V82.3 (Steve, 2026-05-16): strip leftover parens and
                     // brackets. Begin Landing's text is "(or Coruscant) docking
                     // bay" — after or→comma split we get "[episode i] (" and

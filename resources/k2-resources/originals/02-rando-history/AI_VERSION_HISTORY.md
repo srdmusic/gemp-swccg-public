@@ -6124,3 +6124,28 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     lines per bot; +10/−498 and +9/−345 each, perfectly mirrored. MVN_EXIT=0 both bots. Tombstones
     at every deletion site. Local commit only — Codex jar byte-parity gate BEFORE deploy (m00222).
     Full details in resources/AI_CHANGELOG.md 2026-07-12 entry.
+
+  ════ PHASE-REORG BATCH 1 (2026-07-12, commit 5ab16f8ac): four live-defect hotfixes, both bots ════
+    (Entry added 2026-07-13 per Codex m00225 — it was missing at push time, a bookkeeping violation.)
+    1a pull-target "here" suffix strip (ATE pull-route guard, consumer-local); 1b two-weak-solos
+    -800 move-dest split (CSE, Chiraneau/Ozzel escape); 1c flip-exemption first-name token;
+    1d V28/V47 RESERVE SOLO BLOCK deleted (CSE ~8861; wrong Cloud City facts on forced nodes;
+    first deletion under Steve's migration ruling). PROCESS NOTE: deployed BEFORE the independent
+    Codex gate; gate returned HOLD (m00225/m00229) — 1a was UNREACHABLE on the real Krennic card
+    (side-text blindness), 1c regressed 'Director Orson Krennic', 1b overpenalized power-0
+    friendlies. See the BATCH 1 CORRECTIONS entry below. Full details in resources/AI_CHANGELOG.md
+    2026-07-12 entry.
+
+  ════ PHASE-REORG BATCH 1 CORRECTIONS (2026-07-13): Codex HOLD m00225/m00229, both bots ════
+    NEW single side-aware owner DeckOracle.getSourceCardFullGameText(bp, actingSide): base
+    getGameText() + the ACTING player's getLocationDark/LightSideGameText() — location pull text
+    (Card216_016 "May [download] Krennic here.", dark side only) was invisible to getGameText()
+    readers, leaving the Batch-1a guard unreachable. ALL pull-text consumers rewired: ATE (v177,
+    v183, V67h, V95, V131, V82 predicate, pull-route guard, 3 generic), DE (V67h/V67i/V67m),
+    DeployPhaseScript, ActionAudit x2. here/there/at-that-location strip CENTRALIZED into
+    parseSourceCardPullTargets (ATE-local copy removed). Flip exemption now matches typed
+    blueprint Personas (getHumanReadable, word-boundary) against flip text — fixes 'Director
+    Orson Krennic'. Batch-1b no-overpenalty gate counts friendly non-undercover characters at
+    destination (power<=0 misread power-0 Ozzel as empty site). Compiles clean both bots
+    (MVN_EXIT=0), mirrored. NOT deployed — awaiting Codex re-gate. Full details in
+    resources/AI_CHANGELOG.md 2026-07-13 entry.

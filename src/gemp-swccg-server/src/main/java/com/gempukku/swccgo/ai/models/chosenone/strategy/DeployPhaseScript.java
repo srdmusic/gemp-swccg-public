@@ -293,7 +293,9 @@ public class DeployPhaseScript {
         if (cardIdStr != null) {
             PhysicalCard srcCard = findCardByIdSafe(gameState, cardIdStr);
             if (srcCard != null && srcCard.getBlueprint() != null) {
-                String gt = srcCard.getBlueprint().getGameText();
+                // BATCH1-CORR (2026-07-13, Codex m00229): side-aware owner.
+                String gt = DeckOracle.getSourceCardFullGameText(
+                    srcCard.getBlueprint(), gameState != null ? gameState.getSide(playerId) : null);
                 if (gt != null) {
                     try {
                         java.util.List<String> tgts = DeckOracle.parseSourceCardPullTargets(gt);

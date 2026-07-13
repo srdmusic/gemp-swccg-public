@@ -792,7 +792,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                 PhysicalCard v67hSrcCard =
                                     gameState.findCardById(Integer.parseInt(v67hCardIdStr));
                                 if (v67hSrcCard != null && v67hSrcCard.getBlueprint() != null) {
-                                    String v67hGT = v67hSrcCard.getBlueprint().getGameText();
+                                    // BATCH1-CORR (2026-07-13, Codex m00229): side-aware owner — location
+                                    // pull text lives in per-side getters, getGameText() alone is blind.
+                                    String v67hGT = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                        .getSourceCardFullGameText(v67hSrcCard.getBlueprint(), context.getSide());
                                     if (v67hGT != null) {
                                         com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullValidation v67hResult =
                                             v60Oracle.validatePullFromSourceCard(v66Zone, v67hGT);
@@ -3604,7 +3607,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     PhysicalCard v67iSrc =
                                         gameState.findCardById(Integer.parseInt(v67iCardIdStr));
                                     if (v67iSrc != null && v67iSrc.getBlueprint() != null) {
-                                        String gt = v67iSrc.getBlueprint().getGameText();
+                                        String gt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                            .getSourceCardFullGameText(v67iSrc.getBlueprint(), context.getSide());
                                         if (gt != null) {
                                             List<String> targets = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
                                                 .parseSourceCardPullTargets(gt);
@@ -3707,7 +3711,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     PhysicalCard v67mSrc =
                                         gameState.findCardById(Integer.parseInt(v67mCardIdStr));
                                     if (v67mSrc != null && v67mSrc.getBlueprint() != null) {
-                                        String gt = v67mSrc.getBlueprint().getGameText();
+                                        String gt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                            .getSourceCardFullGameText(v67mSrc.getBlueprint(), context.getSide());
                                         if (gt != null) {
                                             List<String> targets = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
                                                 .parseSourceCardPullTargets(gt);

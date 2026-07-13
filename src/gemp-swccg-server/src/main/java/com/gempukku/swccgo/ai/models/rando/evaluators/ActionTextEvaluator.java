@@ -290,8 +290,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     if (v177Oracle != null && v177Oracle.isAnalyzed()
                             && v177Gs != null && cardId != null) {
                         PhysicalCard v177Src = v177Gs.findCardById(Integer.parseInt(cardId));
+                        // BATCH1-CORR (2026-07-13, Codex m00229): side-aware owner — locations
+                        // keep pull text in per-side getters, getGameText() alone is blind.
                         String v177Gt = (v177Src != null && v177Src.getBlueprint() != null)
-                            ? v177Src.getBlueprint().getGameText() : null;
+                            ? com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                .getSourceCardFullGameText(v177Src.getBlueprint(), context.getSide()) : null;
                         java.util.List<String> v177Targets =
                             com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
                                 .parseSourceCardPullTargets(v177Gt);
@@ -380,7 +383,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         // out-of-Reserve "Bespin" would falsely block a search the other three
                         // targets keep alive. Parser-silent is the only safe place for this.
                         if (v177Targets.isEmpty() && v177Src != null && v177Src.getBlueprint() != null) {
-                            String v183Text = v177Src.getBlueprint().getGameText();
+                            String v183Text = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                .getSourceCardFullGameText(v177Src.getBlueprint(), context.getSide());
                             String v183SrcBp = v177Src.getBlueprintId(true);
                             java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard>
                                 v183Named = v177Oracle.namedDeckCardsInText(v183Text, v183SrcBp);
@@ -4722,7 +4726,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         try {
                             PhysicalCard sourceCard = pullGs.findCardById(Integer.parseInt(cardId));
                             if (sourceCard != null && sourceCard.getBlueprint() != null) {
-                                String v67hGT = sourceCard.getBlueprint().getGameText();
+                                String v67hGT = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                    .getSourceCardFullGameText(sourceCard.getBlueprint(), context.getSide());
                                 if (v67hGT != null) {
                                     com.gempukku.swccgo.common.Zone v67hZone =
                                         com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.parseSourceZone(actionText);
@@ -4785,7 +4790,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     try {
                         PhysicalCard ssrc = pullGs.findCardById(Integer.parseInt(cardId));
                         if (ssrc != null && ssrc.getBlueprint() != null) {
-                            String ssrcGT = ssrc.getBlueprint().getGameText();
+                            String ssrcGT = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                .getSourceCardFullGameText(ssrc.getBlueprint(), context.getSide());
                             String ssrcTitleLower = ssrc.getTitle() != null
                                 ? ssrc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
                             if (ssrcGT != null) {
@@ -4865,7 +4871,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         if (v95Src != null && v95Src.getBlueprint() != null
                                 && v95Src.getBlueprint().getCardCategory()
                                     == com.gempukku.swccgo.common.CardCategory.INTERRUPT) {
-                            String v95Gt = v95Src.getBlueprint().getGameText();
+                            String v95Gt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                .getSourceCardFullGameText(v95Src.getBlueprint(), context.getSide());
                             if (v95Gt != null) {
                                 java.util.List<String> v95Targets =
                                     com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
@@ -4943,7 +4950,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             try {
                                 PhysicalCard srcCard = v82Gs.findCardById(Integer.parseInt(cardId));
                                 if (srcCard != null && srcCard.getBlueprint() != null) {
-                                    String srcGt = srcCard.getBlueprint().getGameText();
+                                    String srcGt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                        .getSourceCardFullGameText(srcCard.getBlueprint(), context.getSide());
                                     if (srcGt != null) {
                                         // V82.2 (Steve, 2026-05-16): added "docking bay" and "system|sector"
                                         // — all are LOCATION-type pulls and deserve the LOCATION tier.
@@ -5010,7 +5018,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         try {
                             PhysicalCard sc = pullGs.findCardById(Integer.parseInt(cardId));
                             if (sc != null && sc.getBlueprint() != null) {
-                                String gt = sc.getBlueprint().getGameText();
+                                String gt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                    .getSourceCardFullGameText(sc.getBlueprint(), context.getSide());
                                 if (gt != null) {
                                     java.util.List<String> tgts = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
                                         .parseSourceCardPullTargets(gt);
@@ -5066,7 +5075,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         try {
                             PhysicalCard v131Src = pullGs.findCardById(Integer.parseInt(cardId));
                             if (v131Src != null && v131Src.getBlueprint() != null) {
-                                String v131Gt = v131Src.getBlueprint().getGameText();
+                                String v131Gt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                    .getSourceCardFullGameText(v131Src.getBlueprint(), context.getSide());
                                 if (v131Gt != null) {
                                     java.util.List<String> v131Tgts =
                                         com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
@@ -5249,7 +5259,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         try {
                             PhysicalCard sc = pullGs.findCardById(Integer.parseInt(cardId));
                             if (sc != null && sc.getBlueprint() != null) {
-                                String gt = sc.getBlueprint().getGameText();
+                                String gt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                    .getSourceCardFullGameText(sc.getBlueprint(), context.getSide());
                                 if (gt != null) {
                                     java.util.List<String> tgts = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
                                         .parseSourceCardPullTargets(gt);
@@ -5400,7 +5411,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         try {
                             PhysicalCard sc = pullGs.findCardById(Integer.parseInt(cardId));
                             if (sc != null && sc.getBlueprint() != null) {
-                                String gt = sc.getBlueprint().getGameText();
+                                String gt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                    .getSourceCardFullGameText(sc.getBlueprint(), context.getSide());
                                 if (gt != null) {
                                     java.util.List<String> tgts =
                                         com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
@@ -5496,7 +5508,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         try {
                             PhysicalCard srcPc = pullGs.findCardById(Integer.parseInt(cardId));
                             if (srcPc != null && srcPc.getBlueprint() != null) {
-                                String srcGT = srcPc.getBlueprint().getGameText();
+                                String srcGT = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                    .getSourceCardFullGameText(srcPc.getBlueprint(), context.getSide());
                                 if (srcGT != null) {
                                     java.util.List<String> srcTargets =
                                         com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
@@ -5686,7 +5699,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 PhysicalCard fsSrc = gameState.findCardById(Integer.parseInt(cardId));
                                 if (fsSrc != null && fsSrc.getBlueprint() != null
                                         && fsSrc.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.LOCATION) {
-                                    String fsGt = fsSrc.getBlueprint().getGameText();
+                                    // BATCH1-CORR (2026-07-13, Codex m00229): the Krennic site's pull text
+                                    // lives ONLY in the location's dark-side text — getGameText() is null,
+                                    // which made this whole guard unreachable on the real card.
+                                    String fsGt = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                        .getSourceCardFullGameText(fsSrc.getBlueprint(), context.getSide());
                                     String fsGtl = fsGt != null ? fsGt.toLowerCase(java.util.Locale.ROOT) : "";
                                     if (fsGtl.matches("(?s).*(?:\\[download\\]|deploy|take)[^.;]*\\bhere\\b.*")) {
                                         // Resolve the pulled CHARACTER from Reserve via the parsed targets.
@@ -5699,12 +5716,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                             String rt = rc.getTitle().toLowerCase(java.util.Locale.ROOT);
                                             for (String t : fsT) {
                                                 if (t == null || t.isEmpty()) continue;
-                                                // BATCH1a (2026-07-12, Codex m00202): forced-location texts parse as
-                                                // "krennic here" — strip the location-forcing suffix or the guard
-                                                // never resolves its target and is inert (JShell-proven).
-                                                String tn = t.replaceAll("\\s+(?:here|there|at that location)$", "").trim();
-                                                if (tn.isEmpty()) continue;
-                                                if (rt.contains(tn) || tn.contains(rt)) { fsPulled = rc; break; }
+                                                // BATCH1-CORR (2026-07-13, Codex m00225 #3): the here/there
+                                                // suffix strip moved INTO DeckOracle.parseSourceCardPullTargets
+                                                // (one normalization owner) — targets arrive clean here.
+                                                if (rt.contains(t) || t.contains(rt)) { fsPulled = rc; break; }
                                             }
                                             if (fsPulled != null) break;
                                         }
@@ -5715,16 +5730,28 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                                 context.getObjectiveAnalyzer();
                                             if (fsOa != null && fsOa.isAnalyzed() && !fsOa.isFlipped()
                                                     && fsOa.getFlipConditionText() != null) {
-                                                // BATCH1c (2026-07-12, Codex P1): any-4-letter-word overlap was too
-                                                // broad — use the character's FIRST-NAME token only ("Krennic, Death
-                                                // Star Commandant" -> "krennic"), which is how objective flip texts
-                                                // name characters.
+                                                // BATCH1-CORR (2026-07-13, Codex m00225 #1): first-name token
+                                                // regressed 'Director Orson Krennic' (first token = 'director').
+                                                // Match the blueprint's TYPED Personas against the flip text —
+                                                // persona names are how flip conditions identify characters.
                                                 String fsFlip = fsOa.getFlipConditionText().toLowerCase(java.util.Locale.ROOT);
-                                                String[] fsNm = fsPulled.getTitle().toLowerCase(java.util.Locale.ROOT).split("[^a-z]+");
-                                                if (fsNm.length > 0 && fsNm[0].length() >= 3
-                                                        && fsFlip.matches(".*\\b" + java.util.regex.Pattern.quote(fsNm[0]) + "\\b.*")) {
-                                                    fsFlipPlan = true;
-                                                }
+                                                try {
+                                                    java.util.Set<com.gempukku.swccgo.common.Persona> fsPs =
+                                                        fsPulled.getBlueprint().getPersonas();
+                                                    if (fsPs != null) {
+                                                        for (com.gempukku.swccgo.common.Persona fsP : fsPs) {
+                                                            String fsPn;
+                                                            try { fsPn = fsP.getHumanReadable(); } catch (Exception e) { continue; }
+                                                            if (fsPn == null || fsPn.length() < 3) continue;
+                                                            if (fsFlip.matches("(?s).*\\b"
+                                                                    + java.util.regex.Pattern.quote(fsPn.toLowerCase(java.util.Locale.ROOT))
+                                                                    + "\\b.*")) {
+                                                                fsFlipPlan = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                } catch (Exception fsPex) { /* no personas — no exemption */ }
                                             }
                                             if (!fsFlipPlan) {
                                                 SwccgCardBlueprint fsBp = fsPulled.getBlueprint();
