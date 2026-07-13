@@ -31,14 +31,14 @@ public class TraceStateEventTest {
     }
 
     // =========================================================================
-    // Sealed hierarchy: exactly the 4A1 + 4A2a + 4A2b families, nothing else
+    // Sealed hierarchy: exactly the 4A1 + 4A2a + 4A2b + 4B1 families, nothing else
     // =========================================================================
 
     @Test
     public void hierarchyIsSealedToThePermittedFamilies() {
         assertTrue(TraceStateEvent.class.isSealed());
         Class<?>[] permitted = TraceStateEvent.class.getPermittedSubclasses();
-        assertEquals(8, permitted.length);
+        assertEquals(14, permitted.length);
         List<String> names = new ArrayList<>();
         for (Class<?> c : permitted) {
             names.add(c.getSimpleName());
@@ -53,6 +53,14 @@ public class TraceStateEventTest {
         // TRACE STAGE 4A2b: the two inherited shared-tracker families
         assertTrue(names.contains("TrackerPhaseChangeEvent"));
         assertTrue(names.contains("TrackerBlockResponseEvent"));
+        // TRACE STAGE 4B1: the six closed heuristic-memory families; the local block
+        // and the reassignment count stay FOLDED, so no seventh 4B1 family exists
+        assertTrue(names.contains("HeuristicStateUpdateEvent"));
+        assertTrue(names.contains("HeuristicActionChoiceRememberEvent"));
+        assertTrue(names.contains("HeuristicFailedSearchAddEvent"));
+        assertTrue(names.contains("HeuristicSingleResponseRecordEvent"));
+        assertTrue(names.contains("HeuristicRecentResponseAppendEvent"));
+        assertTrue(names.contains("HeuristicReassignmentRecordEvent"));
     }
 
     // =========================================================================

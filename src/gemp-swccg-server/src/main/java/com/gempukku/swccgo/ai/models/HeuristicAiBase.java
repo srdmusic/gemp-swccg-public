@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerLifecycleSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerPhaseSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicMemorySnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.ai.models.rando.DecisionSafety;
 import com.gempukku.swccgo.ai.models.rando.DecisionTracker;
@@ -756,6 +757,21 @@ public abstract class HeuristicAiBase implements SwccgAiController {
             return;
         }
         String key = buildDecisionKey(decisionType.name(), decision.getText());
+        // TRACE 4B1 (packet owner table, RECENT_RESPONSE_APPEND): the guard returns
+        // above emitted nothing; past them the deque append always executes (after
+        // map-entry creation when the key is new), so exactly one event is emitted
+        // with map creation and FIFO eviction folded in. The before-snapshot precedes
+        // the first owned write; the event carries the legacy helper's own key.
+        HeuristicMemorySnapshot traceMemoryBefore = null;
+        if (TraceSession.isActive()) {
+            try {
+                traceMemoryBefore = snapshotHeuristicMemory();
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "heuristic RECENT_RESPONSE_APPEND before-snapshot failed; legacy deque append unaffected");
+            }
+        }
         ArrayDeque<String> history = recentDecisionResponses.get(key);
         if (history == null) {
             history = new ArrayDeque<String>();
@@ -764,6 +780,16 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         history.addLast(trackingResponse);
         while (history.size() > RECENT_DECISION_RESPONSE_WINDOW) {
             history.removeFirst();
+        }
+        if (traceMemoryBefore != null) {
+            try {
+                TraceSession.recordHeuristicRecentResponseAppend(key, trackingResponse,
+                    traceMemoryBefore, snapshotHeuristicMemory());
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "heuristic RECENT_RESPONSE_APPEND after-snapshot/record failed; legacy deque append already ran");
+            }
         }
     }
 
@@ -791,8 +817,33 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         String actionBlueprintId = lower(getAtIndex(params.get("blueprintId"), index));
         String key = buildReassignmentKey(actionCardId, actionBlueprintId, actionText);
         if (!key.isEmpty()) {
+            // TRACE 4B1 (packet owner table, REASSIGNMENT_RECORD): the guard returns
+            // above and the empty-key fall-through emit nothing; once this branch is
+            // entered the turn put and the count increment always execute together,
+            // both folded into this one event. The event carries the legacy helper's
+            // own key, whose closed variant precedence is card, blueprint, then text.
+            HeuristicMemorySnapshot traceMemoryBefore = null;
+            if (TraceSession.isActive()) {
+                try {
+                    traceMemoryBefore = snapshotHeuristicMemory();
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "heuristic REASSIGNMENT_RECORD before-snapshot failed; legacy map writes unaffected");
+                }
+            }
             recentReassignmentTurns.put(key, currentTurnNumber);
             incrementReassignmentCount(key);
+            if (traceMemoryBefore != null) {
+                try {
+                    TraceSession.recordHeuristicReassignmentRecord(key, currentTurnNumber,
+                        traceMemoryBefore, snapshotHeuristicMemory());
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "heuristic REASSIGNMENT_RECORD after-snapshot/record failed; legacy map writes already ran");
+                }
+            }
         }
     }
 
@@ -891,12 +942,40 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         if (decision == null || response == null || currentStateHash.isEmpty()) {
             return;
         }
+        // TRACE 4B1 (packet owner table, SINGLE_RESPONSE_RECORD): only the guard above
+        // suppresses (the ThrowingHand empty-state-hash law); past it, owned writes
+        // always execute on BOTH exits, so each exit emits exactly one event. The
+        // empty-response-key reset below is an EXECUTED write (NO_OP only when the
+        // fields were already reset), and the internally created local-response block
+        // further down stays FOLDED into this one event; no seventh family exists.
+        HeuristicMemorySnapshot traceMemoryBefore = null;
+        if (TraceSession.isActive()) {
+            try {
+                traceMemoryBefore = snapshotHeuristicMemory();
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "heuristic SINGLE_RESPONSE_RECORD before-snapshot failed; legacy loop update unaffected");
+            }
+        }
         String responseKey = trackingResponse != null ? trackingResponse : response;
         if (responseKey == null || responseKey.isEmpty()) {
             lastDecisionRepeatCount = 0;
             lastDecisionKey = "";
             lastDecisionResponse = "";
             lastDecisionStateHash = "";
+            if (traceMemoryBefore != null) {
+                try {
+                    TraceSession.recordHeuristicSingleResponseRecord(
+                        decision.getDecisionType() != null ? decision.getDecisionType().name() : "UNKNOWN",
+                        decision.getText() != null ? decision.getText() : "",
+                        response, trackingResponse, traceMemoryBefore, snapshotHeuristicMemory());
+                } catch (Throwable traceT) {
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                        traceT.getClass().getName(),
+                        "heuristic SINGLE_RESPONSE_RECORD after-snapshot/record failed; legacy loop reset already ran");
+                }
+            }
             return;
         }
         String decisionTypeName = decision.getDecisionType() != null ? decision.getDecisionType().name() : "UNKNOWN";
@@ -938,6 +1017,20 @@ public abstract class HeuristicAiBase implements SwccgAiController {
                 if (!response.equals(responseKey)) {
                     blocked.add(response);
                 }
+            }
+        }
+
+        // TRACE 4B1: the main-path exit; the folded local-block mutation above (when
+        // the repeat threshold was reached) rides the snapshots' localBlockedResponses
+        // delta inside this same single event.
+        if (traceMemoryBefore != null) {
+            try {
+                TraceSession.recordHeuristicSingleResponseRecord(decisionTypeName, decisionText,
+                    response, trackingResponse, traceMemoryBefore, snapshotHeuristicMemory());
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "heuristic SINGLE_RESPONSE_RECORD after-snapshot/record failed; legacy loop update already ran");
             }
         }
     }
@@ -1086,6 +1179,31 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         }
     }
 
+    // TRACE 4B1 (Handoffs/CODEX_TRACE_STAGE4_4B1_HEURISTIC_MEMORY_PREFLIGHT_2026-07-13.md
+    // "Snapshot Boundary"): pure canonical snapshot of the retained heuristic memory
+    // this class owns directly. Called ONLY under an active-session trace guard inside
+    // an instrumentation-only try/catch; it reads every owned field once and mutates
+    // nothing. The private DecisionTracker is the separate 4A2b owner and is excluded,
+    // as are the static keyword tables and all game/service references.
+    private HeuristicMemorySnapshot snapshotHeuristicMemory() {
+        Map<String, List<String>> localBlocked = new HashMap<String, List<String>>();
+        for (Map.Entry<String, Set<String>> entry : localBlockedResponses.entrySet()) {
+            localBlocked.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+        }
+        Map<String, List<String>> recentResponses = new HashMap<String, List<String>>();
+        for (Map.Entry<String, ArrayDeque<String>> entry : recentDecisionResponses.entrySet()) {
+            recentResponses.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+        }
+        return new HeuristicMemorySnapshot(currentStateHash, blockStateHash,
+            lastDecisionStateHash, lastDecisionKey, lastDecisionResponse,
+            lastDecisionRepeatCount, currentTurnNumber,
+            lastActionChoiceText, lastActionChoiceCardId, lastActionChoiceBlueprintId,
+            new ArrayList<String>(failedSearchActionTexts),
+            new ArrayList<String>(failedSearchCardIds),
+            new ArrayList<String>(failedSearchBlueprintIds),
+            localBlocked, recentResponses, recentReassignmentTurns, reassignmentCounts);
+    }
+
     private void updateDecisionTrackerState(GameState gameState, String playerId) {
         if (gameState == null || playerId == null) {
             return;
@@ -1111,6 +1229,25 @@ public abstract class HeuristicAiBase implements SwccgAiController {
             }
         } catch (RuntimeException e) {
             return;
+        }
+
+        // TRACE 4B1 (Handoffs/CODEX_TRACE_STAGE4_4B1_HEURISTIC_MEMORY_PREFLIGHT_2026-07-13.md
+        // "Source-Complete Owner Table", STATE_UPDATE): the guard returns above emitted
+        // nothing; from here the turn and state-hash assignments always execute, so
+        // exactly one owner event is emitted at helper exit, NO_OP when nothing moved.
+        // The before-snapshot is captured ahead of the first owned write; pruned rows
+        // are derived inside the event factory from the before/after maps. The nested
+        // shared decisionTracker.updateState(...) below stays a SEPARATE 4A2b event
+        // recorded first, exactly as the packet orders the two summaries.
+        HeuristicMemorySnapshot traceMemoryBefore = null;
+        if (TraceSession.isActive()) {
+            try {
+                traceMemoryBefore = snapshotHeuristicMemory();
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "heuristic STATE_UPDATE before-snapshot failed; legacy state update unaffected");
+            }
         }
 
         int previousTurn = currentTurnNumber;
@@ -1157,6 +1294,19 @@ public abstract class HeuristicAiBase implements SwccgAiController {
             lastDecisionRepeatCount = 0;
             blockStateHash = currentStateHash;
         }
+
+        // TRACE 4B1: the completed heuristic STATE_UPDATE summary, recorded at helper
+        // exit with the EXACT five legacy state-read values.
+        if (traceMemoryBefore != null) {
+            try {
+                TraceSession.recordHeuristicStateUpdate(handSize, forcePile, reserveDeck, turn,
+                    cardsInPlay, traceMemoryBefore, snapshotHeuristicMemory());
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "heuristic STATE_UPDATE after-snapshot/record failed; legacy state update already ran");
+            }
+        }
     }
 
     private void pruneReassignmentHistory(int turn) {
@@ -1181,6 +1331,25 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         if (!isFailedSearchVerification(decision, params, gameState, playerId)) {
             return;
         }
+        // TRACE 4B1 (packet owner table, FAILED_SEARCH_ADD): a mismatch returned above
+        // with no event, and a throwing reserve-deck getter inside the check propagates
+        // uncaught exactly as legacy code does, before any capture. The adds below run
+        // only for non-empty identities; when all three are empty no owned write
+        // executes and no event is emitted. A repeated addition is a real NO_OP. The
+        // three fields are not modified by the adds, so reading them here is exact.
+        HeuristicMemorySnapshot traceMemoryBefore = null;
+        if (TraceSession.isActive()
+                && ((lastActionChoiceText != null && !lastActionChoiceText.isEmpty())
+                    || (lastActionChoiceCardId != null && !lastActionChoiceCardId.isEmpty())
+                    || (lastActionChoiceBlueprintId != null && !lastActionChoiceBlueprintId.isEmpty()))) {
+            try {
+                traceMemoryBefore = snapshotHeuristicMemory();
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "heuristic FAILED_SEARCH_ADD before-snapshot failed; legacy set adds unaffected");
+            }
+        }
         if (lastActionChoiceText != null && !lastActionChoiceText.isEmpty()) {
             failedSearchActionTexts.add(lastActionChoiceText);
         }
@@ -1189,6 +1358,19 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         }
         if (lastActionChoiceBlueprintId != null && !lastActionChoiceBlueprintId.isEmpty()) {
             failedSearchBlueprintIds.add(lastActionChoiceBlueprintId);
+        }
+        if (traceMemoryBefore != null) {
+            try {
+                TraceSession.recordHeuristicFailedSearchAdd(
+                    lastActionChoiceText != null ? lastActionChoiceText : "",
+                    lastActionChoiceCardId != null ? lastActionChoiceCardId : "",
+                    lastActionChoiceBlueprintId != null ? lastActionChoiceBlueprintId : "",
+                    traceMemoryBefore, snapshotHeuristicMemory());
+            } catch (Throwable traceT) {
+                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                    traceT.getClass().getName(),
+                    "heuristic FAILED_SEARCH_ADD after-snapshot/record failed; legacy set adds already ran");
+            }
         }
     }
 
@@ -1251,6 +1433,20 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         try {
             int index = Integer.parseInt(result);
             if (index >= 0 && index < actionTexts.length) {
+                // TRACE 4B1 (packet owner table, ACTION_CHOICE_REMEMBER): the guard
+                // returns above and the out-of-range fall-through emit nothing; once
+                // this branch is entered the three tuple assignments always execute,
+                // so exactly one event is emitted, NO_OP on an identical rewrite.
+                HeuristicMemorySnapshot traceMemoryBefore = null;
+                if (TraceSession.isActive()) {
+                    try {
+                        traceMemoryBefore = snapshotHeuristicMemory();
+                    } catch (Throwable traceT) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            traceT.getClass().getName(),
+                            "heuristic ACTION_CHOICE_REMEMBER before-snapshot failed; legacy tuple write unaffected");
+                    }
+                }
                 lastActionChoiceText = lower(actionTexts[index]);
                 lastActionChoiceCardId = lower(getAtIndex(cardIds, index));
                 String blueprintId = lower(getAtIndex(blueprintIds, index));
@@ -1258,6 +1454,16 @@ public abstract class HeuristicAiBase implements SwccgAiController {
                     lastActionChoiceBlueprintId = blueprintId;
                 } else {
                     lastActionChoiceBlueprintId = "";
+                }
+                if (traceMemoryBefore != null) {
+                    try {
+                        TraceSession.recordHeuristicActionChoiceRemember(decisionType, result,
+                            index, traceMemoryBefore, snapshotHeuristicMemory());
+                    } catch (Throwable traceT) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            traceT.getClass().getName(),
+                            "heuristic ACTION_CHOICE_REMEMBER after-snapshot/record failed; legacy tuple write already ran");
+                    }
                 }
             }
         } catch (NumberFormatException e) {

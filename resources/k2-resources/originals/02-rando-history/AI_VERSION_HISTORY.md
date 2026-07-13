@@ -6319,3 +6319,8 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     hooks only; failure injection proves all four call/append boundaries execute once (armed TRUE block proven at tracker level only, per m00465);
     COMBINED_EVALUATOR route fixture; mutator bytecode equality verified. 198 green + 1 skip.
     Capture DISABLED. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ TRACE 4B1 (2026-07-13, Codex released packet): heuristic memory observation ════
+    Canonical HeuristicMemorySnapshot + six closed families; six direct owner hooks; suppression
+    vs NO_OP law; insert-only guarded diff; 842 module tests green; parity OK. Capture DISABLED.
+    NOT deployed. Details in AI_CHANGELOG 2026-07-13.

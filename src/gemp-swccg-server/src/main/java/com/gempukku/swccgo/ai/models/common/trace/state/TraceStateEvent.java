@@ -22,11 +22,17 @@ package com.gempukku.swccgo.ai.models.common.trace.state;
  * real HeuristicAiBase hooks: PHASE_CHANGE and BLOCK_RESPONSE (owner fixed to
  * HEURISTIC_SHARED); the shared UPDATE_STATE and RECORD_RESPONSE calls REUSE the
  * accepted records, whose owner invariant is intentionally expanded to accept
- * HEURISTIC_SHARED; still schema 3, no envelope change. Later families (heuristic
- * memory, strategy, objective, deck, shield, opponent intel, deploy plan, retry
- * budget, barrier memory) land beside their first real owner hook per the matrix's
- * corrected landing order (4B, 4C); no complete type algebra lands ahead of reachable
- * hooks.
+ * HEURISTIC_SHARED; still schema 3, no envelope change. TRACE STAGE 4B1
+ * (Handoffs/CODEX_TRACE_STAGE4_4B1_HEURISTIC_MEMORY_PREFLIGHT_2026-07-13.md
+ * "Source-Complete Owner Table") adds the six closed heuristic-memory families beside
+ * their real HeuristicAiBase owner hooks: STATE_UPDATE, ACTION_CHOICE_REMEMBER,
+ * FAILED_SEARCH_ADD, SINGLE_RESPONSE_RECORD (the internal local-block mutation stays
+ * folded in), RECENT_RESPONSE_APPEND, and REASSIGNMENT_RECORD (the count increment
+ * stays folded in); no seventh local-block or nested-count family exists, still
+ * schema 3, no envelope change. Later families (strategy, objective, deck, shield,
+ * opponent intel, deploy plan, retry budget, barrier memory) land beside their first
+ * real owner hook per the matrix's corrected landing order (4B, 4C); no complete type
+ * algebra lands ahead of reachable hooks.
  *
  * Records contain immutable data only: no callback, no apply, no game/service reference,
  * no timestamp, no RNG value. List position in the envelope is the authoritative event
@@ -36,5 +42,8 @@ package com.gempukku.swccgo.ai.models.common.trace.state;
 public sealed interface TraceStateEvent
     permits TrackerRecordResponseEvent, PendingConcedeEvent, EnginePlayerLostEvent,
             PendingDeployEvent, TrackerUpdateStateEvent, TrackerClearEvent,
-            TrackerPhaseChangeEvent, TrackerBlockResponseEvent {
+            TrackerPhaseChangeEvent, TrackerBlockResponseEvent,
+            HeuristicStateUpdateEvent, HeuristicActionChoiceRememberEvent,
+            HeuristicFailedSearchAddEvent, HeuristicSingleResponseRecordEvent,
+            HeuristicRecentResponseAppendEvent, HeuristicReassignmentRecordEvent {
 }

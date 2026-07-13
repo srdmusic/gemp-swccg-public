@@ -100,7 +100,8 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
 - MODEL-SWITCH RESUME: read this file + AI_WORK_QUEUE.md, check `git log --oneline -5`, read raw mailbox
   tail (~/claude-codex-mailbox/mailbox.jsonl) beyond the watermark, then continue the ACTIVE lane exactly.
   All discipline sections below remain binding.
-- Mailbox watermark: m00470.
+- 4B1 COMMITTED (agent report reconciled, 842 module tests green). F1/F2 agent RUNNING (relaunched on Steve reconfirmed blanket go-ahead). Next: Codex 4B1 clean gate; F1/F2 report, then two separate commits, then his gates.
+- Mailbox watermark: m00479.
 
 ## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture

@@ -5,6 +5,13 @@ import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerLifecycle
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerPhaseSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicActionChoiceRememberEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicFailedSearchAddEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicMemorySnapshot;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicReassignmentRecordEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicRecentResponseAppendEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicSingleResponseRecordEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicStateUpdateEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.EnginePlayerLostEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
@@ -593,6 +600,121 @@ public final class TraceSession {
         if (c == null) return;
         try {
             c.recordStateEvent(PendingDeployEvent.of(operation, typeBefore, typeAfter));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    // ── TRACE STAGE 4B1 (Handoffs/CODEX_TRACE_STAGE4_4B1_HEURISTIC_MEMORY_PREFLIGHT_2026-07-13.md
+    //    "Source-Complete Owner Table"): one typed recording method per heuristic-memory
+    //    family, following the 4A2b error law. With no active session every call
+    //    immediately returns. Each hook passes only already-computed values plus the
+    //    before/after snapshots captured under its own active-session guard; event
+    //    construction or append failure marks the envelope INCOMPLETE/STATE_EVENT and
+    //    never alters or throws into the legacy decision path. ──
+
+    /** Heuristic STATE_UPDATE at updateDecisionTrackerState(...) exit: the exact five
+     *  state-read values plus complete before/after snapshots; pruned rows are derived
+     *  inside the event factory from the two snapshots. Recorded AFTER the nested
+     *  4A2b-owned shared UPDATE_STATE event, which stays separate. */
+    public static void recordHeuristicStateUpdate(int handSize, int forcePile, int reserveDeck,
+                                                  int turn, int cardsInPlay,
+                                                  HeuristicMemorySnapshot before,
+                                                  HeuristicMemorySnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(HeuristicStateUpdateEvent.of(handSize, forcePile, reserveDeck,
+                turn, cardsInPlay, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Heuristic ACTION_CHOICE_REMEMBER at the updateLastActionChoiceText(...) in-range
+     *  write branch: exact decision type, result, and parsed index; the prior/new tuple
+     *  rides the complete before/after snapshots. */
+    public static void recordHeuristicActionChoiceRemember(String decisionType, String result,
+                                                           int index,
+                                                           HeuristicMemorySnapshot before,
+                                                           HeuristicMemorySnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(HeuristicActionChoiceRememberEvent.of(decisionType, result, index,
+                before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Heuristic FAILED_SEARCH_ADD after the handleFailedSearchVerification(...) adds:
+     *  the exact prior action tuple; the sorted per-set deltas are derived inside the
+     *  event factory from the two snapshots. Never called when all three identities are
+     *  empty (no owned write executed) or when the verification match failed. */
+    public static void recordHeuristicFailedSearchAdd(String priorActionText, String priorCardId,
+                                                      String priorBlueprintId,
+                                                      HeuristicMemorySnapshot before,
+                                                      HeuristicMemorySnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(HeuristicFailedSearchAddEvent.of(priorActionText, priorCardId,
+                priorBlueprintId, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Heuristic SINGLE_RESPONSE_RECORD on either updateSingleDecisionLoop(...) exit:
+     *  the exact decision, raw response, and tracking response (null passed verbatim);
+     *  the internally created local-response block stays FOLDED into this one event via
+     *  the snapshots' localBlockedResponses delta. */
+    public static void recordHeuristicSingleResponseRecord(String decisionType,
+                                                           String decisionText,
+                                                           String rawResponse,
+                                                           String trackingResponse,
+                                                           HeuristicMemorySnapshot before,
+                                                           HeuristicMemorySnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(HeuristicSingleResponseRecordEvent.of(decisionType, decisionText,
+                rawResponse, trackingResponse, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Heuristic RECENT_RESPONSE_APPEND after the recordRecentDecisionResponse(...)
+     *  deque append: the legacy helper's own decision key and appended response; the
+     *  ordered deque before/after and the evicted FIFO rows are derived inside the
+     *  event factory from the two snapshots. */
+    public static void recordHeuristicRecentResponseAppend(String decisionKey,
+                                                           String appendedResponse,
+                                                           HeuristicMemorySnapshot before,
+                                                           HeuristicMemorySnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(HeuristicRecentResponseAppendEvent.of(decisionKey,
+                appendedResponse, before, after));
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
+        }
+    }
+
+    /** Heuristic REASSIGNMENT_RECORD after the recordRecentReassignment(...) writes:
+     *  the legacy helper's own map key (closed variant derived from its prefix) and the
+     *  recorded turn; both map deltas are derived inside the event factory from the two
+     *  snapshots, with the count increment FOLDED in. */
+    public static void recordHeuristicReassignmentRecord(String key, int turn,
+                                                         HeuristicMemorySnapshot before,
+                                                         HeuristicMemorySnapshot after) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordStateEvent(HeuristicReassignmentRecordEvent.of(key, turn, before, after));
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
         }

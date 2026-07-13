@@ -8,6 +8,12 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.TraceStateEventFailureTestSupport;
 import com.gempukku.swccgo.ai.models.common.trace.TraceStatus;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicActionChoiceRememberEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicFailedSearchAddEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicReassignmentRecordEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicRecentResponseAppendEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicSingleResponseRecordEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicStateUpdateEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.MutationOutcome;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
@@ -170,6 +176,21 @@ public class TheChosenOneAiTraceHookTest {
         }
     }
 
+    /** TRACE 4B1 (packet scope law): the heuristic-memory owner boundaries live inside
+     *  super.decide(...), so primary evaluator and direct interceptor routes must show
+     *  ZERO heuristic-memory events; suppressed guards on fallback routes emit nothing. */
+    private static void assertNoHeuristicMemoryEvents(List<TraceStateEvent> events) {
+        for (TraceStateEvent e : events) {
+            assertFalse("no heuristic-memory event may exist here: " + e,
+                e instanceof HeuristicStateUpdateEvent
+                    || e instanceof HeuristicActionChoiceRememberEvent
+                    || e instanceof HeuristicFailedSearchAddEvent
+                    || e instanceof HeuristicSingleResponseRecordEvent
+                    || e instanceof HeuristicRecentResponseAppendEvent
+                    || e instanceof HeuristicReassignmentRecordEvent);
+        }
+    }
+
     // =========================================================================
     // Direct interceptor (V45): distinct route + final response, skipped finalizer
     // =========================================================================
@@ -211,6 +232,8 @@ public class TheChosenOneAiTraceHookTest {
         // full frozen raw input: CARD_SELECTION candidates come from the raw cardId array
         assertEquals(Arrays.asList("temp1", "temp2"), trace.getRawCandidateOrder());
         assertEquals("42", trace.getDecisionId());
+        // TRACE 4B1: the direct interceptor never reaches super.decide
+        assertNoHeuristicMemoryEvents(trace.getStateEvents());
         assertTrue("bot model is the bot source-package identifier",
             trace.getBotModel().contains("models"));
 
@@ -351,6 +374,10 @@ public class TheChosenOneAiTraceHookTest {
             assertFalse("non-empty result must suppress the shared BLOCK_RESPONSE: " + e,
                 e instanceof TrackerBlockResponseEvent);
         }
+        // TRACE 4B1: the null game state suppresses the heuristic STATE_UPDATE, the
+        // still-empty state hash suppresses the single-response and recent-response
+        // owners, and the type guards suppress the rest: zero heuristic-memory events
+        assertNoHeuristicMemoryEvents(events);
         PendingDeployEvent deploySet = (PendingDeployEvent) events.get(2);
         assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
         assertNull(deploySet.typeBefore());
@@ -438,6 +465,7 @@ public class TheChosenOneAiTraceHookTest {
         // routes only; the packet's primary-evaluator proof is the dedicated
         // primaryEvaluatorRouteProducesZeroSharedOwnerEvents fixture (m00447).
         assertNoSharedOwnerEvents(events1);
+        assertNoHeuristicMemoryEvents(events1);
 
         // traced run 2: same game (same opponent/side) — no second clear, exactly one
         // update whose outcome follows lifecycle-snapshot equality (nothing moved)
@@ -455,16 +483,19 @@ public class TheChosenOneAiTraceHookTest {
         assertEquals(repeat.before(), repeat.after());
         assertEquals(MutationOutcome.NO_OP, repeat.outcome());
         assertNoSharedOwnerEvents(events2);
+        assertNoHeuristicMemoryEvents(events2);
     }
 
     // =========================================================================
-    // TRACE 4A2b (packet "Bot boundary" + "Highest overlap risk" fixtures): on a
-    // fallback route the shared events appear in EXACT source order between the
+    // TRACE 4A2b (packet "Bot boundary" + "Highest overlap risk" fixtures) + 4B1: on
+    // a fallback route the shared events appear in EXACT source order between the
     // outer events: outer new-game clear + outer UPDATE_STATE first, then inside
     // super.decide the shared PHASE_CHANGE, shared UPDATE_STATE (identical call
-    // arguments to the outer one, DISTINCT owner, never coalesced), shared
-    // RECORD_RESPONSE (trackingResponse), then the outer RECORD_RESPONSE (final
-    // result) and the pending-deploy write. Untraced twin proves behavior parity.
+    // arguments to the outer one, DISTINCT owner, never coalesced), the heuristic
+    // STATE_UPDATE summary immediately after it (4B1), SINGLE_RESPONSE_RECORD
+    // immediately before the shared RECORD_RESPONSE (trackingResponse), then the
+    // outer RECORD_RESPONSE (final result) and the pending-deploy write. Untraced
+    // twin proves behavior parity.
     // =========================================================================
 
     @Test
@@ -500,8 +531,8 @@ public class TheChosenOneAiTraceHookTest {
         DecisionTrace trace = sink.single();
         assertEquals(TraceRoute.HEURISTIC_FALLBACK, trace.getRoute().selected());
         List<TraceStateEvent> events = trace.getStateEvents();
-        assertEquals("expected the full outer+shared fallback stream: " + events,
-            8, events.size());
+        assertEquals("expected the full outer+shared+heuristic fallback stream: " + events,
+            10, events.size());
 
         // outer events first, exactly as 4A1/4A2a landed them
         assertTrue(events.get(0) instanceof PendingConcedeEvent);
@@ -532,18 +563,39 @@ public class TheChosenOneAiTraceHookTest {
         assertFalse("owners must stay distinct on identical arguments",
             outerUpdate.owner() == sharedUpdate.owner());
 
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(5);
+        // TRACE 4B1: the heuristic STATE_UPDATE summary lands immediately after the
+        // nested shared UPDATE_STATE, exactly as the packet orders the two summaries
+        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events.get(5);
+        assertEquals(sharedUpdate.handSize(), heuristicState.handSize());
+        assertEquals(sharedUpdate.turn(), heuristicState.turn());
+        assertEquals("", heuristicState.before().currentStateHash());
+        assertEquals("0:4:20:1:0", heuristicState.after().currentStateHash());
+        assertEquals(MutationOutcome.CHANGED, heuristicState.outcome());
+        assertTrue(heuristicState.prunedReassignmentTurns().isEmpty());
+
+        // TRACE 4B1: SINGLE_RESPONSE_RECORD lands immediately before the shared
+        // RECORD_RESPONSE; the other heuristic owners stay guard-suppressed here
+        HeuristicSingleResponseRecordEvent singleResponse =
+            (HeuristicSingleResponseRecordEvent) events.get(6);
+        assertEquals("MULTIPLE_CHOICE", singleResponse.decisionType());
+        assertEquals(tracedResult, singleResponse.rawResponse());
+        assertEquals(1, singleResponse.after().lastDecisionRepeatCount());
+        assertEquals(MutationOutcome.CHANGED, singleResponse.outcome());
+
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(7);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
         assertEquals("77", sharedRecord.decisionId());
         assertEquals(MutationOutcome.CHANGED, sharedRecord.outcome());
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(6);
+        // the shared call records the same heuristic tracking response 4B1 observed
+        assertEquals(singleResponse.trackingResponse(), sharedRecord.response());
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(8);
         assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
         assertEquals(tracedResult, outerRecord.response());
         // shared trackingResponse (choice text) vs outer final result (index)
         assertFalse("the two owners' recorded responses legitimately differ",
             sharedRecord.response().equals(outerRecord.response()));
 
-        PendingDeployEvent deploySet = (PendingDeployEvent) events.get(7);
+        PendingDeployEvent deploySet = (PendingDeployEvent) events.get(9);
         assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
         assertEquals("character", deploySet.typeAfter());
     }
@@ -584,14 +636,19 @@ public class TheChosenOneAiTraceHookTest {
         DecisionTrace trace = sink.single();
         List<TraceStateEvent> events = trace.getStateEvents();
         assertEquals("expected the fallback stream with the shared BLOCK_RESPONSE: " + events,
-            8, events.size());
+            10, events.size());
         assertTrue(events.get(0) instanceof PendingConcedeEvent);
         assertEquals(TrackerOwner.OUTER_CHOSENONE, ((TrackerClearEvent) events.get(1)).owner());
         assertEquals(TrackerOwner.OUTER_CHOSENONE, ((TrackerUpdateStateEvent) events.get(2)).owner());
         assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerPhaseChangeEvent) events.get(3)).owner());
         assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerUpdateStateEvent) events.get(4)).owner());
 
-        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events.get(5);
+        // TRACE 4B1: heuristic STATE_UPDATE immediately after the shared UPDATE_STATE
+        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events.get(5);
+        assertEquals(MutationOutcome.CHANGED, heuristicState.outcome());
+        assertEquals("0:4:20:1:0", heuristicState.after().currentStateHash());
+
+        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events.get(6);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, block.owner());
         assertEquals("CARD_SELECTION", block.decisionType());
         assertEquals("Choose device to steal, or click Done to cancel", block.decisionText());
@@ -599,9 +656,17 @@ public class TheChosenOneAiTraceHookTest {
         assertFalse(block.blocked());
         assertEquals(MutationOutcome.NO_OP, block.outcome());
 
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(6);
+        // TRACE 4B1: the empty response takes the reset exit of the single-response
+        // owner; the writes executed on already-reset fields, a real NO_OP event
+        HeuristicSingleResponseRecordEvent singleResponse =
+            (HeuristicSingleResponseRecordEvent) events.get(7);
+        assertEquals("", singleResponse.rawResponse());
+        assertEquals("", singleResponse.trackingResponse());
+        assertEquals(MutationOutcome.NO_OP, singleResponse.outcome());
+
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(8);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(7);
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(9);
         assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
     }
 
@@ -672,11 +737,13 @@ public class TheChosenOneAiTraceHookTest {
             failure.stage() == TraceCaptureFailure.Stage.STATE_EVENT
                 && failure.detail().contains("injected state-event append failure")).count();
         // pending-concede clear, outer CLEAR, outer UPDATE_STATE, shared PHASE_CHANGE,
-        // shared UPDATE_STATE, shared RECORD_RESPONSE, pending-deploy SET = 7 appends
-        // (the outer RECORD_RESPONSE hook is traceOpened-guarded and the bot never
-        // owned this session, so its append was never attempted)
+        // shared UPDATE_STATE, heuristic STATE_UPDATE, heuristic SINGLE_RESPONSE_RECORD,
+        // shared RECORD_RESPONSE, pending-deploy SET = 9 appends (TRACE 4B1 adds the
+        // two heuristic-memory boundaries this MULTIPLE_CHOICE route reaches; the
+        // outer RECORD_RESPONSE hook is traceOpened-guarded and the bot never owned
+        // this session, so its append was never attempted)
         assertEquals("one typed failure per attempted append: " + failureTrace.getCaptureFailures(),
-            7, injected);
+            9, injected);
 
         // run 2: normal capture on the SAME bot; the owners' before-snapshots prove
         // every run-1 legacy mutator ran exactly once
@@ -690,7 +757,7 @@ public class TheChosenOneAiTraceHookTest {
         DecisionTrace trace2 = sink.single();
         List<TraceStateEvent> events2 = trace2.getStateEvents();
         assertEquals("same game: no concede/clear events, full fallback stream: " + events2,
-            6, events2.size());
+            8, events2.size());
 
         // outer updateState ran once in run 1: run 2's before already carries turn 1
         TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events2.get(0);
@@ -712,20 +779,36 @@ public class TheChosenOneAiTraceHookTest {
         assertEquals(1, sharedUpdate.before().lastTurn());
         assertEquals(MutationOutcome.NO_OP, sharedUpdate.outcome());
 
+        // TRACE 4B1: the heuristic state writes ran once in run 1 despite the failed
+        // appends: run 2's before already carries the run-1 hash, an executed NO_OP
+        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events2.get(3);
+        assertEquals("0:4:20:1:0", heuristicState.before().currentStateHash());
+        assertEquals(MutationOutcome.NO_OP, heuristicState.outcome());
+
+        // TRACE 4B1: the single-response owner ran EXACTLY ONCE in run 1: run 2's
+        // repeat count moves 1 to 2 and folds the threshold local block into this event
+        HeuristicSingleResponseRecordEvent singleResponse =
+            (HeuristicSingleResponseRecordEvent) events2.get(4);
+        assertEquals(1, singleResponse.before().lastDecisionRepeatCount());
+        assertEquals(2, singleResponse.after().lastDecisionRepeatCount());
+        assertTrue(singleResponse.before().localBlockedResponses().isEmpty());
+        assertEquals(1, singleResponse.after().localBlockedResponses().size());
+        assertEquals(MutationOutcome.CHANGED, singleResponse.outcome());
+
         // shared recordDecision ran EXACTLY ONCE in run 1: one row before, two after
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(3);
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(5);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
         assertEquals(1, sharedRecord.before().sequenceRows().size());
         assertEquals(2, sharedRecord.after().sequenceRows().size());
 
         // outer recordDecision ran EXACTLY ONCE in run 1: one row before, two after
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(4);
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(6);
         assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
         assertEquals(1, outerRecord.before().sequenceRows().size());
         assertEquals(2, outerRecord.after().sequenceRows().size());
 
         // the run-1 pending-deploy write happened: run 2's rewrite is a NO_OP SET
-        PendingDeployEvent deploySet = (PendingDeployEvent) events2.get(5);
+        PendingDeployEvent deploySet = (PendingDeployEvent) events2.get(7);
         assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
         assertEquals("character", deploySet.typeBefore());
         assertEquals("character", deploySet.typeAfter());
@@ -737,8 +820,9 @@ public class TheChosenOneAiTraceHookTest {
     // reaches the direct BLOCK_RESPONSE boundary, so the four-mutator gate needs an
     // injected EMPTY CANCELABLE CARD_SELECTION path too. The exact append count is
     // the not-skipped/not-repeated evidence for the block call (the injected failure
-    // details are family-blind): 7 appends means every boundary including the block
-    // attempted exactly one append; 6 would be a skip, 8 a repeat. The armed TRUE
+    // details are family-blind): 9 appends (with the two 4B1 heuristic-memory
+    // boundaries) means every boundary including the block attempted exactly one
+    // append; 8 would be a skip, 10 a repeat. The armed TRUE
     // block is NOT reachable at this boundary: arming the shared last-action pair
     // needs a fallback CARD_ACTION_CHOICE with a non-empty heuristic pick, but any
     // CARD_ACTION_CHOICE with candidates is consumed by the ActionTextEvaluator
@@ -792,11 +876,13 @@ public class TheChosenOneAiTraceHookTest {
             failure.stage() == TraceCaptureFailure.Stage.STATE_EVENT
                 && failure.detail().contains("injected state-event append failure")).count();
         // pending-concede clear, outer CLEAR, outer UPDATE_STATE, shared PHASE_CHANGE,
-        // shared UPDATE_STATE, shared BLOCK_RESPONSE, shared RECORD_RESPONSE = 7
-        // (no pending-deploy write: the decision text has no deploy subject; the outer
+        // shared UPDATE_STATE, heuristic STATE_UPDATE, shared BLOCK_RESPONSE, heuristic
+        // SINGLE_RESPONSE_RECORD, shared RECORD_RESPONSE = 9 (TRACE 4B1 adds the two
+        // heuristic-memory boundaries this empty CARD_SELECTION route reaches; no
+        // pending-deploy write: the decision text has no deploy subject; the outer
         // RECORD_RESPONSE hook is traceOpened-guarded on this refused nested open)
         assertEquals("exactly one append per boundary including the direct block: "
-            + failureTrace.getCaptureFailures(), 7, injected);
+            + failureTrace.getCaptureFailures(), 9, injected);
 
         // run 2: normal capture on the SAME bot. The empty cancel response never
         // enters sequenceRows (the owner tracks non-pass responses only), so the
@@ -814,15 +900,31 @@ public class TheChosenOneAiTraceHookTest {
         DecisionTrace trace2 = sink.single();
         List<TraceStateEvent> events2 = trace2.getStateEvents();
         assertEquals("same game: full fallback stream with the block boundary: " + events2,
-            6, events2.size());
+            8, events2.size());
         assertEquals(TrackerOwner.OUTER_CHOSENONE, ((TrackerUpdateStateEvent) events2.get(0)).owner());
         assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerPhaseChangeEvent) events2.get(1)).owner());
         assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerUpdateStateEvent) events2.get(2)).owner());
-        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events2.get(3);
+
+        // TRACE 4B1: run 1's heuristic state writes happened despite the failed
+        // appends: run 2's before carries them and the repeat is an executed NO_OP
+        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events2.get(3);
+        assertEquals("0:4:20:1:0", heuristicState.before().currentStateHash());
+        assertEquals(MutationOutcome.NO_OP, heuristicState.outcome());
+
+        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events2.get(4);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, block.owner());
         assertFalse(block.blocked());
         assertEquals(MutationOutcome.NO_OP, block.outcome());
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(4);
+
+        // TRACE 4B1: run 1 already executed the empty-key reset, so run 2's reset
+        // rewrite is an executed-write NO_OP folded boundary event
+        HeuristicSingleResponseRecordEvent singleResponse =
+            (HeuristicSingleResponseRecordEvent) events2.get(5);
+        assertEquals("", singleResponse.rawResponse());
+        assertEquals("", singleResponse.trackingResponse());
+        assertEquals(MutationOutcome.NO_OP, singleResponse.outcome());
+
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(6);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
         assertEquals(cancelKey, sharedRecord.before().consecutiveCancelKey());
         assertEquals(1, sharedRecord.before().consecutiveCancelCount());
@@ -831,7 +933,7 @@ public class TheChosenOneAiTraceHookTest {
         assertEquals(0, sharedRecord.before().sequenceRows().size());
         assertEquals(0, sharedRecord.after().sequenceRows().size());
         assertEquals(MutationOutcome.CHANGED, sharedRecord.outcome());
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(5);
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(7);
         assertEquals(TrackerOwner.OUTER_CHOSENONE, outerRecord.owner());
         assertEquals(cancelKey, outerRecord.before().consecutiveCancelKey());
         assertEquals(1, outerRecord.before().consecutiveCancelCount());
@@ -921,6 +1023,10 @@ public class TheChosenOneAiTraceHookTest {
                     update.owner() == TrackerOwner.HEURISTIC_SHARED);
             }
         }
+        // TRACE 4B1: the same failed read returns before any heuristic-memory write
+        // (no STATE_UPDATE), and the still-empty state hash makes the single-response
+        // helper return before any owned write, so the stream stays at seven
+        assertNoHeuristicMemoryEvents(events);
 
         // the shared RECORD_RESPONSE still appears, in source order, before the outer's
         TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(4);
@@ -971,6 +1077,8 @@ public class TheChosenOneAiTraceHookTest {
         List<TraceStateEvent> events = trace.getStateEvents();
         // primary evaluator routes do not mutate the inherited tracker: zero shared events
         assertNoSharedOwnerEvents(events);
+        // TRACE 4B1: nor do they reach any heuristic-memory owner boundary
+        assertNoHeuristicMemoryEvents(events);
         // the outer owner still observed ITS decision normally on this route
         boolean outerRecordSeen = false;
         for (TraceStateEvent e : events) {
