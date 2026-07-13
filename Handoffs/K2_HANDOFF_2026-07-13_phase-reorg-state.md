@@ -6,6 +6,11 @@ all apply — especially: check-replays-not-logs, one-change-at-a-time, changelo
 comment-out-not-delete (EXCEPT inside Codex-sanctioned cleanup packets), verify-before-done.
 
 ## Steve's operating directives (2026-07-13, latest first — these override older habits)
+0. **FINAL FABLE GATE before ANY deploy** (Steve via Codex m00497): after Opus completes this consolidation
+   tranche, a FRESH FABLE session must independently re-verify Opus's exact committed diff, phase/trace
+   invariants, focused + aggregate tests, and capture-disabled state, then report findings to Codex for the
+   FINAL gate. NO deployment until that Fable review AND Codex's final gate are both complete. This is a hard
+   precondition on the aggregate deploy, on top of every per-commit gate.
 1. **Token conservation**: hand off maximal load to SMALL AGENTS; K-2 main loop = coordination, commits, gates only.
 2. **Utilize Codex MORE** — he has far more tokens. He authors packets, runs all independent gates, does source
    audits and preflights. Propose he take even more (see "role split" below).
@@ -105,16 +110,21 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
 - ALL THREE INHERITED COMMITS GATE-CLEAN: 4B1 ec886934b ADVANCE-INERT (m00484, 842 tests), F1 5bd89ac68
   ADVANCE (m00486), F2 a095db834 ADVANCE (m00487, 128 green). The F1/F2 engine-fix lane is DONE + gated.
 - HEAD 2eb105a4a (this doc commit will advance it). Tree clean, no agents running.
-- CURRENT HOLD (Codex m00487): do NOT dispatch 4B2 — its packet lacks an embedded Agent-Ready Brief and
-  still says implementation held; Codex is finishing the current-HEAD source audit + release brief. Deploy/
-  push/capture remain HOLD. WAIT for his released 4B2 brief, then dispatch it VERBATIM as one bg agent.
+- 4B2 RELEASED FOR JAVA (m00494, released packet SHA 8f5a0438, parent 85eb0452a). Preflight AGREE against
+  revised SHA 1631df9e; release-SHA delta is the status-flip only, embedded brief confirmed to encode the
+  verified contract before dispatch. ONE background agent RUNNING (K-2 lane trace-4b2, owns: RandoCalAi/
+  TheChosenOneAi hook sites, both StrategyController traceSnapshot seams + StrategyControllerTraceAccess
+  bridges, TraceSession record methods, StrategyControllerSnapshot/Owner + six event records + sealed
+  permits, focused 4B2 tests + mirrored bot fixtures). Agent will NOT commit; K-2 verifies + isolated commit
+  + gate handback. On its report: focused suite + full module + package exit + parity + seven-method javap +
+  diff-check + NoOpTraceSink-default proof -> constructed changelogs -> commit -> SHA to Codex.
 - OPUS FIRST ACTIONS (if this session also ends): (1) read this file; (2) mailbox check --as claude --mark
   + raw store past the watermark below; (3) tell Codex K-2 resumed, same protocol; (4) act on his latest
   released brief only. Discipline sections below all bind; agents never commit; changelogs per-commit;
   engine files beyond F1/F2 need Steve.
 - Remaining released queue: Codex packet stream (4B2+ once released, route repairs per frozen order;
   K-2 tasks #13-#24). Deploy of EVERYTHING stays HOLD until the aggregate gate.
-- Mailbox watermark: m00487.
+- Mailbox watermark: m00494.
 
 ## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture
