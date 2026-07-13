@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando;
 
+import com.gempukku.swccgo.ai.models.common.trace.TraceCorrection;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 
 import org.apache.logging.log4j.Logger;
@@ -152,10 +154,22 @@ public class DecisionSafety {
                 String forced = availableOptions[RANDOM.nextInt(availableOptions.length)];
                 String reason = "SAFETY FORCED: Empty response but must choose. Picked random: " + forced;
                 LOG.error(reason);
+                // TRACE ORACLE V2 (2026-07-13): DecisionSafety owns the correction record —
+                // typed reason + before/after. Observation only; the correction itself is
+                // unchanged legacy behavior (recorded AFTER the RNG draw, no extra draws).
+                if (TraceSession.isActive()) {
+                    TraceSession.recordCorrection(TraceCorrection.Kind.SAFETY_FORCED_CHOICE,
+                        response, forced, reason);
+                }
                 return new String[]{forced, reason};
             } else {
                 // Absolute last resort
                 LOG.error("SAFETY CRITICAL: Must choose but no options available!");
+                // TRACE ORACLE V2 (2026-07-13): typed correction record, observation only.
+                if (TraceSession.isActive()) {
+                    TraceSession.recordCorrection(TraceCorrection.Kind.SAFETY_CRITICAL_NO_OPTIONS,
+                        response, "0", "SAFETY CRITICAL: No options, guessing '0'");
+                }
                 return new String[]{"0", "SAFETY CRITICAL: No options, guessing '0'"};
             }
         }
@@ -227,6 +241,11 @@ public class DecisionSafety {
                         String reason = "SAFETY CLAMP: '" + response
                                 + "' had non-selectable/unknown card ids → '" + fixed + "' (" + typeName + ")";
                         LOG.error(reason);
+                        // TRACE ORACLE V2 (2026-07-13): typed correction record, observation only.
+                        if (TraceSession.isActive()) {
+                            TraceSession.recordCorrection(TraceCorrection.Kind.SELECTABLE_CLAMP,
+                                response, fixed, reason);
+                        }
                         return new String[]{fixed, reason};
                     }
                 }

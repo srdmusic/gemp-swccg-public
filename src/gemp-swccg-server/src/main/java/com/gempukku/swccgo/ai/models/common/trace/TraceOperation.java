@@ -1,7 +1,8 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
 /**
- * TRACE HOOK (2026-07-13): one immutable operation in the append-only decision trace.
+ * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
+ * "Operation record"): one immutable operation in the append-only decision trace.
  *
  * Score values are stored as RAW FLOAT BITS (Float.floatToRawIntBits) so comparison is
  * exact, never decimal-tolerant. A field is null when not applicable to the operation:
@@ -9,20 +10,25 @@ package com.gempukku.swccgo.ai.models.common.trace;
  * contribution), and a MERGE records the boundary only (the merged source operations
  * already explain the value, so no synthetic delta either).
  *
- * candidateOrdinal is the action id's FIRST-SEEN ordinal in the frozen candidate order
- * (CombinedEvaluator's LinkedHashMap insertion order). Synthetic actions (e.g. the
- * pass actions CombinedEvaluator manufactures) carry ORDINAL_SYNTHETIC plus an explicit
- * syntheticSource marker instead.
+ * candidateOrdinal binds to the COMPLETE RAW decision candidate order (the id's first
+ * ordinal in DecisionTrace.rawCandidateOrder) — never to evaluator output or the merge
+ * map. Synthetic actions (e.g. the pass actions CombinedEvaluator manufactures) carry
+ * ORDINAL_SYNTHETIC plus an explicit syntheticSource marker; a synthetic Pass with
+ * action id "" can never reuse or replace an offered candidate's ordinal (identity-based
+ * marking, not id-based). An id that never appeared in the raw arrays carries
+ * ORDINAL_UNKNOWN — visible drift, not silent adoption.
+ *
+ * Rule/domain/kind identity is TYPED (TraceRuleId / TraceDomainId / TraceOutputKind):
+ * free-form identity strings are rejected at construction, and unmigrated arms carry
+ * the one explicit TraceRuleId.LEGACY_UNTAGGED value. Reason text stays diagnostic
+ * evidence; it never defines identity.
  */
 public final class TraceOperation {
-
-    /** Rule id recorded by the un-migrated legacy choke points. Visible debt, never guessed. */
-    public static final String RULE_LEGACY_UNTAGGED = "LEGACY_UNTAGGED";
 
     /** candidateOrdinal for synthetic actions (see syntheticSource for the origin marker). */
     public static final int ORDINAL_SYNTHETIC = -1;
 
-    /** candidateOrdinal when the action id never entered the frozen candidate order. */
+    /** candidateOrdinal when the action id never appeared in the raw candidate arrays. */
     public static final int ORDINAL_UNKNOWN = -2;
 
     private final int seq;
@@ -31,9 +37,9 @@ public final class TraceOperation {
     private final String syntheticSource;
     private final String actionId;
     private final String evaluatorId;
-    private final String ruleId;
-    private final String domainId;
-    private final String outputKind;
+    private final TraceRuleId ruleId;
+    private final TraceDomainId domainId;
+    private final TraceOutputKind outputKind;
     private final Integer beforeBits;
     private final Integer deltaBits;
     private final Integer afterBits;
@@ -42,8 +48,9 @@ public final class TraceOperation {
     private final String detail;
 
     public TraceOperation(int seq, TraceOp op, int candidateOrdinal, String syntheticSource,
-                          String actionId, String evaluatorId, String ruleId, String domainId,
-                          String outputKind, Integer beforeBits, Integer deltaBits, Integer afterBits,
+                          String actionId, String evaluatorId, TraceRuleId ruleId,
+                          TraceDomainId domainId, TraceOutputKind outputKind,
+                          Integer beforeBits, Integer deltaBits, Integer afterBits,
                           boolean vetoed, String vetoReason, String detail) {
         this.seq = seq;
         this.op = op;
@@ -68,9 +75,9 @@ public final class TraceOperation {
     public String getSyntheticSource() { return syntheticSource; }
     public String getActionId() { return actionId; }
     public String getEvaluatorId() { return evaluatorId; }
-    public String getRuleId() { return ruleId; }
-    public String getDomainId() { return domainId; }
-    public String getOutputKind() { return outputKind; }
+    public TraceRuleId getRuleId() { return ruleId; }
+    public TraceDomainId getDomainId() { return domainId; }
+    public TraceOutputKind getOutputKind() { return outputKind; }
     public Integer getBeforeBits() { return beforeBits; }
     public Integer getDeltaBits() { return deltaBits; }
     public Integer getAfterBits() { return afterBits; }
@@ -85,7 +92,7 @@ public final class TraceOperation {
             + (syntheticSource != null ? ", synthetic=" + syntheticSource : "")
             + ", actionId=" + actionId
             + (evaluatorId != null ? ", evaluator=" + evaluatorId : "")
-            + (ruleId != null ? ", rule=" + ruleId : "")
+            + (ruleId != null ? ", rule=" + ruleId.id() : "")
             + (domainId != null ? ", domain=" + domainId : "")
             + (outputKind != null ? ", kind=" + outputKind : "")
             + (beforeBits != null ? ", beforeBits=" + beforeBits : "")

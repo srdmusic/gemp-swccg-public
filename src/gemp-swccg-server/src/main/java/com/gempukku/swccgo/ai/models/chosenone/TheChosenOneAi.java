@@ -15,6 +15,13 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
+import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
+import com.gempukku.swccgo.ai.models.common.trace.TraceIntendedStateEvent;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSink;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSnapshots;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -116,6 +123,19 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
     // Bot stats DAO for record lookups (optional - set via setter)
     private com.gempukku.swccgo.db.BotStatsDAO botStatsDAO;
+
+    // TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
+    // "Trace ownership"): the bot entry point owns the per-decide() trace session — route
+    // id, full frozen input, fallback/emergency path, final response. Production default
+    // = NoOpTraceSink: no session is ever opened, every trace call short-circuits on a
+    // thread-local null check, and behavior is byte-identical to un-instrumented code.
+    // Capture stays DISABLED until the contract's landing increment 6 gate passes.
+    private TraceSink decisionTraceSink = NoOpTraceSink.INSTANCE;
+
+    /** TRACE ORACLE V2: package-visible pure-harness seam (JUnit only; production never calls). */
+    void setDecisionTraceSinkForTesting(TraceSink sink) {
+        this.decisionTraceSink = (sink != null) ? sink : NoOpTraceSink.INSTANCE;
+    }
 
     // V29.15: Deck name for saga-aware Epic Event choices
     private String deckName;
@@ -514,6 +534,21 @@ public class TheChosenOneAi extends HeuristicAiBase {
             decisionType, phase,
             decisionText.length() > 50 ? decisionText.substring(0, 50) + "..." : decisionText);
 
+        // TRACE ORACLE V2 (2026-07-13, CODEX_TRACE_ORACLE_V2_CONTRACT "Trace ownership"):
+        // open the bot-boundary session — full frozen raw input + shadow snapshot — when
+        // the sink is enabled. OBSERVATION ONLY per the route map's shadow authority:
+        // no interceptor return moves, no extra RNG draw, no behavior change. Production
+        // default sink is disabled, so this whole block no-ops.
+        boolean traceOpened = false;
+        try {
+            if (decisionTraceSink.isEnabled()) {
+                traceOpened = openDecisionTraceSession(playerId, decision, gameState,
+                    decisionType, decisionText, phase);
+            }
+        } catch (Throwable traceT) {
+            traceOpened = false;
+        }
+
         String result = null;
         try {
             // Track game/turn changes for chat
@@ -543,6 +578,11 @@ public class TheChosenOneAi extends HeuristicAiBase {
                                 lostPileDeficit, myLostPile, opponentLostPile);
                             LOG.warn("V67aw CONCEDE PENDING: {} — will concede after next battle phase ends",
                                 pendingConcedeReason);
+                            // TRACE ORACLE V2: typed intended-mutation observation (outer choke point).
+                            if (traceOpened) {
+                                TraceSession.recordIntendedStateEvent(
+                                    TraceIntendedStateEvent.Kind.PENDING_CONCEDE, pendingConcedeReason);
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -576,6 +616,13 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 String dtLower = decisionText.toLowerCase(java.util.Locale.ROOT);
                 if (dtLower.contains("forfeit") && dtLower.contains("if desired")) {
                     LOG.warn("V45 IMMUNE FORFEIT: All cards immune — PASSING on optional forfeit! Text: '{}'", decisionText);
+                    // TRACE ORACLE V2: route + final-response observation ONLY; the direct
+                    // return below is untouched (it skips the common finalizer — recorded).
+                    if (traceOpened) {
+                        TraceSession.recordRoute(TraceRoute.V45_OPTIONAL_FORFEIT,
+                            "decision text contains 'forfeit' + 'if desired'", null);
+                        TraceSession.recordFinalResponse("", true);
+                    }
                     return "";  // Empty = select nothing = pass
                 }
             }
@@ -605,6 +652,12 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 }
                 LOG.warn("V44/V67j REVERT: Accepting revert request (index={} = '{}') text: '{}'",
                     yesIndex, yesText, decisionText);
+                // TRACE ORACLE V2: route + final-response observation ONLY.
+                if (traceOpened) {
+                    TraceSession.recordRoute(TraceRoute.V44_V67J_REVERT_APPROVAL,
+                        "MULTIPLE_CHOICE + decision text contains 'revert'", null);
+                    TraceSession.recordFinalResponse(String.valueOf(yesIndex), true);
+                }
                 return String.valueOf(yesIndex);
             }
 
@@ -657,6 +710,12 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 LOG.warn("V170 UNDERCOVER SPY: opponent total drain={} -> {} (index={}) text: '{}'",
                     v170OppDrain, v170GoUndercover ? "YES, go undercover (block their drain)"
                         : "NO, deploy normally (nothing to block)", v170Pick, decisionText);
+                // TRACE ORACLE V2: route + final-response observation ONLY.
+                if (traceOpened) {
+                    TraceSession.recordRoute(TraceRoute.V170_UNDERCOVER_CHOICE,
+                        "MULTIPLE_CHOICE + decision text contains 'undercover spy'", null);
+                    TraceSession.recordFinalResponse(String.valueOf(v170Pick), true);
+                }
                 return String.valueOf(v170Pick);
             }
 
@@ -710,6 +769,12 @@ public class TheChosenOneAi extends HeuristicAiBase {
                         if (pick >= 0) {
                             LOG.warn("V61 EPIC EVENT SAGA: deck='{}' choices={} → {} (index {})",
                                 deckName, java.util.Arrays.asList(results), why, pick);
+                            // TRACE ORACLE V2: route + final-response observation ONLY.
+                            if (traceOpened) {
+                                TraceSession.recordRoute(TraceRoute.V61_SAGA_CHOICE,
+                                    "MULTIPLE_CHOICE results contain TFISMF saga options", null);
+                                TraceSession.recordFinalResponse(String.valueOf(pick), true);
+                            }
                             return String.valueOf(pick);
                         }
                     }
@@ -723,15 +788,31 @@ public class TheChosenOneAi extends HeuristicAiBase {
             boolean isSafeForChaos = currentPhase != Phase.DEPLOY && currentPhase != Phase.BATTLE;
             if (isSafeForChaos && shouldApplyChaos()) {
                 RandoLogger.debug("Chaos mode: selecting random action");
+                // TRACE ORACLE V2: explicit chaos route (recorded AFTER shouldApplyChaos()
+                // consumed its one RNG draw — the trace never draws).
+                if (traceOpened) {
+                    TraceSession.recordRoute(TraceRoute.CHAOS_FALLBACK,
+                        "chaos gate passed (phase=" + currentPhase + ", outside deploy/battle)", null);
+                }
                 result = super.decide(playerId, decision, gameState);
             } else {
                 // Try evaluator system for supported decision types
                 String evaluatorResult = tryEvaluators(playerId, decision, gameState);
                 if (evaluatorResult != null) {
+                    // TRACE ORACLE V2: normal CombinedEvaluator route.
+                    if (traceOpened) {
+                        TraceSession.recordRoute(TraceRoute.COMBINED_EVALUATOR,
+                            "evaluator lane handled decisionType=" + decisionType, null);
+                    }
                     result = evaluatorResult;
                 } else {
                     // Fall back to keyword-based heuristics
                     LOG.debug("Evaluators returned null, falling back to heuristics");
+                    // TRACE ORACLE V2: explicit heuristic-fallback route (no invisible side exit).
+                    if (traceOpened) {
+                        TraceSession.recordRoute(TraceRoute.HEURISTIC_FALLBACK,
+                            "no evaluator handled decisionType=" + decisionType, null);
+                    }
                     result = super.decide(playerId, decision, gameState);
                     // V191 (2026-07-06): TOP-N breadcrumb for the fallback path.
                     // The per-candidate score loop (scoreAction + penalty stack)
@@ -758,10 +839,21 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
             if (needsEmergencyFallback) {
                 LOG.warn("🚨 No result from evaluators or heuristics, using emergency fallback");
+                String traceEmergencyWhy = (result == null)
+                    ? "no result from evaluators or heuristics"
+                    : "empty result with raw noPass=true";
                 DecisionSafety.SafetyDecision emergency =
                     DecisionSafety.getEmergencyResponse(decision, actionIds, cardIds);
                 result = emergency.value;
                 LOG.warn("🚨 Emergency response: '{}' ({})", result, emergency.reason);
+                // TRACE ORACLE V2: the raw-noPass emergency is an explicit route (the prior
+                // lane stays in the ordered evidence) + the emergency response/reason land
+                // in the finalization record. Observation only, recorded after the fact.
+                if (traceOpened) {
+                    TraceSession.recordRoute(TraceRoute.RAW_NOPASS_EMERGENCY,
+                        traceEmergencyWhy, traceEmergencyWhy);
+                    TraceSession.recordEmergencyResponse(result, emergency.reason);
+                }
             }
 
             // === SAFETY LAYER 2: Response Validation ===
@@ -774,17 +866,128 @@ public class TheChosenOneAi extends HeuristicAiBase {
             result = validated[0];
 
             // Record the decision for loop tracking
+            // TRACE ORACLE V2: typed intended-mutation observation (outer tracker choke point).
+            if (traceOpened) {
+                TraceSession.recordIntendedStateEvent(
+                    TraceIntendedStateEvent.Kind.DECISION_TRACKER_RECORD,
+                    "decisionTracker.recordDecision type=" + decisionType
+                        + " response='" + (result != null ? result : "") + "'");
+            }
             decisionTracker.recordDecision(decisionType, decisionText,
                 String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "");
 
             // Track strategic events for learning
+            // TRACE ORACLE V2: typed intended-mutation observation (strategic memory choke point).
+            if (traceOpened) {
+                TraceSession.recordIntendedStateEvent(
+                    TraceIntendedStateEvent.Kind.STRATEGIC_EVENT_RECORD,
+                    "trackStrategicEvents response='" + (result != null ? result : "") + "'");
+            }
             trackStrategicEvents(decision, decisionText, result);
 
             LOG.info("[TheChosenOneAi] decide() result: '{}' ✅", result != null ? result : "(pass)");
+            // TRACE ORACLE V2: the AI's ACTUAL final answer, after safety (contract
+            // "Finalization record" item 6). The five direct interceptors record theirs
+            // with skippedCommonFinalizer=true at their own return sites above.
+            if (traceOpened) {
+                TraceSession.recordFinalResponse(result, false);
+            }
             return result;
         } finally {
             context = null;
+            // TRACE ORACLE V2: only the opener closes and emits; the thread-local is
+            // ALWAYS cleared (TraceSession.close clears in its own finally). A sink
+            // exception is swallowed — gameplay is never harmed by capture.
+            if (traceOpened) {
+                try {
+                    DecisionTrace trace = TraceSession.close();
+                    if (trace != null) {
+                        decisionTraceSink.accept(trace);
+                    }
+                } catch (Throwable traceT) {
+                    TraceSession.abandon();
+                }
+            }
         }
+    }
+
+    /**
+     * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
+     * "Frozen input and candidate order"): open the bot-boundary session with the
+     * COMPLETE raw decision arrays (verbatim, unfiltered — unlike buildEvaluatorContext,
+     * which drops null/empty entries) plus the shadow DecisionSnapshot. Pure reads only:
+     * decision params, DecisionTracker.getBlockedResponses (pure), and plain GameState
+     * getters. No evaluator, strategy service, or cache-mutating call.
+     */
+    private boolean openDecisionTraceSession(String playerId, AwaitingDecision decision,
+                                             GameState gameState, String decisionType,
+                                             String decisionText, Phase phase) {
+        Map<String, String[]> params = decision.getDecisionParameters();
+        TraceSnapshots.Input in = new TraceSnapshots.Input();
+        in.producerId = "bot-decide-boundary";
+        in.decisionId = String.valueOf(decision.getAwaitingDecisionId());
+        in.decisionTypeName = decisionType;
+        in.decisionText = decisionText;
+        in.phase = phase;
+        in.turn = gameState != null ? gameState.getPlayersLatestTurnNumber(playerId) : 0;
+        in.currentPlayer = playerId;
+        in.side = gameState != null ? gameState.getSide(playerId) : mySide;
+        if (params != null) {
+            String[] noPassArr = params.get("noPass");
+            if (noPassArr != null && noPassArr.length > 0) {
+                in.noPassParam = Boolean.parseBoolean(noPassArr[0]);
+            }
+            in.minParam = traceParseIntOrNull(params.get("min"));
+            in.maxParam = traceParseIntOrNull(params.get("max"));
+            in.actionIds = traceRawList(params.get("actionId"));
+            in.actionTexts = traceRawList(params.get("actionText"));
+            in.cardIds = traceRawList(params.get("cardId"));
+            in.blueprintIds = traceRawList(params.get("blueprintId"));
+            in.testingTexts = traceRawList(params.get("testingText"));
+            in.multipleChoiceResults = traceRawList(params.get("results"));
+            String[] selectableArr = params.get("selectable");
+            if (selectableArr != null) {
+                java.util.List<Boolean> sel = new java.util.ArrayList<>(selectableArr.length);
+                for (String s : selectableArr) {
+                    sel.add("true".equalsIgnoreCase(s));
+                }
+                in.selectable = sel;
+            }
+        }
+        try {
+            in.blockedResponses = decisionTracker.getBlockedResponses(decisionType, decisionText);
+        } catch (Exception ignore) {
+            // leave null — facts model treats it as empty
+        }
+        if (gameState != null) {
+            try {
+                in.forcePileSize = gameState.getForcePileSize(playerId);
+                in.lifeForceCardCount = gameState.getPlayerLifeForce(playerId);
+                in.handSize = gameState.getHand(playerId).size();
+                in.reserveDeckSize = gameState.getReserveDeckSize(playerId);
+            } catch (Exception ignore) {
+                // leave unknown — never fabricate an observation
+            }
+        }
+        TraceSnapshots.Result snapshot = TraceSnapshots.build(in);
+        return TraceSession.open(getClass().getPackageName(),
+            in.decisionId, decisionType, decisionText,
+            TraceSnapshots.rawCandidateIds(decisionType, in.actionIds, in.cardIds,
+                in.multipleChoiceResults),
+            snapshot.snapshot(), snapshot.issues(), true);
+    }
+
+    private static Integer traceParseIntOrNull(String[] vals) {
+        if (vals == null || vals.length == 0 || vals[0] == null) return null;
+        try {
+            return Integer.parseInt(vals[0]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static java.util.List<String> traceRawList(String[] arr) {
+        return arr != null ? java.util.Arrays.asList(arr) : null;
     }
 
     /**
@@ -894,6 +1097,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 LOG.warn("MULTI-SELECT: min={} max={} → joining {} IDs: '{}' (best='{}', decision='{}')",
                     multiMin, multiMax, picked.size(), multiResponse, bestId,
                     bestAction.getDisplayText());
+                // TRACE ORACLE V2: multi-select formatting result (finalization item 3).
+                // No-op unless a bot-boundary session is open.
+                TraceSession.recordMultiSelectResponse(multiResponse);
                 return multiResponse;
             }
             LOG.warn("MULTI-SELECT FALLBACK: min={} but only {} selectable IDs collected — returning single bestId '{}' (engine likely rejects)",

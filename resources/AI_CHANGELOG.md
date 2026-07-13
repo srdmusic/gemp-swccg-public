@@ -10,6 +10,15 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — TRACE INCREMENT 2 (Codex V2 oracle contract; both bots) — capture still DISABLED
+- The V2 envelope per CODEX_TRACE_ORACLE_V2_CONTRACT: schema v2, botModel, shadow-built DecisionSnapshot from raw params (UNKNOWN where unobserved), typed route (all five direct interceptors + chaos/evaluator/fallback/emergency), RAW candidate order (complete arrays; duplicates/unreturned/invented ids all visible) separate from merge order, typed operations, TraceFinalization (pre-safety winner, V148 pass eligibility + facts, multi-select, ordered typed DecisionSafety corrections, final response, skipped-finalizer flag), intended state events (observed, never applied), COMPLETE/INCOMPLETE status where EVERY swallowed error is a typed failure — no silent truncation.
+- Typed ids: TraceRuleId (validated, LEGACY_UNTAGGED kept), TraceDomainId (the 22 registry domains), TraceOutputKind. Free strings no longer compile.
+- Observation-only hooks (zero control flow / RNG change): RandoCalAi + TheChosenOneAi boundary open/close + route/final records; DecisionSafety correction records. Codex live-read blockers m00290 (chosenone mirror) and m00291 (stale V1 tests) both closed.
+- 91 tests green (24 trace + 8 tie + 10 envelope + 6 bot-entry + 43 decision), independently re-run; mirrors normalized byte-identical (bot-entry differs by exactly the rando-only V79b block).
+- Deferred honestly to the next increments (stage 4/5 of the contract's landing split): inner mutation observation (heuristic tracker, strategy refresh, deploy-plan lifecycle), COMPLETE real-decide() fixtures over real game state, cross-bot single-test envelope comparison.
+- NOT deployed; capture off (NoOpTraceSink production default; sink attach = package-visible test seam only).
+- Revert: `git revert` of the single commit.
+
 ## 2026-07-13 — CLEANUP BATCH 1.7 (Codex packet; both bots) — comment-only, NO behavior change
 - 226 mirrored comment-only lines deleted per Handoffs/CODEX_CLEANUP_BATCH17_CANDIDATES_2026-07-13.md (113/bot): DrawEvaluator old inline DTF/First Strike/IAO/maintenance/Verge scan (78), PassEvaluator old DTF + maintenance scans (35) — all superseded by the live shared ForceReserveService cache. Dual-layer comment-only assertions PASS; three surviving-comment rewrites per manifest (claims now point at git history).
 - Bytecode proof: isolated same-JDK compile + normalized `javap -p -c -s -constants` IDENTICAL pre/post for all four classes (module-level maven build was unavailable mid-verification due to a concurrent trace-lane dirty state; the isolated gate is the stronger oracle for a comment-only change). V191 DRAW/PASS parity holds trivially — no executable change exists.

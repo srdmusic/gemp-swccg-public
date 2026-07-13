@@ -3,8 +3,11 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
+import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSink;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSnapshots;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
@@ -82,41 +85,102 @@ public class CombinedEvaluator {
      * @return Best evaluated action, or null if no evaluators apply
      */
     public EvaluatedAction evaluateDecision(DecisionContext context) {
-        // TRACE HOOK (2026-07-13): open a per-decision session only when the sink is enabled.
-        // The sink receives ONE complete record, only after finalization. Instrumentation
-        // must never throw into the decision path, hence the blanket guards.
-        boolean traced = false;
+        // TRACE ORACLE V2 (2026-07-13, CODEX_TRACE_ORACLE_V2_CONTRACT): session ownership.
+        // The bot entry point (RandoCalAi) owns the per-decide() session; when one is
+        // already active this method only RECORDS into it and never closes it. The pure
+        // JUnit seam owns its own session: it opens one here (raw candidate arrays +
+        // shadow snapshot from the DecisionContext) only when none is active, and only
+        // the opener closes and emits. Instrumentation must never throw into the
+        // decision path, hence the blanket guards.
+        boolean externallyOwned = false;
+        boolean opened = false;
         try {
-            if (traceSink.isEnabled()) {
-                traced = TraceSession.open(context.getDecisionId(), context.getDecisionType(),
-                    context.getDecisionText());
+            externallyOwned = TraceSession.isActive();
+            if (!externallyOwned && traceSink.isEnabled()) {
+                opened = openSeamSession(context);
             }
         } catch (Throwable t) {
-            traced = false;
+            opened = false;
         }
+        boolean traced = externallyOwned || opened;
         if (!traced) {
             return evaluateDecisionCore(context, false);
         }
         EvaluatedAction traceResult = null;
+        boolean completedNormally = false;
         try {
             traceResult = evaluateDecisionCore(context, true);
+            completedNormally = true;
             return traceResult;
         } finally {
             try {
-                TraceSession.recordFinalize(traceResult,
-                    (traceResult != null) ? traceResult.getActionId() : null,
-                    (traceResult != null) ? Float.valueOf(traceResult.getScore()) : null,
-                    traceResult != null && traceResult.isHardVetoed(),
-                    (traceResult != null) ? traceResult.getVetoReason() : null,
-                    "CombinedEvaluator pre-final winner");
-                DecisionTrace trace = TraceSession.close();
-                if (trace != null) {
-                    traceSink.accept(trace);
+                if (completedNormally) {
+                    // The pre-SAFETY winner (contract "Finalization record" item 1) —
+                    // explicitly NOT the AI's final answer; DecisionSafety and the bot
+                    // boundary record the rest of the finalization record.
+                    TraceSession.recordPreSafetyWinner(
+                        (traceResult != null) ? traceResult.getActionId() : null,
+                        (traceResult != null) ? Float.valueOf(traceResult.getScore()) : null,
+                        traceResult != null && traceResult.isHardVetoed(),
+                        (traceResult != null) ? traceResult.getVetoReason() : null);
+                } else {
+                    // Evaluation threw: the record must say so, never truncate silently.
+                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.EVALUATOR,
+                        "evaluator-exception",
+                        "evaluateDecisionCore exited exceptionally; trace is truncated");
+                }
+                if (opened) {
+                    DecisionTrace trace = TraceSession.close();
+                    if (trace != null) {
+                        traceSink.accept(trace);
+                    }
                 }
             } catch (Throwable t) {
-                TraceSession.abandon();
+                if (opened) {
+                    TraceSession.abandon();
+                }
             }
         }
+    }
+
+    /**
+     * TRACE ORACLE V2 (2026-07-13): open a seam-owned session from the DecisionContext —
+     * COMPLETE raw candidate arrays (per decision shape) + shadow DecisionSnapshot. Pure
+     * reads only. Used only when no bot-boundary session is active.
+     */
+    private boolean openSeamSession(DecisionContext context) {
+        TraceSnapshots.Input in = new TraceSnapshots.Input();
+        in.producerId = "combined-evaluator-seam";
+        in.decisionId = context.getDecisionId();
+        in.decisionTypeName = context.getDecisionType();
+        in.decisionText = context.getDecisionText();
+        in.phase = context.getPhase();
+        in.turn = context.getTurnNumber();
+        in.currentPlayer = context.getPlayerId();
+        in.side = context.getSide();
+        // Context values are the EFFECTIVE values the legacy pipeline decides with
+        // (parsed-or-default); the bot-boundary session records raw param presence.
+        in.noPassParam = context.isNoPass();
+        in.minParam = context.getMin();
+        in.maxParam = context.getMax();
+        in.blockedResponses = context.getBlockedResponses();
+        in.actionIds = context.getActionIds();
+        in.actionTexts = context.getActionTexts();
+        in.cardIds = context.getCardIds();
+        in.blueprintIds = context.getBlueprints();
+        in.testingTexts = context.getTestingTexts();
+        in.selectable = context.getSelectable();
+        TraceSnapshots.Result snapshot = TraceSnapshots.build(in);
+        boolean opened = TraceSession.open(getClass().getPackageName(),
+            context.getDecisionId(), context.getDecisionType(), context.getDecisionText(),
+            TraceSnapshots.rawCandidateIds(context.getDecisionType(),
+                context.getActionIds(), context.getCardIds(), null),
+            snapshot.snapshot(), snapshot.issues(), false);
+        if (opened) {
+            TraceSession.recordRoute(TraceRoute.COMBINED_EVALUATOR,
+                "seam session: decisionType=" + context.getDecisionType(), null);
+        }
+        return opened;
     }
 
     private EvaluatedAction evaluateDecisionCore(DecisionContext context, boolean traced) {
@@ -140,6 +204,21 @@ public class CombinedEvaluator {
         // the earlier candidate (strict Float.compare(candidate, best) > 0 to replace).
         Map<String, EvaluatedAction> actionMap = new LinkedHashMap<>();
 
+        // TRACE ORACLE V2 (2026-07-13): semantic pass/cancel eligibility with the exact
+        // facts used — the SAME V148 cancellability expression the pass gates below use.
+        // Pure reads; recorded once per decision, traced runs only.
+        if (traced) {
+            String peText = context.getDecisionText() != null
+                ? context.getDecisionText().toLowerCase() : "";
+            boolean peTextCancel = peText.contains("done") || peText.contains("cancel")
+                || peText.contains("if desired") || peText.contains("optional");
+            boolean peEligible = context.getMin() == 0
+                && (!context.isNoPass() || peTextCancel);
+            TraceSession.recordPassEligibility(peEligible,
+                "min=" + context.getMin() + " noPass=" + context.isNoPass()
+                    + " textOffersCancel=" + peTextCancel + " (V148 semantics)");
+        }
+
         for (ActionEvaluator evaluator : evaluators) {
             if (!evaluator.isEnabled()) {
                 continue;
@@ -149,29 +228,35 @@ public class CombinedEvaluator {
                 LOG.debug("Running evaluator: {}", evaluator.getName());
                 // TRACE HOOK (2026-07-13): bind this evaluator's id to every op recorded during
                 // its evaluate() call (and the merges of its returned actions) before moving on.
+                // ORACLE V2 lifecycle law: beginEvaluator is paired with endEvaluator in
+                // finally, so an evaluator exception cannot leak the binding.
                 if (traced) TraceSession.beginEvaluator(evaluator.getName());
-                List<EvaluatedAction> actions = evaluator.evaluate(context);
+                try {
+                    List<EvaluatedAction> actions = evaluator.evaluate(context);
 
-                for (EvaluatedAction action : actions) {
-                    String actionId = action.getActionId();
+                    for (EvaluatedAction action : actions) {
+                        String actionId = action.getActionId();
 
-                    // Merge with existing action if same ID, otherwise add new
-                    if (actionMap.containsKey(actionId)) {
-                        EvaluatedAction existing = actionMap.get(actionId);
-                        // Merge: add the scores together and combine reasoning
-                        existing.mergeFrom(action);
-                        LOG.debug("Merged scores for '{}': now {}", actionId, existing.getScore());
-                    } else {
-                        actionMap.put(actionId, action);
-                        // TRACE HOOK (2026-07-13): freeze the candidate's first-seen ordinal,
-                        // straight from this LinkedHashMap insertion (B0-TIE-DETERMINISM order).
-                        if (traced) TraceSession.registerCandidate(actionId);
+                        // Merge with existing action if same ID, otherwise add new
+                        if (actionMap.containsKey(actionId)) {
+                            EvaluatedAction existing = actionMap.get(actionId);
+                            // Merge: add the scores together and combine reasoning
+                            existing.mergeFrom(action);
+                            LOG.debug("Merged scores for '{}': now {}", actionId, existing.getScore());
+                        } else {
+                            actionMap.put(actionId, action);
+                            // TRACE ORACLE V2 (2026-07-13): record the first-seen MERGE
+                            // insertion order (reorder detector). Ordinals bind to the
+                            // RAW candidate order frozen at session open, NOT to this map.
+                            if (traced) TraceSession.registerCandidate(actionId);
+                        }
+
+                        // Log this evaluator's contribution
+                        evaluator.logEvaluation(action);
                     }
-
-                    // Log this evaluator's contribution
-                    evaluator.logEvaluation(action);
+                } finally {
+                    if (traced) TraceSession.endEvaluator();
                 }
-                if (traced) TraceSession.endEvaluator();
             }
         }
 
@@ -497,9 +582,9 @@ public class CombinedEvaluator {
         LOG.info("Best action: {} (score: {})", bestAction.getDisplayText(), bestAction.getScore());
         LOG.info("   Reasoning: {}", bestAction.getReasoningString());
 
-        // TRACE HOOK (2026-07-13): selected winner. DecisionSafety and the router boundary
-        // are the NEXT increment; the FINALIZE recorded by evaluateDecision() above marks
-        // this method's pre-final output.
+        // TRACE ORACLE V2 (2026-07-13): selected winner op. evaluateDecision() records the
+        // same value into the finalization record as the PRE-SAFETY winner; the bot entry
+        // point and DecisionSafety record the emergency/corrections/final-response fields.
         if (traced) TraceSession.recordSelect(bestAction, bestAction.getActionId(),
             Float.valueOf(bestAction.getScore()), bestAction.isHardVetoed(),
             bestAction.getVetoReason(), "winner");

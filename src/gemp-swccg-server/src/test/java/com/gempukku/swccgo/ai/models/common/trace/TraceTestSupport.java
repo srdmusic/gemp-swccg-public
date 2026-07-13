@@ -8,11 +8,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
- * TRACE HOOK (2026-07-13): trace-comparison assertion helper for the minimal decision
- * trace hook tests. Ordered events, raw float bits exact, complete veto reasons; never
- * decimal-tolerant. The full comparator tool is a later increment; this helper only has
- * to prove the Gate cases (reordering, one-bit drift, veto-reason change, SET-vs-ADD,
- * finalize change) all fail comparison.
+ * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
+ * "Finalization record": "The comparator includes all top-level decision fields, the
+ * snapshot, status/errors, route, operations, finalization, and intended state events.
+ * Winner-only comparison is rejected."): trace-comparison assertion helper.
+ *
+ * Ordered events, raw float bits exact, complete veto reasons, full envelope coverage;
+ * never decimal-tolerant. The standalone fixture comparator tool is a later increment;
+ * this helper proves the gate corpus cases fail comparison.
  */
 public final class TraceTestSupport {
 
@@ -20,7 +23,7 @@ public final class TraceTestSupport {
     }
 
     /** Capture sink: enabled, stores every finalized DecisionTrace it receives. */
-    public static final class CaptureSink implements TraceSink {
+    public static class CaptureSink implements TraceSink {
         private final List<DecisionTrace> traces = new ArrayList<>();
 
         @Override
@@ -45,11 +48,71 @@ public final class TraceTestSupport {
         }
     }
 
+    /**
+     * Strict fixture sink (contract "Error and lifecycle rules": "A strict fixture sink
+     * fails on any incomplete trace"): an INCOMPLETE trace must never become fixture
+     * evidence, so accepting one is an immediate test failure.
+     */
+    public static final class StrictFixtureSink extends CaptureSink {
+        @Override
+        public void accept(DecisionTrace trace) {
+            if (trace.getStatus() != TraceStatus.COMPLETE) {
+                fail("strict fixture sink rejects INCOMPLETE trace: " + trace.getCaptureFailures());
+            }
+            super.accept(trace);
+        }
+    }
+
     /** @return null when the traces compare equal, otherwise the FIRST mismatch found. */
     public static String firstMismatch(DecisionTrace a, DecisionTrace b) {
-        if (!a.getCandidateOrder().equals(b.getCandidateOrder())) {
-            return "candidateOrder: " + a.getCandidateOrder() + " != " + b.getCandidateOrder();
+        // ── top-level decision fields (winner-only comparison is rejected) ──
+        if (a.getSchemaVersion() != b.getSchemaVersion()) {
+            return "schemaVersion: " + a.getSchemaVersion() + " != " + b.getSchemaVersion();
         }
+        if (!Objects.equals(a.getBotModel(), b.getBotModel())) {
+            return "botModel: " + a.getBotModel() + " != " + b.getBotModel();
+        }
+        if (!Objects.equals(a.getDecisionId(), b.getDecisionId())) {
+            return "decisionId: " + a.getDecisionId() + " != " + b.getDecisionId();
+        }
+        if (!Objects.equals(a.getDecisionType(), b.getDecisionType())) {
+            return "decisionType: " + a.getDecisionType() + " != " + b.getDecisionType();
+        }
+        if (!Objects.equals(a.getDecisionText(), b.getDecisionText())) {
+            return "decisionText: " + a.getDecisionText() + " != " + b.getDecisionText();
+        }
+        // ── status + ordered typed failures ──
+        if (a.getStatus() != b.getStatus()) {
+            return "status: " + a.getStatus() + " != " + b.getStatus();
+        }
+        if (!a.getCaptureFailures().equals(b.getCaptureFailures())) {
+            return "captureFailures: " + a.getCaptureFailures() + " != " + b.getCaptureFailures();
+        }
+        // ── frozen input snapshot (records: deep equals via components) ──
+        if (!Objects.equals(a.getSnapshot(), b.getSnapshot())) {
+            return "snapshot: differs";
+        }
+        // ── route ──
+        if (!Objects.equals(a.getRoute(), b.getRoute())) {
+            return "route: " + a.getRoute() + " != " + b.getRoute();
+        }
+        // ── candidate orders: raw (ordinal authority) AND merge (reorder detector) ──
+        if (!a.getRawCandidateOrder().equals(b.getRawCandidateOrder())) {
+            return "rawCandidateOrder: " + a.getRawCandidateOrder() + " != " + b.getRawCandidateOrder();
+        }
+        if (!a.getMergeOrder().equals(b.getMergeOrder())) {
+            return "mergeOrder: " + a.getMergeOrder() + " != " + b.getMergeOrder();
+        }
+        // ── finalization (pre-safety winner, pass eligibility, corrections, final response) ──
+        if (!Objects.equals(a.getFinalization(), b.getFinalization())) {
+            return "finalization: " + a.getFinalization() + " != " + b.getFinalization();
+        }
+        // ── intended state events ──
+        if (!a.getIntendedStateEvents().equals(b.getIntendedStateEvents())) {
+            return "intendedStateEvents: " + a.getIntendedStateEvents()
+                + " != " + b.getIntendedStateEvents();
+        }
+        // ── ordered operations, raw float bits exact ──
         List<TraceOperation> opsA = a.getOperations();
         List<TraceOperation> opsB = b.getOperations();
         int common = Math.min(opsA.size(), opsB.size());

@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
-import com.gempukku.swccgo.ai.models.common.trace.TraceOperation;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 
 import java.util.ArrayList;
@@ -42,9 +44,9 @@ public class EvaluatedAction {
         this.reasoning = new ArrayList<>();
         // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): INITIAL score op,
         // LEGACY_UNTAGGED until arms migrate to the tagged overloads. No-op (cheap
-        // thread-local guard) unless CombinedEvaluator opened a trace session.
+        // thread-local guard) unless a trace session is open.
         TraceSession.recordInitial(this, actionId, score,
-            TraceOperation.RULE_LEGACY_UNTAGGED, null, null, displayText);
+            TraceRuleId.LEGACY_UNTAGGED, null, null, displayText);
     }
 
     /**
@@ -55,16 +57,18 @@ public class EvaluatedAction {
      */
     public void addReasoning(String reason, float scoreDelta) {
         // TRACE HOOK (2026-07-13): legacy arm, records ADD as LEGACY_UNTAGGED.
-        addReasoning(reason, scoreDelta, TraceOperation.RULE_LEGACY_UNTAGGED, null, null);
+        addReasoning(reason, scoreDelta, TraceRuleId.LEGACY_UNTAGGED, null, null);
     }
 
     /**
-     * TRACE HOOK (2026-07-13): tagged overload for migrated arms. Identical score and
-     * reasoning behavior to addReasoning(reason, delta); additionally stamps explicit
-     * rule/domain/kind identity on the trace ADD op. NEVER parse V-tags out of reason
-     * prose; supply them here instead (reason text stays diagnostic).
+     * TRACE HOOK (2026-07-13, ORACLE V2): tagged overload for migrated arms. Identical
+     * score and reasoning behavior to addReasoning(reason, delta); additionally stamps
+     * TYPED rule/domain/kind identity on the trace ADD op (validated stable-id value
+     * types — free strings no longer compile). NEVER parse V-tags out of reason prose;
+     * supply them here instead (reason text stays diagnostic).
      */
-    public void addReasoning(String reason, float scoreDelta, String ruleId, String domainId, String outputKind) {
+    public void addReasoning(String reason, float scoreDelta, TraceRuleId ruleId,
+                             TraceDomainId domainId, TraceOutputKind outputKind) {
         float traceBefore = score;
         if (scoreDelta != 0) {
             reasoning.add(String.format("%s (%+.1f)", reason, scoreDelta));
@@ -130,11 +134,13 @@ public class EvaluatedAction {
     /** FORMATION SAFETY (2026-07-11c): mark this action un-selectable regardless of score. */
     public void hardVeto(String reason) {
         // TRACE HOOK (2026-07-13): legacy arm, records HARD_VETO as LEGACY_UNTAGGED.
-        hardVeto(reason, TraceOperation.RULE_LEGACY_UNTAGGED, null, null);
+        hardVeto(reason, TraceRuleId.LEGACY_UNTAGGED, null, null);
     }
 
-    /** TRACE HOOK (2026-07-13): tagged overload for migrated veto arms, identical behavior. */
-    public void hardVeto(String reason, String ruleId, String domainId, String outputKind) {
+    /** TRACE HOOK (2026-07-13, ORACLE V2): typed tagged overload for migrated veto arms,
+     *  identical behavior. */
+    public void hardVeto(String reason, TraceRuleId ruleId, TraceDomainId domainId,
+                         TraceOutputKind outputKind) {
         this.hardVeto = true;
         if (this.vetoReason == null) this.vetoReason = reason;
         this.reasoning.add("HARD VETO: " + reason);
@@ -168,14 +174,16 @@ public class EvaluatedAction {
 
     public void setScore(float score) {
         // TRACE HOOK (2026-07-13): legacy arm, records SET as LEGACY_UNTAGGED.
-        setScore(score, TraceOperation.RULE_LEGACY_UNTAGGED, null, null);
+        setScore(score, TraceRuleId.LEGACY_UNTAGGED, null, null);
     }
 
     /**
-     * TRACE HOOK (2026-07-13): tagged overload for migrated arms, identical behavior.
-     * A SET records before and after; it never masquerades as an additive delta.
+     * TRACE HOOK (2026-07-13, ORACLE V2): typed tagged overload for migrated arms,
+     * identical behavior. A SET records before and after; it never masquerades as an
+     * additive delta.
      */
-    public void setScore(float score, String ruleId, String domainId, String outputKind) {
+    public void setScore(float score, TraceRuleId ruleId, TraceDomainId domainId,
+                         TraceOutputKind outputKind) {
         float traceBefore = this.score;
         this.score = score;
         TraceSession.recordSet(this, actionId, traceBefore, this.score,

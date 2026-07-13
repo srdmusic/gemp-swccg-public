@@ -6204,3 +6204,12 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     dumps byte-identical pre/post (module maven blocked by concurrent trace-lane dirty state;
     isolated gate is stronger for comment-only). Surviving comments point at git history.
     NOT deployed. Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.
+
+  ════ TRACE INCREMENT 2 (2026-07-13, Codex V2 oracle contract): typed envelope, capture off ════
+    NOT a V-tag. common/trace rewritten to the V2 envelope (schema v2, shadow DecisionSnapshot,
+    typed route incl. all five interceptors, raw-vs-merge candidate order, typed ops/rule/domain/
+    kind ids, TraceFinalization with pre-safety winner + typed DecisionSafety corrections,
+    intended state events, COMPLETE/INCOMPLETE with typed failures — no silent truncation).
+    Observation-only hooks in RandoCalAi/TheChosenOneAi/DecisionSafety, zero control-flow change.
+    91 tests green. m00290/m00291 closed. Stage 4/5 (inner mutation observation, real-decide
+    fixtures) deferred. Capture DISABLED. NOT deployed. Details in AI_CHANGELOG 2026-07-13.

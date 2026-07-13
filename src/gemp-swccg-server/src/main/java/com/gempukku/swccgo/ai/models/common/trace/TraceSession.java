@@ -1,15 +1,25 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
+import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+
+import java.util.List;
+
 /**
- * TRACE HOOK (2026-07-13): thread-local access point for the per-decision trace session.
+ * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md):
+ * thread-local access point for the per-decision trace session.
  *
- * CombinedEvaluator opens a session only when its sink is enabled; EvaluatedAction's
- * score/veto choke points call the record* statics unconditionally. With no session
- * open (the production default, no-op sink) every call short-circuits on a plain
- * ThreadLocal null check: zero behavior, zero allocation beyond that cheap guard.
+ * OWNERSHIP: the bot entry point (RandoCalAi / TheChosenOneAi) opens the session at the
+ * decide() boundary when its sink is enabled; the pure CombinedEvaluator test seam opens
+ * one only when no session is already active. open() REFUSES a nested open (returns
+ * false, outer session untouched) — only the opener closes and emits. All record*
+ * statics are unconditional call sites guarded by a plain ThreadLocal null check: with
+ * no session open (the production default, no-op sink) every call short-circuits —
+ * zero behavior, zero allocation beyond that cheap guard.
  *
- * Instrumentation must never throw into the decision path, so every method here
- * swallows Throwable after the null check.
+ * ERROR LAW: instrumentation must never throw into the decision path, and it must never
+ * silently claim completion. Every swallowed Throwable after the null check marks the
+ * current collector with a typed capture failure, so the emitted envelope is INCOMPLETE
+ * rather than plausibly truncated.
  */
 public final class TraceSession {
 
@@ -19,10 +29,26 @@ public final class TraceSession {
         // static access only
     }
 
-    /** Open a session for one decision on this thread. Returns false on any failure. */
-    public static boolean open(String decisionId, String decisionType, String decisionText) {
+    /**
+     * Open a session for one decision on this thread. Returns false on any failure AND
+     * on a nested open (an active session is never replaced or corrupted; the would-be
+     * opener simply does not own it).
+     *
+     * @param rawCandidateIds COMPLETE raw decision candidate ids, verbatim order
+     * @param snapshot shadow DecisionSnapshot (null with snapshotIssues explaining why)
+     * @param expectsFinalResponse true at the bot decide() boundary — closing without a
+     *        recorded final response then marks the trace INCOMPLETE
+     */
+    public static boolean open(String botModel, String decisionId, String decisionType,
+                               String decisionText, List<String> rawCandidateIds,
+                               DecisionSnapshot snapshot, List<String> snapshotIssues,
+                               boolean expectsFinalResponse) {
         try {
-            CURRENT.set(new TraceCollector(decisionId, decisionType, decisionText));
+            if (CURRENT.get() != null) {
+                return false;  // nested open refused; outer session stays intact
+            }
+            CURRENT.set(new TraceCollector(botModel, decisionId, decisionType, decisionText,
+                rawCandidateIds, snapshot, snapshotIssues, expectsFinalResponse));
             return true;
         } catch (Throwable t) {
             abandon();
@@ -30,15 +56,16 @@ public final class TraceSession {
         }
     }
 
-    /** Close the session and build the one complete record. Null when nothing was open. */
+    /** Close the session and build the one complete envelope. Null when nothing was open.
+     *  The thread-local is ALWAYS cleared, even when record construction fails. */
     public static DecisionTrace close() {
+        TraceCollector collector = CURRENT.get();
         try {
-            TraceCollector collector = CURRENT.get();
-            CURRENT.remove();
             return (collector != null) ? collector.finish() : null;
         } catch (Throwable t) {
-            abandon();
             return null;
+        } finally {
+            CURRENT.remove();
         }
     }
 
@@ -56,13 +83,34 @@ public final class TraceSession {
         return CURRENT.get() != null;
     }
 
+    /** Typed capture failure on the current session (no-op when none is open). */
+    public static void markCaptureFailure(TraceCaptureFailure.Stage stage,
+                                          String errorClass, String detail) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.markFailure(stage, errorClass, detail);
+        } catch (Throwable ignored) {
+            // the failure list itself failed; nothing sensible left to do
+        }
+    }
+
+    private static void failQuietly(TraceCollector c, TraceCaptureFailure.Stage stage, Throwable t) {
+        try {
+            c.markFailure(stage, t.getClass().getName(), String.valueOf(t.getMessage()));
+        } catch (Throwable ignored) {
+            // best effort only
+        }
+    }
+
     /** Bind an evaluator id to every operation recorded until endEvaluator(). */
     public static void beginEvaluator(String evaluatorId) {
         TraceCollector c = CURRENT.get();
         if (c == null) return;
         try {
             c.beginEvaluator(evaluatorId);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
@@ -71,17 +119,20 @@ public final class TraceSession {
         if (c == null) return;
         try {
             c.endEvaluator();
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
-    /** Freeze an action id's first-seen candidate ordinal (merge-map insertion order). */
+    /** Record an id's first-seen evaluator-merge insertion (reorder detector; ordinals
+     *  always bind to the raw candidate order supplied at open). */
     public static void registerCandidate(String actionId) {
         TraceCollector c = CURRENT.get();
         if (c == null) return;
         try {
             c.registerCandidate(actionId);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
@@ -91,46 +142,53 @@ public final class TraceSession {
         if (c == null) return;
         try {
             c.markSynthetic(handle, sourceMarker);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
     /** Constructor score. */
     public static void recordInitial(Object handle, String actionId, float score,
-                                     String ruleId, String domainId, String outputKind, String detail) {
+                                     TraceRuleId ruleId, TraceDomainId domainId,
+                                     TraceOutputKind outputKind, String detail) {
         TraceCollector c = CURRENT.get();
         if (c == null) return;
         try {
             c.record(handle, actionId, TraceOp.INITIAL,
                 null, null, Float.floatToRawIntBits(score),
                 false, null, ruleId, domainId, outputKind, detail);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
     /** Additive score change: before, delta, and after, all as raw float bits. */
     public static void recordAdd(Object handle, String actionId, float before, float delta, float after,
-                                 String ruleId, String domainId, String outputKind, String detail) {
+                                 TraceRuleId ruleId, TraceDomainId domainId,
+                                 TraceOutputKind outputKind, String detail) {
         TraceCollector c = CURRENT.get();
         if (c == null) return;
         try {
             c.record(handle, actionId, TraceOp.ADD,
                 Float.floatToRawIntBits(before), Float.floatToRawIntBits(delta), Float.floatToRawIntBits(after),
                 false, null, ruleId, domainId, outputKind, detail);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
     /** Overwrite: before and after only. A SET never fakes an additive delta. */
     public static void recordSet(Object handle, String actionId, float before, float after,
-                                 String ruleId, String domainId, String outputKind, String detail) {
+                                 TraceRuleId ruleId, TraceDomainId domainId,
+                                 TraceOutputKind outputKind, String detail) {
         TraceCollector c = CURRENT.get();
         if (c == null) return;
         try {
             c.record(handle, actionId, TraceOp.SET,
                 Float.floatToRawIntBits(before), null, Float.floatToRawIntBits(after),
                 false, null, ruleId, domainId, outputKind, detail);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
@@ -140,14 +198,16 @@ public final class TraceSession {
      */
     public static void recordHardVeto(Object handle, String actionId,
                                       String effectiveVetoReason, String requestedReason,
-                                      String ruleId, String domainId, String outputKind) {
+                                      TraceRuleId ruleId, TraceDomainId domainId,
+                                      TraceOutputKind outputKind) {
         TraceCollector c = CURRENT.get();
         if (c == null) return;
         try {
             c.record(handle, actionId, TraceOp.HARD_VETO,
                 null, null, null,
                 true, effectiveVetoReason, ruleId, domainId, outputKind, requestedReason);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
@@ -160,7 +220,8 @@ public final class TraceSession {
             c.record(handle, actionId, TraceOp.MERGE,
                 Float.floatToRawIntBits(before), null, Float.floatToRawIntBits(after),
                 vetoed, vetoReason, null, null, null, detail);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
@@ -172,7 +233,8 @@ public final class TraceSession {
             c.record(handle, actionId, TraceOp.RANK,
                 null, null, (score != null) ? Float.floatToRawIntBits(score.floatValue()) : null,
                 false, null, null, null, null, detail);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
@@ -185,20 +247,100 @@ public final class TraceSession {
             c.record(handle, actionId, TraceOp.SELECT,
                 null, null, (score != null) ? Float.floatToRawIntBits(score.floatValue()) : null,
                 vetoed, vetoReason, null, null, null, detail);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
     }
 
-    /** Finalization boundary (this increment: CombinedEvaluator's pre-final winner). */
-    public static void recordFinalize(Object handle, String actionId, Float score,
-                                      boolean vetoed, String vetoReason, String detail) {
+    /** Ordered typed route observation (bot entry point / seam owner only). */
+    public static void recordRoute(TraceRoute route, String evidence, String fallbackReason) {
         TraceCollector c = CURRENT.get();
         if (c == null) return;
         try {
-            c.record(handle, actionId, TraceOp.FINALIZE,
-                null, null, (score != null) ? Float.floatToRawIntBits(score.floatValue()) : null,
-                vetoed, vetoReason, null, null, null, detail);
-        } catch (Throwable ignored) {
+            c.recordRoute(route, evidence, fallbackReason);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.ROUTE, t);
+        }
+    }
+
+    /** Semantic pass/cancel eligibility with the exact facts used (V148 semantics). */
+    public static void recordPassEligibility(boolean eligible, String facts) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordPassEligibility(eligible, facts);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
+        }
+    }
+
+    /** CombinedEvaluator's selected action — explicitly NOT the AI's final answer. */
+    public static void recordPreSafetyWinner(String actionId, Float score,
+                                             boolean vetoed, String vetoReason) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordPreSafetyWinner(actionId,
+                (score != null) ? Float.floatToRawIntBits(score.floatValue()) : null,
+                vetoed, vetoReason);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
+        }
+    }
+
+    /** Multi-select formatting result (comma-joined card ids). */
+    public static void recordMultiSelectResponse(String response) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordMultiSelectResponse(response);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
+        }
+    }
+
+    /** Raw-noPass emergency action and reason. */
+    public static void recordEmergencyResponse(String response, String reason) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordEmergencyResponse(response, reason);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
+        }
+    }
+
+    /** One DecisionSafety correction with typed reason and before/after response. */
+    public static void recordCorrection(TraceCorrection.Kind kind, String before, String after,
+                                        String detail) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordCorrection(kind, before, after, detail);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
+        }
+    }
+
+    /** Final response returned by the bot after safety (the AI's actual answer). */
+    public static void recordFinalResponse(String response, boolean skippedCommonFinalizer) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordFinalResponse(response, skippedCommonFinalizer);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
+        }
+    }
+
+    /** Typed AI-side mutation event OBSERVED at an existing legacy choke point. */
+    public static void recordIntendedStateEvent(TraceIntendedStateEvent.Kind kind, String detail) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordIntendedStateEvent(kind, detail);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.STATE_EVENT, t);
         }
     }
 }
