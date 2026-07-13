@@ -890,9 +890,7 @@ public class DeployEvaluator extends ActionEvaluator {
                 // ONE baseline lives in the scorer now, and CombinedEvaluator's additive
                 // merge means this line double-counted on every pull). The guards above
                 // (V60 FAIL-STOP/RISK/MISS, V67bg, V66, V67h, V185, V190) STAY as vetoes —
-                // duplicate -9999s are harmless. Commented out per feedback_comment_out_old_rules:
-                // action.addReasoning("V60 RESERVE PULL: try every turn — free value", 100.0f);
-                // LOG.warn("V60 RESERVE PULL: '{}' passed guards — +100 baseline", actionText);
+                // duplicate -9999s are harmless. Superseded +100 baseline removed 2026-07-13; see git.
                 LOG.info("V60 RESERVE PULL guards passed for '{}' — baseline owned by V192 (ActionTextEvaluator)", actionText);
             }
 

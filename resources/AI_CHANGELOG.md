@@ -17,6 +17,11 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — CLEANUP BATCH 2.2 (Codex packet; both bots) — comment-only, NO behavior change
+- Two commented V60 +100 baseline statements deleted at the "Passed all guards"/V192 anchor in DeployEvaluator (net −2/bot, −4 total; deletion stream SHA-matched the packet both bots); retained preface's final sentence rewritten per manifest (V192 stays live owner, all V60 guards untouched — tag-count proof in gate evidence).
+- RAW javap hashes identical parent vs candidate both bots; 55/55 focused fixtures green.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — F3 CORRECTION (Codex gate m00336; shared finalization) — still inert
 - **Pass policy now governs**: ResponseIntent.Pass is judged by `policyPassAllowed` (the ONE V148 semantic) FIRST — policy-legal + wire-encodable = ACCEPTED ""; policy-legal but wire-rejecting = FORCED `PASS_NOT_WIRE_ENCODABLE`; policy-DENIED = FORCED `POLICY_PASS_DENIED` (never silently sends a policy-illegal empty, even where the engine would accept it); no legal fallback = typed REJECTED. Acknowledge caged to its declared shapes (EMPTY + the recorded CARD_ACTION_CHOICE noPass contradiction); everything else REJECTED `INTENT_TYPE_MISMATCH`.
 - **Typed ForceReason** on FinalizedResponse (`POLICY_PASS_DENIED` / `PASS_NOT_WIRE_ENCODABLE` + detail), construction invariant BOTH directions (FORCED requires a reason; non-FORCED forbids one); every forced path supplies its reason.

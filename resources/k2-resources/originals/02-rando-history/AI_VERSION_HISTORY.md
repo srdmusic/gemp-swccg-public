@@ -6264,3 +6264,7 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     gate's P0); Acknowledge caged to declared shapes; FinalizedResponse.ForceReason with
     both-direction FORCED invariant on every forced path. 139 green + 1 named skip. Inert.
     NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ CLEANUP BATCH 2.2 (2026-07-13, Codex packet): DeployEvaluator V60 corpse, −4 total ════
+    Two commented +100 baseline lines (SHA-gated) + preface sentence rewrite; V192 live owner,
+    guards untouched. RAW javap identical. 55/55 fixtures. NOT deployed. Details in AI_CHANGELOG.
