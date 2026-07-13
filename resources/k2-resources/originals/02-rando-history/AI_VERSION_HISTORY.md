@@ -6242,3 +6242,10 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     V169 soft-block / V160 old −9999 / V79 getAtLocation predecessors deleted per manifest
     (ranges hash-verified to the packet's SHA-256). javap identical, 46/46 fixtures green,
     live successors confirmed. NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ FINALIZER F0+F3 (2026-07-13, Codex packet m00328): real-engine fixtures + pure shadow ════
+    NOT a V-tag. common/finalization: F0 corpus over REAL engine decisions (MC unchecked-AIOOBE
+    P0 pinned executable; ARBITRARY locked-preselected red contract; empty-wire truth per type)
+    + F3 ResponseFinalizer pure seam (one V148 pass semantic, typed corrections, one recorded
+    RNG draw max). Seven engine-verified divergences where legacy strands and shadow's answer
+    is engine-accepted. F1/F2 = engine files, HELD FOR STEVE. 137 tests green. NOT deployed.

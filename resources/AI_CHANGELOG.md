@@ -17,6 +17,13 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — FINALIZER LANE F0+F3 (Codex packet m00328; shared) — pure shadow, zero production consumers
+- **F0 real-engine fixture corpus** (`ai/models/common/finalization/` tests): fresh REAL engine decision instances driven through actual decisionMade — empty-wire acceptance per decision type (incl. the CARD_ACTION_CHOICE empty-under-noPass contradiction, recorded), min/max exactness, ARBITRARY returnAnyChange delta semantics (locked-preselected resend REJECTED by the engine — packet red contract), MULTIPLE_CHOICE out-of-bounds ordinal = UNCHECKED ArrayIndexOutOfBounds today (audit P0 pinned executable), INTEGER inclusive bounds. Mediator P0 evidence (AI success never credits the clock; checked rejection requeues without retry) pinned as source-anchored doc + exception-type fixtures.
+- **F3 pure shadow finalizer** (`ResponseFinalizer.finalize(snapshot, contract, intent, rng, history)` per the packet seam): sealed ResponseIntent; ResponseContract derived from RawDecision with the ONE V148 pass-legality semantic; FinalizedResponse with typed corrections, at most one RECORDED RNG draw, exactly one tracker mutation request. Shadow-vs-legacy table: agreement on V148-legal pass; SEVEN engine-verified EXPECTED_DIVERGENCEs where legacy strands (blank-under-min passthrough, skipped max-clamp, blind INTEGER "0", MC AIOOBE) and the shadow's response is ENGINE-ACCEPTED.
+- F1 (MC bounds) + F2 (mediator retry/clock) NOT implemented — engine files, held for Steve's explicit OK (task list). Post-F1 checked-bounds contract shipped @Ignore'd red, named.
+- 137 tests green (112 prior + F0 7 + F3 17 + 1 ignored), independently re-run.
+- NOT deployed; no production consumer.
+
 ## 2026-07-13 — CLEANUP BATCH 1.9 (Codex packet; both bots) — comment-only, NO behavior change
 - 28 mirrored comment-only lines (net −14/bot) in MoveEvaluator per Handoffs/CODEX_CLEANUP_BATCH19_CANDIDATES_2026-07-13.md: V169 old soft-block predecessor, V160 old −9999 block (explanation condensed: T4.1 raised the cancel-loop veto to ladder −100000), V79 broken getAtLocation() lookup (live getSystemOrbited() retained). Pre-delete ranges hash-matched the manifest's mirror-identity SHA-256 exactly, both bots.
 - Dual-layer comment-only assertions PASS; isolated normalized-javap hashes identical pre/post both bots; 46/46 focused fixtures green; live V169 warn / V160 LADDER VETO trio / getSystemOrbited() all confirmed present.
