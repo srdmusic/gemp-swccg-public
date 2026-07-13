@@ -4,6 +4,11 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — B0 TIE-DETERMINISM (Codex m00228; both bots) — INTENTIONAL contract delta
+- Fixture audit found exact-score winners depended on unspecified HashMap iteration order in `CombinedEvaluator`'s merge map. Per the updated fixture contract this is the ONE sanctioned early behavior delta: `LinkedHashMap` (first-seen insertion order = evaluator registration order, then offered-action order) + every winner selection (DPS bucket walk, final selection) now an explicit loop with strict `Float.compare(candidate, best) > 0` — exact ties KEEP the earlier candidate, identically in both bots. Non-tied decisions are bit-identical. Pre-cutover exact-tie fixtures remain marked UNSTABLE per contract.
+- Verified: compiles clean both bots (MVN_EXIT=0); mirrored. NOT deployed — same gate valve as Batch-1 corrections.
+- Revert: `git revert` of the single commit.
+
 ## 2026-07-13 — PHASE-REORG BATCH 1 CORRECTIONS (Codex HOLD m00225/m00229; both bots)
 - Codex's independent gate on Batch 1 (5ab16f8ac) returned HOLD with three functional failures plus a fundamental P0. All corrected:
 - **Side-aware source game-text owner** (P0, m00229): the Krennic pull guard read `getGameText()`, but LOCATION cards keep their pull text in `getLocationDarkSideGameText()`/`getLocationLightSideGameText()` — Card216_016's "May [download] Krennic here." lives on the dark side ONLY, so the entire Batch-1a guard was UNREACHABLE on the real card (JShell-proven on the deployed jar). NEW single owner `DeckOracle.getSourceCardFullGameText(bp, actingSide)` returns base text + the ACTING player's side text; ALL pull-text consumers rewired through it: ActionTextEvaluator (v177, v183, V67h, V95, V131, V82 site-pull predicate, pull-route guard + 3 generic sites), DeployEvaluator (V67h, V67i, V67m), DeployPhaseScript, ActionAudit ×2.

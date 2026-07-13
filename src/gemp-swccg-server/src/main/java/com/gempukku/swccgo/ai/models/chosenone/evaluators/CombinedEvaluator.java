@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -74,7 +74,12 @@ public class CombinedEvaluator {
         // ═══════════════════════════════════════════════════════════
         // Use a map to merge scores for actions with the same ID
         // This prevents a generic evaluator from overriding a specific evaluator's score
-        Map<String, EvaluatedAction> actionMap = new HashMap<>();
+        // B0-TIE-DETERMINISM (2026-07-13, Codex m00228 — INTENTIONAL fixture-contract delta):
+        // HashMap iteration made exact-score ties depend on unspecified map order.
+        // LinkedHashMap = first-seen insertion order (evaluator registration order, then
+        // offered-action order), and every winner selection below breaks ties by KEEPING
+        // the earlier candidate (strict Float.compare(candidate, best) > 0 to replace).
+        Map<String, EvaluatedAction> actionMap = new LinkedHashMap<>();
 
         for (ActionEvaluator evaluator : evaluators) {
             if (!evaluator.isEnabled()) {
@@ -172,10 +177,14 @@ public class CombinedEvaluator {
                     LOG.warn("V67bc DPS WALK: step={} bucket has 0 scored actions, skipping", label);
                     continue;
                 }
-                EvaluatedAction bestInBucket = bucketActions.stream()
-                    .filter(a -> !a.isHardVetoed())  // FORMATION SAFETY 2026-07-11c
-                    .max(Comparator.comparing(EvaluatedAction::getScore))
-                    .orElse(null);
+                // B0-TIE-DETERMINISM (m00228): explicit first-seen tie retention.
+                EvaluatedAction bestInBucket = null;
+                for (EvaluatedAction ba : bucketActions) {
+                    if (ba.isHardVetoed()) continue;  // FORMATION SAFETY 2026-07-11c
+                    if (bestInBucket == null || Float.compare(ba.getScore(), bestInBucket.getScore()) > 0) {
+                        bestInBucket = ba;
+                    }
+                }
                 if (bestInBucket == null) continue;
                 LOG.warn("V67bc DPS WALK: step={} best={} score={}",
                     label, bestInBucket.getDisplayText(), bestInBucket.getScore());
@@ -285,9 +294,13 @@ public class CombinedEvaluator {
             }
         }
         boolean fsAllVetoed = nonVetoed.isEmpty() && !allActions.isEmpty();
-        EvaluatedAction bestAction = (fsAllVetoed ? allActions : nonVetoed).stream()
-            .max(Comparator.comparing(EvaluatedAction::getScore))
-            .orElse(null);
+        // B0-TIE-DETERMINISM (m00228): explicit first-seen tie retention.
+        EvaluatedAction bestAction = null;
+        for (EvaluatedAction ca : (fsAllVetoed ? allActions : nonVetoed)) {
+            if (bestAction == null || Float.compare(ca.getScore(), bestAction.getScore()) > 0) {
+                bestAction = ca;
+            }
+        }
         if (fsAllVetoed && bestAction != null) {
             // ADJUSTED 2026-07-12 (Codex m00194 P0#2): use V148's cancellability semantics — optional
             // CARD_SELECTION prompts commonly carry noPass=true with min=0 + a Done/Cancel button;

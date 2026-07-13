@@ -6149,3 +6149,11 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     destination (power<=0 misread power-0 Ozzel as empty site). Compiles clean both bots
     (MVN_EXIT=0), mirrored. NOT deployed — awaiting Codex re-gate. Full details in
     resources/AI_CHANGELOG.md 2026-07-13 entry.
+
+  ════ B0 TIE-DETERMINISM (2026-07-13, Codex m00228): LinkedHashMap + strict Float.compare ════
+    INTENTIONAL fixture-contract delta (the one sanctioned early behavior change): exact-score
+    winners previously depended on unspecified HashMap iteration in CombinedEvaluator's merge map.
+    Now LinkedHashMap first-seen order + explicit winner loops (DPS bucket walk, final selection)
+    with strict Float.compare(candidate,best)>0 — ties keep the earlier candidate, both bots
+    identical. Non-tied decisions bit-identical. NOT deployed pending Codex gate. Full details in
+    resources/AI_CHANGELOG.md 2026-07-13 entry.
