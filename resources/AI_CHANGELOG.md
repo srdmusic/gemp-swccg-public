@@ -4,6 +4,11 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — F2: mediator bounded AI retry + clock + visible terminal failure (ENGINE FILE, Steve-approved; Codex packet)
+- SwccgGameMediator: initial attempt + exactly ONE retry on a checked AI rejection (iterative, no recursion, chain counter untouched by the retry); on acceptance addTimeSpentOnDecisionToUserClock exactly once (the AI path never credited the clock before), ordered as the human path; second rejection AND chain overflow route through ONE visible reporter (GameState.sendMessage + LOG.error) preserving the pending decision/timer — no more silent requeue-forever stall; terminal budget keyed by player + decision OBJECT IDENTITY (fresh object = fresh budget); human path untouched.
+- New SwccgGameMediatorAiRetryTest 5/5; combined F1+F2 focused run 128/0/0/0.
+- NOT deployed (aggregate gate).
+
 ## 2026-07-13 — F1: MultipleChoice checked bounds (ENGINE FILE, Steve-approved; Codex packet + m00431)
 - MultipleChoiceAwaitingDecision.decisionMade: ordinal range-checked AFTER parse and BEFORE indexing; out-of-range now throws the checked DecisionResultInvalidException (same type/message as the existing non-numeric path) instead of an unchecked ArrayIndexOutOfBounds that escaped the mediator catch and could strand the game.
 - m00431 disposition in the same commit: the checked-contract target un-@Ignored and GREEN; the old unchecked-AIOOBE defect pin CONVERTED to a positive mapping/non-numeric test (no contradictory active contracts; 8/8 active in EngineAwaitingDecisionContractTest).

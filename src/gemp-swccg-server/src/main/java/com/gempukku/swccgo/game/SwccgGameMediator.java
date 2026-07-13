@@ -55,7 +55,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class SwccgGameMediator {
     private static final Logger LOG = LogManager.getLogger(SwccgGameMediator.class);
     private static final int MAX_AI_CHAIN = 50;
+    // F2 (2026-07-13, Handoffs/CODEX_FINALIZER_FIXTURE_RETRY_PACKET_2026-07-13.md):
+    // one initial AI answer plus exactly ONE retry per decision, iterative inside a
+    // single maybeLetAiPlay call. A second checked rejection is a VISIBLE terminal
+    // failure that preserves the pending decision (audit P0 #1: a rejected AI answer
+    // used to be requeued silently with no retry, stranding the game).
+    private static final int MAX_AI_RESPONSE_ATTEMPTS = 2;
     private int aiChainCounter = 0;
+    // F2: terminal-exhaustion ownership keyed by player plus AwaitingDecision OBJECT
+    // IDENTITY (values compared with ==, never equals or numeric id: several decision
+    // classes hardcode id 1). A NEW decision object gets a fresh attempt budget.
+    private final Map<String, AwaitingDecision> _aiTerminalDecisions = new HashMap<String, AwaitingDecision>();
 
     private Map<String, GameCommunicationChannel> _communicationChannels = Collections.synchronizedMap(new HashMap<String, GameCommunicationChannel>());
     private DefaultUserFeedback _userFeedback;
@@ -109,6 +119,19 @@ public class SwccgGameMediator {
         _userFeedback = new DefaultUserFeedback();
         _swccgoGame = new DefaultSwccgGame(swccgFormat, decks, _userFeedback, library, _playerClocks, useBonusAbilities);
         _userFeedback.setGame(_swccgoGame);
+    }
+
+    /**
+     * F2 TEST SEAM (package-private, 2026-07-13): narrow constructor for
+     * SwccgGameMediatorAiRetryTest per Handoffs/CODEX_FINALIZER_FIXTURE_RETRY_PACKET_2026-07-13.md.
+     * The caller supplies the game, feedback, and player-clock map directly (and is
+     * responsible for wiring {@code userFeedback.setGame(game)}). Not for production use.
+     */
+    SwccgGameMediator(String gameId, SwccgGame game, DefaultUserFeedback userFeedback, Map<String, Integer> playerClocks) {
+        _gameId = gameId;
+        _swccgoGame = game;
+        _userFeedback = userFeedback;
+        _playerClocks = playerClocks;
     }
 
     public boolean isPrivate() { return _isPrivate;};
@@ -1276,13 +1299,14 @@ public class SwccgGameMediator {
     }
 
     // Let registered AI users answer pending decisions; guards against runawayloops.
-    private void maybeLetAiPlay(String playerId) {
+    // F2 (2026-07-13, Handoffs/CODEX_FINALIZER_FIXTURE_RETRY_PACKET_2026-07-13.md): bounded
+    // retry (MAX_AI_RESPONSE_ATTEMPTS), AI decision-clock credit on acceptance, and VISIBLE
+    // terminal exhaustion keyed by player plus decision object identity. Package-private
+    // (was private) for the terminal re-entry assertion in SwccgGameMediatorAiRetryTest.
+    // The human path (playerAnswered) is unchanged.
+    void maybeLetAiPlay(String playerId) {
         if (!AiRegistry.isAi(_gameId, playerId)) {
             aiChainCounter = 0; // Reset for human player
-            return;
-        }
-
-        if (++aiChainCounter > MAX_AI_CHAIN) { // simple guard if AI keeps triggering itself
             return;
         }
 
@@ -1291,18 +1315,67 @@ public class SwccgGameMediator {
             return;
         }
 
+        // F2: suppress rescheduling for a decision already reported terminal for this
+        // player. SAME OBJECT ONLY (identity): no duplicate terminal message, no further
+        // AI calls. A different decision object (even with the same numeric id) clears
+        // the record and gets a fresh attempt budget.
+        AwaitingDecision terminalDecision = _aiTerminalDecisions.get(playerId);
+        if (terminalDecision == decision) {
+            return;
+        }
+        if (terminalDecision != null) {
+            _aiTerminalDecisions.remove(playerId);
+        }
+
+        if (++aiChainCounter > MAX_AI_CHAIN) { // simple guard if AI keeps triggering itself
+            // F2: route chain exhaustion through the visible terminal reporter instead of
+            // returning silently (audit P0 #1). The pending decision and its timer remain.
+            reportAiTerminalFailure(playerId, decision,
+                    "AI action chain limit (" + MAX_AI_CHAIN + ") reached");
+            return;
+        }
+
         SwccgAiController ai = AiRegistry.get(_gameId, playerId);
         if (ai == null) {
             return;
         }
 
-        try {
-            // Provide the full game reference for advanced AI features (e.g., deploy planning)
-            ai.setGame(_swccgoGame);
+        // Provide the full game reference for advanced AI features (e.g., deploy planning)
+        ai.setGame(_swccgoGame);
+
+        // F2 bounded retry: initial attempt plus exactly ONE retry, ITERATIVE inside this
+        // call (no recursion, no aiChainCounter increment for the retry). Only the checked
+        // DecisionResultInvalidException (an invalid PLAYER response) triggers the retry;
+        // any RuntimeException is a programming fault and propagates un-retried
+        // (packet F2 gate: "No arbitrary RuntimeException is converted into a retry").
+        for (int attempt = 1; attempt <= MAX_AI_RESPONSE_ATTEMPTS; attempt++) {
             String answer = ai.decide(playerId, decision, _swccgoGame.getGameState());
 
+            // Remove BEFORE the callback: accepted callbacks can synchronously create
+            // child decisions (packet F2: preserve remove-before-callback ordering).
             _userFeedback.participantDecided(playerId);
-            decision.decisionMade(answer);
+            try {
+                decision.decisionMade(answer);
+            } catch (DecisionResultInvalidException e) {
+                // Requeue the SAME decision immediately; its original timer entry in
+                // _decisionQuerySentTimes is deliberately untouched.
+                _userFeedback.sendAwaitingDecision(playerId, decision);
+                if (attempt >= MAX_AI_RESPONSE_ATTEMPTS) {
+                    // Second checked rejection: visible terminal exhaustion. The decision
+                    // stays pending with its original timer; no pending-action continuation.
+                    reportAiTerminalFailure(playerId, decision,
+                            "rejected " + MAX_AI_RESPONSE_ATTEMPTS + " consecutive answers (last: \"" + answer + "\")");
+                    return;
+                }
+                continue; // the single retry
+            }
+
+            // Accepted: credit the AI's decision clock EXACTLY ONCE, BEFORE chat,
+            // pending-action continuation, and new clock scheduling. Mirrors the human
+            // playerAnswered path, which credits the clock right after decisionMade;
+            // previously the AI path never called this, so the AI's pending timer stayed
+            // active and could charge the bot while another participant thought.
+            addTimeSpentOnDecisionToUserClock(playerId);
 
             // Check if AI has any chat messages to send
             String chatMessage = ai.getChatMessage();
@@ -1323,10 +1396,22 @@ public class SwccgGameMediator {
 
             _swccgoGame.carryOutPendingActionsUntilDecisionNeeded();
             startClocksForUsersPendingDecision();
-
-        } catch (DecisionResultInvalidException e) {
-            _userFeedback.sendAwaitingDecision(playerId, decision);
+            return;
         }
+    }
+
+    // F2: single VISIBLE terminal reporter, once per (player, decision OBJECT). Records
+    // terminal ownership so repeated maybeLetAiPlay calls for the same stranded decision
+    // are suppressed without duplicate messages. GameState.sendMessage reaches every
+    // connected client; DefaultUserFeedback.sendWarning is NOT a terminal channel for a
+    // bot without a browser connection (packet F2). Numeric id is diagnostic only.
+    private void reportAiTerminalFailure(String playerId, AwaitingDecision decision, String reason) {
+        _aiTerminalDecisions.put(playerId, decision);
+        String message = "AI player " + playerId + " failed to resolve its pending decision"
+                + " (decision id " + decision.getAwaitingDecisionId() + ", diagnostic only): "
+                + reason + ". The decision remains pending.";
+        LOG.error("Game " + _gameId + ": " + message);
+        _swccgoGame.getGameState().sendMessage(message);
     }
 
     private int getCurrentUserPendingTime(String participantId) {

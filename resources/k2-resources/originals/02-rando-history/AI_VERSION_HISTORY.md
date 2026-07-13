@@ -6329,3 +6329,7 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Range check before indexing; checked DecisionResultInvalidException replaces the escaping
     AIOOBE; red contract test flipped green; old defect pin converted (m00431). 6+8 tests green.
     NOT deployed. Details in AI_CHANGELOG 2026-07-13.
+
+  ════ F2 (2026-07-13, ENGINE, Steve-approved): mediator AI retry/clock/visible terminal ════
+    One retry then visible failure (object-identity budget); AI clock credited on success;
+    human path untouched. 5/5 + 128 combined green. NOT deployed. Details in AI_CHANGELOG.
