@@ -5699,7 +5699,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                             String rt = rc.getTitle().toLowerCase(java.util.Locale.ROOT);
                                             for (String t : fsT) {
                                                 if (t == null || t.isEmpty()) continue;
-                                                if (rt.contains(t) || t.contains(rt)) { fsPulled = rc; break; }
+                                                // BATCH1a (2026-07-12, Codex m00202): forced-location texts parse as
+                                                // "krennic here" — strip the location-forcing suffix or the guard
+                                                // never resolves its target and is inert (JShell-proven).
+                                                String tn = t.replaceAll("\\s+(?:here|there|at that location)$", "").trim();
+                                                if (tn.isEmpty()) continue;
+                                                if (rt.contains(tn) || tn.contains(rt)) { fsPulled = rc; break; }
                                             }
                                             if (fsPulled != null) break;
                                         }
@@ -5710,9 +5715,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                                 context.getObjectiveAnalyzer();
                                             if (fsOa != null && fsOa.isAnalyzed() && !fsOa.isFlipped()
                                                     && fsOa.getFlipConditionText() != null) {
+                                                // BATCH1c (2026-07-12, Codex P1): any-4-letter-word overlap was too
+                                                // broad — use the character's FIRST-NAME token only ("Krennic, Death
+                                                // Star Commandant" -> "krennic"), which is how objective flip texts
+                                                // name characters.
                                                 String fsFlip = fsOa.getFlipConditionText().toLowerCase(java.util.Locale.ROOT);
-                                                for (String w : fsPulled.getTitle().toLowerCase(java.util.Locale.ROOT).split("[^a-z]+")) {
-                                                    if (w.length() >= 4 && fsFlip.contains(w)) { fsFlipPlan = true; break; }
+                                                String[] fsNm = fsPulled.getTitle().toLowerCase(java.util.Locale.ROOT).split("[^a-z]+");
+                                                if (fsNm.length > 0 && fsNm[0].length() >= 3
+                                                        && fsFlip.matches(".*\\b" + java.util.regex.Pattern.quote(fsNm[0]) + "\\b.*")) {
+                                                    fsFlipPlan = true;
                                                 }
                                             }
                                             if (!fsFlipPlan) {

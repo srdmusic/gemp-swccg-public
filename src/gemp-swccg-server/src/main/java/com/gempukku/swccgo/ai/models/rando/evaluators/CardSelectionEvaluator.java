@@ -6278,6 +6278,43 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             if (fsV != null) {
                                 action.hardVeto(fsV);
                                 logger.warn("FORMATION SAFETY (move-dest): {}", fsV);
+                            } else {
+                                // BATCH1b (2026-07-12, Codex m00199/m00209 — Chiraneau empty-site split):
+                                // a WEAK (ability<4) mover relocating SOLO to an uncontested empty site
+                                // while leaving a lone weak buddy behind creates TWO weak solos — L1
+                                // requires enemy at origin and L4 exits on empty destinations, so both
+                                // guards miss it. Heavy penalty (-800: 327.5 -> -472.5 loses to Pass),
+                                // NOT a veto — genuine repositioning must stay possible.
+                                try {
+                                    SwccgCardBlueprint fsMbp = fsMover.getBlueprint();
+                                    Float fsMa = (fsMbp != null && fsMbp.hasAbilityAttribute()) ? fsMbp.getAbility() : null;
+                                    if (fsMa != null && fsMa < 4f && fsOrigin != null
+                                            && fsOrigin.getCardId() != location.getCardId()) {
+                                        String fsOpp = gameState.getOpponent(playerId);
+                                        float fsDestOpp = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, location, fsOpp, false, false);
+                                        float fsDestOur = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, location, playerId, false, false);
+                                        if (fsDestOpp <= 0 && fsDestOur <= 0) {
+                                            int fsRemain = 0; float fsRemainMaxAb = 0f;
+                                            for (PhysicalCard oc : gameState.getCardsAtLocation(fsOrigin)) {
+                                                if (oc == null || oc.getBlueprint() == null) continue;
+                                                if (oc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                                if (!playerId.equals(oc.getOwner())) continue;
+                                                if (oc.getCardId() == fsMover.getCardId()) continue;
+                                                if (oc.isUndercover()) continue;
+                                                fsRemain++;
+                                                Float oa = oc.getBlueprint().hasAbilityAttribute() ? oc.getBlueprint().getAbility() : null;
+                                                if (oa != null && oa > fsRemainMaxAb) fsRemainMaxAb = oa;
+                                            }
+                                            if (fsRemain == 1 && fsRemainMaxAb < 4f) {
+                                                action.addReasoning(
+                                                    "L1/L4 SPLIT (batch1b): weak mover to empty site would create TWO weak solos",
+                                                    -800.0f);
+                                                logger.warn("FORMATION SAFETY (move-dest): L1/L4 SPLIT -800 — {} to {} leaves lone weak buddy at {}",
+                                                    fsMover.getTitle(), location.getTitle(), fsOrigin.getTitle());
+                                            }
+                                        }
+                                    }
+                                } catch (Exception fsSplitE) { /* fail-open */ }
                             }
                         }
 
@@ -8821,59 +8858,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 }
             }
 
-            // === V28: RESERVE DEPLOY SOLO PROTECTION ===
-            // When choosing characters to deploy from reserve (e.g., Dining Room effect),
-            // apply the same buddy protection as hand deploys. Characters deployed from
-            // reserve to a location where they'd be ALONE are vulnerable.
-            // This catches "Choose card to deploy from Reserve Deck" decisions.
-            if (blueprint != null && category == CardCategory.CHARACTER
-                && textLower.contains("deploy") && textLower.contains("reserve")
-                && gameState != null && game != null) {
-                try {
-                    String rsPlayerId = context.getPlayerId();
-                    com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer rsObjAnalyzer =
-                        context.getObjectiveAnalyzer();
-
-                    // Check if any Cloud City ground location has friendly characters
-                    boolean hasFriendlyBuddyAtCC = false;
-                    boolean hasEnemyAtCC = false;
-                    for (PhysicalCard loc : gameState.getTopLocations()) {
-                        if (loc == null || loc.getTitle() == null) continue;
-                        String rsLocTitle = loc.getTitle().toLowerCase(java.util.Locale.ROOT);
-                        if (!rsLocTitle.contains("cloud city")) continue;
-                        // Check for friendly characters at this CC location
-                        int friendlyChars = 0;
-                        float enemyPower = 0;
-                        try {
-                            for (PhysicalCard atLoc : gameState.getCardsAtLocation(loc)) {
-                                if (atLoc == null || atLoc.getBlueprint() == null) continue;
-                                if (atLoc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                    if (rsPlayerId.equals(atLoc.getOwner())) {
-                                        friendlyChars++;
-                                    }
-                                }
-                            }
-                            String rsOpponent = game.getOpponent(rsPlayerId);
-                            enemyPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, loc, rsOpponent, false, false);
-                        } catch (Exception e) { }
-                        if (friendlyChars > 0) hasFriendlyBuddyAtCC = true;
-                        if (enemyPower > 0) hasEnemyAtCC = true;
-                    }
-
-                    if (!hasFriendlyBuddyAtCC) {
-                        // V47: Character would be deployed ALONE at a CC location — HARD BLOCK
-                        // Don't deploy anyone solo from reserve — they get clobbered every time.
-                        action.addReasoning(String.format(
-                            "V47 RESERVE SOLO BLOCK: %s would be ALONE at Cloud City!%s Nobody to protect them!",
-                            cardTitle, hasEnemyAtCC ? " ENEMY PRESENT!" : ""), -9999.0f);
-                        logger.warn("V47 RESERVE SOLO BLOCK: {} alone at CC, enemy={} — HARD BLOCK!",
-                            cardTitle, hasEnemyAtCC);
-                    }
-                } catch (Exception e) {
-                    logger.debug("V28 RESERVE SOLO: Error checking buddy status: {}", e.getMessage());
-                }
-            }
+            // V28/V47 RESERVE SOLO BLOCK — RETIRED 2026-07-12 (batch 1d; Codex m00206 wrong-facts
+            // audit CODEX_V47_WRONG_FACTS_AUDIT_2026-07-12.md): it applied Cloud City board facts to
+            // EVERY "deploy...reserve" character prompt regardless of the real forced destination
+            // (Krennic->Scarif, Praji, Snoke all false-blocked at -9999 on forced noPass nodes).
+            // Replacement owner: FormationSafety pull-route guard (destination-aware, ActionText
+            // V192 block). DELETED per Steve's 2026-07-12 migration ruling (backup + git = undo).
 
             actions.add(action);
         }
