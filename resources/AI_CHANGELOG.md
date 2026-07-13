@@ -5,11 +5,11 @@ Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
 ## 2026-07-13 — B2 TRACE HOOKS (Codex m00243 design; both bots) — no-op by default, zero behavior change
-- The exact-fixture oracle the log harvester can never be: `ai/models/common/trace/` (TraceOp, TraceOperation with raw-float-bit before/delta/after, DecisionTrace, TraceSink + NoOpTraceSink, TraceCollector, thread-local TraceSession with swallow-all guards — instrumentation can NEVER throw into the decision path).
+- Toward the exact-fixture oracle the log harvester can never be (Codex m00268: this increment is the inert plumbing, NOT yet the oracle — candidate order still derives from evaluator merge output rather than complete raw decision arrays; capture/oracle enablement stays HOLD until the next trace increment): `ai/models/common/trace/` (TraceOp, TraceOperation with raw-float-bit before/delta/after, DecisionTrace, TraceSink + NoOpTraceSink, TraceCollector, thread-local TraceSession with swallow-all guards — instrumentation can NEVER throw into the decision path).
 - `EvaluatedAction` (both bots): constructor/addReasoning/setScore/hardVeto record INITIAL/ADD/SET/HARD_VETO as `LEGACY_UNTAGGED`; mergeFrom records the MERGE boundary only. Tagged overloads (ruleId/domainId/kind) ready for migrated arms. No V-tag prose parsing.
 - `CombinedEvaluator` (both bots): package-visible seam `CombinedEvaluator(orderedEvaluators, traceSink)` for pure JUnit scripted evaluators; production no-arg ctor keeps the normal list + no-op sink. Core records evaluator binding, candidate first-seen registration, RANK/SELECT through the DPS walk/epilogues/V148 gate, FINALIZE; synthetic passes get explicit markers (V67BC_DPS_PASS, FORMATION_SAFETY_PASS, V148_ALL_BAD_PASS...). Merge/winner semantics from the tie-determinism delta UNTOUCHED.
 - Tests: 12 green (6 per bot, identical scenarios = unit-level bot parity), covering all six Codex gate cases: no-op preservation, candidate reordering, one-bit float change, veto-reason change, SET-vs-ADD distinction, FINALIZE divergence.
-- RandoCalAi/DecisionSafety route/finalize hooks deliberately deferred to the next increment (spec section 7); schema needs no change for them.
+- RandoCalAi/DecisionSafety route/finalize hooks deliberately deferred to the next increment (spec section 7). CORRECTED per Codex m00268: the schema WILL need additions for them (schema version, full frozen input, route id, pass eligibility, final response) — the earlier "no schema change" claim was an overstatement.
 - Verified: compiles clean both bots (MVN_EXIT=0); mirrors byte-identical (normalized). NOT deployed.
 - Revert: `git revert` of the single commit.
 
@@ -24,6 +24,7 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 ## 2026-07-13 — B0 TIE-DETERMINISM (Codex m00228; both bots) — INTENTIONAL contract delta
 - Fixture audit found exact-score winners depended on unspecified HashMap iteration order in `CombinedEvaluator`'s merge map. Per the updated fixture contract this is the ONE sanctioned early behavior delta: `LinkedHashMap` (first-seen insertion order = evaluator registration order, then offered-action order) + every winner selection (DPS bucket walk, final selection) now an explicit loop with strict `Float.compare(candidate, best) > 0` — exact ties KEEP the earlier candidate, identically in both bots. Non-tied decisions are bit-identical. Pre-cutover exact-tie fixtures remain marked UNSTABLE per contract.
 - Verified: compiles clean both bots (MVN_EXIT=0); mirrored. NOT deployed — same gate valve as Batch-1 corrections.
+- FOCUSED TIE FIXTURES ADDED 2026-07-13 (Codex m00258 deploy-gate requirement): `CombinedEvaluatorTieTest`, 4 tests per bot on the scripted-evaluator seam — normal-selection tie keeps first offered, duplicate-id merge preserves first insertion, DPS bucket tie keeps first offered, all-vetoed forced choice keeps first vetoed; every case has a one-ULP control proving strict Float.compare, not first-always. All 8 green.
 - Revert: `git revert` of the single commit.
 
 ## 2026-07-13 — PHASE-REORG BATCH 1 CORRECTIONS (Codex HOLD m00225/m00229; both bots)
