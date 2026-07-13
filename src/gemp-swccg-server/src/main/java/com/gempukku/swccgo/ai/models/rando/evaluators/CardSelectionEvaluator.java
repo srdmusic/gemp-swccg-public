@@ -7902,7 +7902,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // (where V51 lives). Mirror the BG-occupation check here to close that gap.
             // Battle Order/Plan are only useful if Rando already occupies BOTH a
             // battleground site AND a battleground system simultaneously. Otherwise
-            // Battle Order also costs Rando 1 Force per drain — net negative.
+            // Battle Order/Plan normally requires Rando to use 3 Force per drain; occupation
+            // waives that cost, and Battle Plan also suppresses the Battle Order modifier.
             if (cardTitle != null) {
                 String v112TitleLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
                 if (v112TitleLower.contains("battle order") || v112TitleLower.contains("battle plan")) {

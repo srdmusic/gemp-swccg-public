@@ -4,6 +4,11 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — FACTUAL COMMENT REPAIR (Codex packet + m00410 correction; 3 files) — comment-only
+- The final sanctioned comment pass: comments that LIED about the code fixed. (A) MaintenanceFacts shared header: the Blizzard 4 / Stormtrooper Garrison card-id attributions were swapped (Card13_056 IS Blizzard 4, Card13_087 IS Stormtrooper Garrison — card-source verified). (B) Both CardSelectionEvaluators, Battle Order comment: the old "costs Rando 1 Force per drain — net negative" claim replaced with the card-accurate two lines (3 Force per drain, occupation waives, Battle Plan suppresses the Battle Order modifier; Card8_118/Card13_054 anchors verified) — the packet's own first replacement wording was ALSO corrected mid-flight by its author (m00410).
+- +6/−4 across 3 files, every line a comment; SHA pins matched pre-edit; RAW javap identical on all three classes; 61/61 fixtures. Comment deletion now STOPS by coordinator ruling: 24 pairs / 840 lines remain held as revert evidence.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — CLEANUP BATCH 2.8 (Codex packet; both bots) — comment-only, NO behavior change
 - ActionTextEvaluator V140 corpse: the 64-line OLD-detection comment block + 7-line stale preface replaced with the manifest's 7-line preface (7 insertions / 71 deletions per bot, −128 total). All three SHA pins matched (per-bot stream, two-bot concatenation, preface).
 - Live successor proven intact both bots: getInitiateForceDrainCost engine query, the <=0f waiver, the +60 grant, and the V104/V52/V48 fallthrough.

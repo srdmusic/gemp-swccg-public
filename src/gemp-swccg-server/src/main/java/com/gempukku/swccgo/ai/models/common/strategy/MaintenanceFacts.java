@@ -19,8 +19,8 @@ import java.util.regex.Pattern;
  * 8 cards, all encoding the number in game text ("End of your turn: ... Use N ..."):
  *   Lando, Scoundrel 1 (Card13_027, deploy 5) — Han, Chewie, And The Falcon 3
  *   (Card13_021) — Chewie, Enraged 2 (Card13_009) — Boba Fett, Bounty Hunter 2
- *   (Card13_059) — Stormtrooper Garrison 1 (Card13_056) — Thok And Thug 2
- *   (Card13_092) — Blizzard 4 1 (Card13_087) — Ap'lek 1 (Card222_002, "Use 1 or
+ *   (Card13_059) — Blizzard 4 1 (Card13_056) — Thok And Thug 2
+ *   (Card13_092) — Stormtrooper Garrison 1 (Card13_087) — Ap'lek 1 (Card222_002, "Use 1 or
  *   [Skull]" variant).
  * The AI's old basis (deploy cost, V22.3/V27/V24.5/V29.13/V38/V59 sites) was
  * OVER-reserving 2-5x; the V67w basis (+1 flat) was UNDER for maintain-2/3 cards.

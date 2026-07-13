@@ -6302,3 +6302,9 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     64-line OLD-detection block + preface swap (all three SHA pins matched). Live drain-cost
     waiver successor intact. RAW javap identical. 61/61 fixtures. NOT deployed. Details in
     AI_CHANGELOG 2026-07-13.
+
+  ════ FACTUAL COMMENT REPAIR (2026-07-13, Codex packet + m00410): 3 files, +6/−4 ════
+    MaintenanceFacts header card-id swap (Blizzard 4 vs Stormtrooper Garrison) + both CSEs'
+    Battle Order comment corrected to card truth (3 Force/drain; occupation waives; Battle Plan
+    suppresses the modifier). Packet's own wording corrected mid-flight by author. javap
+    identical. 61/61 fixtures. Comment deletion STOPS here (24 pairs/840 lines held). NOT deployed.
