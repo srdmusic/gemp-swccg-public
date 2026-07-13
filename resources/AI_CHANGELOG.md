@@ -4,6 +4,11 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — CLEANUP BATCH 2.7 (Codex packet; both bots) — comment-only, NO behavior change
+- Six commented force-economy predecessor lines in CardSelectionEvaluator (0 insertions / 6 deletions per bot, −12 total): the thisIsMaint flag, the buddy maint-flag add, the deploy-cost-as-upkeep pair, the old reserved expression, and the 2× deploy-cost double-spend — each beside its live MaintenanceFacts/thisMaintCost successor. All seven SHA pins matched (five per-line, per-bot stream, two-bot concatenation).
+- RAW javap identical parent vs candidate both bots (no inner classes exist — verified by inventory, not skipped); 61/61 fixtures.
+- NOT deployed; separate revert boundary.
+
 ## 2026-07-13 — CLEANUP BATCH 2.6 (Codex packet; both bots) — comment-only, NO behavior change
 - V67ai/V67am commented duplicate pull scorers in DeployEvaluator: two ranges (V67ai Tier 1-3 DE copy ×32, V67am +600 weapon grant ×6) = 38 corpse lines + 9 preface replacements per bot (9 insertions / 47 deletions per bot, −76 total). All four SHA pins matched (per-bot ab6710a2…, two-bot 8f510b1b…, per-range 91d10cf4… / 4ac26eca…).
 - Live successors proven both bots: V192 pull scorer in ActionTextEvaluator is sole owner of the resized location tier (+1500/+1400/+1300/+1200 after V131 gating) and the +600 weapon tier; V67i/V67m detection, the DeployEvaluator V67ar/V67ao/V149 vetoes, and the V162/V67ai Tier4-HAND anchor all retained. Held V192/V82/V60/V131/V67l ActionText predecessors untouched.

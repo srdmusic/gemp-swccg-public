@@ -5540,11 +5540,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     if (!skippedSelf && deployingBpId != null
                             && deployingBpId.equals(h.getBlueprintId(true))) {
                         thisCost = cv;
-                        // thisIsMaint = maint;  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
                         thisMaintCost = maintCost;
                         skippedSelf = true; // the deploying card is not its own buddy
                     } else {
-                        // buddies.add(new float[]{pv, cv, maint ? 1f : 0f});  // superseded T2 COMMIT-1 2026-07-06 (flag → cost)
                         buddies.add(new float[]{pv, cv, maintCost});
                     }
                 } else if (bp.getCardCategory() == CardCategory.WEAPON) {
@@ -5566,8 +5564,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 if (tZone == null || !tZone.isInPlay()) continue;
                 if (playerId.equals(t.getOwner()) && t.getBlueprint() != null
                         && t.getBlueprint().hasIcon(Icon.MAINTENANCE)) {
-                    // Float mc = t.getBlueprint().getDeployCost();  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
-                    // tableMaint += mc != null ? mc : 0f;  // superseded T2 COMMIT-1 2026-07-06
                     tableMaint += com.gempukku.swccgo.ai.models.common.strategy
                         .MaintenanceFacts.maintainCost(t.getBlueprint());
                 }
@@ -5577,7 +5573,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // deployed onto solo Yoda and then could NOT battle him — the deploys spent
             // the last force and battle initiation costs 1. A wave that exists to fight
             // must keep the fee to start the fight.
-            // float reserved = tableMaint + interruptReserve + (thisIsMaint ? thisCost : 0f) + 1f;  // superseded T2 COMMIT-1 2026-07-06 (deploy-cost basis)
             float reserved = tableMaint + interruptReserve + thisMaintCost + 1f;
             // V177 (Steve, 2026-06): RESERVE CAP — never let upkeep reserves starve the wave
             // to zero. Replay aab2jiaa5sca (Luke vs Kylo): force=10 but reserved=12 (full table
@@ -5598,7 +5593,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 // a maintenance buddy must bring its own upkeep: deploy cost + upkeep
                 // T2 COMMIT-1 (2026-07-06): upkeep = engine maintain cost (ch[2]), fixing
                 // the double-spend that charged 2x deploy cost for maintenance buddies.
-                // float spend = ch[2] > 0f ? ch[1] * 2f : ch[1];  // superseded T2 COMMIT-1 2026-07-06 (2x deploy-cost double-spend)
                 float spend = ch[1] + ch[2];
                 if (spend <= budget) { addPower += ch[0]; budget -= spend; taken++; }
                 // unaffordable big hitter: skip and try the next (cheaper) character
