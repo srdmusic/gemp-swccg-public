@@ -9,9 +9,12 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -73,6 +76,13 @@ public final class TraceSnapshots {
         public Integer lifeForceCardCount;    // null = not observed
         public Integer handSize;              // null = not observed
         public Integer reserveDeckSize;       // null = not observed
+        /** TRACE-V2 GATE P0-1 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): the COMPLETE
+         *  verbatim engine parameter map (AwaitingDecision.getDecisionParameters()), set at
+         *  the bot decide() boundary. Presence = key exists; present-empty arrays and blank
+         *  entries are preserved verbatim. null = not available on this path (the pure
+         *  CombinedEvaluator seam) — build() then stages a CONTEXT_EFFECTIVE raw record
+         *  from the already-parsed fields above, honestly source-marked. */
+        public Map<String, String[]> rawParameters;
     }
 
     /**
@@ -205,7 +215,61 @@ public final class TraceSnapshots {
                 "ForceReserveService not consulted at trace boundary (cache-mutation hazard)"));
 
         return new DecisionSnapshot(decisionFacts, actionFacts, serviceFacts,
-            DecisionSnapshot.CURRENT_VERSION);
+            buildRawDecision(in), DecisionSnapshot.CURRENT_VERSION);
+    }
+
+    /**
+     * TRACE-V2 GATE P0-1 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md "add one immutable
+     * raw-decision component to DecisionSnapshot"): the verbatim raw evidence the
+     * normalized ActionFacts rows are built FROM and never replace.
+     *
+     * Bot boundary (in.rawParameters set): every engine parameter key preserved
+     * separately and verbatim — typed scalar presence (noPass/min/max/defaultIndex/
+     * defaultValue/timeoutValue/...), every array (preselected, autoPassEligible,
+     * backSideTestingText, horizontal, cardText, returnAnyChange, yourTurn, noLongDelay,
+     * revertEligible, results, ...) including present-EMPTY versus absent, blank entries
+     * blank. Seam (rawParameters null): the already-parsed effective values are re-staged
+     * under Source.CONTEXT_EFFECTIVE — declared derivation, never fake raw evidence.
+     */
+    private static DecisionSnapshot.RawDecision buildRawDecision(Input in) {
+        if (in.rawParameters != null) {
+            LinkedHashMap<String, List<String>> verbatim = new LinkedHashMap<>();
+            for (Map.Entry<String, String[]> entry : in.rawParameters.entrySet()) {
+                String[] values = entry.getValue();
+                // null-tolerant verbatim copy; a null value array is retained as
+                // present-empty (the key WAS present on the raw decision)
+                verbatim.put(entry.getKey(),
+                    values != null ? new ArrayList<>(Arrays.asList(values)) : new ArrayList<>());
+            }
+            return new DecisionSnapshot.RawDecision(
+                DecisionSnapshot.RawDecision.Source.ENGINE_PARAMETERS, verbatim);
+        }
+        LinkedHashMap<String, List<String>> effective = new LinkedHashMap<>();
+        if (in.noPassParam != null) effective.put("noPass", List.of(String.valueOf(in.noPassParam)));
+        if (in.minParam != null) effective.put("min", List.of(String.valueOf(in.minParam)));
+        if (in.maxParam != null) effective.put("max", List.of(String.valueOf(in.maxParam)));
+        putEffectiveList(effective, "actionId", in.actionIds);
+        putEffectiveList(effective, "actionText", in.actionTexts);
+        putEffectiveList(effective, "cardId", in.cardIds);
+        putEffectiveList(effective, "blueprintId", in.blueprintIds);
+        putEffectiveList(effective, "testingText", in.testingTexts);
+        if (in.selectable != null) {
+            List<String> sel = new ArrayList<>(in.selectable.size());
+            for (Boolean b : in.selectable) {
+                sel.add(b != null ? String.valueOf(b) : null);
+            }
+            effective.put("selectable", sel);
+        }
+        putEffectiveList(effective, "results", in.multipleChoiceResults);
+        return new DecisionSnapshot.RawDecision(
+            DecisionSnapshot.RawDecision.Source.CONTEXT_EFFECTIVE, effective);
+    }
+
+    private static void putEffectiveList(Map<String, List<String>> target, String key,
+                                         List<String> values) {
+        if (values != null) {
+            target.put(key, new ArrayList<>(values));
+        }
     }
 
     /**
@@ -260,9 +324,22 @@ public final class TraceSnapshots {
 
     /** Raw parallel arrays encode "no value for this ordinal" as an empty string
      *  (e.g. a CARD_ACTION_CHOICE action with no associated card). ActionFacts models
-     *  absence as null, so blank maps to absent — routine, not a capture failure. */
+     *  absence as null, so blank maps to absent — routine, not a capture failure.
+     *  TRACE-V2 GATE P0-1: the offered blank value itself is NOT lost — it stays
+     *  verbatim in DecisionSnapshot.rawDecision() (and in rawCandidateOrder). */
     private static String blankToAbsent(String s) {
         return (s != null && s.isBlank()) ? null : s;
+    }
+
+    /**
+     * TRACE-V2 GATE P0-1 seam helper: DecisionContext initializes its candidate arrays
+     * to EMPTY lists, so it cannot represent PRESENT-EMPTY versus ABSENT. Seam callers
+     * therefore stage an empty context list as ABSENT; the raw present-empty distinction
+     * is owned by the bot boundary's rawParameters capture. Shared here so both bots'
+     * openSeamSession stay mirror-identical.
+     */
+    public static <T> List<T> contextListOrAbsent(List<T> list) {
+        return (list == null || list.isEmpty()) ? null : list;
     }
 
     private static int size(List<?> list) {
@@ -277,7 +354,11 @@ public final class TraceSnapshots {
         return max;
     }
 
-    /** Present parallel arrays must agree in length; a mismatch is retained AND reported. */
+    /** Present parallel arrays must agree in length; a mismatch is retained AND reported.
+     *  TRACE-V2 GATE P0-1 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): a PRESENT-EMPTY
+     *  array counts as present with length 0 — paired with a present non-empty parallel
+     *  array it IS a mismatch and the trace becomes INCOMPLETE. Only ABSENT (null)
+     *  arrays impose no constraint. */
     private static void checkParallelLengths(Input in, List<String> issues) {
         Set<Integer> lengths = new LinkedHashSet<>();
         StringBuilder present = new StringBuilder();
@@ -296,7 +377,7 @@ public final class TraceSnapshots {
 
     private static void recordLength(Set<Integer> lengths, StringBuilder present,
                                      String name, List<?> list) {
-        if (list != null && !list.isEmpty()) {
+        if (list != null) {
             lengths.add(list.size());
             present.append(name).append('=').append(list.size()).append(' ');
         }

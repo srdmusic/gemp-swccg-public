@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
+import java.util.Objects;
+
 /**
  * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
  * "Operation record"): one immutable operation in the append-only decision trace.
@@ -22,6 +24,14 @@ package com.gempukku.swccgo.ai.models.common.trace;
  * free-form identity strings are rejected at construction, and unmigrated arms carry
  * the one explicit TraceRuleId.LEGACY_UNTAGGED value. Reason text stays diagnostic
  * evidence; it never defines identity.
+ *
+ * TRACE-V2 GATE P1-4 (Handoffs/CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md "operation
+ * identity remains nullable"): identity is now MANDATORY on every dimension — op,
+ * producer (evaluatorId), ruleId, domainId, and outputKind are rejected as null at
+ * construction. Framework-produced merge/rank/select/synthetic-pass operations carry
+ * the typed {@link #PRODUCER_COMBINED_EVALUATOR} producer plus the COMBINED_EVALUATOR
+ * sentinel on each identity dimension; unmigrated legacy arms carry the explicit
+ * LEGACY_UNTAGGED sentinel on each dimension. Null never means anything.
  */
 public final class TraceOperation {
 
@@ -30,6 +40,11 @@ public final class TraceOperation {
 
     /** candidateOrdinal when the action id never appeared in the raw candidate arrays. */
     public static final int ORDINAL_UNKNOWN = -2;
+
+    /** Typed producer id for operations the CombinedEvaluator FRAMEWORK itself performs
+     *  (merge boundaries recorded outside a binding, rank/select steps, synthetic Pass
+     *  construction) — the framework ranks and selects, so it is the producer (gate P1-4). */
+    public static final String PRODUCER_COMBINED_EVALUATOR = "COMBINED_EVALUATOR";
 
     private final int seq;
     private final TraceOp op;
@@ -52,6 +67,16 @@ public final class TraceOperation {
                           TraceDomainId domainId, TraceOutputKind outputKind,
                           Integer beforeBits, Integer deltaBits, Integer afterBits,
                           boolean vetoed, String vetoReason, String detail) {
+        // GATE P1-4: incomplete operation identity is rejected at construction —
+        // explicit sentinels exist for every dimension, so null carries no meaning.
+        Objects.requireNonNull(op, "op");
+        Objects.requireNonNull(evaluatorId, "evaluatorId (producer) — use PRODUCER_COMBINED_EVALUATOR for framework ops");
+        Objects.requireNonNull(ruleId, "ruleId — use TraceRuleId.LEGACY_UNTAGGED/COMBINED_EVALUATOR sentinels");
+        Objects.requireNonNull(domainId, "domainId — use TraceDomainId.LEGACY_UNTAGGED/COMBINED_EVALUATOR sentinels");
+        Objects.requireNonNull(outputKind, "outputKind — use TraceOutputKind.LEGACY_UNTAGGED/COMBINED_EVALUATOR sentinels");
+        if (evaluatorId.isBlank()) {
+            throw new IllegalArgumentException("evaluatorId (producer) must be nonblank");
+        }
         this.seq = seq;
         this.op = op;
         this.candidateOrdinal = candidateOrdinal;

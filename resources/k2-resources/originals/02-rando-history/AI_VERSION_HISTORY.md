@@ -6229,3 +6229,11 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     V192 region restored verbatim, byte-identical to pre-batch HEAD. Dual-layer comment-only
     assertions PASS; isolated same-JDK javap normalized dumps identical pre/post both classes.
     NOT deployed. Full details in resources/AI_CHANGELOG.md 2026-07-13 entry.
+
+  ════ TRACE INCREMENT 2b (2026-07-13, Codex m00303): five semantic gaps, snapshot v3 ════
+    NOT a V-tag. RawDecision verbatim engine-param capture (presence/present-empty/absent
+    distinct); typed-INCOMPLETE on every open/finish/sink failure path (single closeAndEmit
+    channel); route-required COMPLETE matrix; mandatory op producer/rule/domain/kind with
+    COMBINED_EVALUATOR sentinels; route/wire-shape cross-validation (phase never implies
+    route, per amended route map). 112 tests green. Stages 4-5 still open. Capture DISABLED.
+    NOT deployed. Details in AI_CHANGELOG 2026-07-13.

@@ -8,8 +8,11 @@ import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -147,6 +150,22 @@ public class DecisionSnapshotTest {
                 .build();
     }
 
+    /** Minimal verbatim raw-decision component (trace-V2 gate P0-1) consistent with
+     *  the {@code actionCount} rows the snapshot helpers build. */
+    private static DecisionSnapshot.RawDecision rawDecision(int actionCount) {
+        Map<String, List<String>> params = new LinkedHashMap<>();
+        List<String> ids = new ArrayList<>();
+        List<String> cardIds = new ArrayList<>();
+        for (int i = 0; i < actionCount; i++) {
+            ids.add("action-" + i);
+            cardIds.add("card-" + i);
+        }
+        params.put("actionId", ids);
+        params.put("cardId", cardIds);
+        return new DecisionSnapshot.RawDecision(
+                DecisionSnapshot.RawDecision.Source.ENGINE_PARAMETERS, params);
+    }
+
     private static DecisionSnapshot snapshot(int actionCount) {
         List<ActionFacts> actions = new ArrayList<>();
         for (int i = 0; i < actionCount; i++) {
@@ -159,6 +178,7 @@ public class DecisionSnapshotTest {
                 decisionFacts(actionCount),
                 actions,
                 new DecisionSnapshot.ServiceFacts(FactValue.known(3, PRODUCER, "ForceReserveService.maintenanceObligation")),
+                rawDecision(actionCount),
                 DecisionSnapshot.CURRENT_VERSION);
     }
 
@@ -183,7 +203,8 @@ public class DecisionSnapshotTest {
     public void snapshotVersionIsPresent() {
         DecisionSnapshot snap = snapshot(1);
         assertEquals(DecisionSnapshot.CURRENT_VERSION, snap.snapshotVersion());
-        assertEquals(2, snap.snapshotVersion());
+        // Version 3 = the RawDecision-bearing shape (trace-V2 gate P0-1).
+        assertEquals(3, snap.snapshotVersion());
     }
 
     @Test
@@ -598,7 +619,7 @@ public class DecisionSnapshotTest {
         try {
             new DecisionSnapshot(decisionFacts(2), reversed,
                     new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
-                    DecisionSnapshot.CURRENT_VERSION);
+                    rawDecision(2), DecisionSnapshot.CURRENT_VERSION);
             fail("snapshot must reject action facts not ordered by original ordinal");
         } catch (IllegalArgumentException expected) {
             // expected: candidate order is never sorted or rebuilt
@@ -614,7 +635,7 @@ public class DecisionSnapshotTest {
         try {
             new DecisionSnapshot(decisionFacts(3), List.of(actionFacts(0)),
                     new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
-                    DecisionSnapshot.CURRENT_VERSION);
+                    rawDecision(3), DecisionSnapshot.CURRENT_VERSION);
             fail("evidence claiming more candidates than the snapshot has rows must be rejected");
         } catch (IllegalArgumentException expected) {
             // expected
@@ -624,7 +645,7 @@ public class DecisionSnapshotTest {
             new DecisionSnapshot(decisionFacts(2),
                     List.of(actionFacts(0), actionFacts(1), actionFacts(2)),
                     new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
-                    DecisionSnapshot.CURRENT_VERSION);
+                    rawDecision(2), DecisionSnapshot.CURRENT_VERSION);
             fail("a row with a raw id beyond the claimed candidate count must be rejected");
         } catch (IllegalArgumentException expected) {
             // expected
@@ -634,7 +655,7 @@ public class DecisionSnapshotTest {
         DecisionSnapshot ghostRow = new DecisionSnapshot(decisionFacts(2),
                 List.of(actionFacts(0), actionFacts(1), allUnknownAction(2)),
                 new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
-                DecisionSnapshot.CURRENT_VERSION);
+                rawDecision(2), DecisionSnapshot.CURRENT_VERSION);
         assertEquals(3, ghostRow.actionFacts().size());
     }
 
@@ -663,7 +684,7 @@ public class DecisionSnapshotTest {
         source.add(actionFacts(0));
         DecisionSnapshot snap = new DecisionSnapshot(decisionFacts(1), source,
                 new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
-                DecisionSnapshot.CURRENT_VERSION);
+                rawDecision(1), DecisionSnapshot.CURRENT_VERSION);
         source.add(actionFacts(9)); // mutate the source AFTER construction
         assertEquals(1, snap.actionFacts().size());
     }
@@ -893,11 +914,106 @@ public class DecisionSnapshotTest {
             try {
                 new DecisionSnapshot(decisionFacts(1), List.of(actionFacts(0)),
                         new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
-                        version);
+                        rawDecision(1), version);
                 fail("snapshotVersion " + version + " must be rejected");
             } catch (IllegalArgumentException expected) {
                 // expected
             }
+        }
+    }
+
+    // ── trace-V2 gate P0-1 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): the verbatim
+    //    RawDecision component — presence, present-empty vs absent, blanks preserved ──
+
+    @Test
+    public void rawDecisionPreservesPresenceEmptinessAndBlanksVerbatim() {
+        Map<String, List<String>> params = new LinkedHashMap<>();
+        params.put("actionId", Arrays.asList("5", "", "7"));      // blank id stays blank
+        params.put("results", Arrays.asList("Yes", "No"));        // results kept as their OWN array
+        params.put("preselected", List.of());                     // PRESENT-EMPTY array
+        params.put("noPass", List.of("true"));                    // scalar presence
+        DecisionSnapshot.RawDecision raw = new DecisionSnapshot.RawDecision(
+                DecisionSnapshot.RawDecision.Source.ENGINE_PARAMETERS, params);
+
+        assertEquals(DecisionSnapshot.RawDecision.Source.ENGINE_PARAMETERS, raw.source());
+        // verbatim values, including the blank entry
+        assertEquals(Arrays.asList("5", "", "7"), raw.values("actionId"));
+        assertEquals(Arrays.asList("Yes", "No"), raw.values("results"));
+        // present-empty is fully distinct from absent
+        assertTrue(raw.has("preselected"));
+        assertEquals(List.of(), raw.values("preselected"));
+        assertFalse("absent key must not read as present-empty", raw.has("defaultIndex"));
+        assertEquals(null, raw.values("defaultIndex"));
+        // scalar presence
+        assertTrue(raw.has("noPass"));
+        assertEquals(List.of("true"), raw.values("noPass"));
+    }
+
+    @Test
+    public void rawDecisionIsDeeplyImmutableAndDetached() {
+        Map<String, List<String>> params = new LinkedHashMap<>();
+        List<String> ids = new ArrayList<>(Arrays.asList("5", "7"));
+        params.put("actionId", ids);
+        DecisionSnapshot.RawDecision raw = new DecisionSnapshot.RawDecision(
+                DecisionSnapshot.RawDecision.Source.ENGINE_PARAMETERS, params);
+
+        // mutate the caller-owned sources AFTER construction — the record must not move
+        ids.add("tampered");
+        params.put("cardId", List.of("temp1"));
+        assertEquals(Arrays.asList("5", "7"), raw.values("actionId"));
+        assertFalse(raw.has("cardId"));
+
+        // and the exposed collections are unmodifiable
+        try {
+            raw.parameters().put("x", List.of());
+            fail("parameters map must be unmodifiable");
+        } catch (UnsupportedOperationException expected) {
+            // required
+        }
+        try {
+            raw.values("actionId").add("Z");
+            fail("value lists must be unmodifiable");
+        } catch (UnsupportedOperationException expected) {
+            // required
+        }
+    }
+
+    @Test
+    public void rawDecisionRejectsMalformedConstruction() {
+        try {
+            new DecisionSnapshot.RawDecision(null,
+                    Map.of("actionId", List.of("5")));
+            fail("null source must be rejected");
+        } catch (NullPointerException expected) {
+            // required
+        }
+        try {
+            new DecisionSnapshot.RawDecision(
+                    DecisionSnapshot.RawDecision.Source.ENGINE_PARAMETERS, null);
+            fail("null parameter map must be rejected");
+        } catch (NullPointerException expected) {
+            // required
+        }
+        Map<String, List<String>> blankKey = new LinkedHashMap<>();
+        blankKey.put("  ", List.of("x"));
+        try {
+            new DecisionSnapshot.RawDecision(
+                    DecisionSnapshot.RawDecision.Source.ENGINE_PARAMETERS, blankKey);
+            fail("blank parameter key must be rejected");
+        } catch (IllegalArgumentException expected) {
+            // required
+        }
+    }
+
+    @Test
+    public void snapshotRequiresARawDecision() {
+        try {
+            new DecisionSnapshot(decisionFacts(1), List.of(actionFacts(0)),
+                    new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                    null, DecisionSnapshot.CURRENT_VERSION);
+            fail("snapshot without the raw-decision component must be rejected");
+        } catch (NullPointerException expected) {
+            // required: normalized rows never REPLACE the raw evidence
         }
     }
 }

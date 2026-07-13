@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
-import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -130,10 +129,11 @@ public class CombinedEvaluator {
                         "evaluateDecisionCore exited exceptionally; trace is truncated");
                 }
                 if (opened) {
-                    DecisionTrace trace = TraceSession.close();
-                    if (trace != null) {
-                        traceSink.accept(trace);
-                    }
+                    // GATE P0-2 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): the one
+                    // typed emission channel — finish() failures emit the fallback
+                    // envelope, sink failures are re-offered once with a typed SINK
+                    // failure. Never throws into the decision path.
+                    TraceSession.closeAndEmit(traceSink);
                 }
             } catch (Throwable t) {
                 if (opened) {
@@ -160,16 +160,20 @@ public class CombinedEvaluator {
         in.side = context.getSide();
         // Context values are the EFFECTIVE values the legacy pipeline decides with
         // (parsed-or-default); the bot-boundary session records raw param presence.
+        // GATE P0-1: DecisionContext defaults its arrays to EMPTY lists, so it cannot
+        // represent present-empty-versus-absent — contextListOrAbsent stages empty as
+        // ABSENT here, and build() marks the raw record Source.CONTEXT_EFFECTIVE. The
+        // verbatim raw distinction is owned by the bot boundary's rawParameters.
         in.noPassParam = context.isNoPass();
         in.minParam = context.getMin();
         in.maxParam = context.getMax();
         in.blockedResponses = context.getBlockedResponses();
-        in.actionIds = context.getActionIds();
-        in.actionTexts = context.getActionTexts();
-        in.cardIds = context.getCardIds();
-        in.blueprintIds = context.getBlueprints();
-        in.testingTexts = context.getTestingTexts();
-        in.selectable = context.getSelectable();
+        in.actionIds = TraceSnapshots.contextListOrAbsent(context.getActionIds());
+        in.actionTexts = TraceSnapshots.contextListOrAbsent(context.getActionTexts());
+        in.cardIds = TraceSnapshots.contextListOrAbsent(context.getCardIds());
+        in.blueprintIds = TraceSnapshots.contextListOrAbsent(context.getBlueprints());
+        in.testingTexts = TraceSnapshots.contextListOrAbsent(context.getTestingTexts());
+        in.selectable = TraceSnapshots.contextListOrAbsent(context.getSelectable());
         TraceSnapshots.Result snapshot = TraceSnapshots.build(in);
         boolean opened = TraceSession.open(getClass().getPackageName(),
             context.getDecisionId(), context.getDecisionType(), context.getDecisionText(),

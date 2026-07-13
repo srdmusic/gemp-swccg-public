@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
+import com.gempukku.swccgo.ai.models.common.decision.DecisionFacts;
+
 /**
  * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
  * "Route record"): the typed runtime route ids for one legacy decision execution.
@@ -32,5 +34,33 @@ public enum TraceRoute {
     /** No evaluator handled the decision: HeuristicAiBase.decide ran. */
     HEURISTIC_FALLBACK,
     /** Outer emergency: result null (or empty with raw noPass=true), emergency response used. */
-    RAW_NOPASS_EMERGENCY
+    RAW_NOPASS_EMERGENCY;
+
+    /**
+     * TRACE-V2 GATE P1-5 (Handoffs/CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md "route
+     * authority is duplicated and not validated"): frozen-fact cross-validation between
+     * the runtime-selected route and the snapshot's frozen decision shape
+     * (DecisionFacts.selectedRoute). TraceCollector.finish() records a typed ROUTE
+     * failure when they disagree, so the envelope preserves the disagreement as
+     * evidence instead of throwing it away.
+     *
+     * POLICY-FREE EVIDENCE ONLY (route-map amendment, CODEX_RANDO_RUNTIME_ROUTE_MAP
+     * 2026-07-13 §3 "Semantic subroute"): the constraint here is the WIRE DECISION
+     * SHAPE, nothing else. Phase is only an allowed-route window, never a route key —
+     * no phase appears in this validation, and no score/assessment ever could. The
+     * four MULTIPLE_CHOICE-guarded direct interceptors are shape-bound because their
+     * own legacy guards test the wire shape; every other route (including V45, whose
+     * legacy guard is text-only, and the cross-phase-capable lanes) is unconstrained.
+     */
+    public boolean isCompatibleWithFrozenShape(DecisionFacts.DecisionRoute frozenShape) {
+        switch (this) {
+            case V44_V67J_REVERT_APPROVAL:
+            case V170_UNDERCOVER_CHOICE:
+            case V61_SAGA_CHOICE:
+            case V79B_PARSEC_CHOICE:
+                return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
+            default:
+                return true;
+        }
+    }
 }

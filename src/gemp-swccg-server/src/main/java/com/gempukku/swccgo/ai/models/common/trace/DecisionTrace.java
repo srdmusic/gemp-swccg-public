@@ -100,6 +100,23 @@ public final class DecisionTrace {
             Objects.requireNonNull(src, "list")));
     }
 
+    /**
+     * TRACE-V2 GATE P0-2 (Handoffs/CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md
+     * "record-construction and sink failures still disappear"): derive an INCOMPLETE
+     * copy of this (already-immutable) trace with one more typed failure appended.
+     * This is the typed failure channel for post-finalization failures — e.g. a sink
+     * that throws on accept: the emitter re-offers the derived trace once, so the sink
+     * failure is inspectable evidence instead of a silent abandon.
+     */
+    public DecisionTrace withAdditionalFailure(TraceCaptureFailure failure) {
+        Objects.requireNonNull(failure, "failure");
+        List<TraceCaptureFailure> augmented = new ArrayList<>(captureFailures);
+        augmented.add(failure);
+        return new DecisionTrace(schemaVersion, botModel, decisionId, decisionType,
+            decisionText, snapshot, TraceStatus.INCOMPLETE, augmented, route,
+            rawCandidateOrder, mergeOrder, operations, finalization, intendedStateEvents);
+    }
+
     public int getSchemaVersion() { return schemaVersion; }
     public String getBotModel() { return botModel; }
     public String getDecisionId() { return decisionId; }

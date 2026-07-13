@@ -521,4 +521,28 @@ public class CombinedEvaluatorTraceTest {
         assertNotNull("comparator must flag top-level decision field divergence",
             TraceTestSupport.firstMismatch(t1, t2));
     }
+
+    // =========================================================================
+    // GAP P1-4 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): mandatory identity —
+    // framework rank/select ops carry the typed COMBINED_EVALUATOR producer, and no
+    // operation dimension is ever null
+    // =========================================================================
+
+    @Test
+    public void frameworkOperationsCarryCombinedEvaluatorProducerIdentity() {
+        DecisionTrace trace = capture(richScenario(), passableContext("A", "B", "C"));
+        boolean sawFrameworkOp = false;
+        for (TraceOperation op : trace.getOperations()) {
+            assertNotNull("producer is mandatory on every op", op.getEvaluatorId());
+            assertNotNull("ruleId is mandatory on every op", op.getRuleId());
+            assertNotNull("domainId is mandatory on every op", op.getDomainId());
+            assertNotNull("outputKind is mandatory on every op", op.getOutputKind());
+            if (op.getOp() == TraceOp.RANK || op.getOp() == TraceOp.SELECT) {
+                sawFrameworkOp = true;
+                assertEquals("framework ranks/selects, so it is the producer",
+                    TraceOperation.PRODUCER_COMBINED_EVALUATOR, op.getEvaluatorId());
+            }
+        }
+        assertTrue("scenario must produce at least one rank/select", sawFrameworkOp);
+    }
 }

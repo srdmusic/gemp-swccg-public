@@ -51,21 +51,84 @@ public final class TraceSession {
                 rawCandidateIds, snapshot, snapshotIssues, expectsFinalResponse));
             return true;
         } catch (Throwable t) {
-            abandon();
-            return false;
+            // GATE P0-2 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): open() no longer
+            // fails silently. A degraded evidence-only collector (no snapshot, no raw
+            // ids — the failed inputs themselves may be what threw) is installed with a
+            // typed OPEN failure, so the emitted envelope is INCOMPLETE with evidence
+            // instead of the whole decision's trace disappearing.
+            try {
+                TraceCollector degraded = new TraceCollector(botModel, decisionId,
+                    decisionType, decisionText, null, null,
+                    List.of("session open failed before staging completed: "
+                        + t.getClass().getName() + ": " + t.getMessage()),
+                    expectsFinalResponse);
+                degraded.markFailure(TraceCaptureFailure.Stage.OPEN, t.getClass().getName(),
+                    "trace session construction failed; degraded evidence-only session installed");
+                CURRENT.set(degraded);
+                return true;
+            } catch (Throwable second) {
+                abandon();
+                return false;  // structurally impossible to preserve evidence
+            }
         }
     }
 
+    /** TEST SEAM (package-private, GATE P0-2 lifecycle proof): install a prepared
+     *  collector when none is active, so the finish()-failure fallback path can be
+     *  driven deterministically from the same-package lifecycle test. Never used in
+     *  production code. */
+    static boolean openForTesting(TraceCollector collector) {
+        if (collector == null || CURRENT.get() != null) {
+            return false;
+        }
+        CURRENT.set(collector);
+        return true;
+    }
+
     /** Close the session and build the one complete envelope. Null when nothing was open.
-     *  The thread-local is ALWAYS cleared, even when record construction fails. */
+     *  The thread-local is ALWAYS cleared, even when record construction fails.
+     *  GATE P0-2: a finish() failure no longer returns null — the collector's typed
+     *  fallback envelope (INCOMPLETE, CLOSE-stage failure) survives where structurally
+     *  possible, so record-construction failure stays inspectable evidence. */
     public static DecisionTrace close() {
         TraceCollector collector = CURRENT.get();
         try {
             return (collector != null) ? collector.finish() : null;
         } catch (Throwable t) {
-            return null;
+            try {
+                return collector.fallback(t);
+            } catch (Throwable second) {
+                return null;  // even the primitive fallback failed; nothing sensible left
+            }
         } finally {
             CURRENT.remove();
+        }
+    }
+
+    /**
+     * GATE P0-2: the one emission channel — close the session and deliver the envelope
+     * to the sink, with every failure typed. A finish() failure emits the fallback
+     * envelope (via close()); a sink accept() failure re-offers the SAME trace once,
+     * derived INCOMPLETE with a typed SINK failure appended, so sink failures are
+     * inspectable through the sink itself. Never throws into the decision path.
+     */
+    public static void closeAndEmit(TraceSink sink) {
+        DecisionTrace trace = close();
+        if (trace == null || sink == null) {
+            return;
+        }
+        try {
+            sink.accept(trace);
+        } catch (Throwable sinkT) {
+            try {
+                sink.accept(trace.withAdditionalFailure(new TraceCaptureFailure(
+                    TraceCaptureFailure.Stage.SINK, sinkT.getClass().getName(),
+                    "sink accept failed for the finalized trace; re-offered once with this typed SINK failure: "
+                        + sinkT.getMessage())));
+            } catch (Throwable second) {
+                // the sink refused the typed failure too; no further channel exists and
+                // gameplay must never be harmed by capture
+            }
         }
     }
 
@@ -147,6 +210,24 @@ public final class TraceSession {
         }
     }
 
+    // ── GATE P1-4 sentinel filling: operation identity is mandatory on every
+    //    dimension. A null from an unmigrated legacy arm becomes the explicit
+    //    LEGACY_UNTAGGED sentinel at this choke point (visible debt, never null
+    //    inference); framework merge/rank/select ops carry the COMBINED_EVALUATOR
+    //    sentinels. TraceOperation's constructor rejects any null that slips past. ──
+
+    private static TraceRuleId legacyOr(TraceRuleId ruleId) {
+        return ruleId != null ? ruleId : TraceRuleId.LEGACY_UNTAGGED;
+    }
+
+    private static TraceDomainId legacyOr(TraceDomainId domainId) {
+        return domainId != null ? domainId : TraceDomainId.LEGACY_UNTAGGED;
+    }
+
+    private static TraceOutputKind legacyOr(TraceOutputKind outputKind) {
+        return outputKind != null ? outputKind : TraceOutputKind.LEGACY_UNTAGGED;
+    }
+
     /** Constructor score. */
     public static void recordInitial(Object handle, String actionId, float score,
                                      TraceRuleId ruleId, TraceDomainId domainId,
@@ -156,7 +237,7 @@ public final class TraceSession {
         try {
             c.record(handle, actionId, TraceOp.INITIAL,
                 null, null, Float.floatToRawIntBits(score),
-                false, null, ruleId, domainId, outputKind, detail);
+                false, null, legacyOr(ruleId), legacyOr(domainId), legacyOr(outputKind), detail);
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
@@ -171,7 +252,7 @@ public final class TraceSession {
         try {
             c.record(handle, actionId, TraceOp.ADD,
                 Float.floatToRawIntBits(before), Float.floatToRawIntBits(delta), Float.floatToRawIntBits(after),
-                false, null, ruleId, domainId, outputKind, detail);
+                false, null, legacyOr(ruleId), legacyOr(domainId), legacyOr(outputKind), detail);
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
@@ -186,7 +267,7 @@ public final class TraceSession {
         try {
             c.record(handle, actionId, TraceOp.SET,
                 Float.floatToRawIntBits(before), null, Float.floatToRawIntBits(after),
-                false, null, ruleId, domainId, outputKind, detail);
+                false, null, legacyOr(ruleId), legacyOr(domainId), legacyOr(outputKind), detail);
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
@@ -205,7 +286,8 @@ public final class TraceSession {
         try {
             c.record(handle, actionId, TraceOp.HARD_VETO,
                 null, null, null,
-                true, effectiveVetoReason, ruleId, domainId, outputKind, requestedReason);
+                true, effectiveVetoReason,
+                legacyOr(ruleId), legacyOr(domainId), legacyOr(outputKind), requestedReason);
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
@@ -219,7 +301,8 @@ public final class TraceSession {
         try {
             c.record(handle, actionId, TraceOp.MERGE,
                 Float.floatToRawIntBits(before), null, Float.floatToRawIntBits(after),
-                vetoed, vetoReason, null, null, null, detail);
+                vetoed, vetoReason, TraceRuleId.COMBINED_EVALUATOR,
+                TraceDomainId.COMBINED_EVALUATOR, TraceOutputKind.COMBINED_EVALUATOR, detail);
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
@@ -232,7 +315,8 @@ public final class TraceSession {
         try {
             c.record(handle, actionId, TraceOp.RANK,
                 null, null, (score != null) ? Float.floatToRawIntBits(score.floatValue()) : null,
-                false, null, null, null, null, detail);
+                false, null, TraceRuleId.COMBINED_EVALUATOR,
+                TraceDomainId.COMBINED_EVALUATOR, TraceOutputKind.COMBINED_EVALUATOR, detail);
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
@@ -246,7 +330,8 @@ public final class TraceSession {
         try {
             c.record(handle, actionId, TraceOp.SELECT,
                 null, null, (score != null) ? Float.floatToRawIntBits(score.floatValue()) : null,
-                vetoed, vetoReason, null, null, null, detail);
+                vetoed, vetoReason, TraceRuleId.COMBINED_EVALUATOR,
+                TraceDomainId.COMBINED_EVALUATOR, TraceOutputKind.COMBINED_EVALUATOR, detail);
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.OPERATION, t);
         }
@@ -260,6 +345,24 @@ public final class TraceSession {
             c.recordRoute(route, evidence, fallbackReason);
         } catch (Throwable t) {
             failQuietly(c, TraceCaptureFailure.Stage.ROUTE, t);
+        }
+    }
+
+    /**
+     * GATE P0-3 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md "COMPLETE is not
+     * route-complete"): routes that legitimately never run the evaluator lane (direct
+     * interceptors, chaos fallback, pure heuristic, raw-noPass emergency) mark the
+     * lane's finalization facts EXPLICITLY not-applicable — the route-completeness
+     * matrix in finish() refuses COMPLETE for silently-null facts. Per-fact no-op when
+     * a real value was already recorded.
+     */
+    public static void recordEvaluatorLaneNotApplicable(String reason) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.markEvaluatorLaneNotApplicable(reason);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
         }
     }
 

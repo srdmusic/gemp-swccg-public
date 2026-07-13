@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.trace;
 
+import com.gempukku.swccgo.ai.models.common.decision.DecisionFacts;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
 
 import java.util.ArrayList;
@@ -23,8 +24,16 @@ import java.util.Map;
  * Every swallowed capture error lands here as a typed failure; finish() then stamps the
  * envelope INCOMPLETE. Silent truncation is structurally impossible: the status/failure
  * consistency check lives in the DecisionTrace constructor itself.
+ *
+ * TRACE-V2 GATE P0-2/P0-3/P1-5 (Handoffs/CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md):
+ * finish() now enforces the route-specific completeness matrix (pass/cancel facts on
+ * every route, pre-safety winner + operations on the evaluator route, explicit
+ * not-applicable markers on routes that legitimately skip a fact) and cross-validates
+ * the selected runtime route against the snapshot's frozen decision shape. fallback()
+ * is the typed failure envelope for a finish() that itself throws. Non-final ONLY so
+ * the same-package lifecycle test can force that failure deterministically.
  */
-final class TraceCollector {
+class TraceCollector {
 
     private static final class Staged {
         final int seq;
@@ -99,8 +108,11 @@ final class TraceCollector {
     private Integer preSafetyWinnerScoreBits;
     private boolean preSafetyWinnerVetoed;
     private String preSafetyWinnerVetoReason;
+    private boolean preSafetyWinnerRecorded;              // P0-3: recorded-null != never-reached
+    private String preSafetyWinnerNotApplicableReason;    // P0-3: explicit skip, never silent null
     private Boolean passEligible;
     private String passEligibilityFacts;
+    private String passEligibilityNotApplicableReason;    // P0-3: explicit skip, never silent null
     private String multiSelectResponse;
     private String emergencyResponse;
     private String emergencyReason;
@@ -166,9 +178,14 @@ final class TraceCollector {
                 Integer beforeBits, Integer deltaBits, Integer afterBits,
                 boolean vetoed, String vetoReason,
                 TraceRuleId ruleId, TraceDomainId domainId, TraceOutputKind outputKind, String detail) {
+        // GATE P1-4: producer identity is mandatory. Outside an evaluator binding the
+        // framework itself is performing the operation (merge/rank/select/synthetic
+        // pass), so it carries the typed COMBINED_EVALUATOR producer — never null.
+        String producer = (currentEvaluatorId != null)
+            ? currentEvaluatorId : TraceOperation.PRODUCER_COMBINED_EVALUATOR;
         staged.add(new Staged(nextSeq++, handle, actionId, op,
             beforeBits, deltaBits, afterBits, vetoed, vetoReason,
-            currentEvaluatorId, ruleId, domainId, outputKind, detail));
+            producer, ruleId, domainId, outputKind, detail));
     }
 
     /** Ordered route observation. The SELECTED route is the last lane observed (the one
@@ -180,6 +197,8 @@ final class TraceCollector {
     void recordPassEligibility(boolean eligible, String facts) {
         this.passEligible = eligible;
         this.passEligibilityFacts = facts;
+        // a recorded value supersedes any earlier not-applicable marker (P0-3)
+        this.passEligibilityNotApplicableReason = null;
     }
 
     void recordPreSafetyWinner(String actionId, Integer scoreBits, boolean vetoed, String vetoReason) {
@@ -187,6 +206,27 @@ final class TraceCollector {
         this.preSafetyWinnerScoreBits = scoreBits;
         this.preSafetyWinnerVetoed = vetoed;
         this.preSafetyWinnerVetoReason = vetoReason;
+        this.preSafetyWinnerRecorded = true;
+        // a recorded value supersedes any earlier not-applicable marker (P0-3)
+        this.preSafetyWinnerNotApplicableReason = null;
+    }
+
+    /**
+     * GATE P0-3: a route that legitimately never runs the evaluator lane (direct
+     * interceptors, chaos, pure heuristic, raw-noPass emergency after a non-evaluator
+     * lane) marks the lane's finalization facts EXPLICITLY not-applicable instead of
+     * leaving them silently null. No-op per fact when a real value was already
+     * recorded (e.g. heuristic fallback after the evaluator lane ran and declined).
+     */
+    void markEvaluatorLaneNotApplicable(String reason) {
+        String marked = (reason != null && !reason.isBlank())
+            ? reason : "evaluator lane not applicable on this route";
+        if (passEligible == null) {
+            this.passEligibilityNotApplicableReason = marked;
+        }
+        if (!preSafetyWinnerRecorded) {
+            this.preSafetyWinnerNotApplicableReason = marked;
+        }
     }
 
     void recordMultiSelectResponse(String response) {
@@ -257,9 +297,53 @@ final class TraceCollector {
                 "bot-boundary session closed without a recorded final response");
         }
 
+        // ── GATE P0-3: route-specific completeness matrix. COMPLETE requires every
+        //    fact the selected route produces — recorded or EXPLICITLY not-applicable.
+        //    (Final-response completeness stays owned by the expectsFinalResponse check
+        //    above: only the bot decide() boundary reaches that fact at all.) ──
+        if (routeRecord != null) {
+            TraceRoute selectedRoute = routeRecord.selected();
+            if (passEligible == null && passEligibilityNotApplicableReason == null) {
+                markFailure(TraceCaptureFailure.Stage.FINALIZATION, "route-completeness",
+                    "route " + selectedRoute + " closed without pass/cancel eligibility facts"
+                        + " (record a value or an explicit not-applicable)");
+            }
+            if (selectedRoute == TraceRoute.COMBINED_EVALUATOR) {
+                // the evaluator route PRODUCES a pre-safety winner and operations —
+                // not-applicable is not an option here (gate: "evaluator routes do not
+                // legitimately lack ops").
+                if (!preSafetyWinnerRecorded) {
+                    markFailure(TraceCaptureFailure.Stage.FINALIZATION, "route-completeness",
+                        "COMBINED_EVALUATOR route closed without a recorded pre-safety winner");
+                }
+                if (staged.isEmpty()) {
+                    markFailure(TraceCaptureFailure.Stage.OPERATION, "route-completeness",
+                        "COMBINED_EVALUATOR route closed with zero recorded operations");
+                }
+            } else if (!preSafetyWinnerRecorded && preSafetyWinnerNotApplicableReason == null) {
+                markFailure(TraceCaptureFailure.Stage.FINALIZATION, "route-completeness",
+                    "route " + selectedRoute + " closed without a pre-safety winner"
+                        + " (record a value or an explicit not-applicable)");
+            }
+
+            // ── GATE P1-5: frozen-fact cross-validation. The runtime-selected route must
+            //    be compatible with the snapshot's frozen decision SHAPE (wire shape only —
+            //    phase is a window, never a route key; see TraceRoute.isCompatibleWithFrozenShape).
+            //    Disagreement is preserved as a typed ROUTE failure, not thrown away. ──
+            if (snapshot != null) {
+                DecisionFacts.DecisionRoute frozenShape = snapshot.decisionFacts().selectedRoute();
+                if (!selectedRoute.isCompatibleWithFrozenShape(frozenShape)) {
+                    markFailure(TraceCaptureFailure.Stage.ROUTE, "route-evidence-mismatch",
+                        "selected runtime route " + selectedRoute
+                            + " is incompatible with the frozen decision shape " + frozenShape);
+                }
+            }
+        }
+
         TraceFinalization finalization = new TraceFinalization(
             preSafetyWinnerActionId, preSafetyWinnerScoreBits, preSafetyWinnerVetoed,
-            preSafetyWinnerVetoReason, passEligible, passEligibilityFacts,
+            preSafetyWinnerVetoReason, preSafetyWinnerRecorded, preSafetyWinnerNotApplicableReason,
+            passEligible, passEligibilityFacts, passEligibilityNotApplicableReason,
             multiSelectResponse, emergencyResponse, emergencyReason,
             corrections, finalResponse, finalResponseRecorded, skippedCommonFinalizer);
 
@@ -269,5 +353,45 @@ final class TraceCollector {
             decisionId, decisionType, decisionText,
             snapshot, status, failures, routeRecord,
             rawCandidateOrder, mergeOrder, ops, finalization, stateEvents);
+    }
+
+    /**
+     * TRACE-V2 GATE P0-2 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md "record-construction
+     * and sink failures still disappear"): the typed failure envelope for a finish() that
+     * threw. Built from primitives and defensive copies only, so it survives whatever
+     * broke the full construction; carries every already-collected typed failure plus a
+     * CLOSE-stage failure naming the error class. TraceSession.close() returns this
+     * instead of null, so construction failure reaches the sink as inspectable evidence.
+     */
+    DecisionTrace fallback(Throwable cause) {
+        List<TraceCaptureFailure> fallbackFailures = new ArrayList<>();
+        try {
+            fallbackFailures.addAll(failures);
+        } catch (Throwable ignored) {
+            // the collected list itself is broken; the CLOSE failure below still lands
+        }
+        fallbackFailures.add(new TraceCaptureFailure(TraceCaptureFailure.Stage.CLOSE,
+            cause.getClass().getName(),
+            "record construction failed in finish(): " + cause.getMessage()));
+        List<String> rawOrder;
+        try {
+            rawOrder = new ArrayList<>(rawCandidateOrder);
+        } catch (Throwable ignored) {
+            rawOrder = new ArrayList<>();
+        }
+        List<String> mergeOrderCopy;
+        try {
+            mergeOrderCopy = new ArrayList<>(mergeOrder);
+        } catch (Throwable ignored) {
+            mergeOrderCopy = new ArrayList<>();
+        }
+        TraceFinalization emptyFinalization = new TraceFinalization(
+            null, null, false, null, false, null,
+            null, null, null,
+            null, null, null, List.of(), null, false, false);
+        return new DecisionTrace(DecisionTrace.SCHEMA_VERSION, botModel,
+            decisionId, decisionType, decisionText,
+            null, TraceStatus.INCOMPLETE, fallbackFailures, null,
+            rawOrder, mergeOrderCopy, List.of(), emptyFinalization, List.of());
     }
 }

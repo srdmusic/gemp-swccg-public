@@ -15,7 +15,6 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
-import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceIntendedStateEvent;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -621,6 +620,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                     if (traceOpened) {
                         TraceSession.recordRoute(TraceRoute.V45_OPTIONAL_FORFEIT,
                             "decision text contains 'forfeit' + 'if desired'", null);
+                        // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
+                        TraceSession.recordEvaluatorLaneNotApplicable(
+                            "direct interceptor V45: evaluator lane never runs on this route");
                         TraceSession.recordFinalResponse("", true);
                     }
                     return "";  // Empty = select nothing = pass
@@ -656,6 +658,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 if (traceOpened) {
                     TraceSession.recordRoute(TraceRoute.V44_V67J_REVERT_APPROVAL,
                         "MULTIPLE_CHOICE + decision text contains 'revert'", null);
+                    // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
+                    TraceSession.recordEvaluatorLaneNotApplicable(
+                        "direct interceptor V44/V67j: evaluator lane never runs on this route");
                     TraceSession.recordFinalResponse(String.valueOf(yesIndex), true);
                 }
                 return String.valueOf(yesIndex);
@@ -714,6 +719,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 if (traceOpened) {
                     TraceSession.recordRoute(TraceRoute.V170_UNDERCOVER_CHOICE,
                         "MULTIPLE_CHOICE + decision text contains 'undercover spy'", null);
+                    // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
+                    TraceSession.recordEvaluatorLaneNotApplicable(
+                        "direct interceptor V170: evaluator lane never runs on this route");
                     TraceSession.recordFinalResponse(String.valueOf(v170Pick), true);
                 }
                 return String.valueOf(v170Pick);
@@ -773,6 +781,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                             if (traceOpened) {
                                 TraceSession.recordRoute(TraceRoute.V61_SAGA_CHOICE,
                                     "MULTIPLE_CHOICE results contain TFISMF saga options", null);
+                                // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
+                                TraceSession.recordEvaluatorLaneNotApplicable(
+                                    "direct interceptor V61: evaluator lane never runs on this route");
                                 TraceSession.recordFinalResponse(String.valueOf(pick), true);
                             }
                             return String.valueOf(pick);
@@ -793,6 +804,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 if (traceOpened) {
                     TraceSession.recordRoute(TraceRoute.CHAOS_FALLBACK,
                         "chaos gate passed (phase=" + currentPhase + ", outside deploy/battle)", null);
+                    // GATE P0-3: chaos bypasses the evaluator lane — facts explicitly n/a.
+                    TraceSession.recordEvaluatorLaneNotApplicable(
+                        "chaos fallback: heuristic base bypassed the evaluator lane");
                 }
                 result = super.decide(playerId, decision, gameState);
             } else {
@@ -812,6 +826,10 @@ public class TheChosenOneAi extends HeuristicAiBase {
                     if (traceOpened) {
                         TraceSession.recordRoute(TraceRoute.HEURISTIC_FALLBACK,
                             "no evaluator handled decisionType=" + decisionType, null);
+                        // GATE P0-3: explicit n/a — a per-fact no-op when the evaluator
+                        // lane DID run (and record its facts) before declining.
+                        TraceSession.recordEvaluatorLaneNotApplicable(
+                            "heuristic fallback: no evaluator lane facts for this decision");
                     }
                     result = super.decide(playerId, decision, gameState);
                     // V191 (2026-07-06): TOP-N breadcrumb for the fallback path.
@@ -852,6 +870,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 if (traceOpened) {
                     TraceSession.recordRoute(TraceRoute.RAW_NOPASS_EMERGENCY,
                         traceEmergencyWhy, traceEmergencyWhy);
+                    // GATE P0-3: explicit n/a backstop — a per-fact no-op when the
+                    // evaluator lane recorded its facts before the emergency took over.
+                    TraceSession.recordEvaluatorLaneNotApplicable(traceEmergencyWhy);
                     TraceSession.recordEmergencyResponse(result, emergency.reason);
                 }
             }
@@ -896,17 +917,13 @@ public class TheChosenOneAi extends HeuristicAiBase {
         } finally {
             context = null;
             // TRACE ORACLE V2: only the opener closes and emits; the thread-local is
-            // ALWAYS cleared (TraceSession.close clears in its own finally). A sink
-            // exception is swallowed — gameplay is never harmed by capture.
+            // ALWAYS cleared (TraceSession.close clears in its own finally).
+            // GATE P0-2 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): closeAndEmit is
+            // the one typed emission channel — a finish() failure emits the fallback
+            // INCOMPLETE envelope, a sink accept() failure re-offers the trace once
+            // with a typed SINK failure appended. Never throws into the decision path.
             if (traceOpened) {
-                try {
-                    DecisionTrace trace = TraceSession.close();
-                    if (trace != null) {
-                        decisionTraceSink.accept(trace);
-                    }
-                } catch (Throwable traceT) {
-                    TraceSession.abandon();
-                }
+                TraceSession.closeAndEmit(decisionTraceSink);
             }
         }
     }
@@ -925,6 +942,11 @@ public class TheChosenOneAi extends HeuristicAiBase {
         Map<String, String[]> params = decision.getDecisionParameters();
         TraceSnapshots.Input in = new TraceSnapshots.Input();
         in.producerId = "bot-decide-boundary";
+        // GATE P0-1 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): the COMPLETE verbatim
+        // engine parameter map — every key preserved separately (presence = key exists;
+        // present-empty arrays and blank entries verbatim). The parsed fields below stay
+        // the typed-facts inputs; the raw evidence is never replaced by them.
+        in.rawParameters = (params != null) ? params : java.util.Collections.emptyMap();
         in.decisionId = String.valueOf(decision.getAwaitingDecisionId());
         in.decisionTypeName = decisionType;
         in.decisionText = decisionText;

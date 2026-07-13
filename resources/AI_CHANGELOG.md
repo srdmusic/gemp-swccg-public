@@ -17,6 +17,12 @@ Everything below is the ONLY divergence from pure devs code — each is reversib
 - Held items untouched: V122, V67as, ObjectiveAnalyzer V193, ObjectiveHandler, ActionAudit, DE 1424-1794.
 - NOT deployed; separate revert boundary.
 
+## 2026-07-13 — TRACE INCREMENT 2b (Codex gate m00303; both bots) — capture still DISABLED
+- Five semantic gaps closed: (P0-1) DecisionSnapshot.RawDecision — the FULL engine parameter map verbatim (presence vs present-empty vs absent distinct; blanks/duplicates/order preserved; results its own array; 22-key fixture), snapshot v3; (P0-2) no failure disappears — open failures install a degraded evidence-only collector, finish() throws become typed-INCOMPLETE fallbacks, sink failures re-offer once with typed SINK evidence via the single closeAndEmit channel; (P0-3) COMPLETE now route-required — pass/cancel facts on every route, pre-safety winner (recorded-null ≠ never-reached) + ≥1 op on the evaluator route, explicit not-applicable elsewhere; (P1-4) operations carry mandatory producer/rule/domain/kind (COMBINED_EVALUATOR sentinels for framework rank/select/merge; nulls impossible); (P1-5) route/frozen-shape cross-validation — wire shape only, PHASE NEVER IMPLIES ROUTE per the amended route map; mismatch = typed ROUTE failure, evidence preserved.
+- 112 tests green (97 + 15 new), independently re-run; mirrors byte-identical except the documented Rando-only V79b block.
+- Deferred (disclosed): contract stages 4-5 (inner mutation observation, real-decide fixtures, cross-bot normalized comparison, chaos fixture).
+- NOT deployed; capture off.
+
 ## 2026-07-13 — B2 CONSISTENCY GAPS closed (Codex gate m00277; shared types) — still zero consumers
 - Four internal consistency gaps from the fa0f254ac gate: Builder.turn boxed Integer, unset = construction failure (explicit turn 0 stays legal); RouteSelectionEvidence now CARRIES selectedRoute and DecisionFacts rejects route/evidence mismatch; KNOWN obligationFlags cross-validated against KNOWN noPass/minimum (UNKNOWN imposes nothing — trace shadow paths intact); DecisionSnapshot validates CandidateShape against actual ActionFacts rows (ghost-row surplus stays lawful for the honest-INCOMPLETE trace case); the inconsistent 3+3-claim test data fixed.
 - TraceSnapshots adapted (one line: evidence carries route); zero bot-file edits. 97 tests green (91 + 6 new).

@@ -25,6 +25,12 @@ public record TraceRuleId(String id) {
     /** Rule id recorded by the un-migrated legacy choke points. */
     public static final TraceRuleId LEGACY_UNTAGGED = new TraceRuleId("LEGACY_UNTAGGED");
 
+    /** Rule id for operations the CombinedEvaluator FRAMEWORK itself performs
+     *  (merge/rank/select/synthetic-pass) — gate P1-4 mandatory-identity sentinel
+     *  (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): framework structure is not a
+     *  rule arm, and it is not legacy debt either; it gets its own explicit identity. */
+    public static final TraceRuleId COMBINED_EVALUATOR = new TraceRuleId("COMBINED_EVALUATOR");
+
     public TraceRuleId {
         Objects.requireNonNull(id, "id");
         if (id.isBlank()) {

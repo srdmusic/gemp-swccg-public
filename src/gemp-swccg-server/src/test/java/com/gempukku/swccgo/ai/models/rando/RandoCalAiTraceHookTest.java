@@ -99,6 +99,11 @@ public class RandoCalAiTraceHookTest {
             trace.getFinalization().skippedCommonFinalizer());
         assertTrue(trace.getFinalization().finalResponseRecorded());
         assertEquals("", trace.getFinalization().finalResponse());
+        // GATE P0-3: the fields the direct route skips are EXPLICITLY not-applicable
+        assertNotNull("pass eligibility must be explicit n/a on a direct route",
+            trace.getFinalization().passEligibilityNotApplicableReason());
+        assertNotNull("pre-safety winner must be explicit n/a on a direct route",
+            trace.getFinalization().preSafetyWinnerNotApplicableReason());
         // full frozen raw input: CARD_SELECTION candidates come from the raw cardId array
         assertEquals(Arrays.asList("temp1", "temp2"), trace.getRawCandidateOrder());
         assertEquals("42", trace.getDecisionId());
