@@ -1,7 +1,7 @@
   ════ ACTIVATE + CONTROL PHASE B CUTOVER (2026-07-14, Steve-approved, both bots) ════
 Six stamped ACTIVATE and CONTROL routes now have one shared typed owner after the existing chaos gate and before PULL
 or legacy evaluation. Amount arithmetic is consolidated in ActivateAmountPolicy; CONTROL drain scoring is consolidated
-in ControlDrainAssessment over immutable facts. Existing score magnitudes, operation order, candidate order, and logs
+in ControlDrainAssessment over a lazy collector returning immutable fact records. Existing score magnitudes, operation order, candidate order, and logs
 remain pinned. ForceActivationEvaluator now requires ACTIVATE_AMOUNT or ACTIVATE_ALLOWANCE instead of claiming every
 INTEGER. PassEvaluator also excludes INTEGER, closing the optional-min-zero regression K2 found in m00634; unstamped
 gain amounts now reach the shared heuristic value picker instead of silently choosing zero. Normal zero activation
