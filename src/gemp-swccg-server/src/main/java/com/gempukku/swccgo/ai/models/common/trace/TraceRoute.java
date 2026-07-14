@@ -31,6 +31,8 @@ public enum TraceRoute {
     CHAOS_FALLBACK,
     /** Normal lane: CombinedEvaluator handled the decision. */
     COMBINED_EVALUATOR,
+    /** Canonical top-level DRAW decision owned by the typed DRAW finalizer lane. */
+    DRAW_TOP_LEVEL,
     /** No evaluator handled the decision: HeuristicAiBase.decide ran. */
     HEURISTIC_FALLBACK,
     /** Outer emergency: result null (or empty with raw noPass=true), emergency response used. */
@@ -59,6 +61,8 @@ public enum TraceRoute {
             case V61_SAGA_CHOICE:
             case V79B_PARSEC_CHOICE:
                 return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
+            case DRAW_TOP_LEVEL:
+                return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE;
             default:
                 return true;
         }

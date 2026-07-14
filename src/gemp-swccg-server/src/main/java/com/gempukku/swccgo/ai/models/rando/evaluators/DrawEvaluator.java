@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
+import com.gempukku.swccgo.ai.models.common.phase.DrawReserveLegacyReader;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -475,20 +476,14 @@ public class DrawEvaluator extends ActionEvaluator {
      *   +N total ENGINE maintain cost (MaintenanceFacts) of our on-table
      *      maintenance cards — NOT deploy cost, NOT +1/card (T2 COMMIT-1 2026-07-06)
      *   +1 per contested location (battle interrupt headroom)
-     * Hard cap at 4 — hoarding more than 4 force in pile is wasted.
+     * Base reserve is capped at 10. Mandatory Hidden Path corridor transit
+     * funding is added after that cap.
      *
-     * T2 COMMIT-1 (2026-07-06, audit force-economy-5): the permanent-card scan below
-     * is Zone.isInPlay()-gated at loop top. getAllPermanentCards returns EVERY card
-     * ever created including RESERVE_DECK (GameState.java:2800-2802), so before the
-     * gate this method phantom-reserved for DTF/First Strike/IAO/maintenance/Verge
-     * from turn 1 on mere deck presence.
-     *
-     * T2 COMMIT-2 (2026-07-06): the five detections now come from the shared
-     * per-decision ForceReserveService cache (DecisionContext.getForceReserveFacts);
-     * the inline scan is commented out in place. Same gate, same detection.
+     * The five threat detections come from the shared per-decision
+     * ForceReserveService cache. DrawReserveLegacyReader owns the common board
+     * reads and DrawReserveAssessment owns the arithmetic for both bots.
      */
     private int calculateForceToReserve(DecisionContext context, int handSize) {
-        int forceToReserve = 0;
         SwccgGame game = context.getGame();
         if (game == null) {
             return 1;  // safe default
@@ -497,103 +492,16 @@ public class DrawEvaluator extends ActionEvaluator {
         GameState gameState = context.getGameState();
         String playerId = context.getPlayerId();
         int turnNumber = context.getTurnNumber();
-
-        try {
-            int contestedCount = 0;
-            int maintenanceCost = 0;
-            boolean opponentHasDTF = false;
-            boolean opponentHasFirstStrike = false;
-            boolean opponentHasIAO = false;  // V78: Imperial Arrest Order
-            boolean ourVergeNeedsDeathStarMove = false;  // V79: save 1 force for Death Star move
-
-            Collection<PhysicalCard> locations = gameState.getLocationsInOrder();
-            for (PhysicalCard loc : locations) {
-                if (loc == null) continue;
-                Collection<PhysicalCard> cardsAtLoc = gameState.getCardsAtLocation(loc);
-                boolean weHavePresence = false;
-                boolean theyHavePresence = false;
-                for (PhysicalCard card : cardsAtLoc) {
-                    if (card.getOwner() != null && card.getOwner().equals(playerId)) {
-                        weHavePresence = true;
-                    } else {
-                        theyHavePresence = true;
-                    }
-                }
-                if (weHavePresence && theyHavePresence) contestedCount++;
-            }
-
-            // ═══ T2 MOVE #1 COMMIT-2 (2026-07-06): shared force-reserve facts ═══
-            // The five detections below (DTF / First Strike / IAO / maintenance /
-            // Verge) now come from the ONE cached ForceReserveService pass on
-            // DecisionContext (getForceReserveFacts) — same in-play gate, same
-            // title/icon detection, MaintenanceFacts basis. See the
-            // ForceReserveService header for the 3 documented unifications
-            // (exact-opponent owner match, any-unused-grabber, gated spy count).
-            // Old inline scan removed in cleanup batch 1.7 (see git history);
-            // updates V58/V67w/V78/V79 in place (weights unchanged).
-            com.gempukku.swccgo.ai.models.common.strategy.ForceReserveService.Facts rsvFacts =
-                context.getForceReserveFacts();
-            opponentHasDTF = rsvFacts.dtfActive;
-            opponentHasFirstStrike = rsvFacts.firstStrikeActive;
-            opponentHasIAO = rsvFacts.iaoActive;
-            maintenanceCost = rsvFacts.maintenanceObligation;
-            ourVergeNeedsDeathStarMove = rsvFacts.vergeNeedsDeathStarMove;
-
-            if (opponentHasDTF)        forceToReserve += 1;
-            if (opponentHasFirstStrike) forceToReserve += 1;
-            if (contestedCount > 0)     forceToReserve += 1;  // one battle-interrupt buffer
-            if (turnNumber >= 4)        forceToReserve += 1;  // mid/late-game interrupt buffer
-            if (opponentHasIAO)         forceToReserve += 2;  // V78: IAO retrieval-cancel tax
-            if (ourVergeNeedsDeathStarMove) forceToReserve += 1;  // V79: Death Star move reserve
-            forceToReserve += maintenanceCost;
-
-            // V67w: Bumped cap from 4 → 8. Multiple maintenance characters PLUS
-            // DTF/First Strike/contested can legitimately need 5-6 force reserved.
-            // V78: Bumped cap to 10 to accommodate IAO tax on top of existing reserves.
-            forceToReserve = Math.min(10, forceToReserve);
-
-            // V67z TRANSIT RESERVE (Steve, 2026-06-18): on Hidden Path (unflipped),
-            // each Jedi survivor sitting at Mapuzo: Underground Corridor needs 1 Force
-            // in the MOVE phase to fire "Move Jedi Survivor here to a site" (forFree=
-            // false, baseCost 1) and transit off Mapuzo — which flips the objective and
-            // restores them from crippled (power/forfeit 3, game text canceled). Added
-            // ON TOP of the cap: this is mandatory transit funding, not a defensive
-            // luxury. Without it Rando spends all Force on deploy/activate and the
-            // Jedi sit stranded crippled at the Corridor (replay aj816vuaxukwoie2).
-            try {
-                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer hpRsvObj =
+        return DrawReserveLegacyReader.calculate(gameState, playerId, turnNumber,
+            context::getForceReserveFacts,
+            () -> {
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objective =
                     context.getObjectiveAnalyzer();
-                if (hpRsvObj != null && hpRsvObj.isAnalyzed() && !hpRsvObj.isFlipped()
-                        && hpRsvObj.getObjectiveTitle() != null
-                        && hpRsvObj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path")) {
-                    int corridorJedi = 0;
-                    for (PhysicalCard loc : gameState.getLocationsInOrder()) {
-                        if (loc == null || loc.getTitle() == null
-                                || !loc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("underground corridor")) continue;
-                        for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
-                            if (c != null && playerId.equals(c.getOwner())
-                                    && c.getBlueprint() != null
-                                    && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                corridorJedi++;
-                            }
-                        }
-                    }
-                    if (corridorJedi > 0) {
-                        forceToReserve += corridorJedi;
-                        logger.warn("V67z TRANSIT RESERVE: {} Jedi at Underground Corridor — reserve +{} Force for the move-phase transit off Mapuzo",
-                            corridorJedi, corridorJedi);
-                    }
-                }
-            } catch (Exception e) { logger.debug("V67z transit-reserve error: {}", e.getMessage()); }
-
-            logger.debug("V58 RESERVE: DTF={}, FirstStrike={}, IAO={}, contested={}, maint={}, turn={}, total={}",
-                opponentHasDTF, opponentHasFirstStrike, opponentHasIAO, contestedCount, maintenanceCost, turnNumber, forceToReserve);
-        } catch (Exception e) {
-            logger.trace("V58 RESERVE: error calculating, using default 1: {}", e.getMessage());
-            return 1;
-        }
-
-        return forceToReserve;
+                return objective != null && objective.isAnalyzed() && !objective.isFlipped()
+                    && objective.getObjectiveTitle() != null
+                    && objective.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path");
+            },
+            logger);
     }
 
     /**

@@ -1,3 +1,16 @@
+  ════ DRAW PHASE CUTOVER (2026-07-13, Steve-approved, both bots) ════
+Canonical top-level Force-Pile draw actions now carry the closed engine semantic DRAW_CARD_INTO_HAND_FROM_FORCE_PILE;
+CardActionSelectionDecision emits one aligned actionSemantic per offered action and UNKNOWN for unstamped actions. The
+pure resolver owns only PHASE_ACTION + DRAW + current player's turn + CARD_ACTION_CHOICE + complete recognized metadata;
+all optional/child/failed-search/malformed shapes stay legacy. DrawPhaseOwner calls the existing CombinedEvaluator once,
+preserves its Pass or unique action-id winner, calls ResponseFinalizer once with exact immutable rejection history, uses
+no RNG, and has no owned fallback/safety re-entry. Rando/ChosenOne use one boundary snapshot and normalized-identical
+owner blocks. Legacy score math is pinned exactly: blocked draw -200 + -100000 = -100200, first-offered ties, Pass/noPass
+and one-ULP boundaries, mixed evaluator ordering, and raw trace bits. Reserve math has one pure shared owner with cap 10
+BEFORE Corridor characters; the shared legacy reader preserves scan/read/log/exception ordering and each evaluator is a
+thin delegate. Focused phase boundary 220/0/0/0 plus diff/parity/single-owner/no-fallback proofs. Immediate local reload
+authorized after commit; no game simulation and no push. Codex packet 9f2a40ac. See AI_CHANGELOG 2026-07-13.
+
   ════ FINALIZER-RUNTIME + ACCEPTED-RESPONSE LIFECYCLE PREREQUISITE (2026-07-13, ENGINE, Steve-approved, both bots) ════
 FIRST behavioral-migration ENGINE phase (Codex packet bc430fee). Fixes record-before-acceptance: the AI wrote its
 decision into its own memory inside decide() BEFORE the engine validated it, so a checked rejection + F2 retry left

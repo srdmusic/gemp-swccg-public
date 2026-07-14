@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.logic.decisions;
 
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.DecisionActionSemantic;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.logic.timing.Action;
 
@@ -33,6 +34,7 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
         setParam("backSideTestingText", getBackSideTestingTextsForVirtualActions(actions));
         setParam("horizontal", getHorizontalsForVirtualActions(actions));
         setParam("actionText", getActionTexts(actions));
+        setParam(DecisionActionSemantic.WIRE_PARAMETER, getActionSemantics(actions));
         setParam("yourTurn", String.valueOf(yourTurn));
         setParam("autoPassEligible", String.valueOf(autoPassEligible));
         setParam("noPass", String.valueOf(noPass));
@@ -155,6 +157,16 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
         String[] result = new String[actions.size()];
         for (int i = 0; i < result.length; i++)
             result[i] = actions.get(i).getText();
+        return result;
+    }
+
+    /** Gets ordinal-aligned, nonblank semantic identities for all offered actions. */
+    private String[] getActionSemantics(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            DecisionActionSemantic semantic = actions.get(i).getDecisionActionSemantic();
+            result[i] = (semantic != null ? semantic : DecisionActionSemantic.UNKNOWN).name();
+        }
         return result;
     }
 

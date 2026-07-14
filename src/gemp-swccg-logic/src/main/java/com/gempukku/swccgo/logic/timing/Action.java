@@ -27,6 +27,11 @@ public interface Action extends Snapshotable<Action> {
      */
     Type getType();
 
+    /** Engine-owned semantic identity used by typed decision routing. */
+    default DecisionActionSemantic getDecisionActionSemantic() {
+        return DecisionActionSemantic.UNKNOWN;
+    }
+
     /**
      * Gets the card that is the source of the action or null if the action from a game rule not from a specified card.
      * @return the card, or null

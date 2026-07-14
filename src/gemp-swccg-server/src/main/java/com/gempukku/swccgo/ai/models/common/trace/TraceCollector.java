@@ -402,17 +402,18 @@ class TraceCollector {
                     "route " + selectedRoute + " closed without pass/cancel eligibility facts"
                         + " (record a value or an explicit not-applicable)");
             }
-            if (selectedRoute == TraceRoute.COMBINED_EVALUATOR) {
+            if (selectedRoute == TraceRoute.COMBINED_EVALUATOR
+                    || selectedRoute == TraceRoute.DRAW_TOP_LEVEL) {
                 // the evaluator route PRODUCES a pre-safety winner and operations —
                 // not-applicable is not an option here (gate: "evaluator routes do not
                 // legitimately lack ops").
                 if (!preSafetyWinnerRecorded) {
                     markFailure(TraceCaptureFailure.Stage.FINALIZATION, "route-completeness",
-                        "COMBINED_EVALUATOR route closed without a recorded pre-safety winner");
+                        selectedRoute + " route closed without a recorded pre-safety winner");
                 }
                 if (staged.isEmpty()) {
                     markFailure(TraceCaptureFailure.Stage.OPERATION, "route-completeness",
-                        "COMBINED_EVALUATOR route closed with zero recorded operations");
+                        selectedRoute + " route closed with zero recorded operations");
                 }
             } else if (!preSafetyWinnerRecorded && preSafetyWinnerNotApplicableReason == null) {
                 markFailure(TraceCaptureFailure.Stage.FINALIZATION, "route-completeness",

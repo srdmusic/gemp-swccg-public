@@ -2301,6 +2301,11 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
 
             CardPileAction action = new CardPileAction(playerId, self) {
                 @Override
+                public DecisionActionSemantic getDecisionActionSemantic() {
+                    return DecisionActionSemantic.DRAW_CARD_INTO_HAND_FROM_FORCE_PILE;
+                }
+
+                @Override
                 public String getText() {
                     return "Draw card into hand from Force Pile";
                 }

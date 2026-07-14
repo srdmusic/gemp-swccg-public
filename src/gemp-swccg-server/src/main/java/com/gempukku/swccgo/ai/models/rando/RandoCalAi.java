@@ -3,7 +3,12 @@ package com.gempukku.swccgo.ai.models.rando;
 import com.gempukku.swccgo.ai.AiDecisionResult;
 import com.gempukku.swccgo.ai.DecisionRejectionKind;
 import com.gempukku.swccgo.ai.models.HeuristicAiBase;
+import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
 import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
+import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseOwner;
+import com.gempukku.swccgo.ai.models.common.phase.DrawRoute;
+import com.gempukku.swccgo.ai.models.common.phase.DrawRouteInput;
+import com.gempukku.swccgo.ai.models.common.phase.DrawRouteResolver;
 import com.gempukku.swccgo.ai.models.common.trace.TraceFinalization;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.ContestStatus;
@@ -11,6 +16,7 @@ import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.LocationAnalysis;
 import com.gempukku.swccgo.ai.common.AiChatManager;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.rando.evaluators.CombinedEvaluator;
+import com.gempukku.swccgo.ai.models.rando.evaluators.ActionType;
 import com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext;
 import com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
@@ -550,16 +556,32 @@ public class RandoCalAi extends HeuristicAiBase {
     private static final class OuterDecision {
         final String wireResponse;
         final AiDecisionResult.MutationMode mode;
+        final AiDecisionResult engineResult;
         OuterDecision(String wireResponse, AiDecisionResult.MutationMode mode) {
             this.wireResponse = wireResponse;
             this.mode = mode;
+            this.engineResult = null;
+        }
+        OuterDecision(AiDecisionResult engineResult) {
+            this.engineResult = engineResult;
+            this.wireResponse = engineResult.status() == AiDecisionResult.Status.WIRE_RESPONSE
+                ? engineResult.wireResponse() : null;
+            this.mode = engineResult.mutationMode();
         }
     }
 
     @Override
     public String decide(String playerId, AwaitingDecision decision, GameState gameState) {
         // Direct callers: compute + apply outer common mutation inline + close inline.
-        return computeDecision(playerId, decision, gameState, false).wireResponse;
+        OuterDecision computed = computeDecision(playerId, decision, gameState,
+            RejectionHistory.empty(), false);
+        if (computed.engineResult != null
+                && computed.engineResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
+            throw new IllegalStateException("typed decision rejection: "
+                + computed.engineResult.rejectionCode() + ": "
+                + computed.engineResult.rejectionDetail());
+        }
+        return computed.wireResponse;
     }
 
     @Override
@@ -574,7 +596,10 @@ public class RandoCalAi extends HeuristicAiBase {
         // Mediator-facing: compute the SAME wire, DEFER the outer mutation and trace close.
         // The immutable history is carried but, until a phase owner calls ResponseFinalizer,
         // legacy routes do not modify or persist it.
-        OuterDecision computed = computeDecision(playerId, decision, gameState, true);
+        OuterDecision computed = computeDecision(playerId, decision, gameState, history, true);
+        if (computed.engineResult != null) {
+            return computed.engineResult;
+        }
         return AiDecisionResult.wire(computed.wireResponse, computed.mode,
             String.valueOf(decision.getAwaitingDecisionId()));
     }
@@ -746,7 +771,8 @@ public class RandoCalAi extends HeuristicAiBase {
     }
 
     private OuterDecision computeDecision(String playerId, AwaitingDecision decision,
-                                          GameState gameState, boolean mediatorFacing) {
+                                          GameState gameState, RejectionHistory history,
+                                          boolean mediatorFacing) {
         // Build context for this decision
         context = RandoContext.build(playerId, gameState, currentGame);
 
@@ -764,10 +790,13 @@ public class RandoCalAi extends HeuristicAiBase {
         // no interceptor return moves, no extra RNG draw, no behavior change. Production
         // default sink is disabled, so this whole block no-ops.
         boolean traceOpened = false;
+        TraceSnapshots.Result boundarySnapshot = null;
         try {
             if (decisionTraceSink.isEnabled()) {
-                traceOpened = openDecisionTraceSession(playerId, decision, gameState,
+                boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
                     decisionType, decisionText, phase);
+                traceOpened = openDecisionTraceSession(decision, decisionType, decisionText,
+                    boundarySnapshot);
             }
         } catch (Throwable traceT) {
             traceOpened = false;
@@ -1179,6 +1208,18 @@ public class RandoCalAi extends HeuristicAiBase {
                 }
                 result = super.decide(playerId, decision, gameState);
             } else {
+                DrawRoute drawRoute = DrawRouteResolver.resolve(
+                    DrawRouteInput.capture(currentPhase, decision));
+                if (drawRoute == DrawRoute.DRAW_TOP_LEVEL) {
+                    if (boundarySnapshot == null) {
+                        boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
+                            decisionType, decisionText, phase);
+                    }
+                    return decideOwnedDraw(playerId, decision, gameState, history,
+                        boundarySnapshot.snapshot(), traceOpened, mediatorFacing,
+                        decisionType, decisionText);
+                }
+
                 // Try evaluator system for supported decision types
                 String evaluatorResult = tryEvaluators(playerId, decision, gameState);
                 if (evaluatorResult != null) {
@@ -1296,15 +1337,18 @@ public class RandoCalAi extends HeuristicAiBase {
 
     /**
      * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
-     * "Frozen input and candidate order"): open the bot-boundary session with the
+     * "Frozen input and candidate order"): capture the bot-boundary snapshot with the
      * COMPLETE raw decision arrays (verbatim, unfiltered — unlike buildEvaluatorContext,
      * which drops null/empty entries) plus the shadow DecisionSnapshot. Pure reads only:
      * decision params, DecisionTracker.getBlockedResponses (pure), and plain GameState
      * getters. No evaluator, strategy service, or cache-mutating call.
      */
-    private boolean openDecisionTraceSession(String playerId, AwaitingDecision decision,
-                                             GameState gameState, String decisionType,
-                                             String decisionText, Phase phase) {
+    private TraceSnapshots.Result captureDecisionSnapshot(String playerId,
+                                                          AwaitingDecision decision,
+                                                          GameState gameState,
+                                                          String decisionType,
+                                                          String decisionText,
+                                                          Phase phase) {
         Map<String, String[]> params = decision.getDecisionParameters();
         TraceSnapshots.Input in = new TraceSnapshots.Input();
         in.producerId = "bot-decide-boundary";
@@ -1357,11 +1401,24 @@ public class RandoCalAi extends HeuristicAiBase {
                 // leave unknown — never fabricate an observation
             }
         }
-        TraceSnapshots.Result snapshot = TraceSnapshots.build(in);
+        return TraceSnapshots.build(in);
+    }
+
+    /** Open the trace with the same immutable snapshot later consumed by an owned route. */
+    private boolean openDecisionTraceSession(AwaitingDecision decision,
+                                             String decisionType,
+                                             String decisionText,
+                                             TraceSnapshots.Result snapshot) {
+        Map<String, String[]> params = decision.getDecisionParameters();
+        java.util.List<String> actionIds = params != null
+            ? traceRawList(params.get("actionId")) : null;
+        java.util.List<String> cardIds = params != null
+            ? traceRawList(params.get("cardId")) : null;
+        java.util.List<String> results = params != null
+            ? traceRawList(params.get("results")) : null;
         return TraceSession.open(getClass().getPackageName(),
-            in.decisionId, decisionType, decisionText,
-            TraceSnapshots.rawCandidateIds(decisionType, in.actionIds, in.cardIds,
-                in.multipleChoiceResults),
+            String.valueOf(decision.getAwaitingDecisionId()), decisionType, decisionText,
+            TraceSnapshots.rawCandidateIds(decisionType, actionIds, cardIds, results),
             snapshot.snapshot(), snapshot.issues(), true);
     }
 
@@ -1439,6 +1496,58 @@ public class RandoCalAi extends HeuristicAiBase {
                     "UPDATE_STATE after-snapshot/record failed; legacy updateState already ran");
             }
         }
+    }
+
+    /**
+     * Execute the one typed canonical DRAW owner. No owned result re-enters the
+     * legacy safety, fallback, or evaluator lanes.
+     */
+    private OuterDecision decideOwnedDraw(String playerId,
+                                          AwaitingDecision decision,
+                                          GameState gameState,
+                                          RejectionHistory history,
+                                          DecisionSnapshot snapshot,
+                                          boolean traceOpened,
+                                          boolean mediatorFacing,
+                                          String decisionType,
+                                          String decisionText) {
+        if (traceOpened) {
+            TraceSession.recordRoute(TraceRoute.DRAW_TOP_LEVEL,
+                "typed canonical Force-Pile draw action", null);
+        }
+
+        DecisionContext evalContext = buildEvaluatorContext(playerId, decision, gameState);
+        AiDecisionResult ownedResult;
+        if (evalContext == null) {
+            ownedResult = AiDecisionResult.typedRejection(
+                com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
+                "owned DRAW route could not build the evaluator context",
+                String.valueOf(decision.getAwaitingDecisionId()));
+        } else {
+            ownedResult = DrawPhaseOwner.decide(snapshot, history, () -> {
+                EvaluatedAction bestAction = combinedEvaluator.evaluateDecision(evalContext);
+                if (bestAction == null) {
+                    return null;
+                }
+                return bestAction.getActionType() == ActionType.PASS
+                    ? DrawPhaseOwner.Evaluation.passResult()
+                    : DrawPhaseOwner.Evaluation.candidate(bestAction.getActionId());
+            });
+        }
+
+        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
+            return new OuterDecision(ownedResult);
+        }
+
+        String wire = ownedResult.wireResponse();
+        if (!mediatorFacing) {
+            applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceOpened);
+            LOG.info("[RandoCalAi] owned DRAW result: '{}'", wire.isEmpty() ? "(pass)" : wire);
+            if (traceOpened) {
+                TraceSession.recordFinalResponse(wire, false);
+            }
+        }
+        return new OuterDecision(ownedResult);
     }
 
     /**
