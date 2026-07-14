@@ -17,6 +17,14 @@ import com.gempukku.swccgo.ai.models.common.phase.ActivateControlPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRoute;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRouteInput;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRouteResolver;
+import com.gempukku.swccgo.ai.models.common.phase.BattleAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.BattleDeployIntent;
+import com.gempukku.swccgo.ai.models.common.phase.BattleFacts;
+import com.gempukku.swccgo.ai.models.common.phase.BattlePhaseOwner;
+import com.gempukku.swccgo.ai.models.common.phase.BattlePredictionAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.BattleRouteInput;
+import com.gempukku.swccgo.ai.models.common.phase.BattleRouteResolver;
+import com.gempukku.swccgo.ai.models.common.phase.BattleWindowRoute;
 import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRoute;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRouteInput;
@@ -957,8 +965,48 @@ public class RandoCalAi extends HeuristicAiBase {
             String[] actionIds = params != null ? params.get("actionId") : null;
             String[] cardIds = params != null ? params.get("cardId") : null;
 
+            BattleRouteInput battleInput = BattleRouteInput.capture(phase, decision);
+            BattleWindowRoute battleRoute = BattleRouteResolver.resolve(battleInput);
+            if (battleRoute != BattleWindowRoute.LEGACY_UNOWNED) {
+                FactValue<BattleFacts> battleFactsValue = BattleFacts.parse(
+                        boundarySnapshot.snapshot(), battleInput, battleRoute);
+                if (battleFactsValue.isKnown()) {
+                    BattleFacts battleFacts = battleFactsValue.value();
+                    int battleTurn = gameState != null
+                            ? gameState.getPlayersLatestTurnNumber(playerId) : -1;
+                    BattleDeployIntent deployIntent = BattleDeployIntent.from(
+                            deployPhasePlanner.getLastTerminalTransaction(),
+                            battleTurn, playerId);
+                    BattleAssessment battleAssessment = BattleAssessment.capture(
+                            battleFacts, deployIntent, currentGame, gameState,
+                            playerId,
+                            (ourPower, ourWeaponBonus, ourDraws,
+                             opponentPower, opponentWeaponBonus, opponentDraws) -> {
+                                com.gempukku.swccgo.ai.models.rando.evaluators.BattlePredictor.BattleOutcome outcome =
+                                        com.gempukku.swccgo.ai.models.rando.evaluators.BattlePredictor.predictBattle(
+                                                (int) (ourPower + ourWeaponBonus), ourDraws,
+                                                (int) (opponentPower + opponentWeaponBonus), opponentDraws,
+                                                deckOracle, opponentDeckTracker);
+                                return new BattlePredictionAssessment(
+                                        true, outcome.winProbability,
+                                        outcome.expectedDamageDealt,
+                                        outcome.expectedDamageTaken);
+                            });
+                    String compatibilityWire = battleAssessment.optionalImmuneForfeit()
+                            ? null
+                            : exactLegacyBattleWire(
+                                playerId, decision, gameState,
+                                boundarySnapshot.snapshot(), battleFacts,
+                                battleAssessment);
+                    return decideOwnedBattle(
+                            decision, history, boundarySnapshot.snapshot(),
+                            battleFacts, battleAssessment, compatibilityWire,
+                            traceOpened, mediatorFacing, decisionType, decisionText);
+                }
+            }
+
             // V45: NEVER forfeit when all cards are immune to attrition
-            {
+            { // Typed BATTLE_FORFEIT returns above; untyped legacy decisions retain V45.
                 String dtLower = decisionText.toLowerCase(java.util.Locale.ROOT);
                 if (dtLower.contains("forfeit") && dtLower.contains("if desired")) {
                     LOG.warn("V45 IMMUNE FORFEIT: All cards immune — PASSING on optional forfeit! Text: '{}'", decisionText);
@@ -1729,6 +1777,85 @@ public class RandoCalAi extends HeuristicAiBase {
         return new OuterDecision(ownedResult);
     }
 
+    /** Execute one typed BATTLE decision through one compatibility lane and finalizer. */
+    private OuterDecision decideOwnedBattle(AwaitingDecision decision,
+                                             RejectionHistory history,
+                                             DecisionSnapshot snapshot,
+                                             BattleFacts facts,
+                                             BattleAssessment assessment,
+                                             String compatibilityWire,
+                                             boolean traceOpened,
+                                             boolean mediatorFacing,
+                                             String decisionType,
+                                             String decisionText) {
+        if (traceOpened) {
+            TraceSession.recordRoute(traceRouteForBattle(facts.route()),
+                    "typed BATTLE route " + facts.route(), null);
+            if (assessment.optionalImmuneForfeit()) {
+                TraceSession.recordEvaluatorLaneNotApplicable(
+                        "typed optional immune forfeit uses engine-owned immunity fact");
+            }
+        }
+
+        AiDecisionResult ownedResult = BattlePhaseOwner.decide(
+                snapshot, history, facts, assessment,
+                (ignoredFacts, ignoredAssessment) -> compatibilityWire);
+        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
+            return new OuterDecision(ownedResult);
+        }
+        String wire = ownedResult.wireResponse();
+        if (!mediatorFacing) {
+            applyOuterCommonTrackerAndStrategic(
+                    decision, decisionType, decisionText, wire, traceOpened);
+            LOG.info("[RandoCalAi] owned BATTLE {} result: '{}'",
+                    facts.route(), wire.isEmpty() ? "(pass)" : wire);
+            if (traceOpened) {
+                TraceSession.recordFinalResponse(wire, false);
+            }
+        }
+        return new OuterDecision(ownedResult);
+    }
+
+    /** Frozen evaluator/fallback mapping used by the typed BATTLE owner. */
+    private String exactLegacyBattleWire(String playerId,
+                                         AwaitingDecision decision,
+                                         GameState gameState,
+                                         DecisionSnapshot snapshot,
+                                         BattleFacts battleFacts,
+                                         BattleAssessment battleAssessment) {
+        String wire = tryEvaluators(
+                playerId, decision, gameState, snapshot,
+                null, null, null, null, null, null,
+                battleFacts, battleAssessment);
+        if (wire == null) {
+            wire = super.decide(playerId, decision, gameState);
+        }
+        Map<String, String[]> params = decision.getDecisionParameters();
+        String[] actionIds = params != null ? params.get("actionId") : null;
+        String[] cardIds = params != null ? params.get("cardId") : null;
+        String[] noPass = params != null ? params.get("noPass") : null;
+        boolean mustChoose = noPass != null && noPass.length > 0
+                && Boolean.parseBoolean(noPass[0]);
+        if ((wire == null || wire.isEmpty()) && mustChoose) {
+            wire = DecisionSafety.getEmergencyResponse(
+                    decision, actionIds, cardIds).value;
+        }
+        String[] options = actionIds != null && actionIds.length > 0
+                ? actionIds : cardIds;
+        return DecisionSafety.ensureValidResponse(decision, wire, options)[0];
+    }
+
+    private static TraceRoute traceRouteForBattle(BattleWindowRoute route) {
+        return switch (route) {
+            case INITIATE -> TraceRoute.BATTLE_INITIATE;
+            case FIRE -> TraceRoute.BATTLE_FIRE;
+            case ADD_DESTINY -> TraceRoute.BATTLE_ADD_DESTINY;
+            case TACTIC -> TraceRoute.BATTLE_TACTIC;
+            default -> throw new IllegalArgumentException(
+                    "unowned BATTLE route " + route);
+        };
+    }
+
     /** Frozen evaluator/fallback mapping used as the compatibility wire inside the owner. */
     private String exactLegacyDeployWire(String playerId,
                                          AwaitingDecision decision,
@@ -1741,7 +1868,7 @@ public class RandoCalAi extends HeuristicAiBase {
         String wire = tryEvaluators(
                 playerId, decision, gameState, snapshot,
                 null, null, deployFacts, deployAssessment,
-                deployObligations, deployPlan);
+                deployObligations, deployPlan, null, null);
         if (wire == null) {
             wire = super.decide(playerId, decision, gameState);
         }
@@ -2021,7 +2148,8 @@ public class RandoCalAi extends HeuristicAiBase {
                 (route, ignoredFacts, ignoredAssessment) ->
                     tryEvaluators(
                         playerId, decision, gameState, snapshot,
-                        facts, assessment, null, null, null, deployPlan));
+                        facts, assessment, null, null, null, deployPlan,
+                        null, null));
         }
 
         if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
@@ -2072,7 +2200,7 @@ public class RandoCalAi extends HeuristicAiBase {
                                  GameState gameState, DecisionSnapshot snapshot) {
         return tryEvaluators(
                 playerId, decision, gameState, snapshot,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
     }
 
     private String tryEvaluators(String playerId, AwaitingDecision decision,
@@ -2080,7 +2208,7 @@ public class RandoCalAi extends HeuristicAiBase {
                                  PullFacts pullFacts, PullAssessment pullAssessment) {
         return tryEvaluators(
                 playerId, decision, gameState, snapshot,
-                pullFacts, pullAssessment, null, null, null, null);
+                pullFacts, pullAssessment, null, null, null, null, null, null);
     }
 
     private String tryEvaluators(String playerId, AwaitingDecision decision,
@@ -2088,7 +2216,9 @@ public class RandoCalAi extends HeuristicAiBase {
                                  PullFacts pullFacts, PullAssessment pullAssessment,
                                  DeployFacts deployFacts, DeployAssessment deployAssessment,
                                  ForceObligationVector deployForceObligations,
-                                 DeploymentPlan deployPlan) {
+                                 DeploymentPlan deployPlan,
+                                 BattleFacts battleFacts,
+                                 BattleAssessment battleAssessment) {
         // Build DecisionContext for evaluators
         DecisionContext evalContext = buildEvaluatorContext(
             playerId, decision, gameState, snapshot);
@@ -2105,6 +2235,9 @@ public class RandoCalAi extends HeuristicAiBase {
             evalContext.setDeployTransaction(
                     deployFacts, deployAssessment,
                     deployForceObligations, deployPlan);
+        }
+        if (battleFacts != null && battleAssessment != null) {
+            evalContext.setBattleTransaction(battleFacts, battleAssessment);
         }
 
         // Check if evaluators can handle this decision
@@ -2364,7 +2497,9 @@ public class RandoCalAi extends HeuristicAiBase {
         // Set game context for advanced analysis
         evalContext.setGame(currentGame);
         evalContext.setSide(mySide);
-        evalContext.setDecisionSnapshot(snapshot);
+        if (snapshot != null) {
+            evalContext.setDecisionSnapshot(snapshot);
+        }
 
         // Set strategy components so evaluators can use them
         evalContext.setStrategyController(strategyController);

@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.logic.timing.actions.battle;
 
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.decisions.CardActionSelectionDecision;
@@ -39,6 +40,8 @@ class BattlePlayerPlaysNextActionEffect extends AbstractSuccessfulEffect {
 
         game.getUserFeedback().sendAwaitingDecision(playerId,
                 new CardActionSelectionDecision(1, "Choose weapons segment action to play or Pass", playableActions, playerId.equals(game.getGameState().getCurrentPlayerId()), false, false, false, true) {
+                    { setDecisionOrigin(DecisionOrigin.BATTLE_ACTION); }
+
                     @Override
                     public void decisionMade(String result) throws DecisionResultInvalidException {
                         // Check if revert to previous game state was chosen

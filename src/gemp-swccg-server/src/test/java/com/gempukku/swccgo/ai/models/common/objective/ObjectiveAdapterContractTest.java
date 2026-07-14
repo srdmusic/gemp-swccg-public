@@ -197,6 +197,66 @@ public class ObjectiveAdapterContractTest {
     }
 
     @Test
+    public void battleInitiationEmitsEachMigratedHuntRuleOnceInLegacyOrder() {
+        DecisionSnapshot snapshot = snapshot(huntFacts());
+
+        ObjectiveBattleAdapter.InitiationAssessment result =
+                ObjectiveBattleAdapter.assessInitiation(
+                        snapshot, 4, Set.of(302), true, true,
+                        true, true, -250.0f, 0.4f);
+
+        assertExactBits(-100.0f, result.adjustedBarrierRisk());
+        assertTrue(result.vaderExpendabilityApplied());
+        assertEquals(List.of(
+                contribution(ObjectiveContribution.Rule.V35_VADER_EXPENDABLE,
+                        ObjectiveContribution.Channel.BATTLE_INITIATE, 4, 150.0f),
+                contribution(ObjectiveContribution.Rule.V29_9_HUNT_DOWN,
+                        ObjectiveContribution.Channel.BATTLE_INITIATE, 4, 200.0f),
+                contribution(ObjectiveContribution.Rule.V35_HUNT_DESTINY,
+                        ObjectiveContribution.Channel.BATTLE_INITIATE, 4, 350.0f)),
+                result.contributions());
+        assertExactBits(150.0f, result.contribution(
+                ObjectiveContribution.Rule.V35_VADER_EXPENDABLE));
+        assertExactBits(200.0f, result.contribution(
+                ObjectiveContribution.Rule.V29_9_HUNT_DOWN));
+        assertExactBits(350.0f, result.contribution(
+                ObjectiveContribution.Rule.V35_HUNT_DESTINY));
+    }
+
+    @Test
+    public void battleInitiationPreservesHuntScoreMatrixAndNonHuntFallthrough() {
+        DecisionSnapshot hunt = snapshot(huntFacts());
+
+        ObjectiveBattleAdapter.InitiationAssessment vader =
+                ObjectiveBattleAdapter.assessInitiation(
+                        hunt, 0, Set.of(), true, true,
+                        false, false, 0f, 0.4f);
+        assertExactBits(80.0f, vader.contribution(
+                ObjectiveContribution.Rule.V29_9_HUNT_DOWN));
+
+        ObjectiveBattleAdapter.InitiationAssessment inquisitor =
+                ObjectiveBattleAdapter.assessInitiation(
+                        hunt, 1, Set.of(301), false, false,
+                        false, false, 0f, 0.4f);
+        assertExactBits(120.0f, inquisitor.contribution(
+                ObjectiveContribution.Rule.V35_HUNT_DESTINY));
+
+        ObjectiveBattleAdapter.InitiationAssessment hatred =
+                ObjectiveBattleAdapter.assessInitiation(
+                        hunt, 2, Set.of(302), false, false,
+                        false, false, 0f, 0.4f);
+        assertExactBits(250.0f, hatred.contribution(
+                ObjectiveContribution.Rule.V35_HUNT_DESTINY));
+
+        ObjectiveBattleAdapter.InitiationAssessment nonHunt =
+                ObjectiveBattleAdapter.assessInitiation(
+                        snapshot(deployFacts()), 3, Set.of(302), true, true,
+                        true, true, -250.0f, 0.4f);
+        assertExactBits(-250.0f, nonHunt.adjustedBarrierRisk());
+        assertTrue(nonHunt.contributions().isEmpty());
+    }
+
+    @Test
     public void pullParentAddsExactlyOneContributionPerMatchingActionOrdinal() {
         DecisionSnapshot snapshot = snapshot(ObjectiveFactsFixtures.facts(false));
         PullFacts facts = parentPullFacts(List.of(

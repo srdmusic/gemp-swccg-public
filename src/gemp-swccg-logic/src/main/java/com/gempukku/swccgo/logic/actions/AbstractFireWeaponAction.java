@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.logic.actions;
 
+import com.gempukku.swccgo.common.DecisionActionSemantic;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgBuiltInCardBlueprint;
@@ -26,6 +27,7 @@ public abstract class AbstractFireWeaponAction extends AbstractGameTextAction im
      */
     public AbstractFireWeaponAction(PhysicalCard weaponToFire, SwccgBuiltInCardBlueprint permanentWeapon, boolean repeatedFiring, Filter fireAtTargetFilter) {
         super(weaponToFire, weaponToFire.getOwner(), weaponToFire.getCardId());
+        setDecisionActionSemantic(DecisionActionSemantic.BATTLE_FIRE);
         _weaponToFire = weaponToFire;
         _permanentWeapon = permanentWeapon;
         _repeatedFiring = repeatedFiring;

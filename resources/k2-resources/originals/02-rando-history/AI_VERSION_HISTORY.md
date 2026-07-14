@@ -1,3 +1,14 @@
+  ════ BATTLE PHASE OWNER CUTOVER (2026-07-14, Steve-approved, both bots) ════
+Origin-stamped battle initiation, weapon fire, next-action, power, destiny-redraw, and optional-forfeit wires now
+route through one typed owner before the V45 compatibility path. Each initiation candidate receives one immutable
+BattleAssessment containing exact target identity, power/ability, permanent-weapon, formation, objective, same-turn
+DEPLOY-intent, and exactly one predictor result. Typed UNKNOWN prediction cannot rerun the predictor. Objective battle
+contributions migrate through ObjectiveBattleAdapter. Force Push no longer cross-triggers the Stunning Leader
+exclusion penalty; legacy permanent-lightsaber +5 versus other permanent-weapon +3 weighting is preserved. V76 and
+Force Push penalties remain additive, not hard vetoes. Rando/ChosenOne changed hunks normalize identically. Gate:
+130 focused + 185 regression tests, zero failures/errors; package and compiled-marker checks pass; no game, browser,
+VTS, sandbox, push, or deployment during verification. See AI_CHANGELOG and CODEX_BATTLE_PHASE_GATE_2026-07-14.md.
+
   ════ DEPLOY PHASE OWNER CUTOVER (2026-07-14, Steve-approved, both bots) ════
 One origin-stamped DEPLOY owner now carries an exact physical transaction across parent, destination, buddy,
 undercover, capacity, confirmation, forced auto-selection, and expected deployment completion. The immutable

@@ -4,6 +4,10 @@ import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
+import com.gempukku.swccgo.ai.models.common.phase.BattleCandidateRole;
+import com.gempukku.swccgo.ai.models.common.phase.BattleFacts;
+import com.gempukku.swccgo.ai.models.common.phase.BattleInitiationAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.BattleLocationAssessment;
 import com.gempukku.swccgo.ai.models.common.objective.ObjectiveContribution;
 import com.gempukku.swccgo.ai.models.common.objective.ObjectivePullAdapter;
 import com.gempukku.swccgo.common.CardCategory;
@@ -101,6 +105,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
             String actionText = i < actionTexts.size() ? actionTexts.get(i) : "";
             String cardId = i < cardIds.size() ? cardIds.get(i) : null;
             String textLower = actionText.toLowerCase();
+            BattleFacts.Candidate battleCandidate = context.getBattleFacts() != null
+                    ? context.getBattleFacts().candidateByWireId(actionId) : null;
+            boolean typedInitiate = battleCandidate != null
+                    && battleCandidate.role() == BattleCandidateRole.INITIATE;
 
             EvaluatedAction action = new EvaluatedAction(actionId, ActionType.UNKNOWN, 0.0f, actionText);
 
@@ -2953,7 +2961,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Stunning Leader excludes characters from battle. Good when DEFENDING
             // against a stronger opponent (saves Vader from certain death).
             // BAD when WE initiated (we started the fight to WIN).
-            else if (textLower.contains("stunning leader") || textLower.contains("exclude") && textLower.contains("from battle")) {
+            else if (textLower.contains("stunning leader")
+                    || (!textLower.contains("force push")
+                        && !v67uIsForcePushSource
+                        && textLower.contains("exclude")
+                        && textLower.contains("from battle"))) {
                 if (context.getPhase() == Phase.BATTLE && gameState != null) {
                     try {
                         com.gempukku.swccgo.game.state.BattleState bState = gameState.getBattleState();
@@ -3250,7 +3262,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                      (textLower.contains("interrupt") || textLower.contains("sense") ||
                       textLower.contains("alter") || textLower.contains("effect") ||
                       textLower.contains("force drain")) &&
-                     !textLower.contains("your")) {
+                     !textLower.contains("your")
+                     && !(textLower.contains("redraw") && textLower.contains("destiny"))) {
                 action.setActionType(ActionType.CANCEL);
                 evaluateSenseCancel(action, context, actionText);
             }
@@ -4240,7 +4253,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Battle initiation was previously unhandled (fell to default 0.0f) which
             // meant Rando NEVER chose to initiate battles because other actions always
             // outscored them. Now we evaluate the specific location's power differential.
-            else if (actionText.contains("Initiate battle") || actionText.contains("initiate battle")) {
+            else if (typedInitiate || actionText.contains("Initiate battle")
+                    || actionText.contains("initiate battle")) {
                 action.setActionType(ActionType.BATTLE);
                 boolean battleScored = false;
 
@@ -4253,17 +4267,36 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     if (bOpponentId != null) {
                         try {
                             // Find which location this battle targets
+                            BattleInitiationAssessment typedAssessment = typedInitiate
+                                    && context.getBattleAssessment() != null
+                                    ? context.getBattleAssessment().initiationAt(
+                                        battleCandidate.ordinal()) : null;
+                            BattleLocationAssessment typedLocation =
+                                    typedAssessment != null
+                                            && typedAssessment.location().known()
+                                        ? typedAssessment.location() : null;
                             for (PhysicalCard bLoc : bGs.getTopLocations()) {
                                 String bLocTitle = bLoc.getTitle();
-                                if (bLocTitle != null && actionText.contains(bLocTitle)) {
-                                    float ourPower = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
-                                        bGs, bLoc, bPlayerId, false, false);
-                                    float theirPower = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
-                                        bGs, bLoc, bOpponentId, false, false);
-                                    float ourAbility = battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
-                                        bGs, bPlayerId, bLoc);
-                                    float theirAbility = battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
-                                        bGs, bOpponentId, bLoc);
+                                boolean targetMatches = typedAssessment != null
+                                        ? bLoc.getCardId() == typedAssessment.targetCardId()
+                                        : bLocTitle != null && actionText.contains(bLocTitle);
+                                if (targetMatches) {
+                                    float ourPower = typedLocation != null
+                                            ? typedLocation.ourPower()
+                                            : battleGame.getModifiersQuerying().getTotalPowerAtLocation(
+                                                bGs, bLoc, bPlayerId, false, false);
+                                    float theirPower = typedLocation != null
+                                            ? typedLocation.opponentPower()
+                                            : battleGame.getModifiersQuerying().getTotalPowerAtLocation(
+                                                bGs, bLoc, bOpponentId, false, false);
+                                    float ourAbility = typedLocation != null
+                                            ? typedLocation.ourAbility()
+                                            : battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
+                                                bGs, bPlayerId, bLoc);
+                                    float theirAbility = typedLocation != null
+                                            ? typedLocation.opponentAbility()
+                                            : battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
+                                                bGs, bOpponentId, bLoc);
                                     float powerDiff = ourPower - theirPower;
                                     float abilityDiff = ourAbility - theirAbility;
                                     // Ability matters: each point of ability = roughly 2.5 power via destiny draws

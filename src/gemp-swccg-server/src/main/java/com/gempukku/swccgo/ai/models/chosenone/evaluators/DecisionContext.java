@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.phase.BattleAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.BattleFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullAssessment;
@@ -94,6 +96,8 @@ public class DecisionContext {
     private OpponentDeckTracker opponentDeckTracker;  // V24.7: Opponent destiny intel
     private String deckName;  // V29.15: Deck name for saga-aware Epic Event choices
     private DecisionSnapshot decisionSnapshot;
+    private BattleFacts battleFacts;
+    private BattleAssessment battleAssessment;
     private DeployFacts deployFacts;
     private DeployAssessment deployAssessment;
     private ForceObligationVector forceObligations;
@@ -464,6 +468,25 @@ public class DecisionContext {
     public void setPullTransaction(PullFacts pullFacts, PullAssessment pullAssessment) {
         this.pullFacts = Objects.requireNonNull(pullFacts, "pullFacts");
         this.pullAssessment = Objects.requireNonNull(pullAssessment, "pullAssessment");
+    }
+
+    public BattleFacts getBattleFacts() {
+        return battleFacts;
+    }
+
+    public BattleAssessment getBattleAssessment() {
+        return battleAssessment;
+    }
+
+    public void setBattleTransaction(BattleFacts battleFacts,
+                                     BattleAssessment battleAssessment) {
+        this.battleFacts = Objects.requireNonNull(battleFacts, "battleFacts");
+        this.battleAssessment = Objects.requireNonNull(
+                battleAssessment, "battleAssessment");
+        if (battleFacts.route() != battleAssessment.route()) {
+            throw new IllegalArgumentException(
+                    "BattleFacts and BattleAssessment must share one route");
+        }
     }
 
     // V22.6: DeckOracle — full deck knowledge

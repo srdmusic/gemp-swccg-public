@@ -1,6 +1,14 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
+import com.gempukku.swccgo.ai.models.common.phase.BattleCandidateRole;
+import com.gempukku.swccgo.ai.models.common.phase.BattleFacts;
+import com.gempukku.swccgo.ai.models.common.phase.BattleInitiationAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.BattleLocationAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.BattlePredictionAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponFacts;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveBattleAdapter;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveContribution;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -8,8 +16,10 @@ import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.game.state.GameState;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 // ═══════════════════════════════════════════════════════════
 // ═══ SECTION: BATTLE-1 (Initiation) (reorg 2026-07-06) ═══
@@ -142,9 +152,16 @@ public class BattleEvaluator extends ActionEvaluator {
             String actionId = actionIds.get(i);
             String actionText = i < actionTexts.size() ? actionTexts.get(i) : "";
             String actionLower = actionText.toLowerCase(Locale.ROOT);
+            BattleFacts.Candidate battleCandidate = context.getBattleFacts() != null
+                    ? context.getBattleFacts().candidateByWireId(actionId) : null;
+            boolean typedInitiate = battleCandidate != null
+                    && battleCandidate.role() == BattleCandidateRole.INITIATE;
+            boolean typedFire = battleCandidate != null
+                    && battleCandidate.role() == BattleCandidateRole.FIRE;
 
             // Only handle battle-related actions
-            if (!actionLower.contains("battle") && !actionLower.contains("fire")) {
+            if (!typedInitiate && !typedFire
+                    && !actionLower.contains("battle") && !actionLower.contains("fire")) {
                 continue;
             }
 
@@ -156,7 +173,9 @@ public class BattleEvaluator extends ActionEvaluator {
             );
 
             // === INITIATE BATTLE SCORING ===
-            if (actionLower.contains("initiate battle")) {
+            if (typedInitiate || actionLower.contains("initiate battle")) {
+                PhysicalCard selectedBattleLocation = null;
+                BattleLocationAssessment selectedLocationAssessment = null;
                 // V22.4: LOCATION-SPECIFIC battle evaluation
                 // OLD BUG: Checked ALL locations — if ANY was favorable, approved initiation.
                 // But the action is for a SPECIFIC location! Rando initiated battle at Dining Room
@@ -176,25 +195,53 @@ public class BattleEvaluator extends ActionEvaluator {
                         try {
                             // V22.4: First try to find the SPECIFIC location this action targets
                             PhysicalCard targetLocation = null;
-                            for (PhysicalCard location : gameState.getTopLocations()) {
-                                String locTitle = location.getTitle();
-                                if (locTitle != null && actionLower.contains(locTitle.toLowerCase(Locale.ROOT))) {
-                                    targetLocation = location;
-                                    break;
+                            BattleInitiationAssessment typedAssessment = typedInitiate
+                                    && context.getBattleAssessment() != null
+                                    ? context.getBattleAssessment().initiationAt(
+                                        battleCandidate.ordinal()) : null;
+                            if (typedAssessment != null) {
+                                PhysicalCard typedTarget = gameState.findCardById(
+                                        typedAssessment.targetCardId());
+                                if (typedTarget != null
+                                        && gameState.getTopLocations().contains(typedTarget)) {
+                                    targetLocation = typedTarget;
+                                }
+                            } else {
+                                for (PhysicalCard location : gameState.getTopLocations()) {
+                                    String locTitle = location.getTitle();
+                                    if (locTitle != null && actionLower.contains(
+                                            locTitle.toLowerCase(Locale.ROOT))) {
+                                        targetLocation = location;
+                                        break;
+                                    }
                                 }
                             }
 
                             if (targetLocation != null) {
+                                selectedBattleLocation = targetLocation;
+                                BattleLocationAssessment typedLocation =
+                                        typedAssessment != null
+                                                && typedAssessment.location().known()
+                                            ? typedAssessment.location() : null;
+                                selectedLocationAssessment = typedLocation;
                                 // V22.4: Evaluate THIS SPECIFIC location only
                                 checkedSpecificLocation = true;
-                                float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                    gameState, targetLocation, playerId, false, false);
-                                float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                    gameState, targetLocation, opponentId, false, false);
-                                float ourAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
-                                    gameState, playerId, targetLocation);
-                                float theirAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
-                                    gameState, opponentId, targetLocation);
+                                float ourPower = typedLocation != null
+                                        ? typedLocation.ourPower()
+                                        : game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, targetLocation, playerId, false, false);
+                                float theirPower = typedLocation != null
+                                        ? typedLocation.opponentPower()
+                                        : game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, targetLocation, opponentId, false, false);
+                                float ourAbility = typedLocation != null
+                                        ? typedLocation.ourAbility()
+                                        : game.getModifiersQuerying().getTotalAbilityAtLocation(
+                                            gameState, playerId, targetLocation);
+                                float theirAbility = typedLocation != null
+                                        ? typedLocation.opponentAbility()
+                                        : game.getModifiersQuerying().getTotalAbilityAtLocation(
+                                            gameState, opponentId, targetLocation);
                                 float powerDiff = ourPower - theirPower;
                                 float abilityDiff = ourAbility - theirAbility;
                                 float effectiveDiff = powerDiff + (abilityDiff * 2.5f);
@@ -207,18 +254,30 @@ public class BattleEvaluator extends ActionEvaluator {
                                 // Vader (power 6) + lightsaber = hit + throw destiny = effectively +4-6 power.
                                 // IHYN in hand adds 2-3 more battle destiny draws.
                                 // Check our characters for weapons and adjust effective power.
-                                float weaponBonus = 0;
+                                float weaponBonus = typedLocation != null
+                                        ? typedLocation.ourWeaponBonus() : 0;
                                 // V29.7/V76 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c): count the
                                 // OPPONENT's weapons too — the predictor got our sabers (+wb) but raw
                                 // enemy power, systematically underestimating armed defenders.
-                                float oppWeaponBonus = 0;
-                                boolean ourVaderHere = false;
-                                boolean lukeHere = false;
-                                boolean hasIHYN = false;
+                                float oppWeaponBonus = typedLocation != null
+                                        ? typedLocation.opponentWeaponBonus() : 0;
+                                boolean ourVaderHere = typedLocation != null
+                                        && typedLocation.vaderAtTarget();
+                                boolean vaderArmed = typedLocation != null
+                                        && typedLocation.vaderArmed();
+                                boolean lukeHere = typedLocation != null
+                                        && typedLocation.lukeAtTarget();
+                                boolean hasIHYN = typedLocation != null
+                                        && typedLocation.haveIHaveYouNow();
+                                boolean jediAtLocation = typedLocation != null
+                                        && typedLocation.jediAtTarget();
+                                Set<Integer> friendlyCardIdsAtTarget = typedLocation != null
+                                        ? new HashSet<>(typedLocation.friendlyCardIds())
+                                        : new HashSet<>();
                                 java.util.List<PhysicalCard> cardsHere = null;
                                 try {
                                     cardsHere = gameState.getCardsAtLocation(targetLocation);
-                                    for (PhysicalCard locCard : cardsHere) {
+                                    if (typedLocation == null) for (PhysicalCard locCard : cardsHere) {
                                         if (locCard == null || locCard.getBlueprint() == null) continue;
                                         if (locCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
 
@@ -226,6 +285,7 @@ public class BattleEvaluator extends ActionEvaluator {
                                         String locCardTitle = locCard.getTitle() != null ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
 
                                         if (playerId.equals(cardOwner)) {
+                                            friendlyCardIdsAtTarget.add(locCard.getCardId());
                                             // Our character — check for weapons
                                             if (locCardTitle.contains("vader")) ourVaderHere = true;
                                             java.util.List<PhysicalCard> attachments = gameState.getAttachedCards(locCard);
@@ -245,6 +305,7 @@ public class BattleEvaluator extends ActionEvaluator {
                                         } else if (opponentId != null && opponentId.equals(cardOwner)) {
                                             // Opponent character — check for key targets
                                             if (locCardTitle.contains("luke")) lukeHere = true;
+                                            if (isJediOrPadawan(locCardTitle)) jediAtLocation = true;
                                             // V29.7/V76 ADJUSTED 2026-07-10: opponent weapons (attached
                                             // + permanent), same +5/+3 heuristic as ours.
                                             java.util.List<PhysicalCard> oppAtts = gameState.getAttachedCards(locCard);
@@ -257,15 +318,16 @@ public class BattleEvaluator extends ActionEvaluator {
                                                     }
                                                 }
                                             }
-                                            String oppGt = locCard.getBlueprint().getGameText();
-                                            if (oppGt != null && oppGt.toLowerCase(Locale.ROOT).contains("permanent weapon")) {
+                                            BattleWeaponFacts permanentWeapon =
+                                                    BattleWeaponFacts.from(locCard);
+                                            if (permanentWeapon.ownsPermanentWeapon()) {
                                                 oppWeaponBonus += locCardTitle.contains("lightsaber") ? 5.0f : 3.0f;
                                             }
                                         }
                                     }
 
                                     // Check for IHYN in hand (devastating with Vader)
-                                    if (ourVaderHere) {
+                                    if (typedLocation == null && ourVaderHere) {
                                         java.util.List<PhysicalCard> hand = gameState.getHand(playerId);
                                         if (hand != null) {
                                             for (PhysicalCard hCard : hand) {
@@ -277,6 +339,9 @@ public class BattleEvaluator extends ActionEvaluator {
                                                 }
                                             }
                                         }
+                                    }
+                                    if (typedLocation == null) {
+                                        vaderArmed = ourVaderHere && weaponBonus > 0;
                                     }
                                 } catch (Exception e) {
                                     logger.debug("V29.7: Error checking weapons for battle: {}", e.getMessage());
@@ -300,6 +365,7 @@ public class BattleEvaluator extends ActionEvaluator {
                                 // When our strength is concentrated in one key character (Vader),
                                 // initiating battle is very risky because Barrier negates that character.
                                 float barrierRiskPenalty = 0;
+                                ObjectiveBattleAdapter.InitiationAssessment objectiveBattle = null;
                                 if (ourVaderHere && ourPower > 0 && theirPower > 0 && cardsHere != null) {
                                     // Calculate power WITHOUT Vader to see what happens if he's Barriered
                                     float powerWithoutVader = 0;
@@ -323,13 +389,19 @@ public class BattleEvaluator extends ActionEvaluator {
                                         if (charCountWithoutVader <= 1) barrierRiskPenalty = -250.0f; // Solo char left = suicide
                                         if (powerDeficitWithoutVader > 10) barrierRiskPenalty -= 100.0f; // Even worse
 
-                                        // V35: VADER EXPENDABILITY — In Hunt Down V, Vader is expendable.
-                                        // Multiple copies in deck, lightsaber retrievable from Lost Pile.
-                                        // Reduce barrier risk to encourage aggressive Vader battles.
-                                        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer expendAnalyzer =
-                                            context.getObjectiveAnalyzer();
-                                        if (expendAnalyzer != null && expendAnalyzer.isAnalyzed() && expendAnalyzer.isHuntDownV()) {
-                                            barrierRiskPenalty = barrierRiskPenalty * RandoConfig.VADER_EXPENDABILITY_FACTOR;
+                                        if (context.getDecisionSnapshot() != null) {
+                                            objectiveBattle = ObjectiveBattleAdapter.assessInitiation(
+                                                    context.getDecisionSnapshot(), i,
+                                                    friendlyCardIdsAtTarget,
+                                                    ourVaderHere,
+                                                    vaderArmed,
+                                                    lukeHere, jediAtLocation,
+                                                    barrierRiskPenalty,
+                                                    RandoConfig.VADER_EXPENDABILITY_FACTOR);
+                                            barrierRiskPenalty = objectiveBattle.adjustedBarrierRisk();
+                                        }
+                                        if (objectiveBattle != null
+                                                && objectiveBattle.vaderExpendabilityApplied()) {
                                             logger.warn("V35 VADER EXPENDABLE: Barrier risk reduced to {} (Hunt Down — Vader is replaceable)",
                                                 (int)barrierRiskPenalty);
                                         }
@@ -345,15 +417,24 @@ public class BattleEvaluator extends ActionEvaluator {
                                     }
                                 }
 
+                                if (objectiveBattle == null
+                                        && context.getDecisionSnapshot() != null) {
+                                    objectiveBattle = ObjectiveBattleAdapter.assessInitiation(
+                                            context.getDecisionSnapshot(), i,
+                                            friendlyCardIdsAtTarget,
+                                            ourVaderHere,
+                                            vaderArmed,
+                                            lukeHere, jediAtLocation, 0f,
+                                            RandoConfig.VADER_EXPENDABILITY_FACTOR);
+                                }
+
                                 // === V29.9: HUNT DOWN VADER BATTLE AGGRESSIVENESS ===
                                 // When playing Hunt Down with armed Vader, he SHOULD be fighting.
                                 // Boost battle initiation significantly when Vader is armed and present.
-                                if (ourVaderHere && weaponBonus > 0) {
-                                    com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer battleObjAnalyzer =
-                                        context.getObjectiveAnalyzer();
-                                    if (battleObjAnalyzer != null && battleObjAnalyzer.isAnalyzed() && battleObjAnalyzer.isHuntDownV()) {
-                                        float huntBonus = 80.0f;
-                                        if (lukeHere) huntBonus = 200.0f;
+                                if (objectiveBattle != null) {
+                                    float huntBonus = objectiveBattle.contribution(
+                                            ObjectiveContribution.Rule.V29_9_HUNT_DOWN);
+                                    if (huntBonus != 0f) {
                                         action.addReasoning(String.format(
                                             "V29.9 HUNT DOWN: Armed Vader should FIGHT! %s (+%.0f)",
                                             lukeHere ? "LUKE IS HERE — THIS IS THE OBJECTIVE!" : "Vader hunts and destroys!",
@@ -368,50 +449,17 @@ public class BattleEvaluator extends ActionEvaluator {
                                 // an Inquisitor (+2 if hatred card present). This is like 1-2 extra
                                 // destiny draws — massive advantage. Also check for Jedi opponents.
                                 {
-                                    com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v35ObjAnalyzer =
-                                        context.getObjectiveAnalyzer();
-                                    if (v35ObjAnalyzer != null && v35ObjAnalyzer.isAnalyzed() && v35ObjAnalyzer.isHuntDownV()
-                                        && cardsHere != null) {
-                                        boolean inquisitorInBattle = false;
-                                        boolean hatredAtLocation = false;
-                                        boolean jediAtLocation = false;
-
-                                        for (PhysicalCard bCard : cardsHere) {
-                                            if (bCard == null || bCard.getBlueprint() == null) continue;
-                                            String bTitle = bCard.getTitle() != null ? bCard.getTitle().toLowerCase(Locale.ROOT) : "";
-
-                                            if (playerId.equals(bCard.getOwner())) {
-                                                // Our characters — check for Inquisitors
-                                                if (isInquisitor(bTitle)) {
-                                                    inquisitorInBattle = true;
-                                                }
-                                            } else {
-                                                // Opponent characters — check for Jedi/Padawan and stacked hatred
-                                                if (isJediOrPadawan(bTitle)) {
-                                                    jediAtLocation = true;
-                                                }
-                                                try {
-                                                    java.util.List<PhysicalCard> stacked = gameState.getStackedCards(bCard);
-                                                    if (stacked != null && !stacked.isEmpty()) {
-                                                        hatredAtLocation = true;
-                                                    }
-                                                } catch (Exception e) { /* ignore */ }
-                                            }
-                                        }
-
-                                        if (inquisitorInBattle) {
-                                            float destinyBonus = 120.0f; // +1 battle destiny from objective
-                                            if (hatredAtLocation) destinyBonus = 250.0f; // +2 battle destiny
-                                            if (jediAtLocation) destinyBonus += 100.0f; // FMFTD and Fifth Brother bonuses
+                                    float destinyBonus = objectiveBattle != null
+                                            ? objectiveBattle.contribution(
+                                                ObjectiveContribution.Rule.V35_HUNT_DESTINY)
+                                            : 0f;
+                                    if (destinyBonus != 0f) {
                                             action.addReasoning(String.format(
-                                                "V35 HUNT DESTINY: Inquisitor in battle%s%s — +%d total battle destiny!",
-                                                hatredAtLocation ? " + HATRED" : "",
-                                                jediAtLocation ? " vs JEDI" : "",
-                                                hatredAtLocation ? 2 : 1), destinyBonus);
-                                            logger.warn("V35 HUNT DESTINY at {}: Inquisitor={}, hatred={}, jedi={} — bonus +{}",
-                                                targetLocation.getTitle(), inquisitorInBattle, hatredAtLocation,
-                                                jediAtLocation, (int)destinyBonus);
-                                        }
+                                                "V35 HUNT DESTINY: Inquisitor in battle%s — objective battle destiny bonus!",
+                                                jediAtLocation ? " vs JEDI" : ""), destinyBonus);
+                                            logger.warn("V35 HUNT DESTINY at {}: jedi={} — bonus +{}",
+                                                targetLocation.getTitle(), jediAtLocation,
+                                                (int)destinyBonus);
                                     }
                                 }
 
@@ -422,8 +470,10 @@ public class BattleEvaluator extends ActionEvaluator {
                                     // zero normal battle-destiny draws (engine truth: total ability >= 4;
                                     // Codex audit: First Light ability 3 initiated vs Falcon+Han, drew
                                     // nothing, auto-lost; V164a's parity model was wrong).
-                                    String fsL2 = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
-                                        .vetoInitiateBattle(game, gameState, playerId, targetLocation);
+                                    String fsL2 = typedLocation != null
+                                            ? typedLocation.formationVetoReason()
+                                            : com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                                .vetoInitiateBattle(game, gameState, playerId, targetLocation);
                                     if (fsL2 != null) {
                                         action.hardVeto(fsL2);
                                         logger.warn("FORMATION SAFETY (battle): {}", fsL2);
@@ -442,51 +492,67 @@ public class BattleEvaluator extends ActionEvaluator {
                                     // exists with 311 lines of simulation logic but was never
                                     // wired into BattleEvaluator. This wiring closes the gap.
                                     try {
-                                        // Estimate destiny draws per side: count chars with ability >= 1
-                                        // at the location, capped between 1 and 4 (typical SWCCG range).
-                                        int myDraws = 1, oppDraws = 1;
-                                        try {
-                                            int myCh = 0, oppCh = 0;
-                                            for (PhysicalCard c : cardsHere) {
-                                                if (c == null || c.getBlueprint() == null) continue;
-                                                if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                                if (playerId.equals(c.getOwner())) myCh++;
-                                                else if (opponentId.equals(c.getOwner())) oppCh++;
+                                        int myDraws = typedLocation != null
+                                                ? typedLocation.ourDestinyDraws() : 1;
+                                        int oppDraws = typedLocation != null
+                                                ? typedLocation.opponentDestinyDraws() : 1;
+                                        BattlePredictionAssessment frozenPrediction =
+                                                typedLocation != null
+                                                    ? typedLocation.prediction() : null;
+                                        BattlePredictor.BattleOutcome v76Outcome = null;
+                                        if (typedLocation != null) {
+                                            if (frozenPrediction.known()) {
+                                                v76Outcome = new BattlePredictor.BattleOutcome(
+                                                        frozenPrediction.winProbability(),
+                                                        frozenPrediction.expectedDamageDealt(),
+                                                        frozenPrediction.expectedDamageTaken());
                                             }
-                                            myDraws = Math.max(1, Math.min(4, myCh));
-                                            oppDraws = Math.max(1, Math.min(4, oppCh));
-                                        } catch (Exception e) { /* use defaults */ }
+                                        } else {
+                                            try {
+                                                int myCh = 0, oppCh = 0;
+                                                for (PhysicalCard c : cardsHere) {
+                                                    if (c == null || c.getBlueprint() == null) continue;
+                                                    if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                                    if (playerId.equals(c.getOwner())) myCh++;
+                                                    else if (opponentId.equals(c.getOwner())) oppCh++;
+                                                }
+                                                myDraws = Math.max(1, Math.min(4, myCh));
+                                                oppDraws = Math.max(1, Math.min(4, oppCh));
+                                            } catch (Exception e) { /* use defaults */ }
+                                            com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle v76DeckOracle =
+                                                context.getDeckOracle();
+                                            com.gempukku.swccgo.ai.models.chosenone.strategy.OpponentDeckTracker v76OppTracker =
+                                                context.getOpponentDeckTracker();
+                                            v76Outcome = BattlePredictor.predictBattle(
+                                                (int) (ourPower + weaponBonus), myDraws,
+                                                (int) (theirPower + oppWeaponBonus), oppDraws,
+                                                v76DeckOracle, v76OppTracker);
+                                        }
 
-                                        com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle v76DeckOracle =
-                                            context.getDeckOracle();
-                                        com.gempukku.swccgo.ai.models.chosenone.strategy.OpponentDeckTracker v76OppTracker =
-                                            context.getOpponentDeckTracker();
-                                        // V76 ADJUSTED 2026-07-10: opponent side weapon-adjusted (was raw).
-                                        BattlePredictor.BattleOutcome v76Outcome = BattlePredictor.predictBattle(
-                                            (int) (ourPower + weaponBonus), myDraws,
-                                            (int) (theirPower + oppWeaponBonus), oppDraws,
-                                            v76DeckOracle, v76OppTracker);
+                                        if (v76Outcome != null) {
+                                            logger.warn("V76 BATTLE PREDICT at {}: winRate={} avgDamageTaken={} avgDamageDealt={} (myPow={}+wb{} draws={} vs oppPow={} draws={})",
+                                                targetLocation.getTitle(),
+                                                String.format("%.2f", v76Outcome.winProbability),
+                                                String.format("%.1f", v76Outcome.expectedDamageTaken),
+                                                String.format("%.1f", v76Outcome.expectedDamageDealt),
+                                                (int) ourPower, (int) weaponBonus, myDraws,
+                                                (int) theirPower, oppDraws);
 
-                                        logger.warn("V76 BATTLE PREDICT at {}: winRate={} avgDamageTaken={} avgDamageDealt={} (myPow={}+wb{} draws={} vs oppPow={} draws={})",
-                                            targetLocation.getTitle(),
-                                            String.format("%.2f", v76Outcome.winProbability),
-                                            String.format("%.1f", v76Outcome.expectedDamageTaken),
-                                            String.format("%.1f", v76Outcome.expectedDamageDealt),
-                                            (int) ourPower, (int) weaponBonus, myDraws,
-                                            (int) theirPower, oppDraws);
-
-                                        if (v76Outcome.winProbability < 0.35f) {
-                                            action.addReasoning(String.format(
-                                                "V76 BATTLE PREDICT: winRate %.0f%% at %s — probable defeat, don't initiate!",
-                                                v76Outcome.winProbability * 100, targetLocation.getTitle()), -800.0f);
-                                            logger.warn("V76 BATTLE BLOCK: predicted defeat at {} (winRate {})",
-                                                targetLocation.getTitle(), String.format("%.2f", v76Outcome.winProbability));
-                                        } else if (v76Outcome.expectedDamageTaken >= 10f) {
-                                            action.addReasoning(String.format(
-                                                "V76 BATTLE PREDICT: avg damage taken %.1f at %s — pyrrhic, don't initiate!",
-                                                v76Outcome.expectedDamageTaken, targetLocation.getTitle()), -500.0f);
-                                            logger.warn("V76 BATTLE COSTLY: predicted damage {} at {} — too high",
-                                                String.format("%.1f", v76Outcome.expectedDamageTaken), targetLocation.getTitle());
+                                            if (v76Outcome.winProbability < 0.35f) {
+                                                String v76Reason = String.format(
+                                                    "V76 BATTLE PREDICT: winRate %.0f%% at %s — probable defeat, don't initiate!",
+                                                    v76Outcome.winProbability * 100, targetLocation.getTitle());
+                                                action.addReasoning(v76Reason, -800.0f);
+                                                logger.warn("V76 BATTLE BLOCK: predicted defeat at {} (winRate {})",
+                                                    targetLocation.getTitle(), String.format("%.2f", v76Outcome.winProbability));
+                                            } else if (v76Outcome.expectedDamageTaken >= 10f) {
+                                                String v76Reason = String.format(
+                                                    "V76 BATTLE PREDICT: avg damage taken %.1f at %s — pyrrhic, don't initiate!",
+                                                    v76Outcome.expectedDamageTaken, targetLocation.getTitle());
+                                                action.addReasoning(v76Reason, -500.0f);
+                                                logger.warn("V76 BATTLE COSTLY: predicted damage {} at {} — too high",
+                                                    String.format("%.1f", v76Outcome.expectedDamageTaken), targetLocation.getTitle());
+                                            }
                                         }
                                     } catch (Exception v76Ex) {
                                         logger.debug("V76 prediction error: {}", v76Ex.getMessage());
@@ -606,11 +672,15 @@ public class BattleEvaluator extends ActionEvaluator {
                                                             }
                                                         }
                                                     }
-                                                    String fgt = fc.getBlueprint().getGameText();
-                                                    if (fgt != null && fgt.toLowerCase(Locale.ROOT).contains("permanent weapon")) {
+                                                    BattleWeaponFacts permanentWeapon =
+                                                            BattleWeaponFacts.from(fc);
+                                                    if (permanentWeapon.ownsPermanentWeapon()) {
                                                         String fct = fc.getTitle() != null ? fc.getTitle().toLowerCase(Locale.ROOT) : "";
                                                         v76fOppWeap += fct.contains("lightsaber") ? 5f : 3f;
-                                                        fArmed = true;
+                                                        if (permanentWeapon.canHitCharacter()
+                                                                && permanentWeapon.canSetForfeitToZero()) {
+                                                            fArmed = true;
+                                                        }
                                                     }
                                                     if (fArmed) v76fOppArmed++;
                                                 }
@@ -767,17 +837,27 @@ public class BattleEvaluator extends ActionEvaluator {
                 // strong opponent destiny swing, skip the reserve penalty entirely and take the battle.
                 float v61BestOverpower = 0f;
                 try {
-                    String v61pid = context.getPlayerId();
-                    String v61oid = gameState.getOpponent(v61pid);
-                    for (PhysicalCard v61loc : gameState.getTopLocations()) {
-                        float op = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, v61loc, v61pid, false, false);
-                        float tp = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, v61loc, v61oid, false, false);
-                        if (op > 0 && tp > 0 && (op - tp) > v61BestOverpower) v61BestOverpower = op - tp;
+                    if (selectedLocationAssessment != null) {
+                        if (selectedLocationAssessment.targetOverpower()) {
+                            v61BestOverpower = selectedLocationAssessment.ourPower()
+                                    - selectedLocationAssessment.opponentPower();
+                        }
+                    } else {
+                        String v61pid = context.getPlayerId();
+                        String v61oid = gameState.getOpponent(v61pid);
+                        List<PhysicalCard> v61Locations = selectedBattleLocation != null
+                                ? List.of(selectedBattleLocation)
+                                : gameState.getTopLocations();
+                        for (PhysicalCard v61loc : v61Locations) {
+                            float op = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, v61loc, v61pid, false, false);
+                            float tp = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, v61loc, v61oid, false, false);
+                            if (op > 0 && tp > 0 && (op - tp) > v61BestOverpower) v61BestOverpower = op - tp;
+                        }
                     }
                 } catch (Exception ignore) { /* 0 */ }
                 boolean v61Overpowering = v61BestOverpower >= 8f;  // beats a strong single destiny; win w/o ours
                 if (v61Overpowering) {
-                    logger.warn("V61b OVERPOWER: best margin {} >= 8 — reserve guard skipped, take the battle", (int) v61BestOverpower);
+                    logger.warn("V61b OVERPOWER: target margin {} >= 8 — reserve guard skipped, take the battle", (int) v61BestOverpower);
                 } else if (reserveDeck == 0) {
                     action.addReasoning(
                         "V61 RESERVE EMPTY: 0 cards in Reserve — CANNOT draw battle destiny, auto-lose!",
@@ -881,7 +961,7 @@ public class BattleEvaluator extends ActionEvaluator {
             }
 
             // === WEAPON FIRING ===
-            if (actionLower.contains("fire")) {
+            if (typedFire || actionLower.contains("fire")) {
                 action.addReasoning("Fire weapon", 40.0f);
 
                 // Target selection bonuses

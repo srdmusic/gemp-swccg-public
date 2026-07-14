@@ -17,13 +17,17 @@ public record ObjectiveContribution(
         OBJECTIVE_SITE,
         V193_PARENT,
         V193_CHILD,
-        V192_PULL_PARENT
+        V192_PULL_PARENT,
+        V29_9_HUNT_DOWN,
+        V35_VADER_EXPENDABLE,
+        V35_HUNT_DESTINY
     }
 
     public enum Channel {
         DEPLOY_PARENT,
         DEPLOY_CHILD,
-        PULL_PARENT
+        PULL_PARENT,
+        BATTLE_INITIATE
     }
 
     public ObjectiveContribution {

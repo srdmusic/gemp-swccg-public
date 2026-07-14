@@ -6,7 +6,9 @@ public enum DecisionActionSemantic {
     DRAW_CARD_INTO_HAND_FROM_FORCE_PILE,
     DEPLOY_CARD,
     PULL_DEPLOY_FROM_PILE,
-    PULL_TAKE_INTO_HAND_FROM_PILE;
+    PULL_TAKE_INTO_HAND_FROM_PILE,
+    BATTLE_INITIATE,
+    BATTLE_FIRE;
 
     public static final String WIRE_PARAMETER = "actionSemantic";
 

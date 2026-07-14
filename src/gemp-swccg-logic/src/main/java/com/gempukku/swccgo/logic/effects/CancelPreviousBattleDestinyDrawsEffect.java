@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.logic.effects;
 
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -79,6 +80,8 @@ public class CancelPreviousBattleDestinyDrawsEffect extends AbstractSubActionEff
                             subAction.appendEffect(
                                     new PlayoutDecisionEffect(subAction, performingPlayerId,
                                             new ArbitraryCardsSelectionDecision("Choose " + numToChoose + " battle destiny draw" + GameUtils.s(numToChoose) + " to cancel", cancelableDestinyDraws, cancelableDestinyDraws, numToChoose, numToChoose, cardTextMap) {
+                                                { setDecisionOrigin(DecisionOrigin.BATTLE_DESTINY_SELECTION); }
+
                                                 @Override
                                                 public void decisionMade(String result) throws DecisionResultInvalidException {
                                                     List<Integer> selectedIndexes = getIndexesByResponse(result);

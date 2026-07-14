@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.logic.timing.actions.battle;
 
+import com.gempukku.swccgo.common.BattleDecisionWire;
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -385,6 +387,12 @@ public class BattleDamageSegmentAction extends SystemQueueAction {
         private void chooseCardDecision(final SwccgGame game, final SubAction subAction, final List<PhysicalCard> selectableCards, final boolean isOptionalSelection) {
             game.getUserFeedback().sendAwaitingDecision(_playerId,
                     new CardsSelectionDecision(_text, selectableCards, isOptionalSelection ? 0 : 1, 1) {
+                        {
+                            setDecisionOrigin(DecisionOrigin.BATTLE_FORFEIT);
+                            setParam(BattleDecisionWire.OPTIONAL_IMMUNE_FORFEIT,
+                                    String.valueOf(isOptionalSelection));
+                        }
+
                         @Override
                         public void decisionMade(String result) throws DecisionResultInvalidException {
                             List<PhysicalCard> cards = getSelectedCardsByResponse(result);

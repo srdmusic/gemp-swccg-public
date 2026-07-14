@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.logic.actions;
 
+import com.gempukku.swccgo.common.DecisionActionSemantic;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.effects.BattleEffect;
@@ -45,6 +46,7 @@ public class InitiateBattleAction extends AbstractTopLevelRuleAction {
      */
     public InitiateBattleAction(String playerId, final PhysicalCard location, boolean free) {
         super(location, playerId);
+        setDecisionActionSemantic(DecisionActionSemantic.BATTLE_INITIATE);
         _location = location;
         _free = free;
     }

@@ -67,6 +67,14 @@ public enum TraceRoute {
     DEPLOY_CAPACITY,
     /** Typed confirmation choice bound to an accepted DEPLOY attempt. */
     DEPLOY_CONFIRMATION,
+    /** Typed top-level BATTLE initiation chooser. */
+    BATTLE_INITIATE,
+    /** Typed active-battle fire/tactic chooser containing a fire candidate. */
+    BATTLE_FIRE,
+    /** Typed battle-destiny draw choice. */
+    BATTLE_ADD_DESTINY,
+    /** Typed BATTLE tactic, forfeit, or destiny-selection decision. */
+    BATTLE_TACTIC,
     /** No evaluator handled the decision: HeuristicAiBase.decide ran. */
     HEURISTIC_FALLBACK,
     /** Outer emergency: result null (or empty with raw noPass=true), emergency response used. */
@@ -118,6 +126,15 @@ public enum TraceRoute {
             case DEPLOY_DESTINATION:
             case DEPLOY_BUDDY:
                 return frozenShape == DecisionFacts.DecisionRoute.CARD_SELECTION;
+            case BATTLE_INITIATE:
+            case BATTLE_FIRE:
+                return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE;
+            case BATTLE_ADD_DESTINY:
+                return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
+            case BATTLE_TACTIC:
+                return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE
+                        || frozenShape == DecisionFacts.DecisionRoute.CARD_SELECTION
+                        || frozenShape == DecisionFacts.DecisionRoute.ARBITRARY_CARDS;
             default:
                 return true;
         }
