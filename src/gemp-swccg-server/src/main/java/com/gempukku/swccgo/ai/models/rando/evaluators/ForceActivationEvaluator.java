@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
-import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.ai.models.common.phase.ActivateAmountPolicy;
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.game.state.GameState;
 
 import java.util.ArrayList;
@@ -11,9 +12,9 @@ import java.util.List;
 // Owns: how MUCH Force to activate (INTEGER amount): V57 economy curve, V67at tuning, V42 pacing,
 // V43 floor, V61c keep-3 destiny cap. Hub: none. KIND mix (ACTIVATE overall): 4 VETO / 3 ORDERING;
 // key magnitudes live in ActionTextEvaluator: the V61c -6000 / V168 +5000 / V38.3 +500 triangle is ONE boundary.
-// V61c battle-intent gate uses the shared predicate DecisionContext.isBattlePlausibleThisTurn() —
-// THREE sites must agree: the keep-3 cap here, ATE's V168/V61c activate block, ATE's V38.3 confirm carve-out.
-// Absorbs (dead, commented below/nearby — revert path, do not delete): none in this file.
+// V61c battle-intent gate uses the shared predicate DecisionContext.isBattlePlausibleThisTurn().
+// Three sites must agree: ActivateAmountPolicy, ATE's V168/V61c action block, and the typed
+// ACTIVATE_ZERO_CONFIRM owner.
 // Cross-refs: ACTIVATE region in ActionTextEvaluator (whether/interleave), PULL-ENGINE (V97: pulls fire
 // BEFORE activating), BATTLE-1 (V61b shares the battle-plausible scan). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
 // ═══════════════════════════════════════════════════════════
@@ -31,29 +32,24 @@ import java.util.List;
  */
 public class ForceActivationEvaluator extends ActionEvaluator {
 
-    // Config constants
-    private static final int MAX_FORCE_PILE = 25;
-    private static final int RESERVE_FOR_DESTINY_CONTESTED = 4;
-    private static final int RESERVE_FOR_DESTINY_SAFE = 1;
-    private static final int LATE_GAME_LIFE_FORCE = 12;
-    private static final int CRITICAL_LIFE_FORCE = 6;
-
     public ForceActivationEvaluator() {
         super("ForceActivation");
     }
 
     @Override
     public boolean canEvaluate(DecisionContext context) {
-        // Handle all INTEGER decisions - force activation is the most common
-        return "INTEGER".equals(context.getDecisionType());
+        if (!"INTEGER".equals(context.getDecisionType())) {
+            return false;
+        }
+        DecisionOrigin origin = context.getDecisionOrigin();
+        return origin == DecisionOrigin.ACTIVATE_AMOUNT
+            || origin == DecisionOrigin.ACTIVATE_ALLOWANCE;
     }
 
     @Override
     public List<EvaluatedAction> evaluate(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
         GameState gameState = context.getGameState();
-        String textLower = context.getDecisionText().toLowerCase();
-
         // Parse min/max from context
         int minVal = context.getMin();
         int maxVal = context.getMax();
@@ -68,7 +64,7 @@ public class ForceActivationEvaluator extends ActionEvaluator {
         // Per Steve (2026-05-25): keep peer-priority with self-activate. Allowing
         // opponent to activate force is NORMAL play (standard SWCCG rule), not a
         // last-resort. V132 (which had dropped this to 10) reverted.
-        if (textLower.contains("allow opponent to activate") || textLower.contains("opponent to activate")) {
+        if (context.getDecisionOrigin() == DecisionOrigin.ACTIVATE_ALLOWANCE) {
             EvaluatedAction action = new EvaluatedAction(
                 String.valueOf(maxVal),
                 ActionType.ACTIVATE_FORCE,
@@ -96,21 +92,24 @@ public class ForceActivationEvaluator extends ActionEvaluator {
         // V42: Use calculateActivationAmount which ALWAYS reserves cards for destiny draws.
         // Old V38.2 logic only saved reserve when reserveDeck-maxVal < 4, which meant
         // early game activated everything and depleted reserve before the threshold kicked in.
-        int amount = calculateActivationAmount(context, maxVal);
+        int currentForce = context.getForcePileSize();
+        int reserveDeck = context.getReserveDeckSize();
+        int lifeForce = context.getLifeForce();
+        int handSize = context.getHandSize();
+        ActivateAmountPolicy.Result amountResult = ActivateAmountPolicy.assess(
+            new ActivateAmountPolicy.Input(minVal, maxVal, reserveDeck, lifeForce,
+                context.isBattlePlausibleThisTurn()));
+        int amount = amountResult.amount();
+        String mode = switch (amountResult.mode()) {
+            case KEEP_THREE_FOR_BATTLE -> "V61c DESTINY BUFFER (keep 3 in reserve)";
+            case KEEP_TWO_AT_LOW_LIFE -> "V67at END-GAME RESERVE-2 (lifeForce <= 10)";
+            case ACTIVATE_FULL -> "V57 ACTIVATE FULL";
+        };
+        logger.warn("{}: activating {} of {} (reserve={}, forcePile={}, hand={}, lifeForce={})",
+            mode, amount, maxVal, reserveDeck, currentForce, handSize, lifeForce);
         logger.warn("V42 FORCE ACTIVATION: activating {} of {} (reserve={}, forcePile={}, hand={}, lifeForce={})",
             amount, maxVal, context.getReserveDeckSize(), context.getForcePileSize(),
             context.getHandSize(), context.getLifeForce());
-
-        // V43: ALWAYS activate at least 1 Force when asked. Activating 0
-        // causes the engine to re-ask the same question, creating an infinite loop.
-        // The game engine only asks this question when activation is possible.
-        if (amount <= 0 && maxVal > 0) {
-            amount = 1;
-            logger.warn("V43 FORCE ACTIVATION: Forced minimum 1 (was 0, reserve preservation too aggressive)");
-        }
-
-        // Ensure amount is within bounds
-        amount = Math.max(minVal, Math.min(amount, maxVal));
 
         // Build action with reasoning
         EvaluatedAction action = new EvaluatedAction(
@@ -133,8 +132,6 @@ public class ForceActivationEvaluator extends ActionEvaluator {
 
         if (amount == maxVal) {
             action.addReasoning("Activating full amount available", 10.0f);
-        } else if (amount == 0) {
-            action.addReasoning("Skipping activation this turn", -10.0f);
         } else {
             action.addReasoning(String.format("Activating partial (%d/%d)", amount, maxVal));
         }
@@ -143,85 +140,4 @@ public class ForceActivationEvaluator extends ActionEvaluator {
         return actions;
     }
 
-    /**
-     * Calculate optimal force activation amount.
-     *
-     * V57 FIX 19 (2026-04-16): Removed throttling rules entirely.
-     *
-     * Previously this method applied three throttling rules BEFORE logging
-     * "V52 ACTIVATE 100% (no throttling)" — which was misleading, because
-     * Rules 1 and 3 had already clamped `amount` by the time that log fired:
-     *
-     *   Rule 1 (destiny reserve):  amount = min(amount, reserveDeck - 4)
-     *       → On Turn 9 in the 2026-04-16 replay, reserveDeck was low,
-     *         so amount collapsed to 0, then V43 forced it to 1. Rando
-     *         activated 1 of 14 Force generation — completely passive.
-     *
-     *   Rule 3 (critical life force < 6):
-     *       amount = min(amount, max(1, 6 - currentForce))
-     *       → Same catastrophic under-activation in late game.
-     *
-     * Steve's philosophy is explicit: activate ALL force every turn, deploy
-     * everything, draw the rest into hand. Hoarding force pile or "saving"
-     * reserve deck just makes Rando die passively instead of fighting.
-     *
-     * V43 still guarantees minimum 1 (prevents engine loops). If reserve
-     * deck truly runs out, the normal loss condition takes over — but we
-     * don't artificially hobble ourselves on the way there.
-     */
-    private int calculateActivationAmount(DecisionContext context, int maxAvailable) {
-        int currentForce = context.getForcePileSize();
-        int reserveDeck = context.getReserveDeckSize();
-        int lifeForce = context.getLifeForce();
-        int handSize = context.getHandSize();
-
-        // V67at (Steve, 2026-05-08, REVISED): END-GAME FORCE PRESERVATION.
-        //
-        // Steve's refined spec: 'He needs to save at bare minimum 2 force
-        // during activation in reserve if reserve, used and force pile total
-        // 10 or less.'
-        //
-        // Trigger: total life force (reserve + used + force pile) ≤ 10.
-        // Action: activate at most maxAvailable - 2 (save 2 from the
-        // generation). V43 minimum 1 still applies elsewhere — never zero.
-        //
-        // V57 ACTIVATE FULL preserved as default for early/mid-game when
-        // life force > 10.
-        // V61c (Steve, 2026-06-29 REVISED): ALWAYS keep 3 cards in the Reserve Deck for battle
-        // destiny + weapon destiny this turn. Force-pile condition removed per Steve — keep 3 for
-        // ANY battle. Cap activation so the Reserve Deck never drops below 3. (Engine requires >=1,
-        // so once the reserve is already <=3 we activate the minimum 1 — can't both keep 3 and
-        // activate when only 3 remain.) The earlier force-pile-gated version almost never fired
-        // (Rando draws its force to hand, so the pile rarely reached the trigger), so the reserve
-        // still drained to 0 and V61 blocked battles. This guarantees the destiny buffer.
-        // V61c UPDATED 2026-07-06: battle-intent bypass — the keep-3 cap now applies ONLY on turns
-        // a battle is plausible (any contested location, per the shared predicate
-        // DecisionContext.isBattlePlausibleThisTurn(), same scan V61b uses). Zero contested
-        // locations => Rando deploys and ends turn without battling => activate ALL. The SAME
-        // predicate gates the ActionTextEvaluator V168 + V38.3 carve-outs so all three sites agree.
-        // V61c pre-2026-07-06 (always-on buffer):
-        // int amount = Math.max(1, Math.min(maxAvailable, reserveDeck - 3));
-        int amount;
-        if (context.isBattlePlausibleThisTurn()) {
-            amount = Math.max(1, Math.min(maxAvailable, reserveDeck - 3));
-        } else {
-            amount = maxAvailable;
-            if (reserveDeck - 3 < maxAvailable) {
-                logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
-            }
-        }
-        String mode = (amount < maxAvailable)
-            ? "V61c DESTINY BUFFER (keep 3 in reserve)" : "V57 ACTIVATE FULL";
-
-        if (lifeForce <= 10) {
-            // V67at end-game: ALSO save 2 Force from the generation — take the more conservative.
-            int v67at = Math.max(1, maxAvailable - 2);
-            if (v67at < amount) { amount = v67at; mode = "V67at END-GAME RESERVE-2 (lifeForce <= 10)"; }
-        }
-
-        logger.warn("{}: activating {} of {} (reserve={}, forcePile={}, hand={}, lifeForce={})",
-            mode, amount, maxAvailable, reserveDeck, currentForce, handSize, lifeForce);
-
-        return amount;
-    }
 }

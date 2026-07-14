@@ -33,6 +33,18 @@ public enum TraceRoute {
     COMBINED_EVALUATOR,
     /** Canonical top-level DRAW decision owned by the typed DRAW finalizer lane. */
     DRAW_TOP_LEVEL,
+    /** Typed top-level ACTIVATE action chooser. */
+    ACTIVATE_TOP_LEVEL,
+    /** Typed Force-activation amount. */
+    ACTIVATE_AMOUNT,
+    /** Typed opponent activation allowance amount. */
+    ACTIVATE_ALLOWANCE,
+    /** Typed zero-activation Yes/No confirmation. */
+    ACTIVATE_ZERO_CONFIRM,
+    /** Typed activation-interruption acknowledgement. */
+    ACTIVATE_ACK,
+    /** Typed top-level CONTROL action chooser. */
+    CONTROL_TOP_LEVEL,
     /** Typed PULL parent action choice. */
     PULL_PARENT,
     /** Typed deploy-from-pile child card choice. */
@@ -73,7 +85,15 @@ public enum TraceRoute {
                 return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
             case DRAW_TOP_LEVEL:
             case PULL_PARENT:
+            case ACTIVATE_TOP_LEVEL:
+            case CONTROL_TOP_LEVEL:
                 return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE;
+            case ACTIVATE_AMOUNT:
+            case ACTIVATE_ALLOWANCE:
+                return frozenShape == DecisionFacts.DecisionRoute.INTEGER;
+            case ACTIVATE_ZERO_CONFIRM:
+            case ACTIVATE_ACK:
+                return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
             case PULL_DEPLOY_CHILD:
             case PULL_TAKE_CHILD:
             case PULL_FAILED_VERIFY:

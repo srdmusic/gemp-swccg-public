@@ -42,6 +42,13 @@ public class PassEvaluator extends ActionEvaluator {
 
     @Override
     public boolean canEvaluate(DecisionContext context) {
+        // INTEGER responses are values, not pass actions. Typed activation amounts are
+        // owned by ForceActivationEvaluator; every other INTEGER belongs to the shared
+        // heuristic value picker. Returning an empty pass here means "choose zero".
+        if ("INTEGER".equals(context.getDecisionType())) {
+            return false;
+        }
+
         // Can only pass if:
         // 1. noPass=false (passing is allowed)
         // 2. AND min=0 (no minimum selection required)

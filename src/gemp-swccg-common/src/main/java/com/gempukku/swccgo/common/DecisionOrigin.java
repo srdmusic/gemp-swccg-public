@@ -16,7 +16,7 @@ package com.gempukku.swccgo.common;
 // Each origin declares its REQUIRED wire type. It is held as the AwaitingDecisionType
 // name STRING, not the enum, because AwaitingDecisionType lives in gemp-swccg-logic
 // and gemp-swccg-common must not depend on logic (dependency runs logic -> common).
-// The shadow resolver validates the stamped decision's real wire type against this
+// The live resolver validates the stamped decision's real wire type against this
 // name; a resolver-side fixture asserts every name parses back to a real
 // AwaitingDecisionType, so a rename cannot drift silently.
 //

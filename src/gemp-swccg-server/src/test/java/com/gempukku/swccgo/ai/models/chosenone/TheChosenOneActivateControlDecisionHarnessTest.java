@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone;
 
+import com.gempukku.swccgo.ai.AiDecisionResult;
+import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
 import com.gempukku.swccgo.ai.models.common.phase.AbstractActivateControlDecisionHarnessTest;
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
@@ -14,8 +16,8 @@ import static org.junit.Assert.assertFalse;
  * TheChosenOneAi adapter for the ACTIVATE + CONTROL decide-equivalent harness
  * (packet Handoffs/CODEX_ACTIVATE_CONTROL_DECIDE_HARNESS_PACKET_2026-07-13.md).
  *
- * Overrides ONLY {@link #runDecision}: the abstract contract owns the six fixtures and
- * every structured assertion. This adapter exists solely because TheChosenOneAi's
+ * Overrides only the direct and mediator-facing execution seams; the abstract contract
+ * owns every fixture and structured assertion. This adapter exists solely because TheChosenOneAi's
  * {@code setDecisionTraceSinkForTesting} is package-visible — no reflection, no widening.
  * It differs from the Rando adapter ONLY by the bot package/class substitutions; the
  * packet requires Rando and ChosenOne to agree on candidate/score/veto/route/response.
@@ -43,5 +45,14 @@ public class TheChosenOneActivateControlDecisionHarnessTest extends AbstractActi
 
         DecisionTrace trace = sink.single();
         return new CapturedDecision(tracedResponse, trace);
+    }
+
+    @Override
+    protected AiDecisionResult runEngineDecision(
+            AwaitingDecision decision, GameState gameState, RejectionHistory history) {
+        AiDecisionResult result = new TheChosenOneAi().decideForEngine(
+            DECIDING_PLAYER, decision, gameState, history);
+        assertFalse("engine-facing run must not leak a trace session", TraceSession.isActive());
+        return result;
     }
 }

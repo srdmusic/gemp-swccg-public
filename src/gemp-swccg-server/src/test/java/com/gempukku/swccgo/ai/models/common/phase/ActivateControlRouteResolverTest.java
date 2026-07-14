@@ -2,10 +2,13 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
 import org.junit.Test;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,9 +17,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Pure resolver + input contract for the ACTIVATE/CONTROL Option 2 shadow phase.
- * Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_PACKET_2026-07-13.md §2, §3.
- * There is deliberately no production consumer; this is the only caller.
+ * Pure resolver + input contract for the live ACTIVATE/CONTROL Option 2 phase.
+ * Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_B_PACKET_2026-07-13.md §1.
  */
 public class ActivateControlRouteResolverTest {
 
@@ -125,6 +127,42 @@ public class ActivateControlRouteResolverTest {
     }
 
     @Test
+    public void captureParsesTypedOriginOrderedResultsAndDefaults() {
+        Map<String, String[]> params = new LinkedHashMap<>();
+        params.put(DecisionOrigin.WIRE_PARAMETER,
+                new String[]{DecisionOrigin.ACTIVATE_ZERO_CONFIRM.name()});
+        params.put("results", new String[]{"No", "Yes"});
+        params.put("defaultIndex", new String[]{"1"});
+        AwaitingDecision decision = decision(AwaitingDecisionType.MULTIPLE_CHOICE, params);
+
+        ActivateControlRouteInput input = ActivateControlRouteInput.capture(
+                Phase.ACTIVATE, decision, ACTIVATOR, ACTIVATOR);
+
+        assertEquals(DecisionOrigin.ACTIVATE_ZERO_CONFIRM, input.origin());
+        assertEquals(List.of("No", "Yes"), input.results());
+        assertEquals(Integer.valueOf(1), input.defaultIndex());
+        assertNull(input.defaultValue());
+        assertEquals(ActivateControlRoute.ACTIVATE_ZERO_CONFIRM,
+                ActivateControlRouteResolver.resolve(input));
+    }
+
+    @Test
+    public void captureTreatsAmbiguousOrMalformedRawFieldsAsUnownedOrUnknown() {
+        Map<String, String[]> params = new LinkedHashMap<>();
+        params.put(DecisionOrigin.WIRE_PARAMETER,
+                new String[]{DecisionOrigin.ACTIVATE_AMOUNT.name(), DecisionOrigin.ACTIVATE_ALLOWANCE.name()});
+        params.put("defaultValue", new String[]{"not-an-integer"});
+        ActivateControlRouteInput input = ActivateControlRouteInput.capture(
+                Phase.ACTIVATE, decision(AwaitingDecisionType.INTEGER, params),
+                ACTIVATOR, ACTIVATOR);
+
+        assertNull(input.origin());
+        assertNull(input.defaultValue());
+        assertEquals(ActivateControlRoute.LEGACY_UNOWNED,
+                ActivateControlRouteResolver.resolve(input));
+    }
+
+    @Test
     public void resultsListIsDefensivelyImmutable() {
         ActivateControlRouteInput input = input(Phase.ACTIVATE, DecisionOrigin.ACTIVATE_ZERO_CONFIRM,
                 AwaitingDecisionType.MULTIPLE_CHOICE, ACTIVATOR, ACTIVATOR, List.of("Yes", "No"), 0, null);
@@ -174,5 +212,16 @@ public class ActivateControlRouteResolverTest {
                                                    Integer defaultIndex, Integer defaultValue) {
         return new ActivateControlRouteInput(phase, origin, wireType, recipient, turnPlayer,
                 results, defaultIndex, defaultValue);
+    }
+
+    private static AwaitingDecision decision(AwaitingDecisionType type,
+                                              Map<String, String[]> params) {
+        return new AwaitingDecision() {
+            @Override public int getAwaitingDecisionId() { return 1; }
+            @Override public String getText() { return "test"; }
+            @Override public AwaitingDecisionType getDecisionType() { return type; }
+            @Override public Map<String, String[]> getDecisionParameters() { return params; }
+            @Override public void decisionMade(String result) { }
+        };
     }
 }

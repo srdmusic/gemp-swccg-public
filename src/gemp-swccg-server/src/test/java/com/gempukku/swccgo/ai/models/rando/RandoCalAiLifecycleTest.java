@@ -10,6 +10,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.TraceStatus;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
 import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
+import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.state.GameState;
@@ -71,6 +72,20 @@ public class RandoCalAiLifecycleTest {
         };
     }
 
+    @Test
+    public void unownedOptionalGainIntegerUsesHeuristicMaximum() {
+        IntegerAwaitingDecision decision = new IntegerAwaitingDecision(
+                "Draw up to three cards", 0, 3, 0) {
+            @Override public void decisionMade(int result) { }
+        };
+
+        AiDecisionResult result = new RandoCalAi().decideForEngine(
+                "tester", decision, null, RejectionHistory.empty());
+
+        assertEquals("3", result.wireResponse());
+        assertEquals(AiDecisionResult.MutationMode.OUTER_COMMON, result.mutationMode());
+    }
+
     private static AwaitingDecision outerMutationFailureDecision() {
         return new AwaitingDecision() {
             @Override public int getAwaitingDecisionId() { throw new RuntimeException("outer-mutation-fault"); }
@@ -94,7 +109,8 @@ public class RandoCalAiLifecycleTest {
 
     private static boolean hasOuterTrackerRecord(DecisionTrace trace) {
         for (TraceStateEvent event : trace.getStateEvents()) {
-            if (event instanceof TrackerRecordResponseEvent) {
+            if (event instanceof TrackerRecordResponseEvent record
+                    && record.owner() == TrackerOwner.OUTER_RANDO) {
                 return true;
             }
         }

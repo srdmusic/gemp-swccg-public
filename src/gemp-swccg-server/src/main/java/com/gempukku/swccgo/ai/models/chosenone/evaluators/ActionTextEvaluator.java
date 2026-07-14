@@ -2,6 +2,8 @@ package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -60,14 +62,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
             return true;
         }
 
-        // Also handle MULTIPLE_CHOICE for capacity slot decisions, Epic Event choices,
-        // and the critical "not activated Force" confirmation
+        // Also handle MULTIPLE_CHOICE for capacity slot and Epic Event choices.
         if ("MULTIPLE_CHOICE".equals(decisionType)) {
             String decisionText = context.getDecisionText();
             if (decisionText != null) {
                 String dtLower = decisionText.toLowerCase();
-                if (dtLower.contains("capacity slot") || dtLower.contains("choose an option")
-                    || dtLower.contains("not activated force") || dtLower.contains("have not activated")) {
+                if (dtLower.contains("capacity slot") || dtLower.contains("choose an option")) {
                     return true;
                 }
                 // V79 (Steve, 2026-05-15): Death Star hyperspace destination decisions.
@@ -201,9 +201,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ═══════════════════════════════════════════════════════════
             // ═══ REGION: ACTIVATE — activation guards (reorg 2026-07-06) ═══
             // Owns: whether to activate: V168 always-activate +5000 vs V61c destiny-buffer -6000 (reserve<=3 AND
-            // battle plausible); with V38.3's +500 confirm (evaluateActivateForce below) this triangle is ONE boundary.
-            // Shared predicate DecisionContext.isBattlePlausibleThisTurn() — THREE sites must agree: this block,
-            // the ForceActivationEvaluator keep-3 cap, and the V38.3 reserve<=3 carve-out.
+            // battle plausible); with V38.3's +500 activation-action bonus this triangle is one boundary.
+            // Shared predicate DecisionContext.isBattlePlausibleThisTurn(). Three sites must agree:
+            // this block, ActivateAmountPolicy, and the typed ACTIVATE_ZERO_CONFIRM owner.
             // Absorbs (dead, commented below/nearby — revert path, do not delete): V61c pre-2026-07-06
             // always-on buffer branch.
             // Cross-refs: ACTIVATE (ForceActivationEvaluator owns how MUCH), PULL-ENGINE (V97 pulls fire BEFORE
@@ -223,15 +223,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // destiny buffer that battle/weapon destiny draws need this turn (the engine
                 // forces >=1 per activation, so capping the amount alone erodes 3->2->1->0 over
                 // turns). Steve: "If Rando intends to battle that turn, he needs to save 3." Score
-                // below Pass (~5-8) so the action-choice lands on Pass. Pairs with the V38.3
-                // reserve<=3 carve-out below (else the "you have not activated Force" confirm
+                // below Pass (~5-8) so the action-choice lands on Pass. Pairs with the typed
+                // zero-confirmation owner (else the "you have not activated Force" confirm
                 // would bounce Rando straight back into activating).
                 // V61c UPDATED 2026-07-06: battle-intent bypass — the buffer protection now applies
                 // ONLY on turns a battle is plausible (any contested location, per the shared
                 // predicate DecisionContext.isBattlePlausibleThisTurn(), same scan V61b uses).
                 // Zero contested locations => deploy-and-end turn => normal V168 always-activate.
-                // SAME predicate gates the ForceActivationEvaluator keep-3 cap + the V38.3
-                // carve-out below so all three sites agree.
+                // The same predicate gates ActivateAmountPolicy and the zero-confirmation owner.
                 int v61cReserve = context.getReserveDeckSize();
                 // V61c pre-2026-07-06 (always-on buffer):
                 // if (v61cReserve <= 3) {
@@ -1489,48 +1488,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     } catch (NumberFormatException nfe) { /* ignore */ }
                       catch (Exception e) {
                         logger.debug("V67bi check error: {}", e.getMessage());
-                    }
-                }
-            }
-
-            // ========== V38.3: "Not activated Force" — ALWAYS go back and activate ==========
-            // The game asks "You have not activated Force. Do you want to Pass?"
-            // Options: "Yes" (pass without activating) and "No" (go back and activate)
-            // ALWAYS choose "No" — Force is essential for deploying characters.
-            {
-                String decisionTextCheck = context.getDecisionText() != null
-                    ? context.getDecisionText().toLowerCase() : "";
-                if (decisionTextCheck.contains("not activated force") || decisionTextCheck.contains("have not activated")) {
-                    // V61c DESTINY BUFFER carve-out (Steve, 2026-06-29): when the Reserve Deck is
-                    // already <= 3, Rando deliberately passed activation (V168 exception above) to
-                    // keep 3 cards for battle/weapon destiny. Here the engine confirms "you have not
-                    // activated Force — pass?"; honor the pass ("Yes") instead of the usual V38.3
-                    // bounce-back, or the buffer protection is undone.
-                    // V61c UPDATED 2026-07-06: battle-intent bypass — honor the pass ONLY when a
-                    // battle is plausible (shared predicate DecisionContext.isBattlePlausibleThisTurn(),
-                    // same gate as the V168 carve-out above + the ForceActivationEvaluator keep-3
-                    // cap). Zero contested locations => normal V38.3 bounce-back ("No", go activate).
-                    int v38cReserve = context.getReserveDeckSize();
-                    // V61c pre-2026-07-06 (always-on buffer):
-                    // if (v38cReserve <= 3) {
-                    boolean v38cBattlePlausible = context.isBattlePlausibleThisTurn();
-                    if (v38cReserve <= 3 && !v38cBattlePlausible && textLower.equals("no")) {
-                        // Logged once (on the "No" option, which the bypass flips to +9999).
-                        logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
-                    }
-                    if (v38cReserve <= 3 && v38cBattlePlausible) {
-                        if (textLower.equals("yes")) {
-                            action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — confirm pass, keep 3 for destiny", 9999.0f);
-                            logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — confirming pass (skip activation)", v38cReserve);
-                        } else if (textLower.equals("no")) {
-                            action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — do not go back and activate", -9999.0f);
-                        }
-                    } else if (textLower.equals("no")) {
-                        action.addReasoning("V38.3 MUST ACTIVATE: Go back and activate Force!", 9999.0f);
-                        logger.warn("V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
-                    } else if (textLower.equals("yes")) {
-                        action.addReasoning("V38.3 NEVER SKIP ACTIVATION: Do not pass without activating!", -9999.0f);
-                        logger.warn("V38.3 BLOCKED: Refusing to skip Force activation");
                     }
                 }
             }
@@ -5808,403 +5765,22 @@ public class ActionTextEvaluator extends ActionEvaluator {
     // drain-response timings). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
     // ═══════════════════════════════════════════════════════════
     private void evaluateForceDrain(EvaluatedAction action, DecisionContext context, String locationCardId) {
-        // Force drains are generally good unless under Battle Order rules
-        // Ported from Python action_text_evaluator.py lines 351-493
-
-        GameState gameState = context.getGameState();
-        String playerId = context.getPlayerId();
-
-        // ========== V24.15: NEVER force drain at 0! ==========
-        // Draining for 0 does nothing but opens us up to Surprise Assault and other traps.
-        // Check the actual drain amount at the location before committing.
-        if (gameState != null && locationCardId != null) {
-            try {
-                PhysicalCard drainLocation = gameState.findCardById(Integer.parseInt(locationCardId));
-                if (drainLocation != null) {
-                    SwccgGame drainGame = context.getGame();
-                    if (drainGame != null) {
-                        float drainAmount = drainGame.getModifiersQuerying().getForceDrainAmount(
-                            gameState, drainLocation, playerId);
-                        if (drainAmount <= 0) {
-                            action.addReasoning("V24.15 DRAIN BLOCK: Force drain would be 0 — pointless and opens us to Surprise Assault!", -9999.0f);
-                            logger.warn("V24.15 DRAIN BLOCK: Force drain at {} would be {} — HARD BLOCKING to avoid Surprise Assault trap!",
-                                drainLocation.getTitle(), drainAmount);
-                            return;
-                        } else {
-                            logger.info("V24.15 DRAIN CHECK: Force drain at {} will be {} — proceeding", drainLocation.getTitle(), drainAmount);
-                        }
-                        // === V189 (Steve, 2026-07-04): NET-VALUE DRAIN GATE ===
-                        // "He should not have paid to drain for 1 with battle plan or
-                        // battle order on the board." Game 20jqtseod148of4y: Rando paid
-                        // 3 Force to drain 1 at Audience Chamber, twice. Ask the engine
-                        // what initiating costs (getInitiateForceDrainCost sums every
-                        // INITIATE_FORCE_DRAIN_COST modifier — Battle Order, Battle
-                        // Plan, anything future — the same query the engine charges via
-                        // PayInitiateForceDrainCostEffect). Boundary: cost 0 games
-                        // completely unaffected (0 is never > drain, drainAmount > 0
-                        // past V24.15); net 0 (pay 3 drain 3) ALLOWED — 3 permanent
-                        // Life Force damage for 3 recycling Force. -2000 blocks land
-                        // exactly -2000 (nothing scores a drain before this point),
-                        // losing to Pass (+5) by ~2005, above the -9999 trap tier.
-                        // UPDATED 2026-07-06 in place (Steve, 2026-07-04): "We should
-                        // still allow drain 2 for 3 force if there is enough force to
-                        // deploy and move everything that rando wants to do that turn."
-                        // Two tiers now. Net <= -2 (pay 3 drain 1, the original
-                        // offender) stays flat-blocked. Net -1 (pay 3 drain 2) is
-                        // BUDGET-GATED: allowed only when forcePile - cost still covers
-                        // the live deployables in hand + a 2-Force move allowance.
-                        // Drains are CONTROL phase (before Deploy/Move), so the budget
-                        // is a forecast, recomputed from live gameState at EVERY drain
-                        // decision — automatically re-checked whenever Force is spent
-                        // (the DeckOracle.refresh freshness pattern; no spend event
-                        // exists to hook, and priming DeployPhasePlanner at Control
-                        // would cache a stale over-budgeted plan into the V38.4
-                        // hold-back machinery — see AI_CHANGELOG 2026-07-06). This
-                        // restores V52's old "net -1 marginal but worth it" stance
-                        // ONLY while the turn plan stays funded. Under-forecast gaps
-                        // (Effects/weapons/devices/pull costs uncounted) err toward
-                        // allowing a marginal drain — bounded, listed in changelog.
-                        float v189Cost = drainGame.getModifiersQuerying().getInitiateForceDrainCost(
-                            gameState, drainLocation, playerId);
-                        if (v189Cost > drainAmount) {
-                            if (v189Cost - drainAmount >= 2.0f) {
-                                action.addReasoning(String.format(
-                                    "V189 DRAIN NET-VALUE BLOCK: initiate cost %.0f > drain %.0f at %s — net <= -2, never worth it",
-                                    v189Cost, drainAmount, drainLocation.getTitle()), -2000.0f);
-                                logger.warn("V189 DRAIN NET-VALUE BLOCK: initiate cost {} > drain {} at {} — net <= -2 → -2000",
-                                    (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
-                                return;
-                            }
-                            // Net -1 tier: TURN SPEND FORECAST — live deployable hand
-                            // costs (persona-dead cards excluded, same isDeadCard test
-                            // DeployPhasePlanner uses) + flat 2-Force move allowance.
-                            int v189ForcePile = gameState.getForcePileSize(playerId);
-                            int v189PlannedSpend = 0;
-                            List<PhysicalCard> v189Hand = gameState.getHand(playerId);
-                            if (v189Hand != null) {
-                                for (PhysicalCard v189Hc : v189Hand) {
-                                    if (v189Hc == null || v189Hc.getBlueprint() == null) continue;
-                                    CardCategory v189Cat = v189Hc.getBlueprint().getCardCategory();
-                                    if (v189Cat == CardCategory.CHARACTER || v189Cat == CardCategory.STARSHIP
-                                            || v189Cat == CardCategory.VEHICLE) {
-                                        if (com.gempukku.swccgo.ai.common.AiCardHelper.isDeadCard(v189Hc, drainGame, playerId)) continue;
-                                        Float v189DepCost = v189Hc.getBlueprint().getDeployCost();
-                                        if (v189DepCost != null && v189DepCost > 0) v189PlannedSpend += v189DepCost.intValue();
-                                    }
-                                }
-                            }
-                            final int v189MoveAllowance = 2;
-                            if (v189ForcePile - v189Cost < v189PlannedSpend + v189MoveAllowance) {
-                                action.addReasoning(String.format(
-                                    "V189 DRAIN NET-VALUE BLOCK: net -1 but budget fails — %d Force - %.0f cost < %d planned deploys + %d move allowance at %s",
-                                    v189ForcePile, v189Cost, v189PlannedSpend, v189MoveAllowance, drainLocation.getTitle()), -2000.0f);
-                                logger.warn("V189 DRAIN NET-1 BUDGET BLOCK: force {} - cost {} < plan {} + moves {} at {} → -2000",
-                                    v189ForcePile, (int)v189Cost, v189PlannedSpend, v189MoveAllowance, drainLocation.getTitle());
-                                return;
-                            }
-                            logger.warn("V189 NET -1 DRAIN ALLOWED: cost {} drain {} at {} — force {} covers plan {} + moves {} — proceeding",
-                                (int)v189Cost, (int)drainAmount, drainLocation.getTitle(), v189ForcePile, v189PlannedSpend, v189MoveAllowance);
-                        } else if (v189Cost > 0) {
-                            logger.info("V189 DRAIN NET-VALUE CHECK: cost {} <= drain {} at {} — worth paying, proceeding",
-                                (int)v189Cost, (int)drainAmount, drainLocation.getTitle());
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.debug("V24.15: Error checking drain amount: {}", e.getMessage());
-            }
-        }
-
-        // === V25: SIMPLE TRICKS AND NONSENSE — avoid draining at non-battleground sites ===
-        // Simple Tricks cancels Force drains at non-battleground sites. If opponent has it
-        // on table, draining at non-battleground sites is pointless (gets cancelled).
-        // Check for this BEFORE spending resources on the drain.
-        if (gameState != null && locationCardId != null) {
-            try {
-                PhysicalCard drainLoc = gameState.findCardById(Integer.parseInt(locationCardId));
-                if (drainLoc != null) {
-                    SwccgCardBlueprint locBp = drainLoc.getBlueprint();
-                    // Check if the drain location is a non-battleground site
-                    // V25 UPDATED 2026-07-06: ask the ENGINE for DYNAMIC battleground status
-                    // (modifiersQuerying.isBattleground — the same call pattern V140 used
-                    // before its 2026-07-04 rework). The old static printed-icon check said
-                    // "battleground" for dual-icon sites dynamically made non-battleground
-                    // (cancelled force icons, NONBATTLEGROUND modifiers, Senate/Audience
-                    // Chamber class cards), so the -9999 block below never fired and Rando
-                    // drained into a guaranteed Simple Tricks cancel (audit row
-                    // control-drain-5). Static icons kept ONLY as fallback when the game
-                    // object is unavailable (pre-2026-07-06 behavior).
-                    boolean isBattlegroundSite = false;
-                    if (context.getGame() != null) {
-                        isBattlegroundSite = context.getGame().getModifiersQuerying()
-                            .isBattleground(gameState, drainLoc, null);
-                    } else if (locBp != null) {
-                        // OLD static detection (now fallback-only), pre-2026-07-06:
-                        // A battleground site typically has force icons from both sides
-                        isBattlegroundSite = locBp.hasIcon(com.gempukku.swccgo.common.Icon.DARK_FORCE)
-                            && locBp.hasIcon(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
-                    }
-
-                    if (!isBattlegroundSite) {
-                        // Check if opponent has Simple Tricks And Nonsense on table
-                        String opponentId = gameState.getOpponent(playerId);
-                        boolean simpleTricksOnTable = false;
-                        if (opponentId != null) {
-                            for (PhysicalCard card : gameState.getAllPermanentCards()) {
-                                if (card == null || !opponentId.equals(card.getOwner())) continue;
-                                com.gempukku.swccgo.common.Zone zone = card.getZone();
-                                if (zone == null || !zone.isInPlay()) continue;
-                                String cardTitle = card.getTitle();
-                                if (cardTitle != null && cardTitle.contains("Simple Tricks")) {
-                                    simpleTricksOnTable = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (simpleTricksOnTable) {
-                            action.addReasoning("V25 SIMPLE TRICKS: Non-battleground drain will be CANCELLED by Simple Tricks And Nonsense!", -9999.0f);
-                            logger.warn("V25 SIMPLE TRICKS: BLOCKING drain at non-battleground {} — opponent has Simple Tricks!",
-                                drainLoc.getTitle());
-                            return;
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.debug("V25 Simple Tricks check error: {}", e.getMessage());
-            }
-        }
-
-        // Check if we're under Battle Order rules (force drains cost +3 extra)
-        // Battle Order is typically triggered when opponent has mains + specific cards
-        boolean underBattleOrder = false;
-        com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController strategyController = context.getStrategyController();
-        if (strategyController != null) {
-            underBattleOrder = strategyController.isUnderBattleOrderRules();
-        }
-
-        // Get available force
-        int forceAvailable = 0;
-        if (gameState != null) {
-            forceAvailable = gameState.getForcePileSize(playerId);
-        }
-
-        // Check if we have any deployable cards in hand
-        boolean hasDeployableCard = false;
-        int cheapestDeployCost = Integer.MAX_VALUE;
-        if (gameState != null) {
-            List<PhysicalCard> hand = gameState.getHand(playerId);
-            if (hand != null) {
-                for (PhysicalCard card : hand) {
-                    if (card.getBlueprint() != null) {
-                        CardCategory category = card.getBlueprint().getCardCategory();
-                        if (category == CardCategory.CHARACTER || category == CardCategory.STARSHIP ||
-                            category == CardCategory.VEHICLE) {
-                            hasDeployableCard = true;
-                            Float deployCost = card.getBlueprint().getDeployCost();
-                            if (deployCost != null && deployCost < cheapestDeployCost) {
-                                cheapestDeployCost = deployCost.intValue();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (underBattleOrder) {
-            // Under Battle Order rules - force drains cost extra (+3)
-            int battleOrderCost = 3;
-
-            // If we can't afford the drain (need 3+ force), skip it
-            if (forceAvailable < battleOrderCost) {
-                action.addReasoning("Under Battle Order but can't afford drain (need " + battleOrderCost + ", have " + forceAvailable + ")", VERY_BAD_DELTA);
-                return;
-            }
-
-            // Check if we have deployable cards - if yes, save force for them
-            if (hasDeployableCard && cheapestDeployCost < Integer.MAX_VALUE) {
-                int forceAfterDrain = forceAvailable - battleOrderCost;
-                if (forceAfterDrain < cheapestDeployCost) {
-                    action.addReasoning("Under Battle Order - saving force for deploy (cost " + cheapestDeployCost + ")", VERY_BAD_DELTA);
-                    return;
-                }
-            }
-
-            // If NO deployable cards - drains are our only pressure! Boost them!
-            if (!hasDeployableCard) {
-                action.addReasoning("Under Battle Order but NO deployable cards - drain is our only pressure!", VERY_GOOD_DELTA + 20.0f);
-                logger.info("🔥 FORCE DRAIN BOOST: No deployable cards under Battle Order");
-                return;
-            }
-
-            // V140 (Steve, 2026-05-26): BATTLE ORDER COST-WAIVER CHECK
-            //
-            // Battle Order's text: "must first use 3 Force UNLESS that player
-            // occupies a battleground site (except a holosite) AND a battleground
-            // system." Also waived if Battle Plan is on table.
-            //
-            // Previous V104/V48 logic treated Battle Order as ALWAYS imposing the
-            // 3-force cost. Steve flagged 2026-05-26: "If he satisfies battle order
-            // or battle plan he does not need to pay three force to drain." Adding
-            // the waiver check so V104/V48 only fire when the cost is actually due.
-            // V140 UPDATED 2026-07-04: engine aggregate initiate-cost is the sole
-            // waiver authority. Card8_118 stands down while Battle Plan is on table,
-            // but Card8_035 imposes its own 3-Force tax unless the player occupies
-            // a battleground site and a battleground system.
-            // A queried cost of 0 receives +60 and returns; positive cost falls
-            // through to V104/V52/V48. Query failure also falls through.
-            // The wrong hand-rolled predecessor was removed 2026-07-13 after source proof.
-            boolean v140CostWaived = false;
-            try {
-                if (gameState != null && locationCardId != null && context.getGame() != null) {
-                    PhysicalCard v140Loc = gameState.findCardById(Integer.parseInt(locationCardId));
-                    if (v140Loc != null) {
-                        v140CostWaived = context.getGame().getModifiersQuerying()
-                            .getInitiateForceDrainCost(gameState, v140Loc, playerId) <= 0f;
-                    }
-                }
-            } catch (Exception v140e) {
-                logger.debug("V140 cost-waiver check error: {}", v140e.getMessage());
-            }
-            if (v140CostWaived) {
-                action.addReasoning(
-                    "V140 BATTLE ORDER COST WAIVED: engine initiate-cost is 0 — drain is FREE!",
-                    VERY_GOOD_DELTA + 10.0f);
-                logger.warn("V140 BATTLE ORDER COST WAIVED: engine initiate-cost 0 — drain is free, skipping V104/V48 penalties");
-                // No further BO-specific scoring; drain is free, treat like normal drain
-                return;
-            }
-
-            // V104 (Steve, 2026-05-20): UNDER BATTLE ORDER — HARD BLOCK DRAIN ≤ 1.
-            // (Skipped when V140 cost-waiver fires above.)
-            // NOTE (2026-07-04): V189 upstream (net-value gate at the V24.15 check)
-            // now fronts every V104 case with the engine-true cost; V104 remains as
-            // a backstop for the rare case where the engine cost query throws.
-            boolean v104HardBlock = false;
-            try {
-                if (gameState != null && locationCardId != null && context.getGame() != null) {
-                    PhysicalCard v104Loc = gameState.findCardById(Integer.parseInt(locationCardId));
-                    if (v104Loc != null) {
-                        float v104Amt = context.getGame().getModifiersQuerying()
-                            .getForceDrainAmount(gameState, v104Loc, playerId);
-                        if (v104Amt <= 1f) {
-                            action.addReasoning(String.format(
-                                "V104 BATTLE ORDER + DRAIN <= 1: drain %.0f at %s, pay 3 = net %.0f — hard block",
-                                v104Amt, v104Loc.getTitle(), v104Amt - 3f), -2000.0f);
-                            logger.warn("V104 BATTLE ORDER + DRAIN <= 1: drain {} at {} → -2000",
-                                (int)v104Amt, v104Loc.getTitle());
-                            v104HardBlock = true;
-                        }
-                    }
-                } else {
-                    logger.debug("V104: cannot determine drain value (gameState/location/game missing)");
-                }
-            } catch (Exception v104e) {
-                logger.debug("V104: drain value check error: {}", v104e.getMessage());
-            }
-
-            // V52: After Turn 3, ALWAYS drain even under Battle Order.
-            int drainTurn = context.getTurnNumber();
-            if (v104HardBlock) {
-                // Skip V52 boost — V104 already hard-blocked.
-            } else if (drainTurn >= 3) {
-                action.addReasoning("V52 DRAIN ANYWAY: Turn " + drainTurn + " — any drain is damage, pay the Battle Order cost!", VERY_GOOD_DELTA);
-                logger.warn("V52 DRAIN ANYWAY: Turn {} under Battle Order — draining anyway! 1 damage > 0 damage!", drainTurn);
-            } else {
-                // Turns 1-2: save force for deploys, Battle Order drain is too expensive early
-                action.addReasoning("V48 BATTLE ORDER EARLY: Turn " + drainTurn + " — save force for deploys", VERY_BAD_DELTA);
-                logger.warn("V48 BATTLE ORDER EARLY: Turn {} — skipping drain to save for deploys", drainTurn);
-            }
-
-        } else {
-            // Not under Battle Order - drain is generally good
-            if (!hasDeployableCard) {
-                // NO deployable cards - drains are our only pressure!
-                action.addReasoning("Force drain (no deployable cards - our only pressure!)", VERY_GOOD_DELTA + 20.0f);
-                logger.info("🔥 FORCE DRAIN BOOST: No deployable cards");
-            } else {
-                action.addReasoning("Force drain is good", VERY_GOOD_DELTA);
-            }
-        }
-
-        // === V52 FIX 14: MULTI-SITE DRAIN — Prioritize draining at multiple sites ===
-        // Count how many drain-capable sites we occupy and rank this drain by amount.
-        // Draining at 3+ sites per turn is how Steve wins in 4 turns.
-        if (gameState != null && locationCardId != null) {
-            try {
-                SwccgGame drainGame14 = context.getGame();
-                if (drainGame14 != null) {
-                    // Count sites where we can drain (we have presence + drain > 0)
-                    int drainCapableSites = 0;
-                    float thisDrainAmount = 0;
-                    PhysicalCard thisDrainLoc = gameState.findCardById(Integer.parseInt(locationCardId));
-
-                    for (PhysicalCard loc14 : gameState.getTopLocations()) {
-                        if (loc14 == null) continue;
-                        try {
-                            float ourPower14 = drainGame14.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, loc14, playerId, false, false);
-                            if (ourPower14 > 0) {
-                                float drainAmt14 = drainGame14.getModifiersQuerying().getForceDrainAmount(
-                                    gameState, loc14, playerId);
-                                if (drainAmt14 > 0) {
-                                    drainCapableSites++;
-                                }
-                            }
-                        } catch (Exception e) { /* ignore */ }
-                    }
-
-                    if (thisDrainLoc != null) {
-                        try {
-                            thisDrainAmount = drainGame14.getModifiersQuerying().getForceDrainAmount(
-                                gameState, thisDrainLoc, playerId);
-                        } catch (Exception e) { /* ignore */ }
-                    }
-
-                    // Give bonus based on drain amount ranking (higher drain = higher bonus)
-                    if (thisDrainAmount >= 3) {
-                        action.addReasoning("V52 MULTI-DRAIN: Drain " + (int)thisDrainAmount + " — top priority drain site!", 300.0f);
-                        logger.warn("V52 MULTI-DRAIN: {} drains {} — +300 (top tier)", thisDrainLoc != null ? thisDrainLoc.getTitle() : "?", (int)thisDrainAmount);
-                    } else if (thisDrainAmount >= 2) {
-                        action.addReasoning("V52 MULTI-DRAIN: Drain " + (int)thisDrainAmount + " — high value drain!", 200.0f);
-                        logger.warn("V52 MULTI-DRAIN: {} drains {} — +200", thisDrainLoc != null ? thisDrainLoc.getTitle() : "?", (int)thisDrainAmount);
-                    } else if (drainCapableSites >= 2) {
-                        action.addReasoning("V52 MULTI-DRAIN: " + drainCapableSites + " drain sites — drain everywhere!", 100.0f);
-                        logger.warn("V52 MULTI-DRAIN: {} — {} drain-capable sites +100", thisDrainLoc != null ? thisDrainLoc.getTitle() : "?", drainCapableSites);
-                    }
-                }
-            } catch (Exception e) {
-                logger.debug("V52 MULTI-DRAIN: Error: {}", e.getMessage());
-            }
-        }
-
-        // === V29.9: HUNT DOWN FORCE DRAIN PRIORITY ===
-        // For Hunt Down (V or regular), force drains are extra valuable because:
-        // 1. Visage Of The Emperor adds +1 to each drain while we occupy a battleground
-        // 2. Vader's presence at battleground locations enables draining
-        // 3. Hunt Down V gives bonus force loss from lightsaber combat
-        // Boost force drains significantly when running Hunt Down objective.
-        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer drainObjAnalyzer = context.getObjectiveAnalyzer();
-        if (drainObjAnalyzer != null && drainObjAnalyzer.isAnalyzed() && drainObjAnalyzer.isHuntDownV()) {
-            // Check if we're draining at a location with opponent icons (actual drain value)
-            boolean highValueDrain = false;
-            if (gameState != null && locationCardId != null) {
-                try {
-                    PhysicalCard drainLoc = gameState.findCardById(Integer.parseInt(locationCardId));
-                    if (drainLoc != null && drainLoc.getBlueprint() != null) {
-                        int oppIcons = drainLoc.getBlueprint().getIconCount(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
-                        if (oppIcons >= 2) {
-                            highValueDrain = true;
-                            action.addReasoning("V29.9 HUNT DOWN DRAIN: High-value drain location (" + oppIcons + " opponent icons)!", 40.0f);
-                        }
-                    }
-                } catch (Exception e) { /* ignore */ }
-            }
-            // General Hunt Down drain boost
-            action.addReasoning("V29.9 HUNT DOWN: Force drains are critical — Visage adds +1, keep pressure on!", 30.0f);
+        ControlDrainFacts facts = new ControlDrainFacts(
+            context.getGameState(),
+            context.getGame(),
+            context.getPlayerId(),
+            locationCardId,
+            context.getTurnNumber(),
+            () -> context.getStrategyController() != null
+                && context.getStrategyController().isUnderBattleOrderRules(),
+            () -> context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer().isAnalyzed()
+                && context.getObjectiveAnalyzer().isHuntDownV());
+        ControlDrainAssessment.Result assessment = ControlDrainAssessment.assess(facts);
+        for (ControlDrainAssessment.Operation operation : assessment.operations()) {
+            action.addReasoning(operation.detail(), operation.delta());
         }
     }
-
     private void evaluatePlayCard(EvaluatedAction action, DecisionContext context) {
         int forcePile = context.getForcePileSize();
         if (forcePile == 0) {

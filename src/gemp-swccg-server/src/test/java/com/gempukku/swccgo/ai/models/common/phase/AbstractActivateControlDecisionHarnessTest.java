@@ -1,7 +1,10 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.AiDecisionResult;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionFacts;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse;
+import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOp;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOperation;
@@ -35,13 +38,11 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * ACTIVATE + CONTROL Decide-Equivalent Harness
- * (packet Handoffs/CODEX_ACTIVATE_CONTROL_DECIDE_HARNESS_PACKET_2026-07-13.md, baseline
- * 443248a65). TEST-ONLY freeze of the CURRENT ACTIVATE and CONTROL decision boundary,
- * before any shadow route is connected to a bot entry point. Adds executable evidence
- * only: no production main-tree file changes, no score/route/schema/default moves.
+ * (packet Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_B_PACKET_2026-07-13.md). Freezes the
+ * live typed owner boundary and the documented zero-confirmation correction.
  *
  * ONE abstract JUnit 4 contract (this class) owns: the scripted immutable AwaitingDecision
- * helper, a configurable minimal GameState subclass, the SIX inherited tests, and the
+ * helper, a configurable minimal GameState subclass, the inherited tests, and the
  * structured trace assertions. Each bot adapter (rando + chosenone) overrides ONLY
  * {@link #runDecision}, because {@code setDecisionTraceSinkForTesting} is intentionally
  * package-visible. The six tests live ONCE, here.
@@ -88,6 +89,10 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
      */
     protected abstract CapturedDecision runDecision(AwaitingDecision decision, GameState gameState);
 
+    /** Run the same decision through the mediator-facing typed boundary. */
+    protected abstract AiDecisionResult runEngineDecision(
+        AwaitingDecision decision, GameState gameState, RejectionHistory history);
+
     // =========================================================================
     // Expected operation record (structured; never a formatted-decimal/hash compare)
     // =========================================================================
@@ -103,7 +108,7 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
     // =========================================================================
 
     /** activateTopLevel: ACTIVATE CARD_ACTION_CHOICE, one Activate Force action + optional
-     *  Pass → offered action id, route COMBINED_EVALUATOR. */
+     *  Pass -> offered action id, route ACTIVATE_TOP_LEVEL. */
     @Test
     public void activateTopLevel() {
         AwaitingDecision decision = decision(101, AwaitingDecisionType.CARD_ACTION_CHOICE,
@@ -116,6 +121,7 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
                 DecisionOrigin.WIRE_PARAMETER, arr(DecisionOrigin.PHASE_ACTION.name())));
         CapturedDecision cap = runDecision(decision, stub(Phase.ACTIVATE));
         verifyEvaluatorLane("activateTopLevel", cap, decision, Phase.ACTIVATE,
+            TraceRoute.ACTIVATE_TOP_LEVEL,
             DecisionOrigin.PHASE_ACTION, "A1",
             list("A1"), list("A1", ""),
             /* obligations known */ true, Set.of(),
@@ -142,6 +148,7 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
                 DecisionOrigin.WIRE_PARAMETER, arr(DecisionOrigin.PHASE_ACTION.name())));
         CapturedDecision cap = runDecision(decision, stub(Phase.CONTROL));
         verifyEvaluatorLane("controlTopLevel", cap, decision, Phase.CONTROL,
+            TraceRoute.CONTROL_TOP_LEVEL,
             DecisionOrigin.PHASE_ACTION, "C1",
             list("C1"), list("C1", ""),
             true, Set.of(),
@@ -164,6 +171,7 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
         // obligationFlags UNKNOWN: the bot boundary derives them only when the noPass
         // parameter is present, and a real INTEGER amount decision carries no noPass.
         verifyEvaluatorLane("activateAmount", cap, decision, Phase.ACTIVATE,
+            TraceRoute.ACTIVATE_AMOUNT,
             DecisionOrigin.ACTIVATE_AMOUNT, "3",
             list(), list("3"),
             false, null,
@@ -190,6 +198,7 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
             DECIDING_PLAYER, gameState.getCurrentPlayerId());
         CapturedDecision cap = runDecision(decision, gameState);
         verifyEvaluatorLane("activateAllowance", cap, decision, Phase.ACTIVATE,
+            TraceRoute.ACTIVATE_ALLOWANCE,
             DecisionOrigin.ACTIVATE_ALLOWANCE, "3",
             list(), list("3"),
             false, null,
@@ -197,34 +206,59 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
             ACTIVATE_ALLOWANCE_OPS);
     }
 
-    /** activateZeroConfirmLegacy: ACTIVATE MULTIPLE_CHOICE results Yes,No → 0 (Yes), the
-     *  CURRENT fallback route.
-     *
-     *  DEFECT FREEZE: the "0 (Yes)" response is evidence of the CURRENT DEFECT, NOT desired
-     *  policy. The bot blind-confirms index 0 ("Yes") on a zero-activation confirm; a real
-     *  player rarely pass-confirms turn 1. A later ACTIVATE owner is expected to create an
-     *  INTENTIONAL delta here — this assertion is the pre-migration baseline, not a target.
-     *  (The evaluator lane runs but produces no candidate, so it records a null pre-safety
-     *  winner and passEligible=false; the heuristic base then picks index 0.) */
+    /** Normal zero activation declines Pass by selecting the original ordinal of No. */
     @Test
-    public void activateZeroConfirmLegacyDefect() {
+    public void activateZeroConfirmSelectsNo() {
         AwaitingDecision decision = decision(105, AwaitingDecisionType.MULTIPLE_CHOICE,
             "You have not activated Force. Do you want to Pass?",
             params(
                 "results", arr("Yes", "No"),
                 DecisionOrigin.WIRE_PARAMETER, arr(DecisionOrigin.ACTIVATE_ZERO_CONFIRM.name())));
         CapturedDecision cap = runDecision(decision, stub(Phase.ACTIVATE));
-        verifyHeuristicFallback("activateZeroConfirmLegacyDefect", cap, decision, Phase.ACTIVATE,
-            DecisionOrigin.ACTIVATE_ZERO_CONFIRM, "0",
-            list("0", "1"),
-            /* preSafetyWinnerRecorded */ true, /* preSafetyWinnerActionId */ null,
-            /* preSafetyWinnerNaReason */ null,
-            /* passEligible */ Boolean.FALSE, /* passEligibilityNaReason */ null);
+        verifyOwnedLabelRoute("activateZeroConfirmSelectsNo", cap, decision, Phase.ACTIVATE,
+            DecisionOrigin.ACTIVATE_ZERO_CONFIRM, TraceRoute.ACTIVATE_ZERO_CONFIRM,
+            "1", list("0", "1"));
     }
 
-    /** activateInterruptionAck: ACTIVATE MULTIPLE_CHOICE sole result OK → 0, the CURRENT
-     *  fallback route. No evaluator handles the single-option choice, so the evaluator-lane
-     *  facts are explicitly not-applicable. */
+    @Test
+    public void activateZeroConfirmSelectsNoAtItsOriginalReversedOrdinal() {
+        AwaitingDecision decision = decision(108, AwaitingDecisionType.MULTIPLE_CHOICE,
+            "You have not activated Force. Do you want to Pass?",
+            params(
+                "results", arr("No", "Yes"),
+                DecisionOrigin.WIRE_PARAMETER, arr(DecisionOrigin.ACTIVATE_ZERO_CONFIRM.name())));
+        CapturedDecision cap = runDecision(decision, stubWithReserve(Phase.ACTIVATE, 4));
+        verifyOwnedLabelRoute("activateZeroConfirmReversed", cap, decision, Phase.ACTIVATE,
+            DecisionOrigin.ACTIVATE_ZERO_CONFIRM, TraceRoute.ACTIVATE_ZERO_CONFIRM,
+            "0", list("0", "1"));
+    }
+
+    @Test
+    public void activateZeroConfirmKeepsThreeAcrossBothLabelOrders() {
+        AwaitingDecision yesFirst = decision(109, AwaitingDecisionType.MULTIPLE_CHOICE,
+            "You have not activated Force. Do you want to Pass?",
+            params(
+                "results", arr("Yes", "No"),
+                DecisionOrigin.WIRE_PARAMETER, arr(DecisionOrigin.ACTIVATE_ZERO_CONFIRM.name())));
+        CapturedDecision yesFirstCap = runDecision(
+            yesFirst, stubWithReserve(Phase.ACTIVATE, 3));
+        verifyOwnedLabelRoute("activateZeroConfirmKeepThreeYesFirst", yesFirstCap,
+            yesFirst, Phase.ACTIVATE, DecisionOrigin.ACTIVATE_ZERO_CONFIRM,
+            TraceRoute.ACTIVATE_ZERO_CONFIRM, "0", list("0", "1"));
+
+        AwaitingDecision noFirst = decision(110, AwaitingDecisionType.MULTIPLE_CHOICE,
+            "You have not activated Force. Do you want to Pass?",
+            params(
+                "results", arr("No", "Yes"),
+                DecisionOrigin.WIRE_PARAMETER, arr(DecisionOrigin.ACTIVATE_ZERO_CONFIRM.name())));
+        CapturedDecision noFirstCap = runDecision(
+            noFirst, stubWithReserve(Phase.ACTIVATE, 3));
+        verifyOwnedLabelRoute("activateZeroConfirmKeepThreeNoFirst", noFirstCap,
+            noFirst, Phase.ACTIVATE, DecisionOrigin.ACTIVATE_ZERO_CONFIRM,
+            TraceRoute.ACTIVATE_ZERO_CONFIRM, "1", list("0", "1"));
+    }
+
+    /** ACTIVATE interruption acknowledgement selects the sole original OK ordinal. */
     @Test
     public void activateInterruptionAck() {
         AwaitingDecision decision = decision(106, AwaitingDecisionType.MULTIPLE_CHOICE,
@@ -233,19 +267,40 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
                 "results", arr("OK"),
                 DecisionOrigin.WIRE_PARAMETER, arr(DecisionOrigin.ACTIVATE_INTERRUPTION_ACK.name())));
         CapturedDecision cap = runDecision(decision, stub(Phase.ACTIVATE));
-        verifyHeuristicFallback("activateInterruptionAck", cap, decision, Phase.ACTIVATE,
-            DecisionOrigin.ACTIVATE_INTERRUPTION_ACK, "0",
-            list("0"),
-            /* preSafetyWinnerRecorded */ false, /* preSafetyWinnerActionId */ null,
-            /* preSafetyWinnerNaReason */ "heuristic fallback: no evaluator lane facts for this decision",
-            /* passEligible */ null,
-            /* passEligibilityNaReason */ "heuristic fallback: no evaluator lane facts for this decision");
+        verifyOwnedLabelRoute("activateInterruptionAck", cap, decision, Phase.ACTIVATE,
+            DecisionOrigin.ACTIVATE_INTERRUPTION_ACK, TraceRoute.ACTIVATE_ACK,
+            "0", list("0"));
+    }
+
+    /** Direct callers keep the frozen safe ordinal while mediator callers receive the
+     *  typed rejection. Neither path re-enters the other after ownership is established. */
+    @Test
+    public void malformedZeroConfirmationSplitsDirectCompatibilityFromEngineRejection() {
+        AwaitingDecision decision = decision(107, AwaitingDecisionType.MULTIPLE_CHOICE,
+            "You have not activated Force. Do you want to Pass?",
+            params(
+                "results", arr("Yes", "Maybe"),
+                DecisionOrigin.WIRE_PARAMETER, arr(DecisionOrigin.ACTIVATE_ZERO_CONFIRM.name())));
+        GameState gameState = stub(Phase.ACTIVATE);
+
+        CapturedDecision direct = runDecision(decision, gameState);
+        verifyOwnedLabelRoute("malformedZeroConfirmationDirect", direct, decision,
+            Phase.ACTIVATE, DecisionOrigin.ACTIVATE_ZERO_CONFIRM,
+            TraceRoute.ACTIVATE_ZERO_CONFIRM, "0", list("0", "1"));
+
+        RejectionHistory history = RejectionHistory.empty();
+        AiDecisionResult engine = runEngineDecision(decision, gameState, history);
+        assertEquals(AiDecisionResult.Status.TYPED_REJECTION, engine.status());
+        assertEquals(FinalizedResponse.RejectReason.ORDINAL_OUT_OF_BOUNDS,
+            engine.rejectionCode());
+        assertNotNull(engine.rejectionDetail());
+        assertNull(engine.wireResponse());
+        assertEquals(0, history.size());
     }
 
     // =========================================================================
-    // Frozen expected operations for the COMBINED_EVALUATOR fixtures. MULTIPLE_CHOICE
-    // fixtures take the heuristic fallback, so the CombinedEvaluator never runs and no
-    // operations exist (asserted empty in verifyHeuristicFallback).
+    // Frozen expected operations for the four evaluator-backed owners. The two
+    // MULTIPLE_CHOICE label owners do not run CombinedEvaluator and record no operations.
     //
     // FROZEN VERBATIM from the captured current-source traces (baseline 443248a65,
     // DUMP=true). Rando and ChosenOne produce byte-identical operation streams over the
@@ -295,13 +350,14 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
     /** COMBINED_EVALUATOR fixture: the evaluator lane ran and recorded the pre-safety
      *  winner, pass eligibility, and the operation stream. */
     private void verifyEvaluatorLane(String name, CapturedDecision cap, AwaitingDecision decision,
-                                     Phase phase, DecisionOrigin origin, String expectedResponse,
+                                     Phase phase, TraceRoute expectedRoute,
+                                     DecisionOrigin origin, String expectedResponse,
                                      List<String> expectedRawCandidateOrder, List<String> expectedMergeOrder,
                                      boolean obligationsKnown, Set<DecisionFacts.ObligationFlag> obligationsValue,
                                      String expectedPreSafetyWinnerActionId, Boolean expectedPassEligible,
                                      List<ExpectedOp> expectedOps) {
         DecisionTrace trace = commonHeader(name, cap, decision, phase, origin,
-            TraceRoute.COMBINED_EVALUATOR, expectedResponse, expectedRawCandidateOrder,
+            expectedRoute, expectedResponse, expectedRawCandidateOrder,
             expectedMergeOrder, obligationsKnown, obligationsValue);
 
         var fin = trace.getFinalization();
@@ -318,34 +374,28 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
         assertOps(name, trace, expectedOps);
     }
 
-    /** Fallback (heuristic) fixture: the CombinedEvaluator never selected an action, so the
-     *  bot boundary took HEURISTIC_FALLBACK and no operations exist. The evaluator-lane
-     *  finalization facts are asserted per fixture, because a MULTIPLE_CHOICE whose lane ran
-     *  but produced no candidate records a null pre-safety winner (recorded, not n/a) while
-     *  a MULTIPLE_CHOICE no evaluator handled marks both facts explicitly n/a. */
-    private void verifyHeuristicFallback(String name, CapturedDecision cap, AwaitingDecision decision,
-                                         Phase phase, DecisionOrigin origin, String expectedResponse,
-                                         List<String> expectedRawCandidateOrder,
-                                         boolean preSafetyWinnerRecorded, String preSafetyWinnerActionId,
-                                         String preSafetyWinnerNaReason,
-                                         Boolean passEligible, String passEligibilityNaReason) {
+    /** Typed label owner: no evaluator scoring and both evaluator-lane facts are n/a. */
+    private void verifyOwnedLabelRoute(String name, CapturedDecision cap,
+                                       AwaitingDecision decision, Phase phase,
+                                       DecisionOrigin origin, TraceRoute route,
+                                       String expectedResponse,
+                                       List<String> expectedRawCandidateOrder) {
         DecisionTrace trace = commonHeader(name, cap, decision, phase, origin,
-            TraceRoute.HEURISTIC_FALLBACK, expectedResponse, expectedRawCandidateOrder,
+            route, expectedResponse, expectedRawCandidateOrder,
             list(), false, null);
 
         var fin = trace.getFinalization();
-        assertEquals(name + ": pre-safety winner recorded flag",
-            preSafetyWinnerRecorded, fin.preSafetyWinnerRecorded());
-        assertEquals(name + ": pre-safety winner action id",
-            preSafetyWinnerActionId, fin.preSafetyWinnerActionId());
+        String reason = "typed ACTIVATE label owner selects the original result ordinal";
+        assertFalse(name + ": pre-safety winner is not an evaluator fact",
+            fin.preSafetyWinnerRecorded());
+        assertNull(name + ": pre-safety winner action id", fin.preSafetyWinnerActionId());
         assertEquals(name + ": pre-safety winner n/a reason",
-            preSafetyWinnerNaReason, fin.preSafetyWinnerNotApplicableReason());
-        assertEquals(name + ": pass eligibility", passEligible, fin.passEligible());
+            reason, fin.preSafetyWinnerNotApplicableReason());
+        assertNull(name + ": pass eligibility", fin.passEligible());
         assertEquals(name + ": pass eligibility n/a reason",
-            passEligibilityNaReason, fin.passEligibilityNotApplicableReason());
+            reason, fin.passEligibilityNotApplicableReason());
 
-        // Heuristic fallback never selected inside the CombinedEvaluator: zero operations.
-        assertTrue(name + ": fallback route records no evaluator operations: " + trace.getOperations(),
+        assertTrue(name + ": label owner records no evaluator operations: " + trace.getOperations(),
             trace.getOperations().isEmpty());
     }
 
@@ -501,7 +551,7 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
     }
 
     protected static GameState stub(Phase phase) {
-        return new StubGameState(phase, null);
+        return new StubGameState(phase, DECIDING_PLAYER);
     }
 
     /** Stub whose current turn player is an explicit, concrete id — used by the allowance
@@ -512,19 +562,29 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
         return new StubGameState(phase, turnPlayerId);
     }
 
+    protected static GameState stubWithReserve(Phase phase, int reserveDeckSize) {
+        return new StubGameState(phase, DECIDING_PLAYER, reserveDeckSize);
+    }
+
     /** Minimal real-GameState subclass (mirrors the trace-hook StubGameState) overriding
      *  only the getters the decide() path reads, with the phase supplied by the fixture.
      *  Fixed facts: side DARK, turn 1, empty hand/permanent/used piles, Force pile 4,
      *  Reserve Deck 20, life force 40, opponent id "opponent". getCurrentPlayerId returns
-     *  the fixture's turn player (null by default, i.e. unspecified). Another override is
+     *  the fixture's nonblank turn player. Another override is
      *  added ONLY when a captured failure names the exact missing read. */
     protected static class StubGameState extends GameState {
         private final Phase phase;
         private final String currentPlayerId;
+        private final int reserveDeckSize;
 
         protected StubGameState(Phase phase, String currentPlayerId) {
+            this(phase, currentPlayerId, 20);
+        }
+
+        protected StubGameState(Phase phase, String currentPlayerId, int reserveDeckSize) {
             this.phase = phase;
             this.currentPlayerId = currentPlayerId;
+            this.reserveDeckSize = reserveDeckSize;
         }
 
         @Override public String getOpponent(String playerId) { return "opponent"; }
@@ -535,7 +595,7 @@ public abstract class AbstractActivateControlDecisionHarnessTest {
         @Override public List<PhysicalCard> getHand(String playerId) { return List.of(); }
         @Override public List<PhysicalCard> getAllPermanentCards() { return List.of(); }
         @Override public int getForcePileSize(String playerId) { return 4; }
-        @Override public int getReserveDeckSize(String playerId) { return 20; }
+        @Override public int getReserveDeckSize(String playerId) { return reserveDeckSize; }
         @Override public int getPlayerLifeForce(String playerId) { return 40; }
         @Override public List<PhysicalCard> getUsedPile(String playerId) { return List.of(); }
         @Override public PhysicalCard getBattleLocation() { return null; }

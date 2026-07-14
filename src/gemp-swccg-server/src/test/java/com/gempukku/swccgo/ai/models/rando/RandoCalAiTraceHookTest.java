@@ -31,6 +31,7 @@ import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerPhaseChangeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerUpdateStateEvent;
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -1142,9 +1143,8 @@ public class RandoCalAiTraceHookTest {
     // TRACE 4A2b (packet "Primary evaluator route" fixture, m00447/m00451): a REAL
     // decide() whose selected route IS the evaluator lane produces ZERO
     // HEURISTIC_SHARED events because super.decide(...) was never called. The
-    // deterministic carrier is an INTEGER decision: ForceActivationEvaluator handles
-    // every INTEGER and always emits an action (a CARD_ACTION_CHOICE was tried first
-    // and empirically fell back). The route is asserted from the trace before relying
+    // deterministic carrier is a typed ACTIVATE_AMOUNT INTEGER decision, which the
+    // ForceActivationEvaluator owns. The route is asserted from the trace before relying
     // on it; the V45 fixture above covers the direct-interceptor (non-super) routes
     // but is NOT this proof.
     // =========================================================================
@@ -1154,6 +1154,8 @@ public class RandoCalAiTraceHookTest {
         Map<String, String[]> params = new HashMap<>();
         params.put("min", new String[]{"1"});
         params.put("max", new String[]{"3"});
+        params.put(DecisionOrigin.WIRE_PARAMETER,
+            new String[]{DecisionOrigin.ACTIVATE_AMOUNT.name()});
 
         // untraced twin proves behavior parity on the evaluator lane too
         RandoCalAi untraced = new RandoCalAi();

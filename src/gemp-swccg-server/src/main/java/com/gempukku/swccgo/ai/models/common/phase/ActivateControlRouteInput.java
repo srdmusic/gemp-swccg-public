@@ -2,14 +2,18 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 // ═══════════════════════════════════════════════════════════
-// ═══ SECTION: ACTIVATE/CONTROL OPTION 2 / SHADOW ROUTE INPUT (2026-07-13) ═══
-// Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_PACKET_2026-07-13.md §2.
+// ═══ SECTION: ACTIVATE/CONTROL OPTION 2 / LIVE ROUTE INPUT (2026-07-13) ═══
+// Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_B_PACKET_2026-07-13.md §1.
 //
 // The immutable, phase-specific input the pure resolver reads. It carries exactly
 // the signals routing may use and nothing else: no game state, no evaluator, no
@@ -58,6 +62,51 @@ public record ActivateControlRouteInput(
     /** Whether this decision carries a typed (owned) origin rather than the unowned state. */
     public boolean hasOwnedOrigin() {
         return origin != null;
+    }
+
+    /** Capture the raw route fields once, without consulting game state or strategy services. */
+    public static ActivateControlRouteInput capture(Phase phase,
+                                                    AwaitingDecision decision,
+                                                    String decisionRecipient,
+                                                    String currentTurnPlayer) {
+        Objects.requireNonNull(decision, "decision");
+        Map<String, String[]> params = decision.getDecisionParameters();
+        return new ActivateControlRouteInput(
+                phase,
+                DecisionOrigin.fromWire(single(params, DecisionOrigin.WIRE_PARAMETER)),
+                decision.getDecisionType(),
+                decisionRecipient,
+                currentTurnPlayer,
+                values(params, "results"),
+                integer(params, "defaultIndex"),
+                integer(params, "defaultValue"));
+    }
+
+    private static String single(Map<String, String[]> params, String key) {
+        String[] values = params != null ? params.get(key) : null;
+        return values != null && values.length == 1 ? values[0] : null;
+    }
+
+    private static List<String> values(Map<String, String[]> params, String key) {
+        String[] values = params != null ? params.get(key) : null;
+        if (values == null) {
+            return Collections.emptyList();
+        }
+        List<String> copy = new ArrayList<>(values.length);
+        Collections.addAll(copy, values);
+        return copy;
+    }
+
+    private static Integer integer(Map<String, String[]> params, String key) {
+        String value = single(params, key);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private static void requireNonBlank(String value, String name) {

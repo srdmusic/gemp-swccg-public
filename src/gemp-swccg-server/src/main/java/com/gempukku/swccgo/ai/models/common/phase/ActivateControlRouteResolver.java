@@ -6,8 +6,8 @@ import com.gempukku.swccgo.common.Phase;
 import java.util.Objects;
 
 // ═══════════════════════════════════════════════════════════
-// ═══ SECTION: ACTIVATE/CONTROL OPTION 2 / PURE SHADOW RESOLVER (2026-07-13) ═══
-// Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_PACKET_2026-07-13.md §2.
+// ═══ SECTION: ACTIVATE/CONTROL OPTION 2 / PURE LIVE RESOLVER (2026-07-13) ═══
+// Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_B_PACKET_2026-07-13.md §1.
 //
 // Deterministic, side-effect-free mapping from (phase, origin, wire shape) to one
 // closed ActivateControlRoute. It reads NO game state, calls NO evaluator, mutates
@@ -25,8 +25,8 @@ import java.util.Objects;
 //
 // LEGACY_UNOWNED is the intentional bypass: absent or unrecognized origin (input
 // .origin() == null), a wire shape that does not match the origin's required type,
-// or an origin appearing in a phase it does not own. NO production call site exists
-// in this phase; the resolver is shadow-only.
+// or an origin appearing in a phase it does not own. The two mirrored bot adapters
+// are the only production consumers.
 // ═══════════════════════════════════════════════════════════
 public final class ActivateControlRouteResolver {
 

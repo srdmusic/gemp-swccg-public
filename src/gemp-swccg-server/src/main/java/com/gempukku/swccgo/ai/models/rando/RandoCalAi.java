@@ -6,6 +6,10 @@ import com.gempukku.swccgo.ai.models.HeuristicAiBase;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
 import com.gempukku.swccgo.ai.models.common.decision.FactValue;
 import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
+import com.gempukku.swccgo.ai.models.common.phase.ActivateControlPhaseOwner;
+import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRoute;
+import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRouteInput;
+import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRouteResolver;
 import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRoute;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRouteInput;
@@ -50,6 +54,7 @@ import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerSnapsh
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerClearEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
@@ -1225,6 +1230,26 @@ public class RandoCalAi extends HeuristicAiBase {
                         decisionType, decisionText);
                 }
 
+                String currentTurnPlayer = gameState != null
+                    ? gameState.getCurrentPlayerId() : null;
+                if (currentTurnPlayer != null && !currentTurnPlayer.isBlank()) {
+                    ActivateControlRouteInput activateControlInput =
+                        ActivateControlRouteInput.capture(currentPhase, decision,
+                            playerId, currentTurnPlayer);
+                    ActivateControlRoute activateControlRoute =
+                        ActivateControlRouteResolver.resolve(activateControlInput);
+                    if (activateControlRoute != ActivateControlRoute.LEGACY_UNOWNED) {
+                        if (boundarySnapshot == null) {
+                            boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
+                                decisionType, decisionText, phase);
+                        }
+                        return decideOwnedActivateControl(playerId, decision, gameState, history,
+                            boundarySnapshot.snapshot(), activateControlInput,
+                            activateControlRoute, traceOpened, mediatorFacing,
+                            decisionType, decisionText);
+                    }
+                }
+
                 PullRouteInput pullInput = PullRouteInput.capture(decision);
                 PullRoute pullRoute = PullRouteResolver.resolve(pullInput);
                 if (pullRoute != PullRoute.LEGACY_UNOWNED) {
@@ -1567,6 +1592,153 @@ public class RandoCalAi extends HeuristicAiBase {
         return new OuterDecision(ownedResult);
     }
 
+    /** Execute one stamped ACTIVATE/CONTROL route without re-entering legacy safety. */
+    private OuterDecision decideOwnedActivateControl(String playerId,
+                                                      AwaitingDecision decision,
+                                                      GameState gameState,
+                                                      RejectionHistory history,
+                                                      DecisionSnapshot snapshot,
+                                                      ActivateControlRouteInput routeInput,
+                                                      ActivateControlRoute route,
+                                                      boolean traceOpened,
+                                                      boolean mediatorFacing,
+                                                      String decisionType,
+                                                      String decisionText) {
+        if (traceOpened) {
+            TraceSession.recordRoute(traceRouteForActivateControl(route),
+                "typed ACTIVATE/CONTROL route " + route, null);
+            if (route == ActivateControlRoute.ACTIVATE_ZERO_CONFIRM
+                    || route == ActivateControlRoute.ACTIVATE_ACK) {
+                TraceSession.recordEvaluatorLaneNotApplicable(
+                    "typed ACTIVATE label owner selects the original result ordinal");
+            }
+        }
+
+        boolean[] selectionInvoked = {false};
+        ActivateControlPhaseOwner.Selection[] selected = {null};
+        AiDecisionResult ownedResult = ActivateControlPhaseOwner.decide(
+            snapshot, history, route, () -> {
+                selectionInvoked[0] = true;
+                selected[0] = selectOwnedActivateControl(
+                    playerId, decision, gameState, routeInput, route);
+                return selected[0];
+            });
+        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
+            if (mediatorFacing) {
+                return new OuterDecision(ownedResult);
+            }
+            String compatibilityWire = selected[0] != null && !selected[0].isRejected()
+                ? selected[0].wire() : null;
+            if (!selectionInvoked[0]) {
+                compatibilityWire = tryEvaluators(playerId, decision, gameState);
+            }
+            return completeDirectActivateControlCompatibility(
+                playerId, decision, gameState, compatibilityWire,
+                traceOpened, decisionType, decisionText, route);
+        }
+
+        String wire = ownedResult.wireResponse();
+        if (!mediatorFacing) {
+            applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceOpened);
+            LOG.info("[RandoCalAi] owned {} result: '{}'", route,
+                wire.isEmpty() ? "(pass)" : wire);
+            if (traceOpened) {
+                TraceSession.recordFinalResponse(wire, false);
+            }
+        }
+        return new OuterDecision(ownedResult);
+    }
+
+    /** Preserve the frozen raw-string decide() mapping after a typed owner rejection. */
+    private OuterDecision completeDirectActivateControlCompatibility(
+            String playerId,
+            AwaitingDecision decision,
+            GameState gameState,
+            String compatibilityWire,
+            boolean traceOpened,
+            String decisionType,
+            String decisionText,
+            ActivateControlRoute route) {
+        String wire = compatibilityWire;
+        if (wire == null) {
+            wire = super.decide(playerId, decision, gameState);
+        }
+
+        Map<String, String[]> params = decision.getDecisionParameters();
+        String[] actionIds = params != null ? params.get("actionId") : null;
+        String[] cardIds = params != null ? params.get("cardId") : null;
+        String[] noPass = params != null ? params.get("noPass") : null;
+        boolean rawNoPass = noPass != null && noPass.length > 0
+            && Boolean.parseBoolean(noPass[0]);
+        if ((wire == null || wire.isEmpty()) && rawNoPass) {
+            wire = DecisionSafety.getEmergencyResponse(decision, actionIds, cardIds).value;
+        }
+        String[] options = actionIds != null && actionIds.length > 0 ? actionIds : cardIds;
+        wire = DecisionSafety.ensureValidResponse(decision, wire, options)[0];
+
+        applyOuterCommonTrackerAndStrategic(
+            decision, decisionType, decisionText, wire, traceOpened);
+        LOG.warn("[RandoCalAi] direct {} compatibility result after typed rejection: '{}'",
+            route, wire != null && !wire.isEmpty() ? wire : "(pass)");
+        if (traceOpened) {
+            TraceSession.recordFinalResponse(wire, false);
+        }
+        return new OuterDecision(wire, AiDecisionResult.MutationMode.OUTER_COMMON);
+    }
+
+    private ActivateControlPhaseOwner.Selection selectOwnedActivateControl(
+            String playerId,
+            AwaitingDecision decision,
+            GameState gameState,
+            ActivateControlRouteInput routeInput,
+            ActivateControlRoute route) {
+        switch (route) {
+            case ACTIVATE_TOP_LEVEL:
+            case ACTIVATE_AMOUNT:
+            case ACTIVATE_ALLOWANCE:
+            case CONTROL_TOP_LEVEL:
+                String wire = tryEvaluators(playerId, decision, gameState);
+                return wire != null
+                    ? ActivateControlPhaseOwner.Selection.wire(wire)
+                    : ActivateControlPhaseOwner.Selection.rejected(
+                        com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.NO_LEGAL_FALLBACK,
+                        "owned ACTIVATE/CONTROL evaluator lane produced no result");
+            case ACTIVATE_ZERO_CONFIRM:
+                DecisionContext zeroContext = buildEvaluatorContext(playerId, decision, gameState);
+                if (zeroContext == null) {
+                    return ActivateControlPhaseOwner.Selection.rejected(
+                        com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
+                        "owned ACTIVATE zero confirmation could not build evaluator context");
+                }
+                boolean keepThree = zeroContext.getReserveDeckSize() <= 3
+                    && zeroContext.isBattlePlausibleThisTurn();
+                return ActivateControlPhaseOwner.zeroConfirmation(routeInput.results(), keepThree);
+            case ACTIVATE_ACK:
+                if (buildEvaluatorContext(playerId, decision, gameState) == null) {
+                    return ActivateControlPhaseOwner.Selection.rejected(
+                        com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
+                        "owned ACTIVATE acknowledgement could not build evaluator context");
+                }
+                return ActivateControlPhaseOwner.interruptionAcknowledgement(routeInput.results());
+            default:
+                return ActivateControlPhaseOwner.Selection.rejected(
+                    com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
+                    "unowned ACTIVATE/CONTROL route reached selection");
+        }
+    }
+
+    private static TraceRoute traceRouteForActivateControl(ActivateControlRoute route) {
+        return switch (route) {
+            case ACTIVATE_TOP_LEVEL -> TraceRoute.ACTIVATE_TOP_LEVEL;
+            case ACTIVATE_AMOUNT -> TraceRoute.ACTIVATE_AMOUNT;
+            case ACTIVATE_ALLOWANCE -> TraceRoute.ACTIVATE_ALLOWANCE;
+            case ACTIVATE_ZERO_CONFIRM -> TraceRoute.ACTIVATE_ZERO_CONFIRM;
+            case ACTIVATE_ACK -> TraceRoute.ACTIVATE_ACK;
+            case CONTROL_TOP_LEVEL -> TraceRoute.CONTROL_TOP_LEVEL;
+            default -> throw new IllegalArgumentException("unowned ACTIVATE/CONTROL route " + route);
+        };
+    }
+
     /**
      * Execute the one typed PULL owner. Owned results and typed rejections do not
      * re-enter the legacy fallback or safety lanes.
@@ -1733,17 +1905,21 @@ public class RandoCalAi extends HeuristicAiBase {
         }
 
         Phase phase = gameState != null ? gameState.getCurrentPhase() : null;
+        Map<String, String[]> params = decision.getDecisionParameters();
+        String[] originValues = params != null ? params.get(DecisionOrigin.WIRE_PARAMETER) : null;
+        DecisionOrigin decisionOrigin = originValues != null && originValues.length == 1
+            ? DecisionOrigin.fromWire(originValues[0]) : null;
         DecisionContext evalContext = new DecisionContext(
             gameState,
             playerId,
             decisionType.name(),  // "INTEGER", "CARD_ACTION_CHOICE", etc.
             decision.getText(),
             String.valueOf(decision.getAwaitingDecisionId()),
-            phase
+            phase,
+            decisionOrigin
         );
 
         // Parse parameters from decision
-        Map<String, String[]> params = decision.getDecisionParameters();
         if (params != null) {
             // For INTEGER decisions
             String[] minVal = params.get("min");

@@ -7,6 +7,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -35,6 +36,7 @@ public class DecisionContext {
     private final String decisionType;  // CARD_ACTION_CHOICE, CARD_SELECTION, INTEGER, etc.
     private final String decisionText;  // Human-readable prompt
     private final String decisionId;
+    private final DecisionOrigin decisionOrigin;
 
     // Phase info
     private final Phase phase;
@@ -87,11 +89,18 @@ public class DecisionContext {
 
     public DecisionContext(GameState gameState, String playerId, String decisionType,
                           String decisionText, String decisionId, Phase phase) {
+        this(gameState, playerId, decisionType, decisionText, decisionId, phase, null);
+    }
+
+    public DecisionContext(GameState gameState, String playerId, String decisionType,
+                          String decisionText, String decisionId, Phase phase,
+                          DecisionOrigin decisionOrigin) {
         this.gameState = gameState;
         this.playerId = playerId;
         this.decisionType = decisionType;
         this.decisionText = decisionText;
         this.decisionId = decisionId;
+        this.decisionOrigin = decisionOrigin;
         this.phase = phase;
         this.turnNumber = gameState != null ? gameState.getPlayersLatestTurnNumber(playerId) : 1;
         this.isMyTurn = gameState != null && playerId.equals(gameState.getCurrentPlayerId());
@@ -137,6 +146,10 @@ public class DecisionContext {
 
     public String getDecisionId() {
         return decisionId;
+    }
+
+    public DecisionOrigin getDecisionOrigin() {
+        return decisionOrigin;
     }
 
     public Phase getPhase() {
@@ -315,9 +328,9 @@ public class DecisionContext {
     // Bias toward keeping 3 when unsure: any null/error => TRUE (battle plausible), because a
     // false "no battle" re-opens the no-destiny bug for a turn, while a false "battle" only
     // costs a little activation.
-    // ONE predicate shared by ALL THREE V61c sites (ForceActivationEvaluator keep-3 cap,
-    // ActionTextEvaluator V168 carve-out, ActionTextEvaluator V38.3 confirm carve-out) — the
-    // original V61c bug was exactly these sites disagreeing.
+    // One predicate shared by all three V61c sites: ActivateAmountPolicy,
+    // ActionTextEvaluator's V168 carve-out, and the typed ACTIVATE_ZERO_CONFIRM owner.
+    // The original V61c bug was exactly these sites disagreeing.
     public boolean isBattlePlausibleThisTurn() {
         if (game == null || gameState == null || playerId == null) return true;  // can't tell — keep 3
         try {
