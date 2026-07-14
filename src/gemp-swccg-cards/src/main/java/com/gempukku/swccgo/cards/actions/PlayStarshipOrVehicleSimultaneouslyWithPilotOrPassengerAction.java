@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.cards.actions;
 
 import com.gempukku.swccgo.cards.effects.PaySimultaneousDeployCostEffect;
+import com.gempukku.swccgo.common.DecisionOrigin;
+import com.gempukku.swccgo.common.DeployPhysicalCardRef;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
@@ -18,6 +20,8 @@ import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
+
+import java.util.List;
 
 /**
  * The action to deploy a starship or vehicle simultaneously with a specified pilot.
@@ -60,7 +64,7 @@ public class PlayStarshipOrVehicleSimultaneouslyWithPilotOrPassengerAction exten
      */
     public PlayStarshipOrVehicleSimultaneouslyWithPilotOrPassengerAction(final SwccgGame game, final PhysicalCard sourceCard, final PhysicalCard starshipOrVehicle, boolean forFree, float changeInCost, final Filter deployWithCharacterTargetFilter,
                                                                          final PhysicalCard characterToDeployWith, final boolean characterToDeployWithForFree, final float characterToDeployWithChangeInCost, final DeploymentRestrictionsOption deploymentRestrictionsOption) {
-        super(starshipOrVehicle, sourceCard);
+        super(starshipOrVehicle, sourceCard, true);
         setPerformingPlayer(starshipOrVehicle.getOwner());
         _that = this;
         _starshipOrVehicle = starshipOrVehicle;
@@ -68,6 +72,11 @@ public class PlayStarshipOrVehicleSimultaneouslyWithPilotOrPassengerAction exten
         _changeInCost = changeInCost;
         _characterMustBePilot = !Filters.piloted.accepts(game, starshipOrVehicle);
         _character = characterToDeployWith;
+        DeployPhysicalCardRef buddy = new DeployPhysicalCardRef(
+                _character.getPermanentCardId(), _character.getCardId());
+        setDeployActionMetadata(getDeployActionMetadata()
+                .withBuddyCandidates(List.of(buddy))
+                .withSelectedBuddy(buddy));
         _characterForFree = characterToDeployWithForFree;
         _characterChangeInCost = characterToDeployWithChangeInCost;
         _text = "Deploy";
@@ -115,6 +124,12 @@ public class PlayStarshipOrVehicleSimultaneouslyWithPilotOrPassengerAction exten
                                                 // Ask player to choose pilot/driver or passenger capacity slot
                                                 _chooseCapacitySlotForCharacterEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                                         new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_character) + " aboard " + GameUtils.getCardLink(_starshipOrVehicle), seatChoices) {
+                                                            {
+                                                                setDeployTransactionMetadata(_that,
+                                                                        DecisionOrigin.DEPLOY_CAPACITY,
+                                                                        List.of(_target), false);
+                                                            }
+
                                                             @Override
                                                             protected void validDecisionMade(int index, String result) {
                                                                 _capacitySlotForCharacterChosen = true;
@@ -143,6 +158,12 @@ public class PlayStarshipOrVehicleSimultaneouslyWithPilotOrPassengerAction exten
                                                 // Ask player to choose vehicle or starship capacity slot
                                                 _chooseCapacitySlotEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                                         new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_starshipOrVehicle) + " in cargo bay of " + GameUtils.getCardLink(_starshipOrVehicle), new String[]{"Vehicle", "Starship"}) {
+                                                            {
+                                                                setDeployTransactionMetadata(_that,
+                                                                        DecisionOrigin.DEPLOY_CAPACITY,
+                                                                        List.of(_target), false);
+                                                            }
+
                                                             @Override
                                                             protected void validDecisionMade(int index, String result) {
                                                                 _capacitySlotChosen = true;
@@ -161,6 +182,12 @@ public class PlayStarshipOrVehicleSimultaneouslyWithPilotOrPassengerAction exten
                                                                     // Ask player to choose pilot/driver or passenger capacity slot
                                                                     _chooseCapacitySlotForCharacterEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                                                             new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_character) + " aboard " + GameUtils.getCardLink(_starshipOrVehicle), seatChoices) {
+                                                                                {
+                                                                                    setDeployTransactionMetadata(_that,
+                                                                                            DecisionOrigin.DEPLOY_CAPACITY,
+                                                                                            List.of(_target), false);
+                                                                                }
+
                                                                                 @Override
                                                                                 protected void validDecisionMade(int index, String result) {
                                                                                     _capacitySlotForCharacterChosen = true;
@@ -198,6 +225,12 @@ public class PlayStarshipOrVehicleSimultaneouslyWithPilotOrPassengerAction exten
                                                     // Ask player to choose pilot/driver or passenger capacity slot
                                                     _chooseCapacitySlotForCharacterEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                                             new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_character) + " aboard " + GameUtils.getCardLink(_starshipOrVehicle), seatChoices) {
+                                                                {
+                                                                    setDeployTransactionMetadata(_that,
+                                                                            DecisionOrigin.DEPLOY_CAPACITY,
+                                                                            List.of(_target), false);
+                                                                }
+
                                                                 @Override
                                                                 protected void validDecisionMade(int index, String result) {
                                                                     _capacitySlotForCharacterChosen = true;

@@ -53,7 +53,7 @@ public class PlayCardAsAttachedAction extends AbstractPlayCardAction {
      * @param deployTargetFilter the filter for where the card can be deployed
      */
     public PlayCardAsAttachedAction(final PhysicalCard sourceCard, final PhysicalCard cardToPlay, PlayCardOption playCardOption, boolean forFree, float changeInCost, final ReactActionOption reactActionOption, final Map<InactiveReason, Boolean> spotOverrides, final Filter deployTargetFilter) {
-        super(cardToPlay, sourceCard);
+        super(cardToPlay, sourceCard, cardToPlay.getBlueprint().isCardTypeDeployed());
         setPerformingPlayer(cardToPlay.getOwner());
         _that = this;
         _cardToPlay = cardToPlay;

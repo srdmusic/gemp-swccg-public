@@ -64,6 +64,11 @@ import java.util.Set;
  */
 public class MoveEvaluator extends ActionEvaluator {
 
+    static com.gempukku.swccgo.ai.models.common.strategy.ForceObligationVector forceObligations(
+            DecisionContext context) {
+        return context.getForceObligations();
+    }
+
     // Move keywords to identify move actions
     private static final String[] MOVE_KEYWORDS = {
         "Move using", "Shuttle", "Docking bay transit", "Transport",
@@ -722,8 +727,10 @@ public class MoveEvaluator extends ActionEvaluator {
                     // per-decision ForceReserveService cache, which preserves this block's
                     // in-play-gated DTF detection and any-unused-grabber semantics. V29 weights
                     // (-100/-150/-60) unchanged. Old inline scan removed 2026-07-13; see git.
-                    boolean dtfActive = context.getForceReserveFacts().dtfActive;
-                    boolean grabberNeedsForce = context.getForceReserveFacts().grabberUnused;
+                    com.gempukku.swccgo.ai.models.common.strategy.ForceObligationVector obligations =
+                            forceObligations(context);
+                    boolean dtfActive = obligations.drawTheirFireActive();
+                    boolean grabberNeedsForce = obligations.grabberUnused();
 
                     // Calculate total Force we should reserve
                     int reserveNeeded = 0;
@@ -1922,7 +1929,7 @@ public class MoveEvaluator extends ActionEvaluator {
                         // shared per-decision ForceReserveService cache (authoritative). This
                         // site formerly used deploy cost; the consolidated MaintenanceFacts
                         // engine basis is intentional. -80 weight unchanged. History in git.
-                        int maintenanceCost = context.getForceReserveFacts().maintenanceObligation;
+                        int maintenanceCost = forceObligations(context).maintenanceObligation();
                         if (maintenanceCost > 0) {
                             int forcePile = gameState.getForcePileSize(playerId);
                             if (forcePile <= maintenanceCost + 1) {

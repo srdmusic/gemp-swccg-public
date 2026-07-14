@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.actions;
 
 import com.gempukku.swccgo.cards.effects.PayDeployCostEffect;
 import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.common.DeployDestinationRef;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PlayCardOption;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -47,11 +48,16 @@ public class PlayCardToZoneAction extends AbstractPlayCardAction {
      * @param changeInCost change in amount of Force (can be positive or negative) required
      */
     public PlayCardToZoneAction(PhysicalCard sourceCard, PhysicalCard cardToPlay, PlayCardOption playCardOption, boolean forFree, float changeInCost) {
-        super(cardToPlay, sourceCard);
+        super(cardToPlay, sourceCard, cardToPlay.getBlueprint().isCardTypeDeployed());
         setPerformingPlayer(cardToPlay.getOwner());
         _that = this;
         _cardToPlay = cardToPlay;
         _playedToZone = playCardOption.getZone();
+        if (getDeployActionMetadata() != null) {
+            setDeployActionMetadata(getDeployActionMetadata().withDestinations(
+                    List.of(new DeployDestinationRef.ZoneDestination(_playedToZone)))
+                    .withForcedDestination(true));
+        }
         _playCardOption = playCardOption;
         _forFree = forFree;
         _changeInCost = changeInCost;

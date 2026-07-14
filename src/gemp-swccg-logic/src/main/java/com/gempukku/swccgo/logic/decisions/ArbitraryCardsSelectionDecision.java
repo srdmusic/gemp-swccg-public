@@ -2,6 +2,7 @@ package com.gempukku.swccgo.logic.decisions;
 
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.DecisionOrigin;
+import com.gempukku.swccgo.common.DeployDecisionWire;
 import com.gempukku.swccgo.common.PullDecisionWire;
 import com.gempukku.swccgo.common.PullDeployRef;
 import com.gempukku.swccgo.common.Zone;
@@ -213,6 +214,16 @@ public abstract class ArbitraryCardsSelectionDecision extends AbstractAwaitingDe
                     ? physicalCard.getPermanentCardId() : physicalCard.getCardId());
         }
         return result;
+    }
+
+    /** Stamps legal buddy metadata plus temp-id-aligned physical identities. */
+    protected final void setDeployBuddySelectionMetadata(
+            Action action, Collection<PhysicalCard> buddies) {
+        setDeployBuddyMetadata(action, buddies);
+        setParam(DeployDecisionWire.BUDDY_CARD_ID,
+                getPhysicalCardIds(_physicalCards, false));
+        setParam(DeployDecisionWire.BUDDY_PERMANENT_CARD_ID,
+                getPhysicalCardIds(_physicalCards, true));
     }
 
     /**

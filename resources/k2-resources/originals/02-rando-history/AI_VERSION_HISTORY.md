@@ -1,3 +1,32 @@
+  ════ DEPLOY PHASE OWNER CUTOVER (2026-07-14, Steve-approved, both bots) ════
+One origin-stamped DEPLOY owner now carries an exact physical transaction across parent, destination, buddy,
+undercover, capacity, confirmation, forced auto-selection, and expected deployment completion. The immutable
+transaction binds an opaque attempt id, diagnostic parent id and ordinal, current/permanent source identity,
+ordered typed destinations, buddy candidates and selection, one formation assessment, and one unchanged
+ForceObligationVector. State mutates only after engine acceptance. Permanent identity survives current-id rotation;
+accepted placement covers attached, at-location, related, system, orbit, and converted-location relations. Exact
+cancellation, rejection, identity/zone, game/phase/turn, and affordability failures terminate only that attempt.
+Cancellation blocks only the exact opaque attempt while rejection leaves replay available. Character actions preflight legal
+destinations without mutation, so a one-destination engine shortcut still receives parent safety. Zone deployment,
+simultaneous buddy, ARBITRARY temp-wire mapping, and pre-send confirmation identity are typed. PULL keeps search,
+target, and outcome ownership and no longer has its origin overwritten by DEPLOY; formation is deferred to its first
+exact destination child and then bound once. ObjectiveDeployAdapter is the
+exclusive live owner of V83/V88/V108/V110, objective-site +200, and V193 +400/+2000; predecessors and both prompt-
+text V170 interceptors remain present but disabled. V99, V86/V121, formation, rescue, overpower, and Rando-only
+V79b remain separate. Direct calls accept their selected parent/PULL-child once; mediator calls defer that same
+transition to the engine callback. Optional all-veto keeps Pass, mandatory all-veto keeps the exact compatibility
+wire, and ties keep insertion order. Physical body presence is tri-state, including ability-zero PRESENT and missing
+facts UNKNOWN. One common forced-destination assessment covers the named first-pull exemption, exact unsupported
+repeat and weak-solo penalties, UNKNOWN identity, and hard blocks. One ForceObligationVector is reused by parent,
+child, Pass, and Move. Assessment copies deep-copy instructions, and actual destination drift terminates once. Direct
+entry without a bound game returns an accepted assessment copy or unknown instead of dereferencing null. Named rescue,
+Tyranus/direct-contact, safe solo/establish, drain-denial, and legal-overpower intents remain explicit. The complete
+V170 direct/mediator/order/unknown/malformed matrix is pinned. Boundary: 285 tests passed across focused DEPLOY plus
+mediator/bot/trace/PULL regressions, six repaired mirror streams remained identical on top of the original nine-pair
+gate, server reactor package passed, and diff check is clean. Deploy-weight tuning remains a separate phase.
+No game simulation, push, or deployment occurred during the gate. Revert the single phase commit. See AI_CHANGELOG
+2026-07-14.
+
   ════ OBJECTIVE FACTS AND ADAPTER PHASE (2026-07-14, Steve-approved, both bots) ════
 One immutable ObjectiveFacts view is now built before trace selection for every mediated decision and carried by
 DecisionSnapshot v4. Trace, CombinedEvaluator, and every objective adapter consume that exact instance. Physical

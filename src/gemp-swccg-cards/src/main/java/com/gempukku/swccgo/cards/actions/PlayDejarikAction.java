@@ -35,7 +35,7 @@ public class PlayDejarikAction extends AbstractPlayCardAction {
      * @param forFree true if deploying card for free, otherwise false
      */
     public PlayDejarikAction(final PhysicalCard sourceCard, final PhysicalCard cardToDeploy, boolean forFree) {
-        super(cardToDeploy, sourceCard);
+        super(cardToDeploy, sourceCard, true);
         setPerformingPlayer(cardToDeploy.getOwner());
         _cardToPlay = cardToDeploy;
         _forFree = forFree;

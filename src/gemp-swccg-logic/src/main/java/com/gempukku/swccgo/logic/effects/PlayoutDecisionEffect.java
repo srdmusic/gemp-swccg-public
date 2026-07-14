@@ -18,6 +18,7 @@ public class PlayoutDecisionEffect extends AbstractSuccessfulEffect implements T
 
     @Override
     public void doPlayEffect(SwccgGame game) {
+        _decision.refreshDeployTransactionMetadata(getAction());
         game.getUserFeedback().sendAwaitingDecision(_playerId, _decision);
     }
 }

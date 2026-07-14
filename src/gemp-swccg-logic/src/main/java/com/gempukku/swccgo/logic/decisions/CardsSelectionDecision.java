@@ -4,6 +4,7 @@ import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.PullDecisionWire;
 import com.gempukku.swccgo.common.PullDeployRef;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -93,6 +94,19 @@ public abstract class CardsSelectionDecision extends AbstractAwaitingDecision {
             setParam(PullDecisionWire.FORCED_DESTINATION_PERMANENT_CARD_ID,
                     String.valueOf(ref.forcedDestinationCard().permanentCardId()));
         }
+    }
+
+    /** Stamps one prompted DEPLOY destination choice with exact parent identity. */
+    protected final void setDeployDestinationMetadata(Action action,
+                                                      Collection<PhysicalCard> destinations) {
+        setDeployTransactionMetadata(
+                action, DecisionOrigin.DEPLOY_DESTINATION, destinations, false);
+    }
+
+    /** Stamps one prompted DEPLOY buddy choice with exact physical candidates. */
+    protected final void setDeployBuddySelectionMetadata(
+            Action action, Collection<PhysicalCard> buddies) {
+        setDeployBuddyMetadata(action, buddies);
     }
 
     /**

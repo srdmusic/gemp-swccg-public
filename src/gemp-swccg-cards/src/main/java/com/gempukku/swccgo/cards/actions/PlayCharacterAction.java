@@ -2,6 +2,9 @@ package com.gempukku.swccgo.cards.actions;
 
 import com.gempukku.swccgo.cards.effects.PayDeployCostEffect;
 import com.gempukku.swccgo.common.CaptureOption;
+import com.gempukku.swccgo.common.DecisionOrigin;
+import com.gempukku.swccgo.common.DeployDestinationRef;
+import com.gempukku.swccgo.common.DeployPhysicalCardRef;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -22,6 +25,8 @@ import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
 import com.gempukku.swccgo.logic.timing.results.CaptureCharacterResult;
+
+import java.util.List;
 
 /**
  * The action to deploy a character.
@@ -58,7 +63,7 @@ public class PlayCharacterAction extends AbstractPlayCardAction {
      * @param deployTargetFilter the filter for where the character can be deployed
      */
     public PlayCharacterAction(final SwccgGame game, PhysicalCard sourceCard, final PhysicalCard character, boolean forFree, float changeInCost, final DeployAsCaptiveOption deployAsCaptiveOption, final ReactActionOption reactActionOption, final Filter deployTargetFilter) {
-        super(character, sourceCard);
+        super(character, sourceCard, true);
         setPerformingPlayer(character.getOwner());
         _that = this;
         _character = character;
@@ -69,6 +74,15 @@ public class PlayCharacterAction extends AbstractPlayCardAction {
         if (character.getBlueprint().isOnlyDeploysAsEscortedCaptive(game, character)) {
             _text = "Deploy as escorted captive";
         }
+
+        List<DeployDestinationRef> legalDestinations = Filters
+                .filterActive(game, sourceCard, deployTargetFilter).stream()
+                .map(card -> (DeployDestinationRef) new DeployDestinationRef.Card(
+                        new DeployPhysicalCardRef(
+                                card.getPermanentCardId(), card.getCardId())))
+                .toList();
+        setDeployActionMetadata(
+                getDeployActionMetadata().withDestinations(legalDestinations));
 
         appendTargeting(
                 new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(character), deployTargetFilter) {
@@ -91,6 +105,12 @@ public class PlayCharacterAction extends AbstractPlayCardAction {
                                 // Ask player to choose whether to deploy character as Undercover spy
                                 _chooseIfUndercoverEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                         new YesNoDecision("Do you want to deploy " + GameUtils.getCardLink(_character) + " as an Undercover spy?") {
+                                            {
+                                                setDeployTransactionMetadata(_that,
+                                                        DecisionOrigin.DEPLOY_V170_UNDERCOVER,
+                                                        List.of(_target), false);
+                                            }
+
                                             @Override
                                             protected void yes() {
                                                 _chosenIfUndercover = true;
@@ -143,6 +163,12 @@ public class PlayCharacterAction extends AbstractPlayCardAction {
                                 // Ask player to choose pilot/driver or passenger capacity slot
                                 _chooseCapacitySlotEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                         new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_character) + " aboard " + GameUtils.getCardLink(_target), seatChoices) {
+                                            {
+                                                setDeployTransactionMetadata(_that,
+                                                        DecisionOrigin.DEPLOY_CAPACITY,
+                                                        List.of(_target), false);
+                                            }
+
                                             @Override
                                             protected void validDecisionMade(int index, String result) {
                                                 _capacitySlotChosen = true;

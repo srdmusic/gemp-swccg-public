@@ -41,7 +41,7 @@ public class PlayCreatureAction extends AbstractPlayCardAction {
      * @param deployTargetFilter the filter for where the creature can be deployed
      */
     public PlayCreatureAction(final SwccgGame game, final PhysicalCard sourceCard, final PhysicalCard creature, boolean forFree, float changeInCost, final Filter deployTargetFilter) {
-        super(creature, sourceCard);
+        super(creature, sourceCard, true);
         setPerformingPlayer(creature.getOwner());
         _that = this;
         _creature = creature;

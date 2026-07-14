@@ -30,6 +30,7 @@ public record PullFacts(
         FactValue<Zone> sourceZone,
         FactValue<String> sourceZoneOwner,
         List<PullPhysicalCardRef> candidateCards,
+        List<String> candidateWireIds,
         PullPhysicalCardRef selectedChild,
         List<PullPhysicalCardRef> orderedDestinations,
         PullPhysicalCardRef forcedDestination,
@@ -55,12 +56,14 @@ public record PullFacts(
         Objects.requireNonNull(sourceZone, "sourceZone");
         Objects.requireNonNull(sourceZoneOwner, "sourceZoneOwner");
         candidateCards = List.copyOf(candidateCards);
+        candidateWireIds = List.copyOf(candidateWireIds);
         orderedDestinations = List.copyOf(orderedDestinations);
         Objects.requireNonNull(sourceFilter, "sourceFilter");
         if (!sourceFilter.isUnknown()) {
             throw new IllegalArgumentException("sourceFilter must remain explicitly UNKNOWN");
         }
         validateUniqueCards(candidateCards, "candidateCards");
+        validateCandidateWires(candidateCards, candidateWireIds);
         validateUniqueCards(orderedDestinations, "orderedDestinations");
 
         if (route == PullRoute.PULL_PARENT) {
@@ -68,6 +71,7 @@ public record PullFacts(
                     || parentCandidates.isEmpty() || sourceCard.isKnown()
                     || gameTextActionId.isKnown() || sourceZone.isKnown()
                     || sourceZoneOwner.isKnown() || !candidateCards.isEmpty()
+                    || !candidateWireIds.isEmpty()
                     || selectedChild != null || !orderedDestinations.isEmpty()
                     || forcedDestination != null) {
                 throw new IllegalArgumentException("PULL_PARENT facts must remain pre-acceptance");
@@ -210,6 +214,8 @@ public record PullFacts(
                         parseCards(input.destinationPermanentCardIds(), input.destinationCardIds());
                 default -> List.of();
             };
+            List<String> candidateWires = route == PullRoute.PULL_PARENT
+                    ? List.of() : input.cardIds();
             PullPhysicalCardRef selected = route == PullRoute.PULL_DESTINATION
                     ? parseCard(input.selectedPermanentCardIds(), input.selectedCardIds()) : null;
             List<PullPhysicalCardRef> destinations = route == PullRoute.PULL_DESTINATION
@@ -234,6 +240,7 @@ public record PullFacts(
                     sourceZone,
                     sourceZoneOwner,
                     candidates,
+                    candidateWires,
                     selected,
                     destinations,
                     forced,
@@ -283,6 +290,21 @@ public record PullFacts(
             if (!permanentIds.add(card.permanentCardId())
                     || !currentIds.add(card.currentCardId())) {
                 throw new IllegalArgumentException(name + " must contain unique physical cards");
+            }
+        }
+    }
+
+    private static void validateCandidateWires(List<PullPhysicalCardRef> cards,
+                                               List<String> wireIds) {
+        if (cards.size() != wireIds.size()) {
+            throw new IllegalArgumentException(
+                    "candidate wire ids must align with physical candidate cards");
+        }
+        Set<String> unique = new HashSet<>();
+        for (String wireId : wireIds) {
+            if (wireId == null || wireId.isBlank() || !unique.add(wireId)) {
+                throw new IllegalArgumentException(
+                        "candidate wire ids must be non-blank and unique");
             }
         }
     }

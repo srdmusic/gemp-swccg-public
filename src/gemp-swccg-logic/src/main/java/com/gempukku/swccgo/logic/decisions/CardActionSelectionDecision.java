@@ -2,6 +2,9 @@ package com.gempukku.swccgo.logic.decisions;
 
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.DecisionActionSemantic;
+import com.gempukku.swccgo.common.DeployActionMetadata;
+import com.gempukku.swccgo.common.DeployDecisionWire;
+import com.gempukku.swccgo.common.DeployDestinationRef;
 import com.gempukku.swccgo.common.PullDecisionWire;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -14,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public abstract class CardActionSelectionDecision extends AbstractAwaitingDecision {
     private static final AtomicLong NEXT_PULL_TRANSACTION_ID = new AtomicLong();
+    private static final AtomicLong NEXT_DEPLOY_ATTEMPT_ID = new AtomicLong();
     private List<Action> _actions;
 
     /**
@@ -30,6 +34,7 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
     public CardActionSelectionDecision(int decisionId, String text, List<Action> actions, boolean yourTurn, boolean autoPassEligible, boolean noPass, boolean noLongDelay, boolean revertEligible) {
         super(decisionId, text, AwaitingDecisionType.CARD_ACTION_CHOICE);
         _actions = actions;
+        prepareDeployAttempts(actions);
         setParam("actionId", getActionIds(actions));
         setParam("cardId", getCardIds(actions));
         setParam("blueprintId", getBlueprintIdsForVirtualActions(actions));
@@ -42,6 +47,22 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
             setParam(PullDecisionWire.SOURCE_CARD_ID, getActionSourceCardIds(actions));
             setParam(PullDecisionWire.SOURCE_PERMANENT_CARD_ID, getActionSourcePermanentCardIds(actions));
             setParam(PullDecisionWire.GAME_TEXT_ACTION_ID, getGameTextActionIds(actions));
+        }
+        if (hasDeployAction(actions)) {
+            setParam(DeployDecisionWire.ATTEMPT_ID, getDeployAttemptIds(actions));
+            setParam(DeployDecisionWire.PLAYER_ID, getDeployPlayerIds(actions));
+            setParam(DeployDecisionWire.SOURCE_CARD_ID, getDeploySourceCardIds(actions));
+            setParam(DeployDecisionWire.SOURCE_PERMANENT_CARD_ID,
+                    getDeploySourcePermanentCardIds(actions));
+            setParam(DeployDecisionWire.SOURCE_ZONE, getDeploySourceZones(actions));
+            setParam(DeployDecisionWire.DESTINATION_LEGALITY_KNOWN,
+                    getDeployDestinationKnown(actions));
+            setParam(DeployDecisionWire.LEGAL_DESTINATIONS,
+                    getDeployLegalDestinations(actions));
+            setParam(DeployDecisionWire.LEGAL_BUDDIES,
+                    getDeployLegalBuddies(actions));
+            setParam(DeployDecisionWire.SELECTED_BUDDY,
+                    getDeploySelectedBuddies(actions));
         }
         setParam("yourTurn", String.valueOf(yourTurn));
         setParam("autoPassEligible", String.valueOf(autoPassEligible));
@@ -199,6 +220,142 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
         return false;
     }
 
+    private void prepareDeployAttempts(List<Action> actions) {
+        for (Action action : actions) {
+            if (action.getDecisionActionSemantic() == DecisionActionSemantic.DEPLOY_CARD
+                    && action.getDeployAttemptId() == null) {
+                action.setDeployAttemptId("DEPLOY-" + NEXT_DEPLOY_ATTEMPT_ID.incrementAndGet());
+            }
+        }
+    }
+
+    private boolean hasDeployAction(List<Action> actions) {
+        for (Action action : actions) {
+            if (action.getDecisionActionSemantic() == DecisionActionSemantic.DEPLOY_CARD) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String[] getDeployAttemptIds(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            Action action = actions.get(i);
+            result[i] = action.getDecisionActionSemantic() == DecisionActionSemantic.DEPLOY_CARD
+                    ? action.getDeployAttemptId() : "";
+        }
+        return result;
+    }
+
+    private String[] getDeployPlayerIds(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            Action action = actions.get(i);
+            result[i] = action.getDecisionActionSemantic() == DecisionActionSemantic.DEPLOY_CARD
+                    && action.getPerformingPlayer() != null ? action.getPerformingPlayer() : "";
+        }
+        return result;
+    }
+
+    private String[] getDeploySourceCardIds(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            DeployActionMetadata metadata = deployMetadata(actions.get(i));
+            result[i] = metadata != null
+                    ? String.valueOf(metadata.sourceCard().currentCardId()) : "";
+        }
+        return result;
+    }
+
+    private String[] getDeploySourcePermanentCardIds(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            DeployActionMetadata metadata = deployMetadata(actions.get(i));
+            result[i] = metadata != null
+                    ? String.valueOf(metadata.sourceCard().permanentCardId()) : "";
+        }
+        return result;
+    }
+
+    private String[] getDeploySourceZones(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            DeployActionMetadata metadata = deployMetadata(actions.get(i));
+            result[i] = metadata != null && metadata.sourceZone() != null
+                    ? metadata.sourceZone().name() : "";
+        }
+        return result;
+    }
+
+    private String[] getDeployDestinationKnown(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            DeployActionMetadata metadata = deployMetadata(actions.get(i));
+            result[i] = metadata != null
+                    ? String.valueOf(metadata.destinationLegalityKnown()) : "";
+        }
+        return result;
+    }
+
+    private String[] getDeployLegalDestinations(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            DeployActionMetadata metadata = deployMetadata(actions.get(i));
+            if (metadata == null || !metadata.destinationLegalityKnown()) {
+                result[i] = "";
+                continue;
+            }
+            result[i] = metadata.orderedLegalDestinations().stream()
+                    .map(CardActionSelectionDecision::encodeDestination)
+                    .collect(java.util.stream.Collectors.joining(","));
+        }
+        return result;
+    }
+
+    private String[] getDeployLegalBuddies(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            DeployActionMetadata metadata = deployMetadata(actions.get(i));
+            result[i] = metadata != null
+                    ? metadata.orderedLegalBuddies().stream()
+                            .map(CardActionSelectionDecision::encodeCard)
+                            .collect(java.util.stream.Collectors.joining(","))
+                    : "";
+        }
+        return result;
+    }
+
+    private String[] getDeploySelectedBuddies(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            DeployActionMetadata metadata = deployMetadata(actions.get(i));
+            result[i] = metadata != null && metadata.selectedBuddy() != null
+                    ? encodeCard(metadata.selectedBuddy()) : "";
+        }
+        return result;
+    }
+
+    private DeployActionMetadata deployMetadata(Action action) {
+        return action.getDecisionActionSemantic() == DecisionActionSemantic.DEPLOY_CARD
+                ? action.getDeployActionMetadata() : null;
+    }
+
+    private static String encodeDestination(DeployDestinationRef destination) {
+        if (destination instanceof DeployDestinationRef.Card card) {
+            return "CARD:" + card.card().permanentCardId() + ":"
+                    + card.card().currentCardId();
+        }
+        DeployDestinationRef.ZoneDestination zone =
+                (DeployDestinationRef.ZoneDestination) destination;
+        return "ZONE:" + zone.zone().name();
+    }
+
+    private static String encodeCard(
+            com.gempukku.swccgo.common.DeployPhysicalCardRef card) {
+        return card.permanentCardId() + ":" + card.currentCardId();
+    }
+
     /** Gets ordinal-aligned permanent physical identities for typed action routes. */
     private String[] getActionSourcePermanentCardIds(List<Action> actions) {
         String[] result = new String[actions.size()];
@@ -255,6 +412,8 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
                     || semantic == DecisionActionSemantic.PULL_TAKE_INTO_HAND_FROM_PILE) {
                 selected.setAcceptedDecisionIdentity(getAwaitingDecisionId(), actionIndex);
                 selected.setAcceptedPullTransactionId(NEXT_PULL_TRANSACTION_ID.incrementAndGet());
+            } else if (semantic == DecisionActionSemantic.DEPLOY_CARD) {
+                selected.setAcceptedDecisionIdentity(getAwaitingDecisionId(), actionIndex);
             }
             return selected;
         } catch (NumberFormatException exp) {

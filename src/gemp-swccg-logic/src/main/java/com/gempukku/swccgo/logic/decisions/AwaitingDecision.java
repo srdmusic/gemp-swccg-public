@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.logic.decisions;
 
+import com.gempukku.swccgo.logic.timing.Action;
+
 import java.util.Map;
 
 /**
@@ -30,6 +32,10 @@ public interface AwaitingDecision {
      * @return the decision parameters
      */
     Map<String, String[]> getDecisionParameters();
+
+    /** Refreshes action-bound DEPLOY identity immediately before engine delivery. */
+    default void refreshDeployTransactionMetadata(Action action) {
+    }
 
     /**
      * This method is called with the result of the players decision.

@@ -95,6 +95,77 @@ public class ObjectiveAdapterContractTest {
                 contribution(ObjectiveContribution.Rule.V193_CHILD,
                         ObjectiveContribution.Channel.DEPLOY_CHILD, 3, 2000.0f)),
                 childDestination.contributions());
+
+        assertExactBits(-2000.0f, contributionValue(
+                nonSenateSenator, ObjectiveContribution.Rule.MY_LORD_V83));
+        assertExactBits(1500.0f, contributionValue(
+                senateSenator, ObjectiveContribution.Rule.MY_LORD_V88));
+        assertExactBits(500.0f, contributionValue(
+                senateSenator, ObjectiveContribution.Rule.MY_LORD_V108));
+        assertExactBits(200.0f, contributionValue(
+                senateSenator, ObjectiveContribution.Rule.OBJECTIVE_SITE));
+        assertExactBits(-2000.0f, contributionValue(
+                nonSenator, ObjectiveContribution.Rule.MY_LORD_V110));
+        assertExactBits(400.0f, contributionValue(
+                senateSenator, ObjectiveContribution.Rule.V193_PARENT));
+        assertExactBits(2000.0f, contributionValue(
+                childDestination, ObjectiveContribution.Rule.V193_CHILD));
+    }
+
+    @Test
+    public void myLordSenatorPredicatesRemainRuleSpecific() {
+        DecisionSnapshot snapshot = snapshot(deployFacts(false));
+
+        ObjectiveDeployAdapter.Result filterOnlyParent = ObjectiveDeployAdapter.adapt(
+                snapshot,
+                deployCandidate(0, ObjectiveDeployAdapter.Stage.PARENT_ACTION,
+                        101, 402, true, false, false, false, false,
+                        2.0f, 3.0f));
+        assertEquals(List.of(
+                contribution(ObjectiveContribution.Rule.MY_LORD_V83,
+                        ObjectiveContribution.Channel.DEPLOY_PARENT, 0, -2000.0f),
+                contribution(ObjectiveContribution.Rule.MY_LORD_V110,
+                        ObjectiveContribution.Channel.DEPLOY_PARENT, 0, -2000.0f)),
+                filterOnlyParent.contributions());
+
+        ObjectiveDeployAdapter.Result keywordOnlyParent = ObjectiveDeployAdapter.adapt(
+                snapshot,
+                deployCandidate(1, ObjectiveDeployAdapter.Stage.PARENT_ACTION,
+                        101, 401, false, true, false, false, false,
+                        2.0f, 3.0f));
+        assertEquals(List.of(contribution(ObjectiveContribution.Rule.MY_LORD_V108,
+                        ObjectiveContribution.Channel.DEPLOY_PARENT, 1, 500.0f)),
+                keywordOnlyParent.contributions());
+
+        ObjectiveDeployAdapter.Result keywordOnlyChild = ObjectiveDeployAdapter.adapt(
+                snapshot,
+                deployCandidate(2, ObjectiveDeployAdapter.Stage.CHILD_DESTINATION,
+                        101, 401, false, true, false, false, false,
+                        2.0f, 3.0f));
+        assertEquals(List.of(contribution(ObjectiveContribution.Rule.MY_LORD_V88,
+                        ObjectiveContribution.Channel.DEPLOY_CHILD, 2, 1500.0f)),
+                keywordOnlyChild.contributions());
+    }
+
+    @Test
+    public void v193ChildUsesExactLegacyBranchFactInsteadOfAbilityCostApproximation() {
+        DecisionSnapshot snapshot = snapshot(deployFacts(false));
+
+        ObjectiveDeployAdapter.Result branchEmits = ObjectiveDeployAdapter.adapt(
+                snapshot,
+                deployCandidate(0, ObjectiveDeployAdapter.Stage.CHILD_DESTINATION,
+                        999, 402, false, false, false, false, true,
+                        null, null));
+        assertEquals(List.of(contribution(ObjectiveContribution.Rule.V193_CHILD,
+                        ObjectiveContribution.Channel.DEPLOY_CHILD, 0, 2000.0f)),
+                branchEmits.contributions());
+
+        ObjectiveDeployAdapter.Result branchDoesNotEmit = ObjectiveDeployAdapter.adapt(
+                snapshot,
+                deployCandidate(1, ObjectiveDeployAdapter.Stage.CHILD_DESTINATION,
+                        999, 402, false, false, false, false, false,
+                        1.0f, 4.0f));
+        assertTrue(branchDoesNotEmit.contributions().isEmpty());
     }
 
     @Test
@@ -360,14 +431,40 @@ public class ObjectiveAdapterContractTest {
             boolean targetsFlipGate,
             Float ability,
             Float deployCost) {
+        boolean senator = cardId == 101;
+        boolean child = stage == ObjectiveDeployAdapter.Stage.CHILD_DESTINATION;
+        return deployCandidate(
+                ordinal, stage, cardId, destinationId,
+                senator, senator, true, targetsFlipGate && !child,
+                targetsFlipGate && child, ability, deployCost);
+    }
+
+    private static ObjectiveDeployAdapter.CandidateFacts deployCandidate(
+            int ordinal,
+            ObjectiveDeployAdapter.Stage stage,
+            int cardId,
+            Integer destinationId,
+            boolean filtersSenator,
+            boolean keywordOrLoreSenator,
+            boolean objectiveSiteEligible,
+            boolean v193ParentLegacyBranchEmits,
+            boolean v193ChildLegacyBranchEmits,
+            Float ability,
+            Float deployCost) {
         return new ObjectiveDeployAdapter.CandidateFacts(
                 ordinal,
                 stage,
                 cardId,
                 true,
+                filtersSenator,
+                keywordOrLoreSenator,
                 destinationId,
-                targetsFlipGate,
+                v193ParentLegacyBranchEmits || v193ChildLegacyBranchEmits,
                 true,
+                objectiveSiteEligible,
+                destinationId != null && Set.of(401, 402).contains(destinationId),
+                v193ParentLegacyBranchEmits,
+                v193ChildLegacyBranchEmits,
                 ability,
                 deployCost);
     }
@@ -380,6 +477,10 @@ public class ObjectiveAdapterContractTest {
     }
 
     private static ObjectiveFacts deployFacts() {
+        return deployFacts(false);
+    }
+
+    private static ObjectiveFacts deployFacts(boolean flipped) {
         ObjectiveFacts.TypedBoardFacts board = new ObjectiveFacts.TypedBoardFacts(
                 Set.of(101),
                 Set.of(),
@@ -387,7 +488,7 @@ public class ObjectiveAdapterContractTest {
                 Set.of(),
                 Set.of(401),
                 Set.of(401, 402),
-                Set.of(),
+                Set.of(401),
                 false,
                 0,
                 false,
@@ -398,7 +499,8 @@ public class ObjectiveAdapterContractTest {
                 new ObjectiveFacts.ObjectiveKind(true, false, false, false, false, false),
                 emptyStartingRefs(),
                 board,
-                true);
+                true,
+                flipped);
     }
 
     private static ObjectiveFacts huntFacts() {
@@ -427,6 +529,14 @@ public class ObjectiveAdapterContractTest {
                                         ObjectiveFacts.StartingRefs startingRefs,
                                         ObjectiveFacts.TypedBoardFacts board,
                                         boolean withFlipGate) {
+        return facts(kind, startingRefs, board, withFlipGate, false);
+    }
+
+    private static ObjectiveFacts facts(ObjectiveFacts.ObjectiveKind kind,
+                                        ObjectiveFacts.StartingRefs startingRefs,
+                                        ObjectiveFacts.TypedBoardFacts board,
+                                        boolean withFlipGate,
+                                        boolean flipped) {
         FactValue<String> controlSite = withFlipGate
                 ? known("flip-critical site", "typed control site")
                 : unknown("flip-critical site", "no control gate");
@@ -451,12 +561,24 @@ public class ObjectiveAdapterContractTest {
                 false,
                 Set.of());
         return new ObjectiveFacts(
-                known(ObjectiveFactsFixtures.identity(false), "physical objective orientation"),
+                known(ObjectiveFactsFixtures.identity(flipped), "physical objective orientation"),
                 known(ObjectiveFactsFixtures.profileResolution(
                                 ObjectiveFacts.ProfileResolution.MatchKind.BLUEPRINT_ID),
                         "blueprint-first objective profile"),
                 known(strategy, "typed objective strategy"),
                 known(board, "typed objective board"));
+    }
+
+    private static void assertExactBits(float expected, float actual) {
+        assertEquals(Float.floatToIntBits(expected), Float.floatToIntBits(actual));
+    }
+
+    private static float contributionValue(ObjectiveDeployAdapter.Result result,
+                                           ObjectiveContribution.Rule rule) {
+        for (ObjectiveContribution contribution : result.contributions()) {
+            if (contribution.rule() == rule) return contribution.value();
+        }
+        throw new AssertionError("Missing contribution " + rule);
     }
 
     private static ObjectiveFacts.StartingRefs emptyStartingRefs() {
@@ -499,6 +621,7 @@ public class ObjectiveAdapterContractTest {
                 unknown("source zone", "candidate-specific before acceptance"),
                 unknown("source zone owner", "candidate-specific before acceptance"),
                 List.of(),
+                List.of(),
                 null,
                 List.of(),
                 null,
@@ -528,6 +651,9 @@ public class ObjectiveAdapterContractTest {
                 known(Zone.RESERVE_DECK, "typed source zone"),
                 known(PLAYER, "typed source zone owner"),
                 candidates,
+                candidates.stream()
+                        .map(card -> String.valueOf(card.currentCardId()))
+                        .toList(),
                 null,
                 List.of(),
                 null,

@@ -5692,55 +5692,55 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                             if (fsPulled != null) break;
                                         }
                                         if (fsPulled != null) {
-                                            // Flip-plan exemption check.
-                                            boolean fsFlipPlan = false;
+                                            com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.ObjectiveState fsObjectiveState =
+                                                com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.ObjectiveState.NOT_APPLICABLE;
                                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer fsOa =
                                                 context.getObjectiveAnalyzer();
-                                            if (fsOa != null && fsOa.isAnalyzed() && !fsOa.isFlipped()
-                                                    && fsOa.getFlipConditionText() != null) {
-                                                // BATCH1-CORR (2026-07-13, Codex m00225 #1): first-name token
-                                                // regressed 'Director Orson Krennic' (first token = 'director').
-                                                // Match the blueprint's TYPED Personas against the flip text —
-                                                // shared helper, pure-tested (m00262 fixture requirement).
-                                                String fsFlip = fsOa.getFlipConditionText().toLowerCase(java.util.Locale.ROOT);
-                                                try {
-                                                    fsFlipPlan = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
-                                                        .personaNamedInText(fsPulled.getBlueprint().getPersonas(), fsFlip);
-                                                } catch (Exception fsPex) { /* no personas — no exemption */ }
+                                            if (fsOa != null && fsOa.isAnalyzed()) {
+                                                if (fsOa.isFlipped()) {
+                                                    fsObjectiveState =
+                                                        com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.ObjectiveState.FLIPPED;
+                                                } else if (fsOa.getFlipConditionText() != null) {
+                                                    String fsFlip = fsOa.getFlipConditionText().toLowerCase(java.util.Locale.ROOT);
+                                                    try {
+                                                        if (com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
+                                                                .personaNamedInText(fsPulled.getBlueprint().getPersonas(), fsFlip)) {
+                                                            fsObjectiveState =
+                                                                com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.ObjectiveState.UNFLIPPED_TARGET_NAMED;
+                                                        }
+                                                    } catch (Exception fsPex) { /* no typed persona exemption */ }
+                                                }
                                             }
-                                            if (!fsFlipPlan) {
-                                                SwccgCardBlueprint fsBp = fsPulled.getBlueprint();
-                                                float fsForce = gameState.getForcePileSize(context.getPlayerId());
-                                                Float fsCost = fsBp.getDeployCost();
-                                                Float fsBuddy = null;
-                                                for (PhysicalCard fsH : gameState.getHand(context.getPlayerId())) {
-                                                    if (fsH == null || fsH.getBlueprint() == null) continue;
-                                                    if (fsH.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                                    Float c = fsH.getBlueprint().getDeployCost();
-                                                    if (c == null) continue;
-                                                    if (fsBuddy == null || c < fsBuddy) fsBuddy = c;
-                                                }
-                                                String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
-                                                    .vetoCharacterDeploy(context.getGame(), gameState, context.getPlayerId(),
-                                                        fsPulled,
-                                                        fsBp.hasPowerAttribute() ? fsBp.getPower() : null,
-                                                        fsBp.hasAbilityAttribute() ? fsBp.getAbility() : null,
-                                                        false, fsSrc, fsForce, fsCost, fsBuddy, null);
-                                                if (fsV != null) {
-                                                    action.hardVeto(fsV);
-                                                    logger.warn("FORMATION SAFETY (pull-route): {}", fsV);
-                                                } else if (com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
-                                                        .weakSoloNoPlan(context.getGame(), gameState, context.getPlayerId(),
-                                                            fsBp.hasAbilityAttribute() ? fsBp.getAbility() : null,
-                                                            false, fsSrc, fsBuddy)) {
-                                                    action.addReasoning(
-                                                        "L3 NO-PLAN SOLO (pull-route): weak character would be pulled alone to "
-                                                            + fsSrc.getTitle() + " with no buddy plan", -800.0f);
-                                                    logger.warn("FORMATION SAFETY (pull-route): L3 NO-PLAN SOLO -800 at {}", fsSrc.getTitle());
-                                                }
-                                            } else {
+
+                                            com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner fsPlanner =
+                                                context.getDeployPhasePlanner();
+                                            com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.Assessment fsAssessment =
+                                                fsPlanner != null
+                                                    ? fsPlanner.assessForcedDestinationDeploySafety(
+                                                        context.getGame(), gameState, context.getPlayerId(),
+                                                        fsPulled, fsSrc, fsObjectiveState)
+                                                    : assessForcedDestinationDeploySafety(
+                                                        false, fsObjectiveState, null, false);
+                                            if (fsAssessment.verdict()
+                                                    == com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.Verdict.HARD_BLOCK) {
+                                                action.hardVeto(fsAssessment.reason());
+                                                logger.warn("FORMATION SAFETY (pull-route): {}", fsAssessment.reason());
+                                            } else if (fsAssessment.verdict()
+                                                    == com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.Verdict.WEAK_SOLO_NO_PLAN) {
+                                                action.addReasoning(
+                                                    "L3 NO-PLAN SOLO (pull-route): weak character would be pulled alone to "
+                                                        + fsSrc.getTitle() + " with no buddy plan",
+                                                    fsAssessment.scoreDelta());
+                                                logger.warn("FORMATION SAFETY (pull-route): L3 NO-PLAN SOLO -800 at {}", fsSrc.getTitle());
+                                            } else if (fsAssessment.verdict()
+                                                    == com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.Verdict.FLIP_PLAN_EXEMPT) {
                                                 logger.warn("FORMATION SAFETY (pull-route): flip-plan exemption — '{}' named in unflipped objective flip condition", fsPulled.getTitle());
+                                            } else if (fsAssessment.verdict()
+                                                    == com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.Verdict.UNKNOWN) {
+                                                logger.debug("FORMATION SAFETY (pull-route) unknown: {}", fsAssessment.reason());
                                             }
+                                        } else {
+                                            logger.debug("FORMATION SAFETY (pull-route) unknown: forced-destination pull identity is unresolved");
                                         }
                                     }
                                 }
@@ -5763,6 +5763,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
     }
 
     // ========== Helper Methods ==========
+
+    static com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.Assessment
+            assessForcedDestinationDeploySafety(
+                    boolean physicalIdentityResolved,
+                    com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.ObjectiveState objectiveState,
+                    com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.CharacterDeployCheck formation,
+                    boolean weakSoloNoPlan) {
+        return com.gempukku.swccgo.ai.models.common.strategy.ForcedDestinationDeploySafety.assess(
+                physicalIdentityResolved, objectiveState, formation, weakSoloNoPlan);
+    }
 
     private void evaluateActivateForce(EvaluatedAction action, DecisionContext context) {
         // V38.3: ALWAYS activate Force. ALWAYS. No exceptions.

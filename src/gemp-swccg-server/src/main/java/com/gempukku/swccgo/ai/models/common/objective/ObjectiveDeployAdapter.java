@@ -31,9 +31,15 @@ public final class ObjectiveDeployAdapter {
             Stage stage,
             int deployingCardId,
             boolean character,
+            boolean filtersSenator,
+            boolean keywordOrLoreSenator,
             Integer destinationLocationId,
             boolean targetsFlipCriticalControlSite,
             boolean flipCriticalControlCardAvailable,
+            boolean objectiveSiteScoringEligible,
+            boolean objectiveRelevantLocation,
+            boolean v193ParentLegacyBranchEmits,
+            boolean v193ChildLegacyBranchEmits,
             Float ability,
             Float deployCost) {
 
@@ -75,7 +81,9 @@ public final class ObjectiveDeployAdapter {
         ObjectiveFacts.StrategyFacts strategy = facts.strategy().value();
         ObjectiveFacts.TypedBoardFacts board = facts.board().value();
         boolean myLord = strategy.kind().myLord();
-        boolean senator = board.senatorCardIds().contains(candidate.deployingCardId());
+        boolean destinationSenator = candidate.stage() == Stage.PARENT_ACTION
+                ? candidate.filtersSenator()
+                : candidate.keywordOrLoreSenator();
         boolean senateDestination = candidate.destinationLocationId() != null
                 && board.galacticSenateLocationIds().contains(candidate.destinationLocationId());
         ObjectiveContribution.Channel channel = candidate.stage() == Stage.PARENT_ACTION
@@ -83,43 +91,37 @@ public final class ObjectiveDeployAdapter {
                 : ObjectiveContribution.Channel.DEPLOY_CHILD;
 
         List<ObjectiveContribution> contributions = new ArrayList<>();
-        if (myLord && senator && candidate.destinationLocationId() != null && !senateDestination) {
+        if (myLord && destinationSenator
+                && candidate.destinationLocationId() != null && !senateDestination) {
             add(contributions, ObjectiveContribution.Rule.MY_LORD_V83,
                     channel, candidate.candidateOrdinal(), V83);
         }
         if (candidate.stage() == Stage.PARENT_ACTION && myLord && candidate.character()
-                && !senator && !board.nonSenateSiteOnTable()) {
+                && !candidate.keywordOrLoreSenator() && !board.nonSenateSiteOnTable()) {
             add(contributions, ObjectiveContribution.Rule.MY_LORD_V110,
                     channel, candidate.candidateOrdinal(), V110);
         }
-        if (candidate.stage() == Stage.PARENT_ACTION && myLord && candidate.character() && senator) {
+        if (candidate.stage() == Stage.PARENT_ACTION && myLord && candidate.character()
+                && candidate.keywordOrLoreSenator()) {
             add(contributions, ObjectiveContribution.Rule.MY_LORD_V108,
                     channel, candidate.candidateOrdinal(), V108);
         }
-        if (myLord && senator && senateDestination) {
+        if (myLord && destinationSenator && senateDestination) {
             add(contributions, ObjectiveContribution.Rule.MY_LORD_V88,
                     channel, candidate.candidateOrdinal(), V88);
         }
-        if (candidate.character() && candidate.destinationLocationId() != null
-                && board.objectiveRelevantLocationIds().contains(candidate.destinationLocationId())) {
+        if (candidate.character() && candidate.objectiveSiteScoringEligible()
+                && candidate.objectiveRelevantLocation()) {
             add(contributions, ObjectiveContribution.Rule.OBJECTIVE_SITE,
                     channel, candidate.candidateOrdinal(), OBJECTIVE_SITE);
         }
 
-        boolean hasFlipGate = strategy.flipCriticalControlSite().isKnown()
-                && (strategy.flipCriticalControlCard().isKnown()
-                || !strategy.flipCriticalControlCardIds().isEmpty());
-        boolean shouldSteerToFlipGate = candidate.character()
-                && hasFlipGate
-                && candidate.targetsFlipCriticalControlSite()
-                && candidate.flipCriticalControlCardAvailable()
-                && !board.controlsFlipCriticalSite();
-        if (shouldSteerToFlipGate && candidate.stage() == Stage.PARENT_ACTION) {
+        if (candidate.stage() == Stage.PARENT_ACTION
+                && candidate.v193ParentLegacyBranchEmits()) {
             add(contributions, ObjectiveContribution.Rule.V193_PARENT,
                     channel, candidate.candidateOrdinal(), V193_PARENT);
-        } else if (shouldSteerToFlipGate && candidate.stage() == Stage.CHILD_DESTINATION
-                && candidate.ability() != null && candidate.ability() >= 1.0f
-                && candidate.deployCost() != null && candidate.deployCost() <= 4.0f) {
+        } else if (candidate.stage() == Stage.CHILD_DESTINATION
+                && candidate.v193ChildLegacyBranchEmits()) {
             add(contributions, ObjectiveContribution.Rule.V193_CHILD,
                     channel, candidate.candidateOrdinal(), V193_CHILD);
         }

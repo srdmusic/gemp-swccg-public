@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -179,6 +180,45 @@ public class CombinedEvaluatorTieTest {
             b.hardVeto("formation law B");
             return Arrays.asList(a, b);
         });
+    }
+
+    private static List<ActionEvaluator> scorePseudoVetoed(float scoreA, float scoreB) {
+        return single(ctx -> Arrays.asList(
+                action("A", scoreA, "Deploy A"),
+                action("B", scoreB, "Deploy B")));
+    }
+
+    @Test
+    public void allVetoedOptionalChoicePasses() {
+        EvaluatedAction result = winner(
+                allVetoed(-500.0f, -400.0f), passableContext());
+
+        assertNotNull(result);
+        assertEquals(ActionType.PASS, result.getActionType());
+        assertEquals("", result.getActionId());
+    }
+
+    @Test
+    public void scorePseudoVetoedOptionalChoicePasses() {
+        EvaluatedAction result = winner(
+                scorePseudoVetoed(-500.0f, -400.0f), passableContext());
+
+        assertNotNull(result);
+        assertEquals(ActionType.PASS, result.getActionType());
+        assertEquals("", result.getActionId());
+    }
+
+    @Test
+    public void scorePseudoVetoedForcedChoiceUsesTheLeastBadCandidate() {
+        EvaluatedAction result = winner(
+                scorePseudoVetoed(-500.0f, -400.0f), forcedContext());
+
+        assertNotNull(result);
+        assertNotEquals(ActionType.PASS, result.getActionType());
+        assertFalse(result.isHardVetoed());
+        assertEquals("B", result.getActionId());
+        assertEquals(Float.floatToRawIntBits(-400.0f),
+                Float.floatToRawIntBits(result.getScore()));
     }
 
     @Test

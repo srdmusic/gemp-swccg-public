@@ -51,7 +51,7 @@ public class PlayLocationAction extends AbstractPlayCardAction {
      * @param placements the valid placements to deploy the location
      */
     public PlayLocationAction(PhysicalCard sourceCard, final PhysicalCard location, final List<LocationPlacement> placements) {
-        super(location, sourceCard);
+        super(location, sourceCard, true);
         setPerformingPlayer(location.getOwner());
         _that = this;
         _location = location;

@@ -40,6 +40,8 @@ public abstract class AbstractAction implements Action {
     private Integer _acceptedDecisionOrdinal;
     private Long _acceptedPullTransactionId;
     private PullDeployRef _pullDeployRef;
+    private String _deployAttemptId;
+    private DeployActionMetadata _deployActionMetadata;
 
     protected int _latestTargetGroupId;
     protected Map<Integer, String> _targetingTextMap = new HashMap<Integer, String>();
@@ -87,6 +89,8 @@ public abstract class AbstractAction implements Action {
         snapshot._acceptedDecisionOrdinal = _acceptedDecisionOrdinal;
         snapshot._acceptedPullTransactionId = _acceptedPullTransactionId;
         snapshot._pullDeployRef = _pullDeployRef;
+        snapshot._deployAttemptId = _deployAttemptId;
+        snapshot._deployActionMetadata = _deployActionMetadata;
         snapshot._latestTargetGroupId = _latestTargetGroupId;
         snapshot._targetingTextMap.putAll(_targetingTextMap);
         snapshot._minimumMap.putAll(_minimumMap);
@@ -175,11 +179,45 @@ public abstract class AbstractAction implements Action {
     @Override
     public void setPullDeployRef(PullDeployRef pullDeployRef) {
         _pullDeployRef = Objects.requireNonNull(pullDeployRef, "pullDeployRef");
+        if (_deployAttemptId == null || _deployAttemptId.startsWith("DEPLOY-ACTION-")) {
+            _deployAttemptId = "PULL-" + pullDeployRef.transactionId();
+        }
+        if (_acceptedDecisionId == null && pullDeployRef.parentDecisionId() != null
+                && pullDeployRef.parentActionOrdinal() != null) {
+            setAcceptedDecisionIdentity(
+                    pullDeployRef.parentDecisionId(), pullDeployRef.parentActionOrdinal());
+        }
     }
 
     @Override
     public PullDeployRef getPullDeployRef() {
         return _pullDeployRef;
+    }
+
+    @Override
+    public void setDeployAttemptId(String attemptId) {
+        if (attemptId == null || attemptId.isBlank()) {
+            throw new IllegalArgumentException("deploy attempt id must be nonblank");
+        }
+        if (_deployAttemptId != null && !_deployAttemptId.equals(attemptId)) {
+            throw new IllegalStateException("deploy attempt identity cannot change");
+        }
+        _deployAttemptId = attemptId;
+    }
+
+    @Override
+    public String getDeployAttemptId() {
+        return _deployAttemptId;
+    }
+
+    @Override
+    public void setDeployActionMetadata(DeployActionMetadata metadata) {
+        _deployActionMetadata = Objects.requireNonNull(metadata, "metadata");
+    }
+
+    @Override
+    public DeployActionMetadata getDeployActionMetadata() {
+        return _deployActionMetadata;
     }
 
     /**

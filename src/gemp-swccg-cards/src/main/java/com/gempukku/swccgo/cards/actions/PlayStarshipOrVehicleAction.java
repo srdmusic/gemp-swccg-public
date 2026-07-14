@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.actions;
 
 import com.gempukku.swccgo.cards.effects.PayDeployCostEffect;
 import com.gempukku.swccgo.cards.effects.PaySimultaneousDeployCostEffect;
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -23,6 +24,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The action to deploy a starship or vehicle.
@@ -65,7 +67,7 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
      */
     public PlayStarshipOrVehicleAction(final SwccgGame game, final PhysicalCard sourceCard, final PhysicalCard starshipOrVehicle, boolean forFree, float changeInCost, final DeploymentRestrictionsOption deploymentRestrictionsOption,
                                        final ReactActionOption reactActionOption, final Filter deployWithoutPilotTargetFilter, final Filter deployWithPilotTargetFilter, final Collection<PhysicalCard> validPilotsFromHand) {
-        super(starshipOrVehicle, sourceCard);
+        super(starshipOrVehicle, sourceCard, true);
         setPerformingPlayer(starshipOrVehicle.getOwner());
         _that = this;
         _starshipOrVehicle = starshipOrVehicle;
@@ -111,6 +113,12 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
                                     // Ask player to choose vehicle or starship capacity slot
                                     _chooseCapacitySlotEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                             new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_starshipOrVehicle) + " in cargo bay of " + GameUtils.getCardLink(_starshipOrVehicle), new String[]{"Vehicle", "Starship"}) {
+                                                {
+                                                    setDeployTransactionMetadata(_that,
+                                                            DecisionOrigin.DEPLOY_CAPACITY,
+                                                            List.of(_target), false);
+                                                }
+
                                                 @Override
                                                 protected void validDecisionMade(int index, String result) {
                                                     _capacitySlotChosen = true;
@@ -140,6 +148,10 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
             // Both options are available, ask player if they want to simultaneously deploy a pilot/driver from hand
             _optionalPilotEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                     new YesNoDecision("Do you want to simultaneously deploy a " + _pilotOrDriverText + " from hand aboard  " + GameUtils.getCardLink(_starshipOrVehicle)) {
+                        {
+                            setDeployConfirmationMetadata(_that);
+                        }
+
                         @Override
                         protected void yes() {
                             _optionalPilotChosen = true;
@@ -185,6 +197,12 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
                                                                     // Ask player to choose vehicle or starship capacity slot
                                                                     _chooseCapacitySlotEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                                                             new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_starshipOrVehicle) + " in cargo bay of " + GameUtils.getCardLink(_starshipOrVehicle), new String[]{"Vehicle", "Starship"}) {
+                                                                                {
+                                                                                    setDeployTransactionMetadata(_that,
+                                                                                            DecisionOrigin.DEPLOY_CAPACITY,
+                                                                                            List.of(_target), false);
+                                                                                }
+
                                                                                 @Override
                                                                                 protected void validDecisionMade(int index, String result) {
                                                                                     _capacitySlotChosen = true;
@@ -240,6 +258,12 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
                                                     // Ask player to choose vehicle or starship capacity slot
                                                     _chooseCapacitySlotEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                                             new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_starshipOrVehicle) + " in cargo bay of " + GameUtils.getCardLink(_starshipOrVehicle), new String[]{"Vehicle", "Starship"}) {
+                                                                {
+                                                                    setDeployTransactionMetadata(_that,
+                                                                            DecisionOrigin.DEPLOY_CAPACITY,
+                                                                            List.of(_target), false);
+                                                                }
+
                                                                 @Override
                                                                 protected void validDecisionMade(int index, String result) {
                                                                     _capacitySlotChosen = true;
@@ -305,6 +329,12 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
                                                     // Ask player to choose vehicle or starship capacity slot
                                                     _chooseCapacitySlotEffect = new PlayoutDecisionEffect(_that, getPerformingPlayer(),
                                                             new MultipleChoiceAwaitingDecision("Choose capacity slot for  " + GameUtils.getCardLink(_starshipOrVehicle) + " in cargo bay of " + GameUtils.getCardLink(_starshipOrVehicle), new String[]{"Vehicle", "Starship"}) {
+                                                                {
+                                                                    setDeployTransactionMetadata(_that,
+                                                                            DecisionOrigin.DEPLOY_CAPACITY,
+                                                                            List.of(_target), false);
+                                                                }
+
                                                                 @Override
                                                                 protected void validDecisionMade(int index, String result) {
                                                                     _capacitySlotChosen = true;

@@ -1,11 +1,15 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.phase.DeployAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.DeployFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.PullFacts;
+import com.gempukku.swccgo.ai.models.common.strategy.ForceObligationVector;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.OpponentDeckTracker;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
@@ -90,6 +94,10 @@ public class DecisionContext {
     private OpponentDeckTracker opponentDeckTracker;  // V24.7: Opponent destiny intel
     private String deckName;  // V29.15: Deck name for saga-aware Epic Event choices
     private DecisionSnapshot decisionSnapshot;
+    private DeployFacts deployFacts;
+    private DeployAssessment deployAssessment;
+    private ForceObligationVector forceObligations;
+    private DeploymentPlan assessedDeploymentPlan;
     private PullFacts pullFacts;
     private PullAssessment pullAssessment;
 
@@ -402,6 +410,47 @@ public class DecisionContext {
 
     public void setDecisionSnapshot(DecisionSnapshot decisionSnapshot) {
         this.decisionSnapshot = Objects.requireNonNull(decisionSnapshot, "decisionSnapshot");
+    }
+
+    public DeployFacts getDeployFacts() {
+        return deployFacts;
+    }
+
+    public DeployAssessment getDeployAssessment() {
+        return deployAssessment;
+    }
+
+    /** One immutable vector for DEPLOY and its adjacent Pass/Move consumers. */
+    public ForceObligationVector getForceObligations() {
+        if (forceObligations == null) {
+            forceObligations = ForceObligationVector.from(getForceReserveFacts(), 0);
+        }
+        return forceObligations;
+    }
+
+    public DeploymentPlan getAssessedDeploymentPlan() {
+        return assessedDeploymentPlan;
+    }
+
+    public void setAssessedDeploymentPlan(DeploymentPlan assessedDeploymentPlan) {
+        this.assessedDeploymentPlan = Objects.requireNonNull(
+                assessedDeploymentPlan, "assessedDeploymentPlan");
+    }
+
+    public void setDeployTransaction(DeployFacts deployFacts,
+                                     DeployAssessment deployAssessment,
+                                     ForceObligationVector forceObligations,
+                                     DeploymentPlan assessedDeploymentPlan) {
+        this.deployFacts = Objects.requireNonNull(deployFacts, "deployFacts");
+        this.deployAssessment = deployAssessment;
+        this.forceObligations = Objects.requireNonNull(
+                forceObligations, "forceObligations");
+        if (deployAssessment != null
+                && deployAssessment.forceObligations() != forceObligations) {
+            throw new IllegalArgumentException(
+                    "DeployAssessment must retain the injected ForceObligationVector");
+        }
+        setAssessedDeploymentPlan(assessedDeploymentPlan);
     }
 
     public PullFacts getPullFacts() {

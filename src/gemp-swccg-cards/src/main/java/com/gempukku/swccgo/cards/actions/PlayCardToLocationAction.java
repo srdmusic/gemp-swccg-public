@@ -53,7 +53,8 @@ public class PlayCardToLocationAction extends AbstractPlayCardAction {
      * @param deployTargetFilter the filter for where the card can be deployed
      */
     public PlayCardToLocationAction(PhysicalCard sourceCard, final PhysicalCard cardToDeploy, PlayCardOption playCardOption, boolean forFree, float changeInCost, ReactActionOption reactActionOption, final Filter deployTargetFilter) {
-        super(cardToDeploy, sourceCard);
+        super(cardToDeploy, sourceCard,
+                cardToDeploy.getBlueprint().isCardTypeDeployed());
         setPerformingPlayer(cardToDeploy.getOwner());
         _that = this;
         _playCardOption = playCardOption;

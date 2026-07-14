@@ -21,6 +21,12 @@ import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRoute;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRouteInput;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRouteResolver;
+import com.gempukku.swccgo.ai.models.common.phase.DeployAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.DeployFacts;
+import com.gempukku.swccgo.ai.models.common.phase.DeployPhaseOwner;
+import com.gempukku.swccgo.ai.models.common.phase.DeployRoute;
+import com.gempukku.swccgo.ai.models.common.phase.DeployRouteInput;
+import com.gempukku.swccgo.ai.models.common.phase.DeployRouteResolver;
 import com.gempukku.swccgo.ai.models.common.phase.RevertApprovalPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.PullAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.PullFacts;
@@ -28,6 +34,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.PullRoute;
 import com.gempukku.swccgo.ai.models.common.phase.PullRouteInput;
 import com.gempukku.swccgo.ai.models.common.phase.PullRouteResolver;
+import com.gempukku.swccgo.ai.models.common.strategy.ForceObligationVector;
 import com.gempukku.swccgo.ai.models.common.trace.TraceFinalization;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.ContestStatus;
@@ -40,6 +47,7 @@ import com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext;
 import com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
@@ -135,6 +143,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
     private RandoContext context;
     private SwccgGame currentGame;
     private Random random = new Random();
+    private PendingDeployDecision pendingDeployDecision;
+    private PendingPullDeployDecision pendingPullDeployDecision;
 
     // State tracking
     private String currentGameId;
@@ -591,6 +601,17 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
     }
 
+    private record PendingDeployDecision(
+            DeployFacts facts,
+            DeployAssessment assessment,
+            DeploymentPlan plan) {
+    }
+
+    private record PendingPullDeployDecision(
+            PullFacts facts,
+            DeploymentPlan plan) {
+    }
+
     @Override
     public String decide(String playerId, AwaitingDecision decision, GameState gameState) {
         OuterDecision computed = computeDecision(playerId, decision, gameState,
@@ -626,6 +647,29 @@ public class TheChosenOneAi extends HeuristicAiBase {
     @Override
     public void onDecisionAccepted(String playerId, AwaitingDecision decision,
                                    GameState gameState, AiDecisionResult result) {
+        try {
+            if (pendingDeployDecision != null
+                    && pendingDeployDecision.facts().decisionId()
+                        .equals(String.valueOf(decision.getAwaitingDecisionId()))) {
+                deployPhasePlanner.acceptDecision(
+                        pendingDeployDecision.facts(),
+                        pendingDeployDecision.assessment(),
+                        pendingDeployDecision.plan(),
+                        result.wireResponse(), currentGame);
+            }
+            if (pendingPullDeployDecision != null
+                    && pendingPullDeployDecision.facts().decisionId()
+                        .equals(String.valueOf(decision.getAwaitingDecisionId()))) {
+                deployPhasePlanner.acceptPullDeployChild(
+                        pendingPullDeployDecision.facts(),
+                        result.wireResponse(), pendingPullDeployDecision.plan(), currentGame);
+            }
+        } catch (RuntimeException lifecycleFault) {
+            LOG.error("DEPLOY accepted-response lifecycle update failed", lifecycleFault);
+        } finally {
+            pendingDeployDecision = null;
+            pendingPullDeployDecision = null;
+        }
         applyAcceptedDisposition(decision, result);
     }
 
@@ -633,12 +677,29 @@ public class TheChosenOneAi extends HeuristicAiBase {
     public void onDecisionRejected(String playerId, AwaitingDecision decision,
                                    GameState gameState, AiDecisionResult result,
                                    DecisionRejectionKind kind, String detail) {
+        try {
+            if (pendingDeployDecision != null) {
+                deployPhasePlanner.rejectDecision(
+                        pendingDeployDecision.facts(),
+                        "engine rejected DEPLOY response: " + nonBlankDetail(detail, kind.name()));
+            }
+        } finally {
+            pendingDeployDecision = null;
+            pendingPullDeployDecision = null;
+        }
         applyRejectedDisposition(result, kind, detail);
     }
 
     @Override
     public void onDecisionAttemptFailed(String playerId, AwaitingDecision decision,
                                         GameState gameState, String detail) {
+        if (pendingDeployDecision != null || pendingPullDeployDecision != null) {
+            deployPhasePlanner.failCurrentAttempt(
+                    "DEPLOY decision attempt failed: "
+                        + nonBlankDetail(detail, "attempt failed before a result"));
+        }
+        pendingDeployDecision = null;
+        pendingPullDeployDecision = null;
         applyAttemptFailedDisposition(detail);
     }
 
@@ -769,6 +830,10 @@ public class TheChosenOneAi extends HeuristicAiBase {
         String decisionType = decision.getDecisionType() != null ? decision.getDecisionType().name() : "UNKNOWN";
         String decisionText = decision.getText() != null ? decision.getText() : "";
         Phase phase = gameState != null ? gameState.getCurrentPhase() : null;
+        pendingDeployDecision = null;
+        pendingPullDeployDecision = null;
+        deployPhasePlanner.observeGameState(
+                currentGame, gameState, playerId, phase);
 
         LOG.info("[TheChosenOneAi] decide() called: type={}, phase={}, text='{}'",
             decisionType, phase,
@@ -907,6 +972,48 @@ public class TheChosenOneAi extends HeuristicAiBase {
                     boundarySnapshot.snapshot(), history, selection));
             }
 
+            DeployRouteInput deployInput = DeployRouteInput.capture(phase, decision);
+            DeployRoute deployRoute = DeployRouteResolver.resolve(deployInput);
+            if (deployRoute != DeployRoute.LEGACY_UNOWNED) {
+                FactValue<DeployFacts> deployFactsValue = DeployFacts.parse(
+                        boundarySnapshot.snapshot(), deployInput, deployRoute, currentGame);
+                if (deployFactsValue.isKnown()) {
+                    DeployFacts deployFacts = deployFactsValue.value();
+                    DeploymentPlan deployPlan = deployPhasePlanner.planForDecision(
+                            currentGame, playerId, gameState.getSide(playerId));
+                    ForceObligationVector deployObligations =
+                            deployPhasePlanner.forceObligationsForDecision(
+                                    deployFacts, currentGame);
+                    DeployAssessment deployAssessment = deployRoute
+                            == DeployRoute.DEPLOY_PARENT
+                            ? null
+                            : deployPhasePlanner.assessDecision(
+                                deployFacts, null, deployPlan,
+                                deployObligations, currentGame);
+                    String compatibilityWire = deployRoute
+                            == DeployRoute.DEPLOY_V170_UNDERCOVER
+                            ? null
+                            : exactLegacyDeployWire(
+                                playerId, decision, gameState,
+                                boundarySnapshot.snapshot(),
+                                deployFacts, deployAssessment,
+                                deployPlan, deployObligations);
+                    if (deployAssessment == null) {
+                        deployAssessment = deployPhasePlanner.assessDecision(
+                                deployFacts, compatibilityWire, deployPlan,
+                                deployObligations, currentGame);
+                    }
+                    if (deployAssessment != null) {
+                        return decideOwnedDeploy(
+                                playerId, decision, gameState, history,
+                                boundarySnapshot.snapshot(), deployFacts,
+                                deployAssessment, deployPlan, compatibilityWire,
+                                traceOpened, mediatorFacing,
+                                decisionType, decisionText);
+                    }
+                }
+            }
+
             // === V170 (Steve, 2026-06): UNDERCOVER SPY — the cheap drain blocker ===
             // Steve: "Spies should always be a part of the strategy. Spies cost much less
             // to block a drain than deploying a bunch of characters to overpower opponent."
@@ -918,7 +1025,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
             // (bonus-aware, getForceDrainAmount over sites they occupy); NO when there is
             // nothing to block yet — keep the spy as a normal body with power/presence.
             // V67j discipline: scan the results array for the actual Yes/No indexes.
-            if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
+            if (false /* DeployPhaseOwner owns exact PlayCharacterAction V170 provenance */
+                    && decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
                     && decisionText.toLowerCase(java.util.Locale.ROOT).contains("undercover spy")) {
                 int v170OppDrain = 0;
                 try {
@@ -1385,6 +1493,102 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
     }
 
+    /** Execute one exact-provenance DEPLOY stage through the shared finalizer. */
+    private OuterDecision decideOwnedDeploy(String playerId,
+                                             AwaitingDecision decision,
+                                             GameState gameState,
+                                             RejectionHistory history,
+                                             DecisionSnapshot snapshot,
+                                             DeployFacts facts,
+                                             DeployAssessment assessment,
+                                             DeploymentPlan plan,
+                                             String compatibilityWire,
+                                             boolean traceOpened,
+                                             boolean mediatorFacing,
+                                             String decisionType,
+                                             String decisionText) {
+        if (traceOpened) {
+            TraceSession.recordRoute(traceRouteForDeploy(facts.route()),
+                    "typed DEPLOY transaction stage " + facts.route(), null);
+            if (facts.route() == DeployRoute.DEPLOY_V170_UNDERCOVER) {
+                TraceSession.recordEvaluatorLaneNotApplicable(
+                        "typed V170 owner uses source-proven opponent drain and original result order");
+            }
+        }
+
+        AiDecisionResult ownedResult = DeployPhaseOwner.decide(
+                snapshot, history, facts, assessment,
+                (route, ignoredFacts, ignoredAssessment) -> compatibilityWire);
+        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
+            return new OuterDecision(ownedResult);
+        }
+
+        String wire = ownedResult.wireResponse();
+        if (mediatorFacing) {
+            pendingDeployDecision = new PendingDeployDecision(
+                    facts, assessment, plan);
+        } else {
+            // Direct callers have no disposition callback. Their established contract
+            // applies accepted mutation inline after finalization.
+            deployPhasePlanner.acceptDecision(
+                    facts, assessment, plan, wire, currentGame);
+        }
+        if (!mediatorFacing) {
+            applyOuterCommonTrackerAndStrategic(
+                    decision, decisionType, decisionText, wire, traceOpened);
+            LOG.info("[TheChosenOneAi] owned DEPLOY {} result: '{}'",
+                    facts.route(), wire.isEmpty() ? "(pass)" : wire);
+            if (traceOpened) {
+                TraceSession.recordFinalResponse(wire, false);
+            }
+        }
+        return new OuterDecision(ownedResult);
+    }
+
+    /** Frozen evaluator/fallback mapping used as the compatibility wire inside the owner. */
+    private String exactLegacyDeployWire(String playerId,
+                                         AwaitingDecision decision,
+                                         GameState gameState,
+                                         DecisionSnapshot snapshot,
+                                         DeployFacts deployFacts,
+                                         DeployAssessment deployAssessment,
+                                         DeploymentPlan deployPlan,
+                                         ForceObligationVector deployObligations) {
+        String wire = tryEvaluators(
+                playerId, decision, gameState, snapshot,
+                null, null, deployFacts, deployAssessment,
+                deployObligations, deployPlan);
+        if (wire == null) {
+            wire = super.decide(playerId, decision, gameState);
+        }
+        Map<String, String[]> params = decision.getDecisionParameters();
+        String[] actionIds = params != null ? params.get("actionId") : null;
+        String[] cardIds = params != null ? params.get("cardId") : null;
+        String[] noPass = params != null ? params.get("noPass") : null;
+        boolean mustChoose = noPass != null && noPass.length > 0
+                && Boolean.parseBoolean(noPass[0]);
+        if ((wire == null || wire.isEmpty()) && mustChoose) {
+            wire = DecisionSafety.getEmergencyResponse(
+                    decision, actionIds, cardIds).value;
+        }
+        String[] options = actionIds != null && actionIds.length > 0
+                ? actionIds : cardIds;
+        return DecisionSafety.ensureValidResponse(decision, wire, options)[0];
+    }
+
+    private static TraceRoute traceRouteForDeploy(DeployRoute route) {
+        return switch (route) {
+            case DEPLOY_PARENT -> TraceRoute.DEPLOY_PARENT;
+            case DEPLOY_DESTINATION -> TraceRoute.DEPLOY_DESTINATION;
+            case DEPLOY_BUDDY -> TraceRoute.DEPLOY_BUDDY;
+            case DEPLOY_V170_UNDERCOVER -> TraceRoute.DEPLOY_UNDERCOVER;
+            case DEPLOY_CAPACITY -> TraceRoute.DEPLOY_CAPACITY;
+            case DEPLOY_CONFIRMATION -> TraceRoute.DEPLOY_CONFIRMATION;
+            default -> throw new IllegalArgumentException(
+                    "unowned DEPLOY route " + route);
+        };
+    }
+
     /**
      * Execute the one typed canonical DRAW owner. No owned result re-enters the
      * legacy safety, fallback, or evaluator lanes.
@@ -1613,6 +1817,10 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
 
         FactValue<PullFacts> factsValue = PullFacts.parse(snapshot, pullInput, pullRoute);
+        DeploymentPlan deployPlan = factsValue.isKnown()
+                ? deployPhasePlanner.planForDecision(
+                    currentGame, playerId, gameState.getSide(playerId))
+                : null;
         AiDecisionResult ownedResult;
         if (factsValue.isUnknown()) {
             ownedResult = AiDecisionResult.typedRejection(
@@ -1627,7 +1835,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
             }
             ownedResult = PullPhaseOwner.decide(snapshot, history, pullRoute, facts, assessment,
                 (route, ignoredFacts, ignoredAssessment) ->
-                    tryEvaluators(playerId, decision, gameState, snapshot, facts, assessment));
+                    tryEvaluators(
+                        playerId, decision, gameState, snapshot,
+                        facts, assessment, null, null, null, deployPlan));
         }
 
         if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
@@ -1635,6 +1845,18 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
 
         String wire = ownedResult.wireResponse();
+        if (pullRoute == PullRoute.PULL_DEPLOY_CHILD) {
+            if (mediatorFacing) {
+                pendingPullDeployDecision = new PendingPullDeployDecision(
+                        factsValue.value(), deployPlan);
+            } else {
+                // Direct callers have no disposition callback. Start only the accepted
+                // deployment transition; PULL retains search ownership.
+                deployPhasePlanner.acceptPullDeployChild(
+                        factsValue.value(), wire, deployPlan, currentGame);
+            }
+        }
+
         if (!mediatorFacing) {
             applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceOpened);
             LOG.info("[TheChosenOneAi] owned PULL {} result: '{}'", pullRoute,
@@ -1664,12 +1886,25 @@ public class TheChosenOneAi extends HeuristicAiBase {
      */
     private String tryEvaluators(String playerId, AwaitingDecision decision,
                                  GameState gameState, DecisionSnapshot snapshot) {
-        return tryEvaluators(playerId, decision, gameState, snapshot, null, null);
+        return tryEvaluators(
+                playerId, decision, gameState, snapshot,
+                null, null, null, null, null, null);
     }
 
     private String tryEvaluators(String playerId, AwaitingDecision decision,
                                  GameState gameState, DecisionSnapshot snapshot,
                                  PullFacts pullFacts, PullAssessment pullAssessment) {
+        return tryEvaluators(
+                playerId, decision, gameState, snapshot,
+                pullFacts, pullAssessment, null, null, null, null);
+    }
+
+    private String tryEvaluators(String playerId, AwaitingDecision decision,
+                                 GameState gameState, DecisionSnapshot snapshot,
+                                 PullFacts pullFacts, PullAssessment pullAssessment,
+                                 DeployFacts deployFacts, DeployAssessment deployAssessment,
+                                 ForceObligationVector deployForceObligations,
+                                 DeploymentPlan deployPlan) {
         // Build DecisionContext for evaluators
         DecisionContext evalContext = buildEvaluatorContext(
             playerId, decision, gameState, snapshot);
@@ -1678,6 +1913,14 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
         if (pullFacts != null && pullAssessment != null) {
             evalContext.setPullTransaction(pullFacts, pullAssessment);
+        }
+        if (deployPlan != null) {
+            evalContext.setAssessedDeploymentPlan(deployPlan);
+        }
+        if (deployFacts != null && deployPlan != null) {
+            evalContext.setDeployTransaction(
+                    deployFacts, deployAssessment,
+                    deployForceObligations, deployPlan);
         }
 
         // Check if evaluators can handle this decision

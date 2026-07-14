@@ -157,6 +157,7 @@ public class PullRouteAndFactsTest {
                 new PullPhysicalCardRef(1001, 101),
                 new PullPhysicalCardRef(1002, 102),
                 new PullPhysicalCardRef(1003, 103)), facts.candidateCards());
+        assertEquals(List.of("temp0", "temp1", "temp2"), facts.candidateWireIds());
         assertFalse(facts.candidateCards().get(0).equals(facts.candidateCards().get(1)));
         assertEquals(Long.valueOf(PullTestFixtures.TRANSACTION_ID), facts.transactionId());
     }

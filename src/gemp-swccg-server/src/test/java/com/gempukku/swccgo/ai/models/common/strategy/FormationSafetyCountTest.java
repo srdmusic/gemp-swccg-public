@@ -64,6 +64,34 @@ public class FormationSafetyCountTest {
     }
 
     @Test
+    public void abilityZeroFriendlyCharacter_isPresence() {
+        int n = FormationSafety.countFriendlyNonUndercoverCharacters(
+            Collections.singletonList(card(CardCategory.CHARACTER, ME, false)), ME);
+        assertEquals(1, n);
+    }
+
+    @Test
+    public void abilityZeroFriendlyCharacter_hasTypedPresentState() {
+        assertEquals(FormationSafety.BodyPresence.PRESENT,
+                FormationSafety.friendlyNonUndercoverCharacterPresence(
+                        Collections.singletonList(
+                                card(CardCategory.CHARACTER, ME, false)), ME));
+    }
+
+    @Test
+    public void knownEmptyLocation_hasTypedAbsentState() {
+        assertEquals(FormationSafety.BodyPresence.ABSENT,
+                FormationSafety.friendlyNonUndercoverCharacterPresence(
+                        Collections.emptyList(), ME));
+    }
+
+    @Test
+    public void missingLocationCards_remainUnknown() {
+        assertEquals(FormationSafety.BodyPresence.UNKNOWN,
+                FormationSafety.friendlyNonUndercoverCharacterPresence(null, ME));
+    }
+
+    @Test
     public void undercoverOnly_isNotPresence() {
         int n = FormationSafety.countFriendlyNonUndercoverCharacters(
             Collections.singletonList(card(CardCategory.CHARACTER, ME, true)), ME);

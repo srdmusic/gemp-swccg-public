@@ -55,6 +55,18 @@ public enum TraceRoute {
     PULL_DESTINATION,
     /** Typed empty verification response after a failed standard search. */
     PULL_FAILED_VERIFY,
+    /** Typed top-level physical-card DEPLOY action choice. */
+    DEPLOY_PARENT,
+    /** Typed DEPLOY destination choice bound to an accepted parent attempt. */
+    DEPLOY_DESTINATION,
+    /** Typed simultaneous buddy choice bound to an accepted parent attempt. */
+    DEPLOY_BUDDY,
+    /** Typed source-proven Undercover Yes/No choice. */
+    DEPLOY_UNDERCOVER,
+    /** Typed capacity-slot choice bound to an accepted DEPLOY attempt. */
+    DEPLOY_CAPACITY,
+    /** Typed confirmation choice bound to an accepted DEPLOY attempt. */
+    DEPLOY_CONFIRMATION,
     /** No evaluator handled the decision: HeuristicAiBase.decide ran. */
     HEURISTIC_FALLBACK,
     /** Outer emergency: result null (or empty with raw noPass=true), emergency response used. */
@@ -85,6 +97,7 @@ public enum TraceRoute {
                 return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
             case DRAW_TOP_LEVEL:
             case PULL_PARENT:
+            case DEPLOY_PARENT:
             case ACTIVATE_TOP_LEVEL:
             case CONTROL_TOP_LEVEL:
                 return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE;
@@ -93,12 +106,17 @@ public enum TraceRoute {
                 return frozenShape == DecisionFacts.DecisionRoute.INTEGER;
             case ACTIVATE_ZERO_CONFIRM:
             case ACTIVATE_ACK:
+            case DEPLOY_UNDERCOVER:
+            case DEPLOY_CAPACITY:
+            case DEPLOY_CONFIRMATION:
                 return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
             case PULL_DEPLOY_CHILD:
             case PULL_TAKE_CHILD:
             case PULL_FAILED_VERIFY:
                 return frozenShape == DecisionFacts.DecisionRoute.ARBITRARY_CARDS;
             case PULL_DESTINATION:
+            case DEPLOY_DESTINATION:
+            case DEPLOY_BUDDY:
                 return frozenShape == DecisionFacts.DecisionRoute.CARD_SELECTION;
             default:
                 return true;

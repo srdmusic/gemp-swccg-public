@@ -52,6 +52,16 @@ public interface Action extends Snapshotable<Action> {
 
     PullDeployRef getPullDeployRef();
 
+    /** Opaque identity for one deploy attempt. It is not a reusable decision id. */
+    void setDeployAttemptId(String attemptId);
+
+    String getDeployAttemptId();
+
+    /** Immutable physical source and ordered destination snapshot for DEPLOY routing. */
+    void setDeployActionMetadata(DeployActionMetadata metadata);
+
+    DeployActionMetadata getDeployActionMetadata();
+
     /**
      * Gets the card that is the source of the action or null if the action from a game rule not from a specified card.
      * @return the card, or null

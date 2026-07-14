@@ -52,6 +52,54 @@ public final class FormationSafety {
     /** Doomed-origin gap (V33 BUDDY BREAK standard) for the survival-retreat exemption. */
     public static final float DOOMED_GAP = 6.0f;
 
+    public enum CharacterDeployState {
+        ALLOWED,
+        VETOED,
+        UNKNOWN
+    }
+
+    public enum BodyPresence {
+        PRESENT,
+        ABSENT,
+        UNKNOWN
+    }
+
+    public record CharacterDeployCheck(CharacterDeployState state, String reason) {
+        public CharacterDeployCheck {
+            if (state == null || reason == null || reason.isBlank()) {
+                throw new IllegalArgumentException(
+                        "character deploy check requires state and nonblank reason");
+            }
+        }
+    }
+
+    /** Physical-body presence is distinct from ability and from missing facts. */
+    public static BodyPresence friendlyNonUndercoverCharacterPresence(
+            Iterable<PhysicalCard> cardsAtLocation, String playerId) {
+        if (cardsAtLocation == null || playerId == null) {
+            return BodyPresence.UNKNOWN;
+        }
+        boolean unresolved = false;
+        try {
+            for (PhysicalCard card : cardsAtLocation) {
+                if (card == null || card.getBlueprint() == null
+                        || card.getBlueprint().getCardCategory() == null
+                        || card.getOwner() == null) {
+                    unresolved = true;
+                    continue;
+                }
+                if (card.getBlueprint().getCardCategory() == CardCategory.CHARACTER
+                        && playerId.equals(card.getOwner())
+                        && !card.isUndercover()) {
+                    return BodyPresence.PRESENT;
+                }
+            }
+        } catch (RuntimeException e) {
+            return BodyPresence.UNKNOWN;
+        }
+        return unresolved ? BodyPresence.UNKNOWN : BodyPresence.ABSENT;
+    }
+
     /** BATCH1b-CORR (2026-07-13, Codex m00225 #2 / m00262 fixtures): count friendly
      *  non-undercover CHARACTERS among the cards at a location. Presence test for the
      *  empty-site gates — total power misreads a present power-0 friendly as absence.
@@ -219,39 +267,87 @@ public final class FormationSafety {
                                              PhysicalCard destination,
                                              float forceAvailable, Float thisDeployCost, Float cheapestBuddyCost,
                                              String flipGateSiteTitle) {
-        if (game == null || gs == null || playerId == null || destination == null) return null;
+        CharacterDeployCheck check = assessCharacterDeploy(
+                game, gs, playerId, cardBeingDeployed,
+                deployPower, deployAbility, deployIsUndercover, destination,
+                forceAvailable, thisDeployCost, cheapestBuddyCost, flipGateSiteTitle);
+        return check.state() == CharacterDeployState.VETOED ? check.reason() : null;
+    }
+
+    /** Tri-state planner seam. Legacy callers retain fail-open behavior through vetoCharacterDeploy. */
+    public static CharacterDeployCheck assessCharacterDeploy(
+                                             SwccgGame game, GameState gs, String playerId,
+                                             PhysicalCard cardBeingDeployed,
+                                             Float deployPower, Float deployAbility,
+                                             boolean deployIsUndercover,
+                                             PhysicalCard destination,
+                                             float forceAvailable, Float thisDeployCost,
+                                             Float cheapestBuddyCost,
+                                             String flipGateSiteTitle) {
+        if (game == null || gs == null || playerId == null || destination == null) {
+            return new CharacterDeployCheck(
+                    CharacterDeployState.UNKNOWN,
+                    "required formation input is unavailable");
+        }
         try {
-            if (deployIsUndercover) return null;  // spies solo by design
+            if (deployIsUndercover) {
+                return new CharacterDeployCheck(
+                        CharacterDeployState.ALLOWED, "undercover deploy is solo by design");
+            }
             if (flipGateSiteTitle != null && destination.getTitle() != null
-                    && flipGateSiteTitle.equalsIgnoreCase(destination.getTitle())) return null;  // V193-class steer
+                    && flipGateSiteTitle.equalsIgnoreCase(destination.getTitle())) {
+                return new CharacterDeployCheck(
+                        CharacterDeployState.ALLOWED, "objective flip-gate deploy is exempt");
+            }
             float power = deployPower != null ? deployPower : 0f;
             float ability = deployAbility != null ? deployAbility : 0f;
             String opp = gs.getOpponent(playerId);
+            if (opp == null) {
+                return new CharacterDeployCheck(
+                        CharacterDeployState.UNKNOWN,
+                        "opponent identity is unavailable");
+            }
+            BodyPresence bodyPresence = friendlyNonUndercoverCharacterPresence(
+                    gs.getCardsAtLocation(destination), playerId);
+            if (bodyPresence == BodyPresence.UNKNOWN) {
+                return new CharacterDeployCheck(
+                        CharacterDeployState.UNKNOWN,
+                        "friendly body presence is unavailable at the destination");
+            }
             float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(gs, destination, opp, false, false);
             float ourThere = game.getModifiersQuerying().getTotalPowerAtLocation(gs, destination, playerId, false, false);
-            boolean landsSolo = game.getModifiersQuerying()
-                .getTotalAbilityAtLocation(gs, playerId, destination) <= 0f;
+            boolean landsSolo = bodyPresence == BodyPresence.ABSENT;
             if (oppPower > 0) {
                 // Contested destination: dominance or a real wave is required for a WEAK body.
                 float oppEff = oppPower + weaponBonusAt(gs, destination, opp);
                 float ourEff = ourThere + power;
-                if (ourEff >= DOMINANCE_MULTIPLE * oppEff) return null;  // Steve's dominance rule
+                if (ourEff >= DOMINANCE_MULTIPLE * oppEff) {
+                    return new CharacterDeployCheck(
+                            CharacterDeployState.ALLOWED, "solo dominance exemption");
+                }
                 if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD) {
-                    return String.format(
+                    return new CharacterDeployCheck(
+                        CharacterDeployState.VETOED, String.format(
                         "L4 WEAK SOLO INTO CONTESTED: ability %.0f alone into %s (their eff %.0f)",
-                        ability, destination.getTitle(), oppEff);
+                        ability, destination.getTitle(), oppEff));
                 }
             } else if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD
                     && cheapestBuddyCost != null && thisDeployCost != null
                     && forceAvailable - thisDeployCost < cheapestBuddyCost) {
                 // L3: the buddy exists but deploying THIS body now leaves too little Force to
                 // complete the pair this phase — hold for the turn the pair fits.
-                return String.format(
+                return new CharacterDeployCheck(
+                    CharacterDeployState.VETOED, String.format(
                     "L3 PAIR-BUDGET: deploying this ability-%.0f body (cost %.0f) leaves %.0f Force < buddy cost %.0f — pair unformable this phase",
-                    ability, thisDeployCost, forceAvailable - thisDeployCost, cheapestBuddyCost);
+                    ability, thisDeployCost, forceAvailable - thisDeployCost, cheapestBuddyCost));
             }
-        } catch (Exception e) { /* fail-open */ }
-        return null;
+            return new CharacterDeployCheck(
+                    CharacterDeployState.ALLOWED, "no formation veto applies");
+        } catch (Exception e) {
+            return new CharacterDeployCheck(
+                    CharacterDeployState.UNKNOWN,
+                    "formation query failed: " + e.getClass().getSimpleName());
+        }
     }
 
     /** L3 'no plan' check (Steve 2026-07-12): weak solo landing with NO other deployable character
@@ -265,8 +361,8 @@ public final class FormationSafety {
             float ability = deployAbility != null ? deployAbility : 0f;
             if (ability >= DESTINY_ABILITY_THRESHOLD) return false;
             if (cheapestBuddyCost != null) return false;  // a plan exists
-            boolean landsSolo = game.getModifiersQuerying()
-                .getTotalAbilityAtLocation(gs, playerId, destination) <= 0f;
+            boolean landsSolo = countFriendlyNonUndercoverCharacters(
+                gs.getCardsAtLocation(destination), playerId) == 0;
             return landsSolo;
         } catch (Exception e) { return false; }
     }
