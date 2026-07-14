@@ -1,0 +1,3020 @@
+{
+  "schemaVersion": "objective-playbook-facts-v1-shard",
+  "generatedBy": "codex",
+  "sourceInventory": "resources/Objective_Blueprint_Inventory_2026-07-07.json rows[40:45]",
+  "batchStatus": {
+    "status": "complete",
+    "owner": "codex",
+    "frontBpsIncluded": [
+      "13_73",
+      "14_113",
+      "109_12",
+      "110_6",
+      "111_6"
+    ],
+    "notes": [
+      "No Java AI model files were edited.",
+      "ObjectiveHandler.java was not used as a source.",
+      "Back-side objective id is <front>_BACK.",
+      "All named blueprint ids in this shard resolved with zero missing ids."
+    ]
+  },
+  "globalRules": [
+    "Card*.java runtime filters are the source of truth.",
+    "Filters.java definitions are cited where source text is broader or narrower than printed card text.",
+    "DB id lists are resolution evidence only; runtime wiring should use filter recipes."
+  ],
+  "entries": [
+    {
+      "inventoryRow": 40,
+      "frontBp": "13_73",
+      "backBp": "13_73_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Let Them Make The First Move",
+      "objectiveTitleBack": "At Last We Will Have Revenge",
+      "abbreviation": "LTMTFM",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "13_73",
+          "13_73_BACK"
+        ],
+        "titleFragments": [
+          "let them make the first move",
+          "at last we will have revenge"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Naboo: Theed Palace Generator Core",
+          "blueprintIds": [
+            "13_77",
+            "13_32"
+          ],
+          "titleFragments": [
+            "theed palace generator core"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Theed_Palace_Generator_Core",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "13_77",
+            "13_32"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Naboo: Theed Palace Generator",
+          "blueprintIds": [
+            "13_76",
+            "13_31",
+            "220_8"
+          ],
+          "titleFragments": [
+            "theed palace generator"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Theed_Palace_Generator",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "13_76",
+            "13_31",
+            "220_8"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Deep Hatred",
+          "blueprintIds": [
+            "13_65"
+          ],
+          "titleFragments": [
+            "deep hatred"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Deep_Hatred",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "13_65"
+          ],
+          "notes": "DB cardCategory is EPIC_EVENT."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Interior Theed Palace site",
+          "text": "Front control-phase target must be present with your Dark Jedi at an interior Theed Palace site.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "THEED_PALACE_SITE"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.interior_Theed_Palace_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Interior Naboo battleground site",
+          "text": "Opponent Jedi presence here flips front to back; absence flips back to front.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "INTERIOR_SITE"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Naboo site",
+          "text": "Your Force drains at Naboo sites where you have a Dark Jedi may not be canceled.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Naboo_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Interior Theed Palace site",
+          "text": "Front control-phase target must be present with your Dark Jedi at an interior Theed Palace site.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "THEED_PALACE_SITE"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.interior_Theed_Palace_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Interior Naboo battleground site",
+          "text": "Opponent Jedi presence here flips front to back; absence flips back to front.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "INTERIOR_SITE"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Naboo site",
+          "text": "Your Force drains at Naboo sites where you have a Dark Jedi may not be canceled.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Naboo_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Your Dark Jedi",
+          "text": "Anchor for uncancelable Naboo drains, front lost-target action, and back lightsaber combat.",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.Dark_Jedi)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent Jedi",
+          "text": "Flip target and lightsaber combat target.",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.Jedi)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent character present with your Dark Jedi",
+          "text": "Front once/control-phase target; game-text modifications can narrow target to undercover spies and R2-D2.",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.character, Filters.presentWith(self, Filters.and(Filters.your(self), Filters.Dark_Jedi, Filters.at(Filters.interior_Theed_Palace_site))))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Your Dark Jedi",
+          "text": "Anchor for uncancelable Naboo drains, front lost-target action, and back lightsaber combat.",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.Dark_Jedi)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent Jedi",
+          "text": "Flip target and lightsaber combat target.",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.Jedi)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent character present with your Dark Jedi",
+          "text": "Front once/control-phase target; game-text modifications can narrow target to undercover spies and R2-D2.",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.character, Filters.presentWith(self, Filters.and(Filters.your(self), Filters.Dark_Jedi, Filters.at(Filters.interior_Theed_Palace_site))))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Theed_Palace_Generator_Core",
+            "label": "Naboo: Theed Palace Generator Core"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card13_073.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Theed_Palace_Generator_Core)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Theed_Palace_Generator",
+            "label": "Naboo: Theed Palace Generator"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card13_073.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Theed_Palace_Generator)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Deep_Hatred",
+            "label": "Deep Hatred"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card13_073.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Deep_Hatred)"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Theed_Palace_Generator_Core",
+            "label": "Naboo: Theed Palace Generator Core"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card13_073.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Theed_Palace_Generator_Core)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Theed_Palace_Generator",
+            "label": "Naboo: Theed Palace Generator"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card13_073.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Theed_Palace_Generator)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Deep_Hatred",
+            "label": "Deep Hatred"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card13_073.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Deep_Hatred)"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT_AT",
+        "count": 1,
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.Jedi)",
+          "label": "opponent Jedi"
+        },
+        "location": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)",
+          "label": "interior Naboo battleground site"
+        },
+        "sourceEvidence": "Card13_073.java TriggerConditions.isTableChanged and GameConditions.canSpot opponent Jedi presentAt interior_Naboo_site plus battleground_site"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "NOT_PRESENT_AT",
+        "count": 0,
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.Jedi)",
+          "label": "opponent Jedi"
+        },
+        "location": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)",
+          "label": "interior Naboo battleground site"
+        },
+        "result": "FlipCardEffect plus RetrieveForceEffect(owner, 1)",
+        "sourceEvidence": "Card13_073_BACK.java negated GameConditions.canSpot opponent Jedi presentAt interior_Naboo_site plus battleground_site"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No objective-specific Rando mapping found outside ObjectiveHandler.java. Generic Dark Jedi movement or weapon logic is not keyed to 13_73."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/dark/Card13_073.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/dark/Card13_073_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters checked in Filters.java",
+          "DB ids resolved for all named cards",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "idsUsed": [
+          "13_73",
+          "13_73_BACK",
+          "13_65",
+          "13_76",
+          "13_31",
+          "220_8",
+          "13_77",
+          "13_32"
+        ],
+        "idVerdict": "CLEAN",
+        "idFixes": [],
+        "idUncertain": [],
+        "forK2ToCheck": [
+          "Deep Hatred resolves in the DB as EPIC_EVENT, not EFFECT.",
+          "Generator and Generator Core title filters are side-agnostic; the dark objective will pull the dark copies from its Reserve Deck in normal play.",
+          "No dedicated objective-specific Rando V-tag was found; any playbook weights would be new authoring."
+        ]
+      }
+    },
+    {
+      "inventoryRow": 41,
+      "frontBp": "14_113",
+      "backBp": "14_113_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Invasion",
+      "objectiveTitleBack": "In Complete Control",
+      "abbreviation": "INV",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "14_113",
+          "14_113_BACK"
+        ],
+        "titleFragments": [
+          "invasion",
+          "in complete control"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Naboo system",
+          "blueprintIds": [
+            "12_169",
+            "216_10",
+            "12_78"
+          ],
+          "titleFragments": [
+            "naboo"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Naboo_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "12_169",
+            "216_10",
+            "12_78"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Blockade Flagship",
+          "blueprintIds": [
+            "14_114"
+          ],
+          "titleFragments": [
+            "blockade flagship"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Blockade_Flagship",
+          "candidateSource": "DB_AND_FILTER",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "14_114"
+          ],
+          "notes": "This is the capital starship, not Blockade Flagship: Docking Bay."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Naboo: Swamp",
+          "blueprintIds": [
+            "12_171",
+            "12_80"
+          ],
+          "titleFragments": [
+            "naboo: swamp"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Naboo_Swamp",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_171",
+            "12_80"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Droid Racks",
+          "blueprintIds": [
+            "14_96",
+            "208_39"
+          ],
+          "titleFragments": [
+            "droid racks"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Droid_Racks",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "14_96",
+            "208_39"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Naboo: Theed Palace Throne Room",
+          "blueprintIds": [
+            "12_174",
+            "12_83"
+          ],
+          "titleFragments": [
+            "theed palace throne room"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Theed_Palace_Throne_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_174",
+            "12_83"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Civil Disorder",
+          "blueprintIds": [
+            "5_20"
+          ],
+          "titleFragments": [
+            "civil disorder"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Civil_Disorder",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "5_20"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Naboo system",
+          "text": "Setup deploy target, Blockade Flagship destination, ongoing control requirement, and opponent icon cancel target.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Naboo_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "12_169",
+            "216_10",
+            "12_78"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Naboo site",
+          "text": "Once during deploy phase may deploy a Naboo site from Reserve Deck.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Naboo_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Naboo: Theed Palace Throne Room",
+          "text": "Flip gate site, must be controlled with a Neimoidian present.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Theed_Palace_Throne_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_174",
+            "12_83"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Naboo system",
+          "text": "Setup deploy target, Blockade Flagship destination, ongoing control requirement, and opponent icon cancel target.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Naboo_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "12_169",
+            "216_10",
+            "12_78"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Naboo site",
+          "text": "Once during deploy phase may deploy a Naboo site from Reserve Deck.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Naboo_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Naboo: Theed Palace Throne Room",
+          "text": "Flip gate site, must be controlled with a Neimoidian present.",
+          "planetOrSystemGroup": "NABOO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Theed_Palace_Throne_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_174",
+            "12_83"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Neimoidian",
+          "text": "Must be present at controlled Theed Palace Throne Room to flip; also participates in back-side battle destiny condition.",
+          "runtimeFilter": "Filters.Neimoidian",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Trade Federation lore character",
+          "text": "Exception to the front's remainder-of-game no-ability deploy restriction.",
+          "runtimeFilter": "Filters.and(Filters.character, Filters.loreContains(\"Trade Federation\"))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Presence droid",
+          "text": "Back-side battle destiny helper requires two [Presence] droids with different titles, or one [Presence] droid and a Neimoidian.",
+          "runtimeFilter": "Filters.and(Icon.PRESENCE, Filters.droid)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Battle droid",
+          "text": "Back-side deploy -1 modifier.",
+          "runtimeFilter": "Filters.battle_droid",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Neimoidian",
+          "text": "Must be present at controlled Theed Palace Throne Room to flip; also participates in back-side battle destiny condition.",
+          "runtimeFilter": "Filters.Neimoidian",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Trade Federation lore character",
+          "text": "Exception to the front's remainder-of-game no-ability deploy restriction.",
+          "runtimeFilter": "Filters.and(Filters.character, Filters.loreContains(\"Trade Federation\"))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Presence droid",
+          "text": "Back-side battle destiny helper requires two [Presence] droids with different titles, or one [Presence] droid and a Neimoidian.",
+          "runtimeFilter": "Filters.and(Icon.PRESENCE, Filters.droid)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Battle droid",
+          "text": "Back-side deploy -1 modifier.",
+          "runtimeFilter": "Filters.battle_droid",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Naboo_system",
+            "label": "Naboo system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Naboo_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy_to_location",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Blockade_Flagship",
+            "label": "Blockade Flagship"
+          },
+          "destination": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Naboo_system",
+            "label": "Naboo system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card14_113.java DeployCardToLocationFromReserveDeckEffect(Filters.Blockade_Flagship, Filters.Naboo_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Naboo_Swamp",
+            "label": "Naboo: Swamp"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Naboo_Swamp)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Droid_Racks",
+            "label": "Droid Racks"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Droid_Racks)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Naboo_site",
+            "label": "Naboo site"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": "INDIRECT",
+          "sourceEvidence": "Card14_113.java getGameTextTopLevelActions DeployCardFromReserveDeckEffect(Filters.Naboo_site)"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Naboo_system",
+            "label": "Naboo system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Naboo_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy_to_location",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Blockade_Flagship",
+            "label": "Blockade Flagship"
+          },
+          "destination": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Naboo_system",
+            "label": "Naboo system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card14_113.java DeployCardToLocationFromReserveDeckEffect(Filters.Blockade_Flagship, Filters.Naboo_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Naboo_Swamp",
+            "label": "Naboo: Swamp"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Naboo_Swamp)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Droid_Racks",
+            "label": "Droid Racks"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card14_113.java DeployCardFromReserveDeckEffect(Filters.Droid_Racks)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Naboo_site",
+            "label": "Naboo site"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": "INDIRECT",
+          "sourceEvidence": "Card14_113.java getGameTextTopLevelActions DeployCardFromReserveDeckEffect(Filters.Naboo_site)"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "CONTROL_WITH_AND_CONTROL",
+        "count": 1,
+        "targets": [
+          {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Theed_Palace_Throne_Room",
+            "label": "Theed Palace Throne Room",
+            "byWhom": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.Neimoidian",
+              "label": "Neimoidian"
+            }
+          },
+          {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Naboo_system",
+            "label": "Naboo system"
+          }
+        ],
+        "sourceEvidence": "Card14_113.java controlsWith(playerId, Theed_Palace_Throne_Room, Neimoidian) and controls(playerId, Naboo_system)"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OPPONENT_CONTROLS",
+        "count": 1,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.or(Filters.Naboo_system, Filters.Theed_Palace_Throne_Room)",
+          "label": "Naboo system or Theed Palace Throne Room"
+        },
+        "sourceEvidence": "Card14_113_BACK.java opponent controls Naboo_system or Theed_Palace_Throne_Room"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [
+          "V86",
+          "V121",
+          "V142",
+          "V177"
+        ],
+        "newVsExisting": "ObjectiveAnalyzer owns isInvasion and V86 scoring. CardSelectionEvaluator has V121 Invasion deploy-location mirror logic. ActionTextEvaluator V142 and DeckOracle V177 touch Blockade Flagship action parsing, but are not general objective pull-chain weights."
+      },
+      "weights": [
+        {
+          "sourceVtag": "V86",
+          "owner": "ObjectiveAnalyzer",
+          "condition": "Invasion objective and deploying a Neimoidian pilot with explicit aboard/to/on target",
+          "score": 300.0,
+          "negativeScore": -1500.0,
+          "sourceEvidence": "ObjectiveAnalyzer.java V86 INVASION"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters checked in Filters.java",
+          "DB ids resolved for all named cards",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "idsUsed": [
+          "14_113",
+          "14_113_BACK",
+          "12_169",
+          "216_10",
+          "12_78",
+          "14_114",
+          "12_171",
+          "12_80",
+          "12_174",
+          "12_83",
+          "14_96",
+          "208_39",
+          "5_20"
+        ],
+        "idVerdict": "CLEAN",
+        "idFixes": [
+          "Seed intel collision excluded 14_111; authoritative source pulls Filters.Blockade_Flagship, resolved to starship 14_114."
+        ],
+        "idUncertain": [],
+        "forK2ToCheck": [
+          "Ongoing Naboo-site download only indirectly helps the flip, since the actual flip gate is control of Throne Room with Neimoidian plus Naboo system.",
+          "Deploy restriction uses hasAbilityOrHasPermanentPilotWithAbility with exceptions for [Trade Federation] starships and characters with Trade Federation in lore.",
+          "V142 and V177 references are parser/guard support around Blockade Flagship action text, not full objective playbook weights."
+        ]
+      }
+    },
+    {
+      "inventoryRow": 42,
+      "frontBp": "109_12",
+      "backBp": "109_12_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "This Deal Is Getting Worse All The Time",
+      "objectiveTitleBack": "Pray I Don't Alter It Any Further",
+      "abbreviation": "TDIGWATT",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "109_12",
+          "109_12_BACK"
+        ],
+        "titleFragments": [
+          "this deal is getting worse all the time",
+          "pray i don't alter it any further"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_SOURCE",
+        "notes": "This row is the base Enhanced Cloud City objective, not the virtual 226_12 version."
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Secret Plans",
+          "blueprintIds": [
+            "13_86",
+            "7_240"
+          ],
+          "titleFragments": [
+            "secret plans"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Secret_Plans",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "13_86",
+            "7_240"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "All Wrapped Up",
+          "blueprintIds": [
+            "6_141",
+            "224_1"
+          ],
+          "titleFragments": [
+            "all wrapped up"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.All_Wrapped_Up",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "6_141",
+            "224_1"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Bespin system",
+          "blueprintIds": [
+            "5_164",
+            "223_8",
+            "5_76"
+          ],
+          "titleFragments": [
+            "bespin"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Bespin_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "5_164",
+            "223_8",
+            "5_76"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Bespin: Cloud City",
+          "blueprintIds": [
+            "5_165",
+            "5_77"
+          ],
+          "titleFragments": [
+            "bespin: cloud city"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Bespin_Cloud_City",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "5_165",
+            "5_77"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Dark Deal",
+          "blueprintIds": [
+            "5_115",
+            "223_9"
+          ],
+          "titleFragments": [
+            "dark deal"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Dark_Deal",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "5_115",
+            "223_9"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Cloud City Occupation",
+          "blueprintIds": [
+            "7_223"
+          ],
+          "titleFragments": [
+            "cloud city occupation"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Cloud_City_Occupation",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_223"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Goo Nee Tay",
+          "blueprintIds": [
+            "7_62"
+          ],
+          "titleFragments": [
+            "goo nee tay"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Goo_Nee_Tay",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_62"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "All Too Easy",
+          "blueprintIds": [
+            "5_112"
+          ],
+          "titleFragments": [
+            "all too easy"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.All_Too_Easy",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "5_112"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "The Planet That It's Farthest From",
+          "blueprintIds": [
+            "7_78"
+          ],
+          "titleFragments": [
+            "the planet that it's farthest from"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.The_Planet_That_Its_Farthest_From",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_78"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Surreptitious Glance",
+          "blueprintIds": [
+            "5_71"
+          ],
+          "titleFragments": [
+            "surreptitious glance"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Title.Surreptitious_Glance",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "5_71"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Cloud City battleground site",
+          "text": "Setup deploy exactly one Cloud City battleground site.",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLOUD_CITY_LOCATION"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Cloud_City_battleground_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Bespin system",
+          "text": "Upload target and flip gate occupation requirement.",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Bespin_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "5_164",
+            "223_8",
+            "5_76"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Bespin: Cloud City",
+          "text": "Upload target and flip gate occupation requirement.",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "SECTOR",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Bespin_Cloud_City",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "5_165",
+            "5_77"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Bespin location",
+          "text": "Front deploy immunity scope and back drain-modification lock scope.",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Bespin_location",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Cloud City battleground site",
+          "text": "Setup deploy exactly one Cloud City battleground site.",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLOUD_CITY_LOCATION"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Cloud_City_battleground_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Bespin system",
+          "text": "Upload target and flip gate occupation requirement.",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Bespin_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "5_164",
+            "223_8",
+            "5_76"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Bespin: Cloud City",
+          "text": "Upload target and flip gate occupation requirement.",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "SECTOR",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Bespin_Cloud_City",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "5_165",
+            "5_77"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Bespin location",
+          "text": "Front deploy immunity scope and back drain-modification lock scope.",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Bespin_location",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Cloud City, Jabba's Palace, or Special Edition character",
+          "text": "Front immunity to Goo Nee Tay when deploying to Bespin locations.",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.or(Icon.CLOUD_CITY, Icon.JABBAS_PALACE, Icon.SPECIAL_EDITION), Filters.character)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial",
+          "text": "Back drain-modification lock requires an Imperial at each controlled Bespin location.",
+          "runtimeFilter": "Filters.Imperial",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Alien and Imperial pair",
+          "text": "Back battle destiny bonus requires your alien in battle with your Imperial; bonus is higher if alien is an Ugnaught.",
+          "runtimeFilter": "Filters.alien with Filters.Imperial; alternative bonus if Filters.Ugnaught",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Cloud City, Jabba's Palace, or Special Edition character",
+          "text": "Front immunity to Goo Nee Tay when deploying to Bespin locations.",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.or(Icon.CLOUD_CITY, Icon.JABBAS_PALACE, Icon.SPECIAL_EDITION), Filters.character)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial",
+          "text": "Back drain-modification lock requires an Imperial at each controlled Bespin location.",
+          "runtimeFilter": "Filters.Imperial",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Alien and Imperial pair",
+          "text": "Back battle destiny bonus requires your alien in battle with your Imperial; bonus is higher if alien is an Ugnaught.",
+          "runtimeFilter": "Filters.alien with Filters.Imperial; alternative bonus if Filters.Ugnaught",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Cloud_City_battleground_site",
+            "label": "Cloud City battleground site"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card109_012.java DeployCardFromReserveDeckEffect(Filters.and(Filters.Cloud_City_battleground_site))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Secret_Plans",
+            "label": "Secret Plans"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card109_012.java optional DeployCardsFromReserveDeckEffect(Filters.Secret_Plans, 0, 1)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.All_Wrapped_Up",
+            "label": "All Wrapped Up"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card109_012.java optional DeployCardsFromReserveDeckEffect(Filters.All_Wrapped_Up, 0, 1)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "take_into_hand",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefOrLocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.Bespin_system, Filters.Bespin_Cloud_City, Filters.Dark_Deal, Filters.Cloud_City_Occupation)",
+            "label": "Bespin system, Bespin: Cloud City, Dark Deal, or Cloud City Occupation"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": true,
+          "sourceEvidence": "Card109_012.java TakeCardIntoHandFromReserveDeckEffect for Bespin system, Bespin: Cloud City, Dark Deal, or Cloud City Occupation"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Cloud_City_battleground_site",
+            "label": "Cloud City battleground site"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card109_012.java DeployCardFromReserveDeckEffect(Filters.and(Filters.Cloud_City_battleground_site))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Secret_Plans",
+            "label": "Secret Plans"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card109_012.java optional DeployCardsFromReserveDeckEffect(Filters.Secret_Plans, 0, 1)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.All_Wrapped_Up",
+            "label": "All Wrapped Up"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card109_012.java optional DeployCardsFromReserveDeckEffect(Filters.All_Wrapped_Up, 0, 1)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "take_into_hand",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefOrLocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.Bespin_system, Filters.Bespin_Cloud_City, Filters.Dark_Deal, Filters.Cloud_City_Occupation)",
+            "label": "Bespin system, Bespin: Cloud City, Dark Deal, or Cloud City Occupation"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": true,
+          "sourceEvidence": "Card109_012.java TakeCardIntoHandFromReserveDeckEffect for Bespin system, Bespin: Cloud City, Dark Deal, or Cloud City Occupation"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "ON_TABLE_AND_OCCUPIES_ALL",
+        "count": 3,
+        "requirements": [
+          {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Dark_Deal",
+            "label": "Dark Deal on table"
+          },
+          {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Bespin_system",
+            "label": "occupy Bespin system"
+          },
+          {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Bespin_Cloud_City",
+            "label": "occupy Bespin: Cloud City"
+          }
+        ],
+        "sourceEvidence": "Card109_012.java canSpot Dark_Deal and occupies Bespin_system and occupies Bespin_Cloud_City"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "ANY_OF",
+        "alternatives": [
+          {
+            "relation": "JUST_CANCELED",
+            "target": {
+              "kind": "NamedCardRef",
+              "runtimeFilter": "Filters.Dark_Deal",
+              "label": "Dark Deal"
+            }
+          },
+          {
+            "relation": "OPPONENT_CONTROLS",
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.Bespin_system",
+              "label": "Bespin system"
+            }
+          },
+          {
+            "relation": "BLOWN_AWAY",
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin, true))",
+              "label": "Bespin system"
+            }
+          }
+        ],
+        "sourceEvidence": "Card109_012_BACK.java Dark Deal canceled, opponent controls Bespin_system, or Bespin system blown away"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [
+          "V22.5",
+          "V24",
+          "V24.6",
+          "V24.10",
+          "V25",
+          "V26",
+          "V29",
+          "V29.2",
+          "V40",
+          "V52"
+        ],
+        "newVsExisting": "TDIGWATT has extensive existing playbook-like logic outside ObjectiveHandler.java. This row is base 109_12; do not merge with 226_12 virtual text."
+      },
+      "weights": [
+        {
+          "sourceVtag": "V24",
+          "owner": "DeployEvaluator",
+          "condition": "Dark Deal or Cloud City Occupation when Bespin occupation is established",
+          "score": 300.0,
+          "sourceEvidence": "DeployEvaluator.java V24 TDIGWATT engine"
+        },
+        {
+          "sourceVtag": "V24.6",
+          "owner": "DeployEvaluator",
+          "condition": "Executor to Bespin for TDIGWATT",
+          "score": 800.0,
+          "negativeScore": -9999.0,
+          "sourceEvidence": "DeployEvaluator.java V24.6/V24.10 Executor to Bespin gate"
+        },
+        {
+          "sourceVtag": "V29",
+          "owner": "DeployEvaluator",
+          "condition": "Bespin-first guard before character deploys",
+          "negativeScore": -500.0,
+          "sourceEvidence": "DeployEvaluator.java V29 BESPIN-FIRST"
+        },
+        {
+          "sourceVtag": "V24.10",
+          "owner": "CardSelectionEvaluator",
+          "condition": "Executor deploy location selection",
+          "score": 500.0,
+          "negativeScore": -9999.0,
+          "sourceEvidence": "CardSelectionEvaluator.java V24.10 EXECUTOR TO BESPIN"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters checked in Filters.java",
+          "DB ids resolved for all named cards",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "idsUsed": [
+          "109_12",
+          "109_12_BACK",
+          "13_86",
+          "7_240",
+          "6_141",
+          "224_1",
+          "5_164",
+          "223_8",
+          "5_76",
+          "5_165",
+          "5_77",
+          "5_115",
+          "223_9",
+          "7_223",
+          "7_62",
+          "5_112",
+          "7_78",
+          "5_71"
+        ],
+        "idVerdict": "CLEAN",
+        "idFixes": [],
+        "idUncertain": [],
+        "forK2ToCheck": [
+          "This row is base 109_12. Virtual 226_12 has different upload targets and should stay separate.",
+          "Cloud City battleground site is a runtime filter using Cloud City location keyword plus battleground, not a fixed title list.",
+          "Existing TDIGWATT weights are numerous and overlapping; this shard records major known magnitudes only, not every TDIGWATT-adjacent generic drain or movement rule."
+        ]
+      }
+    },
+    {
+      "inventoryRow": 43,
+      "frontBp": "110_6",
+      "backBp": "110_6_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Court Of The Vile Gangster",
+      "objectiveTitleBack": "I Shall Enjoy Watching You Die",
+      "abbreviation": "COTVG",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "110_6",
+          "110_6_BACK"
+        ],
+        "titleFragments": [
+          "court of the vile gangster",
+          "i shall enjoy watching you die"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Jabba's Palace: Audience Chamber",
+          "blueprintIds": [
+            "6_162",
+            "6_81"
+          ],
+          "titleFragments": [
+            "audience chamber"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Audience_Chamber",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "6_162",
+            "6_81"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Tatooine: Great Pit Of Carkoon",
+          "blueprintIds": [
+            "6_170",
+            "221_34"
+          ],
+          "titleFragments": [
+            "great pit of carkoon"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Great_Pit_Of_Carkoon",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "6_170",
+            "221_34"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Jabba's Palace: Dungeon",
+          "blueprintIds": [
+            "6_164"
+          ],
+          "titleFragments": [
+            "dungeon"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Dungeon",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_164"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Sarlacc",
+          "blueprintIds": [
+            "107_5",
+            "7_214"
+          ],
+          "titleFragments": [
+            "sarlacc"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Sarlacc",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "107_5",
+            "7_214"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Rancor",
+          "blueprintIds": [
+            "6_139"
+          ],
+          "titleFragments": [
+            "rancor"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Rancor",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_139"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Jabba's Palace: Rancor Pit",
+          "blueprintIds": [
+            "6_166"
+          ],
+          "titleFragments": [
+            "rancor pit"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Rancor_Pit",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_166"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Goo Nee Tay",
+          "blueprintIds": [
+            "7_62"
+          ],
+          "titleFragments": [
+            "goo nee tay"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Goo_Nee_Tay",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_62"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Scanning Crew",
+          "blueprintIds": [
+            "1_266"
+          ],
+          "titleFragments": [
+            "scanning crew"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Scanning_Crew",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_266"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Trap Door",
+          "blueprintIds": [
+            "6_159"
+          ],
+          "titleFragments": [
+            "trap door"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Trap_Door",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_159"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Jabba's Palace site",
+          "text": "Front flip gate requires captives at Jabba's Palace site or sites.",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "JABBAS_PALACE_SITE"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Jabbas_Palace_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Docking bay or Independent starship",
+          "text": "Front once/deploy-phase pull target, narrowed to docking bay only if game text modification is active.",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SITE_OR_STARSHIP",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [
+            "COURT_OF_THE_VILE_GANGSTER__MAY_NOT_DEPLOY_STARSHIPS narrows this to Filters.docking_bay"
+          ],
+          "runtimeFilter": "Filters.or(Filters.docking_bay, Filters.and(Icon.INDEPENDENT, Filters.starship))",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine battleground site",
+          "text": "End-of-deploy-phase maintenance check requires current player to have a non-droid character here.",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Tatooine_battleground_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine site",
+          "text": "Back flipback checks for no captives at Tatooine sites.",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Tatooine_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Jabba's Palace site",
+          "text": "Front flip gate requires captives at Jabba's Palace site or sites.",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "JABBAS_PALACE_SITE"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Jabbas_Palace_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Docking bay or Independent starship",
+          "text": "Front once/deploy-phase pull target, narrowed to docking bay only if game text modification is active.",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SITE_OR_STARSHIP",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [
+            "COURT_OF_THE_VILE_GANGSTER__MAY_NOT_DEPLOY_STARSHIPS narrows this to Filters.docking_bay"
+          ],
+          "runtimeFilter": "Filters.or(Filters.docking_bay, Filters.and(Icon.INDEPENDENT, Filters.starship))",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine battleground site",
+          "text": "End-of-deploy-phase maintenance check requires current player to have a non-droid character here.",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Tatooine_battleground_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine site",
+          "text": "Back flipback checks for no captives at Tatooine sites.",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Tatooine_site",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Bounty hunter",
+          "text": "Front gives forfeit +2 and immunity to Goo Nee Tay.",
+          "runtimeFilter": "Filters.bounty_hunter",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Non-droid character at Tatooine battleground site",
+          "text": "Prevents that player's end-of-deploy-phase 1 Force loss.",
+          "runtimeFilter": "Filters.and(Filters.owner(currentPlayer), Filters.non_droid_character, Filters.at(Filters.Tatooine_battleground_site))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Captive",
+          "text": "Flip requires two captives at Jabba's Palace sites or one captive ability greater than 2 there.",
+          "runtimeFilter": "Filters.and(Filters.captive, Filters.at(Filters.Jabbas_Palace_site))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent character at same site as Rancor",
+          "text": "Back flipback requires no opponent character at same site as a Rancor.",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.character, Filters.at(Filters.sameSiteAs(self, Filters.Rancor)))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Bounty hunter",
+          "text": "Front gives forfeit +2 and immunity to Goo Nee Tay.",
+          "runtimeFilter": "Filters.bounty_hunter",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Non-droid character at Tatooine battleground site",
+          "text": "Prevents that player's end-of-deploy-phase 1 Force loss.",
+          "runtimeFilter": "Filters.and(Filters.owner(currentPlayer), Filters.non_droid_character, Filters.at(Filters.Tatooine_battleground_site))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Captive",
+          "text": "Flip requires two captives at Jabba's Palace sites or one captive ability greater than 2 there.",
+          "runtimeFilter": "Filters.and(Filters.captive, Filters.at(Filters.Jabbas_Palace_site))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent character at same site as Rancor",
+          "text": "Back flipback requires no opponent character at same site as a Rancor.",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.character, Filters.at(Filters.sameSiteAs(self, Filters.Rancor)))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Audience_Chamber",
+            "label": "Jabba's Palace: Audience Chamber"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Audience_Chamber)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Great_Pit_Of_Carkoon",
+            "label": "Tatooine: Great Pit Of Carkoon"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Great_Pit_Of_Carkoon)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Dungeon",
+            "label": "Jabba's Palace: Dungeon"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Dungeon)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefOrLocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.docking_bay, Filters.and(Icon.INDEPENDENT, Filters.starship))",
+            "label": "docking bay or [Independent] starship"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card110_006.java getGameTextTopLevelActions deployFilter"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.or(Filters.Sarlacc, Filters.Rancor, Filters.Rancor_Pit)",
+            "label": "Sarlacc, Rancor, or Rancor Pit"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card110_006_BACK.java DeployCardFromReserveDeckEffect(Filters.or(Filters.Sarlacc, Filters.Rancor, Filters.Rancor_Pit))"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Audience_Chamber",
+            "label": "Jabba's Palace: Audience Chamber"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Audience_Chamber)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Great_Pit_Of_Carkoon",
+            "label": "Tatooine: Great Pit Of Carkoon"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Great_Pit_Of_Carkoon)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Dungeon",
+            "label": "Jabba's Palace: Dungeon"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": true,
+          "sourceEvidence": "Card110_006.java DeployCardFromReserveDeckEffect(Filters.Dungeon)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefOrLocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.docking_bay, Filters.and(Icon.INDEPENDENT, Filters.starship))",
+            "label": "docking bay or [Independent] starship"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card110_006.java getGameTextTopLevelActions deployFilter"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.or(Filters.Sarlacc, Filters.Rancor, Filters.Rancor_Pit)",
+            "label": "Sarlacc, Rancor, or Rancor Pit"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card110_006_BACK.java DeployCardFromReserveDeckEffect(Filters.or(Filters.Sarlacc, Filters.Rancor, Filters.Rancor_Pit))"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "CAPTIVES_AT",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Jabbas_Palace_site",
+          "label": "Jabba's Palace site"
+        },
+        "alternatives": [
+          {
+            "relation": "COUNT_AT_LEAST",
+            "count": 2,
+            "byWhom": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.captive",
+              "label": "captives"
+            }
+          },
+          {
+            "relation": "COUNT_AT_LEAST",
+            "count": 1,
+            "byWhom": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.and(Filters.captive, Filters.abilityMoreThan(2))",
+              "label": "captive ability greater than 2"
+            }
+          }
+        ],
+        "sourceEvidence": "Card110_006.java canSpot captive abilityMoreThan(2) at Jabbas_Palace_site OR canSpot 2 captives at Jabbas_Palace_site"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "NONE_PRESENT",
+        "requirements": [
+          {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.captive, Filters.at(Filters.Tatooine_site))",
+            "label": "no captives at Tatooine sites"
+          },
+          {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.character, Filters.at(Filters.sameSiteAs(self, Filters.Rancor)))",
+            "label": "no opponent character at same site as Rancor"
+          }
+        ],
+        "sourceEvidence": "Card110_006_BACK.java negated canSpot captive at Tatooine_site and opponent character at sameSiteAs Rancor"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [
+          "V190"
+        ],
+        "newVsExisting": "No dedicated Court-specific ObjectiveAnalyzer playbook found outside ObjectiveHandler.java. V190 is a generic starships-to-systems guard motivated by this objective's docking bay or [Independent] starship pull."
+      },
+      "weights": [
+        {
+          "sourceVtag": "V190",
+          "owner": "DeployEvaluator/CardSelectionEvaluator",
+          "condition": "Starship-only pull or starship deploy to site/docking bay instead of space location",
+          "score": -1500.0,
+          "hardBlockScore": -12000.0,
+          "sourceEvidence": "DeployEvaluator.java V190 STARSHIP-NO-SYSTEM and CardSelectionEvaluator.java V190 ships deploy to systems"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters checked in Filters.java",
+          "DB ids resolved for all named cards",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "idsUsed": [
+          "110_6",
+          "110_6_BACK",
+          "6_162",
+          "6_81",
+          "6_170",
+          "221_34",
+          "6_164",
+          "6_166",
+          "107_5",
+          "7_214",
+          "6_139",
+          "7_62",
+          "1_266",
+          "6_159"
+        ],
+        "idVerdict": "CLEAN",
+        "idFixes": [],
+        "idUncertain": [],
+        "forK2ToCheck": [
+          "Audience Chamber title filter resolves both dark and light copies, but normal dark Reserve pulls the dark copy.",
+          "The docking bay or [Independent] starship pull is deliberately mixed type; V190 warns against letting starship targets park at docking bays.",
+          "Back-side EatenByIsPlacedOutOfPlay affects opponent characters eaten by Rancor or Sarlacc, not the objective itself."
+        ]
+      }
+    },
+    {
+      "inventoryRow": 44,
+      "frontBp": "111_6",
+      "backBp": "111_6_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Set Your Course For Alderaan",
+      "objectiveTitleBack": "The Ultimate Power In The Universe",
+      "abbreviation": "SYCFA",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "111_6",
+          "111_6_BACK"
+        ],
+        "titleFragments": [
+          "set your course for alderaan",
+          "the ultimate power in the universe"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Death Star system",
+          "blueprintIds": [
+            "2_143",
+            "216_7"
+          ],
+          "titleFragments": [
+            "death star"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Death_Star_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "2_143",
+            "216_7"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Alderaan system",
+          "blueprintIds": [
+            "1_281"
+          ],
+          "titleFragments": [
+            "alderaan"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Alderaan_system",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_281"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Jedha: Jedha City",
+          "blueprintIds": [
+            "209_49"
+          ],
+          "titleFragments": [
+            "jedha city"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.title(Title.Jedha_City)",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "209_49"
+          ],
+          "notes": "Included because Filters.Deployable_By_SYCFA allows it even though printed text says Alderaan systems."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Death Star: Docking Bay 327",
+          "blueprintIds": [
+            "1_285",
+            "1_124"
+          ],
+          "titleFragments": [
+            "death star: docking bay 327"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Docking_Bay_327",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_285",
+            "1_124"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Revolution",
+          "blueprintIds": [
+            "1_62"
+          ],
+          "titleFragments": [
+            "revolution"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Revolution",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_62"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Commence Primary Ignition",
+          "blueprintIds": [
+            "2_130",
+            "209_45"
+          ],
+          "titleFragments": [
+            "commence primary ignition"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Commence_Primary_Ignition",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "2_130",
+            "209_45"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yavin 4 system",
+          "blueprintIds": [
+            "1_296"
+          ],
+          "titleFragments": [
+            "yavin 4"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Yavin_4_system",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_296"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Hoth system",
+          "blueprintIds": [
+            "3_143"
+          ],
+          "titleFragments": [
+            "hoth"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Hoth_system",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "3_143"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star system",
+          "text": "Setup deploy target, back deploy-cost destination, and hard-lose blown-away target.",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Death_Star_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "2_143",
+            "216_7"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Deployable By SYCFA",
+          "text": "Setup deploy target after Death Star system: dark Alderaan system or Jedha City.",
+          "planetOrSystemGroup": "ALDERAAN_OR_JEDHA",
+          "subtype": "SYSTEM_OR_SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Deployable_By_SYCFA",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_281",
+            "209_49"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star: Docking Bay 327",
+          "text": "Setup deploy target.",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Docking_Bay_327",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_285",
+            "1_124"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground system",
+          "text": "Back once/deploy-phase pull target and Force drain bonus scope.",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.system, Filters.battleground)",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Commence Primary Ignition allowed targets",
+          "text": "CPI may target only Alderaan, Yavin 4, Hoth, or a Subjugated planet.",
+          "planetOrSystemGroup": "ALDERAAN_YAVIN4_HOTH_SUBJUGATED",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.or(Filters.Alderaan_system, Filters.Yavin_4_system, Filters.Hoth_system, Filters.Subjugated_system)",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "1_281",
+            "1_296",
+            "3_143"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star system",
+          "text": "Setup deploy target, back deploy-cost destination, and hard-lose blown-away target.",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Death_Star_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "2_143",
+            "216_7"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Deployable By SYCFA",
+          "text": "Setup deploy target after Death Star system: dark Alderaan system or Jedha City.",
+          "planetOrSystemGroup": "ALDERAAN_OR_JEDHA",
+          "subtype": "SYSTEM_OR_SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Deployable_By_SYCFA",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_281",
+            "209_49"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star: Docking Bay 327",
+          "text": "Setup deploy target.",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Docking_Bay_327",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_285",
+            "1_124"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground system",
+          "text": "Back once/deploy-phase pull target and Force drain bonus scope.",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.system, Filters.battleground)",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Commence Primary Ignition allowed targets",
+          "text": "CPI may target only Alderaan, Yavin 4, Hoth, or a Subjugated planet.",
+          "planetOrSystemGroup": "ALDERAAN_YAVIN4_HOTH_SUBJUGATED",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.or(Filters.Alderaan_system, Filters.Yavin_4_system, Filters.Hoth_system, Filters.Subjugated_system)",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "1_281",
+            "1_296",
+            "3_143"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Star Destroyer",
+          "text": "Back modifiers reduce Star Destroyer deploy cost to Death Star system and boost drains at battleground systems where you have a Star Destroyer.",
+          "runtimeFilter": "Filters.Star_Destroyer",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Victory-class Star Destroyer",
+          "text": "Back deploy-cost reduction is -1 instead of -2.",
+          "runtimeFilter": "Filters.Victory_class_Star_Destroyer",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial- or Super-class Star Destroyer",
+          "text": "Back Force drain bonus is +2 instead of +1.",
+          "runtimeFilter": "Filters.or(Filters.Imperial_class_Star_Destroyer, Filters.Super_class_Star_Destroyer)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Star Destroyer",
+          "text": "Back modifiers reduce Star Destroyer deploy cost to Death Star system and boost drains at battleground systems where you have a Star Destroyer.",
+          "runtimeFilter": "Filters.Star_Destroyer",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Victory-class Star Destroyer",
+          "text": "Back deploy-cost reduction is -1 instead of -2.",
+          "runtimeFilter": "Filters.Victory_class_Star_Destroyer",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial- or Super-class Star Destroyer",
+          "text": "Back Force drain bonus is +2 instead of +1.",
+          "runtimeFilter": "Filters.or(Filters.Imperial_class_Star_Destroyer, Filters.Super_class_Star_Destroyer)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Death_Star_system",
+            "label": "Death Star system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Death_Star_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Deployable_By_SYCFA",
+            "label": "Alderaan system or Jedha City"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Deployable_By_SYCFA)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Docking_Bay_327",
+            "label": "Death Star: Docking Bay 327"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Docking_Bay_327)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "take_into_hand",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.titleContains(\"Death Star\")",
+            "label": "card with Death Star in title"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": "INDIRECT",
+          "sourceEvidence": "Card111_006.java TakeCardIntoHandFromReserveDeckEffect(Filters.titleContains(\"Death Star\"))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.system, Filters.battleground)",
+            "label": "battleground system"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card111_006_BACK.java DeployCardFromReserveDeckEffect(Filters.system, Filters.battleground)"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Death_Star_system",
+            "label": "Death Star system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Death_Star_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Deployable_By_SYCFA",
+            "label": "Alderaan system or Jedha City"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Deployable_By_SYCFA)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Docking_Bay_327",
+            "label": "Death Star: Docking Bay 327"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "required": true,
+          "enablesFlip": false,
+          "sourceEvidence": "Card111_006.java DeployCardFromReserveDeckEffect(Filters.Docking_Bay_327)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "take_into_hand",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.titleContains(\"Death Star\")",
+            "label": "card with Death Star in title"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": "INDIRECT",
+          "sourceEvidence": "Card111_006.java TakeCardIntoHandFromReserveDeckEffect(Filters.titleContains(\"Death Star\"))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.system, Filters.battleground)",
+            "label": "battleground system"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "required": false,
+          "enablesFlip": false,
+          "sourceEvidence": "Card111_006_BACK.java DeployCardFromReserveDeckEffect(Filters.system, Filters.battleground)"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "BLOWN_AWAY",
+        "count": 1,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Alderaan, true))",
+          "label": "Alderaan system"
+        },
+        "sourceEvidence": "Card111_006.java TriggerConditions.isBlownAwayLastStep on Alderaan system"
+      },
+      "flipBack": null,
+      "hardLose": {
+        "condition": "BLOWN_AWAY",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Death_Star, true))",
+          "label": "Death Star system"
+        },
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "sourceEvidence": "Card111_006_BACK.java TriggerConditions.isBlownAwayLastStep on Death Star system then PlaceCardOutOfPlayFromTableEffect(self)"
+      },
+      "randoMapping": {
+        "existingVtags": [
+          "V188"
+        ],
+        "newVsExisting": "V188 is a narrow generic deploy-site penalty for ability characters to Death Star sites while the front objective is active. No full objective playbook exists."
+      },
+      "weights": [
+        {
+          "sourceVtag": "V188",
+          "owner": "CharacterDeploySiteEvaluator",
+          "condition": "Ability character deploying to Death Star site while Set Your Course For Alderaan front is on table",
+          "score": -900.0,
+          "sourceEvidence": "CharacterDeploySiteEvaluator.java V188 ALDERAAN DEATH-STAR"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters checked in Filters.java",
+          "DB ids resolved for all named cards",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "idsUsed": [
+          "111_6",
+          "111_6_BACK",
+          "2_143",
+          "216_7",
+          "1_281",
+          "209_49",
+          "1_285",
+          "1_124",
+          "1_62",
+          "2_130",
+          "209_45",
+          "1_296",
+          "3_143"
+        ],
+        "idVerdict": "CLEAN",
+        "idFixes": [],
+        "idUncertain": [],
+        "forK2ToCheck": [
+          "Filters.Deployable_By_SYCFA allows dark Alderaan system or Jedha City, although printed setup text says Alderaan systems.",
+          "Back side has no flipBack; it places the objective out of play if Death Star is blown away.",
+          "Death Star in title upload is broad and not fully enumerated here; runtime should use Filters.titleContains(\"Death Star\")."
+        ]
+      }
+    }
+  ]
+}

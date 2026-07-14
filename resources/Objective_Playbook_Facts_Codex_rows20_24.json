@@ -1,0 +1,1712 @@
+{
+  "schemaVersion": "objective-playbook-facts-v0.1-shard",
+  "rows": "20-24",
+  "rowSource": "resources/Objective_Blueprint_Inventory_2026-07-07.json .rows[]",
+  "entries": [
+    {
+      "frontBp": "209_29",
+      "backBp": "209_29_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "They Have No Idea We're Coming",
+      "objectiveTitleBack": "Until We Win, Or The Chances Are Spent",
+      "abbreviation": "THNIWRC",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "209_29",
+          "209_29_BACK"
+        ],
+        "titleFragments": [
+          "they have no idea we're coming",
+          "until we win, or the chances are spent"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB_PLUS_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Scarif system",
+          "blueprintIds": [
+            "209_23",
+            "216_13"
+          ],
+          "titleFragments": [
+            "scarif"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Scarif_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "209_23",
+            "216_13"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Data Vault",
+          "blueprintIds": [
+            "209_25"
+          ],
+          "titleFragments": [
+            "scarif: data vault",
+            "data vault"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.DataVault",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "209_25"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Stardust",
+          "blueprintIds": [
+            "209_18"
+          ],
+          "titleFragments": [
+            "stardust"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Stardust",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "209_18"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Massassi War Room",
+          "blueprintIds": [
+            "1_139",
+            "208_24"
+          ],
+          "titleFragments": [
+            "yavin 4: massassi war room",
+            "massassi war room"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Massassi_War_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_139",
+            "208_24"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Rogue One",
+          "blueprintIds": [
+            "206_7"
+          ],
+          "titleFragments": [
+            "rogue one"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Rogue_One",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "206_7"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Corvette",
+          "blueprintIds": [
+            "1_140"
+          ],
+          "titleFragments": [
+            "corvette"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.corvette",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_140"
+          ],
+          "notes": "Runtime is broad subtype/keyword filter, not a title match."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Taking Them With Us",
+          "blueprintIds": [
+            "9_5"
+          ],
+          "titleFragments": [
+            "taking them with us"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.title(Title.Taking_Them_With_Us)",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_5"
+          ],
+          "notes": "Restricted by objective, not pulled."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Scarif system",
+          "text": "Deploy Scarif system",
+          "planetOrSystemGroup": "SCARIF",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Scarif_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "209_23",
+            "216_13"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Scarif site",
+          "text": "a Scarif site",
+          "planetOrSystemGroup": "SCARIF",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Scarif_site",
+          "candidateSource": "DB",
+          "resolvedCount": 9,
+          "resolvedSample": [
+            "209_24",
+            "209_25",
+            "209_26",
+            "209_27",
+            "216_14",
+            "216_15",
+            "216_16",
+            "216_17"
+          ],
+          "notes": "DB snapshot sample is side-mixed; runtime filter is the engine truth."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Scarif location",
+          "text": "control or occupy two Scarif locations",
+          "planetOrSystemGroup": "SCARIF",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Scarif_location",
+          "candidateSource": "DB",
+          "resolvedCount": 11,
+          "resolvedSample": [
+            "209_23",
+            "209_24",
+            "209_25",
+            "209_26",
+            "209_27",
+            "216_13",
+            "216_14",
+            "216_15"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Baze or Chirrut",
+          "runtimeFilter": "Filters.or(Filters.Chirrut, Filters.Baze)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "These characters gain spy keyword for remainder of game."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel trooper",
+          "runtimeFilter": "Filters.and(Filters.Rebel, Filters.trooper)",
+          "keyword": "TROOPER",
+          "icon": "REBEL",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "These characters gain spy keyword for remainder of game."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel spy",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.spy, Filters.Rebel)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Back-side move and weapon-targeting cancel hinge on Rebel spies."
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Scarif_system",
+            "label": "Scarif system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card209_029.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Scarif_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.DataVault",
+            "label": "Data Vault"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card209_029.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.DataVault)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Stardust",
+            "label": "Stardust"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card209_029.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Stardust)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Massassi_War_Room",
+            "label": "Massassi War Room"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card209_029.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.Massassi_War_Room)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CompositeRequirement",
+            "runtimeFilter": "Filters.or(Filters.Rogue_One, Filters.corvette, Filters.Scarif_site)",
+            "label": "Rogue One, a corvette, or a Scarif site"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card209_029.java getGameTextTopLevelActions DeployCardFromReserveDeckEffect(starshipOrSite)"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "relation": "CONTROL",
+          "count": 2,
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Scarif_location",
+            "label": "Scarif location"
+          },
+          "byWhom": null,
+          "opponentConstraint": null,
+          "exceptions": [],
+          "alternatives": [],
+          "sourceEvidence": "Card209_029.java GameConditions.controls(playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Scarif_location)"
+        }
+      ],
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPY",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Scarif_location",
+          "label": "Scarif location"
+        },
+        "exceptions": [
+          {
+            "kind": "PresenceException",
+            "runtimeFilter": "Filters.and(Filters.Rogue_One, Filters.at(Filters.and(Filters.site, Filters.Scarif_location, Filters.occupies(self.getOwner()))))",
+            "label": "Rogue One at a Scarif site you occupy"
+          }
+        ],
+        "sourceEvidence": "Card209_029_BACK.java flips if !occupies 2 Scarif locations and no Rogue One at a Scarif site you occupy"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No dedicated live Rando objective playbook found for 209_29 after excluding ObjectiveHandler.java. Scarif V79 hits are for the dark On The Verge Of Greatness Death Star deck, not this objective."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java read",
+          "front/back ids use <front>_BACK",
+          "runtime filters transcribed from Java",
+          "named ids checked against card_blueprint_database.json where available",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Java deploys Stardust from Reserve Deck as a separate DeployCardFromReserveDeckEffect, not explicitly attached to Data Vault despite card text saying with Stardust there.",
+          "Corvette is represented by Filters.corvette. DB candidate snapshot found one title match, but runtime may resolve by subtype/keyword beyond title.",
+          "No objective-specific live Rando V-tag was found for this row."
+        ]
+      }
+    },
+    {
+      "frontBp": "210_25",
+      "backBp": "210_25_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "The Hyperdrive Generator's Gone",
+      "objectiveTitleBack": "We'll Need A New One",
+      "abbreviation": "THGG",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "210_25",
+          "210_25_BACK"
+        ],
+        "titleFragments": [
+          "the hyperdrive generator's gone",
+          "we'll need a new one"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB_PLUS_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "City Outskirts",
+          "blueprintIds": [
+            "11_42"
+          ],
+          "titleFragments": [
+            "tatooine: city outskirts",
+            "city outskirts"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.City_Outskirts",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "11_42"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Watto's Junkyard",
+          "blueprintIds": [
+            "12_87",
+            "12_178"
+          ],
+          "titleFragments": [
+            "tatooine: watto's junkyard",
+            "watto's junkyard"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Wattos_Junkyard",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_87",
+            "12_178"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Credits Will Do Fine",
+          "blueprintIds": [
+            "12_42",
+            "221_56"
+          ],
+          "titleFragments": [
+            "credits will do fine"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Credits_Will_Do_Fine",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_42",
+            "221_56"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Queen's Royal Starship",
+          "blueprintIds": [
+            "12_91"
+          ],
+          "titleFragments": [
+            "queen's royal starship"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Queens_Royal_Starship",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "12_91"
+          ],
+          "notes": "Ric In Queen's Royal Starship is not included because the runtime filter is the title filter for Queen's Royal Starship."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Episode I system",
+          "text": "an [Episode I] system",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "EPISODE_I"
+          ],
+          "runtimeFilter": "Filters.and(Filters.system, Icon.EPISODE_I)",
+          "candidateSource": "DB",
+          "resolvedCount": 16,
+          "resolvedSample": [
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73",
+            "12_77",
+            "12_78",
+            "12_84"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine location",
+          "text": "Tatooine locations",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Tatooine_location",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "11_42",
+            "12_84",
+            "12_87",
+            "12_178"
+          ],
+          "notes": "Support modifier target, not a flip gate."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground occupied by Amidala or Jar Jar",
+          "text": "each battleground occupied by Amidala or Jar Jar",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.or(Filters.Jar_Jar, Filters.Amidala)))",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Unique alien",
+          "runtimeFilter": "Filters.and(Filters.unique, Filters.alien)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Deploy restriction exception."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Republic character",
+          "runtimeFilter": "Filters.Republic_character",
+          "icon": "REPUBLIC",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Deploy restriction exception and back-side modifier target when unique."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Episode I Jedi",
+          "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.Jedi)",
+          "keyword": "JEDI",
+          "iconsRequired": [
+            "EPISODE_I"
+          ],
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Deploy restriction exception."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Amidala or Jar Jar",
+          "runtimeFilter": "Filters.or(Filters.Jar_Jar, Filters.Amidala)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Back-side control phase damage counts battlegrounds occupied by these personas."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Maul not present with Qui-Gon",
+          "runtimeFilter": "Filters.and(Filters.Maul, Filters.not(Filters.with(self, Filters.QuiGon)))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Front-side immunity to attrition modifier."
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Wattos_Junkyard",
+            "label": "Watto's Junkyard"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card210_025.java DeployCardFromReserveDeckEffect(Filters.Wattos_Junkyard)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.City_Outskirts",
+            "label": "City Outskirts"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card210_025.java DeployCardFromReserveDeckEffect(Filters.City_Outskirts)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Credits_Will_Do_Fine",
+            "label": "Credits Will Do Fine"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card210_025.java DeployCardFromReserveDeckEffect(Filters.Credits_Will_Do_Fine)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "take",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.system, Icon.EPISODE_I)",
+            "label": "Episode I system"
+          },
+          "cadence": "ONCE_PER_GAME",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card210_025.java TakeCardIntoHandFromReserveDeckEffect(Filters.and(Filters.system, Icon.EPISODE_I))"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "relation": "COUNT_BENEATH",
+          "count": 4,
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Credits_Will_Do_Fine",
+            "label": "Credits Will Do Fine"
+          },
+          "byWhom": null,
+          "opponentConstraint": null,
+          "exceptions": [],
+          "alternatives": [],
+          "sourceEvidence": "Card210_025.java finds Credits Will Do Fine and flips if GameConditions.hasStackedCards(..., 4)"
+        }
+      ],
+      "flipBack": null,
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No dedicated live Rando objective playbook found for 210_25 after excluding ObjectiveHandler.java."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java read",
+          "front/back ids use <front>_BACK",
+          "runtime filters transcribed from Java",
+          "named ids checked against card_blueprint_database.json where available",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "No flip-back condition exists on the back Java source.",
+          "Credits Will Do Fine has multiple blueprint ids. Runtime title filter decides actual legal candidates.",
+          "Episode I system candidate count is DB snapshot only. Runtime must use Filters.and(Filters.system, Icon.EPISODE_I).",
+          "No objective-specific live Rando V-tag was found for this row."
+        ]
+      }
+    },
+    {
+      "frontBp": "211_36",
+      "backBp": "211_36_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "The Galaxy May Need A Legend",
+      "objectiveTitleBack": "We Need Luke Skywalker",
+      "abbreviation": "TGMNAL",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "211_36",
+          "211_36_BACK"
+        ],
+        "titleFragments": [
+          "the galaxy may need a legend",
+          "we need luke skywalker"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB_PLUS_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Ahch-To: Saddle",
+          "blueprintIds": [
+            "210_1"
+          ],
+          "titleFragments": [
+            "ahch-to: saddle",
+            "saddle"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.AhchTo_Saddle",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "210_1"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Luke",
+          "blueprintIds": [],
+          "titleFragments": [
+            "luke"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Luke",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Persona requirement; do not wire as title-only id list."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Ahch-To: Saddle",
+          "text": "Deploy Ahch-To: Saddle",
+          "planetOrSystemGroup": "AHCH_TO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "EXTERIOR",
+          "iconsRequired": [
+            "EPISODE_VII"
+          ],
+          "runtimeFilter": "Filters.AhchTo_Saddle",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "210_1"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Ahch-To location",
+          "text": "an Ahch-To location",
+          "planetOrSystemGroup": "AHCH_TO",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.AhchTo_location",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "210_1"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Episode VII battleground",
+          "text": "any [Episode VII] battleground",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "EPISODE_VII"
+          ],
+          "runtimeFilter": "Filters.and(Filters.battleground, Icon.EPISODE_VII)",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": 38,
+          "resolvedSample": [
+            "204_26",
+            "204_27",
+            "204_28",
+            "204_29",
+            "204_30",
+            "204_31",
+            "204_51",
+            "204_52"
+          ],
+          "notes": "DB sample is Episode VII locations, not a guaranteed battleground-only materialization. Runtime battleground filter is authoritative."
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Luke on Ahch-To",
+          "runtimeFilter": "Filters.and(Filters.Luke, Filters.on(Title.Ahch_To))",
+          "persona": "LUKE",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Resistance character",
+          "runtimeFilter": "Filters.Resistance_character",
+          "icon": "RESISTANCE",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Two unique Resistance characters",
+          "runtimeFilter": "Filters.and(Filters.unique, Filters.Resistance_character, Filters.your(self))",
+          "icon": "RESISTANCE",
+          "uniqueness": "UNIQUE",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Back-side force-drain modifier requires two at same location; destiny cancel requires two participating in battle."
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.AhchTo_Saddle",
+            "label": "Ahch-To: Saddle"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card211_036.java DeployCardFromReserveDeckEffect(Filters.AhchTo_Saddle)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.battleground, Icon.EPISODE_VII)",
+            "label": "Episode VII battleground"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card211_036.java DeployCardFromReserveDeckEffect(Filters.and(Filters.battleground, Icon.EPISODE_VII))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "take",
+          "sourceZone": "FORCE_PILE",
+          "target": {
+            "kind": "AnyCard",
+            "runtimeFilter": "Filters.any",
+            "label": "Any one card"
+          },
+          "cadence": "ONCE_PER_GAME",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card211_036.java TakeCardIntoHandFromForcePileEffect(action, playerId, true)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CompositeRequirement",
+            "runtimeFilter": "Filters.or(Filters.AhchTo_location, Filters.and(Filters.battleground, Icon.EPISODE_VII))",
+            "label": "Ahch-To location or Episode VII battleground"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "phaseDetail": "DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card211_036.java DeployCardFromReserveDeckEffect(Filters.or(Filters.AhchTo_location, Filters.and(Filters.battleground, Icon.EPISODE_VII)), true)"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "relation": "PRESENT",
+          "count": 1,
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.Luke, Filters.on(Title.Ahch_To))",
+            "label": "Luke on Ahch-To"
+          },
+          "byWhom": null,
+          "opponentConstraint": null,
+          "exceptions": [],
+          "alternatives": [],
+          "additionalRequirement": {
+            "relation": "BATTLE_INITIATED_INVOLVING",
+            "count": 1,
+            "target": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.Resistance_character",
+              "label": "Resistance character"
+            }
+          },
+          "sourceEvidence": "Card211_036.java optional flip if battle initiated, during battle with Resistance character, and canSpot Luke on Ahch-To"
+        }
+      ],
+      "flipBack": null,
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No dedicated live Rando objective playbook found for 211_36 after excluding ObjectiveHandler.java. Ahch-To mentions in DeployPhaseScript are comments for another card interaction, not a verified objective V-tag."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java read",
+          "front/back ids use <front>_BACK",
+          "runtime filters transcribed from Java",
+          "named ids checked against card_blueprint_database.json where available",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Inventory text says Ahch-To system, but current Java deploys Ahch-To: Saddle. Java is recorded as truth.",
+          "Back side immediately places Luke out of play on flip. This is an objective effect, but not represented as hardLose because hardLose is reserved for objective place-out-of-play conditions in the pilot schema.",
+          "Episode VII battleground candidate count is approximate from DB because battleground is engine-computed. Runtime must use Filters.and(Filters.battleground, Icon.EPISODE_VII).",
+          "No objective-specific live Rando V-tag was found for this row."
+        ]
+      }
+    },
+    {
+      "frontBp": "215_17",
+      "backBp": "215_17_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Rescue The Princess",
+      "objectiveTitleBack": "Sometimes I Amaze Even Myself",
+      "abbreviation": "RTP",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "215_17",
+          "215_17_BACK"
+        ],
+        "titleFragments": [
+          "rescue the princess",
+          "sometimes i amaze even myself"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB_PLUS_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Death Star: Central Core",
+          "blueprintIds": [
+            "215_6",
+            "1_283"
+          ],
+          "titleFragments": [
+            "death star: central core",
+            "central core"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Death_Star_Central_Core",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "215_6",
+            "1_283"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "A Power Loss",
+          "blueprintIds": [
+            "215_2"
+          ],
+          "titleFragments": [
+            "a power loss"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.A_Power_Loss",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "215_2"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Detention Block Corridor",
+          "blueprintIds": [
+            "215_7",
+            "7_118",
+            "1_284"
+          ],
+          "titleFragments": [
+            "death star: detention block corridor",
+            "detention block corridor"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Detention_Block_Corridor",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "215_7",
+            "7_118",
+            "1_284"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Trash Compactor",
+          "blueprintIds": [
+            "215_9",
+            "1_125"
+          ],
+          "titleFragments": [
+            "death star: trash compactor",
+            "trash compactor"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Trash_Compactor",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "215_9",
+            "1_125"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "I Can't Believe He's Gone",
+          "blueprintIds": [
+            "11_19",
+            "221_5"
+          ],
+          "titleFragments": [
+            "i can't believe he's gone"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.I_Cant_Believe_Hes_Gone",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "11_19",
+            "221_5"
+          ],
+          "notes": "Canceled by back side, not pulled."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Set Your Course For Alderaan",
+          "blueprintIds": [
+            "111_6"
+          ],
+          "titleFragments": [
+            "set your course for alderaan"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Set_Your_Course_For_Alderaan",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "111_6"
+          ],
+          "notes": "Back-side modifier changes this objective's game text."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star site",
+          "text": "a Death Star site",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Death_Star_site",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "215_6",
+            "215_7",
+            "215_9",
+            "7_118",
+            "1_125"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Detention Block Corridor",
+          "text": "Detention Block Corridor",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Detention_Block_Corridor",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "215_7",
+            "7_118",
+            "1_284"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "A New Hope Leia",
+          "runtimeFilter": "Filters.and(Icon.A_NEW_HOPE, Filters.Leia)",
+          "persona": "LEIA",
+          "iconsRequired": [
+            "A_NEW_HOPE"
+          ],
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Deployed as imprisoned captive to Detention Block Corridor at setup."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Leia at Death Star site",
+          "runtimeFilter": "Filters.and(Filters.Leia, Filters.at(Filters.Death_Star_site))",
+          "persona": "LEIA",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Obi-Wan at Death Star site",
+          "runtimeFilter": "Filters.and(Filters.ObiWan, Filters.at(Filters.Death_Star_site))",
+          "persona": "OBI_WAN",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Back-side battle-cancel cost places Obi-Wan out of play."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Restricted Luke or Jedi",
+          "runtimeFilter": "Filters.or(Filters.and(Filters.Luke, Filters.abilityMoreThan(4)), Filters.and(Filters.Jedi, Filters.or(Filters.icon(Icon.EPISODE_I), Filters.icon(Icon.EPISODE_VII))))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "MayNotDeploy restriction, not a flip gate."
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Death_Star_Central_Core",
+            "label": "Death Star: Central Core"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card215_017.java DeployCardFromReserveDeckEffect(Filters.Death_Star_Central_Core)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.A_Power_Loss",
+            "label": "A Power Loss"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card215_017.java DeployCardFromReserveDeckEffect(Filters.A_Power_Loss)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Trash_Compactor",
+            "label": "Trash Compactor"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card215_017.java DeployCardFromReserveDeckEffect(Filters.Trash_Compactor)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Detention_Block_Corridor",
+            "label": "Detention Block Corridor"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card215_017.java DeployCardFromReserveDeckEffect(Filters.Detention_Block_Corridor)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Icon.A_NEW_HOPE, Filters.Leia)",
+            "label": "A New Hope Leia"
+          },
+          "destination": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Detention_Block_Corridor",
+            "label": "Detention Block Corridor"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card215_017.java DeployCardToTargetFromReserveDeckEffect(Filters.and(Icon.A_NEW_HOPE, Filters.Leia), Filters.Detention_Block_Corridor, ... DeployAsCaptiveOption.deployAsImprisonedCaptive())"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Death_Star_site",
+            "label": "Death Star site"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card215_017.java and Card215_017_BACK.java DeployCardFromReserveDeckEffect(Filters.Death_Star_site)"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "relation": "OCCUPY",
+          "count": 1,
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Death_Star_site",
+            "label": "Death Star site"
+          },
+          "byWhom": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.Leia",
+            "label": "Leia"
+          },
+          "opponentConstraint": null,
+          "exceptions": [],
+          "alternatives": [],
+          "additionalRequirement": {
+            "relation": "SHUT_DOWN",
+            "target": {
+              "kind": "NamedCardRef",
+              "runtimeFilter": "Filters.A_Power_Loss",
+              "label": "A Power Loss"
+            }
+          },
+          "sourceEvidence": "Card215_017.java GameConditions.occupiesWith(... Filters.Death_Star_site, Filters.Leia) and GameConditions.isDeathStarPowerShutDown(game)"
+        }
+      ],
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT",
+        "comparator": "NOT_PRESENT",
+        "count": 1,
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.Leia, Filters.at(Filters.Death_Star_site))",
+          "label": "Leia at Death Star site"
+        },
+        "sourceEvidence": "Card215_017_BACK.java flips if !canSpot Leia at Death Star site"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No dedicated live Rando objective playbook found for 215_17 after excluding ObjectiveHandler.java."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java read",
+          "front/back ids use <front>_BACK",
+          "runtime filters transcribed from Java",
+          "named ids checked against card_blueprint_database.json where available",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "The setup Leia deploy is conditional on spotting Detention Block Corridor in Reserve Deck at that point in the Java code. Verify engine timing if wiring as guaranteed setup.",
+          "GameConditions.isDeathStarPowerShutDown is the flip truth, not just A Power Loss being on table.",
+          "Set Your Course For Alderaan is an objective id in DB; back side modifies that objective's game text rather than pulling it.",
+          "No objective-specific live Rando V-tag was found for this row."
+        ]
+      }
+    },
+    {
+      "frontBp": "219_48",
+      "backBp": "219_48_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Zero Hour",
+      "objectiveTitleBack": "Liberation of Lothal",
+      "abbreviation": "ZH",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "219_48",
+          "219_48_BACK"
+        ],
+        "titleFragments": [
+          "zero hour",
+          "liberation of lothal"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB_PLUS_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Lothal system",
+          "blueprintIds": [
+            "219_38",
+            "219_10"
+          ],
+          "titleFragments": [
+            "lothal"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Lothal_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "219_38",
+            "219_10"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Menace Fades",
+          "blueprintIds": [
+            "9_38"
+          ],
+          "titleFragments": [
+            "menace fades"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.title(Title.Menace_Fades)",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_38"
+          ],
+          "notes": "Canceled by objective, not pulled."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Projection Of A Skywalker",
+          "blueprintIds": [
+            "6_56"
+          ],
+          "titleFragments": [
+            "projection of a skywalker"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.title(Title.Projection_Of_A_Skywalker)",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_56"
+          ],
+          "notes": "Canceled by objective, not pulled."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Phoenix Squadron named characters",
+          "blueprintIds": [
+            "208_2",
+            "210_14",
+            "204_3",
+            "203_6",
+            "217_38",
+            "207_9",
+            "223_46",
+            "208_13"
+          ],
+          "titleFragments": [
+            "chopper",
+            "ezra",
+            "hera",
+            "kanan",
+            "sabine",
+            "zeb"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Kanan, Filters.Sabine, Filters.Zeb)",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": 8,
+          "resolvedSample": [
+            "208_2",
+            "210_14",
+            "204_3",
+            "203_6",
+            "217_38",
+            "207_9",
+            "223_46",
+            "208_13"
+          ],
+          "notes": "Runtime filter is persona/title based and grants Phoenix Squadron keyword."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Lothal system",
+          "text": "Deploy Lothal system",
+          "planetOrSystemGroup": "LOTHAL",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Lothal_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "219_38",
+            "219_10"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Lothal site",
+          "text": "a Lothal site",
+          "planetOrSystemGroup": "LOTHAL",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Lothal_site",
+          "candidateSource": "DB",
+          "resolvedCount": 8,
+          "resolvedSample": [
+            "219_11",
+            "219_12",
+            "219_13",
+            "219_14",
+            "219_39",
+            "219_40",
+            "219_41",
+            "219_42"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Lothal location",
+          "text": "Lothal locations",
+          "planetOrSystemGroup": "LOTHAL",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.Lothal_location",
+          "candidateSource": "DB",
+          "resolvedCount": 10,
+          "resolvedSample": [
+            "219_10",
+            "219_11",
+            "219_12",
+            "219_13",
+            "219_14",
+            "219_38",
+            "219_39",
+            "219_40"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground occupied with Phoenix Squadron characters",
+          "text": "battlegrounds you occupy with Phoenix Squadron characters",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "runtimeFilter": "Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.Phoenix_Squadron_character))",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel",
+          "runtimeFilter": "Filters.Rebel",
+          "icon": "REBEL",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Front-side alternate flip requires Rebels control three Lothal locations."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Phoenix Squadron character",
+          "runtimeFilter": "Filters.Phoenix_Squadron_character",
+          "keyword": "PHOENIX_SQUADRON",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Objective grants this keyword to Chopper, Ezra, Hera, Kanan, Sabine, and Zeb."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Deploy-cost penalty set",
+          "runtimeFilter": "Filters.or(Filters.Harc, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Ahsoka, Filters.Kanan))), Filters.and(Filters.your(playerId), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.hasAbilityOrHasPermanentPilotWithAbility))",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Support penalty target, not a flip gate."
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Lothal_system",
+            "label": "Lothal system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card219_048.java DeployCardFromReserveDeckEffect(Filters.Lothal_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Lothal_site",
+            "label": "Lothal site"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card219_048.java DeployCardFromReserveDeckEffect(Filters.Lothal_site)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Lothal_site",
+            "label": "Lothal site"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card219_048.java and Card219_048_BACK.java DeployCardFromReserveDeckEffect(Filters.Lothal_site)"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "relation": "CONTROL",
+          "count": 3,
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Lothal_location",
+            "label": "Lothal location"
+          },
+          "byWhom": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.Rebel",
+            "label": "Rebel"
+          },
+          "opponentConstraint": {
+            "relation": "CONTROL",
+            "count": 0,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.Lothal_location",
+              "label": "Lothal location"
+            }
+          },
+          "exceptions": [],
+          "alternatives": [
+            {
+              "relation": "OCCUPY",
+              "count": 3,
+              "target": {
+                "kind": "LocationRequirement",
+                "runtimeFilter": "Filters.Lothal_location",
+                "label": "Lothal location"
+              },
+              "byWhom": {
+                "kind": "CharacterRequirement",
+                "runtimeFilter": "Filters.Phoenix_Squadron_character",
+                "label": "Phoenix Squadron character"
+              }
+            }
+          ],
+          "sourceEvidence": "Card219_048.java flips if controlsWith 3 Lothal locations with Rebel OR occupiesWith 3 Lothal locations with Phoenix Squadron character, and opponent controls no Lothal location"
+        }
+      ],
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "CONTROL",
+        "comparator": "OPPONENT_GREATER_THAN_SELF",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Lothal_location",
+          "label": "Lothal location"
+        },
+        "sourceEvidence": "Card219_048_BACK.java flips if opponent controls more Lothal locations than you"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No dedicated live Rando objective playbook found for 219_48 after excluding ObjectiveHandler.java."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java read",
+          "front/back ids use <front>_BACK",
+          "runtime filters transcribed from Java",
+          "named ids checked against card_blueprint_database.json where available",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "The first flip alternative is implemented as GameConditions.controlsWith(... Filters.Rebel), which is stronger/different than prose shorthand 'Rebels control'. Preserve the Java semantics.",
+          "Phoenix Squadron named-character candidate list is a DB snapshot. Runtime persona filters are authoritative.",
+          "No objective-specific live Rando V-tag was found for this row."
+        ]
+      }
+    }
+  ]
+}

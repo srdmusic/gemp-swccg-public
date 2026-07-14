@@ -1,0 +1,1811 @@
+{
+  "schemaVersion": "objective-playbook-facts-v0.1-shard",
+  "rows": "35-39",
+  "rowSource": "resources/Objective_Blueprint_Inventory_2026-07-07.json .rows[35:40], per Steve explicit ownership list",
+  "entries": [
+    {
+      "frontBp": "8_167",
+      "backBp": "8_167_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Endor Operations",
+      "objectiveTitleBack": "Imperial Outpost",
+      "abbreviation": "EO",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "8_167",
+          "8_167_BACK"
+        ],
+        "titleFragments": [
+          "endor operations",
+          "imperial outpost"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Endor system",
+          "blueprintIds": [
+            "8_157",
+            "8_68",
+            "204_24"
+          ],
+          "titleFragments": [
+            "endor"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Endor_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_157",
+            "8_68",
+            "204_24"
+          ],
+          "notes": "Objective deploys from the dark player's Reserve Deck, so 8_157 is the practical setup target."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Bunker",
+          "blueprintIds": [
+            "8_160",
+            "8_70",
+            "204_25"
+          ],
+          "titleFragments": [
+            "endor: bunker",
+            "bunker"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Bunker",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_160",
+            "8_70",
+            "204_25"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Landing Platform",
+          "blueprintIds": [
+            "8_166",
+            "8_76"
+          ],
+          "titleFragments": [
+            "endor: landing platform",
+            "landing platform"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Landing_Platform",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "8_166",
+            "8_76"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Ominous Rumors",
+          "blueprintIds": [
+            "8_127",
+            "223_19"
+          ],
+          "titleFragments": [
+            "ominous rumors"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Ominous_Rumors",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "8_127",
+            "223_19"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Establish Secret Base",
+          "blueprintIds": [
+            "8_124",
+            "207_25"
+          ],
+          "titleFragments": [
+            "establish secret base"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Establish_Secret_Base",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "8_124",
+            "207_25"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Endor system",
+          "text": "Deploy Endor system",
+          "planetOrSystemGroup": "ENDOR",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Endor_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_157",
+            "8_68",
+            "204_24"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Endor site",
+          "text": "Back side protects Endor sites where you have a biker scout or piloted AT-ST",
+          "planetOrSystemGroup": "ENDOR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Endor_site",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": 9,
+          "resolvedSample": [
+            "8_158",
+            "8_159",
+            "8_160",
+            "8_161",
+            "8_162",
+            "8_163",
+            "8_164",
+            "8_165",
+            "8_166"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Endor location",
+          "text": "Place objective out of play if an Endor location is blown away",
+          "planetOrSystemGroup": "ENDOR",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Endor_location",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": 10,
+          "resolvedSample": [
+            "8_157",
+            "8_158",
+            "8_159",
+            "8_160",
+            "8_161",
+            "8_162",
+            "8_163",
+            "8_164",
+            "8_165",
+            "8_166"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Biker scout",
+          "text": "Back side protects drains at same Endor site and retrieves one biker scout during draw phase",
+          "runtimeFilter": "Filters.biker_scout",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Piloted AT-ST",
+          "text": "Back side protects drains at same Endor site where you have a piloted AT-ST",
+          "runtimeFilter": "Filters.and(Filters.piloted, Filters.AT_ST)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Vehicle/model requirement stored here because this shard shape has no VehicleRequirement array."
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Endor_system",
+            "label": "Endor system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card8_167.java lines 49-55 DeployCardFromReserveDeckEffect(Filters.Endor_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Bunker",
+            "label": "Bunker"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card8_167.java lines 56-62 DeployCardFromReserveDeckEffect(Filters.Bunker)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Landing_Platform",
+            "label": "Landing Platform"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card8_167.java lines 63-69 DeployCardFromReserveDeckEffect(Filters.Landing_Platform)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "CONTROL",
+          "verb": "take",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.or(Filters.Ominous_Rumors, Filters.Establish_Secret_Base)",
+            "label": "Ominous Rumors or Establish Secret Base"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card8_167.java line 88 TakeCardIntoHandFromReserveDeckEffect(Filters.or(Filters.Ominous_Rumors, Filters.Establish_Secret_Base))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "phaseDetail": "DRAW",
+          "verb": "retrieve",
+          "sourceZone": "LOST",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.biker_scout",
+            "label": "Biker scout"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card8_167_BACK.java line 74 RetrieveCardEffect(Filters.biker_scout)"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "ON_TABLE",
+        "count": 2,
+        "target": {
+          "kind": "NamedCardRefSet",
+          "runtimeFilter": "Filters.Ominous_Rumors AND Filters.Establish_Secret_Base",
+          "labels": [
+            "Ominous Rumors",
+            "Establish Secret Base"
+          ]
+        },
+        "byWhom": null,
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card8_167.java lines 99-108 checks Ominous_Rumors and Establish_Secret_Base, then FlipCardEffect"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "ON_TABLE",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "NamedCardRefSet",
+          "runtimeFilter": "Filters.Ominous_Rumors AND Filters.Establish_Secret_Base",
+          "labels": [
+            "Ominous Rumors",
+            "Establish Secret Base"
+          ]
+        },
+        "sourceEvidence": "Card8_167_BACK.java lines 85-94 flips if either Ominous_Rumors or Establish_Secret_Base cannot be spotted"
+      },
+      "hardLose": {
+        "condition": "BLOWN_AWAY",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Endor_location",
+          "label": "Endor location"
+        },
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "sourceEvidence": "Card8_167.java lines 113-120 and Card8_167_BACK.java lines 99-106 PlaceCardOutOfPlayFromTableEffect on Endor_location blown away"
+      },
+      "randoMapping": {
+        "existingVtags": [
+          {
+            "vtag": "V177",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/DeckOracle.java",
+            "line": 1163,
+            "whatItDoes": "Anchored objective pull-target parsing preserves Endor Operations Ominous Rumors and Establish Secret Base search targets."
+          },
+          {
+            "vtag": "V193",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 1009,
+            "whatItDoes": "Marks Endor Operations required cards and Endor: Bunker as the flip-gate control site."
+          },
+          {
+            "vtag": "V193",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/DeployEvaluator.java",
+            "line": 1900,
+            "whatItDoes": "Adds a +400 deploy steer for one body to the flip-gate control site when Establish Secret Base is available."
+          }
+        ],
+        "newVsExisting": "Existing Rando has Endor-specific V193 and generic V177 search parsing. Back-side biker scout retrieval and Endor-site protection are facts only in this shard."
+      },
+      "weights": [
+        {
+          "situation": "Deploy one body to Endor: Bunker while it is the flip-critical control site, not already controlled, and Establish Secret Base is in hand or Reserve Deck",
+          "score": 400,
+          "sourceVtag": "V193"
+        },
+        {
+          "situation": "Dead Reserve search where no parsed targets remain and parsing is trusted",
+          "score": -2000,
+          "sourceVtag": "V177"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "front/back DB ids verified from card_blueprint_database.json",
+          "runtime filters copied from Java source",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Duplicate of pilot WIP entry. Merge should prefer whichever version has the desired field names.",
+          "Piloted AT-ST is represented under characters because the current shard shape has no VehicleRequirement type.",
+          "No dedicated Rando mapping found for back-side biker scout retrieve or drain protection."
+        ]
+      }
+    },
+    {
+      "frontBp": "9_151",
+      "backBp": "9_151_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Bring Him Before Me",
+      "objectiveTitleBack": "Take Your Father's Place",
+      "abbreviation": "BHBM",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "9_151",
+          "9_151_BACK"
+        ],
+        "titleFragments": [
+          "bring him before me",
+          "take your father's place"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Death Star II: Throne Room",
+          "blueprintIds": [
+            "9_147"
+          ],
+          "titleFragments": [
+            "death star ii: throne room",
+            "throne room"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Throne_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_147"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Insignificant Rebellion",
+          "blueprintIds": [
+            "9_127",
+            "210_47"
+          ],
+          "titleFragments": [
+            "insignificant rebellion"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Insignificant_Rebellion",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "9_127",
+            "210_47"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Your Destiny",
+          "blueprintIds": [
+            "9_134"
+          ],
+          "titleFragments": [
+            "your destiny"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Your_Destiny",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_134"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Scanning Crew",
+          "blueprintIds": [
+            "1_266"
+          ],
+          "titleFragments": [
+            "scanning crew"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Scanning_Crew",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_266"
+          ],
+          "notes": "May not be played while the objective is active."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Throne Room",
+          "text": "Deploy Throne Room; duel requires Vader, retargeted captive, and Emperor present at your Throne Room",
+          "planetOrSystemGroup": "DEATH_STAR_II",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Throne_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_147"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Emperor",
+          "text": "You may deploy Emperor from Reserve Deck at deploy -2; duel requires Emperor at Throne Room",
+          "runtimeFilter": "Filters.Emperor",
+          "matchSource": "DB_TITLE_SNAPSHOT",
+          "resolvedCount": 5,
+          "resolvedSample": [
+            "9_109",
+            "10_51",
+            "205_12",
+            "219_19",
+            "222_12"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Vader",
+          "text": "Captures retargeted character if present and not escorting a captive; duel participant",
+          "runtimeFilter": "Filters.Vader",
+          "matchSource": "DB_TITLE_SNAPSHOT",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "1_168",
+            "7_175",
+            "9_113",
+            "208_30",
+            "219_26"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Luke or retargeted Leia/Kanan",
+          "text": "Default target is Luke; Java supports game text modifications retargeting to Leia or Kanan",
+          "runtimeFilter": "Filters.Luke, or Filters.Leia / Filters.Kanan under BRING_HIM_BEFORE_ME game text modifications",
+          "matchSource": "DB_TITLE_SNAPSHOT",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "9_24",
+            "10_10",
+            "208_8",
+            "1_17",
+            "203_6",
+            "217_38"
+          ],
+          "notes": "Retarget branches are runtime truth in Card9_151.java and Card9_151_BACK.java."
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Throne_Room",
+            "label": "Throne Room"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card9_151.java lines 63-69 DeployCardFromReserveDeckEffect(Filters.Throne_Room)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Insignificant_Rebellion",
+            "label": "Insignificant Rebellion"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card9_151.java lines 70-76 DeployCardFromReserveDeckEffect(Filters.Insignificant_Rebellion)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Your_Destiny",
+            "label": "Your Destiny"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card9_151.java lines 77-83 DeployCardFromReserveDeckEffect(Filters.Your_Destiny)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP_OR_POST_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.Emperor",
+            "label": "Emperor"
+          },
+          "cadence": "TOP_LEVEL",
+          "cost": -2,
+          "enablesFlip": false,
+          "sourceEvidence": "Card9_151.java line 223 and Card9_151_BACK.java line 150 DeployCardFromReserveDeckEffect(Filters.Emperor, -2, true)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP_OR_POST_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE_OR_LOST",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.Luke, Filters.Leia, or Filters.Kanan depending on retarget modifiers",
+            "label": "Luke or retargeted Leia/Kanan"
+          },
+          "cadence": "OPPONENT_TOP_LEVEL",
+          "cost": -2,
+          "enablesFlip": true,
+          "sourceEvidence": "Card9_151.java lines 245-323 and Card9_151_BACK.java lines 528-594 deploy retargeted character from Reserve or Lost Pile"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "CAPTURED",
+        "count": 1,
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.Luke, Filters.captive) or retargeted Filters.Leia/Filters.Kanan captive",
+          "label": "Luke or retargeted Leia/Kanan"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Vader",
+          "label": "Vader"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card9_151.java lines 343-383 flips when retargeted Luke/Leia/Kanan is captive"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "NOT_PRESENT_WITH_VADER_AND_NOT_CAPTIVE",
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Luke, or retargeted Filters.Leia/Filters.Kanan",
+          "label": "Luke or retargeted Leia/Kanan"
+        },
+        "sourceEvidence": "Card9_151_BACK.java lines 84-128 flips if retargeted character is neither captive nor present with Vader"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "Targeted rg in ai/models/rando found only ObjectiveType archetype comments for Bring Him Before Me outside ObjectiveHandler.java. No live title-specific V-tag score was verified."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "front/back DB ids verified from card_blueprint_database.json",
+          "runtime filters copied from Java source",
+          "retarget branches for Leia and Kanan verified in Java",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "BHBM duel logic is large and branchy. This shard captures objective facts and retarget branches, not every duel destiny sub-effect.",
+          "Emperor/Vader/Luke candidate samples are not exhaustive persona enumerations. Runtime filters remain truth."
+        ]
+      }
+    },
+    {
+      "frontBp": "10_29",
+      "backBp": "10_29_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Agents Of Black Sun",
+      "objectiveTitleBack": "Vengeance Of The Dark Prince",
+      "abbreviation": "AOBS",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "10_29",
+          "10_29_BACK"
+        ],
+        "titleFragments": [
+          "agents of black sun",
+          "vengeance of the dark prince"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Imperial City",
+          "blueprintIds": [
+            "7_277",
+            "201_38"
+          ],
+          "titleFragments": [
+            "coruscant: imperial city",
+            "imperial city"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Imperial_City",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "7_277",
+            "201_38"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Coruscant system",
+          "blueprintIds": [
+            "7_275",
+            "12_165",
+            "203_31",
+            "226_2",
+            "7_116",
+            "12_73"
+          ],
+          "titleFragments": [
+            "coruscant"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Coruscant_system",
+          "candidateSource": "DB",
+          "resolvedCount": 6,
+          "resolvedSample": [
+            "7_275",
+            "12_165",
+            "203_31",
+            "226_2",
+            "7_116",
+            "12_73"
+          ],
+          "notes": "Objective deploys from dark Reserve Deck, so dark Coruscant printings are the practical setup targets."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Prince Xizor",
+          "blueprintIds": [
+            "10_45"
+          ],
+          "titleFragments": [
+            "prince xizor",
+            "xizor"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Xizor",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "10_45"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "No Bargain",
+          "blueprintIds": [
+            "7_233",
+            "225_4"
+          ],
+          "titleFragments": [
+            "no bargain"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.No_Bargain",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "7_233",
+            "225_4"
+          ],
+          "notes": "Legacy branch deploys Icon.LEGACY_BLOCK_4 No Bargain if Legacy Shada was selected."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Scanning Crew",
+          "blueprintIds": [
+            "1_266"
+          ],
+          "titleFragments": [
+            "scanning crew"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Scanning_Crew",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_266"
+          ],
+          "notes": "May not be played while either side of objective is active."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Imperial City",
+          "text": "Deploy Imperial City, with Xizor or Legacy Shada there",
+          "planetOrSystemGroup": "CORUSCANT",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "EXTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Imperial_City",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "7_277",
+            "201_38"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground site",
+          "text": "Flip if Xizor or retargeted Shada is at a battleground site and Luke/Leia/Kanan/Anakin is not at a battleground site",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground_site",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Black Sun Agent",
+          "text": "Your aliens with Black Sun in lore, bounty hunters, and information brokers are Black Sun Agents",
+          "runtimeFilter": "Filters.or(Filters.and(Filters.alien, Filters.loreContains(\"Black Sun\")), Filters.bounty_hunter, Filters.information_broker)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "10_41",
+            "10_45",
+            "10_53",
+            "10_48",
+            "110_9"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Xizor or Legacy Shada",
+          "text": "Setup deploys Xizor, or Legacy Shada with No Bargain when both are in Reserve Deck; flip and back-side control loss use the same retarget",
+          "runtimeFilter": "GameConditions.hasGameTextModification(... LEGACY__TREAT_XIZOR_AS_SHADA) ? Filters.title(\"Shada\") : Filters.Xizor",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "10_45"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Luke or retargeted Leia/Kanan/Anakin",
+          "text": "Front flip requires this character not at a battleground site; back flips if this character is at a battleground site",
+          "runtimeFilter": "Filters.Luke, Filters.Leia, Filters.Kanan, or Filters.Anakin depending on Reflections II objective game text modifications",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "9_24",
+            "1_17",
+            "203_6",
+            "12_1"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Emperor",
+          "text": "Allowed ability deploy exception and back-side control phase Force loss source",
+          "runtimeFilter": "Filters.Emperor",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "9_109",
+            "10_51",
+            "219_19"
+          ]
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Imperial_City",
+            "label": "Imperial City"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card10_029.java lines 69-75 DeployCardFromReserveDeckEffect(Filters.Imperial_City)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.Xizor or Filters.and(Icon.LEGACY_BLOCK_4, Filters.title(\"Shada\"))",
+            "label": "Xizor or Legacy Shada"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card10_029.java lines 77-108 deploys Xizor or Legacy Shada to Imperial City"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.and(Icon.LEGACY_BLOCK_4, Filters.No_Bargain)",
+            "label": "No Bargain"
+          },
+          "cadence": "CONDITIONAL_ON_LEGACY_SHADA",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card10_029.java lines 88-96 deploys Legacy No Bargain if Legacy Shada is chosen"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Coruscant_system",
+            "label": "Coruscant system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card10_029.java lines 110-116 DeployCardFromReserveDeckEffect(Filters.Coruscant_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP_OR_POST_FLIP",
+          "phaseDetail": "CONTROL",
+          "verb": "regularMove",
+          "sourceZone": "TABLE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.your(self), Filters.bounty_hunter, Filters.at(Filters.site))",
+            "label": "Bounty hunter at site"
+          },
+          "cadence": "EACH_CONTROL_PHASE",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card10_029.java line 125 and Card10_029_BACK.java line 69 bounty hunters may move to adjacent site with a bounty"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "AT_BATTLEGROUND_SITE_AND_OPPONENT_TARGET_NOT_AT_BATTLEGROUND_SITE",
+        "count": 1,
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "xizorFilter at Filters.battleground_site",
+          "label": "Xizor or Legacy Shada"
+        },
+        "byWhom": null,
+        "opponentConstraint": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "retargeted Luke/Leia/Kanan/Anakin not at Filters.battleground_site",
+          "label": "Luke or retargeted Leia/Kanan/Anakin"
+        },
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card10_029.java lines 159-178 checks Xizor/Shada at battleground site and retargeted Luke/Leia/Kanan/Anakin not at battleground site"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "TARGET_AT_BATTLEGROUND_OR_XIZOR_NOT_ON_TABLE",
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "retargeted Luke/Leia/Kanan/Anakin at battleground site OR no xizorFilter on table",
+          "label": "Luke retarget or Xizor/Shada"
+        },
+        "sourceEvidence": "Card10_029_BACK.java lines 217-228 flips if retargeted Luke/Leia/Kanan/Anakin at battleground site or Xizor/Shada not on table"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "Targeted rg in ai/models/rando found only ObjectiveType archetype comments for Agents Of Black Sun outside ObjectiveHandler.java. No live title-specific V-tag score was verified."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "front/back DB ids verified from card_blueprint_database.json",
+          "runtime filters copied from Java source",
+          "Legacy Shada and No Bargain conditional branch verified in Java",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Shada is represented as Java runtime title filter because the checked-in DB query did not produce a clean Shada cardId match.",
+          "Black Sun Agent candidate list is a small DB/source sample. Runtime filter remains truth.",
+          "No dedicated live Rando V-tag found for Agents Of Black Sun outside ObjectiveHandler.java."
+        ]
+      }
+    },
+    {
+      "frontBp": "12_179",
+      "backBp": "12_179_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "My Lord, Is That Legal?",
+      "objectiveTitleBack": "I Will Make It Legal",
+      "abbreviation": "MLITL",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "12_179",
+          "12_179_BACK"
+        ],
+        "titleFragments": [
+          "my lord, is that legal?",
+          "i will make it legal"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Galactic Senate",
+          "blueprintIds": [
+            "12_167",
+            "12_75"
+          ],
+          "titleFragments": [
+            "coruscant: galactic senate",
+            "galactic senate"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_167",
+            "12_75"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Counter Assault",
+          "blueprintIds": [
+            "1_238"
+          ],
+          "titleFragments": [
+            "counter assault"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Counter_Assault",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_238"
+          ],
+          "notes": "Canceled by objective, not pulled."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Surprise Assault",
+          "blueprintIds": [
+            "1_113"
+          ],
+          "titleFragments": [
+            "surprise assault"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Surprise_Assault",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_113"
+          ],
+          "notes": "Canceled by objective, not pulled."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Goo Nee Tay",
+          "blueprintIds": [
+            "7_62"
+          ],
+          "titleFragments": [
+            "goo nee tay"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Goo_Nee_Tay",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_62"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Political Effect",
+          "blueprintIds": [
+            "12_127",
+            "12_137",
+            "12_138",
+            "12_142",
+            "12_40",
+            "12_43",
+            "12_45",
+            "12_48",
+            "204_16"
+          ],
+          "titleFragments": [
+            "political effect"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Political_Effect",
+          "candidateSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 9,
+          "resolvedSample": [
+            "12_127",
+            "12_137",
+            "12_138",
+            "12_142",
+            "12_40"
+          ],
+          "notes": "Subtype-like runtime filter represented as a NamedCardRef because current shard shape has no EffectRequirement array."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Galactic Senate",
+          "text": "Deploy Galactic Senate",
+          "planetOrSystemGroup": "CORUSCANT",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "EPISODE_I"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_167",
+            "12_75"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Any other Episode I location",
+          "text": "Deploy any other Episode I location",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "EPISODE_I"
+          ],
+          "exceptions": [
+            {
+              "runtimeFilter": "Filters.not(Filters.Galactic_Senate)",
+              "text": "not Galactic Senate"
+            }
+          ],
+          "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Senator",
+          "text": "Flip requires 3 senators at Galactic Senate, or 2 with at least 1 blockade agenda",
+          "runtimeFilter": "Filters.senator",
+          "keyword": "SENATOR",
+          "matchSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 28,
+          "resolvedSample": [
+            "12_105",
+            "12_110",
+            "12_113",
+            "12_116",
+            "12_122",
+            "12_123",
+            "12_126",
+            "12_97",
+            "12_98",
+            "217_18"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Blockade agenda senator",
+          "text": "Alternate flip requires at least one senator with a blockade agenda",
+          "runtimeFilter": "Filters.and(Filters.senator, Filters.blockade_agenda)",
+          "keyword": "SENATOR",
+          "matchSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "12_110",
+            "12_97",
+            "12_98"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Ambition agenda senator",
+          "text": "Back side makes senators destiny +3 instead of +2 if senator has an ambition agenda",
+          "runtimeFilter": "Filters.and(Filters.senator, Filters.ambition_agenda)",
+          "keyword": "SENATOR",
+          "matchSource": "SOURCE_SUPPLEMENT",
+          "resolvedCount": 8,
+          "resolvedSample": [
+            "12_105",
+            "12_110",
+            "12_116",
+            "12_123",
+            "12_97",
+            "217_18",
+            "12_28",
+            "12_29"
+          ]
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Galactic_Senate",
+            "label": "Galactic Senate"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card12_179.java lines 62-68 DeployCardFromReserveDeckEffect(Filters.Galactic_Senate)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))",
+            "label": "Any other Episode I location"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card12_179.java lines 69-75 DeployCardFromReserveDeckEffect(Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate)))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "take",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Political_Effect",
+            "label": "Political Effect"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card12_179_BACK.java line 120 TakeCardIntoHandFromReserveDeckEffect(Filters.Political_Effect)"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT",
+        "count": 3,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "label": "Galactic Senate"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.senator",
+          "label": "Senator"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [
+          {
+            "relation": "PRESENT",
+            "count": 2,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.Galactic_Senate",
+              "label": "Galactic Senate"
+            },
+            "byWhom": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.senator",
+              "label": "Senator"
+            },
+            "additionalRequirement": {
+              "relation": "PRESENT",
+              "count": 1,
+              "target": {
+                "kind": "CharacterRequirement",
+                "runtimeFilter": "Filters.blockade_agenda",
+                "label": "Blockade agenda"
+              }
+            }
+          }
+        ],
+        "sourceEvidence": "Card12_179.java lines 169-180 filters your senators at Galactic Senate; flips at 3 or at 2 with blockade agenda"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "label": "Galactic Senate"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.senator",
+          "label": "Senator"
+        },
+        "sourceEvidence": "Card12_179_BACK.java lines 171-179 flips if fewer than two your senators at Galactic Senate"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [
+          {
+            "vtag": "V83",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 432,
+            "whatItDoes": "Penalizes My Lord senator deploys to non-Senate locations."
+          },
+          {
+            "vtag": "V110",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 453,
+            "whatItDoes": "Holds non-senator deploys while no non-Senate site exists."
+          },
+          {
+            "vtag": "V108",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 475,
+            "whatItDoes": "Prioritizes deploying a senator under My Lord."
+          },
+          {
+            "vtag": "V88",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 521,
+            "whatItDoes": "Rewards senator deployment to Galactic Senate."
+          },
+          {
+            "vtag": "V99",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "line": 531,
+            "whatItDoes": "Ungated Senate guard penalizes non-senators going to Galactic Senate unless defense allows."
+          },
+          {
+            "vtag": "V109",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "line": 3890,
+            "whatItDoes": "Protects senators from loss/cost selection."
+          }
+        ],
+        "newVsExisting": "Existing Rando already has My Lord senator/Senate deploy and selection scores. This shard preserves those weights and adds typed source facts."
+      },
+      "weights": [
+        {
+          "situation": "Senator deploy action explicitly targets non-Galactic Senate location",
+          "score": -2000,
+          "sourceVtag": "V83"
+        },
+        {
+          "situation": "Non-senator deploy should wait because only Galactic Senate or no non-Senate site is available",
+          "score": -2000,
+          "sourceVtag": "V110"
+        },
+        {
+          "situation": "Deploying senator under My Lord",
+          "score": 500,
+          "sourceVtag": "V108"
+        },
+        {
+          "situation": "Senator deploy action or destination targets Galactic Senate",
+          "score": 1500,
+          "sourceVtag": "V88"
+        },
+        {
+          "situation": "Non-senator destination is Galactic Senate and not needed for defense",
+          "score": -1500,
+          "sourceVtag": "V99"
+        },
+        {
+          "situation": "Senator selected for Force loss, cost, or forfeit under My Lord",
+          "score": -300,
+          "sourceVtag": "V109"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "front/back DB ids verified from card_blueprint_database.json",
+          "runtime filters copied from Java source",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Duplicate of pilot WIP entry. Merge should prefer whichever version has the desired field names.",
+          "Political Effect is represented as NamedCardRef-like data because the shard shape has no EffectRequirement type.",
+          "V99 is intentionally ungated in current Rando code and should not be narrowed during merge."
+        ]
+      }
+    },
+    {
+      "frontBp": "12_180",
+      "backBp": "12_180_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "No Money, No Parts, No Deal!",
+      "objectiveTitleBack": "You're A Slave?",
+      "abbreviation": "NMNPND",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "12_180",
+          "12_180_BACK"
+        ],
+        "titleFragments": [
+          "no money, no parts, no deal!",
+          "you're a slave?"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Watto's Junkyard",
+          "blueprintIds": [
+            "12_178",
+            "12_87"
+          ],
+          "titleFragments": [
+            "tatooine: watto's junkyard",
+            "watto's junkyard"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Wattos_Junkyard",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_178",
+            "12_87"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Mos Espa",
+          "blueprintIds": [
+            "11_93",
+            "208_56",
+            "11_43",
+            "221_75"
+          ],
+          "titleFragments": [
+            "tatooine: mos espa",
+            "mos espa"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Mos_Espa",
+          "candidateSource": "DB",
+          "resolvedCount": 4,
+          "resolvedSample": [
+            "11_93",
+            "208_56",
+            "11_43",
+            "221_75"
+          ],
+          "notes": "Docking Bay Mos Espa cards are excluded from the sample because the objective text and filter use Mos Espa site title, not Mos Espa Docking Bay."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Watto",
+          "blueprintIds": [
+            "11_65",
+            "11_66"
+          ],
+          "titleFragments": [
+            "watto"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Watto",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "11_65",
+            "11_66"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Revolution",
+          "blueprintIds": [
+            "1_62"
+          ],
+          "titleFragments": [
+            "revolution"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Title.Revolution",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_62"
+          ],
+          "notes": "Watto's Junkyard is immune to Revolution."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Watto's Junkyard",
+          "text": "Deploy Watto's Junkyard; flip and flip-back care about Watto present there",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "EXTERIOR",
+          "iconsRequired": [
+            "EPISODE_I"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Wattos_Junkyard",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "12_178",
+            "12_87"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Mos Espa",
+          "text": "Deploy Mos Espa; flip requires you occupy Mos Espa",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "EXTERIOR",
+          "iconsRequired": [
+            "EPISODE_I"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Mos_Espa",
+          "candidateSource": "DB",
+          "resolvedCount": 4,
+          "resolvedSample": [
+            "11_93",
+            "208_56",
+            "11_43",
+            "221_75"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine sites",
+          "text": "Opponent loses no more than 1 Force from your Force drains at Tatooine sites",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Tatooine_site",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Watto",
+          "text": "Flip requires Watto present at Watto's Junkyard; opponent may use 8 Force to place Watto in Used Pile and allow you to retrieve up to 4 Force",
+          "runtimeFilter": "Filters.and(Filters.Watto, Filters.presentAt(Filters.Wattos_Junkyard))",
+          "matchSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "11_65",
+            "11_66"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Qui-Gon",
+          "text": "While front side up, Qui-Gon is power +3",
+          "runtimeFilter": "Filters.QuiGon",
+          "matchSource": "DB_TITLE_SNAPSHOT",
+          "resolvedCount": 11,
+          "resolvedSample": [
+            "11_10",
+            "11_11",
+            "12_16",
+            "12_17",
+            "13_39",
+            "14_27",
+            "200_22",
+            "200_146",
+            "213_40",
+            "216_37",
+            "218_3"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent non-unique alien",
+          "text": "Back side makes opponent's non-unique aliens deploy +3",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.non_unique, Filters.alien)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Wattos_Junkyard",
+            "label": "Watto's Junkyard"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card12_180.java lines 62-68 DeployCardFromReserveDeckEffect(Filters.Wattos_Junkyard)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Mos_Espa",
+            "label": "Mos Espa"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card12_180.java lines 69-75 DeployCardFromReserveDeckEffect(Filters.Mos_Espa)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "opponentMayUseForceToPlaceInUsed",
+          "sourceZone": "TABLE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.Watto, Filters.at(Filters.Wattos_Junkyard))",
+            "label": "Watto at Watto's Junkyard"
+          },
+          "cadence": "TOP_LEVEL",
+          "cost": 8,
+          "enablesFlip": false,
+          "sourceEvidence": "Card12_180.java lines 92-102 targets Watto at Watto's Junkyard for opponent to place in Used Pile"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "placeFaceDownThenOpponentChooses",
+          "sourceZone": "HAND",
+          "target": {
+            "kind": "AnyCard",
+            "runtimeFilter": "card from hand",
+            "label": "Card from hand"
+          },
+          "cadence": "ONCE_PER_DEPLOY_PHASE",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card12_180_BACK.java lines 152-172 opponent chooses lose 2 Force or use 2 Force to allow free deploy"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT_AND_OCCUPY",
+        "count": 1,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Wattos_Junkyard",
+          "label": "Watto's Junkyard"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Watto",
+          "label": "Watto"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "additionalRequirement": {
+          "relation": "YOU_OCCUPY",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Mos_Espa",
+            "label": "Mos Espa"
+          }
+        },
+        "sourceEvidence": "Card12_180.java lines 163-172 flips if Watto present at Watto's Junkyard and you occupy Mos Espa"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "NOT_PRESENT_OR_NOT_OCCUPY",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Wattos_Junkyard",
+          "label": "Watto's Junkyard"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Watto",
+          "label": "Watto"
+        },
+        "additionalRequirement": {
+          "relation": "YOU_OCCUPY",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Mos_Espa",
+            "label": "Mos Espa"
+          }
+        },
+        "sourceEvidence": "Card12_180_BACK.java lines 225-234 flips if Watto not present at Watto's Junkyard or you do not occupy Mos Espa"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "Targeted rg in ai/models/rando found only ObjectiveType archetype comments for No Money No Parts No Deal outside ObjectiveHandler.java. No live title-specific V-tag score was verified."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "front/back DB ids verified from card_blueprint_database.json",
+          "runtime filters copied from Java source",
+          "rando search checked outside ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "No dedicated live Rando V-tag found for No Money No Parts No Deal outside ObjectiveHandler.java.",
+          "Back-side face-down card procedure is summarized as a PullOrDeployAction even though it is a choice/ploy action, because current shard shape has no separate action family."
+        ]
+      }
+    }
+  ]
+}

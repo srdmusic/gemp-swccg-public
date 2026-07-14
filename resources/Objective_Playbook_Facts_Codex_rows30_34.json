@@ -1,0 +1,1528 @@
+{
+  "schemaVersion": "objective-playbook-facts-v0.1",
+  "generatedAt": "2026-07-07",
+  "generatedBy": "Codex Objective Playbook data worker",
+  "batchStatus": {
+    "status": "complete",
+    "owner": "codex",
+    "frontBpsScope": "Objective_Blueprint_Inventory_2026-07-07.json .rows[30:35]",
+    "frontBpsIncluded": [
+      "7_296",
+      "7_297",
+      "7_298",
+      "7_299",
+      "7_300"
+    ],
+    "notes": [
+      "Back-side objective id is <front>_BACK.",
+      "Runtime Java filters are treated as truth over inventory text and seed intel.",
+      "Objective_Intel_BottomUp_rows29-39_2026-07-07.md was used only as seed intel.",
+      "ObjectiveHandler.java was not read or used.",
+      "No Java AI model files were edited."
+    ]
+  },
+  "entries": [
+    {
+      "frontBp": "7_296",
+      "backBp": "7_296_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Carbon Chamber Testing",
+      "objectiveTitleBack": "My Favorite Decoration",
+      "abbreviation": "CCT",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_296",
+          "7_296_BACK"
+        ],
+        "titles": [
+          "Carbon Chamber Testing",
+          "My Favorite Decoration"
+        ],
+        "titleFragments": [
+          "carbon chamber testing",
+          "my favorite decoration"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Carbonite Chamber",
+          "blueprintIds": [
+            "225_41",
+            "5_166",
+            "5_78"
+          ],
+          "titleFragments": [
+            "cloud city: carbonite chamber"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Carbonite_Chamber",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "225_41",
+            "5_166",
+            "5_78"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Carbonite Chamber Console",
+          "blueprintIds": [
+            "211_8",
+            "5_107"
+          ],
+          "titleFragments": [
+            "carbonite chamber console"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Carbonite_Chamber_Console",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "211_8",
+            "5_107"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Security Tower",
+          "blueprintIds": [
+            "200_126",
+            "5_172"
+          ],
+          "titleFragments": [
+            "cloud city: security tower"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Security_Tower",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "200_126",
+            "5_172"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Jabba's Prize",
+          "blueprintIds": [
+            "10_42"
+          ],
+          "titleFragments": [
+            "jabba's prize"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Jabbas_Prize",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "10_42"
+          ],
+          "notes": "If in the dark player's Reserve Deck, Java deploys this instead of pulling a Rebel from opponent Reserve."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Audience Chamber",
+          "blueprintIds": [
+            "6_162",
+            "6_81"
+          ],
+          "titleFragments": [
+            "jabba's palace: audience chamber"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Audience_Chamber",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "6_162",
+            "6_81"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Docking Bay 94",
+          "blueprintIds": [
+            "1_129",
+            "1_291"
+          ],
+          "titleFragments": [
+            "tatooine: docking bay 94"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Docking_Bay_94",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_129",
+            "1_291"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "East Platform",
+          "blueprintIds": [
+            "5_169"
+          ],
+          "titleFragments": [
+            "cloud city: east platform"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.East_Platform",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "5_169"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Scum And Villainy",
+          "blueprintIds": [
+            "6_149"
+          ],
+          "titleFragments": [
+            "scum and villainy"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Scum_And_Villainy",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_149"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Dark Deal",
+          "blueprintIds": [
+            "223_9",
+            "5_115"
+          ],
+          "titleFragments": [
+            "dark deal"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Dark_Deal",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "223_9",
+            "5_115"
+          ],
+          "notes": "Forbidden by MayNotDeployModifier while front side is active."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Cloud City setup package",
+          "text": "Deploy Carbonite Chamber, Carbonite Chamber Console, and Security Tower",
+          "planetOrSystemGroup": "BESPIN_CLOUD_CITY",
+          "runtimeFilter": "Filters.Carbonite_Chamber / Filters.Carbonite_Chamber_Console / Filters.Security_Tower",
+          "candidateSource": "DB",
+          "resolvedCount": 7,
+          "resolvedSample": [
+            "225_41",
+            "5_166",
+            "5_78",
+            "211_8",
+            "5_107",
+            "200_126",
+            "5_172"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Audience Chamber",
+          "text": "move a frozen captive to Audience Chamber to flip; frozen captive there enables Scum And Villainy pull",
+          "planetOrSystemGroup": "TATOOINE_JABBAS_PALACE",
+          "subtype": "SITE",
+          "runtimeFilter": "Filters.Audience_Chamber",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "6_162",
+            "6_81"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel captive from opponent Reserve",
+          "text": "If Jabba's Prize is absent from your Reserve, opponent may choose a Rebel from opponent Reserve to deploy imprisoned at Security Tower",
+          "runtimeFilter": "Filters.Rebel, possibly excluding Han/Leia/Luke based on opponent objective",
+          "icon": "REBEL",
+          "candidateSource": "DB",
+          "resolvedCount": 216,
+          "resolvedSample": [
+            "101_2",
+            "102_3",
+            "104_1",
+            "105_1",
+            "106_6",
+            "107_2",
+            "108_1",
+            "108_2"
+          ],
+          "notes": "Opponent-objective exclusions: Profit excludes Han, Rescue The Princess excludes Leia, There Is Good In Him excludes Luke."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Frozen captive",
+          "text": "Front flips when you move an escorting frozen captive to Audience Chamber; back stays in play only while a frozen captive exists unless no Rebel was in opponent Reserve at setup",
+          "runtimeFilter": "Filters.frozenCaptive",
+          "candidateSource": "RUNTIME_BOARD_STATE"
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Alien or Independent starship",
+          "text": "Back side grants immunity to attrition < 4 to your aliens and Independent starships",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.or(Filters.alien, Filters.and(Icon.INDEPENDENT, Filters.starship)))",
+          "candidateSource": "DB",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "ALIEN character count 421",
+            "INDEPENDENT starship count 45"
+          ]
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefSet",
+            "runtimeFilter": "Filters.Carbonite_Chamber, Filters.Carbonite_Chamber_Console, Filters.Security_Tower",
+            "labels": [
+              "Carbonite Chamber",
+              "Carbonite Chamber Console",
+              "Security Tower"
+            ]
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_296.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy_as_captive",
+          "sourceZone": "OWN_RESERVE_OR_OPPONENT_RESERVE",
+          "target": {
+            "kind": "NamedCardRefOrCharacterRequirement",
+            "runtimeFilter": "Filters.Jabbas_Prize OR opponent Filters.Rebel with exclusions",
+            "label": "Jabba's Prize or opponent Rebel captive"
+          },
+          "destination": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Security_Tower",
+            "label": "Security Tower"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_296.java DeployCardToTargetFromReserveDeckEffect with DeployAsCaptiveOption"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefSet",
+            "runtimeFilter": "Filters.or(Filters.Audience_Chamber, Filters.Docking_Bay_94, Filters.East_Platform)",
+            "labels": [
+              "Audience Chamber",
+              "Docking Bay 94",
+              "East Platform"
+            ]
+          },
+          "cadence": "ONCE_PER_DEPLOY_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_296.java getGameTextTopLevelActions"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "retrieve",
+          "sourceZone": "LOST",
+          "target": {
+            "kind": "ForceRetrieval",
+            "label": "1 Force"
+          },
+          "cadence": "ONCE_PER_CONTROL_PHASE",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_296_BACK.java RetrieveForceEffect"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Scum_And_Villainy",
+            "label": "Scum And Villainy"
+          },
+          "cadence": "ONCE_PER_DEPLOY_PHASE",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_296_BACK.java deploy Scum And Villainy if frozen captive at Audience Chamber"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "alternatives": [
+          {
+            "relation": "MOVED_TO_LOCATION_BY",
+            "target": {
+              "kind": "NamedCardRef",
+              "runtimeFilter": "Filters.Audience_Chamber",
+              "label": "Audience Chamber"
+            },
+            "byWhom": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.escorting(Filters.frozenCaptive)",
+              "label": "escort moving frozen captive"
+            }
+          },
+          {
+            "relation": "NO_INITIAL_CAPTIVE",
+            "target": {
+              "kind": "RuntimeState",
+              "runtimeFilter": "!canSpot(Filters.imprisonedIn(Filters.Security_Tower)) after deployment",
+              "label": "no Rebel imprisoned at Security Tower"
+            }
+          }
+        ],
+        "sourceEvidence": "Card7_296.java movedToLocationBy escorting frozen captive to Audience Chamber, or after deployment no imprisoned captive at Security Tower"
+      },
+      "flipBack": null,
+      "hardLose": {
+        "condition": "NO_FROZEN_CAPTIVE",
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "unless": "cardHasWhileInPlayDataSet(self), meaning no Rebel was in opponent Reserve at setup",
+        "sourceEvidence": "Card7_296_BACK.java places self out of play when no frozen captive is on table and while-in-play data flag is not set"
+      },
+      "randoMapping": {
+        "existingVtags": [
+          {
+            "vtag": "V24.13",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "whatItDoes": "Prioritizes Carbonite Chamber and deprioritizes Security Tower for the I'm Sorry Cloud City pull package; not Carbon Chamber Testing-specific."
+          }
+        ],
+        "newVsExisting": "No dedicated Carbon Chamber Testing playbook found outside forbidden ObjectiveHandler. Existing handling is mostly generic Cloud City and I'm Sorry heuristics."
+      },
+      "weights": [
+        {
+          "situation": "Carbonite Chamber in I'm Sorry pull package",
+          "score": 150,
+          "sourceVtag": "V24.13"
+        },
+        {
+          "situation": "Security Tower in I'm Sorry pull package",
+          "score": -30,
+          "sourceVtag": "V24.13"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back setGameText read",
+          "front and back runtime action/filter code read",
+          "Filters.java definitions checked for Carbonite_Chamber, Carbonite_Chamber_Console, Security_Tower, Jabbas_Prize, Audience_Chamber, Docking_Bay_94, East_Platform, Scum_And_Villainy, Dark_Deal"
+        ],
+        "forK2ToCheck": [
+          "Rando has no dedicated awareness of the opponent-Reserve Rebel imprisonment path.",
+          "Back side has no flip-back, but can place itself out of play if frozen captives disappear unless setup flipped because no Rebel was available.",
+          "V24.13 references Carbonite Chamber/Security Tower through another Cloud City pull package, not this objective directly."
+        ]
+      }
+    },
+    {
+      "frontBp": "7_297",
+      "backBp": "7_297_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Hunt Down And Destroy The Jedi",
+      "objectiveTitleBack": "Their Fire Has Gone Out Of The Universe",
+      "abbreviation": "HDADTJ",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_297",
+          "7_297_BACK"
+        ],
+        "titles": [
+          "Hunt Down And Destroy The Jedi",
+          "Their Fire Has Gone Out Of The Universe"
+        ],
+        "titleFragments": [
+          "hunt down and destroy the jedi",
+          "their fire has gone out of the universe"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Holotheatre",
+          "blueprintIds": [
+            "4_161"
+          ],
+          "titleFragments": [
+            "executor: holotheatre"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Holotheatre",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "4_161"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Visage Of The Emperor",
+          "blueprintIds": [
+            "213_16",
+            "4_135"
+          ],
+          "titleFragments": [
+            "visage of the emperor"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Visage_Of_The_Emperor",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "213_16",
+            "4_135"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Meditation Chamber",
+          "blueprintIds": [
+            "4_163"
+          ],
+          "titleFragments": [
+            "executor: meditation chamber"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Meditation_Chamber",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "4_163"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Epic Duel",
+          "blueprintIds": [
+            "5_129"
+          ],
+          "titleFragments": [
+            "epic duel"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Epic_Duel",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "5_129"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Scanning Crew",
+          "blueprintIds": [
+            "1_266"
+          ],
+          "titleFragments": [
+            "scanning crew"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Scanning_Crew",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_266"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Executor sites",
+          "text": "Holotheatre is mandatory, Meditation Chamber optional, and Force draining at any Executor site places the objective out of play",
+          "planetOrSystemGroup": "EXECUTOR",
+          "subtype": "SITE",
+          "runtimeFilter": "Filters.Executor_site",
+          "candidateSource": "DB",
+          "resolvedCount": 7,
+          "resolvedSample": [
+            "213_24",
+            "4_159",
+            "4_160",
+            "4_161",
+            "4_162",
+            "4_163",
+            "7_282"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground site",
+          "text": "Vader at a battleground site with no opponent Luke/Jedi at a battleground site flips front to back",
+          "runtimeFilter": "Filters.battleground_site",
+          "candidateSource": "RUNTIME_BOARD_STATE"
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Vader",
+          "text": "Vader at battleground site is the flip driver; back flips if Vader not on table",
+          "runtimeFilter": "Filters.Vader",
+          "persona": "VADER",
+          "candidateSource": "DB",
+          "resolvedCount": 10,
+          "resolvedSample": [
+            "101_5",
+            "108_6",
+            "1_168",
+            "200_78",
+            "208_30",
+            "216_6",
+            "217_13",
+            "219_26"
+          ],
+          "notes": "DB title/persona approximation includes Lando Calrissian, Vader's Broker by title; runtime Filters.Vader is persona-based."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent Luke or Jedi",
+          "text": "front must have no opponent Luke or Jedi at battleground site; back flips if opponent Luke or Jedi is at battleground site",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.Luke), Filters.at(Filters.battleground_site))",
+          "candidateSource": "DB_PLUS_FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "LUKE persona/title count 18",
+            "JEDI runtime approximation count 56"
+          ],
+          "notes": "Filters.Jedi is side Light and ability >= 6, not a DB keyword."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent Jedi or Skywalker",
+          "text": "back prevents opponent from initiating battles or Force drains where opponent has a Jedi or Skywalker",
+          "runtimeFilter": "Filters.or(Filters.Jedi, Filters.Skywalker)",
+          "candidateSource": "DB_PLUS_FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "SKYWALKER title/persona approximation count 20"
+          ]
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefSet",
+            "runtimeFilter": "Filters.Holotheatre and Filters.Visage_Of_The_Emperor",
+            "labels": [
+              "Holotheatre",
+              "Visage Of The Emperor"
+            ]
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_297.java required DeployCardFromReserveDeckEffect for Holotheatre and Visage Of The Emperor"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy_optional",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefSet",
+            "runtimeFilter": "Filters.Meditation_Chamber and Filters.Epic_Duel",
+            "labels": [
+              "Meditation Chamber",
+              "Epic Duel"
+            ]
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_297.java optional DeployCardsFromReserveDeckEffect for Meditation Chamber and Epic Duel"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "MOVE",
+          "verb": "take_into_hand",
+          "sourceZone": "TABLE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.Vader, Filters.at(Filters.controls(playerId)))",
+            "label": "Vader at a location you control"
+          },
+          "cadence": "ONCE_PER_MOVE_PHASE",
+          "cost": 4,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_297.java ReturnCardToHandFromTableEffect on Vader; cards on him to Used Pile"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.battleground_site",
+          "label": "battleground site"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Vader",
+          "label": "Vader"
+        },
+        "opponentConstraint": {
+          "relation": "NOT_PRESENT",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.Luke), Filters.at(Filters.battleground_site))",
+          "label": "no opponent Luke or Jedi at battleground site"
+        },
+        "sourceEvidence": "Card7_297.java flip trigger"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OR",
+        "alternatives": [
+          {
+            "relation": "PRESENT",
+            "target": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.Luke), Filters.at(Filters.battleground_site))",
+              "label": "opponent Luke or Jedi at battleground site"
+            }
+          },
+          {
+            "relation": "NOT_ON_TABLE",
+            "target": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.Vader",
+              "label": "Vader"
+            }
+          }
+        ],
+        "sourceEvidence": "Card7_297_BACK.java flip trigger"
+      },
+      "hardLose": {
+        "condition": "SELF_PLACE_OUT_OF_PLAY",
+        "alternatives": [
+          "you play Scanning Crew",
+          "you initiate a non-Epic duel, except Maul duel if HUNT_DOWN__DO_NOT_PLACE_OUT_OF_PLAY_IF_MAUL_DUELS applies",
+          "you initiate a Force drain at an Executor site"
+        ],
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "sourceEvidence": "Card7_297.java and Card7_297_BACK.java required before/after triggers"
+      },
+      "randoMapping": {
+        "existingVtags": [
+          {
+            "vtag": "V25",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "whatItDoes": "Detects Hunt Down from Vader/battleground flip text and tracks Vader-needed and no-Vader flip-back facts."
+          },
+          {
+            "vtag": "V25",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "whatItDoes": "Prioritizes Vader deployment for Hunt Down and penalizes non-Vader characters before Vader is on table."
+          },
+          {
+            "vtag": "V29.12/V35.1/V40/V51",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/DeployEvaluator.java",
+            "whatItDoes": "Groups with Vader, neutralizes scatter penalty, and gives a large Vader-to-opponent-battleground flip bonus."
+          },
+          {
+            "vtag": "V29.12/V137b",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/MoveEvaluator.java",
+            "whatItDoes": "Pushes Vader and other dark Jedi to hunt instead of staying idle."
+          }
+        ],
+        "newVsExisting": "Live Rando has substantial Hunt Down movement/deploy awareness, but this data pass still records setup pulls and hard-lose facts from card Java."
+      },
+      "weights": [
+        {
+          "situation": "Deploy Vader under Hunt Down",
+          "score": 300,
+          "sourceVtag": "V25"
+        },
+        {
+          "situation": "Deploy Vader to battleground for Hunt Down flip",
+          "score": 400,
+          "sourceVtag": "V25"
+        },
+        {
+          "situation": "Deploy Vader to opponent battleground for immediate flip",
+          "score": 900,
+          "sourceVtag": "V51"
+        },
+        {
+          "situation": "Deploy non-Vader before Vader on table, pre-flip",
+          "score": -200,
+          "sourceVtag": "V25"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_297.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_297_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back setGameText read",
+          "front and back runtime action/filter code read",
+          "Filters.java definitions checked for Holotheatre, Visage_Of_The_Emperor, Meditation_Chamber, Epic_Duel, Scanning_Crew, Executor_site, Vader, Jedi, Luke, Skywalker"
+        ],
+        "forK2ToCheck": [
+          "DB Vader approximation includes a title false-positive; runtime Filters.Vader is persona-based.",
+          "Hard-lose guard for non-Epic duel has a Maul game-text-modification exception.",
+          "Setup pulls are not obviously covered by the Hunt Down-specific Rando evaluator hooks."
+        ]
+      }
+    },
+    {
+      "frontBp": "7_298",
+      "backBp": "7_298_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Imperial Occupation",
+      "objectiveTitleBack": "Imperial Control",
+      "abbreviation": "IO",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_298",
+          "7_298_BACK"
+        ],
+        "titles": [
+          "Imperial Occupation",
+          "Imperial Control"
+        ],
+        "titleFragments": [
+          "imperial occupation",
+          "imperial control"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Renegade planet",
+          "text": "Deploy any planet system; that system name is stored as Renegade planet",
+          "subtype": "SYSTEM",
+          "runtimeFilter": "Filters.planet_system",
+          "candidateSource": "DB",
+          "resolvedCount": 100,
+          "resolvedSample": [
+            "102_7",
+            "106_12",
+            "106_2",
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Generic site to Renegade planet",
+          "text": "Deploy one generic site to the Renegade planet on setup and once per deploy phase",
+          "subtype": "SITE",
+          "runtimeFilter": "Filters.and(Filters.generic, Filters.site)",
+          "candidateSource": "DB",
+          "resolvedCount": 28,
+          "resolvedSample": [
+            "221_48",
+            "221_54",
+            "221_74",
+            "2_149",
+            "2_66",
+            "4_157",
+            "4_165",
+            "4_83"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Renegade planet battleground sites",
+          "text": "control three battleground sites related to the Renegade planet to flip; occupy two to stay flipped",
+          "subtype": "SITE",
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.Renegade_planet_location)",
+          "candidateSource": "RUNTIME_SELECTED_PLANET"
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Matching operative",
+          "text": "operative whose blueprint matching system equals the chosen Renegade planet",
+          "runtimeFilter": "Filters.matchingOperativeToRenegadePlanet",
+          "keyword": "OPERATIVE",
+          "candidateSource": "DB",
+          "resolvedCount": 20,
+          "resolvedSample": [
+            "7_1",
+            "7_10",
+            "7_13",
+            "7_165",
+            "7_173",
+            "7_174",
+            "7_177",
+            "7_183",
+            "7_184",
+            "7_185"
+          ],
+          "notes": "Runtime matching uses blueprint.getMatchingSystem() against gameState.getRenegadePlanet(), not title text."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel",
+          "text": "back side gives matching operatives on the planet power +2 when at same site as a Rebel",
+          "runtimeFilter": "Filters.Rebel",
+          "icon": "REBEL",
+          "candidateSource": "DB",
+          "resolvedCount": 216,
+          "resolvedSample": [
+            "101_2",
+            "102_3",
+            "104_1",
+            "105_1",
+            "106_6",
+            "107_2",
+            "108_1",
+            "108_2"
+          ]
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.planet_system",
+            "label": "any planet system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_298.java DeployCardFromReserveDeckEffect(Filters.planet_system) sets Renegade planet"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.generic, Filters.site)",
+            "label": "generic site"
+          },
+          "destination": {
+            "kind": "RuntimeLocation",
+            "runtimeFilter": "gameState.getRenegadePlanet()",
+            "label": "Renegade planet"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_298.java DeployCardToSystemFromReserveDeckEffect generic site to selected system"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.generic, Filters.site)",
+            "label": "generic site"
+          },
+          "destination": {
+            "kind": "RuntimeLocation",
+            "runtimeFilter": "gameState.getRenegadePlanet()",
+            "label": "Renegade planet"
+          },
+          "cadence": "ONCE_PER_DEPLOY_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_298.java top-level DeployCardToSystemFromReserveDeckEffect"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "relation": "CONTROLS_WITH",
+        "count": 3,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.Renegade_planet_location)",
+          "label": "Renegade planet battleground site"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.matchingOperativeToRenegadePlanet)",
+          "label": "your matching operatives"
+        },
+        "sourceEvidence": "Card7_298.java GameConditions.controlsWith(..., 3, battleground Renegade_planet_location, matchingOperativeToRenegadePlanet)"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPIES",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.Renegade_planet_location)",
+          "label": "Renegade planet battleground site"
+        },
+        "sourceEvidence": "Card7_298_BACK.java flips if not occupying 2 battleground sites related to Renegade planet"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No Imperial Occupation-specific live Rando mapping found outside forbidden ObjectiveHandler. ObjectiveType mentions Imperial Occupation only as an example class, not a data mapping."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back setGameText read",
+          "front and back runtime action/filter code read",
+          "Filters.java definitions checked for planet_system, matchingOperativeToRenegadePlanet, Renegade_planet_location"
+        ],
+        "forK2ToCheck": [
+          "All location requirements after setup are dynamic because the Renegade planet is player-selected at deploy time.",
+          "Matching operative resolution depends on blueprint matchingSystem, not title/lore.",
+          "No static DB count can fully represent Renegade_planet_location after generic sites are deployed."
+        ]
+      }
+    },
+    {
+      "frontBp": "7_299",
+      "backBp": "7_299_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "ISB Operations",
+      "objectiveTitleBack": "Empire's Sinister Agents",
+      "abbreviation": "ISBO",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_299",
+          "7_299_BACK"
+        ],
+        "titles": [
+          "ISB Operations",
+          "Empire's Sinister Agents"
+        ],
+        "titleFragments": [
+          "isb operations",
+          "empire's sinister agents"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Coruscant location",
+          "text": "Deploy any Coruscant location",
+          "planetOrSystemGroup": "CORUSCANT",
+          "subtype": "ANY_LOCATION",
+          "runtimeFilter": "Filters.Coruscant_location",
+          "candidateSource": "DB",
+          "resolvedCount": 22,
+          "resolvedSample": [
+            "12_165",
+            "12_166",
+            "12_167",
+            "12_73",
+            "12_74",
+            "12_75",
+            "12_76",
+            "200_57"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Rebel Base locations",
+          "text": "ISB agents control two Rebel Base locations for one flip path",
+          "planetOrSystemGroup": "YAVIN_4_OR_HOTH",
+          "subtype": "ANY_LOCATION",
+          "runtimeFilter": "Filters.Rebel_Base_location",
+          "candidateSource": "DB",
+          "resolvedCount": 38,
+          "resolvedSample": [
+            "104_4",
+            "1_135",
+            "1_136",
+            "1_137",
+            "1_138",
+            "1_139",
+            "1_296",
+            "1_297"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground site with non-undercover ISB agent",
+          "text": "back side modifies Force drains at battleground site and same/related locations",
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.ISB_agent, Filters.not(Filters.undercover_spy))))",
+          "candidateSource": "RUNTIME_BOARD_STATE"
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "ISB agent by lore",
+          "text": "your characters with ISB, Rebel, Rebels, or Rebellion in lore become ISB agents and spies",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.character, Filters.or(Filters.loreContains(\"ISB\"), Filters.loreContains(\"Rebel\"), Filters.loreContains(\"Rebels\"), Filters.loreContains(\"Rebellion\")))",
+          "candidateSource": "DB_LORE_SCAN",
+          "resolvedCount": 118,
+          "resolvedSample": [
+            "102_11",
+            "102_3",
+            "104_6",
+            "106_1",
+            "106_11",
+            "106_6",
+            "10_10",
+            "10_6"
+          ],
+          "notes": "Runtime grants Keyword.ISB_AGENT and Keyword.SPY; flip checks Filters.ISB_agent."
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Coruscant_location",
+            "label": "Coruscant location"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_299.java DeployCardFromReserveDeckEffect(Filters.Coruscant_location)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "retrieve",
+          "sourceZone": "LOST",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.ISB_agent",
+            "label": "ISB agent"
+          },
+          "cadence": "ONCE_PER_DRAW_PHASE",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_299_BACK.java RetrieveCardEffect(Filters.ISB_agent)"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "alternatives": [
+          {
+            "relation": "ON_TABLE",
+            "count": 4,
+            "target": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.ISB_agent",
+              "label": "ISB agents"
+            }
+          },
+          {
+            "relation": "CONTROLS_WITH",
+            "count": 2,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.Rebel_Base_location",
+              "label": "Rebel Base location"
+            },
+            "byWhom": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.ISB_agent",
+              "label": "ISB agents"
+            }
+          }
+        ],
+        "sourceEvidence": "Card7_299.java flips if canSpot 4 ISB_agent OR controlsWith 2 Rebel_Base_location using ISB_agent"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "ON_TABLE",
+        "comparator": "EQUALS",
+        "count": 0,
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.ISB_agent",
+          "label": "ISB agents"
+        },
+        "sourceEvidence": "Card7_299_BACK.java flips if no ISB_agent on table"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [
+          {
+            "vtag": "V25",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+            "whatItDoes": "Detects ISB Operations flip and flip-back facts and counts ISB agents by lore."
+          },
+          {
+            "vtag": "V29.7",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "whatItDoes": "Scores ISB agent deploys, with stronger pre-flip bonuses and battleground/high-ability bonuses."
+          }
+        ],
+        "newVsExisting": "Live Rando has ISB awareness. This shard preserves exact card filters and the lore-based source of ISB agent status."
+      },
+      "weights": [
+        {
+          "situation": "Deploy ISB agent pre-flip when more agents needed",
+          "score": "200 + (4 - agentsStillNeeded) * 30",
+          "sourceVtag": "V29.7"
+        },
+        {
+          "situation": "ISB agent deploy to battleground",
+          "score": 60,
+          "sourceVtag": "V29.7"
+        },
+        {
+          "situation": "High-ability ISB agent deploy ability >= 5",
+          "score": 40,
+          "sourceVtag": "V29.7"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back setGameText read",
+          "front and back runtime action/filter code read",
+          "Filters.java definitions checked for Coruscant_location, Rebel_Base_location, ISB_agent"
+        ],
+        "forK2ToCheck": [
+          "ISB agent source is lore text, then runtime KeywordModifier grants ISB_AGENT and SPY.",
+          "DB lore scan count includes both sides; runtime modifier only applies to your characters.",
+          "Seed intel said no live ISB handling, but current Rando source has V25 and V29.7 handling."
+        ]
+      }
+    },
+    {
+      "frontBp": "7_300",
+      "backBp": "7_300_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Ralltiir Operations",
+      "objectiveTitleBack": "In The Hands Of The Empire",
+      "abbreviation": "RO",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_300",
+          "7_300_BACK"
+        ],
+        "titles": [
+          "Ralltiir Operations",
+          "In The Hands Of The Empire"
+        ],
+        "titleFragments": [
+          "ralltiir operations",
+          "in the hands of the empire"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Ralltiir system",
+          "blueprintIds": [
+            "220_3",
+            "2_148",
+            "2_65"
+          ],
+          "titleFragments": [
+            "ralltiir"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Ralltiir_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "220_3",
+            "2_148",
+            "2_65"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Ralltiir system",
+          "text": "Deploy Ralltiir system",
+          "planetOrSystemGroup": "RALLTIIR",
+          "subtype": "SYSTEM",
+          "runtimeFilter": "Filters.Ralltiir_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "220_3",
+            "2_148",
+            "2_65"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Site to Ralltiir",
+          "text": "front may deploy one site to Ralltiir from Reserve",
+          "subtype": "SITE",
+          "runtimeFilter": "Filters.site with DeployCardToSystemFromReserveDeckEffect(..., Title.Ralltiir)",
+          "candidateSource": "DB",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "generic site count 28"
+          ],
+          "notes": "The site pool is deployment-to-system runtime logic, not static title Ralltiir rows."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Ralltiir site/location",
+          "text": "front flips on Imperials controlling three Ralltiir sites; back flips if opponent controls two Ralltiir locations",
+          "planetOrSystemGroup": "RALLTIIR",
+          "runtimeFilter": "Filters.Ralltiir_site / Filters.Ralltiir_location",
+          "candidateSource": "RUNTIME_BOARD_STATE",
+          "notes": "DB has Ralltiir systems but no static Ralltiir site cards; generic sites deployed to Ralltiir satisfy runtime location relation."
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial",
+          "text": "Imperials control Ralltiir sites to flip; back adds battle destiny by count of Ralltiir locations occupied by Imperials",
+          "runtimeFilter": "Filters.Imperial",
+          "icon": "IMPERIAL",
+          "candidateSource": "DB",
+          "resolvedCount": 196,
+          "resolvedSample": [
+            "101_5",
+            "102_10",
+            "102_11",
+            "104_6",
+            "106_16",
+            "108_6",
+            "10_31",
+            "10_33"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Non-unique Imperial",
+          "text": "front may deploy a non-unique Imperial to Ralltiir from Reserve",
+          "runtimeFilter": "Filters.and(Filters.non_unique, Filters.Imperial)",
+          "candidateSource": "DB",
+          "resolvedCount": 25,
+          "resolvedSample": [
+            "106_16",
+            "13_87",
+            "1_170",
+            "1_180",
+            "1_181",
+            "1_194",
+            "204_44",
+            "206_10"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel",
+          "text": "Rebels deploy +2 to Ralltiir locations on both sides",
+          "runtimeFilter": "Filters.Rebel",
+          "icon": "REBEL",
+          "candidateSource": "DB",
+          "resolvedCount": 216,
+          "resolvedSample": [
+            "101_2",
+            "102_3",
+            "104_1",
+            "105_1",
+            "106_6",
+            "107_2",
+            "108_1",
+            "108_2"
+          ]
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Ralltiir_system",
+            "label": "Ralltiir system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_300.java DeployCardFromReserveDeckEffect(Filters.Ralltiir_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationOrCharacterRequirement",
+            "runtimeFilter": "Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Imperial))",
+            "label": "site or non-unique Imperial"
+          },
+          "destination": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Title.Ralltiir",
+            "label": "Ralltiir"
+          },
+          "cadence": "ONCE_PER_DEPLOY_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_300.java DeployCardToSystemFromReserveDeckEffect(..., Title.Ralltiir)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "take",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "AnyCard",
+            "runtimeFilter": "any one card",
+            "label": "any one card"
+          },
+          "cadence": "ONCE_PER_CONTROL_PHASE",
+          "cost": 2,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_300_BACK.java UseForceEffect(2) plus TakeCardIntoHandFromReserveDeckEffect(action, playerId, true)"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "relation": "CONTROLS_WITH",
+        "count": 3,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Ralltiir_site",
+          "label": "Ralltiir sites"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Imperial",
+          "label": "Imperials"
+        },
+        "opponentConstraint": {
+          "relation": "CONTROLS",
+          "comparator": "EQUALS",
+          "count": 0,
+          "runtimeFilter": "Filters.Ralltiir_location",
+          "label": "opponent controls no Ralltiir locations"
+        },
+        "sourceEvidence": "Card7_300.java flip trigger"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "CONTROLS",
+        "count": 2,
+        "byWhom": {
+          "kind": "Opponent",
+          "label": "opponent"
+        },
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Ralltiir_location",
+          "label": "Ralltiir locations"
+        },
+        "sourceEvidence": "Card7_300_BACK.java flips if opponent controls 2 Ralltiir locations"
+      },
+      "hardLose": {
+        "condition": "BLOWN_AWAY",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Ralltiir, true))",
+          "label": "Ralltiir system"
+        },
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "sourceEvidence": "Card7_300.java and Card7_300_BACK.java PlaceCardOutOfPlayFromTableEffect on Ralltiir blown away"
+      },
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No Ralltiir Operations-specific live Rando mapping found outside forbidden ObjectiveHandler. ObjectiveType mentions Ralltiir Operations only as an example."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back setGameText read",
+          "front and back runtime action/filter code read",
+          "Filters.java definitions checked for Ralltiir_system, Ralltiir_site, Ralltiir_location, Imperial, Rebel"
+        ],
+        "forK2ToCheck": [
+          "DB has Ralltiir systems but no static Ralltiir site rows; runtime generic-site-to-system deployment creates Ralltiir sites.",
+          "Back side can take any one card from Reserve for 2 Force, a very broad tutor.",
+          "No dedicated Ralltiir playbook was found in live Rando source outside generic objective type comments."
+        ]
+      }
+    }
+  ]
+}

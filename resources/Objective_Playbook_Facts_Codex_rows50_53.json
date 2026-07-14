@@ -1,0 +1,1654 @@
+{
+  "schemaVersion": "objective-playbook-facts-v0.1-shard",
+  "rows": "50-53",
+  "rowSource": "resources/Objective_Blueprint_Inventory_2026-07-07.json .rows[50:54], per Steve explicit ownership list",
+  "entries": [
+    {
+      "inventoryRow": 50,
+      "frontBp": "213_32",
+      "backBp": "213_32_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "Shadow Collective",
+      "objectiveTitleBack": "You Know Who I Answer To",
+      "abbreviation": "SC",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "213_32",
+          "213_32_BACK"
+        ],
+        "titleFragments": [
+          "shadow collective",
+          "you know who i answer to"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_JAVA_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Dathomir: Maul's Chambers",
+          "blueprintIds": [
+            "213_23"
+          ],
+          "titleFragments": [
+            "dathomir: maul's chambers"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.title(Title.Dathomir_Mauls_Chambers)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "213_23"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Maul",
+          "blueprintIds": [
+            "213_10"
+          ],
+          "titleFragments": [
+            "maul"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Maul",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "213_10"
+          ],
+          "notes": "Objective text says [Set 13] Maul; Java uses persona Filters.Maul for the optional setup deploy to Maul's Chambers."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yavin 4: Massassi Throne Room",
+          "blueprintIds": [
+            "1_138"
+          ],
+          "titleFragments": [
+            "yavin 4: massassi throne room"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.title(Title.Massassi_Throne_Room)",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_138"
+          ],
+          "notes": "Table-state gate for the Maul setup deploy, not a Dark-side pull target."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Non-unique blaster or First Light title card",
+          "blueprintIds": [
+            "221_19"
+          ],
+          "titleFragments": [
+            "first light"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.or(Filters.and(Filters.non_unique, Filters.blaster), Filters.titleContains(\"First Light\"))",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "221_19"
+          ],
+          "notes": "Broad pull filter. 221_19 is the named First Light sample; non-unique blasters remain runtime-filtered."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Shadow Collective payoff starting effects",
+          "blueprintIds": [
+            "200_114",
+            "9_126"
+          ],
+          "titleFragments": [
+            "you'll be dead",
+            "inconsequential losses"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Rando CardSelectionEvaluator title check, not objective Java",
+          "candidateSource": "DB_AND_RANDO_SOURCE",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "200_114",
+            "9_126"
+          ],
+          "notes": "Existing Rando V22 preference for starting-effect selection, not an objective pull."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Maul's Chambers",
+          "text": "Deploy Maul's Chambers at setup",
+          "planetOrSystemGroup": "DATHOMIR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.title(Title.Dathomir_Mauls_Chambers)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "213_23"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Two battlegrounds controlled by gangsters",
+          "text": "Flip during your battle phase if your gangsters control two battlegrounds",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground with GameConditions.controlsWith(..., Filters.gangster)",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Three occupied battlegrounds",
+          "text": "Opponent loses 1 Force when this card flips and you occupy three battlegrounds",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "GameConditions.occupies(playerId, 3, Filters.battleground)",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Maul",
+          "text": "If Massassi Throne Room on table, may deploy Maul to Maul's Chambers at setup. Back side may peek at Force Pile if Maul is alone.",
+          "runtimeFilter": "Filters.Maul",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "213_10"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Gangster",
+          "text": "Gangsters controlling two battlegrounds can flip the objective during your battle phase.",
+          "runtimeFilter": "Filters.gangster",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Gangster leader",
+          "text": "Back side can add one destiny to total power if your gangster leader is in battle at same site as your non-unique blaster.",
+          "runtimeFilter": "Filters.and(Filters.your(playerId), Filters.leader, Filters.gangster, Filters.at(Filters.site))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.title(Title.Dathomir_Mauls_Chambers)",
+            "label": "Dathomir: Maul's Chambers"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card213_032.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.Maul",
+            "label": "Maul"
+          },
+          "cadence": "ON_DEPLOY_OPTIONAL_IF_MASSASSI_THRONE_ROOM_ON_TABLE",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card213_032.java optional DeployCardsToLocationFromReserveDeckEffect"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "ANY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CardFilter",
+            "runtimeFilter": "Filters.or(Filters.and(Filters.non_unique, Filters.blaster), Filters.titleContains(\"First Light\"))",
+            "label": "non-unique blaster or First Light title card"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": null,
+          "enablesFlip": true,
+          "sourceEvidence": "Card213_032.java and Card213_032_BACK.java getGameTextTopLevelActions"
+        }
+      ],
+      "flip": "Front -> back if you just hit a character, or during your battle phase if your gangsters control two battlegrounds. Java: TriggerConditions.justHitBy(Filters.character, Filters.your(playerId)) OR GameConditions.controlsWith(playerId, 2, Filters.battleground, Filters.gangster).",
+      "flipBack": "Back -> front at end of each turn. The front-side cardFlipped trigger applies the occupy-three-battlegrounds Force-loss rider when the card flips.",
+      "hardLose": "None. No place-out-of-play condition in front or back Java.",
+      "randoMapping": {
+        "status": "partial_existing",
+        "source": "rg over live rando/common source, ObjectiveHandler excluded",
+        "liveHooks": [
+          "V22 CardSelectionEvaluator prefers You'll Be Dead! and Inconsequential Losses as Shadow Collective payoff starting effects.",
+          "V154 comment mentions Shadow Collective weapon-loss edge case, but it is not objective setup scoring."
+        ],
+        "missingHooks": [
+          "No live Rando handling found for Maul's Chambers setup, optional Maul deployment, First Light/blaster pull, or gangster battleground flip gate."
+        ]
+      },
+      "weights": [
+        {
+          "vtag": "V22",
+          "score": 500.0,
+          "appliesTo": "Starting-effect selection for You'll Be Dead! and Inconsequential Losses",
+          "sourceFile": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named card ids checked against DB/source",
+          "back id verified as <front>_BACK",
+          "ObjectiveHandler.java not used"
+        ],
+        "idsUsed": [
+          "213_32",
+          "213_32_BACK",
+          "213_23",
+          "213_10",
+          "1_138",
+          "221_19",
+          "200_114",
+          "9_126"
+        ],
+        "idVerdict": "CLEAN",
+        "idErrors": [],
+        "forK2ToCheck": [
+          "Filters.Maul is persona-based; the objective text says [Set 13] Maul, so runtime can be broader than the printed text.",
+          "The once-per-turn pull is broad for non-unique blasters; no static id list is sufficient.",
+          "No Rando hook found for the actual flip gate or back-side end-of-turn flip."
+        ]
+      }
+    },
+    {
+      "inventoryRow": 51,
+      "frontBp": "216_11",
+      "backBp": "216_11_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "On The Verge Of Greatness",
+      "objectiveTitleBack": "Taking Control Of The Weapon",
+      "abbreviation": "OTVOG",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "216_11",
+          "216_11_BACK"
+        ],
+        "titleFragments": [
+          "on the verge of greatness",
+          "taking control of the weapon"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_JAVA_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "[Set 16] Death Star system",
+          "blueprintIds": [
+            "216_7"
+          ],
+          "titleFragments": [
+            "death star"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_16, Filters.Death_Star_system)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "216_7"
+          ],
+          "notes": "Setup pull is Icon.VIRTUAL_SET_16 gated. Back hard-lose check uses broad Filters.Death_Star_system; title siblings include 2_143 DARK and 7_117 LIGHT."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Scarif system",
+          "blueprintIds": [
+            "216_13"
+          ],
+          "titleFragments": [
+            "scarif"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Scarif_system",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "216_13"
+          ],
+          "notes": "Light title sibling 209_23 exists but is not the Dark setup pull."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Scarif: Citadel Tower",
+          "blueprintIds": [
+            "216_15"
+          ],
+          "titleFragments": [
+            "scarif: citadel tower"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.title(Title.Scarif_Citadel_Tower)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "216_15"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Shield Gate",
+          "blueprintIds": [
+            "216_18"
+          ],
+          "titleFragments": [
+            "shield gate"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Shield_Gate",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "216_18"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Krennic",
+          "blueprintIds": [
+            "209_36"
+          ],
+          "titleFragments": [
+            "krennic"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Krennic",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "209_36"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Tarkin",
+          "blueprintIds": [
+            "102_11",
+            "204_45"
+          ],
+          "titleFragments": [
+            "tarkin"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Tarkin",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "102_11",
+            "204_45"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "A Bright Center To The Universe",
+          "blueprintIds": [
+            "7_218"
+          ],
+          "titleFragments": [
+            "a bright center to the universe"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.A_Bright_Center_To_The_Universe",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_218"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Endor Shield",
+          "blueprintIds": [
+            "201_29",
+            "9_124"
+          ],
+          "titleFragments": [
+            "endor shield"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Endor_Shield",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "201_29",
+            "9_124"
+          ],
+          "notes": "Front Java bans this from deployment for remainder of game. The inventory frontGameText mentioning Commence Primary Ignition is stale against Java."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Scarif battleground",
+          "text": "Once per turn, may deploy a Scarif battleground from Reserve Deck",
+          "planetOrSystemGroup": "SCARIF",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.Scarif_location, Filters.battleground)",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": 5,
+          "resolvedSample": [
+            "216_13",
+            "216_14",
+            "216_15",
+            "216_16",
+            "216_17"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Scarif battleground site",
+          "text": "Flip and flip-back character presence gate",
+          "planetOrSystemGroup": "SCARIF",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Scarif_battleground_site",
+          "candidateSource": "DB_SNAPSHOT",
+          "resolvedCount": 4,
+          "resolvedSample": [
+            "216_14",
+            "216_15",
+            "216_16",
+            "216_17"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star orbiting Scarif",
+          "text": "Flip requires Death Star system orbiting Scarif",
+          "planetOrSystemGroup": "SCARIF",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.Death_Star_system, Filters.isOrbiting(Title.Scarif))",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "216_7"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Krennic or Tarkin",
+          "text": "Front flips if Krennic or Tarkin is at a Scarif battleground site while Death Star orbits Scarif.",
+          "runtimeFilter": "Filters.and(Filters.at(Filters.Scarif_battleground_site), Filters.or(Filters.Krennic, Filters.Tarkin))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "209_36",
+            "102_11",
+            "204_45"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Your leader at Scarif battleground site",
+          "text": "Back flips to front if you do not have a leader at a Scarif battleground site.",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.leader, Filters.at(Filters.Scarif_battleground_site))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Vader",
+          "text": "Back side lets Vader make a regular move to a battle just initiated.",
+          "runtimeFilter": "Filters.Vader",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "101_5",
+            "219_26"
+          ],
+          "notes": "Persona sample follows K-2 seed. DB title search also contains Darth Vader title variants that should not replace the runtime persona filter."
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_16, Filters.Death_Star_system)",
+            "label": "[Set 16] Death Star system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card216_011.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Scarif_system",
+            "label": "Scarif system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card216_011.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.title(Title.Scarif_Citadel_Tower)",
+            "label": "Scarif: Citadel Tower"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card216_011.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Shield_Gate",
+            "label": "Shield Gate"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card216_011.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "ANY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.Scarif_location, Filters.battleground)",
+            "label": "Scarif battleground"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": null,
+          "enablesFlip": true,
+          "sourceEvidence": "Card216_011.java and Card216_011_BACK.java getGameTextTopLevelActions"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "DRAW",
+          "verb": "retrieve",
+          "sourceZone": "LOST_PILE",
+          "target": {
+            "kind": "CardFilter",
+            "runtimeFilter": "Filters.and(Filters.non_unique, Filters.hasAbilityOrHasPermanentPilotWithAbility)",
+            "label": "non-unique card with ability"
+          },
+          "cadence": "ONCE_PER_PHASE_BACK_ONLY",
+          "cost": null,
+          "enablesFlip": false,
+          "sourceEvidence": "Card216_011_BACK.java getGameTextTopLevelActions"
+        }
+      ],
+      "flip": "Front -> back when Krennic or Tarkin is at a Scarif battleground site and a Death Star system is orbiting Scarif. Java uses SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE for the character gate.",
+      "flipBack": "Back -> front when you do not have a leader at a Scarif battleground site.",
+      "hardLose": "Back places objective out of play if no Death Star system is on table or Shield Gate is not on table.",
+      "randoMapping": {
+        "status": "existing_verge_specific",
+        "source": "rg over live rando/common source, ObjectiveHandler excluded",
+        "liveHooks": [
+          "V79 family reserves Force and steers Death Star movement toward Scarif.",
+          "V79b RandoCalAi handles Death Star parsec/orbit choices for Verge.",
+          "CharacterDeploySiteEvaluator has a Verge flip-not-ready gate that avoids weak solo Scarif deploys until Death Star is orbiting Scarif.",
+          "ForceReserveService tracks Verge plus Death Star not at Scarif."
+        ],
+        "missingHooks": [
+          "No normalized ObjectiveAnalyzer data entry yet for the full 216_11 pull and hard-lose package."
+        ]
+      },
+      "weights": [
+        {
+          "vtag": "V79",
+          "score": 1500.0,
+          "appliesTo": "Death Star move/orbit choice toward Scarif",
+          "sourceFile": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/MoveEvaluator.java"
+        },
+        {
+          "vtag": "V79",
+          "score": -500.0,
+          "appliesTo": "Deploy action penalty if it spends Force needed for Death Star movement toward Scarif",
+          "sourceFile": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/DeployEvaluator.java"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named card ids checked against DB/source",
+          "back id verified as <front>_BACK",
+          "ObjectiveHandler.java not used"
+        ],
+        "idsUsed": [
+          "216_11",
+          "216_11_BACK",
+          "216_7",
+          "216_13",
+          "216_14",
+          "216_15",
+          "216_16",
+          "216_17",
+          "216_18",
+          "2_143",
+          "7_117",
+          "209_23",
+          "209_36",
+          "102_11",
+          "204_45",
+          "201_29",
+          "9_124",
+          "7_218",
+          "101_5",
+          "219_26"
+        ],
+        "idVerdict": "CLEAN",
+        "idErrors": [],
+        "forK2ToCheck": [
+          "Inventory frontGameText is stale: Java setup deploys Death Star, Scarif system, Citadel Tower, and Shield Gate, not Commence Primary Ignition.",
+          "Back hard-lose Death Star spot is broad Filters.Death_Star_system, while setup specifically pulls the Set 16 virtual Death Star.",
+          "Vader persona sample follows seed intel; DB title search includes Darth Vader titles that may or may not share persona metadata."
+        ]
+      }
+    },
+    {
+      "inventoryRow": 52,
+      "frontBp": "219_1",
+      "backBp": "219_1_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "A Great Tactician Creates Plans",
+      "objectiveTitleBack": "The Result Is Often Resentment",
+      "abbreviation": "AGTCP",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "219_1",
+          "219_1_BACK"
+        ],
+        "titleFragments": [
+          "a great tactician creates plans",
+          "the result is often resentment"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_JAVA_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Lothal system",
+          "blueprintIds": [
+            "219_10"
+          ],
+          "titleFragments": [
+            "lothal"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Lothal_system",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "219_10"
+          ],
+          "notes": "Light title sibling 219_38 exists but is not the Dark setup pull."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Lothal: Advanced Projects Laboratory",
+          "blueprintIds": [
+            "219_11"
+          ],
+          "titleFragments": [
+            "lothal: advanced projects laboratory"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.title(Title.Lothal_Advanced_Projects_Laboratory)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "219_11"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Lothal: Imperial Complex",
+          "blueprintIds": [
+            "219_13"
+          ],
+          "titleFragments": [
+            "lothal: imperial complex"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.title(Title.Lothal_Imperial_Complex)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "219_13"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Thrawn's Art Collection",
+          "blueprintIds": [
+            "219_20"
+          ],
+          "titleFragments": [
+            "thrawn's art collection"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Thrawns_Art_Collection",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "219_20"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Thrawn",
+          "blueprintIds": [
+            "10_40",
+            "207_21",
+            "207_30"
+          ],
+          "titleFragments": [
+            "grand admiral thrawn"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Thrawn",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "10_40",
+            "207_21",
+            "207_30"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Chimaera",
+          "blueprintIds": [
+            "219_2",
+            "9_154"
+          ],
+          "titleFragments": [
+            "chimaera"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Chimaera",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "219_2",
+            "9_154"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Admiral Chiraneau",
+          "blueprintIds": [
+            "9_97"
+          ],
+          "titleFragments": [
+            "admiral chiraneau"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Chiraneau",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_97"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "TIE Defender Mark I",
+          "blueprintIds": [
+            "7_308"
+          ],
+          "titleFragments": [
+            "tie defender mark i"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.TIE_Defender",
+          "candidateSource": "DB_SAMPLE_FOR_MODEL_FILTER",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_308"
+          ],
+          "notes": "Back side uses model filter Filters.TIE_Defender, not title-only."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Lothal system",
+          "text": "Deploy Lothal system at setup",
+          "planetOrSystemGroup": "LOTHAL",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Lothal_system",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "219_10"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground system",
+          "text": "Once per turn may deploy a battleground system",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground_system",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "219_10"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Site deployable to Lothal",
+          "text": "Once per turn may deploy a site to Lothal",
+          "planetOrSystemGroup": "LOTHAL",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.site, Filters.deployableToSystem(self, Title.Lothal, null, false, 0))",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Thrawn",
+          "text": "Front flips if Thrawn is at a battleground and two or more artwork cards are stacked on Thrawn's Art Collection. Back flips if Thrawn is not on table.",
+          "runtimeFilter": "Filters.Thrawn",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "10_40",
+            "207_21",
+            "207_30"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial leader or piloted TIE defender",
+          "text": "Back side may study artwork when a battle was just initiated involving an Imperial leader or piloted TIE defender.",
+          "runtimeFilter": "Filters.or(Filters.Imperial_leader, Filters.and(Filters.TIE_Defender, Filters.or(Filters.piloted, Filters.hasPermanentPilot, Filters.hasAboard(self, Filters.character))))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "7_308"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Card with ability",
+          "text": "Studied artwork destiny 3-4 uploads a card with ability from Reserve Deck.",
+          "runtimeFilter": "Filters.hasAbilityOrHasPermanentPilotWithAbility",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Lothal_system",
+            "label": "Lothal system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card219_001.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.title(Title.Lothal_Advanced_Projects_Laboratory)",
+            "label": "Lothal: Advanced Projects Laboratory"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card219_001.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.title(Title.Lothal_Imperial_Complex)",
+            "label": "Lothal: Imperial Complex"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card219_001.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Thrawns_Art_Collection",
+            "label": "Thrawn's Art Collection"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card219_001.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "ANY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.battleground_system, Filters.and(Filters.site, Filters.deployableToSystem(self, Title.Lothal, null, false, 0)))",
+            "label": "battleground system or site to Lothal"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": null,
+          "enablesFlip": true,
+          "sourceEvidence": "Card219_001.java and Card219_001_BACK.java getGameTextTopLevelActions"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "BATTLE_RESPONSE",
+          "verb": "upload",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.hasAbilityOrHasPermanentPilotWithAbility",
+            "label": "card with ability"
+          },
+          "cadence": "BACK_ONLY_WHEN_STUDIED_ARTWORK_DESTINY_3_TO_4",
+          "cost": null,
+          "enablesFlip": false,
+          "sourceEvidence": "Card219_001_BACK.java ArtworkCardRevealedResult branch"
+        }
+      ],
+      "flip": "Front -> back during any deploy phase if Thrawn is at a battleground and Thrawn's Art Collection has two or more stacked artwork cards.",
+      "flipBack": "Back -> front if Thrawn is not on table, or except during battle if Thrawn's Art Collection has no stacked artwork cards.",
+      "hardLose": "None. No place-out-of-play condition in front or back Java.",
+      "randoMapping": {
+        "status": "none_found",
+        "source": "rg over live rando/common source, ObjectiveHandler excluded",
+        "liveHooks": [],
+        "missingHooks": [
+          "No live Rando scoring found for 219_1, A Great Tactician Creates Plans, The Result Is Often Resentment, or Thrawn's Art Collection."
+        ]
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named card ids checked against DB/source",
+          "back id verified as <front>_BACK",
+          "ObjectiveHandler.java not used"
+        ],
+        "idsUsed": [
+          "219_1",
+          "219_1_BACK",
+          "219_10",
+          "219_38",
+          "219_11",
+          "219_13",
+          "219_20",
+          "219_2",
+          "9_154",
+          "10_40",
+          "207_21",
+          "207_30",
+          "9_97",
+          "7_308"
+        ],
+        "idVerdict": "CLEAN",
+        "idErrors": [],
+        "forK2ToCheck": [
+          "Once-per-turn site pull is dynamic via deployableToSystem(Lothal); no static DB id list is complete.",
+          "Artwork cards are represented as cards stacked on Thrawn's Art Collection, not a card-title category.",
+          "No existing Rando playbook hook was found for this objective."
+        ]
+      }
+    },
+    {
+      "inventoryRow": 53,
+      "frontBp": "222_14",
+      "backBp": "222_14_BACK",
+      "side": "DARK",
+      "objectiveTitleFront": "The Shield Will Be Down in Moments",
+      "objectiveTitleBack": "Imperial Troops Have Entered The Base!",
+      "abbreviation": "TSWBDIM",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "222_14",
+          "222_14_BACK"
+        ],
+        "titleFragments": [
+          "the shield will be down in moments",
+          "imperial troops have entered the base"
+        ],
+        "side": "DARK",
+        "candidateSource": "DB_AND_JAVA_SOURCE"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "5th Marker",
+          "blueprintIds": [
+            "208_49",
+            "3_148"
+          ],
+          "titleFragments": [
+            "hoth: ice plains (5th marker)"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Fifth_Marker",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "208_49",
+            "3_148"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "[Set 17] 4th Marker",
+          "blueprintIds": [
+            "217_12"
+          ],
+          "titleFragments": [
+            "hoth: north ridge (4th marker)"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "217_12"
+          ],
+          "notes": "Title siblings include 3_149 DARK and 3_62 LIGHT, but setup pull is Icon.VIRTUAL_SET_17 gated."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "1st Marker / Main Power Generators",
+          "blueprintIds": [
+            "222_9"
+          ],
+          "titleFragments": [
+            "hoth: main power generators (1st marker)"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.First_Marker for setup, Filters.title(Title.Main_Power_Generators, true) for flip",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "222_9"
+          ],
+          "notes": "Light title siblings 3_61 and 210_15 exist; Java flip target is title based."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "[Set 9] Prepare For A Surface Attack",
+          "blueprintIds": [
+            "209_42"
+          ],
+          "titleFragments": [
+            "prepare for a surface attack"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "209_42"
+          ],
+          "notes": "Base title sibling 13_82 exists, but setup pull is Icon.VIRTUAL_SET_9 gated."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Target The Main Generator",
+          "blueprintIds": [
+            "222_13",
+            "3_115"
+          ],
+          "titleFragments": [
+            "target the main generator"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Target_The_Main_Generator",
+          "candidateSource": "DB_AND_RANDO_SOURCE",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "222_13",
+            "3_115"
+          ],
+          "notes": "Not pulled by objective Java directly, but live ObjectiveAnalyzer V160 treats it as required/pullable flip-engine card."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "AT-AT Cannon",
+          "blueprintIds": [
+            "222_3",
+            "3_158"
+          ],
+          "titleFragments": [
+            "at-at cannon"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.AT_AT_Cannon",
+          "candidateSource": "DB_AND_RANDO_SOURCE",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "222_3",
+            "3_158"
+          ],
+          "notes": "V160 ObjectiveAnalyzer pullable card; front Java also prevents your AT-AT cannons from firing during your control phase."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "You May Start Your Landing",
+          "blueprintIds": [
+            "11_77"
+          ],
+          "titleFragments": [
+            "you may start your landing"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.You_May_Start_Your_Landing",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "11_77"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Rebel Base Occupation",
+          "blueprintIds": [
+            "7_237"
+          ],
+          "titleFragments": [
+            "rebel base occupation"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Rebel_Base_Occupation",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_237"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Sunsdown",
+          "blueprintIds": [
+            "1_230",
+            "10_50"
+          ],
+          "titleFragments": [
+            "sunsdown"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Sunsdown",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_230",
+            "10_50"
+          ],
+          "notes": "Filters.Sunsdown is title exact for 1_230; combo id 10_50 is included as seed caveat and should be checked before treating combos as exact title filters."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Echo Base Sensors",
+          "blueprintIds": [
+            "13_17"
+          ],
+          "titleFragments": [
+            "echo base sensors"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.title(\"Echo Base Sensors\")",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "13_17"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Rebel Leadership",
+          "blueprintIds": [
+            "9_54",
+            "203_17",
+            "218_5"
+          ],
+          "titleFragments": [
+            "rebel leadership"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.title(\"Rebel Leadership\")",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "9_54",
+            "203_17",
+            "218_5"
+          ],
+          "notes": "Back Java uses title(\"Rebel Leadership\") OR Were_Doomed. Combo id 218_5 is a seed caveat, not guaranteed by exact title filter."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "We're Doomed",
+          "blueprintIds": [
+            "1_120",
+            "204_18"
+          ],
+          "titleFragments": [
+            "we're doomed"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Were_Doomed",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_120",
+            "204_18"
+          ],
+          "notes": "Filters.Were_Doomed is title exact for 1_120; combo id 204_18 is included as seed caveat and should be checked before treating combos as exact title filters."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Hoth location",
+          "text": "Once per turn may deploy a Hoth location from Reserve Deck",
+          "planetOrSystemGroup": "HOTH",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Hoth_location",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "222_9",
+            "208_49",
+            "217_12",
+            "3_148",
+            "3_149"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Main Power Generators",
+          "text": "Front flips when Main Power Generators is blown away",
+          "planetOrSystemGroup": "HOTH",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.title(Title.Main_Power_Generators, true)",
+          "candidateSource": "DB_AND_JAVA_SOURCE",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "222_9",
+            "3_61",
+            "210_15"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Occupied Hoth site",
+          "text": "Back stays in play only if you occupy a Hoth site with a piloted AT-AT, Imperial leader, or snowtrooper",
+          "planetOrSystemGroup": "HOTH",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.Hoth_site, Filters.occupiesWith(playerId, self, Filters.or(Filters.and(Filters.AT_AT, Filters.piloted), Filters.Imperial_leader, Filters.snowtrooper)))",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Snowtrooper",
+          "text": "Back side can deploy a snowtrooper from Reserve Deck and a snowtrooper can satisfy the Hoth-site occupation hard-lose guard.",
+          "runtimeFilter": "Filters.snowtrooper",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial leader",
+          "text": "Back side adds attrition against opponent for each Imperial leader in battle and accepts Imperial leader for Hoth-site occupation guard.",
+          "runtimeFilter": "Filters.Imperial_leader",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Piloted AT-AT",
+          "text": "Back side accepts piloted AT-AT for Hoth-site occupation guard.",
+          "runtimeFilter": "Filters.and(Filters.AT_AT, Filters.piloted)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Vehicle/model requirement stored here because the shard shape has no VehicleRequirement array."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Dark Jedi except Vader",
+          "text": "Front Java prevents deploying Dark Jedi except Vader for remainder of game.",
+          "runtimeFilter": "Filters.and(Filters.Dark_Jedi, Filters.not(Filters.Vader))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Fifth_Marker",
+            "label": "5th Marker"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card222_014.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)",
+            "label": "[Set 17] 4th Marker"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card222_014.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.First_Marker",
+            "label": "1st Marker / Main Power Generators"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card222_014.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack)",
+            "label": "[Set 9] Prepare For A Surface Attack"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card222_014.java getGameTextWhenDeployedAction"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "ANY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Hoth_location",
+            "label": "Hoth location"
+          },
+          "cadence": "ONCE_PER_TURN_FRONT_ONLY",
+          "cost": null,
+          "enablesFlip": true,
+          "sourceEvidence": "Card222_014.java getGameTextTopLevelActions"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "ANY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.snowtrooper",
+            "label": "snowtrooper"
+          },
+          "cadence": "ONCE_PER_TURN_BACK_ONLY",
+          "cost": null,
+          "enablesFlip": false,
+          "sourceEvidence": "Card222_014_BACK.java getGameTextTopLevelActions"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "CONTROL",
+          "verb": "retrieve_or_peek",
+          "sourceZone": "LOST_PILE_OR_OPPONENT_RESERVE",
+          "target": {
+            "kind": "CardFilter",
+            "runtimeFilter": "Filters.bottomOfLostPile(playerId) OR top X opponent Reserve where X = countTopLocationsOnTable(Filters.and(Filters.Hoth_location, Filters.controls(playerId)))",
+            "label": "bottom Lost Pile card or opponent Reserve top X"
+          },
+          "cadence": "ONCE_PER_PHASE_BACK_ONLY",
+          "cost": null,
+          "enablesFlip": false,
+          "sourceEvidence": "Card222_014_BACK.java getGameTextTopLevelActions"
+        }
+      ],
+      "flip": "Front -> back when Main Power Generators is blown away. Java: TriggerConditions.isBlownAwayLastStep(..., Filters.title(Title.Main_Power_Generators, true)).",
+      "flipBack": "None. Back side has no FlipCardEffect back to front.",
+      "hardLose": "Back places objective out of play if you do not occupy a Hoth site with a piloted AT-AT, Imperial leader, or snowtrooper.",
+      "randoMapping": {
+        "status": "existing_partial",
+        "source": "rg over live rando/common source, ObjectiveHandler excluded",
+        "liveHooks": [
+          "V160 ObjectiveAnalyzer detects Shield Will Be Down, marks Target The Main Generator required and pullable, marks AT-AT Cannon and Prepare For A Surface Attack pullable, and adds Hoth location fragments.",
+          "V160 ActionTextEvaluator gives +800 to Target The Main Generator actions while this objective is active."
+        ],
+        "missingHooks": [
+          "No live hook found for the back-side Hoth-site occupation hard-lose guard.",
+          "No live hook found for the back-side snowtrooper deploy or control-phase retrieve/peek action."
+        ]
+      },
+      "weights": [
+        {
+          "vtag": "V160",
+          "score": 800.0,
+          "appliesTo": "Target The Main Generator action when Shield Will Be Down objective is active",
+          "sourceFile": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/ActionTextEvaluator.java"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_014.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_014_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named card ids checked against DB/source",
+          "back id verified as <front>_BACK",
+          "ObjectiveHandler.java not used"
+        ],
+        "idsUsed": [
+          "222_14",
+          "222_14_BACK",
+          "222_30",
+          "208_49",
+          "3_148",
+          "217_12",
+          "3_149",
+          "3_62",
+          "222_9",
+          "3_61",
+          "210_15",
+          "209_42",
+          "13_82",
+          "222_13",
+          "3_115",
+          "222_3",
+          "3_158",
+          "11_77",
+          "7_237",
+          "1_230",
+          "10_50",
+          "13_17",
+          "9_54",
+          "203_17",
+          "218_5",
+          "1_120",
+          "204_18"
+        ],
+        "idVerdict": "CLEAN",
+        "idErrors": [],
+        "forK2ToCheck": [
+          "Several combo ids from seed intel are included as caveats, but exact Java title filters may only match the base title card.",
+          "Filters.Fifth_Marker setup pull is broad and not virtual-set gated, so both Dark 5th Marker ids are listed.",
+          "V160 models Target The Main Generator and AT-AT Cannon as the flip engine, but objective Java itself only listens for Main Power Generators blown away.",
+          "Back hard-lose guard is currently not represented by known live Rando scoring."
+        ]
+      }
+    }
+  ]
+}

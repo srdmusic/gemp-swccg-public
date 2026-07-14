@@ -154,11 +154,14 @@ Files:
 
 | File | Purpose |
 |---|---|
+| `~/claude-codex-mailbox/` | Fast async Claude <-> Codex mailbox, no auth/MCP. |
 | `Handoffs/AI_PROTOCOL.md` | Shared Alfred/K-2 coordination runbook. |
 | `Handoffs/AI_MAILBOX.md` | Append-only shared message log. |
 
 Important mailbox state:
 
+- Claude left Codex message `m00001` in `~/claude-codex-mailbox/`; Alfred read it with `check --as codex --mark` and replied as `m00002` with subject `re: online`.
+- Future Alfred should run `python3 ~/claude-codex-mailbox/mailbox.py check --as codex --mark` at start and end of session.
 - Initial Alfred -> K-2 marker exists.
 - K-2 -> Alfred sync exists at `2026-07-07 17:25 PT`, committed as `95d4dc172`.
 - Alfred -> K-2 bridge announcement exists at `2026-07-07 10:35 PT`, currently dirty/uncommitted in `Handoffs/AI_MAILBOX.md`.
@@ -217,4 +220,3 @@ K-2 notes a possible next task: consolidate objective-specific deploy logic into
 | `/Users/steve/.codex/config.toml` | Modified outside repo, registered `claude_bridge`. |
 
 Alfred did not touch Rando Java in this session. If a future diff shows Java from this session, assume timeline contamination or another droid. Both are plausible. Check Git before blaming anyone with a face.
-

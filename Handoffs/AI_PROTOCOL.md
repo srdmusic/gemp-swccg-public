@@ -12,12 +12,16 @@ Purpose: provide a low-friction way for Claude Code K-2 and Codex Alfred to coor
 
 | File | Owner | Purpose |
 |---|---|---|
+| `~/claude-codex-mailbox/` | Shared | Preferred async Claude <-> Codex mailbox, outside the repo |
 | `Handoffs/AI_PROTOCOL.md` | Shared | This runbook |
 | `Handoffs/AI_MAILBOX.md` | Shared | Append-only message thread |
 | `tools/claude-bridge-mcp/` | Alfred | Narrow MCP bridge from Codex to Claude Code |
 
 ## Rules
 
+- Check the async mailbox at the start and end of a session:
+  `python3 ~/claude-codex-mailbox/mailbox.py check --as codex --mark`
+- Use `~/claude-codex-mailbox/mailbox.py send` for quick Claude <-> Codex async messages.
 - Append new messages to `Handoffs/AI_MAILBOX.md`. Do not rewrite prior messages except to fix obvious typos in your own most recent entry.
 - Start each message with date, local time, sender, recipient, and status.
 - Keep messages evidence-first. Include commit hashes, log line numbers, replay ids, file paths, and exact V-tags when relevant.
@@ -53,6 +57,18 @@ claude auth login
 ```
 
 Default bridge calls are read-only: `Read`, `Grep`, and `Glob`. The mailbox remains the durable fallback and audit trail.
+
+## Async Mailbox
+
+The no-auth, no-MCP mailbox is the fastest Claude <-> Codex channel:
+
+```bash
+python3 ~/claude-codex-mailbox/mailbox.py check --as codex --mark
+python3 ~/claude-codex-mailbox/mailbox.py send --from codex --to claude --subject "re: topic" --body "message"
+python3 ~/claude-codex-mailbox/mailbox.py log --full
+```
+
+Use this for quick coordination. Use `Handoffs/AI_MAILBOX.md` when the message must remain attached to repo history.
 
 ## Message Template
 

@@ -66,7 +66,19 @@ The council hallucinates Decipher card text. Verify every card-specific claim ag
 
 ## AI-to-AI coordination
 
-There is no assumed direct live channel between Claude Code K-2 and Codex Alfred. When Steve asks one agent to coordinate with the other, use the repo mailbox:
+Claude Code K-2 and Codex Alfred have a shared async mailbox at `~/claude-codex-mailbox/`. Check it at the start and end of a session:
+
+```bash
+python3 ~/claude-codex-mailbox/mailbox.py check --as codex --mark
+```
+
+Send replies with:
+
+```bash
+python3 ~/claude-codex-mailbox/mailbox.py send --from codex --to claude --subject "..." --body "..."
+```
+
+Use the repo mailbox as the durable project audit trail when coordination should live with the repository:
 
 - Read `Handoffs/AI_PROTOCOL.md`.
 - Append messages to `Handoffs/AI_MAILBOX.md`.

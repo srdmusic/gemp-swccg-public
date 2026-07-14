@@ -1,0 +1,1964 @@
+{
+  "schemaVersion": "objective-playbook-facts-v0.1-shard",
+  "rows": "25-29",
+  "rowSource": "resources/Objective_Blueprint_Inventory_2026-07-07.json .rows[25:30]",
+  "entries": [
+    {
+      "frontBp": "221_67",
+      "backBp": "221_67_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Hunt For The Droid General",
+      "objectiveTitleBack": "He's A Coward",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "221_67",
+          "221_67_BACK"
+        ],
+        "titleFragments": [
+          "hunt for the droid general",
+          "he's a coward"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Clone Command Center",
+          "blueprintIds": [
+            "221_54"
+          ],
+          "titleFragments": [
+            "clone command center"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Clone_Command_Center",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "221_54"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Cloning Cylinders",
+          "blueprintIds": [
+            "211_53"
+          ],
+          "titleFragments": [
+            "cloning cylinders"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Cloning_Cylinders",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "211_53"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Grievous Will Run And Hide",
+          "blueprintIds": [
+            "221_65"
+          ],
+          "titleFragments": [
+            "grievous will run and hide"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Grievous_Will_Run_And_Hide",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "221_65"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Your Destiny",
+          "blueprintIds": [],
+          "titleFragments": [
+            "your destiny"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Your_Destiny",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Suspended by both sides. Current shard records the runtime title filter, not a DB snapshot."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "No Escape",
+          "blueprintIds": [],
+          "titleFragments": [
+            "no escape"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Title.No_Escape",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Your Episode I sites are immune to No Escape."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Clone Army battleground",
+          "text": "Deploy a Clone Army battleground",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLONE_ARMY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Icon.CLONE_ARMY, Filters.battleground, Filters.location)",
+          "candidateSource": "DB_TITLE_ICON_SNAPSHOT",
+          "resolvedCount": 7,
+          "resolvedSample": [
+            "221_48",
+            "221_52",
+            "221_53",
+            "221_54",
+            "221_62",
+            "221_63",
+            "221_74"
+          ],
+          "notes": "Snapshot lists Clone Army locations from DB; battleground truth is runtime modifier state."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Clone Command Center at same planet",
+          "text": "Deploy Clone Command Center to same planet as the chosen Clone Army battleground",
+          "planetOrSystemGroup": "SAME_AS_SETUP_LOCATION_SYSTEM",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLONE_ARMY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Clone_Command_Center",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "221_54"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Grievous",
+          "text": "Flip checks whether Grievous is alone at a battleground",
+          "runtimeFilter": "Filters.Grievous",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Clone with Jedi or Padawan",
+          "text": "Back side gives Force drains +1 where your clone is with a Jedi or Padawan",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.clone, Filters.with(self, Filters.or(Filters.Jedi, Filters.padawan)))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Jedi",
+          "text": "Your Jedi gain Pilot icon",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.Jedi)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Icon.CLONE_ARMY, Filters.battleground, Filters.location)",
+            "label": "Clone Army battleground"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card221_067.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(locationFilter)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Clone_Command_Center",
+            "label": "Clone Command Center"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card221_067.java deploys Filters.Clone_Command_Center to chosen Clone Army location system"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Cloning_Cylinders",
+            "label": "Cloning Cylinders"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card221_067.java DeployCardFromReserveDeckEffect(Filters.Cloning_Cylinders)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Grievous_Will_Run_And_Hide",
+            "label": "Grievous Will Run And Hide"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card221_067.java DeployCardFromReserveDeckEffect(Filters.Grievous_Will_Run_And_Hide)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP_BATTLE_INITIATED",
+          "verb": "retrieve",
+          "sourceZone": "LOST_PILE",
+          "target": {
+            "kind": "CardRequirement",
+            "runtimeFilter": "Filters.icon(Icon.CLONE_ARMY)",
+            "label": "Clone Army card"
+          },
+          "cadence": "WHEN_YOU_INITIATE_BATTLE_IF_X_GREATER_THAN_1",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card221_067_BACK.java RetrieveCardIntoHandFromLostPileEffect(Filters.icon(Icon.CLONE_ARMY))"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "ATTACHED_TO_OBJECTIVE",
+        "count": 1,
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.Grievous_Will_Run_And_Hide",
+          "label": "Grievous Will Run And Hide"
+        },
+        "exceptions": [
+          {
+            "runtimeFilter": "Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground))",
+            "text": "Does not flip while Grievous is alone at a battleground."
+          }
+        ],
+        "sourceEvidence": "Card221_067.java flips if Grievous Will Run And Hide is attached here unless Grievous is alone at a battleground"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "EITHER",
+        "alternatives": [
+          {
+            "relation": "PRESENT",
+            "count": 1,
+            "target": {
+              "kind": "NamedCardRef",
+              "runtimeFilter": "Filters.Grievous_Will_Run_And_Hide",
+              "label": "Grievous Will Run And Hide at a battleground"
+            }
+          },
+          {
+            "relation": "PRESENT",
+            "count": 1,
+            "target": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground))",
+              "label": "Grievous alone at a battleground"
+            }
+          }
+        ],
+        "sourceEvidence": "Card221_067_BACK.java flips back if Grievous Will Run And Hide is at a battleground or Grievous is alone at a battleground"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No non-ObjectiveHandler direct Rando V-tag hit was found for Hunt For The Droid General in ai/models/rando. ObjectiveHandler hits were intentionally ignored per task instruction."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium-high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named setup cards resolved against card_blueprint_database.json",
+          "Rando rg checked outside ObjectiveHandler"
+        ],
+        "forK2ToCheck": [
+          "Clone Army battleground candidate snapshot lists all Clone Army locations from DB; actual battleground status is runtime modifier truth."
+        ]
+      }
+    },
+    {
+      "frontBp": "222_27",
+      "backBp": "222_27_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "The Empire Knows We're Here",
+      "objectiveTitleBack": "Prepare For Ground Assault",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "222_27",
+          "222_27_BACK"
+        ],
+        "titleFragments": [
+          "the empire knows we're here",
+          "prepare for ground assault"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Hoth system",
+          "blueprintIds": [
+            "3_143",
+            "3_55"
+          ],
+          "titleFragments": [
+            "hoth"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Hoth_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "3_143",
+            "3_55"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Main Power Generators",
+          "blueprintIds": [
+            "210_15",
+            "222_9",
+            "3_61"
+          ],
+          "titleFragments": [
+            "main power generators"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Main_Power_Generators",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "210_15",
+            "222_9",
+            "3_61"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Echo Command Center",
+          "blueprintIds": [
+            "3_145",
+            "3_57"
+          ],
+          "titleFragments": [
+            "echo command center"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Echo_Command_Center",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "3_145",
+            "3_57"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Hoth Sentry",
+          "blueprintIds": [
+            "7_64"
+          ],
+          "titleFragments": [
+            "hoth sentry"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Hoth_Sentry",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_64"
+          ],
+          "notes": "Canceled by the back side."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Sunsdown",
+          "blueprintIds": [
+            "1_230"
+          ],
+          "titleFragments": [
+            "sunsdown"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Sunsdown",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_230"
+          ],
+          "notes": "Canceled by the back side."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Ice Storm",
+          "blueprintIds": [
+            "3_104",
+            "3_37"
+          ],
+          "titleFragments": [
+            "ice storm"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Ice_Storm",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "3_104",
+            "3_37"
+          ],
+          "notes": "May not be played by objective owner."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Hoth system",
+          "text": "Deploy Hoth system",
+          "planetOrSystemGroup": "HOTH",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "HOTH"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Hoth_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "3_143",
+            "3_55"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Main Power Generators",
+          "text": "Java deploys Main Power Generators on setup",
+          "planetOrSystemGroup": "HOTH",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "HOTH"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Main_Power_Generators",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "210_15",
+            "222_9",
+            "3_61"
+          ],
+          "notes": "Printed game text in Java says 1st Marker, but runtime deploys Filters.Main_Power_Generators."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Echo Command Center or marker site",
+          "text": "Once per turn deploy Echo Command Center or marker site",
+          "planetOrSystemGroup": "HOTH",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "HOTH"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.or(Filters.Echo_Command_Center, Filters.marker_site)",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "3_145",
+            "3_57"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Hoth battleground marker site",
+          "text": "Retrieve 1 during control if you occupy two Hoth battleground marker sites",
+          "planetOrSystemGroup": "HOTH",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "HOTH"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.battleground, Filters.marker_site)",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent at your Hoth location",
+          "text": "Front flips when opponent occupies your Hoth location",
+          "runtimeFilter": "Filters.and(Filters.your(playerId), Filters.Hoth_location)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Unique non-trooper/non-gunner/non-pilot characters",
+          "text": "Back side cancels game text of your unique characters except troopers, gunners, and pilots",
+          "runtimeFilter": "Filters.and(Filters.your(playerId), Filters.unique, Filters.character, Filters.not(Filters.or(Filters.trooper, Filters.gunner, Filters.pilot)))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Hoth_system",
+            "label": "Hoth system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card222_027.java DeployCardFromReserveDeckEffect(Filters.Hoth_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Main_Power_Generators",
+            "label": "Main Power Generators"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card222_027.java DeployCardFromReserveDeckEffect(Filters.Main_Power_Generators)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.Echo_Command_Center, Filters.marker_site)",
+            "label": "Echo Command Center or marker site"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card222_027.java and Card222_027_BACK.java DeployCardFromReserveDeckEffect(Filters.or(Filters.Echo_Command_Center, Filters.marker_site))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "CONTROL",
+          "verb": "retrieve",
+          "sourceZone": "LOST_PILE",
+          "target": {
+            "kind": "Force",
+            "label": "1 Force"
+          },
+          "cadence": "ONCE_PER_TURN_IF_OCCUPY_TWO_HOTH_BATTLEGROUND_MARKER_SITES",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card222_027.java OptionalGameTextTriggerAction during control phase retrieves 1 Force"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "BATTLE_INITIATED",
+          "verb": "take",
+          "sourceZone": "USED_PILE",
+          "target": {
+            "kind": "Card",
+            "runtimeFilter": "top X cards where X is occupied Hoth battleground count",
+            "label": "one card from top X Used Pile cards"
+          },
+          "cadence": "WHEN_YOU_INITIATE_BATTLE_POST_FLIP",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card222_027_BACK.java peeks top X Used Pile cards and takes one into hand"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPIES",
+        "count": 1,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.your(playerId), Filters.Hoth_location)",
+          "label": "your Hoth location"
+        },
+        "byWhom": {
+          "kind": "Opponent",
+          "runtimeFilter": "opponent occupies",
+          "label": "opponent"
+        },
+        "sourceEvidence": "Card222_027.java flips if opponent occupies Filters.and(Filters.your(playerId), Filters.Hoth_location)"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "NOT_OCCUPIED_BY_OPPONENT",
+        "count": 1,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.your(playerId), Filters.Hoth_location)",
+          "label": "your Hoth location"
+        },
+        "sourceEvidence": "Card222_027_BACK.java flips back if opponent does not occupy your Hoth location"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No direct Rando V-tag hit was found for this objective in ai/models/rando."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium-high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named setup and cancellation cards resolved against card_blueprint_database.json",
+          "Rando rg checked outside ObjectiveHandler"
+        ],
+        "forK2ToCheck": [
+          "Card222_027.java game text says deploy 1st Marker, but actual runtime setup deploys Filters.Main_Power_Generators."
+        ]
+      }
+    },
+    {
+      "frontBp": "225_53",
+      "backBp": "225_53_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Mind What You Have Learned",
+      "objectiveTitleBack": "Save You It Can",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "225_53",
+          "225_53_BACK"
+        ],
+        "titleFragments": [
+          "mind what you have learned",
+          "save you it can"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Beldon's Corridor",
+          "blueprintIds": [
+            "225_40"
+          ],
+          "titleFragments": [
+            "cloud city: beldon's corridor"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Beldons_Corridor",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "225_40"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yoda's Hut",
+          "blueprintIds": [
+            "216_26",
+            "4_89"
+          ],
+          "titleFragments": [
+            "dagobah: yoda's hut"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Yodas_Hut",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "216_26",
+            "4_89"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Dagobah Yoda",
+          "blueprintIds": [],
+          "titleFragments": [
+            "yoda"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.and(Icon.DAGOBAH, Filters.Yoda)",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Runtime requires Yoda with Dagobah icon. Broad Yoda DB title matches are intentionally not flattened here."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "No Disintegrations!",
+          "blueprintIds": [
+            "225_55",
+            "4_28"
+          ],
+          "titleFragments": [
+            "no disintegrations!"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.No_Disintegrations)",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "225_55",
+            "4_28"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Patience",
+          "blueprintIds": [
+            "225_57"
+          ],
+          "titleFragments": [
+            "patience!"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Patience",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "225_57"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Wise Advice",
+          "blueprintIds": [
+            "13_47",
+            "7_81"
+          ],
+          "titleFragments": [
+            "wise advice"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Wise_Advice",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "13_47",
+            "7_81"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yoda's Hope",
+          "blueprintIds": [
+            "225_58",
+            "4_44"
+          ],
+          "titleFragments": [
+            "yoda's hope"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Yodas_Hope",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "225_58",
+            "4_44"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Beldon's Corridor",
+          "text": "Deploy Beldon's Corridor",
+          "planetOrSystemGroup": "CLOUD_CITY",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLOUD_CITY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Beldons_Corridor",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "225_40"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Yoda's Hut",
+          "text": "Deploy Yoda's Hut with Dagobah Yoda there",
+          "planetOrSystemGroup": "DAGOBAH",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "DAGOBAH"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Yodas_Hut",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "216_26",
+            "4_89"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Bespin system or Cloud City site",
+          "text": "Once per turn deploy Bespin system or Cloud City site",
+          "planetOrSystemGroup": "BESPIN_CLOUD_CITY",
+          "subtype": "SYSTEM_OR_SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLOUD_CITY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.or(Filters.Bespin_system, Filters.Cloud_City_site)",
+          "candidateSource": "DB_PLUS_JAVA_RUNTIME_FILTER",
+          "resolvedCount": 37,
+          "resolvedSample": [
+            "223_8",
+            "5_164",
+            "5_76",
+            "200_126",
+            "221_11",
+            "224_13",
+            "225_40",
+            "225_41"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Dagobah location",
+          "text": "Once per turn deploy Dagobah location",
+          "planetOrSystemGroup": "DAGOBAH",
+          "subtype": "LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "DAGOBAH"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dagobah_location",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Luke on Dagobah",
+          "text": "Front may flip if Luke is on Dagobah during your turn",
+          "runtimeFilter": "Filters.and(Filters.Luke, Filters.On_Dagobah)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "High ability non-Dagobah non-Ahsoka character",
+          "text": "Your non-Dagobah ability > 4 characters except Ahsoka are lost",
+          "runtimeFilter": "Filters.and(Filters.your(playerId), Filters.not(Icon.DAGOBAH), Filters.abilityMoreThan(4), Filters.not(Filters.Ahsoka))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Cloud City Rebel",
+          "text": "Back side may place completed Jedi Test out of play to take a Cloud City Rebel from Lost Pile into hand",
+          "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.Rebel)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Beldons_Corridor",
+            "label": "Beldon's Corridor"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card225_053.java DeployCardFromReserveDeckEffect(Filters.Beldons_Corridor)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Yodas_Hut",
+            "label": "Yoda's Hut"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card225_053.java DeployCardFromReserveDeckEffect(Filters.Yodas_Hut)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.and(Icon.DAGOBAH, Filters.Yoda)",
+            "label": "Dagobah Yoda"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card225_053.java DeployCardToLocationFromReserveDeckEffect(Filters.and(Icon.DAGOBAH, Filters.Yoda), Filters.Yodas_Hut)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.No_Disintegrations)",
+            "label": "Cloud City No Disintegrations!"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card225_053.java DeployCardFromReserveDeckEffect(Filters.and(Icon.CLOUD_CITY, Filters.No_Disintegrations))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Patience",
+            "label": "Patience"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card225_053.java DeployCardFromReserveDeckEffect(Filters.Patience)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.Bespin_system, Filters.Cloud_City_site)",
+            "label": "Bespin system or Cloud City site"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card225_053.java and Card225_053_BACK.java deploy Bespin system or Cloud City site once per turn"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "DEPLOY_FRONT_SIDE",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.or(Filters.Wise_Advice, Filters.Yodas_Hope)",
+            "label": "Wise Advice or Yoda's Hope"
+          },
+          "cadence": "AVAILABLE_WHILE_FRONT_SIDE_UP",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card225_053.java top-level DeployCardFromReserveDeckEffect(Filters.or(Filters.Wise_Advice, Filters.Yodas_Hope))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Dagobah_location",
+            "label": "Dagobah location"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card225_053.java DeployCardFromReserveDeckEffect(Filters.Dagobah_location)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "take",
+          "sourceZone": "LOST_PILE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.Rebel)",
+            "label": "Cloud City Rebel"
+          },
+          "cadence": "WHEN_PLACING_COMPLETED_JEDI_TEST_OUT_OF_PLAY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card225_053_BACK.java PlaceCardOutOfPlayFromTableEffect(completed Jedi Test) then TakeCardIntoHandFromLostPileEffect(Filters.and(Icon.CLOUD_CITY, Filters.Rebel))"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT",
+        "count": 1,
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.Luke, Filters.On_Dagobah)",
+          "label": "Luke on Dagobah"
+        },
+        "timing": "DURING_YOUR_TURN",
+        "sourceEvidence": "Card225_053.java may flip during your turn if canTarget(Filters.and(Filters.Luke, Filters.On_Dagobah))"
+      },
+      "flipBack": null,
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No non-ObjectiveHandler direct Rando V-tag hit was found for virtual Mind What You Have Learned in ai/models/rando. ObjectiveHandler hits were intentionally ignored per task instruction."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium-high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named setup cards resolved against card_blueprint_database.json",
+          "Rando rg checked outside ObjectiveHandler"
+        ],
+        "forK2ToCheck": [
+          "The Wise Advice or Yoda's Hope front-side deploy action is not once-per-turn in Java; this shard records the runtime cadence rather than inferred printed-text cadence.",
+          "Runtime Filters.Patience resolves to current DB title Patience! at 225_57."
+        ]
+      }
+    },
+    {
+      "frontBp": "226_28",
+      "backBp": "226_28_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "The Hidden Path",
+      "objectiveTitleBack": "Gather Allies And Train",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "226_28",
+          "226_28_BACK"
+        ],
+        "titleFragments": [
+          "the hidden path",
+          "gather allies and train"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Mining Village",
+          "blueprintIds": [
+            "226_21"
+          ],
+          "titleFragments": [
+            "mapuzo: mining village"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Mining_Village",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "226_21"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Safehouse",
+          "blueprintIds": [
+            "226_22"
+          ],
+          "titleFragments": [
+            "mapuzo: safehouse"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Safehouse",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "226_22"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Underground Corridor",
+          "blueprintIds": [
+            "226_23"
+          ],
+          "titleFragments": [
+            "mapuzo: underground corridor"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Underground_Corridor",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "226_23"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Fallen Order",
+          "blueprintIds": [
+            "226_14"
+          ],
+          "titleFragments": [
+            "fallen order"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Fallen_Order",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "226_14"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Jedi Holocron",
+          "blueprintIds": [
+            "216_31"
+          ],
+          "titleFragments": [
+            "jedi holocron"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.holocron",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "216_31"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "A Jedi's Resilience",
+          "blueprintIds": [],
+          "titleFragments": [
+            "a jedi's resilience"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.A_Jedis_Resilience",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "May not be played by objective owner."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Nabrun Leids",
+          "blueprintIds": [],
+          "titleFragments": [
+            "nabrun leids"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Nabrun_Leids",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "May not be played while front side up."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Mapuzo setup sites",
+          "text": "Deploy Mining Village, Safehouse, and Underground Corridor",
+          "planetOrSystemGroup": "MAPUZO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.or(Filters.Mining_Village, Filters.Safehouse, Filters.Underground_Corridor)",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "226_21",
+            "226_22",
+            "226_23"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Jabiim location",
+          "text": "Once per turn deploy Jabiim location",
+          "planetOrSystemGroup": "JABIIM",
+          "subtype": "LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Jabiim_location",
+          "candidateSource": "DB_TITLE_SNAPSHOT",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "226_15",
+            "226_16"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Non-Mapuzo site",
+          "text": "Flip if Jedi occupy two non-Mapuzo sites",
+          "planetOrSystemGroup": "ANY_NON_MAPUZO",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [
+            {
+              "runtimeFilter": "Filters.Mapuzo_location",
+              "text": "not Mapuzo"
+            }
+          ],
+          "runtimeFilter": "Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site)",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Jabiim site or battleground site",
+          "text": "Back side may relocate a Jedi between a Jabiim site and battleground site",
+          "planetOrSystemGroup": "JABIIM_OR_ANY_BATTLEGROUND",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.or(Filters.Jabiim_site, Filters.battleground_site)",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "226_15",
+            "226_16"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Jedi Survivor",
+          "text": "Jedi Survivors deploy -1 on back side and are the intended Hidden Path transit pieces",
+          "runtimeFilter": "Filters.Jedi_Survivor",
+          "keyword": "JEDI_SURVIVOR",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Jedi",
+          "text": "Flip requires Jedi occupying two non-Mapuzo sites",
+          "runtimeFilter": "Filters.Jedi",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Anakin",
+          "text": "Objective owner may not deploy Anakin",
+          "runtimeFilter": "Filters.Anakin",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent ability > 4 character",
+          "text": "Back side reduces opponent's total battle destiny by 1 while opponent's ability > 4 character is in battle",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4))",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Mining_Village",
+            "label": "Mining Village"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card226_028.java DeployCardFromReserveDeckEffect(Filters.Mining_Village)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Safehouse",
+            "label": "Safehouse"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card226_028.java DeployCardFromReserveDeckEffect(Filters.Safehouse)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Underground_Corridor",
+            "label": "Underground Corridor"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card226_028.java DeployCardFromReserveDeckEffect(Filters.Underground_Corridor)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Fallen_Order",
+            "label": "Fallen Order"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card226_028.java DeployCardFromReserveDeckEffect(Filters.Fallen_Order)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Jabiim_location",
+            "label": "Jabiim location"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card226_028.java and Card226_028_BACK.java DeployCardFromReserveDeckEffect(Filters.Jabiim_location)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "DEPLOY_FRONT_SIDE",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.holocron",
+            "label": "holocron"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card226_028.java DeployCardFromReserveDeckEffect(Filters.holocron)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "MOVE_POST_FLIP",
+          "verb": "relocate",
+          "sourceZone": "TABLE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.your(self), Filters.Jedi)",
+            "label": "your Jedi"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 2,
+          "enablesFlip": false,
+          "sourceEvidence": "Card226_028_BACK.java uses 2 Force to relocate a Jedi between Filters.Jabiim_site and Filters.battleground_site as a regular move"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPIES_WITH",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site)",
+          "label": "non-Mapuzo sites"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Jedi",
+          "label": "Jedi"
+        },
+        "sourceEvidence": "Card226_028.java flips if GameConditions.occupiesWith(2, Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site), Filters.Jedi)"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "NOT_OCCUPIES_WITH",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site)",
+          "label": "non-Mapuzo sites"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Jedi",
+          "label": "Jedi"
+        },
+        "sourceEvidence": "Card226_028_BACK.java flips back if not occupying two non-Mapuzo sites with Jedi"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [
+          {
+            "vtag": "V52b",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/DeployEvaluator.java",
+            "line": 6000,
+            "whatItDoes": "Hidden Path early deploy scoring for Jedi, Fallen Order Jedi deploy, lightsabers, and holocron."
+          },
+          {
+            "vtag": "V53b",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/MoveEvaluator.java",
+            "line": 2057,
+            "whatItDoes": "Hidden Path mandatory Jedi transit and Mapuzo movement scoring."
+          },
+          {
+            "vtag": "V60",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/ActionTextEvaluator.java",
+            "line": 4384,
+            "whatItDoes": "Scores Underground Corridor game-text Jedi transit out to a site."
+          },
+          {
+            "vtag": "V62",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "line": 6443,
+            "whatItDoes": "Hidden Path split-site destination preference for flipping."
+          },
+          {
+            "vtag": "V67aa",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+            "line": 6685,
+            "whatItDoes": "Blocks suicidal pre-flip Jedi movement into high opponent power."
+          },
+          {
+            "vtag": "V67z",
+            "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/DeployEvaluator.java",
+            "line": 301,
+            "whatItDoes": "Reserves move-phase transit Force on unflipped Hidden Path."
+          }
+        ],
+        "newVsExisting": "Existing Rando code has several Hidden Path-specific movement, transit, and deploy weights. This shard records exact objective setup, Java flip filters, Java flip-back filters, and named pull/deploy chain facts without proposing new weights."
+      },
+      "weights": [
+        {
+          "situation": "Hidden Path Jedi character deploy during turns 1-2",
+          "score": 800,
+          "sourceVtag": "V52b"
+        },
+        {
+          "situation": "Hidden Path Fallen Order Jedi deploy during turns 1-2",
+          "score": 800,
+          "sourceVtag": "V52b"
+        },
+        {
+          "situation": "Hidden Path lightsaber deploy",
+          "score": 700,
+          "sourceVtag": "V52b"
+        },
+        {
+          "situation": "Hidden Path holocron deploy",
+          "score": 600,
+          "sourceVtag": "V52b"
+        },
+        {
+          "situation": "Hidden Path landspeed Safehouse to Corridor or leaving Mapuzo toward progress",
+          "score": 800,
+          "sourceVtag": "V53b"
+        },
+        {
+          "situation": "Underground Corridor game-text transit moves Jedi out to a site",
+          "score": 20000,
+          "sourceVtag": "V60"
+        },
+        {
+          "situation": "Hidden Path second Jedi would duplicate a site already occupied by your Jedi",
+          "score": -500,
+          "sourceVtag": "V62"
+        },
+        {
+          "situation": "Hidden Path empty non-Mapuzo battleground destination for split-site flip",
+          "score": 200,
+          "sourceVtag": "V62"
+        },
+        {
+          "situation": "Hidden Path pre-flip transit into opponent power >= 5 with no friendly power there",
+          "score": -9999,
+          "sourceVtag": "V67aa"
+        },
+        {
+          "situation": "Deploy would spend Force needed for Hidden Path move-phase transit",
+          "score": -1500,
+          "sourceVtag": "V67z"
+        }
+      ],
+      "verification": {
+        "confidence": "high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named setup cards resolved against card_blueprint_database.json",
+          "Rando rg checked outside ObjectiveHandler"
+        ],
+        "forK2ToCheck": [
+          "Jedi Survivor candidate expansion is left as runtime filter truth; the current schema has no reliable keyword snapshot field for all Jedi Survivor characters."
+        ]
+      }
+    },
+    {
+      "frontBp": "301_2",
+      "backBp": "301_2_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "City In The Clouds",
+      "objectiveTitleBack": "You Truly Belong Here With Us",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "301_2",
+          "301_2_BACK"
+        ],
+        "titleFragments": [
+          "city in the clouds",
+          "you truly belong here with us"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Bespin",
+          "blueprintIds": [
+            "223_8",
+            "5_164",
+            "5_76"
+          ],
+          "titleFragments": [
+            "bespin"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Bespin_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "223_8",
+            "5_164",
+            "5_76"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Weather Vane",
+          "blueprintIds": [
+            "219_47",
+            "5_127",
+            "5_30"
+          ],
+          "titleFragments": [
+            "weather vane"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Weather_Vane",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "219_47",
+            "5_127",
+            "5_30"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Cloud City Celebration",
+          "blueprintIds": [
+            "7_55"
+          ],
+          "titleFragments": [
+            "cloud city celebration"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Cloud_City_Celebration",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_55"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Bespin system",
+          "text": "Deploy Bespin system",
+          "planetOrSystemGroup": "BESPIN",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLOUD_CITY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Bespin_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "223_8",
+            "5_164",
+            "5_76"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Cloud City battleground site",
+          "text": "Deploy a Cloud City battleground site",
+          "planetOrSystemGroup": "CLOUD_CITY",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLOUD_CITY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.Cloud_City_site, Filters.battleground)",
+          "candidateSource": "DB_TITLE_SNAPSHOT_PLUS_RUNTIME_FILTER",
+          "resolvedCount": 34,
+          "resolvedSample": [
+            "200_126",
+            "221_11",
+            "224_13",
+            "225_40",
+            "225_41",
+            "226_1",
+            "5_165",
+            "5_166"
+          ],
+          "notes": "Snapshot lists Cloud City locations by title. Runtime battleground predicate is modifier truth."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Cloud City location",
+          "text": "Once per turn use 1 Force to deploy a Cloud City battleground location",
+          "planetOrSystemGroup": "CLOUD_CITY",
+          "subtype": "LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLOUD_CITY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Cloud_City_location with Filters.battleground",
+          "candidateSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Cloud City sites",
+          "text": "Back side flips back if opponent controls more Cloud City sites than you",
+          "planetOrSystemGroup": "CLOUD_CITY",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "CLOUD_CITY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Cloud_City_site",
+          "candidateSource": "DB_TITLE_SNAPSHOT",
+          "resolvedCount": 34,
+          "resolvedSample": [
+            "200_126",
+            "221_11",
+            "224_13",
+            "225_40",
+            "225_41",
+            "226_1",
+            "5_166",
+            "5_167"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Your character as react",
+          "text": "Back side may move your character as a react when opponent initiates battle or Force drain at Cloud City site",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.character)",
+          "matchSource": "JAVA_RUNTIME_FILTER",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Bespin_system",
+            "label": "Bespin system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card301_002.java DeployCardFromReserveDeckEffect(Filters.Bespin_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.Cloud_City_site, Filters.battleground)",
+            "label": "Cloud City battleground site"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card301_002.java DeployCardFromReserveDeckEffect(Filters.Cloud_City_site, Filters.battleground, false)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Weather_Vane",
+            "label": "Weather Vane"
+          },
+          "cadence": "OPTIONAL_ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card301_002.java optional DeployCardsFromReserveDeckEffect(Filters.Weather_Vane, 0, 1, true, false)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "DEPLOY_FRONT_SIDE",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Cloud_City_location with Filters.battleground",
+            "label": "Cloud City battleground location"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 1,
+          "enablesFlip": true,
+          "sourceEvidence": "Card301_002.java top-level action uses 1 Force to DeployCardFromReserveDeckEffect(Filters.Cloud_City_location, Filters.battleground)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Cloud_City_Celebration",
+            "label": "Cloud City Celebration"
+          },
+          "cadence": "ONCE_PER_GAME",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card301_002_BACK.java DeployCardFromReserveDeckEffect(Filters.Cloud_City_Celebration)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "CONTROL_POST_FLIP",
+          "verb": "take",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CardRequirement",
+            "runtimeFilter": "Filters.Interrupt",
+            "label": "Interrupt"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 2,
+          "enablesFlip": false,
+          "sourceEvidence": "Card301_002_BACK.java uses 2 Force to TakeCardIntoHandFromReserveDeckEffect(Filters.Interrupt)"
+        }
+      ],
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "ALL",
+        "requirements": [
+          {
+            "relation": "CONTROLS",
+            "count": 2,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.Cloud_City_battleground_site",
+              "label": "Cloud City battleground sites"
+            }
+          },
+          {
+            "relation": "OCCUPIES",
+            "count": 1,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.Bespin_system",
+              "label": "Bespin system"
+            }
+          },
+          {
+            "relation": "OPPONENT_CONTROLS_NONE",
+            "count": 0,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.Cloud_City_site",
+              "label": "Cloud City sites"
+            }
+          }
+        ],
+        "sourceEvidence": "Card301_002.java flips if you control two Cloud City battleground sites, occupy Bespin system, and opponent controls no Cloud City sites"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OPPONENT_CONTROLS_MORE_THAN_YOU",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Cloud_City_site",
+          "label": "Cloud City sites"
+        },
+        "sourceEvidence": "Card301_002_BACK.java flips back if opponent controls more Cloud City sites than you"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No non-ObjectiveHandler direct Rando V-tag hit was found for City In The Clouds in ai/models/rando. ObjectiveHandler hits were intentionally ignored per task instruction."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium-high",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Java source read",
+          "runtime filters copied from Java source",
+          "named setup cards resolved against card_blueprint_database.json",
+          "Rando rg checked outside ObjectiveHandler"
+        ],
+        "forK2ToCheck": [
+          "Cloud City battleground site candidate snapshot is title-based; actual battleground status is runtime modifier truth.",
+          "Rando rg hit ObjectiveHandler for City In The Clouds, but ObjectiveHandler was not used as a source per instruction."
+        ]
+      }
+    }
+  ]
+}

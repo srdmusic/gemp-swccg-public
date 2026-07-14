@@ -1,0 +1,429 @@
+{
+ "rows": "29-39",
+ "entries": [
+  {
+   "frontBp": "7_299",
+   "identity": "ISB Operations / Empire's Sinister Agents (Special Edition objective). NamedCardRef: blueprintIds [7_299, 7_299_BACK]; titleFragments [\"isb operations\",\"empire's sinister agents\"]. Base ids only \u2014 no virtual reprints share either title in card_blueprint_database_dark.json.",
+   "idsUsed": [
+    "7_299",
+    "7_299_BACK"
+   ],
+   "idVerdict": "CLEAN",
+   "backBp": "7_299_BACK",
+   "side": "DARK",
+   "titleFront": "ISB Operations",
+   "titleBack": "Empire's Sinister Agents",
+   "sites": [
+    "LocationRequirement PULL-TARGET (front, setup): Filters.Coruscant_location -> planetOrSystemGroup=CORUSCANT, subtype=ANY_LOCATION, battlegroundRequired=false. \"Deploy any Coruscant location.\"",
+    "LocationRequirement FLIP-GATE (front): Filters.Rebel_Base_location -> subtype=SITE (Rebel Base locations), sideOwnership=SELF (controlled). Flip needs ISB agents controlling >=2 of these.",
+    "LocationRequirement DRAIN-BONUS (back): Filters.battleground_site occupied by your non-Undercover ISB agent -> subtype=SITE, battlegroundRequired=true. Grants +1 own drain there and -1 opp drain at same/related locations."
+   ],
+   "characters": [
+    "CharacterRequirement ISB AGENT (granted, both sides): Filters.and(your, character, loreContains(\"ISB\") OR loreContains(\"Rebel\") OR loreContains(\"Rebels\") OR loreContains(\"Rebellion\")). Engine grants Keyword.ISB_AGENT + Keyword.SPY + ignore-location-deployment-restrictions to these. filterType=loreContains, keyword=ISB_AGENT/SPY (granted, not innate).",
+    "CharacterRequirement FLIP COUNT (front): Filters.ISB_agent, count>=4 on table (canSpot 4, INCLUDE_EXCLUDED_FROM_BATTLE) \u2014 alternative flip path.",
+    "CharacterRequirement DRAIN GATE (back): Filters.and(ISB_agent, not(undercover_spy)) at a battleground_site \u2014 enables the drain modifiers.",
+    "CharacterRequirement RETRIEVE (back): Filters.ISB_agent \u2014 retrieve one per draw phase."
+   ],
+   "pullChain": "[{phase:SETUP, verb:deploy, sourceZone:RESERVE, target:LocationRequirement(Filters.Coruscant_location, CORUSCANT/ANY_LOCATION), cadence:ON_DEPLOY, cost:0, enablesFlip:false} \u2014 front getGameTextWhenDeployedAction, DeployCardFromReserveDeckEffect. {phase:POST_FLIP, verb:retrieve, sourceZone:LOST, target:CharacterRequirement(Filters.ISB_agent), cadence:ONCE_PER_TURN(draw phase), enablesFlip:false} \u2014 back RetrieveCardEffect via OncePerPhaseEffect in DRAW phase]",
+   "flip": "FlipRequirement (front getGameTextRequiredAfterTriggers, on table change): alternatives = [ {relation:ON_TABLE(canSpot), count:4, target:CharacterRequirement(Filters.ISB_agent), spotOverride:INCLUDE_EXCLUDED_FROM_BATTLE} OR {relation:CONTROL, count:2, target:LocationRequirement(Filters.Rebel_Base_location), byWhom:CharacterRequirement(Filters.ISB_agent)} ]. Either satisfies -> FlipCardEffect to Empire's Sinister Agents.",
+   "flipBack": "FlipBackRequirement (back getGameTextRequiredAfterTriggers, on table change): {relation:ON_TABLE, count:0, target:CharacterRequirement(Filters.ISB_agent)} \u2014 i.e. NOT canSpot any ISB_agent. If no ISB agents on table -> FlipCardEffect back to ISB Operations. Maintain ISB presence to avoid flip-back.",
+   "hardLose": "none \u2014 no \"place out of play\" / HardLose clause on either side.",
+   "weights": [
+    "NONE \u2014 no scoring magnitudes exist for this objective. Live rando handling is V25 detection-only flags in ObjectiveAnalyzer (isISBOperations, isbFlipAgentCount, isbFlipLocationCount via regex, isbFlipBackNoAgents) plus addLocationFragment(\"rebel base\"). No numeric score weight to reuse. Do not invent."
+   ],
+   "existingVtags": "V25 \u2014 ISB Operations awareness. ObjectiveAnalyzer.java: field/accessors (lines 104, 290), front detection + flip-count/flip-location regex parsing (lines 719, 780, 924-954), back-side \"no ISB agents\" flip-back flag (line 1240-1244). ObjectiveType.java line 15 lists ISB Operations as an example objective. Detection/awareness only \u2014 no dedicated score weights.",
+   "namedCards": [
+    "ISB Operations (7_299)",
+    "Empire's Sinister Agents (7_299_BACK)"
+   ],
+   "notes": "filtersUsedInJava: Filters.Coruscant_location (pull), Filters.Rebel_Base_location (flip gate), Filters.ISB_agent (flip count/retrieve/gate), Filters.battleground_site, Filters.not(Filters.undercover_spy), Filters.loreContains(\"ISB\"/\"Rebel\"/\"Rebels\"/\"Rebellion\"). Granted keywords: Keyword.ISB_AGENT, Keyword.SPY. Modifiers: KeywordModifier x2, IgnoresLocationDeploymentRestrictionsInGameTextModifier, ForceDrainModifier(+1 self at ISB battleground site), ForceDrainModifier(-1 opp at same/related). Data-quality: game text sourced from Java setGameText (authoritative), not DB. sites/characters here are Filter recipes (broad requirements), not id lists \u2014 only two blueprint ids exist for this objective and both are named-card refs to the objective itself.",
+   "idFixes": [],
+   "idUncertain": []
+  },
+  {
+   "frontBp": "301_2",
+   "backBp": "301_2_BACK",
+   "side": "LIGHT",
+   "identity": "City In The Clouds / You Truly Belong Here With Us (objective, LIGHT, Cloud City + [Virtual Set P] icons). Front title Card301_002 = \"City In The Clouds\"; back Card301_002_BACK = \"You Truly Belong Here With Us\".",
+   "titleFront": "City In The Clouds",
+   "titleBack": "You Truly Belong Here With Us",
+   "sites": [
+    "Bespin system \u2014 LocationRequirement{ planetOrSystemGroup: BESPIN, subtype: SYSTEM }. Runtime Filter = Filters.Bespin_system. Deployed at setup (required) and is the flip 'occupy' target.",
+    "Cloud City battleground site \u2014 LocationRequirement{ planetOrSystemGroup: BESPIN (Cloud City locations), subtype: SITE, battlegroundRequired: true, iconsRequired: [CLOUD_CITY] }. Runtime Filter = Filters.and(Filters.Cloud_City_site, Filters.battleground) at setup; the OPT [download] uses Filters.and(Filters.Cloud_City_location, Filters.battleground); the flip 'control 2' uses Filters.Cloud_City_battleground_site.",
+    "Cloud City site (generic, non-battleground-restricted) \u2014 LocationRequirement{ planetOrSystemGroup: BESPIN, subtype: SITE }. Runtime Filter = Filters.Cloud_City_site. Used ONLY in count/ownership comparisons: front flip requires opponent controls 0 of these; back react-trigger fires on battle/Force-drain by opponent AT one; back flip-back compares opponent-controlled count vs self-controlled count."
+   ],
+   "characters": [
+    "Back-side react mover \u2014 CharacterRequirement{ filterType: your(self) + character, abilityConstraint: canMoveAsReactAsActionFromOtherCard }. Runtime Filter = Filters.and(Filters.your(self), Filters.character, Filters.canMoveAsReactAsActionFromOtherCard(self,false,0,false)). No persona/keyword/species/affiliation restriction \u2014 ANY friendly character. Once per turn, moved as a 'react' to a battle or Force drain initiated by opponent at a Cloud City site."
+   ],
+   "flip": "FRONT flip (City In The Clouds -> You Truly Belong Here With Us), all required simultaneously (isTableChanged trigger, RequiredGameTextTriggerAction): (1) FlipRequirement{ relation: CONTROL, count: 2, target: LocationRequirement(Cloud_City_battleground_site), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE }; AND (2) FlipRequirement{ relation: OCCUPY, count: 1, target: LocationRequirement(Bespin_system), SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE }; AND (3) opponentConstraint{ relation: CONTROL, count: 0, target: LocationRequirement(Cloud_City_site) } \u2014 opponent controls no Cloud City sites.",
+   "flipBack": "BACK flip-back (You Truly Belong Here With Us -> City In The Clouds), RequiredGameTextTriggerAction on isTableChanged: FlipRequirement{ relation: COUNT_COMPARE, condition: opponent-controlled Cloud_City_site count > self-controlled Cloud_City_site count } (both counted via Filters.countTopLocationsOnTable with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE). Negation-ish of the front flip's opponent-controls-none clause.",
+   "pullChain": "FRONT setup (getGameTextWhenDeployedAction, on deploy of objective): [1] PullOrDeployAction{ phase: SETUP, verb: deploy, sourceZone: RESERVE, target: LocationRequirement(Bespin_system), cadence: ON_DEPLOY, required }; [2] PullOrDeployAction{ phase: SETUP, verb: deploy, sourceZone: RESERVE, target: LocationRequirement(Cloud_City_site + battleground), cadence: ON_DEPLOY, required, enablesFlip: true }; [3] PullOrDeployAction{ phase: SETUP, verb: deploy, sourceZone: RESERVE, target: NamedCardRef(Weather Vane), cadence: ON_DEPLOY, optional (0-1) }. FRONT recurring (top-level, PRE_FLIP): PullOrDeployAction{ phase: PRE_FLIP, verb: download, sourceZone: RESERVE, target: LocationRequirement(Cloud_City_location + battleground), cadence: ONCE_PER_TURN, cost: 1 Force, enablesFlip: true (builds toward the control-2 flip gate) }. BACK (POST_FLIP, top-level): [a] PullOrDeployAction{ phase: POST_FLIP, verb: download, sourceZone: RESERVE, target: NamedCardRef(Cloud City Celebration), cadence: ONCE_PER_GAME }; [b] PullOrDeployAction{ phase: POST_FLIP, verb: upload, sourceZone: RESERVE, target: CharacterRequirement n/a -> Filters.Interrupt (card-type), cadence: ONCE_PER_PHASE (control phase), cost: 2 Force, into hand }.",
+   "namedCards": [
+    "Objective front City In The Clouds = 301_2 (LIGHT); back You Truly Belong Here With Us = 301_2_BACK (LIGHT). titleFragments: ['city in the clouds','you truly belong here with us'].",
+    "Weather Vane (deployed at setup, Filters.Weather_Vane title-match) \u2014 ids: 5_30 (LIGHT base), 219_47 (LIGHT virtual), 5_127 (DARK). titleFragments: ['weather vane'].",
+    "Cloud City Celebration (back-side once-per-game [download], Filters.Cloud_City_Celebration) \u2014 id: 7_55 (LIGHT). titleFragments: ['cloud city celebration']."
+   ],
+   "hardLose": "None. No 'place out of play' / hard-lose clause on either side.",
+   "existingVtags": "None specific to this objective. Grep of rando (ObjectiveAnalyzer, DeployEvaluator, DeckOracle, CardSelectionEvaluator, ActionTextEvaluator, DeployPhasePlanner/Script, MoveEvaluator) found only GENERIC logic that happens to touch these tokens: ObjectiveAnalyzer's Cloud-City<->Bespin auto-link for flip/flip-back location fragments (lines ~1150-1156, 1309-1313) and a Weather Vane example in a DeckOracle comment (~line 596). No dedicated City-In-The-Clouds / 301_2 scoring rule exists.",
+   "weights": [
+    "No objective-specific V-tag magnitudes exist for 301_2 \u2014 none to reuse, and per instructions I will NOT invent numbers. Weighting would fall back to the generic ObjectiveAnalyzer flip-gate / LocationRequirement machinery already applied to all objectives."
+   ],
+   "notes": "Set301 = Virtual Premium Set / DEMO_DECK (ExpansionSet.DEMO_DECK), Rarity.V. Legacy-style id: the id IS the Card*.java filename, so front=301_2, back=301_2_BACK (not 301_3). Front front-of-double-sided; back deploy value 7. Data-quality: game text taken verbatim from Java setGameText (authoritative). Weather Vane filter is title-based so both light and dark printings share the title; a LIGHT deck realistically only decks the light copies (5_30 / 219_47), but all three ids share the title token.",
+   "idsUsed": [
+    "301_2",
+    "301_2_BACK",
+    "5_30",
+    "219_47",
+    "5_127",
+    "7_55"
+   ],
+   "idVerdict": "CLEAN",
+   "idFixes": [],
+   "idUncertain": []
+  },
+  {
+   "frontBp": "7_300",
+   "identity": "Ralltiir Operations / In The Hands Of The Empire (Special Edition, DARK objective; front=Card7_300.java, back=Card7_300_BACK.java, both in set7/dark)",
+   "idsUsed": [
+    "7_300",
+    "7_300_BACK",
+    "2_148",
+    "220_3",
+    "2_65"
+   ],
+   "idVerdict": "CLEAN",
+   "backBp": "7_300_BACK",
+   "side": "DARK",
+   "titleFront": "Ralltiir Operations",
+   "titleBack": "In The Hands Of The Empire",
+   "sites": [
+    "LocationRequirement{planetOrSystemGroup:RALLTIIR, subtype:SYSTEM} -- runtime Filters.Ralltiir_system; deployed from Reserve at setup (when-deployed trigger) and is the hard-lose anchor",
+    "LocationRequirement{planetOrSystemGroup:RALLTIIR, subtype:SITE, battlegroundRequired:false} -- runtime Filters.Ralltiir_site; flip gate counts >=3 controlled by Imperials",
+    "LocationRequirement{planetOrSystemGroup:RALLTIIR, subtype:ANY_LOCATION} -- runtime Filters.Ralltiir_location; used in front-flip opponent-controls-none clause, back-flip opponent-controls-2 clause, Rebel deploy +2 modifier, and back total-battle-destiny occupancy count"
+   ],
+   "characters": [
+    "CharacterRequirement{filterType:Imperial (Icon.IMPERIAL)} -- runtime Filters.Imperial; front flip gate requires Imperials to control >=3 Ralltiir sites (controlsWith ... Filters.Imperial); also non-unique Imperial is a pull target",
+    "CharacterRequirement{filterType:Rebel (Icon.REBEL)} -- runtime Filters.Rebel; NOT a requirement, it is a DeployCostToLocationModifier: each Rebel is deploy +2 at Ralltiir locations (both sides)"
+   ],
+   "pullChain": "[\"PullOrDeployAction{phase:SETUP, verb:deploy, sourceZone:RESERVE, target:Ralltiir_system, cadence:ON_DEPLOY, enablesFlip:false} -- getGameTextWhenDeployedAction: DeployCardFromReserveDeckEffect(Filters.Ralltiir_system) at objective deploy; reshuffle\", \"PullOrDeployAction{phase:PRE_FLIP, verb:deploy, sourceZone:RESERVE, target: Filters.or(site, and(non_unique, Imperial)) to Ralltiir, cadence:ONCE_PER_TURN(deploy phase), enablesFlip:true} -- front getGameTextTopLevelActions: DeployCardToSystemFromReserveDeckEffect, OncePerPhaseEffect, GameTextActionId.RALLTIIR_OPERATIONS__DOWNLOAD_SITE_OR_NONUNIQUE_IMPERIAL_TO_RALLTIIR; reshuffle; builds toward the 3-Ralltiir-sites flip gate\", \"PullOrDeployAction{phase:POST_FLIP, verb:take, sourceZone:RESERVE, target:any card into hand, cadence:ONCE_PER_TURN(control phase), cost:2 Force, enablesFlip:false} -- back getGameTextTopLevelActions: TakeCardIntoHandFromReserveDeckEffect, UseForceEffect 2, GameTextActionId.IN_THE_HANDS_OF_THE_EMPIRE__UPLOAD_CARD; reshuffle\"]",
+   "flip": "FlipRequirement (front->back): {relation:CONTROL, count:3, target:LocationRequirement{RALLTIIR, SITE}, byWhom:CharacterRequirement{Imperial}} AND opponentConstraint:{relation:CONTROL, count:0, target:LocationRequirement{RALLTIIR, ANY_LOCATION}}. Code: TriggerConditions.isTableChanged && canBeFlipped && controlsWith(self, playerId, 3, Filters.Ralltiir_site, INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Imperial) && !controls(opponent, Filters.Ralltiir_location). Text: \"Flip if Imperials control at least three Ralltiir sites and opponent controls no Ralltiir locations.\"",
+   "flipBack": "FlipBackRequirement (back->front): {relation:CONTROL, count:2, target:LocationRequirement{RALLTIIR, ANY_LOCATION}, byWhom:opponent}. Code: isTableChanged && canBeFlipped && controls(opponent, 2, INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Ralltiir_location). Text: \"Flip if opponent controls at least two Ralltiir locations.\"",
+   "hardLose": "HardLose{condition:BLOWN_AWAY, target:LocationRequirement{RALLTIIR, SYSTEM}} -- PlaceCardOutOfPlayFromTableEffect on both front and back when TriggerConditions.isBlownAwayLastStep(CardSubtype.SYSTEM AND Filters.title(Ralltiir)). Text: \"Place out of play if Ralltiir is blown away.\"",
+   "weights": [],
+   "existingVtags": "None. No Rando scoring V-tag targets this objective. Only mention across src/.../ai/models/rando is a passing example in strategy/ObjectiveType.java line 23 comment (\"Examples: SYCFA, Ralltiir Operations, They Have No Idea\") -- not a scoring rule. No V-tag magnitudes exist to reuse; none invented.",
+   "namedCards": [
+    "Ralltiir Operations / In The Hands Of The Empire (the objective itself): dark 7_300 (front), 7_300_BACK (back); no virtual reprints",
+    "Ralltiir system (pulled at setup, hard-lose anchor): title 'Ralltiir' SYSTEM -> dark 2_148 (base), dark 220_3 (virtual), light 2_65; matched by title-based Filters.Ralltiir_system, carry side"
+   ],
+   "notes": "Filters-first per code: pull targets are Filters.Ralltiir_system (setup) and Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Imperial)) (pre-flip, deployed to Title.Ralltiir). No named-card pull list beyond the system; sites/Imperials are broad Filter recipes, resolve dynamically -- do NOT snapshot ids. Front passive: DeployCostToLocationModifier Rebel +2 at Ralltiir_location. Back passives: ForceDrainModifier(any,-1) vs opponent; same Rebel +2 deploy; TotalBattleDestinyModifier = OccupiesWithEvaluator(Ralltiir_location, Imperial) at all locations. Control checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE. Ralltiir system is dual-side (light 2_65 exists); a dark deck deploys the dark copy (2_148/220_3) but the title filter is side-agnostic.",
+   "idFixes": [],
+   "idUncertain": []
+  },
+  {
+   "frontBp": "7_298",
+   "identity": "Imperial Occupation (front) / Imperial Control (back), 7_298 / 7_298_BACK, DARK, Special Edition objective. Deploy cost 0 front, 7 back. Icon: SPECIAL_EDITION. Front sets a DYNAMIC \"Renegade planet\" (any planet system chosen at deploy). Runtime state via game.getGameState().getRenegadePlanet()/setRenegadePlanet(); archetype label carries the chosen system name.",
+   "idsUsed": [
+    "7_298",
+    "7_298_BACK"
+   ],
+   "idVerdict": "CLEAN",
+   "backBp": "7_298_BACK",
+   "side": "DARK",
+   "titleFront": "Imperial Occupation",
+   "titleBack": "Imperial Control",
+   "sites": [
+    "RenegadePlanetSystem: LocationRequirement{planetOrSystemGroup:DYNAMIC (\"any planet system\", chosen at deploy -> becomes the Renegade planet), subtype:SYSTEM}. Java Filter: Filters.planet_system (DeployCardFromReserveDeckEffect at setup; card.getBlueprint().getSystemName() -> setRenegadePlanet).",
+    "SetupSite: LocationRequirement{planetOrSystemGroup:DYNAMIC(Renegade planet), subtype:SITE, iconsRequired:[GENERIC/diamond]}. One \u25c7 site deployed to the Renegade planet system at setup. Java Filter: Filters.and(Filters.generic, Filters.site) via DeployCardToSystemFromReserveDeckEffect(systemName).",
+    "OncePerDeployPhaseSite (PRE_FLIP repeatable pull): LocationRequirement{planetOrSystemGroup:DYNAMIC(Renegade planet), subtype:SITE, iconsRequired:[GENERIC/diamond]}. Deploy one \u25c7 site to Renegade planet from Reserve Deck, reshuffle. Java Filter: Filters.and(Filters.generic, Filters.site) to renegadePlanet. GameTextActionId.IMPERIAL_OCCUPATION__DOWNLOAD_SITE, OncePerPhaseEffect.",
+    "FlipGateSites: LocationRequirement{planetOrSystemGroup:DYNAMIC(Renegade planet), subtype:SITE, battlegroundRequired:true, sideOwnership:SELF}. Java Filter: Filters.and(Filters.battleground_site, Filters.Renegade_planet_location), controlsWith count 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+    "FlipBackSites: LocationRequirement{planetOrSystemGroup:DYNAMIC(Renegade planet), subtype:SITE, battlegroundRequired:true, sideOwnership:SELF}. Java Filter: Filters.and(Filters.battleground_site, Filters.Renegade_planet_location), occupies count 2 (negated)."
+   ],
+   "characters": [
+    "MatchingOperative: CharacterRequirement{filterType: Filters.matchingOperativeToRenegadePlanet (operative whose matching-planet is the DYNAMIC Renegade planet)}. NEVER a title fragment. Used as byWhom for the flip gate (Filters.and(Filters.your(self), Filters.matchingOperativeToRenegadePlanet)), for retrieve-on-deploy trigger, back-side power/forfeit modifiers, and add-battle-destiny gate."
+   ],
+   "flip": "FlipRequirement{relation:CONTROL, count:3, target:LocationRequirement(DYNAMIC Renegade planet, subtype SITE, battlegroundRequired true), byWhom:CharacterRequirement(Filters.matchingOperativeToRenegadePlanet)}. Java: GameConditions.controlsWith(game, self, playerId, 3, Filters.and(Filters.battleground_site, Filters.Renegade_planet_location), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(self), Filters.matchingOperativeToRenegadePlanet)) + isTableChanged + canBeFlipped.",
+   "flipBack": "FlipBackRequirement{relation:OCCUPY, count:2, negated:true, target:LocationRequirement(DYNAMIC Renegade planet, subtype SITE, battlegroundRequired true), byWhom:SELF}. Java: !GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.battleground_site, Filters.Renegade_planet_location)) + isTableChanged + canBeFlipped. (Negation of a weaker version of the flip gate: 2 battleground sites occupied vs 3 controlled to flip forward.)",
+   "hardLose": "None. No \"place out of play\" / HardLose condition on either side. Loss of the DYNAMIC planet position is handled purely by the flipBack gate.",
+   "pullChain": "[{phase:SETUP, verb:deploy, sourceZone:RESERVE, target:LocationRequirement(planet_system, DYNAMIC -> sets Renegade planet), cadence:ON_DEPLOY, cost:0}, {phase:SETUP, verb:deploy, sourceZone:RESERVE, target:LocationRequirement(\u25c7 generic site to Renegade planet system), cadence:ON_DEPLOY}, {phase:PRE_FLIP, verb:deploy, sourceZone:RESERVE, target:LocationRequirement(\u25c7 generic site to Renegade planet, battleground-capable), cadence:ONCE_PER_TURN (once per deploy phase), enablesFlip:true, note:reshuffle after}]. Back side (POST_FLIP) has no Reserve pull; instead retrieve 1 Force whenever you deploy a matching operative to the Renegade planet (RetrieveForceEffect, OptionalGameTextTrigger on justDeployedToLocation).",
+   "weights": [],
+   "existingVtags": "None. No V-tag or objective-specific logic for Imperial Occupation / Imperial Control / Renegade planet exists in src/gemp-swccg-server/.../ai/models/rando (evaluators + strategy + ObjectiveAnalyzer all grep-clean for renegade/occupation/7_298/matchingOperative/subjugat). Only incidental game_log references to the unrelated \"Cloud City Occupation\" card. No weights to reuse or cite.",
+   "namedCards": [
+    "NamedCardRef{title:Imperial Occupation/Imperial Control, blueprintIds:[7_298, 7_298_BACK], titleFragments:[\"imperial occupation\",\"imperial control\"], side:DARK} \u2014 the objective itself; the flip-gateway. No other NAMED cards are pulled or gated on; all pull targets are broad LocationRequirements (planet system, \u25c7 generic site) resolved by Filters, not named cards."
+   ],
+   "notes": "DYNAMIC-planet objective (analog to Local Uprising 7_137, the LIGHT-side counterpart): the \"Renegade planet\" is chosen at deploy from any planet system, so every LocationRequirement/CharacterRequirement here must resolve against game state's renegadePlanet at decision time, never a static planet group. The text token \"\u25c7 site\" is implemented in Java as Filters.and(Filters.generic, Filters.site) (generic/diamond marker site), NOT a title token. \"matching operatives\" = Filters.matchingOperativeToRenegadePlanet (operative whose matching planet equals the Renegade planet) \u2014 express as CharacterRequirement filterType, never a lore/title fragment. Only base blueprint ids exist; no virtual reprints in card_blueprint_database_dark.json. Back id verified as 7_298_BACK (not 7_299). Both flip gates use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE. Back-side extras (not pull-relevant, listed for completeness): opponent Force drains -1; matching operatives on planet forfeit +2 and power +2 when at same site as a Rebel; add 1 battle destiny once per battle when a matching operative is in a battle on the Renegade planet.",
+   "idFixes": [],
+   "idUncertain": []
+  },
+  {
+   "frontBp": "12_180",
+   "identity": "No Money, No Parts, No Deal! / You're A Slave? (DARK objective, Coruscant / Episode I). Tatooine/Watto lock-down: deploy Watto's Junkyard + Mos Espa at setup, then keep Watto present at Watto's Junkyard while occupying Mos Espa to hold the front side.",
+   "idsUsed": [
+    "12_180",
+    "12_180_BACK",
+    "12_178",
+    "12_87",
+    "11_93",
+    "208_56",
+    "11_43",
+    "221_75",
+    "11_65",
+    "11_66",
+    "11_10",
+    "11_11",
+    "13_39",
+    "14_27",
+    "213_40"
+   ],
+   "idVerdict": "CLEAN",
+   "backBp": "12_180_BACK",
+   "side": "DARK",
+   "titleFront": "No Money, No Parts, No Deal!",
+   "titleBack": "You're A Slave?",
+   "sites": [
+    "LocationRequirement NamedCardRef 'Watto's Junkyard' -> Filters.Wattos_Junkyard (Tatooine SITE). blueprintIds: 12_178 (dark), 12_87 (light). titleFragments: ['tatooine: watto's junkyard']. Deployed from Reserve at setup; front side makes it immune to Revolution for remainder of game.",
+    "LocationRequirement NamedCardRef 'Mos Espa' -> Filters.Mos_Espa (Tatooine SITE). blueprintIds: 11_93, 208_56 (dark), 11_43, 221_75 (light). titleFragments: ['tatooine: mos espa']. Deployed from Reserve at setup; occupancy is half the flip gate.",
+    "LocationRequirement broad 'Tatooine sites' -> Filters.Tatooine_site (planetGroup=TATOOINE, subtype=SITE, sideOwnership=ANY). Front side caps opponent Force loss from your Force drains here at max 1. Runtime resolve only, no candidate id snapshot."
+   ],
+   "characters": [
+    "CharacterRequirement persona WATTO -> Filters.Watto. blueprintIds: 11_65, 11_66 (dark). Gate character: must be present at Watto's Junkyard for the front flip; also the opponent's place-Watto-in-Used-Pile-for-8-Force target (you may retrieve up to 4) on both sides.",
+    "CharacterRequirement persona QUI_GON -> Filters.QuiGon (LIGHT). blueprintIds: 11_10, 11_11, 13_39, 14_27, 213_40. Front side grants Qui-Gon power +3 (flavor buff to opponent's Qui-Gon, not a Rando pull target).",
+    "CharacterRequirement (back side) opponent's non-unique aliens -> Filters.and(opponents, non_unique, alien): species/keyword alien, uniqueness NON_UNIQUE, sideOwnership OPPONENT. Each is deploy cost +3 while back side up. Runtime resolve only."
+   ],
+   "flip": "Front -> Back ('You're A Slave?'): flip if Watto present at Watto's Junkyard AND you occupy Mos Espa. Code: getGameTextRequiredAfterTriggers on isTableChanged + canBeFlipped + canSpot(Watto presentAt Wattos_Junkyard, INCLUDE_EXCLUDED_FROM_BATTLE) + occupies(playerId, Mos_Espa). enablesFlip gate = the setup deploy of both sites.",
+   "flipBack": "Back -> Front ('No Money, No Parts, No Deal!'): flip if Watto NOT present at Watto's Junkyard OR you do NOT occupy Mos Espa. Negation of the front flip (canSpot Watto/presentAt Wattos_Junkyard is false OR occupies Mos_Espa is false).",
+   "hardLose": "None. No place-out-of-play / lose-game condition on either side.",
+   "pullChain": "SETUP (getGameTextWhenDeployedAction, both required, ON_DEPLOY, sourceZone RESERVE): (1) DeployCardFromReserveDeckEffect target Filters.Wattos_Junkyard; (2) DeployCardFromReserveDeckEffect target Filters.Mos_Espa. No pre-flip or post-flip pulls. Back side has a once-per-deploy-phase place-card-from-hand-face-down mechanic (opponent loses 2 Force or pays 2 to let you deploy it free) but that is a table/hand action, not a Reserve pull.",
+   "weights": [
+    "NONE - no existing Rando V-tag scores this objective (No Money No Parts No Deal / You're A Slave). grep of src/gemp-swccg-server/.../ai/models/rando found only ObjectiveType.java line 19 naming it as a doc example and unrelated 'slave i' starship strings in CardSelectionEvaluator. Do NOT invent magnitudes."
+   ],
+   "existingVtags": "None. No V-tag rule references this objective in the rando models package (only a doc-comment mention in strategy/ObjectiveType.java line 19).",
+   "namedCards": [
+    "Watto's Junkyard (Tatooine: Watto's Junkyard) side ANY: 12_178 DARK, 12_87 LIGHT",
+    "Mos Espa (Tatooine: Mos Espa) side ANY: 11_93 DARK, 208_56 DARK, 11_43 LIGHT, 221_75 LIGHT",
+    "Watto (persona) DARK: 11_65, 11_66",
+    "Qui-Gon Jinn (Filters.QuiGon persona) LIGHT: 11_10, 11_11, 13_39, 14_27, 213_40"
+   ],
+   "notes": "filtersUsedInJava (front): Filters.Wattos_Junkyard, Filters.Mos_Espa, Filters.Watto, Filters.at(Wattos_Junkyard), Filters.presentAt(Wattos_Junkyard), Filters.QuiGon, Filters.Tatooine_site. Modifiers: ImmuneToTitleModifier(Wattos_Junkyard, Title.Revolution), PowerModifier(QuiGon,+3), LimitForceLossFromForceDrainModifier(Tatooine_site,1,opponent). Back filtersUsedInJava: Filters.and(opponents, non_unique, alien) for DeployCostModifier +3; back flip uses same Watto/Wattos_Junkyard/Mos_Espa spot checks. Both sides share the opponent 8-Force place-Watto-in-Used-Pile ability (you retrieve up to 4). Mos Espa has multiple base+virtual ids per side (11_93/208_56 dark, 11_43/221_75 light); Rando's setup deploy pulls whichever copy is in its Reserve, filter matches all. Qui-Gon lightsaber ids (11_49/11_50/221_69/221_70) intentionally excluded - Filters.QuiGon is the character persona only. Back id verified as file Card12_180_BACK.java (not 12_181). ID VERIFICATION 2026-07-07: all 15 idsUsed confirmed against card_blueprint_database_{dark,light}.json with matching title+side; zero id errors.",
+   "idFixes": [],
+   "idUncertain": []
+  },
+  {
+   "frontBp": "7_296",
+   "backBp": "7_296_BACK",
+   "titleFront": "Carbon Chamber Testing",
+   "titleBack": "My Favorite Decoration",
+   "side": "DARK",
+   "identity": "Carbon Chamber Testing / My Favorite Decoration (7_296 / 7_296_BACK), DARK Objective, ExpansionSet SPECIAL_EDITION (Premium/Enhanced Jabba's Palace). Deploys 0.",
+   "sites": [
+    "LocationRequirement Filters.Carbonite_Chamber -> Cloud City: Carbonite Chamber, subtype=SITE, group=BESPIN(Cloud City); dark 5_166 (light 225_41, 5_78). SETUP required deploy from own Reserve.",
+    "LocationRequirement Filters.Security_Tower -> Cloud City: Security Tower, subtype=SITE, group=BESPIN(Cloud City); dark 5_172 base + 200_126 virtual. SETUP required deploy; the captive is imprisoned here.",
+    "LocationRequirement Filters.Audience_Chamber -> Jabba's Palace: Audience Chamber, subtype=SITE, group=TATOOINE(Jabba's Palace); dark 6_162 (light 6_81). Once-per-deploy-phase optional pull; also the flip target (move frozen captive here).",
+    "LocationRequirement Filters.Docking_Bay_94 -> Tatooine: Docking Bay 94, subtype=SITE, group=TATOOINE; dark 1_291 (light 1_129). Once-per-deploy-phase optional pull (one of AC/DB94/EP).",
+    "LocationRequirement Filters.East_Platform -> Cloud City: East Platform (Docking Bay), subtype=SITE, group=BESPIN(Cloud City); dark 5_169. Once-per-deploy-phase optional pull."
+   ],
+   "characters": [
+    "CharacterRequirement Filters.Rebel -> opponent's Rebel (affiliation icon=REBEL). Deployed (opponent's choice) from OPPONENT's Reserve Deck into Security Tower as 'imprisoned' captive. Exceptions when opp's played objective is: You Can Either Profit By This -> not Han; Rescue The Princess -> not Leia; There Is Good In Him -> not Luke.",
+    "NamedCardRef Filters.Jabbas_Prize -> Jabba's Prize (CHARACTER, dark 10_42). If in own Reserve Deck, deploy it to Security Tower as imprisoned FROZEN captive INSTEAD of pulling an opponent Rebel."
+   ],
+   "namedCards": [
+    "Jabba's Prize: dark 10_42 (CHARACTER)",
+    "Carbonite Chamber Console: dark 5_107 base + 211_8 virtual (DEVICE), required SETUP deploy from own Reserve",
+    "Scum And Villainy: dark 6_149 (EFFECT), back-side once-per-deploy-phase pull while frozen captive at Audience Chamber; also gains immune-to-Alter",
+    "Dark Deal: dark 5_115 base + 223_9 virtual (EFFECT), front side MayNotDeployModifier (you may not play Dark Deal)"
+   ],
+   "pullChain": "FRONT SETUP (getGameTextWhenDeployedAction, ON_DEPLOY, RESERVE, own deck, all required unless noted): (1) deploy Filters.Carbonite_Chamber; (2) deploy Filters.Carbonite_Chamber_Console; (3) deploy Filters.Security_Tower; (4) branch: if Jabba's Prize spottable in own Reserve -> required deploy Jabbas_Prize to Security_Tower as imprisoned FROZEN captive (ignore deploy restrictions); ELSE optional deploy opponent's Rebel (opponent chooses) from OPPONENT Reserve into Security_Tower as imprisoned captive. FRONT REPEATABLE (getGameTextTopLevelActions, ONCE_PER_TURN deploy phase, own Reserve, reshuffle): deploy one of Filters.or(Audience_Chamber, Docking_Bay_94, East_Platform). BACK (7_296_BACK): (a) ONCE_PER_TURN control phase retrieve 1 Force; (b) ONCE_PER_TURN deploy phase deploy Filters.Scum_And_Villainy from Reserve (reshuffle) \u2014 gated on a frozen captive at Audience Chamber.",
+   "flip": "Front -> Back flips when you move a frozen captive to Audience Chamber (TriggerConditions.movedToLocationBy escorting(frozenCaptive) -> Filters.Audience_Chamber). ALSO auto-flips at getGameTextAfterDeploymentCompletedAction if NO imprisoned captive is in Security Tower (i.e. no Rebel was in opponent's Reserve Deck at start of game) \u2014 this sets a WhileInPlayData marker before flipping (the marker later suppresses the back-side place-out-of-play).",
+   "flipBack": "None. One-way flip; no getGameTextForFlipToFront / back-to-front condition exists on 7_296_BACK.",
+   "hardLose": "Back side (7_296_BACK) PlaceCardOutOfPlayFromTableEffect: place out of play when NOT cardHasWhileInPlayDataSet AND table changed AND no frozen captive can be spotted (INCLUDE_CAPTIVE). I.e. HardLose condition = zero frozen captives on table; target = CharacterRequirement Filters.frozenCaptive count 0. Suppressed if the 'no Rebel at start of game' WhileInPlayData marker is set.",
+   "weights": [],
+   "existingVtags": "No V-tag scoring magnitudes exist for 7_296 anywhere in the rando model tree. Only reference is DEAD code ObjectiveHandler.java:157-162 (OBJECTIVE_REQUIREMENTS.put(\"7_296\", [5_166 Carbonite Chamber, 5_107 Carbonite Chamber Console, 5_172 Security Tower]) \u2014 a starting-requirement list, NOT a weight; live brain is ObjectiveAnalyzer which has no 7_296 entry). No sourceVtag magnitudes to reuse \u2014 do not invent.",
+   "notes": "Text vs Java confirmed: Java setGameText is authoritative (front line 49, back line 43). Carbonite Chamber Console is a DEVICE (not a site) but is a required SETUP pull. Rebel imprisonment pulls from OPPONENT's Reserve Deck (unusual); all site/device pulls are from OWN Reserve Deck. Site 'group' tags: Carbonite Chamber/Security Tower/East Platform are Cloud City (Bespin); Audience Chamber is Jabba's Palace (Tatooine); Docking Bay 94 is Tatooine. Light-side ids listed for shared-title sites (Filters match either side's printing on table) but only DARK printings are pullable from the dark player's Reserve. All idsUsed verified present in card_blueprint_database_{dark,light}.json.",
+   "idsUsed": [
+    "7_296",
+    "7_296_BACK",
+    "5_166",
+    "225_41",
+    "5_78",
+    "5_172",
+    "200_126",
+    "6_162",
+    "6_81",
+    "1_291",
+    "1_129",
+    "5_169",
+    "10_42",
+    "5_107",
+    "211_8",
+    "6_149",
+    "5_115",
+    "223_9"
+   ],
+   "idVerdict": "CLEAN",
+   "idFixes": [],
+   "idUncertain": []
+  },
+  {
+   "frontBp": "10_29",
+   "backBp": "10_29_BACK",
+   "side": "DARK",
+   "identity": "Agents Of Black Sun / Vengeance Of The Dark Prince (Reflections II objective, DARK, deploy 0 / flip 7). Java: set10/dark/Card10_029.java + Card10_029_BACK.java. Front title Agents_Of_Black_Sun, back title Vengeance_Of_The_Dark_Prince.",
+   "titleFront": "Agents Of Black Sun",
+   "titleBack": "Vengeance Of The Dark Prince",
+   "sites": [
+    "Imperial City = Filters.Imperial_City -> LocationRequirement{subtype:SITE, titleContains:['Coruscant: Imperial City']}; resolved dark ids 7_277 (Special Edition), 201_38 (SET_1). Deployed at setup with Xizor there.",
+    "Coruscant system = Filters.Coruscant_system -> LocationRequirement{planetOrSystemGroup:CORUSCANT, subtype:SYSTEM}; resolved dark ids 12_165, 203_31, 226_2, 7_275. Deployed at setup.",
+    "battleground site = Filters.battleground_site -> LocationRequirement{subtype:SITE, battlegroundRequired:true}; used in flip/flipBack gates (Xizor there / Luke there) and bounty-hunter move target is 'adjacent site where there is a bounty' (Filters.site + sameSiteAs any_bounty).",
+    "location occupied (back peek X = Filters.occupies(self) top-locations count; back drain = battleground occupied by Xizor or Emperor)."
+   ],
+   "characters": [
+    "Xizor = Filters.Xizor persona -> NamedCardRef Prince Xizor, id 10_45. Deployed to Imperial City at setup; front flip-gate 'Xizor at battleground site'; back flip-back-gate 'Xizor not on table'; back control-phase drain counts battlegrounds occupied by Xizor.",
+    "Shada (Legacy alt-Xizor) = Filters.and(Icon.LEGACY_BLOCK_4, Filters.title('Shada')) -> NamedCardRef id 601_148. Only in the LEGACY__TREAT_XIZOR_AS_SHADA branch; substitutes for Xizor everywhere.",
+    "Luke = Filters.Luke (persona) -> CharacterRequirement{persona:LUKE}; front stays flipped only while Luke NOT at battleground site; back flips forward if Luke at battleground site. Game-text mods swap target to Filters.Rey (REY) or Filters.Anakin (ANAKIN).",
+    "Emperor = Filters.Emperor -> CharacterRequirement{persona:EMPEROR}; exempt from may-not-deploy restriction; back drain counts battlegrounds occupied by Xizor OR Emperor.",
+    "Black Sun Agents = Filters.and(your, or(and(Filters.alien, loreContains('Black Sun')), Filters.bounty_hunter, Filters.information_broker)) -> CharacterRequirement composed (keyword BOUNTY_HUNTER / INFORMATION_BROKER, or species=alien with lore 'Black Sun'). Granted Keyword.BLACK_SUN_AGENT; back gives +1 attrition per Black Sun Agent in battle.",
+    "bounty hunters = Filters.bounty_hunter (keyword) -> may move to adjacent site with a bounty during control phase (both sides).",
+    "Scanning Crew = Filters.Scanning_Crew -> NamedCardRef; MayNotPlay restriction (not resolved to ids, filter-only).",
+    "may-not-deploy restriction: Filters.hasAbilityOrHasPermanentPilotWithAbility AND NOT(Black_Sun_agent, your Black Sun Agents, Emperor, Independent starship=Icon.INDEPENDENT+Filters.starship)."
+   ],
+   "flip": "FRONT->BACK: TriggerConditions.isTableChanged AND canBeFlipped AND canSpot(Xizor AND at battleground_site) AND NOT canSpot(Luke AND at battleground_site). Uses SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE. Luke target is Rey/Anakin under the respective ModifyGameTextType mods; Xizor is Shada under LEGACY__TREAT_XIZOR_AS_SHADA.",
+   "flipBack": "BACK->FRONT: TriggerConditions.isTableChanged AND canBeFlipped AND ( canSpot(Luke AND at battleground_site) OR NOT canSpot(Xizor on table) ). Same mod-driven Luke->Rey/Anakin and Xizor->Shada substitutions.",
+   "hardLose": "None. No 'place out of play' / HardLose condition on either side.",
+   "pullChain": "SETUP (getGameTextWhenDeployedAction, all required, ON_DEPLOY from RESERVE): 1) Deploy Imperial City (Filters.Imperial_City). 2a) Standard branch: DeployCardToLocation Xizor (Filters.Xizor) to Imperial City. 2b) LEGACY branch (fires when Reserve holds both a LEGACY_BLOCK_4 No Bargain and a LEGACY_BLOCK_4 'Shada'): deploy Xizor OR Shada to Imperial City; if Shada chosen, then also deploy No Bargain (V) (Filters.and(LEGACY_BLOCK_4, No_Bargain)) from Reserve. 3) Deploy Coruscant system (Filters.Coruscant_system). BACK top-level actions (not pulls): once/turn discard-a-card-from-hand to peek Force Pile; once/battle-phase peek top X Reserve cards (X = locations you occupy); once/control-phase opponent loses 1 Force per battleground occupied by Xizor/Emperor. Both sides: control-phase bounty hunter regular-move to adjacent bounty site.",
+   "weights": [],
+   "existingVtags": "No scoring/strategy V-tags for this objective exist in src/gemp-swccg-server/.../ai/models/rando. The only pre-existing reference is DEAD code: strategy/ObjectiveHandler.java line 152 OBJECTIVE_REQUIREMENTS.put(\"10_29\", [\"7_277\" Imperial City, \"200_144\" (comment says 'Coruscant system')]. NOTE DEFECT: 200_144 is actually 'Alter' (USED_OR_LOST INTERRUPT, DARK), NOT Coruscant system \u2014 the stale requirement list is wrong. ObjectiveHandler is dead per project notes (live brain = ObjectiveAnalyzer). No V-tag magnitudes exist to reuse.",
+   "namedCards": [
+    "Agents Of Black Sun / Vengeance Of The Dark Prince (self): 10_29 / 10_29_BACK (DARK)",
+    "Prince Xizor (Filters.Xizor): 10_45 (DARK)",
+    "Coruscant: Imperial City (Filters.Imperial_City): 7_277, 201_38 (DARK)",
+    "Coruscant system (Filters.Coruscant_system, SYSTEM): 12_165, 203_31, 226_2, 7_275 (DARK)",
+    "Shada (Legacy alt-Xizor): 601_148 (DARK)",
+    "No Bargain (V) (Legacy, Filters.and(LEGACY_BLOCK_4,No_Bargain)): 601_149 (DARK)",
+    "Luke / Rey / Anakin / Emperor / Scanning Crew: filter-only (persona/keyword), not resolved to id lists"
+   ],
+   "idsUsed": [
+    "10_29",
+    "10_29_BACK",
+    "10_45",
+    "7_277",
+    "201_38",
+    "12_165",
+    "203_31",
+    "226_2",
+    "7_275",
+    "601_148",
+    "601_149"
+   ],
+   "notes": "filtersUsedInJava-first, all confirmed in Card10_029.java + Card10_029_BACK.java. Named-card ids resolved from card_blueprint_database_dark.json (all DARK; no light-side blueprints share these titles). Legacy ids 601_148 (Shada), 601_149 (No Bargain V) confirmed against set601/dark Java filenames (Card601_148.java super = Side.DARK ... \"Shada\"; Card601_149.java super = Side.DARK ... Title.No_Bargain, Rarity.V). Coruscant system has 4 dark blueprints (12_165, 203_31, 226_2, 7_275; DB title 'Coruscant', subtype SYSTEM); Filters.Coruscant_system resolves them at runtime \u2014 do NOT hardcode. Imperial City resolves to 7_277 + 201_38 (DB title 'Coruscant: Imperial City', SITE). Three game-text mods alter targets: LEGACY__TREAT_XIZOR_AS_SHADA (Xizor->Shada 601_148), REFLECTIONS_II_OBJECTIVE__TARGETS_REY_INSTEAD_OF_LUKE (Luke->Rey), ..._TARGETS_ANAKIN_INSTEAD_OF_LUKE (Luke->Anakin). No HardLose. No existing V-tag scoring; existing ObjectiveHandler requirement for 10_29 is dead AND contains a wrong id (200_144=Alter INTERRUPT, not Coruscant) \u2014 flag for repair if that dead list is ever revived. INDEPENDENT VERIFICATION 2026-07-07: all 11 ids confirmed against real source (9 in blueprint DB with matching DARK side + titles, 2 Legacy as existing set601/dark Java files); 200_144=Alter note independently confirmed.",
+   "idVerdict": "CLEAN",
+   "idFixes": [],
+   "idUncertain": []
+  },
+  {
+   "frontBp": "9_151",
+   "backBp": "9_151_BACK",
+   "titleFront": "Bring Him Before Me",
+   "titleBack": "Take Your Father's Place",
+   "side": "DARK",
+   "identity": "Death Star II dark-side objective, CAPTURE archetype. FRONT \"Bring Him Before Me\": on deploy, deploy Throne Room + Insignificant Rebellion + Your Destiny from Reserve. Locks Scanning Crew (may-not-play for game) and protects Luke from opponent place-out-of-play. Dark may download Emperor (deploy -2). Opponent may download Luke from Reserve (deploy -2) or Lost Pile. If Luke is present with a non-escorting Vader, Luke is captured+seized by Vader; Vader may not transfer him. Flips when the capture target becomes a captive. A game-text mod (Kanan, Rebel Infiltrator) can redirect the whole objective to target Leia or Kanan instead of Luke. BACK \"Take Your Father's Place\": lose 1 Force each of your turns; once/turn, with Vader+Luke+Emperor all present at your Throne Room, initiate a Luke/Vader duel (each draws 2 destiny + ability); Vader win = opp loses 3 Force; Luke win = shuffle Reserve, draw destiny, if >12 Luke crosses to Dark Side and totally depletes opponent's Life Force. Flips back if Luke neither present with Vader nor a captive.",
+   "sites": [
+    "NamedCardRef Throne Room \u2014 Filters.Throne_Room = Filters.title(\"Death Star II: Throne Room\") -> blueprintId 9_147 (DARK, LOCATION/SITE). Capture requires Luke present with Vader (any site, per the present-with check, not gated to Throne Room); the BACK-side duel is gated to 'present at your Throne Room' (9_147)."
+   ],
+   "characters": [
+    "Captor: CharacterRequirement persona=VADER (Filters.Vader). Must be present with the target, not leaving table, not escorting any captive. Performs capture-with-seizure; on back is the duel initiator.",
+    "Capture target (primary): CharacterRequirement persona=LUKE (Filters.Luke). Downloaded by opponent from Reserve/Lost Pile; captured when present with Vader; protected from opponent place-out-of-play (except We Need Luke Skywalker).",
+    "Capture target alternatives via game-text mod: persona=LEIA (Filters.Leia) or persona=KANAN (Filters.Kanan). Redirect triggers when opponent deploys 'Kanan, Rebel Infiltrator' as the downloaded Luke \u2014 BRING_HIM_BEFORE_ME__TARGETS_LEIA/KANAN_INSTEAD_OF_LUKE.",
+    "Emperor: CharacterRequirement persona=SIDIOUS (Filters.Emperor). Downloadable from Reserve (deploy -2, reshuffle) on both sides; must be present at Throne Room to enable the back-side duel."
+   ],
+   "flip": "FlipRequirement: relation=CAPTURED, count=1, target=CharacterRequirement(persona=LUKE) [alternatives: persona=LEIA, persona=KANAN per active game-text mod]. Front->back fires (RequiredGameTextTriggerAction, singleton) when the target is spottable as a captive (SpotOverride INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE) and card canBeFlipped. Text: \"Flip this card if Luke captured.\"",
+   "flipBack": "FlipBackRequirement (negation): back->front fires when the target is NOT spottable as (captive OR present-with Vader). i.e. relation=NOT(CAPTURED OR PRESENT_WITH Vader), target=CharacterRequirement(persona=LUKE) [alternatives LEIA/KANAN]. Text: \"Flip if Luke neither present with Vader nor a captive.\"",
+   "hardLose": "none \u2014 no \"place out of play\" / hard-lose clause on either side. (The only place-out-of-play text is protective: opponent's OOP effects may not target the capture target.)",
+   "pullChain": "[\"SETUP / ON_DEPLOY (required, getGameTextWhenDeployedAction): DeployCardFromReserveDeckEffect Filters.Throne_Room -> 9_147. sourceZone=RESERVE, verb=deploy.\", \"SETUP / ON_DEPLOY (required): DeployCardFromReserveDeckEffect Filters.Insignificant_Rebellion -> 9_127/210_47. sourceZone=RESERVE.\", \"SETUP / ON_DEPLOY (required): DeployCardFromReserveDeckEffect Filters.Your_Destiny -> 9_134. sourceZone=RESERVE.\", \"PRE_FLIP top-level (self, both sides): download Emperor \u2014 DeployCardFromReserveDeckEffect Filters.Emperor, deploy -2, reshuffle. cadence=REPEATABLE-gated by canDeployCardFromReserveDeck(SIDIOUS). verb=download, sourceZone=RESERVE.\", \"PRE_FLIP opponent top-level: opponent may download the target \u2014 DeployCardFromReserveDeckEffect Filters.Luke (or Leia/Kanan), deploy -2, reshuffle; OR DeployCardFromLostPileEffect Filters.Luke (or Leia/Kanan). sourceZone=RESERVE|LOST. This is the opponent-facing enabler that seeds the capture.\", \"POST_FLIP (back) top-level self: download Emperor from Reserve (deploy -2) again; and the once/turn Luke/Vader DuelEffect gated on Vader+Emperor+target all present at Throne Room (9_147).\"]",
+   "namedCards": [
+    "Objective front 9_151 'Bring Him Before Me' / back 9_151_BACK 'Take Your Father's Place' (DARK)",
+    "Throne Room: Filters.title(\"Death Star II: Throne Room\") -> [9_147]",
+    "Insignificant Rebellion: Filters.title -> [9_127 base, 210_47 virtual]",
+    "Your Destiny: Filters.title -> [9_134]",
+    "Scanning Crew (locked, may-not-play): Filters.title -> [1_266]",
+    "Emperor/Luke/Leia/Kanan/Vader are persona filters (SIDIOUS/LUKE/LEIA/KANAN/VADER), NOT title NamedCardRefs \u2014 see characters[]. We Need Luke Skywalker (211_36_BACK) named only as an exception to the OOP protection."
+   ],
+   "weights": [
+    "NONE. No existing rando V-tag scores this objective. Grep of ai/models/rando (ObjectiveAnalyzer, ObjectiveType, evaluators, strategy) found 9_151 / 'Bring Him Before Me' only as a prose example of the CAPTURE archetype in ObjectiveType.java line 27 \u2014 no scoring magnitude keys off it. Do NOT invent numbers; reuse a CAPTURE-archetype magnitude only if one is later established."
+   ],
+   "existingVtags": "None specific to 9_151. Only reference is a non-scoring comment in src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveType.java:27 (and the chosenone twin) listing \"Bring Him Before Me\" as a CAPTURE-type example. No ObjectiveAnalyzer branch, evaluator, or V-tag currently handles this objective.",
+   "idsUsed": [
+    "9_151",
+    "9_151_BACK",
+    "9_147",
+    "9_127",
+    "210_47",
+    "9_134",
+    "1_266",
+    "211_36_BACK"
+   ],
+   "notes": "Java is authoritative (setGameText read from Card9_151.java + Card9_151_BACK.java). filtersUsedInJava: Filters.Throne_Room, Filters.Insignificant_Rebellion, Filters.Your_Destiny, Filters.Scanning_Crew (all Filters.title), plus persona filters Filters.Emperor(SIDIOUS), Filters.Luke, Filters.Leia, Filters.Kanan, Filters.Vader. Redirect mechanic: ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_LEIA/KANAN_INSTEAD_OF_LUKE swaps the persona the objective captures/duels/protects; Rando should treat the flip target as {LUKE default, LEIA or KANAN if that mod is active}. Capture is a required auto-trigger (isTableChanged) when target present with a valid Vader \u2014 Rando does not choose it, but positioning Vader present with an uncaptured Luke IS the pull-the-trigger decision. OOP protection car/We_Need_Luke_Skywalker (211_36_BACK) is the sole exception to Luke place-out-of-play immunity. No back-side id exists beyond 9_151_BACK; back is same physical card. ID VERIFICATION (2026-07-07): all 8 idsUsed independently confirmed against source. 7 present in card_blueprint_database_dark.json with correct DARK side + title (9_151 Bring Him Before Me OBJECTIVE, 9_151_BACK Take Your Father's Place OBJECTIVE, 9_147 Death Star II: Throne Room LOCATION, 9_127 Insignificant Rebellion EFFECT, 210_47 Insignificant Rebellion EFFECT, 9_134 Your Destiny EFFECT, 1_266 Scanning Crew INTERRUPT). 211_36_BACK confirmed in card_blueprint_database_light.json = We Need Luke Skywalker OBJECTIVE LIGHT (front 211_36 = The Galaxy May Need A Legend). No separate per-side Throne Room location id exists; 9_147 is correct DARK site. No front+1, no back-side malformation, no wrong-side ids.",
+   "idVerdict": "CLEAN",
+   "idFixes": [],
+   "idUncertain": []
+  },
+  {
+   "frontBp": "7_297",
+   "identity": "Objective (Special Edition, DARK). Front: \"Hunt Down And Destroy The Jedi\" (7_297; virtual reprint 213_31). Back: \"Their Fire Has Gone Out Of The Universe\" (7_297_BACK; virtual 213_31_BACK). NamedCardRef titleFragments: [\"hunt down and destroy the jedi\",\"their fire has gone out of the universe\"].",
+   "backBp": "7_297_BACK",
+   "side": "DARK",
+   "titleFront": "Hunt Down And Destroy The Jedi",
+   "titleBack": "Their Fire Has Gone Out Of The Universe",
+   "sites": [
+    "LocationRequirement Executor:Holotheatre \u2014 NamedCardRef blueprintIds:[4_161], runtime Filters.Holotheatre; pulled/deployed at setup (required).",
+    "LocationRequirement Executor:Meditation Chamber \u2014 NamedCardRef blueprintIds:[4_163], runtime Filters.Meditation_Chamber; optional setup deploy. Back side: while Vader present here, -2 to each opponent battle destiny.",
+    "LocationRequirement battleground_site \u2014 subtype-agnostic, battlegroundRequired:true, runtime Filters.battleground_site; used in flip/flipBack gates (SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE).",
+    "LocationRequirement Executor site (group) \u2014 runtime Filters.Executor_site; HardLose trigger: initiating a non-Epic duel OR Force drain at an Executor site places objective out of play.",
+    "LocationRequirement 'a location you control' \u2014 runtime Filters.at(Filters.controls(playerId)); source zone for taking Vader into hand."
+   ],
+   "characters": [
+    "CharacterRequirement Vader \u2014 persona:VADER, runtime Filters.Vader. Front top-level action: MOVE phase, once/phase, pay 4 Force to take Vader into hand from a location you control (cards on him -> owner's Used Pile). Vader must be at a battleground site to flip (byWhom of flip gate). Vader-expendable in this objective (V35).",
+    "CharacterRequirement opponent Jedi/Luke \u2014 runtime Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.Luke)) at battleground_site; their absence at a battleground gates the front flip, their presence gates the back flip.",
+    "CharacterRequirement opponent Jedi/Skywalker (back modifiers) \u2014 runtime Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.Skywalker)); opponent may not initiate battle/Force drain at any location sharing site with such a character."
+   ],
+   "pullChain": "[\"PullOrDeployAction: phase SETUP, verb deploy, sourceZone RESERVE, target NamedCardRef Holotheatre[4_161] (Filters.Holotheatre), cadence ON_DEPLOY, REQUIRED (required effect).\",\"PullOrDeployAction: phase SETUP, verb deploy, sourceZone RESERVE, target NamedCardRef Visage_Of_The_Emperor[4_135,213_16] (Filters.Visage_Of_The_Emperor), cadence ON_DEPLOY, REQUIRED.\",\"PullOrDeployAction: phase SETUP, verb deploy, sourceZone RESERVE, target NamedCardRef Meditation_Chamber[4_163] (Filters.Meditation_Chamber), cadence ON_DEPLOY, OPTIONAL (0..1).\",\"PullOrDeployAction: phase SETUP, verb deploy, sourceZone RESERVE, target NamedCardRef Epic_Duel[5_129] (Filters.Epic_Duel), cadence ON_DEPLOY, OPTIONAL (0..1).\",\"PullOrDeployAction: phase POST-DEPLOY/MOVE, verb take(into hand), sourceZone TABLE, target CharacterRequirement Vader, cadence ONCE_PER_PHASE, cost 4 Force. Not a flip gateway.\"]",
+   "flip": "FlipRequirement (front->back): relation PRESENT, target CharacterRequirement Vader at LocationRequirement(battleground_site), count 1, AND opponentConstraint {relation:PRESENT, count:0, target: CharacterRequirement(opponent Jedi OR Luke) at battleground_site}. Java: canSpot(Vader at battleground_site) && !canSpot(opponents Jedi|Luke at battleground_site), both with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, gated on isTableChanged + canBeFlipped. Singleton trigger.",
+   "flipBack": "FlipBackRequirement (back->front): alternatives = [ {relation PRESENT, target CharacterRequirement(opponent Jedi OR Luke) at LocationRequirement(battleground_site), count 1}, {relation ON_TABLE, target CharacterRequirement Vader, count 0 (Vader NOT on table)} ]. Java: canSpot(opponents Jedi|Luke at battleground_site) || !canSpot(Vader). Singleton trigger.",
+   "hardLose": "HardLose (both sides, identical): PlaceCardOutOfPlayFromTable if ANY of: (1) you play Scanning Crew [NamedCardRef 1_266, Filters.Scanning_Crew], (2) you initiate a non-Epic duel [TriggerConditions.nonEpicDuelInitiatedBy] \u2014 EXCEPT a duel initiated by Maul when ModifyGameTextType.HUNT_DOWN__DO_NOT_PLACE_OUT_OF_PLAY_IF_MAUL_DUELS is active, (3) you initiate a Force drain at an Executor site [Filters.Executor_site]. Note: text says \"non-Epic duel or Force drain at an Executor site\"; the drain clause is site-scoped, the duel clause is global.",
+   "weights": [
+    "V35 SCORE_VADER_SEEK_JEDI = 350 (RandoConfig.java:182) \u2014 Vader move toward opponent Jedi. sourceVtag V35.",
+    "V35 VADER_EXPENDABILITY_FACTOR = 0.3f (RandoConfig.java:194) \u2014 Vader treated as expendable in Hunt Down. sourceVtag V35.",
+    "V29.9 armed-Vader battle aggressiveness = +80, escalates to +200 when Luke present (BattleEvaluator.java:333-334), gated on ObjectiveAnalyzer.isHuntDownV(). sourceVtag V29.9.",
+    "V29.7 Vader-vs-Luke battle bonus = +100 (BattleEvaluator.java:484). sourceVtag V29.7.",
+    "V35 contest bonus +150 for Vader hunting Jedi (MoveEvaluator.java:2857). sourceVtag V35."
+   ],
+   "existingVtags": "Rando ALREADY models this objective family. ObjectiveAnalyzer.java isHuntDownV (V25) detects it text-generically: flip condition contains \"vader\" AND \"battleground\" (line 956-961) -> matches BOTH 7_297 and virtual 213_31. Back detection huntDownFlipBackNoVader on \"vader not on table\" (line 1246-1250). Downstream consumers: BattleEvaluator V29.9 (armed Vader fight +80/+200) + V35 Inquisitor destiny + V29.7 Vader-vs-Luke +100 + V35 Barrier-risk expendability; MoveEvaluator V29.12 (Vader must leave castle/hunt), V29.13 (group allies with Vader), V35 SCORE_VADER_SEEK_JEDI hunt ladder; RandoConfig V35 constants. NOTE: the \"Hunt Down V\" naming in these tags conflates this SE objective with a virtual Vader/Inquisitor/Hatred deck strategy (feedback_hunt_down_strategy.md); detection is purely on flip-text so it fires for 7_297/213_31.",
+   "namedCards": [
+    "Hunt Down And Destroy The Jedi \u2014 blueprintIds:[7_297,213_31], titleFragments:[\"hunt down and destroy the jedi\"], side DARK",
+    "Their Fire Has Gone Out Of The Universe \u2014 blueprintIds:[7_297_BACK,213_31_BACK], titleFragments:[\"their fire has gone out of the universe\"], side DARK",
+    "Holotheatre (Executor: Holotheatre) \u2014 blueprintIds:[4_161], Filters.Holotheatre, side DARK",
+    "Visage Of The Emperor \u2014 blueprintIds:[4_135,213_16], Filters.Visage_Of_The_Emperor, side DARK",
+    "Meditation Chamber (Executor: Meditation Chamber) \u2014 blueprintIds:[4_163], Filters.Meditation_Chamber, side DARK",
+    "Epic Duel \u2014 blueprintIds:[5_129], Filters.Epic_Duel, side DARK",
+    "Scanning Crew \u2014 blueprintIds:[1_266], Filters.Scanning_Crew, side DARK (hard-lose trigger)",
+    "Vader \u2014 persona filter Filters.Vader (CharacterRequirement, not id-listed)",
+    "Sense / Alter \u2014 Filters.Sense, Filters.Alter (front: +4 to each destiny draw for these; back: opponent may not play them) \u2014 not pulled, no id enumeration needed",
+    "Maul \u2014 Filters.Maul (duel exception to hard-lose) \u2014 CharacterRequirement, not id-listed"
+   ],
+   "idsUsed": [
+    "7_297",
+    "7_297_BACK",
+    "213_31",
+    "213_31_BACK",
+    "4_161",
+    "4_163",
+    "4_135",
+    "213_16",
+    "5_129",
+    "1_266"
+   ],
+   "notes": "Filters-first sourcing confirmed against Card7_297.java + Card7_297_BACK.java setGameText (authoritative). Pull filters: Filters.Holotheatre, Filters.Visage_Of_The_Emperor, Filters.Meditation_Chamber, Filters.Epic_Duel. Holotheatre/Meditation Chamber resolve to the Executor sites 4_161/4_163 (title in DB is \"Executor: Holotheatre\"/\"Executor: Meditation Chamber\"; the short Filters.X matches by persona/site-name). Virtual reprint 213_31/_BACK shares all game text so isHuntDownV detection covers it. Front also: while active, +4 to each player's destiny draw for Sense/Alter (DestinyDrawForActionSourceModifier). Back modifiers: MayNotInitiateBattle/ForceDrain where opponent Jedi/Skywalker present, NoForceLoss from Visage, -2 opponent battle destiny while Vader at Meditation Chamber, MayNotPlay Sense/Alter. VERIFICATION 2026-07-07: all 10 idsUsed confirmed present in card_blueprint_database_dark.json by cardId lookup with matching title+side (7_297/7_297_BACK/213_31/213_31_BACK OBJECTIVE; 4_161 Executor: Holotheatre + 4_163 Executor: Meditation Chamber LOCATION SITE; 4_135 + 213_16 Visage Of The Emperor EFFECT; 5_129 Epic Duel EPIC_EVENT; 1_266 Scanning Crew INTERRUPT). All DARK, all _BACK ids follow <front>_BACK. No id errors.",
+   "idVerdict": "CLEAN",
+   "idFixes": [],
+   "idUncertain": []
+  }
+ ]
+}

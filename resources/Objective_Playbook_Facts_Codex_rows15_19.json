@@ -1,0 +1,1987 @@
+{
+  "schemaVersion": "objective-playbook-facts-v0.1-shard",
+  "rows": "15-19",
+  "rowSource": "resources/Objective_Blueprint_Inventory_2026-07-07.json .rows[] index, as specified by Steve final correction",
+  "generatedBy": "Codex K-2",
+  "entries": [
+    {
+      "frontBp": "112_1",
+      "backBp": "112_1_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Agents In The Court",
+      "objectiveTitleBack": "No Love For The Empire",
+      "abbreviation": "AITC",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "112_1",
+          "112_1_BACK"
+        ],
+        "titleFragments": [
+          "agents in the court",
+          "no love for the empire"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Hutt Trade Route",
+          "blueprintIds": [
+            "112_9",
+            "223_48"
+          ],
+          "titleFragments": [
+            "hutt trade route"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Hutt_Trade_Route",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "112_9",
+            "223_48"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yarna d'al' Gargan",
+          "blueprintIds": [
+            "6_59",
+            "208_16"
+          ],
+          "titleFragments": [
+            "yarna d'al' gargan"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Yarna_dal_Gargan",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "6_59",
+            "208_16"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Trap Door",
+          "blueprintIds": [
+            "6_159"
+          ],
+          "titleFragments": [
+            "trap door"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Trap_Door",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_159"
+          ],
+          "notes": "Immune to Bo Shuda while a rancor is at Rancor Pit."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Bo Shuda",
+          "blueprintIds": [
+            "6_54"
+          ],
+          "titleFragments": [
+            "bo shuda"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Title.Bo_Shuda",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_54"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Rancor Pit",
+          "blueprintIds": [
+            "6_166"
+          ],
+          "titleFragments": [
+            "rancor pit"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Rancor_Pit",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_166"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Hutt Trade Route",
+          "text": "Deploy Hutt Trade Route",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "EXTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Hutt_Trade_Route",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "112_9",
+            "223_48"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Jabba's Palace site",
+          "text": "Deploy a Jabba's Palace site",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Jabbas_Palace_site",
+          "candidateSource": "DB",
+          "resolvedCount": 11,
+          "resolvedSample": [
+            "112_12",
+            "112_2",
+            "6_162",
+            "6_163",
+            "6_164",
+            "6_165",
+            "6_166",
+            "6_171"
+          ],
+          "notes": "Runtime is keyword-based, not title-only."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground site",
+          "text": "occupy two/three battleground sites",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground_site",
+          "candidateSource": "DB",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Snapshot intentionally omitted because this is a global dynamic requirement."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine location",
+          "text": "battle at any Tatooine location",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Tatooine_location",
+          "candidateSource": "DB",
+          "resolvedCount": 66,
+          "resolvedSample": [
+            "1_127",
+            "1_128",
+            "1_129",
+            "1_130",
+            "1_131",
+            "1_132",
+            "1_133",
+            "1_289"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Rep",
+          "text": "unique alien from your deck whose lore specifies its species",
+          "runtimeFilter": "Filters.and(Filters.unique, Filters.alien, Filters.hasSpecies)",
+          "matchSource": "JAVA_FILTER",
+          "notes": "Dynamic choice stored in WhileInPlayData; species drives later requirements."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Non-unique alien of Rep's species",
+          "text": "third site occupant and retrieval target",
+          "runtimeFilter": "Filters.and(Filters.non_unique, Filters.alien, Filters.species(rep.getBlueprint().getSpecies()))",
+          "matchSource": "JAVA_FILTER",
+          "notes": "Runtime species is dynamic from chosen Rep."
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Two aliens",
+          "text": "two of your aliens battling at any Tatooine location",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.alien)",
+          "matchSource": "JAVA_FILTER"
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Hutt_Trade_Route",
+            "label": "Hutt Trade Route"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card112_001.java:55 DeployCardFromReserveDeckEffect(Filters.Hutt_Trade_Route)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Jabbas_Palace_site",
+            "label": "Jabba's Palace site"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card112_001.java:62 DeployCardFromReserveDeckEffect(Filters.Jabbas_Palace_site)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "reveal",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.unique, Filters.alien, Filters.hasSpecies)",
+            "label": "Rep"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card112_001.java:69 ChooseCardFromReserveDeckEffect(...Rep...)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Yarna_dal_Gargan",
+            "label": "Yarna d'al' Gargan"
+          },
+          "cadence": "ON_DEPLOY_OPTIONAL",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card112_001.java:85 DeployCardsFromReserveDeckEffect(Filters.Yarna_dal_Gargan, 0, 1, ...)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "retrieve",
+          "sourceZone": "LOST",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.non_unique, Filters.alien, Filters.species(repSpecies))",
+            "label": "non-unique alien of Rep's species"
+          },
+          "cadence": "ONCE_PER_CONTROL_PHASE",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card112_001_BACK.java:134 RetrieveCardEffect(...non_unique alien species...)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "stack",
+          "sourceZone": "HAND",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.sameTitle(rep)",
+            "label": "copy of Rep"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card112_001_BACK.java:84 and :104 StackCardFromHandEffect(...Filters.sameTitle(rep)) to cancel Force drain or battle destiny"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "relation": "OCCUPY",
+          "count": 2,
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.battleground_site",
+            "label": "Battleground site"
+          },
+          "alternatives": [
+            {
+              "relation": "OCCUPY",
+              "count": 3,
+              "target": {
+                "kind": "LocationRequirement",
+                "runtimeFilter": "Filters.battleground_site",
+                "label": "Battleground site"
+              },
+              "additionalRequirement": {
+                "relation": "OCCUPY_WITH",
+                "target": {
+                  "kind": "CharacterRequirement",
+                  "runtimeFilter": "Filters.and(Filters.non_unique, Filters.alien, Filters.species(rep.getBlueprint().getSpecies()))",
+                  "label": "non-unique alien of Rep's species"
+                },
+                "condition": "if GameConditions.canSpotLocation(Filters.non_Tatooine_location)"
+              }
+            }
+          ],
+          "sourceEvidence": "Card112_001.java:144-150 non-Tatooine location branch, else two battleground sites"
+        }
+      ],
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPY",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.battleground_site",
+          "label": "Battleground site"
+        },
+        "sourceEvidence": "Card112_001_BACK.java:155-156 !GameConditions.occupies(...2...Filters.battleground_site)"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No live objective-specific Rando V-tags found for 112_1 outside forbidden ObjectiveHandler.java."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java source read",
+          "runtime Filters copied from Java source, not ObjectiveHandler",
+          "front and back blueprint ids confirmed from card_blueprint_database.json",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Rep species is dynamic and cannot be fully resolved from static DB candidates.",
+          "Jabba's Palace site snapshot is DB-based; runtime keyword Filters.Jabbas_Palace_site is truth.",
+          "Tatooine location resolvedCount is broad DB approximation for Filters.Tatooine_location."
+        ]
+      }
+    },
+    {
+      "frontBp": "203_19",
+      "backBp": "203_19_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Diplomatic Mission To Alderaan",
+      "objectiveTitleBack": "A Weakness Can Be Found",
+      "abbreviation": "DMTA",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "203_19",
+          "203_19_BACK"
+        ],
+        "titleFragments": [
+          "diplomatic mission to alderaan",
+          "a weakness can be found"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Tatooine",
+          "blueprintIds": [
+            "1_127",
+            "1_289",
+            "12_84",
+            "12_175",
+            "203_33"
+          ],
+          "titleFragments": [
+            "tatooine"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Tatooine_system",
+          "candidateSource": "DB",
+          "resolvedCount": 5,
+          "resolvedSample": [
+            "1_127",
+            "1_289",
+            "12_84",
+            "12_175",
+            "203_33"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Tantive IV",
+          "blueprintIds": [
+            "2_73",
+            "201_19"
+          ],
+          "titleFragments": [
+            "tantive iv"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Tantive_IV",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "2_73",
+            "201_19"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "R2-D2",
+          "blueprintIds": [
+            "2_14",
+            "201_6",
+            "203_11"
+          ],
+          "titleFragments": [
+            "r2-d2"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.and(Filters.R2D2, Filters.not(Icon.REFLECTIONS_II))",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "2_14",
+            "201_6",
+            "203_11"
+          ],
+          "notes": "203_11 is included as a likely R2-D2 persona candidate; Java runtime filter decides."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Stolen Data Tapes",
+          "blueprintIds": [
+            "203_14"
+          ],
+          "titleFragments": [
+            "stolen data tapes"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Stolen_Data_Tapes",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "203_14"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Dune Sea",
+          "blueprintIds": [
+            "1_130",
+            "224_22"
+          ],
+          "titleFragments": [
+            "dune sea"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Dune_Sea",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_130",
+            "224_22"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Alderaan",
+          "blueprintIds": [
+            "1_121",
+            "1_281"
+          ],
+          "titleFragments": [
+            "alderaan"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Alderaan_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_121",
+            "1_281"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine system",
+          "text": "Deploy Tatooine",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Tatooine_system",
+          "candidateSource": "DB",
+          "resolvedCount": 5,
+          "resolvedSample": [
+            "1_127",
+            "1_289",
+            "12_84",
+            "12_175",
+            "203_33"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Dune Sea",
+          "text": "Deploy Dune Sea",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "EXTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dune_Sea",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_130",
+            "224_22"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Alderaan system",
+          "text": "download Alderaan",
+          "planetOrSystemGroup": "ALDERAAN",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Alderaan_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_121",
+            "1_281"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Tatooine battleground site",
+          "text": "download a Tatooine battleground site",
+          "planetOrSystemGroup": "TATOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.battleground)",
+          "candidateSource": "DB",
+          "resolvedCount": 40,
+          "resolvedSample": [
+            "1_128",
+            "1_129",
+            "1_130",
+            "1_131",
+            "1_132",
+            "1_133",
+            "1_290",
+            "1_291"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground site",
+          "text": "Rebels control a battleground site",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground_site",
+          "candidateSource": "DB",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Global runtime filter; static snapshot omitted."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground system",
+          "text": "Rebels control a battleground system",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground_system",
+          "candidateSource": "DB",
+          "resolvedCount": 88,
+          "resolvedSample": [
+            "1_127",
+            "1_135",
+            "1_289",
+            "1_296",
+            "204_26",
+            "204_51",
+            "211_32",
+            "223_8"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel",
+          "text": "Rebels control battlegrounds",
+          "runtimeFilter": "Filters.Rebel",
+          "matchSource": "JAVA_FILTER"
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel of ability < 4",
+          "text": "post-flip battle destiny count",
+          "runtimeFilter": "Filters.and(Filters.Rebel, Filters.abilityLessThan(4))",
+          "matchSource": "JAVA_FILTER"
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Tatooine_system",
+            "label": "Tatooine system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card203_019.java:55 DeployCardFromReserveDeckEffect(Filters.Tatooine_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Tantive_IV",
+            "label": "Tantive IV to Tatooine system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card203_019.java:62 DeployCardToLocationFromReserveDeckEffect(Filters.Tantive_IV, Filters.Tatooine_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.and(Filters.R2D2, Filters.not(Icon.REFLECTIONS_II))",
+            "label": "non-[Reflections II] R2-D2 to Tatooine system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card203_019.java:69 DeployCardToLocationFromReserveDeckEffect(non-RefII R2D2, Tatooine_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Stolen_Data_Tapes",
+            "label": "Stolen Data Tapes to Tatooine system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card203_019.java:76 DeployCardToLocationFromReserveDeckEffect(Filters.Stolen_Data_Tapes, Filters.Tatooine_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Dune_Sea",
+            "label": "Dune Sea"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card203_019.java:83 DeployCardFromReserveDeckEffect(Filters.Dune_Sea)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.Alderaan_system, Filters.and(Filters.Tatooine_site, Filters.battleground))",
+            "label": "Alderaan or Tatooine battleground site"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card203_019.java:126 DeployCardFromReserveDeckEffect(or(Alderaan_system,Tatooine_site), or(Alderaan_system,battleground))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.Alderaan_system, Filters.and(Filters.Tatooine_site, Filters.battleground))",
+            "label": "Alderaan or Tatooine battleground site"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card203_019_BACK.java:70 same DeployCardFromReserveDeckEffect as front"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "relation": "ON_TABLE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.delivered_Stolen_Data_Tapes",
+            "label": "delivered Stolen Data Tapes"
+          },
+          "additionalRequirements": [
+            {
+              "relation": "CONTROL_WITH",
+              "count": 1,
+              "target": {
+                "kind": "LocationRequirement",
+                "runtimeFilter": "Filters.battleground_site",
+                "label": "battleground site"
+              },
+              "byWhom": {
+                "kind": "CharacterRequirement",
+                "runtimeFilter": "Filters.Rebel",
+                "label": "Rebel"
+              }
+            },
+            {
+              "relation": "CONTROL_WITH",
+              "count": 1,
+              "target": {
+                "kind": "LocationRequirement",
+                "runtimeFilter": "Filters.battleground_system",
+                "label": "battleground system"
+              },
+              "byWhom": {
+                "kind": "CharacterRequirement",
+                "runtimeFilter": "Filters.Rebel",
+                "label": "Rebel"
+              }
+            }
+          ],
+          "sourceEvidence": "Card203_019.java:165-167 delivered_Stolen_Data_Tapes and controlsWith Rebel at battleground site/system"
+        }
+      ],
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPY",
+        "comparator": "MISSING_ANY_OF",
+        "alternatives": [
+          {
+            "relation": "OCCUPY",
+            "count": 1,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.battleground_site",
+              "label": "battleground site"
+            }
+          },
+          {
+            "relation": "OCCUPY",
+            "count": 1,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.battleground_system",
+              "label": "battleground system"
+            }
+          },
+          {
+            "relation": "CONTROL",
+            "count": 1,
+            "target": {
+              "kind": "LocationRequirement",
+              "runtimeFilter": "Filters.location",
+              "label": "any location"
+            }
+          }
+        ],
+        "sourceEvidence": "Card203_019_BACK.java:104-106 flips if not occupy battleground site OR not occupy battleground system OR not control any location"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No live objective-specific Rando V-tags found for 203_19 outside forbidden ObjectiveHandler.java."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java source read",
+          "runtime Filters copied from Java source, not ObjectiveHandler",
+          "front and back blueprint ids confirmed from card_blueprint_database.json",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Confirm whether Filters.R2D2 includes R2-D2 & C-3PO for the non-[Reflections II] setup deploy.",
+          "Tatooine battleground site resolvedCount is DB-icon approximation; runtime two-filter DeployCardFromReserveDeckEffect is truth."
+        ]
+      }
+    },
+    {
+      "frontBp": "204_32",
+      "backBp": "204_32_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Old Allies",
+      "objectiveTitleBack": "We Need Your Help",
+      "abbreviation": "OA",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "204_32",
+          "204_32_BACK"
+        ],
+        "titleFragments": [
+          "old allies",
+          "we need your help"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Jakku",
+          "blueprintIds": [
+            "204_26",
+            "204_51"
+          ],
+          "titleFragments": [
+            "jakku"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Jakku_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "204_26",
+            "204_51"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Niima Outpost Shipyard",
+          "blueprintIds": [
+            "204_27"
+          ],
+          "titleFragments": [
+            "niima outpost shipyard"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Niima_Outpost_Shipyard",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "204_27"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Episode VII Falcon",
+          "blueprintIds": [
+            "204_35",
+            "204_35_BACK",
+            "206_8"
+          ],
+          "titleFragments": [
+            "episode vii falcon"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.and(Icon.EPISODE_VII, Filters.Falcon)",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "204_35",
+            "204_35_BACK",
+            "206_8"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Graveyard Of Giants",
+          "blueprintIds": [
+            "204_14"
+          ],
+          "titleFragments": [
+            "graveyard of giants"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Graveyard_Of_Giants",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "204_14"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Visage Of The Emperor",
+          "blueprintIds": [
+            "4_135",
+            "213_16"
+          ],
+          "titleFragments": [
+            "visage of the emperor"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Visage_Of_The_Emperor",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "4_135",
+            "213_16"
+          ],
+          "notes": "Suspended while Rey is at a battleground site."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Your Destiny",
+          "blueprintIds": [
+            "9_134"
+          ],
+          "titleFragments": [
+            "your destiny"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Your_Destiny",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_134"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Jakku system",
+          "text": "Deploy Jakku system",
+          "planetOrSystemGroup": "JAKKU",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Jakku_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "204_26",
+            "204_51"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Niima Outpost Shipyard",
+          "text": "Deploy Niima Outpost Shipyard",
+          "planetOrSystemGroup": "JAKKU",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "EXTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Niima_Outpost_Shipyard",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "204_27"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Jakku location",
+          "text": "download a Jakku location",
+          "planetOrSystemGroup": "JAKKU",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Jakku_location",
+          "candidateSource": "DB",
+          "resolvedCount": 11,
+          "resolvedSample": [
+            "204_26",
+            "204_27",
+            "204_28",
+            "204_29",
+            "204_30",
+            "204_31",
+            "204_51",
+            "204_52"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Jakku battleground site",
+          "text": "occupy/control two Jakku battleground sites",
+          "planetOrSystemGroup": "JAKKU",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Jakku_battleground_site",
+          "candidateSource": "DB",
+          "resolvedCount": 7,
+          "resolvedSample": [
+            "204_27",
+            "204_28",
+            "204_30",
+            "204_31",
+            "204_53",
+            "207_16",
+            "221_23"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Jakku battleground",
+          "text": "control two Jakku battlegrounds",
+          "planetOrSystemGroup": "JAKKU",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Jakku_battleground",
+          "candidateSource": "DB",
+          "resolvedCount": 9,
+          "resolvedSample": [
+            "204_26",
+            "204_27",
+            "204_28",
+            "204_30",
+            "204_31",
+            "204_51",
+            "204_53",
+            "207_16"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground",
+          "text": "occupy two battlegrounds",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground",
+          "candidateSource": "DB",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Global runtime filter; static snapshot omitted."
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Rey",
+          "text": "Rey at a battleground site suspends Visage",
+          "runtimeFilter": "Filters.Rey",
+          "matchSource": "JAVA_FILTER"
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Resistance character",
+          "text": "battle involving your Resistance character",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.Resistance_character)",
+          "matchSource": "JAVA_FILTER"
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Episode VII card with Han",
+          "text": "[Episode VII] characters and starships with Han",
+          "runtimeFilter": "Filters.and(Filters.your(self), Icon.EPISODE_VII, Filters.or(Filters.character, Filters.starship), Filters.with(self, Filters.Han))",
+          "matchSource": "JAVA_FILTER"
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Jakku_system",
+            "label": "Jakku system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card204_032.java:56 DeployCardFromReserveDeckEffect(Filters.Jakku_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Niima_Outpost_Shipyard",
+            "label": "Niima Outpost Shipyard"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card204_032.java:63 DeployCardFromReserveDeckEffect(Filters.Niima_Outpost_Shipyard)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.and(Icon.EPISODE_VII, Filters.Falcon)",
+            "label": "Episode VII Falcon to Niima Outpost Shipyard"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card204_032.java:70 DeployCardToLocationFromReserveDeckEffect(Episode VII Falcon, Niima_Outpost_Shipyard)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Graveyard_Of_Giants",
+            "label": "Graveyard Of Giants"
+          },
+          "cadence": "ON_DEPLOY_OPTIONAL",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card204_032.java:77 DeployCardsFromReserveDeckEffect(Filters.Graveyard_Of_Giants, 0, 1, ...)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Jakku_location",
+            "label": "Jakku location"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card204_032.java:119 DeployCardFromReserveDeckEffect(Filters.Jakku_location)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Jakku_location",
+            "label": "Jakku location"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card204_032_BACK.java:63 DeployCardFromReserveDeckEffect(Filters.Jakku_location)"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "alternatives": [
+            {
+              "relation": "CONTROL",
+              "count": 1,
+              "target": {
+                "kind": "LocationRequirement",
+                "runtimeFilter": "Filters.Jakku_system",
+                "label": "Jakku system"
+              },
+              "additionalRequirement": {
+                "relation": "OCCUPY",
+                "count": 2,
+                "target": {
+                  "kind": "LocationRequirement",
+                  "runtimeFilter": "Filters.Jakku_battleground_site",
+                  "label": "Jakku battleground site"
+                }
+              }
+            },
+            {
+              "relation": "OCCUPY",
+              "count": 1,
+              "target": {
+                "kind": "LocationRequirement",
+                "runtimeFilter": "Filters.Jakku_system",
+                "label": "Jakku system"
+              },
+              "additionalRequirement": {
+                "relation": "CONTROL",
+                "count": 2,
+                "target": {
+                  "kind": "LocationRequirement",
+                  "runtimeFilter": "Filters.Jakku_battleground_site",
+                  "label": "Jakku battleground site"
+                }
+              }
+            }
+          ],
+          "sourceEvidence": "Card204_032.java:132-135 control system + occupy two sites OR occupy system + control two sites"
+        }
+      ],
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPY",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.battleground",
+          "label": "battleground"
+        },
+        "sourceEvidence": "Card204_032_BACK.java:126-127 !GameConditions.occupies(...2...Filters.battleground)"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No live objective-specific Rando V-tags found for 204_32 outside forbidden ObjectiveHandler.java."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java source read",
+          "runtime Filters copied from Java source, not ObjectiveHandler",
+          "front and back blueprint ids confirmed from card_blueprint_database.json",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Episode VII Falcon candidate list includes dual-sided 204_35_BACK; confirm deploy-to-location source can choose that face in practice."
+        ]
+      }
+    },
+    {
+      "frontBp": "208_25",
+      "backBp": "208_25_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "He Is The Chosen One",
+      "objectiveTitleBack": "He Will Bring Balance",
+      "abbreviation": "HITCO",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "208_25",
+          "208_25_BACK"
+        ],
+        "titleFragments": [
+          "he is the chosen one",
+          "he will bring balance"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Anakin's Funeral Pyre",
+          "blueprintIds": [
+            "217_34"
+          ],
+          "titleFragments": [
+            "anakin's funeral pyre"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.title(Title.Anakins_Funeral_Pyre)",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "217_34"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Prophecy Of The Force",
+          "blueprintIds": [
+            "208_14"
+          ],
+          "titleFragments": [
+            "prophecy of the force"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Prophecy_Of_The_Force",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "208_14"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Ewok Village",
+          "blueprintIds": [
+            "8_73",
+            "8_163",
+            "208_23"
+          ],
+          "titleFragments": [
+            "ewok village"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Ewok_Village",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_73",
+            "8_163",
+            "208_23"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "I Feel The Conflict",
+          "blueprintIds": [
+            "9_34"
+          ],
+          "titleFragments": [
+            "i feel the conflict"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.I_Feel_The_Conflict",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_34"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Emperor's Power",
+          "blueprintIds": [
+            "9_123"
+          ],
+          "titleFragments": [
+            "emperor's power"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.Emperors_Power",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "9_123"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Anakin's Funeral Pyre",
+          "text": "Deploy Anakin's Funeral Pyre",
+          "planetOrSystemGroup": "ENDOR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "EXTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.title(Title.Anakins_Funeral_Pyre)",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "217_34"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Ewok Village",
+          "text": "Deploy Ewok Village",
+          "planetOrSystemGroup": "ENDOR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Ewok_Village",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "8_73",
+            "8_163",
+            "208_23"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground site",
+          "text": "Luke or Jedi at a battleground site",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground_site",
+          "candidateSource": "DB",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Global runtime filter; static snapshot omitted."
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Luke or Jedi",
+          "text": "Luke or a Jedi at a battleground site",
+          "runtimeFilter": "Filters.and(Filters.or(Filters.Luke, Filters.Jedi), Filters.at(Filters.battleground_site))",
+          "matchSource": "JAVA_FILTER"
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Opponent ability > 4 character",
+          "text": "opponent's character of ability > 4 at a battleground site",
+          "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4), Filters.at(Filters.battleground_site))",
+          "matchSource": "JAVA_FILTER"
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.title(Title.Anakins_Funeral_Pyre)",
+            "label": "Anakin's Funeral Pyre"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_025.java:55 DeployCardFromReserveDeckEffect(Filters.title(Title.Anakins_Funeral_Pyre))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Prophecy_Of_The_Force",
+            "label": "Prophecy Of The Force to Anakin's Funeral Pyre"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_025.java:62 DeployCardToTargetFromReserveDeckEffect(Filters.Prophecy_Of_The_Force, Filters.title(Title.Anakins_Funeral_Pyre))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Ewok_Village",
+            "label": "Ewok Village"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_025.java:69 DeployCardFromReserveDeckEffect(Filters.Ewok_Village)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.I_Feel_The_Conflict",
+            "label": "I Feel The Conflict"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_025.java:76 DeployCardFromReserveDeckEffect(Filters.I_Feel_The_Conflict)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "retrieve",
+          "sourceZone": "LOST",
+          "target": {
+            "kind": "Any",
+            "runtimeFilter": "Filters.any",
+            "label": "any one card"
+          },
+          "cadence": "ONCE_PER_DRAW_PHASE",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_025_BACK.java:104 RetrieveCardEffect(action, playerId, Filters.any)"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "relation": "PRESENT_AT",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.battleground_site",
+            "label": "battleground site"
+          },
+          "byWhom": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.or(Filters.Luke, Filters.Jedi)",
+            "label": "Luke or Jedi"
+          },
+          "opponentConstraint": {
+            "relation": "PRESENT_AT",
+            "comparator": "ZERO",
+            "target": {
+              "kind": "CharacterRequirement",
+              "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4), Filters.at(Filters.battleground_site))",
+              "label": "opponent ability > 4 character at battleground site"
+            }
+          },
+          "sourceEvidence": "Card208_025.java:128-129 Luke/Jedi at battleground site and no opponent ability > 4 character at battleground site"
+        }
+      ],
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "PRESENT_AT",
+        "comparator": "OPPONENT_ABILITY_GT4_PRESENT_OR_NO_LUKE_JEDI",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.battleground_site",
+          "label": "battleground site"
+        },
+        "exception": "unless Vader crossed over",
+        "sourceEvidence": "Card208_025_BACK.java:168-170 !isCrossedOver(VADER) and (opponent ability >4 at BG site OR no Luke/Jedi at BG site)"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No live objective-specific Rando V-tags found for 208_25 outside forbidden ObjectiveHandler.java."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java source read",
+          "runtime Filters copied from Java source, not ObjectiveHandler",
+          "front and back blueprint ids confirmed from card_blueprint_database.json",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Front text says Anakin's Funeral Pyre, Java runtime uses Filters.title(Title.Anakins_Funeral_Pyre), resolved to Endor: Anakin's Funeral Pyre 217_34.",
+          "Flip-back exception depends on crossed-over Vader state, not a static card candidate."
+        ]
+      }
+    },
+    {
+      "frontBp": "208_26",
+      "backBp": "208_26_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Yavin 4 Base Operations",
+      "objectiveTitleBack": "The Time To Fight Is Now",
+      "abbreviation": "Y4BO",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "208_26",
+          "208_26_BACK"
+        ],
+        "titleFragments": [
+          "yavin 4 base operations",
+          "the time to fight is now"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Yavin 4",
+          "blueprintIds": [
+            "1_135",
+            "1_296",
+            "211_32"
+          ],
+          "titleFragments": [
+            "yavin 4"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Yavin_4_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "1_135",
+            "1_296",
+            "211_32"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Massassi War Room",
+          "blueprintIds": [
+            "1_139",
+            "208_24"
+          ],
+          "titleFragments": [
+            "massassi war room"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Massassi_War_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_139",
+            "208_24"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Restore Freedom To The Galaxy",
+          "blueprintIds": [
+            "208_17"
+          ],
+          "titleFragments": [
+            "restore freedom to the galaxy"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Restore_Freedom_To_The_Galaxy",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "208_17"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Yavin 4 system",
+          "text": "Deploy Yavin 4 system",
+          "planetOrSystemGroup": "YAVIN_4",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Yavin_4_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "1_135",
+            "1_296",
+            "211_32"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Massassi War Room",
+          "text": "Deploy Massassi War Room",
+          "planetOrSystemGroup": "YAVIN_4",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Massassi_War_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_139",
+            "208_24"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground system",
+          "text": "download a battleground system / Rebels control two battleground systems",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.system, Filters.battleground)",
+          "candidateSource": "DB",
+          "resolvedCount": 88,
+          "resolvedSample": [
+            "1_127",
+            "1_135",
+            "1_289",
+            "1_296",
+            "204_26",
+            "204_51",
+            "211_32",
+            "223_8"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground",
+          "text": "occupy two battlegrounds",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground",
+          "candidateSource": "DB",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Global runtime filter; static snapshot omitted."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Liberated system",
+          "text": "if a system is liberated",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.liberated_system",
+          "candidateSource": "DB",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Game-state dynamic filter; static snapshot omitted."
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel",
+          "text": "four Rebels on table or Rebels control two battleground systems",
+          "runtimeFilter": "Filters.Rebel",
+          "matchSource": "JAVA_FILTER"
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Piloted unique snub fighter",
+          "text": "for each piloted unique snub fighter present at related system",
+          "runtimeFilter": "Filters.and(Filters.snub_fighter, Filters.unique, Filters.piloted)",
+          "matchSource": "JAVA_FILTER"
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Yavin_4_system",
+            "label": "Yavin 4 system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_026.java:47 DeployCardFromReserveDeckEffect(Filters.Yavin_4_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Massassi_War_Room",
+            "label": "Massassi War Room"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_026.java:54 DeployCardFromReserveDeckEffect(Filters.Massassi_War_Room)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "Filters.Restore_Freedom_To_The_Galaxy",
+            "label": "Restore Freedom To The Galaxy"
+          },
+          "cadence": "ON_DEPLOY_OPTIONAL",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_026.java:61 DeployCardsFromReserveDeckEffect(Filters.Restore_Freedom_To_The_Galaxy, 0, 1, ...)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.system, Filters.battleground)",
+            "label": "battleground system"
+          },
+          "cadence": "ONCE_PER_TURN",
+          "cost": 1,
+          "enablesFlip": true,
+          "sourceEvidence": "Card208_026.java:90 DeployCardFromReserveDeckEffect(Filters.system, Filters.battleground, true) after UseForceEffect(1)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "verb": "retrieve",
+          "sourceZone": "LOST",
+          "target": {
+            "kind": "Force",
+            "runtimeFilter": "Filters.liberated_system",
+            "label": "retrieve 1 Force if a system is liberated"
+          },
+          "cadence": "ONCE_PER_DRAW_PHASE",
+          "cost": "place one Lost Pile card out of play",
+          "enablesFlip": false,
+          "sourceEvidence": "Card208_026_BACK.java:61-75 PlaceCardOutOfPlayFromLostPileEffect then RetrieveForceEffect(1)"
+        }
+      ],
+      "flipRequirements": [
+        {
+          "type": "FlipRequirement",
+          "alternatives": [
+            {
+              "relation": "ON_TABLE",
+              "count": 4,
+              "target": {
+                "kind": "CharacterRequirement",
+                "runtimeFilter": "Filters.Rebel",
+                "label": "Rebel"
+              }
+            },
+            {
+              "relation": "CONTROL_WITH",
+              "count": 2,
+              "target": {
+                "kind": "LocationRequirement",
+                "runtimeFilter": "Filters.battleground_system",
+                "label": "battleground system"
+              },
+              "byWhom": {
+                "kind": "CharacterRequirement",
+                "runtimeFilter": "Filters.Rebel",
+                "label": "Rebel"
+              }
+            }
+          ],
+          "sourceEvidence": "Card208_026.java:103-104 four Rebels on table OR controlsWith two battleground systems with Rebel"
+        }
+      ],
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPY",
+        "comparator": "LESS_THAN_UNLESS_FOUR_REBELS_ON_TABLE",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.battleground",
+          "label": "battleground"
+        },
+        "sourceEvidence": "Card208_026_BACK.java:88-89 no four Rebels and not occupy two battlegrounds"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No live objective-specific Rando V-tags found for 208_26 outside forbidden ObjectiveHandler.java."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front and back Card*.java source read",
+          "runtime Filters copied from Java source, not ObjectiveHandler",
+          "front and back blueprint ids confirmed from card_blueprint_database.json",
+          "rando search excluded ObjectiveHandler.java"
+        ],
+        "forK2ToCheck": [
+          "Battleground system candidate count is a DB snapshot; runtime Filters.system plus Filters.battleground is truth.",
+          "Post-flip liberated system condition is game-state dynamic and has no useful static candidate list."
+        ]
+      }
+    }
+  ]
+}

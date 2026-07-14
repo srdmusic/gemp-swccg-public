@@ -1,0 +1,2630 @@
+{
+  "schemaVersion": "objective-playbook-facts-v1",
+  "generatedBy": "codex",
+  "sourceInventory": "resources/Objective_Blueprint_Inventory_2026-07-07.json rows[0:5]",
+  "batchStatus": {
+    "status": "complete",
+    "owner": "codex",
+    "frontBpsIncluded": [
+      "7_135",
+      "7_136",
+      "7_137",
+      "7_138",
+      "7_139"
+    ],
+    "notes": [
+      "No Java AI model files were edited.",
+      "ObjectiveHandler.java was not used as a source.",
+      "Back-side objective id is <front>_BACK."
+    ]
+  },
+  "globalRules": [
+    "Card*.java runtime filters are the source of truth.",
+    "Broad filters are represented by runtimeFilter plus DB/source candidate counts when resolvable.",
+    "Candidate id lists are DB snapshots only; runtime should use filter recipes."
+  ],
+  "entries": [
+    {
+      "frontBp": "7_135",
+      "backBp": "7_135_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Dantooine Base Operations",
+      "objectiveTitleBack": "More Dangerous Than You Realize",
+      "abbreviation": "DBO",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_135",
+          "7_135_BACK"
+        ],
+        "titleFragments": [
+          "dantooine base operations",
+          "more dangerous than you realize"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Dantooine system",
+          "blueprintIds": [
+            "1_122",
+            "1_282"
+          ],
+          "titleFragments": [
+            "dantooine"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Dantooine_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_122",
+            "1_282"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Non-unique Rebel",
+          "blueprintIds": [],
+          "titleFragments": [
+            "non-unique rebel"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.and(Filters.non_unique, Filters.Rebel)",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 14,
+          "resolvedSample": [
+            "106_6",
+            "1_26",
+            "1_27",
+            "1_28",
+            "222_20",
+            "2_17",
+            "2_18",
+            "3_17",
+            "3_6",
+            "7_13",
+            "7_22",
+            "7_51"
+          ],
+          "notes": "Broad deploy target, not a literal title."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Squadron",
+          "blueprintIds": [],
+          "titleFragments": [
+            "squadron"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.squadron",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Back-side modifier target. Count not resolved from DB because squadron is a runtime card-property filter."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Dantooine system",
+          "text": "Deploy Dantooine system",
+          "planetOrSystemGroup": "DANTOOINE",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dantooine_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_122",
+            "1_282"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Dantooine site",
+          "text": "Rebels control at least three Dantooine sites",
+          "planetOrSystemGroup": "DANTOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dantooine_site",
+          "candidateSource": "RUNTIME_RELATED_LOCATION",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "DB has Dantooine systems but does not statically enumerate generic sites deployed to Dantooine."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Dantooine location",
+          "text": "opponent controls no Dantooine locations / Imperial deploy +2 at Dantooine locations",
+          "planetOrSystemGroup": "DANTOOINE",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dantooine_location",
+          "candidateSource": "RUNTIME_RELATED_LOCATION",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "1_122",
+            "1_282"
+          ],
+          "notes": "Static DB sample includes Dantooine systems only; runtime includes related sites."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Dantooine system",
+          "text": "Deploy Dantooine system",
+          "planetOrSystemGroup": "DANTOOINE",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dantooine_system",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_122",
+            "1_282"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Dantooine site",
+          "text": "Rebels control at least three Dantooine sites",
+          "planetOrSystemGroup": "DANTOOINE",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dantooine_site",
+          "candidateSource": "RUNTIME_RELATED_LOCATION",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "DB has Dantooine systems but does not statically enumerate generic sites deployed to Dantooine."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Dantooine location",
+          "text": "opponent controls no Dantooine locations / Imperial deploy +2 at Dantooine locations",
+          "planetOrSystemGroup": "DANTOOINE",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dantooine_location",
+          "candidateSource": "RUNTIME_RELATED_LOCATION",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "1_122",
+            "1_282"
+          ],
+          "notes": "Static DB sample includes Dantooine systems only; runtime includes related sites."
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel",
+          "text": "Rebels control at least three Dantooine sites",
+          "runtimeFilter": "Filters.Rebel",
+          "icon": "REBEL",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial",
+          "text": "At Dantooine locations, each Imperial is deploy +2",
+          "runtimeFilter": "Filters.Imperial",
+          "icon": "IMPERIAL",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Squadron",
+          "text": "Your squadrons may deploy to Dantooine",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.squadron)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Rebel",
+          "text": "Rebels control at least three Dantooine sites",
+          "runtimeFilter": "Filters.Rebel",
+          "icon": "REBEL",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial",
+          "text": "At Dantooine locations, each Imperial is deploy +2",
+          "runtimeFilter": "Filters.Imperial",
+          "icon": "IMPERIAL",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Squadron",
+          "text": "Your squadrons may deploy to Dantooine",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.squadron)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.Dantooine_system)",
+            "label": "Dantooine system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_135.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.and(Filters.Dantooine_system))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefOrLocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Rebel)) to Title.Dantooine",
+            "label": "site or non-unique Rebel to Dantooine"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_135.java DeployCardToSystemFromReserveDeckEffect(Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Rebel)), Title.Dantooine, true)"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.Dantooine_system)",
+            "label": "Dantooine system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_135.java getGameTextWhenDeployedAction DeployCardFromReserveDeckEffect(Filters.and(Filters.Dantooine_system))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefOrLocationRequirement",
+            "runtimeFilter": "Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Rebel)) to Title.Dantooine",
+            "label": "site or non-unique Rebel to Dantooine"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_135.java DeployCardToSystemFromReserveDeckEffect(Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Rebel)), Title.Dantooine, true)"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "relation": "CONTROLS_WITH",
+        "count": 3,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Dantooine_site",
+          "label": "Dantooine site"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Rebel",
+          "label": "Rebel"
+        },
+        "opponentConstraint": {
+          "relation": "CONTROLS",
+          "comparator": "EQUALS",
+          "count": 0,
+          "runtimeFilter": "Filters.Dantooine_location"
+        },
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card7_135.java controlsWith(playerId, 3, Filters.Dantooine_site, Filters.Rebel) and opponent controls no Filters.Dantooine_location"
+      },
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "CONTROLS_WITH",
+        "count": 3,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Dantooine_site",
+          "label": "Dantooine site"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Rebel",
+          "label": "Rebel"
+        },
+        "opponentConstraint": {
+          "relation": "CONTROLS",
+          "comparator": "EQUALS",
+          "count": 0,
+          "runtimeFilter": "Filters.Dantooine_location"
+        },
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card7_135.java controlsWith(playerId, 3, Filters.Dantooine_site, Filters.Rebel) and opponent controls no Filters.Dantooine_location"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OPPONENT_CONTROLS",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Dantooine_location",
+          "label": "Dantooine location"
+        },
+        "modifiers": [
+          {
+            "runtimeCondition": "ModifyGameTextType.LEGACY__MORE_DANGEROUS_THAN_YOU_REALIZE__REQUIRES_THREE_SITES_TO_FLIP_BACK",
+            "countWhenActive": 3
+          }
+        ],
+        "sourceEvidence": "Card7_135_BACK.java opponent controls 2 Dantooine_location, or 3 if legacy game text modification is active"
+      },
+      "hardLose": {
+        "condition": "BLOWN_AWAY",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dantooine, true))",
+          "label": "Dantooine system"
+        },
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "sourceEvidence": "Card7_135.java and Card7_135_BACK.java TriggerConditions.isBlownAwayLastStep on Dantooine system"
+      },
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No title-specific Rando ObjectiveAnalyzer mapping found outside ObjectiveHandler.java. Treat as generic objective/location playbook data."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front/back setGameText read",
+          "front/back runtime filters read",
+          "DB ids resolved for Dantooine system and broad non-unique Rebel sample"
+        ],
+        "forK2ToCheck": [
+          "Dantooine_site and Dantooine_location candidate sets are runtime related-location filters; checked-in DB does not statically enumerate generic sites related to Dantooine.",
+          "Back-side flip-back count can become 3 under LEGACY__MORE_DANGEROUS_THAN_YOU_REALIZE__REQUIRES_THREE_SITES_TO_FLIP_BACK."
+        ]
+      }
+    },
+    {
+      "frontBp": "7_136",
+      "backBp": "7_136_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Hidden Base",
+      "objectiveTitleBack": "Systems Will Slip Through Your Fingers",
+      "abbreviation": "HB",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_136",
+          "7_136_BACK"
+        ],
+        "titleFragments": [
+          "hidden base",
+          "systems will slip through your fingers"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Rendezvous Point",
+          "blueprintIds": [
+            "7_123"
+          ],
+          "titleFragments": [
+            "rendezvous point"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Rendezvous_Point",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_123"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Probe Droid",
+          "blueprintIds": [],
+          "titleFragments": [
+            "probe droid"
+          ],
+          "side": "DARK",
+          "runtimeFilter": "Filters.probe_droid",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [],
+          "notes": "Used only for opponent retrieval after probing Hidden Base."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Rendezvous Point",
+          "text": "Deploy Rendezvous Point",
+          "planetOrSystemGroup": "SPACE",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "SPECIAL_EDITION"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Rendezvous_Point",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_123"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Hidden Base indicator planet system",
+          "text": "Place a planet system with parsec 1 to 8 from outside deck face down",
+          "planetOrSystemGroup": "ANY_PLANET",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "PLANET"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.planet_system, Filters.planetSystemInParsecRange(1, 8))",
+          "candidateSource": "DB_FILTER_RECIPE_PARTIAL",
+          "resolvedCount": 100,
+          "resolvedSample": [
+            "102_7",
+            "106_12",
+            "106_2",
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73",
+            "12_77",
+            "12_78",
+            "12_84",
+            "1_121"
+          ],
+          "notes": "DB sample is all planet systems; parsec 1-8 was not independently filtered from DB fields."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Deployable system",
+          "text": "once during each deploy phase may deploy one system from Reserve Deck",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.system",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground system",
+          "text": "deployed five battleground systems and Hidden Base system",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground_system",
+          "candidateSource": "DB_FILTER_RECIPE_PARTIAL",
+          "resolvedCount": 88,
+          "resolvedSample": [
+            "106_12",
+            "106_2",
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73",
+            "12_77",
+            "12_78",
+            "12_84",
+            "1_126",
+            "1_127"
+          ],
+          "notes": "DB count approximates battleground by systems with both dark and light Force icons."
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Rendezvous Point",
+          "text": "Deploy Rendezvous Point",
+          "planetOrSystemGroup": "SPACE",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "SPECIAL_EDITION"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Rendezvous_Point",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "7_123"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Hidden Base indicator planet system",
+          "text": "Place a planet system with parsec 1 to 8 from outside deck face down",
+          "planetOrSystemGroup": "ANY_PLANET",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "PLANET"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.planet_system, Filters.planetSystemInParsecRange(1, 8))",
+          "candidateSource": "DB_FILTER_RECIPE_PARTIAL",
+          "resolvedCount": 100,
+          "resolvedSample": [
+            "102_7",
+            "106_12",
+            "106_2",
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73",
+            "12_77",
+            "12_78",
+            "12_84",
+            "1_121"
+          ],
+          "notes": "DB sample is all planet systems; parsec 1-8 was not independently filtered from DB fields."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Deployable system",
+          "text": "once during each deploy phase may deploy one system from Reserve Deck",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.system",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Battleground system",
+          "text": "deployed five battleground systems and Hidden Base system",
+          "planetOrSystemGroup": "ANY",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.battleground_system",
+          "candidateSource": "DB_FILTER_RECIPE_PARTIAL",
+          "resolvedCount": 88,
+          "resolvedSample": [
+            "106_12",
+            "106_2",
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73",
+            "12_77",
+            "12_78",
+            "12_84",
+            "1_126",
+            "1_127"
+          ],
+          "notes": "DB count approximates battleground by systems with both dark and light Force icons."
+        }
+      ],
+      "characterRequirements": [],
+      "characters": [],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.Rendezvous_Point)",
+            "label": "Rendezvous Point"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_136.java DeployCardFromReserveDeckEffect(Filters.and(Filters.Rendezvous_Point))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "stack",
+          "sourceZone": "OUTSIDE_DECK",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.planet_system, Filters.planetSystemInParsecRange(1, 8))",
+            "label": "Hidden Base indicator"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_136.java StackCardFromOutsideDeckEffect"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.system",
+            "label": "system"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_136.java DeployCardFromReserveDeckEffect(Filters.system, true)"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.Rendezvous_Point)",
+            "label": "Rendezvous Point"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_136.java DeployCardFromReserveDeckEffect(Filters.and(Filters.Rendezvous_Point))"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "stack",
+          "sourceZone": "OUTSIDE_DECK",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.planet_system, Filters.planetSystemInParsecRange(1, 8))",
+            "label": "Hidden Base indicator"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_136.java StackCardFromOutsideDeckEffect"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.system",
+            "label": "system"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_136.java DeployCardFromReserveDeckEffect(Filters.system, true)"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "relation": "WHILE_IN_PLAY_DATA_CLEARED",
+        "count": 1,
+        "target": {
+          "kind": "StateRequirement",
+          "runtimeFilter": "GameConditions.cardHasWhileInPlayDataSet(self) == false",
+          "label": "Hidden Base deployment tracker complete"
+        },
+        "byWhom": null,
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [
+          {
+            "relation": "DEPLOYED_SYSTEM_TRACKER",
+            "text": "When Hidden Base system has been deployed and either six tracked system titles exist, or Hidden Base is battleground and five tracked system titles exist, source sets while-in-play data to null. Top-level Flip action is then available."
+          }
+        ],
+        "sourceEvidence": "Card7_136.java tracks justDeployed system titles in while-in-play data; top-level Flip is available when !cardHasWhileInPlayDataSet(self)"
+      },
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "WHILE_IN_PLAY_DATA_CLEARED",
+        "count": 1,
+        "target": {
+          "kind": "StateRequirement",
+          "runtimeFilter": "GameConditions.cardHasWhileInPlayDataSet(self) == false",
+          "label": "Hidden Base deployment tracker complete"
+        },
+        "byWhom": null,
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [
+          {
+            "relation": "DEPLOYED_SYSTEM_TRACKER",
+            "text": "When Hidden Base system has been deployed and either six tracked system titles exist, or Hidden Base is battleground and five tracked system titles exist, source sets while-in-play data to null. Top-level Flip action is then available."
+          }
+        ],
+        "sourceEvidence": "Card7_136.java tracks justDeployed system titles in while-in-play data; top-level Flip is available when !cardHasWhileInPlayDataSet(self)"
+      },
+      "flipBack": null,
+      "hardLose": {
+        "condition": "PROBED",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "systemProbed title equals stacked Hidden Base indicator title",
+          "label": "Hidden Base system"
+        },
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "sourceEvidence": "Card7_136_BACK.java TriggerConditions.systemProbed then PlaceCardOutOfPlayFromTableEffect when probed system title equals hiddenBaseIndicator title"
+      },
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No title-specific Rando playbook found outside ObjectiveHandler.java. ObjectiveType comments mention Hidden Base as an archetype example only."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front/back setGameText read",
+          "while-in-play data flip tracker read",
+          "probe and force-drain cancel mechanics read",
+          "Rendezvous Point id confirmed from DB"
+        ],
+        "forK2ToCheck": [
+          "Hidden Base flip is not a direct RequiredAfterTrigger; it is a top-level action exposed only after while-in-play data is cleared by the system deployment tracker.",
+          "Planet system parsec 1-8 candidates are represented by runtimeFilter; DB candidate count was not parsec-filtered.",
+          "Back side has no flipBack to front, only out-of-play when Hidden Base system is probed."
+        ]
+      }
+    },
+    {
+      "frontBp": "7_137",
+      "backBp": "7_137_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Local Uprising",
+      "objectiveTitleBack": "Liberation",
+      "abbreviation": "LU",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_137",
+          "7_137_BACK"
+        ],
+        "titleFragments": [
+          "local uprising",
+          "liberation"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Planet system",
+          "blueprintIds": [],
+          "titleFragments": [
+            "planet system"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.planet_system",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 100,
+          "resolvedSample": [
+            "102_7",
+            "106_12",
+            "106_2",
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73",
+            "12_77",
+            "12_78",
+            "12_84",
+            "1_121"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Generic site",
+          "blueprintIds": [],
+          "titleFragments": [
+            "generic site"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.and(Filters.generic, Filters.site)",
+          "candidateSource": "DB_FILTER_RECIPE_PARTIAL",
+          "resolvedCount": 21,
+          "resolvedSample": [
+            "221_48",
+            "221_54",
+            "221_74",
+            "4_157",
+            "4_83",
+            "7_119",
+            "7_120",
+            "7_121",
+            "7_122",
+            "7_125",
+            "7_126",
+            "7_127"
+          ],
+          "notes": "DB sample uses DIAMOND_1 generic-like sites; runtime Filters.generic is authoritative."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Operative",
+          "blueprintIds": [],
+          "titleFragments": [
+            "operative"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.matchingOperativeToSubjugatedPlanet",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 20,
+          "resolvedSample": [
+            "7_1",
+            "7_10",
+            "7_13",
+            "7_165",
+            "7_173",
+            "7_174",
+            "7_177",
+            "7_183",
+            "7_184",
+            "7_185",
+            "7_190",
+            "7_193"
+          ],
+          "notes": "Runtime matching depends on the selected Subjugated planet."
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Subjugated planet",
+          "text": "Deploy any planet system; this system is the Subjugated planet",
+          "planetOrSystemGroup": "RUNTIME_SELECTED",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "PLANET"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.planet_system",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 100,
+          "resolvedSample": [
+            "102_7",
+            "106_12",
+            "106_2",
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73"
+          ],
+          "notes": "Source stores systemName in gameState.setSubjugatedPlanet(systemName)."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Generic site to Subjugated planet",
+          "text": "one generic site to that system, and once per deploy phase one generic site to the Subjugated planet",
+          "planetOrSystemGroup": "RUNTIME_SELECTED",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to gameState.getSubjugatedPlanet()",
+          "candidateSource": "DB_FILTER_RECIPE_PARTIAL",
+          "resolvedCount": 21,
+          "resolvedSample": [
+            "221_48",
+            "221_54",
+            "221_74",
+            "4_157",
+            "4_83",
+            "7_119",
+            "7_120",
+            "7_121",
+            "7_122",
+            "7_125",
+            "7_126",
+            "7_127"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Subjugated planet battleground site",
+          "text": "matching operatives control at least three battleground sites related to the Subjugated planet",
+          "planetOrSystemGroup": "RUNTIME_SELECTED",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)",
+          "candidateSource": "RUNTIME_RELATED_LOCATION",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Subjugated planet",
+          "text": "Deploy any planet system; this system is the Subjugated planet",
+          "planetOrSystemGroup": "RUNTIME_SELECTED",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [
+            "PLANET"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.planet_system",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 100,
+          "resolvedSample": [
+            "102_7",
+            "106_12",
+            "106_2",
+            "12_165",
+            "12_168",
+            "12_169",
+            "12_175",
+            "12_73"
+          ],
+          "notes": "Source stores systemName in gameState.setSubjugatedPlanet(systemName)."
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Generic site to Subjugated planet",
+          "text": "one generic site to that system, and once per deploy phase one generic site to the Subjugated planet",
+          "planetOrSystemGroup": "RUNTIME_SELECTED",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to gameState.getSubjugatedPlanet()",
+          "candidateSource": "DB_FILTER_RECIPE_PARTIAL",
+          "resolvedCount": 21,
+          "resolvedSample": [
+            "221_48",
+            "221_54",
+            "221_74",
+            "4_157",
+            "4_83",
+            "7_119",
+            "7_120",
+            "7_121",
+            "7_122",
+            "7_125",
+            "7_126",
+            "7_127"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Subjugated planet battleground site",
+          "text": "matching operatives control at least three battleground sites related to the Subjugated planet",
+          "planetOrSystemGroup": "RUNTIME_SELECTED",
+          "subtype": "SITE",
+          "battlegroundRequired": true,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)",
+          "candidateSource": "RUNTIME_RELATED_LOCATION",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Matching operative to Subjugated planet",
+          "text": "matching operatives control at least three battleground sites",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet)",
+          "keyword": "OPERATIVE",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": 20,
+          "resolvedSample": [
+            "7_1",
+            "7_10",
+            "7_13",
+            "7_165",
+            "7_173",
+            "7_174",
+            "7_177",
+            "7_183",
+            "7_184",
+            "7_185",
+            "7_190",
+            "7_193"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial or AT-AT",
+          "text": "matching operatives are power +2 at same site as an Imperial or AT-AT",
+          "runtimeFilter": "Filters.or(Filters.Imperial, Filters.AT_AT)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Matching operative to Subjugated planet",
+          "text": "matching operatives control at least three battleground sites",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet)",
+          "keyword": "OPERATIVE",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": 20,
+          "resolvedSample": [
+            "7_1",
+            "7_10",
+            "7_13",
+            "7_165",
+            "7_173",
+            "7_174",
+            "7_177",
+            "7_183",
+            "7_184",
+            "7_185",
+            "7_190",
+            "7_193"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Imperial or AT-AT",
+          "text": "matching operatives are power +2 at same site as an Imperial or AT-AT",
+          "runtimeFilter": "Filters.or(Filters.Imperial, Filters.AT_AT)",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.planet_system",
+            "label": "Subjugated planet"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_137.java DeployCardFromReserveDeckEffect(Filters.planet_system); cardDeployed stores gameState.setSubjugatedPlanet(systemName)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to selected systemName",
+            "label": "generic site to Subjugated planet"
+          },
+          "cadence": "AFTER_SYSTEM_DEPLOYED",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_137.java nested DeployCardToSystemFromReserveDeckEffect(Filters.and(Filters.generic, Filters.site), systemName)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to gameState.getSubjugatedPlanet()",
+            "label": "generic site to Subjugated planet"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_137.java top-level DeployCardToSystemFromReserveDeckEffect"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.planet_system",
+            "label": "Subjugated planet"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_137.java DeployCardFromReserveDeckEffect(Filters.planet_system); cardDeployed stores gameState.setSubjugatedPlanet(systemName)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to selected systemName",
+            "label": "generic site to Subjugated planet"
+          },
+          "cadence": "AFTER_SYSTEM_DEPLOYED",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_137.java nested DeployCardToSystemFromReserveDeckEffect(Filters.and(Filters.generic, Filters.site), systemName)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to gameState.getSubjugatedPlanet()",
+            "label": "generic site to Subjugated planet"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_137.java top-level DeployCardToSystemFromReserveDeckEffect"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "relation": "CONTROLS_WITH",
+        "count": 3,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)",
+          "label": "Subjugated planet battleground site"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet)",
+          "label": "matching operative"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card7_137.java controlsWith(playerId, 3, battleground Subjugated_planet_location, matchingOperativeToSubjugatedPlanet)"
+      },
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "CONTROLS_WITH",
+        "count": 3,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)",
+          "label": "Subjugated planet battleground site"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet)",
+          "label": "matching operative"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card7_137.java controlsWith(playerId, 3, battleground Subjugated_planet_location, matchingOperativeToSubjugatedPlanet)"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "OCCUPIES",
+        "comparator": "LESS_THAN",
+        "count": 2,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)",
+          "label": "Subjugated planet battleground site"
+        },
+        "sourceEvidence": "Card7_137_BACK.java flips if !occupies(playerId, 2, battleground Subjugated_planet_location)"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No title-specific Rando mapping found outside ObjectiveHandler.java. Runtime stateful Subjugated planet is the critical playbook fact."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front/back setGameText read",
+          "Subjugated planet state write/read verified",
+          "deploy and flip filters read",
+          "operative DB sample resolved"
+        ],
+        "forK2ToCheck": [
+          "Generic site candidate count is a DB approximation using DIAMOND_1 sites; runtime Filters.generic is authoritative.",
+          "Matching operative resolution depends on selected Subjugated planet, so DB sample is keyword-based only."
+        ]
+      }
+    },
+    {
+      "frontBp": "7_138",
+      "backBp": "7_138_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Mind What You Have Learned",
+      "objectiveTitleBack": "Save You It Can",
+      "abbreviation": "MWYHL",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_138",
+          "7_138_BACK"
+        ],
+        "titleFragments": [
+          "mind what you have learned",
+          "save you it can"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Dagobah system",
+          "blueprintIds": [
+            "4_84",
+            "7_279",
+            "217_33"
+          ],
+          "titleFragments": [
+            "dagobah"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Dagobah_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "4_84",
+            "7_279",
+            "217_33"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Luke",
+          "blueprintIds": [],
+          "titleFragments": [
+            "luke"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Luke",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "101_2",
+            "1_19",
+            "10_10",
+            "110_2"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Leia",
+          "blueprintIds": [],
+          "titleFragments": [
+            "leia"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Leia",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "102_3",
+            "1_17",
+            "200_18",
+            "202_1"
+          ],
+          "notes": "Runtime target only when Daughter Of Skywalker modifies the objective."
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Daughter Of Skywalker",
+          "blueprintIds": [
+            "200_9",
+            "8_8"
+          ],
+          "titleFragments": [
+            "daughter of skywalker"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Daughter_Of_Skywalker",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "200_9",
+            "8_8"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yoda",
+          "blueprintIds": [],
+          "titleFragments": [
+            "yoda"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Yoda",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "4_2",
+            "207_10",
+            "216_38"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yoda's Hope",
+          "blueprintIds": [
+            "4_44",
+            "225_58"
+          ],
+          "titleFragments": [
+            "yoda's hope"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Yodas_Hope",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "4_44",
+            "225_58"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "At Peace",
+          "blueprintIds": [
+            "4_19",
+            "221_49"
+          ],
+          "titleFragments": [
+            "at peace"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.At_Peace",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "4_19",
+            "221_49"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Luke's Backpack",
+          "blueprintIds": [
+            "4_12"
+          ],
+          "titleFragments": [
+            "luke's backpack"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Lukes_Backpack",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "4_12"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Jedi Test #5 / It Is The Future You See",
+          "blueprintIds": [
+            "4_78",
+            "225_48"
+          ],
+          "titleFragments": [
+            "it is the future you see"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Jedi_Test_5",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "4_78",
+            "225_48"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Sense or Alter",
+          "blueprintIds": [
+            "1_109",
+            "1_234",
+            "1_267",
+            "1_71",
+            "12_145",
+            "12_157",
+            "12_54",
+            "12_68",
+            "200_115",
+            "200_143",
+            "200_144",
+            "200_48"
+          ],
+          "titleFragments": [
+            "sense",
+            "alter"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.or(Filters.Sense, Filters.Alter)",
+          "candidateSource": "DB",
+          "resolvedCount": 12,
+          "resolvedSample": [
+            "1_109",
+            "1_234",
+            "1_267",
+            "1_71",
+            "12_145",
+            "12_157",
+            "12_54",
+            "12_68"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Dagobah system",
+          "text": "Deploy Dagobah system",
+          "planetOrSystemGroup": "DAGOBAH",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [
+            {
+              "runtimeFilter": "MayNotBeConvertedModifier(Filters.Dagobah_system)",
+              "text": "may not be converted"
+            }
+          ],
+          "runtimeFilter": "Filters.Dagobah_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "4_84",
+            "7_279",
+            "217_33"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Dagobah location",
+          "text": "Your cards at Dagobah may not Force drain or contribute to Force retrieval",
+          "planetOrSystemGroup": "DAGOBAH",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dagobah_location",
+          "candidateSource": "DB",
+          "resolvedCount": 9,
+          "resolvedSample": [
+            "4_84",
+            "4_85",
+            "4_86",
+            "4_87",
+            "4_88",
+            "4_89",
+            "7_279",
+            "216_26",
+            "217_33"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Dagobah system",
+          "text": "Deploy Dagobah system",
+          "planetOrSystemGroup": "DAGOBAH",
+          "subtype": "SYSTEM",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [
+            {
+              "runtimeFilter": "MayNotBeConvertedModifier(Filters.Dagobah_system)",
+              "text": "may not be converted"
+            }
+          ],
+          "runtimeFilter": "Filters.Dagobah_system",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "4_84",
+            "7_279",
+            "217_33"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Dagobah location",
+          "text": "Your cards at Dagobah may not Force drain or contribute to Force retrieval",
+          "planetOrSystemGroup": "DAGOBAH",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Dagobah_location",
+          "candidateSource": "DB",
+          "resolvedCount": 9,
+          "resolvedSample": [
+            "4_84",
+            "4_85",
+            "4_86",
+            "4_87",
+            "4_88",
+            "4_89",
+            "7_279",
+            "216_26",
+            "217_33"
+          ]
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Luke or Leia apprentice",
+          "text": "Flip when Luke completes Jedi Test #5, or Leia if objective was retargeted",
+          "runtimeFilter": "GameTextModification ? Filters.Leia : Filters.Luke",
+          "matchSource": "SOURCE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Yoda",
+          "text": "Yoda deploys -2 from Reserve Deck to Dagobah",
+          "runtimeFilter": "Filters.Yoda",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "4_2",
+            "207_10",
+            "216_38"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Luke or Leia apprentice",
+          "text": "Flip when Luke completes Jedi Test #5, or Leia if objective was retargeted",
+          "runtimeFilter": "GameTextModification ? Filters.Leia : Filters.Luke",
+          "matchSource": "SOURCE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Yoda",
+          "text": "Yoda deploys -2 from Reserve Deck to Dagobah",
+          "runtimeFilter": "Filters.Yoda",
+          "matchSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": [
+            "4_2",
+            "207_10",
+            "216_38"
+          ]
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Dagobah_system",
+            "label": "Dagobah system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_138.java DeployCardFromReserveDeckEffect(Filters.Dagobah_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefSet",
+            "runtimeFilter": "Filters.or(Filters.Luke, Filters.Daughter_Of_Skywalker, Filters.Yoda, Filters.Yodas_Hope, Filters.At_Peace, Filters.Lukes_Backpack) to Title.Dagobah",
+            "labels": [
+              "Luke",
+              "Daughter Of Skywalker",
+              "Yoda",
+              "Yoda's Hope",
+              "At Peace",
+              "Luke's Backpack"
+            ]
+          },
+          "cadence": "DURING_YOUR_DEPLOY_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_138.java DeployCardToSystemFromReserveDeckEffect to Title.Dagobah; Yoda deploy -2"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "phaseDetail": "MOVE",
+          "verb": "take",
+          "sourceZone": "TABLE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "GameTextModification ? Filters.Leia : Filters.Luke at Filters.controls(playerId)",
+            "label": "Luke or Leia"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 3,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_138_BACK.java ReturnCardToHandFromTableEffect; move phase or deploy phase if SAVE_YOU_IT_CAN__MOVE_PHASE_MAY_BE_TREATED_AS_DEPLOY_PHASE"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Dagobah_system",
+            "label": "Dagobah system"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_138.java DeployCardFromReserveDeckEffect(Filters.Dagobah_system)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "PRE_FLIP",
+          "phaseDetail": "DEPLOY",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "NamedCardRefSet",
+            "runtimeFilter": "Filters.or(Filters.Luke, Filters.Daughter_Of_Skywalker, Filters.Yoda, Filters.Yodas_Hope, Filters.At_Peace, Filters.Lukes_Backpack) to Title.Dagobah",
+            "labels": [
+              "Luke",
+              "Daughter Of Skywalker",
+              "Yoda",
+              "Yoda's Hope",
+              "At Peace",
+              "Luke's Backpack"
+            ]
+          },
+          "cadence": "DURING_YOUR_DEPLOY_PHASE",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_138.java DeployCardToSystemFromReserveDeckEffect to Title.Dagobah; Yoda deploy -2"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "POST_FLIP",
+          "phaseDetail": "MOVE",
+          "verb": "take",
+          "sourceZone": "TABLE",
+          "target": {
+            "kind": "NamedCardRef",
+            "runtimeFilter": "GameTextModification ? Filters.Leia : Filters.Luke at Filters.controls(playerId)",
+            "label": "Luke or Leia"
+          },
+          "cadence": "ONCE_DURING_YOUR_PHASE",
+          "cost": 3,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_138_BACK.java ReturnCardToHandFromTableEffect; move phase or deploy phase if SAVE_YOU_IT_CAN__MOVE_PHASE_MAY_BE_TREATED_AS_DEPLOY_PHASE"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "relation": "JEDI_TEST_COMPLETED_BY",
+        "count": 1,
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.Jedi_Test_5",
+          "label": "Jedi Test #5"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "GameTextModification ? Filters.Leia : Filters.Luke",
+          "label": "Luke or Leia"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card7_138.java TriggerConditions.jediTestCompletedBy(Filters.Jedi_Test_5, Leia if retargeted else Luke)"
+      },
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "JEDI_TEST_COMPLETED_BY",
+        "count": 1,
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.Jedi_Test_5",
+          "label": "Jedi Test #5"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "GameTextModification ? Filters.Leia : Filters.Luke",
+          "label": "Luke or Leia"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card7_138.java TriggerConditions.jediTestCompletedBy(Filters.Jedi_Test_5, Leia if retargeted else Luke)"
+      },
+      "flipBack": null,
+      "hardLose": {
+        "condition": "FORCE_DRAIN_AT_DAGOBAH_OR_APPRENTICE_PLACED_OUT_OF_PLAY",
+        "target": {
+          "kind": "LocationOrCharacterRequirement",
+          "runtimeFilter": "forceDrainInitiatedBy(playerId, Filters.Dagobah_location) OR justPlacedOutOfPlayFromTable(Luke/Leia)",
+          "label": "Dagobah drain or apprentice out of play"
+        },
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY_AND_CANCEL_JEDI_TESTS",
+        "sourceEvidence": "Card7_138_BACK.java PlaceCardOutOfPlayFromTableEffect plus CancelCardsOnTableEffect(jediTestTargetingApprentice)"
+      },
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No title-specific Rando mapping found outside ObjectiveHandler.java. Retargeted Leia branch is the critical source-only fact."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front/back setGameText read",
+          "Daughter Of Skywalker retarget branch read",
+          "post-flip hardLose and take-into-hand action read",
+          "narrow named card ids resolved from DB where title filters were exact"
+        ],
+        "forK2ToCheck": [
+          "Jedi Test #5 is represented as Filters.Jedi_Test_5 with DB titles It Is The Future You See; verify whether Great Warrior should ever be included by source filter implementation.",
+          "Back side has no normal flipBack to front, only out-of-play triggers.",
+          "Luke/Yoda/Leia persona filters are broad runtime filters; samples are not exhaustive."
+        ]
+      }
+    },
+    {
+      "frontBp": "7_139",
+      "backBp": "7_139_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Rescue The Princess",
+      "objectiveTitleBack": "Sometimes I Amaze Even Myself",
+      "abbreviation": "RTP",
+      "identity": {
+        "type": "NamedCardRef",
+        "blueprintIds": [
+          "7_139",
+          "7_139_BACK"
+        ],
+        "titleFragments": [
+          "rescue the princess",
+          "sometimes i amaze even myself"
+        ],
+        "side": "LIGHT",
+        "candidateSource": "DB"
+      },
+      "namedCards": [
+        {
+          "type": "NamedCardRef",
+          "label": "Death Star: Detention Block Corridor",
+          "blueprintIds": [
+            "1_284",
+            "7_118",
+            "215_7"
+          ],
+          "titleFragments": [
+            "death star: detention block corridor"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Detention_Block_Corridor",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "1_284",
+            "7_118",
+            "215_7"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Leia of ability < 4",
+          "blueprintIds": [],
+          "titleFragments": [
+            "leia"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.and(Filters.Leia, Filters.abilityLessThan(4))",
+          "candidateSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 6,
+          "resolvedSample": [
+            "102_3",
+            "111_5",
+            "1_17",
+            "202_1",
+            "220_9",
+            "7_35"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Death Star: Docking Bay 327",
+          "blueprintIds": [
+            "1_124",
+            "1_285"
+          ],
+          "titleFragments": [
+            "death star: docking bay 327"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Docking_Bay_327",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_124",
+            "1_285"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yavin 4: Docking Bay",
+          "blueprintIds": [
+            "1_136",
+            "1_297"
+          ],
+          "titleFragments": [
+            "yavin 4: docking bay"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Yavin_4_Docking_Bay",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_136",
+            "1_297"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Yavin 4: Massassi War Room",
+          "blueprintIds": [
+            "1_139",
+            "208_24"
+          ],
+          "titleFragments": [
+            "yavin 4: massassi war room"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Yavin_4_War_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_139",
+            "208_24"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Death Star Plans",
+          "blueprintIds": [
+            "1_46"
+          ],
+          "titleFragments": [
+            "death star plans"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Death_Star_Plans",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_46"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Detention Block Control Room",
+          "blueprintIds": [
+            "1_123",
+            "7_280"
+          ],
+          "titleFragments": [
+            "death star: detention block control room"
+          ],
+          "side": "ANY",
+          "runtimeFilter": "Filters.Detention_Block_Control_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_123",
+            "7_280"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "8D8",
+          "blueprintIds": [
+            "6_1"
+          ],
+          "titleFragments": [
+            "8d8"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters._8D8",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "6_1"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Revolution",
+          "blueprintIds": [
+            "1_62"
+          ],
+          "titleFragments": [
+            "revolution"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Revolution",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_62"
+          ]
+        },
+        {
+          "type": "NamedCardRef",
+          "label": "Nabrun Leids",
+          "blueprintIds": [
+            "1_97"
+          ],
+          "titleFragments": [
+            "nabrun leids"
+          ],
+          "side": "LIGHT",
+          "runtimeFilter": "Filters.Nabrun_Leids",
+          "candidateSource": "DB",
+          "resolvedCount": 1,
+          "resolvedSample": [
+            "1_97"
+          ]
+        }
+      ],
+      "locationRequirements": [
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star: Detention Block Corridor",
+          "text": "Deploy Detention Block Corridor with Leia imprisoned there",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Detention_Block_Corridor",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "1_284",
+            "7_118",
+            "215_7"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star: Docking Bay 327",
+          "text": "Deploy Docking Bay 327",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "BOTH",
+          "iconsRequired": [
+            "DOCKING_BAY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Docking_Bay_327",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_124",
+            "1_285"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Yavin 4: Docking Bay",
+          "text": "Deploy Yavin 4: Docking Bay",
+          "planetOrSystemGroup": "YAVIN_4",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "BOTH",
+          "iconsRequired": [
+            "DOCKING_BAY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Yavin_4_Docking_Bay",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_136",
+            "1_297"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Yavin 4: War Room",
+          "text": "Flip if Leia moved to Yavin 4: War Room",
+          "planetOrSystemGroup": "YAVIN_4",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "WAR_ROOM"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Yavin_4_War_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_139",
+            "208_24"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star location",
+          "text": "several cards may not deploy to Death Star",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Death_Star_location",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "sites": [
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star: Detention Block Corridor",
+          "text": "Deploy Detention Block Corridor with Leia imprisoned there",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Detention_Block_Corridor",
+          "candidateSource": "DB",
+          "resolvedCount": 3,
+          "resolvedSample": [
+            "1_284",
+            "7_118",
+            "215_7"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star: Docking Bay 327",
+          "text": "Deploy Docking Bay 327",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "BOTH",
+          "iconsRequired": [
+            "DOCKING_BAY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Docking_Bay_327",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_124",
+            "1_285"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Yavin 4: Docking Bay",
+          "text": "Deploy Yavin 4: Docking Bay",
+          "planetOrSystemGroup": "YAVIN_4",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "BOTH",
+          "iconsRequired": [
+            "DOCKING_BAY"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Yavin_4_Docking_Bay",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_136",
+            "1_297"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Yavin 4: War Room",
+          "text": "Flip if Leia moved to Yavin 4: War Room",
+          "planetOrSystemGroup": "YAVIN_4",
+          "subtype": "SITE",
+          "battlegroundRequired": false,
+          "interiorExterior": "INTERIOR",
+          "iconsRequired": [
+            "WAR_ROOM"
+          ],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Yavin_4_War_Room",
+          "candidateSource": "DB",
+          "resolvedCount": 2,
+          "resolvedSample": [
+            "1_139",
+            "208_24"
+          ]
+        },
+        {
+          "type": "LocationRequirement",
+          "label": "Death Star location",
+          "text": "several cards may not deploy to Death Star",
+          "planetOrSystemGroup": "DEATH_STAR",
+          "subtype": "ANY_LOCATION",
+          "battlegroundRequired": false,
+          "interiorExterior": "ANY",
+          "iconsRequired": [],
+          "exceptions": [],
+          "runtimeFilter": "Filters.Death_Star_location",
+          "candidateSource": "FILTER_RECIPE",
+          "resolvedCount": null,
+          "resolvedSample": []
+        }
+      ],
+      "characterRequirements": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Leia of ability < 4",
+          "text": "Leia of ability < 4 imprisoned at Detention Block Corridor",
+          "runtimeFilter": "Filters.and(Filters.Leia, Filters.abilityLessThan(4))",
+          "persona": "LEIA",
+          "abilityConstraint": "< 4",
+          "matchSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 6,
+          "resolvedSample": [
+            "102_3",
+            "111_5",
+            "1_17",
+            "202_1",
+            "220_9",
+            "7_35"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Spy",
+          "text": "your spies may not deploy to Death Star",
+          "runtimeFilter": "Filters.spy",
+          "keyword": "SPY",
+          "matchSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 58,
+          "resolvedSample": [
+            "10_31",
+            "10_5",
+            "110_1",
+            "110_10",
+            "112_3",
+            "12_109",
+            "1_163",
+            "1_17",
+            "1_177",
+            "1_184",
+            "1_195",
+            "1_20"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "type": "CharacterRequirement",
+          "label": "Leia of ability < 4",
+          "text": "Leia of ability < 4 imprisoned at Detention Block Corridor",
+          "runtimeFilter": "Filters.and(Filters.Leia, Filters.abilityLessThan(4))",
+          "persona": "LEIA",
+          "abilityConstraint": "< 4",
+          "matchSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 6,
+          "resolvedSample": [
+            "102_3",
+            "111_5",
+            "1_17",
+            "202_1",
+            "220_9",
+            "7_35"
+          ]
+        },
+        {
+          "type": "CharacterRequirement",
+          "label": "Spy",
+          "text": "your spies may not deploy to Death Star",
+          "runtimeFilter": "Filters.spy",
+          "keyword": "SPY",
+          "matchSource": "DB_FILTER_RECIPE",
+          "resolvedCount": 58,
+          "resolvedSample": [
+            "10_31",
+            "10_5",
+            "110_1",
+            "110_10",
+            "112_3",
+            "12_109",
+            "1_163",
+            "1_17",
+            "1_177",
+            "1_184",
+            "1_195",
+            "1_20"
+          ]
+        }
+      ],
+      "pullOrDeployActions": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Detention_Block_Corridor",
+            "label": "Detention Block Corridor"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Detention_Block_Corridor)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.Leia, Filters.abilityLessThan(4)) to Filters.Detention_Block_Corridor as imprisoned captive",
+            "label": "Leia of ability < 4"
+          },
+          "cadence": "AFTER_DETENTION_BLOCK_CORRIDOR",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_139.java DeployCardToTargetFromReserveDeckEffect(... DeployAsCaptiveOption.deployAsImprisonedCaptive())"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Docking_Bay_327",
+            "label": "Docking Bay 327"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Docking_Bay_327)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Yavin_4_Docking_Bay",
+            "label": "Yavin 4: Docking Bay"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Yavin_4_Docking_Bay)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Yavin_4_War_Room",
+            "label": "Yavin 4: War Room"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Yavin_4_War_Room)"
+        }
+      ],
+      "pullChain": [
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Detention_Block_Corridor",
+            "label": "Detention Block Corridor"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Detention_Block_Corridor)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "CharacterRequirement",
+            "runtimeFilter": "Filters.and(Filters.Leia, Filters.abilityLessThan(4)) to Filters.Detention_Block_Corridor as imprisoned captive",
+            "label": "Leia of ability < 4"
+          },
+          "cadence": "AFTER_DETENTION_BLOCK_CORRIDOR",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_139.java DeployCardToTargetFromReserveDeckEffect(... DeployAsCaptiveOption.deployAsImprisonedCaptive())"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Docking_Bay_327",
+            "label": "Docking Bay 327"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": false,
+          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Docking_Bay_327)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Yavin_4_Docking_Bay",
+            "label": "Yavin 4: Docking Bay"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Yavin_4_Docking_Bay)"
+        },
+        {
+          "type": "PullOrDeployAction",
+          "phase": "SETUP",
+          "verb": "deploy",
+          "sourceZone": "RESERVE",
+          "target": {
+            "kind": "LocationRequirement",
+            "runtimeFilter": "Filters.Yavin_4_War_Room",
+            "label": "Yavin 4: War Room"
+          },
+          "cadence": "ON_DEPLOY",
+          "cost": 0,
+          "enablesFlip": true,
+          "sourceEvidence": "Card7_139.java DeployCardFromReserveDeckEffect(Filters.Yavin_4_War_Room)"
+        }
+      ],
+      "flipRequirements": {
+        "type": "FlipRequirement",
+        "relation": "MOVED_TO_LOCATION_BY",
+        "count": 1,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Yavin_4_War_Room",
+          "label": "Yavin 4: War Room"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Leia",
+          "label": "Leia"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card7_139.java TriggerConditions.movedToLocationBy(playerId, Filters.Leia, Filters.Yavin_4_War_Room)"
+      },
+      "flip": {
+        "type": "FlipRequirement",
+        "relation": "MOVED_TO_LOCATION_BY",
+        "count": 1,
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Yavin_4_War_Room",
+          "label": "Yavin 4: War Room"
+        },
+        "byWhom": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Leia",
+          "label": "Leia"
+        },
+        "opponentConstraint": null,
+        "exceptions": [],
+        "alternatives": [],
+        "sourceEvidence": "Card7_139.java TriggerConditions.movedToLocationBy(playerId, Filters.Leia, Filters.Yavin_4_War_Room)"
+      },
+      "flipBack": {
+        "type": "FlipRequirement",
+        "relation": "CAPTURED",
+        "count": 1,
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Leia",
+          "label": "Leia"
+        },
+        "sourceEvidence": "Card7_139_BACK.java TriggerConditions.captured(Filters.Leia)"
+      },
+      "hardLose": {
+        "condition": "LEIA_LOST_FROM_TABLE",
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.Leia",
+          "label": "Leia"
+        },
+        "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+        "sourceEvidence": "Card7_139.java and Card7_139_BACK.java TriggerConditions.justLost(Filters.Leia), unless RESCUE_THE_PRINCESS__CANNOT_BE_PLACED_OUT_OF_PLAY is active"
+      },
+      "randoMapping": {
+        "existingVtags": [],
+        "newVsExisting": "No title-specific Rando mapping found outside ObjectiveHandler.java. Setup source pulls many exact locations and Leia captive setup."
+      },
+      "weights": [],
+      "verification": {
+        "confidence": "medium",
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139_BACK.java"
+        ],
+        "verifiedFromSource": [
+          "front/back setGameText read",
+          "setup deploy sequence read",
+          "flip, flipBack, and out-of-play triggers read",
+          "named locations and key cards resolved from DB"
+        ],
+        "forK2ToCheck": [
+          "Card7_139_BACK.java contains a top-level action copied from Local Uprising using Subjugated planet and matching operative filters. It appears unrelated to printed Rescue text but is present in actual source.",
+          "Leia hardLose is suppressed if RESCUE_THE_PRINCESS__CANNOT_BE_PLACED_OUT_OF_PLAY game text modification is active.",
+          "Yavin_4_War_Room filter maps to Massassi War Room titles in DB."
+        ]
+      }
+    }
+  ]
+}

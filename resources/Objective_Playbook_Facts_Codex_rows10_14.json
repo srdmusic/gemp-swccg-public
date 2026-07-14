@@ -1,0 +1,987 @@
+{
+  "schemaVersion": "objective-playbook-facts-v0.1-shard",
+  "generatedAt": "2026-07-07",
+  "generatedBy": "Codex Alfred",
+  "rows": "10-14",
+  "sourceRowOrder": "resources/Objective_Blueprint_Inventory_2026-07-07.json .rows[] zero-based index",
+  "entries": [
+    {
+      "frontBp": "13_46",
+      "backBp": "13_46_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "We'll Handle This",
+      "objectiveTitleBack": "Duel Of The Fates",
+      "identity": {
+        "frontTitle": "We'll Handle This",
+        "backTitle": "Duel Of The Fates",
+        "type": "OBJECTIVE",
+        "strategyRole": "lightsaber-combat objective",
+        "frontJava": "Card13_046.java",
+        "backJava": "Card13_046_BACK.java"
+      },
+      "namedCards": [
+        {
+          "title": "Inner Strength",
+          "ids": [
+            "13_24"
+          ],
+          "candidateSource": "card_blueprint_database title match",
+          "blueprintIds": [
+            "13_24"
+          ],
+          "resolvedSample": [
+            "13_24"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "filter": "Filters.Theed_Palace_Generator_Core",
+          "role": "starting deployed location",
+          "resolvedSample": [
+            "13_32",
+            "13_77"
+          ],
+          "candidateSource": "Filters.java title filter; light and dark printings"
+        },
+        {
+          "filter": "Filters.Theed_Palace_Generator",
+          "role": "starting deployed location",
+          "resolvedSample": [
+            "13_31",
+            "13_76"
+          ],
+          "candidateSource": "Filters.java title filter; light and dark printings"
+        },
+        {
+          "filter": "Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)",
+          "role": "flip target site",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.and(Filters.Naboo_site, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.Jedi)))",
+          "role": "force drains may not be canceled by opponent",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.interior_Theed_Palace_site",
+          "role": "front control-phase target action location",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        }
+      ],
+      "characters": [
+        {
+          "filter": "Filters.Jedi",
+          "role": "your Jedi enables protected Naboo drains and target action"
+        },
+        {
+          "filter": "Filters.Dark_Jedi",
+          "role": "opponent Dark Jedi presence flips objective and enables lightsaber combat on back"
+        },
+        {
+          "filter": "Filters.and(Filters.opponents(self), Filters.character, Filters.presentWith(self, Filters.and(Filters.your(self), Filters.Jedi)))",
+          "role": "front once-per-control-phase character target"
+        }
+      ],
+      "pullChain": [
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Theed_Palace_Generator_Core",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Theed_Palace_Generator",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Inner_Strength",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "control",
+          "frequency": "once per control phase",
+          "verb": "target-to-lose",
+          "targetFilter": "opponent character present with your Jedi at an interior Theed Palace site",
+          "cost": "none",
+          "source": "front Java"
+        },
+        {
+          "phase": "move",
+          "frequency": "once during your move phase",
+          "verb": "initiate-lightsaber-combat",
+          "targetFilter": "your Jedi and opponent Dark Jedi present together",
+          "source": "back Java"
+        }
+      ],
+      "flip": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "PRESENT",
+            "who": "opponent Filters.Dark_Jedi",
+            "where": "Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)"
+          }
+        ],
+        "source": "front Java getGameTextWhileActiveInPlay"
+      },
+      "flipBack": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "ABSENT",
+            "who": "opponent Filters.Dark_Jedi",
+            "where": "Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)"
+          }
+        ],
+        "effect": "flip this objective and retrieve 1 Force",
+        "source": "back Java getGameTextWhileActiveInPlay"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "candidateSource": "targeted rg in ai/models/rando excluding ObjectiveHandler.java found only ObjectiveType examples, no row-specific scoring rule"
+      },
+      "weights": [],
+      "verification": {
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046_BACK.java",
+          "src/gemp-swccg-logic/src/main/java/com/gempukku/swccgo/filters/Filters.java"
+        ],
+        "sourceEvidence": [
+          "Front starting interrupt deploys Theed Palace Generator Core, Theed Palace Generator, and Inner Strength from Reserve Deck.",
+          "Front flips when opponent's Dark Jedi is present at an interior Naboo battleground site.",
+          "Back flips when opponent has no Dark Jedi present at an interior Naboo battleground site and retrieves 1 Force."
+        ],
+        "forK2ToCheck": [
+          "Front target action is modified by legacy game text flags that narrow targets to undercover spy, 5D6-RA-7, droid, or spy; this shard records base runtime behavior plus the modifier caveat.",
+          "Resolved location samples include light and dark printings where the Java filter is title-based."
+        ]
+      }
+    },
+    {
+      "frontBp": "14_52",
+      "backBp": "14_52_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "We Have A Plan",
+      "objectiveTitleBack": "They Will Be Lost And Confused",
+      "identity": {
+        "frontTitle": "We Have A Plan",
+        "backTitle": "They Will Be Lost And Confused",
+        "type": "OBJECTIVE",
+        "strategyRole": "Theed Palace control objective",
+        "frontJava": "Card14_052.java",
+        "backJava": "Card14_052_BACK.java"
+      },
+      "namedCards": [
+        {
+          "title": "Vengeance Of The Dark Prince",
+          "ids": [
+            "10_29_BACK"
+          ],
+          "candidateSource": "card_blueprint_database title match",
+          "blueprintIds": [
+            "10_29_BACK"
+          ],
+          "resolvedSample": [
+            "10_29_BACK"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "filter": "Filters.Theed_Palace_Throne_Room",
+          "role": "starting deployed site and flip/flip-back control site",
+          "resolvedSample": [
+            "12_83",
+            "12_174"
+          ],
+          "candidateSource": "Filters.java title filter; light and dark printings"
+        },
+        {
+          "filter": "Filters.Theed_Palace_Hallway",
+          "role": "starting deployed site",
+          "resolvedSample": [
+            "14_51",
+            "14_112",
+            "201_17"
+          ],
+          "candidateSource": "Filters.java title filter; light, dark, and virtual printings"
+        },
+        {
+          "filter": "Filters.Theed_Palace_Courtyard",
+          "role": "starting deployed site",
+          "resolvedSample": [
+            "12_81",
+            "12_172"
+          ],
+          "candidateSource": "Filters.java title filter; light and dark printings"
+        },
+        {
+          "filter": "Filters.interior_Naboo_site",
+          "role": "your characters may not deploy there while front is active",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        }
+      ],
+      "characters": [
+        {
+          "filter": "Filters.Amidala",
+          "role": "must control Theed Palace Throne Room to flip; also counts for back Force loss condition"
+        },
+        {
+          "filter": "Filters.Panaka",
+          "role": "counts for back Force loss condition at controlled battleground sites"
+        },
+        {
+          "filter": "Filters.and(Icon.EPISODE_I, Filters.Jedi)",
+          "role": "allowed deployment class under front deploy restriction"
+        },
+        {
+          "filter": "Filters.alien",
+          "role": "allowed deployment class under front deploy restriction"
+        },
+        {
+          "filter": "Filters.Republic_character",
+          "role": "allowed deployment class under front deploy restriction"
+        }
+      ],
+      "pullChain": [
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Theed_Palace_Throne_Room",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Theed_Palace_Hallway",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Theed_Palace_Courtyard",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "control",
+          "frequency": "once per turn",
+          "verb": "activate",
+          "amount": 1,
+          "source": "front Java"
+        },
+        {
+          "phase": "battle",
+          "frequency": "optional when opponent draws battle destiny greater than 3",
+          "verb": "cancel-destiny",
+          "cost": "use 1 Force",
+          "source": "back Java"
+        }
+      ],
+      "flip": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "CONTROL_WITH",
+            "who": "Filters.Amidala",
+            "where": "Filters.Theed_Palace_Throne_Room"
+          }
+        ],
+        "source": "front Java getGameTextWhileActiveInPlay"
+      },
+      "flipBack": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "OPPONENT_CONTROLS",
+            "where": "Filters.Theed_Palace_Throne_Room"
+          }
+        ],
+        "source": "back Java getGameTextWhileActiveInPlay"
+      },
+      "hardLose": null,
+      "randoMapping": {
+        "existingVtags": [],
+        "candidateSource": "targeted rg in ai/models/rando excluding ObjectiveHandler.java found no row-specific scoring rule"
+      },
+      "weights": [],
+      "verification": {
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052_BACK.java",
+          "src/gemp-swccg-logic/src/main/java/com/gempukku/swccgo/filters/Filters.java"
+        ],
+        "sourceEvidence": [
+          "Front deploys Theed Palace Throne Room, Theed Palace Hallway, and Theed Palace Courtyard from Reserve Deck.",
+          "Front flips when you control Theed Palace Throne Room with Amidala.",
+          "Back flips when opponent controls Theed Palace Throne Room."
+        ],
+        "forK2ToCheck": [
+          "Back Force loss is a repeating control-phase/end-of-control trigger based on battleground sites you control with Amidala or Panaka; playbook consumers should avoid treating it as a one-time flip reward.",
+          "The front deployment restriction is broad and negative; exact legal-deck implications should stay tied to runtime Filters."
+        ]
+      }
+    },
+    {
+      "frontBp": "109_4",
+      "backBp": "109_4_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Quiet Mining Colony",
+      "objectiveTitleBack": "Independent Operation",
+      "identity": {
+        "frontTitle": "Quiet Mining Colony",
+        "backTitle": "Independent Operation",
+        "type": "OBJECTIVE",
+        "strategyRole": "Bespin and Cloud City control objective",
+        "frontJava": "Card109_004.java",
+        "backJava": "Card109_004_BACK.java"
+      },
+      "namedCards": [],
+      "sites": [
+        {
+          "filter": "Filters.Bespin_system",
+          "role": "starting deployed system and flip-back control risk",
+          "resolvedSample": [
+            "5_76",
+            "5_164",
+            "223_8"
+          ],
+          "candidateSource": "Filters.java title filter; light, dark, and virtual printings"
+        },
+        {
+          "filter": "Filters.Cloud_City_battleground_site",
+          "role": "starting deployed site",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.Bespin_Cloud_City",
+          "role": "must be controlled to flip",
+          "resolvedSample": [
+            "5_77",
+            "5_165"
+          ],
+          "candidateSource": "Filters.java title filter"
+        },
+        {
+          "filter": "Filters.Cloud_City_site",
+          "role": "front flip count and back flip-back count",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.Bespin_cloud_sector",
+          "role": "back flip-back count",
+          "resolvedSample": [
+            "5_77",
+            "5_165"
+          ],
+          "candidateSource": "Filters.java cloud-sector filter"
+        },
+        {
+          "filter": "Filters.docking_bay",
+          "role": "back once-per-deploy-phase Reserve Deck deploy target",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        }
+      ],
+      "characters": [
+        {
+          "filter": "Filters.Lando",
+          "role": "alternate front flip enabler if on Cloud City"
+        },
+        {
+          "filter": "Filters.Lobot",
+          "role": "alternate front flip enabler if on Cloud City"
+        },
+        {
+          "filter": "Filters.alien",
+          "role": "back drain protection and attrition immunity condition"
+        },
+        {
+          "filter": "Filters.cloud_car",
+          "role": "back attrition immunity condition"
+        },
+        {
+          "filter": "Filters.Independent_starship",
+          "role": "back deploy discount and attrition immunity condition"
+        }
+      ],
+      "pullChain": [
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Bespin_system",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Cloud_City_battleground_site",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "deploy",
+          "frequency": "once per deploy phase",
+          "verb": "deploy",
+          "targetFilter": "Filters.or(Filters.site, Filters.cloud_sector)",
+          "from": "Reserve Deck",
+          "to": "Bespin",
+          "cost": "use 1 Force",
+          "source": "front Java"
+        },
+        {
+          "phase": "deploy",
+          "frequency": "once per deploy phase",
+          "verb": "deploy",
+          "targetFilter": "Filters.docking_bay",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "back Java"
+        }
+      ],
+      "flip": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "OPPONENT_CONTROLS_COUNT",
+            "count": 0,
+            "where": "Filters.Bespin_location"
+          },
+          {
+            "relation": "YOU_CONTROL",
+            "where": "Filters.Bespin_Cloud_City"
+          },
+          {
+            "relation": "EITHER",
+            "options": [
+              {
+                "relation": "YOU_CONTROL_COUNT_AT_LEAST",
+                "count": 2,
+                "where": "Filters.Cloud_City_site"
+              },
+              {
+                "relation": "AND",
+                "requires": [
+                  {
+                    "relation": "ON",
+                    "who": "Filters.or(Filters.Lando, Filters.Lobot)",
+                    "where": "Filters.Bespin_Cloud_City"
+                  },
+                  {
+                    "relation": "YOU_CONTROL_COUNT_AT_LEAST",
+                    "count": 1,
+                    "where": "Filters.Cloud_City_site"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "source": "front Java getGameTextWhileActiveInPlay"
+      },
+      "flipBack": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "EITHER",
+            "options": [
+              {
+                "relation": "OPPONENT_CONTROLS",
+                "where": "Filters.Bespin_system"
+              },
+              {
+                "relation": "OPPONENT_CONTROLS_COUNT_AT_LEAST",
+                "count": 3,
+                "where": "Filters.or(Filters.Cloud_City_site, Filters.Bespin_cloud_sector)"
+              }
+            ]
+          }
+        ],
+        "source": "back Java getGameTextWhileActiveInPlay"
+      },
+      "hardLose": {
+        "trigger": "blown away",
+        "targetFilter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin, true))",
+        "effect": "place objective out of play",
+        "appliesTo": [
+          "front",
+          "back"
+        ],
+        "source": "front and back Java getGameTextWhenBlownAway"
+      },
+      "randoMapping": {
+        "existingVtags": [],
+        "candidateSource": "targeted rg in ai/models/rando excluding ObjectiveHandler.java found only ObjectiveType examples, no row-specific scoring rule"
+      },
+      "weights": [],
+      "verification": {
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004_BACK.java",
+          "src/gemp-swccg-logic/src/main/java/com/gempukku/swccgo/filters/Filters.java"
+        ],
+        "sourceEvidence": [
+          "Front deploys Bespin system and a Cloud City battleground site from Reserve Deck.",
+          "Front once per deploy phase deploys a site or cloud sector to Bespin from Reserve Deck for 1 Force.",
+          "Back flips if opponent controls Bespin system or controls three Cloud City sites/Bespin cloud sectors."
+        ],
+        "forK2ToCheck": [
+          "The starting Cloud City battleground site is a runtime filter, not a single card id; exact candidate list should be expanded by the shared objective-normalization tooling.",
+          "Bespin_Cloud_City and Bespin_cloud_sector overlap in title samples because the Java filters describe title and subtype behavior separately."
+        ]
+      }
+    },
+    {
+      "frontBp": "110_4",
+      "backBp": "110_4_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "You Can Either Profit By This...",
+      "objectiveTitleBack": "Or Be Destroyed",
+      "identity": {
+        "frontTitle": "You Can Either Profit By This...",
+        "backTitle": "Or Be Destroyed",
+        "type": "OBJECTIVE",
+        "strategyRole": "Jabba's Palace captive-rescue objective",
+        "frontJava": "Card110_004.java",
+        "backJava": "Card110_004_BACK.java"
+      },
+      "namedCards": [
+        {
+          "title": "Frozen Assets",
+          "ids": [],
+          "candidateSource": "runtime Java filter name; id unresolved in this shard",
+          "blueprintIds": [],
+          "resolvedSample": []
+        },
+        {
+          "title": "Bad Feeling Have I",
+          "ids": [
+            "4_116"
+          ],
+          "candidateSource": "card_blueprint_database title match",
+          "blueprintIds": [
+            "4_116"
+          ],
+          "resolvedSample": [
+            "4_116"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "filter": "Filters.Jabbas_Palace",
+          "role": "starting deployed site",
+          "resolvedSample": [
+            "7_131",
+            "6_171"
+          ],
+          "candidateSource": "Filters.java title filter; light and dark printings"
+        },
+        {
+          "filter": "Filters.Audience_Chamber",
+          "role": "starting deployed site; Han starts there as frozen captive unless modified",
+          "resolvedSample": [
+            "6_81",
+            "6_162"
+          ],
+          "candidateSource": "Filters.java title filter; light and dark printings"
+        },
+        {
+          "filter": "Filters.Tatooine_location",
+          "role": "front force drain restriction and flip location family",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.Jabbas_Palace_site",
+          "role": "front deployment discounts",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.exterior_Tatooine_site",
+          "role": "back landed starfighter deploy destination",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        }
+      ],
+      "characters": [
+        {
+          "filter": "Filters.Han",
+          "role": "starts as frozen captive at Audience Chamber unless modified; must be on Tatooine and not captive to flip; absence as non-captive flips back"
+        },
+        {
+          "filter": "Filters.alien",
+          "role": "opponent may deploy 0-2 aliens to Audience Chamber during setup"
+        },
+        {
+          "filter": "Filters.Luke",
+          "role": "front deployment discount to Jabba's Palace site; back Force loss count"
+        },
+        {
+          "filter": "Filters.Master_Luke",
+          "role": "front deploys free to Jabba's Palace site"
+        },
+        {
+          "filter": "Filters.R2D2",
+          "role": "front deployment discount to Jabba's Palace site"
+        },
+        {
+          "filter": "Filters.C3PO",
+          "role": "front deployment discount to Jabba's Palace site"
+        },
+        {
+          "filter": "Filters.or(Filters.Han, Filters.Luke, Filters.Leia, Filters.Chewie, Filters.Lando)",
+          "role": "back Force loss count by occupied battleground locations"
+        }
+      ],
+      "pullChain": [
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Jabbas_Palace",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Audience_Chamber",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "deploy-frozen-captive",
+          "targetFilter": "Filters.Han",
+          "from": "Reserve Deck",
+          "to": "Audience Chamber",
+          "unlessGameTextModifiedBy": "YOU_CAN_EITHER_PROFIT_BY_THIS__DO_NOT_DEPLOY_HAN_AT_START_OF_GAME",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "opponent-optional-deploy",
+          "targetFilter": "Filters.alien",
+          "count": "0-2",
+          "to": "Audience Chamber",
+          "source": "front Java"
+        },
+        {
+          "phase": "on flip to back",
+          "frequency": "once per game",
+          "verb": "retrieve",
+          "amount": "5 Force, or 10 Force if Han's power is less than 4",
+          "source": "back Java"
+        },
+        {
+          "phase": "control",
+          "verb": "opponent-loses-force",
+          "amount": "number of battleground locations occupied by Han, Luke, Leia, Chewie, or Lando",
+          "source": "back Java"
+        }
+      ],
+      "flip": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "ON",
+            "who": "Filters.Han",
+            "where": "Title.Tatooine"
+          },
+          {
+            "relation": "NOT",
+            "condition": "Filters.captive"
+          }
+        ],
+        "source": "front Java getGameTextWhileActiveInPlay"
+      },
+      "flipBack": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "CANNOT_SPOT",
+            "who": "Filters.and(Filters.Han, Filters.not(Filters.captive))"
+          }
+        ],
+        "source": "back Java getGameTextWhileActiveInPlay"
+      },
+      "hardLose": {
+        "trigger": "blown away",
+        "targetFilter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Tatooine, true))",
+        "effect": "place objective out of play",
+        "appliesTo": [
+          "front",
+          "back"
+        ],
+        "source": "front and back Java getGameTextWhenBlownAway"
+      },
+      "randoMapping": {
+        "existingVtags": [],
+        "candidateSource": "targeted rg in ai/models/rando excluding ObjectiveHandler.java found no row-specific scoring rule"
+      },
+      "weights": [],
+      "verification": {
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004_BACK.java",
+          "src/gemp-swccg-logic/src/main/java/com/gempukku/swccgo/filters/Filters.java"
+        ],
+        "sourceEvidence": [
+          "Front deploys Jabba's Palace, Audience Chamber, and usually Han as an unattended frozen captive at Audience Chamber.",
+          "Front flips when Han is on Tatooine and not captive.",
+          "Back flips when Han cannot be spotted as not captive."
+        ],
+        "forK2ToCheck": [
+          "Frozen Assets id was not resolved in the current shard pass; only the runtime filter name was verified from Java.",
+          "Back Force loss has game text modifiers that can cap loss at 3, make it unmodifiable, or require Reserve Deck loss of at least 2; consumers should use runtime modifiers as truth."
+        ]
+      }
+    },
+    {
+      "frontBp": "111_4",
+      "backBp": "111_4_BACK",
+      "side": "LIGHT",
+      "objectiveTitleFront": "Massassi Base Operations",
+      "objectiveTitleBack": "One In A Million",
+      "identity": {
+        "frontTitle": "Massassi Base Operations",
+        "backTitle": "One In A Million",
+        "type": "OBJECTIVE",
+        "strategyRole": "Yavin 4 and Attack Run objective",
+        "frontJava": "Card111_004.java",
+        "backJava": "Card111_004_BACK.java"
+      },
+      "namedCards": [
+        {
+          "title": "Rebel Tech",
+          "ids": [
+            "2_19"
+          ],
+          "candidateSource": "card_blueprint_database title match",
+          "blueprintIds": [
+            "2_19"
+          ],
+          "resolvedSample": [
+            "2_19"
+          ]
+        },
+        {
+          "title": "Death Star system",
+          "ids": [
+            "2_143",
+            "7_117",
+            "216_7"
+          ],
+          "candidateSource": "card_blueprint_database title/filter candidates",
+          "blueprintIds": [
+            "2_143",
+            "7_117",
+            "216_7"
+          ],
+          "resolvedSample": [
+            "2_143",
+            "7_117",
+            "216_7"
+          ]
+        },
+        {
+          "title": "Attack Run",
+          "ids": [
+            "2_42"
+          ],
+          "candidateSource": "card_blueprint_database title match",
+          "blueprintIds": [
+            "2_42"
+          ],
+          "resolvedSample": [
+            "2_42"
+          ]
+        },
+        {
+          "title": "Proton Torpedoes",
+          "ids": [
+            "1_158",
+            "14_66"
+          ],
+          "candidateSource": "card_blueprint_database exact title match for Filters.Proton_Torpedoes",
+          "blueprintIds": [
+            "1_158",
+            "14_66"
+          ],
+          "resolvedSample": [
+            "1_158",
+            "14_66"
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "filter": "Filters.Yavin_4_system",
+          "role": "starting deployed system and front hard-lose blown-away target",
+          "resolvedSample": [
+            "1_135",
+            "1_296",
+            "211_32"
+          ],
+          "candidateSource": "Filters.java title filter; light, dark, and virtual printings"
+        },
+        {
+          "filter": "Filters.Yavin_4_Docking_Bay",
+          "role": "starting deployed site",
+          "resolvedSample": [
+            "1_136",
+            "1_297"
+          ],
+          "candidateSource": "Filters.java title filter; light and dark printings"
+        },
+        {
+          "filter": "Filters.Yavin_4_site",
+          "role": "front Reserve Deck deploy target and flip control count",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.Yavin_4_sector",
+          "role": "front force drain restriction",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.Death_Star_site",
+          "role": "back blown-away Force loss calculation",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        },
+        {
+          "filter": "Filters.battleground_system",
+          "role": "back post-Death-Star-blown-away drain bonus location",
+          "resolvedSample": [],
+          "candidateSource": "runtime Java filter"
+        }
+      ],
+      "characters": [
+        {
+          "filter": "Filters.Imperial",
+          "role": "front deploys +2 to Yavin 4 locations"
+        },
+        {
+          "filter": "Filters.and(Filters.starfighter, Filters.hasAboard(self, Filters.pilot))",
+          "role": "back post-Death-Star-blown-away force drain bonus condition"
+        }
+      ],
+      "pullChain": [
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Yavin_4_system",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "game start",
+          "verb": "deploy",
+          "targetFilter": "Filters.Yavin_4_Docking_Bay",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "deploy",
+          "frequency": "once per deploy phase",
+          "verb": "deploy",
+          "targetFilter": "Filters.Yavin_4_site",
+          "from": "Reserve Deck",
+          "to": "table",
+          "source": "front Java"
+        },
+        {
+          "phase": "deploy",
+          "frequency": "once per deploy phase",
+          "verb": "take-into-hand",
+          "targetFilter": "Filters.or(Filters.Rebel_Tech, Filters.Death_Star_system, Filters.Attack_Run, Filters.Proton_Torpedoes)",
+          "from": "Reserve Deck",
+          "to": "hand",
+          "source": "back Java"
+        }
+      ],
+      "flip": {
+        "type": "automatic",
+        "requires": [
+          {
+            "relation": "YOU_CONTROL_COUNT_AT_LEAST",
+            "count": 3,
+            "where": "Filters.Yavin_4_site"
+          },
+          {
+            "relation": "OPPONENT_CONTROLS_COUNT_LESS_THAN",
+            "count": 3,
+            "where": "Filters.Yavin_4_site"
+          }
+        ],
+        "source": "front Java getGameTextWhileActiveInPlay"
+      },
+      "flipBack": null,
+      "hardLose": {
+        "trigger": "blown away",
+        "targetFilter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Yavin_4, true))",
+        "effect": "place objective out of play",
+        "appliesTo": [
+          "front"
+        ],
+        "source": "front Java getGameTextWhenBlownAway"
+      },
+      "randoMapping": {
+        "existingVtags": [],
+        "candidateSource": "targeted rg in ai/models/rando excluding ObjectiveHandler.java found no row-specific scoring rule"
+      },
+      "weights": [],
+      "verification": {
+        "sourceFilesRead": [
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004.java",
+          "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004_BACK.java",
+          "src/gemp-swccg-logic/src/main/java/com/gempukku/swccgo/filters/Filters.java"
+        ],
+        "sourceEvidence": [
+          "Front deploys Yavin 4 system and Yavin 4 Docking Bay from Reserve Deck.",
+          "Front flips when you control three Yavin 4 sites and opponent does not control three Yavin 4 sites.",
+          "Back has a Reserve Deck take-into-hand action for Rebel Tech, Death Star system, Attack Run, or Proton Torpedoes and no flip-back text in Java."
+        ],
+        "forK2ToCheck": [
+          "Back side has no flip-back method in the Java source; this is intentional in the shard unless a non-Java rule layer says otherwise.",
+          "Yavin 4 blown-away hard-lose is present on the front Java only; back Java instead modifies Death Star blown-away Force loss and post-blow-away drains."
+        ]
+      }
+    }
+  ]
+}

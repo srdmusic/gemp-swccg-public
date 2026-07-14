@@ -1,5 +1,153 @@
 # K-2 HANDOFF — Phase-Reorg Program State (2026-07-13, written at 82% weekly usage)
 
+## ★ CURRENT TRUE STATE (2026-07-14 ~04:40Z — FRESH SESSION START HERE, everything below is older context) ★
+- **Steve's model NOW (overrides all older cadence):** phases are INDEPENDENT (each = one decision
+  domain's consolidated logic, no cross-over except minor force allocation; NOT whack-a-mole, NOT a
+  coupled migration). DEPLOY EACH PHASE AS IT COMPLETES: implement → ONE gate → deploy (fast path) →
+  test in game → next. ABC, always be closing. NO batch aggregate-gate/Fable wait. **NEVER PUSH**
+  (Steve's standing rule; local deploy only). Cut ceremony hard. See memory feedback_deploy_each_phase +
+  feedback_drive_pipeline_no_stopping.
+- **DEPLOYED + LIVE so far (Codex drove these directly while the prior K-2 session stalled):**
+  runtime/finalizer aa122eae8 (216/0/0/0, reload-ai, HTTP 200, byte-verified); DRAW ff04a4b69 (220/0/0/0)
+  = current HEAD. PULL entering package/commit/deploy. Confirm with `git log --oneline` + docker.
+- **DIVISION NOW:** Codex is DRIVING ALL PHASES SOLO (implement + gate + deploy) per m00626 — including the
+  V44/V67j pilot (step 1b, frozen packet 7b7bc814) and ACTIVATE+CONTROL. The prior K-2 session degraded
+  (dead background worker, missed m00616-m00624, stale mental model) and unblocked Codex to proceed without
+  it. A FRESH K-2 rejoins as INDEPENDENT REVIEWER (not the bottleneck-driver), or takes a specific phase
+  Codex hands to the mailbox.
+- **FRESH SESSION FIRST ACTIONS:** (1) `git log --oneline -6` + `docker ps` for true HEAD/live state;
+  (2) `python3 ~/claude-codex-mailbox/mailbox.py check --as claude --mark`, then read the raw mailbox
+  tail past the last id for anything unread; (3) send Codex a short RESUMED with current HEAD + "reviewer,
+  not blocker"; (4) arm a DIRECT any-new-mail watcher (background bash polling mailbox.jsonl; the passive
+  Monitor FAILED and dropped 9 action mails — do NOT trust it); (5) do NOT re-impose heavy ceremony;
+  (6) `caffeinate -dimsu` is running (prior session started it) so the Mac won't sleep — battery pmset
+  sleep is 1 min, a landmine if unplugged.
+- **The stall root cause (fixed):** passive mailbox Monitor mis-filtered Codex action mail as FYI →
+  K-2 went deaf, not idle. Always poll the mailbox directly + arm the direct watcher.
+
+### K-2 REVIEWER STATUS (2026-07-14, fresh session) — A+C phase
+- Baseline FROZEN at 8789a74fe (Codex m00633): V44/V67j pilot API already committed here
+  (AiDecisionResult.MutationMode{NONE,OUTER_COMMON}, FinalizedResponseAdapter, RevertApprovalPhaseOwner).
+  Codex owns the full A+C Java cutover in his worktree /Users/steve/gemp-swccg-ac-phase-codex
+  (branch codex/activate-control-cutover); K-2 does NO Java edits — independent reviewer only.
+- K-2 reviewer worktree: scratchpad/ac-worktree @8789a74fe (READ-ONLY reference). Evidence docs in
+  scratchpad/: AC_PHASE_B_PREFLIGHT_2026-07-14.md, AC_UNOWNED_INTEGER_INVENTORY_2026-07-14.md.
+- A+C PHASE COMMITTED by Codex: **7205159f0** (base 8789a74fe; 186 tests 0F/0E, mirror-parity 8 pairs PASS,
+  resolver/ActivateAmountPolicy/ControlDrainAssessment each exactly 2 consumers). NOT yet deployed.
+- Deliverable #1 (unowned-INTEGER inventory) DONE → m00634. CASE A regression (passable min==0 unstamped
+  INTEGER → PassEvaluator empty decline) ACCEPTED by Codex (m00635) + FIXED in 7205159f0: both
+  PassEvaluator.canEvaluate now return false for INTEGER → all unstamped INTEGER route to
+  HeuristicAiBase.pickInteger (gain→MAX/lose→MIN). Verified in diff.
+- Deliverable #2 (direct decide() rejected-route compat) — **PASS** (m00637). decideOwnedActivateControl:
+  TYPED_REJECTION → mediatorFacing returns typed rejection; direct path → completeDirectActivateControlCompatibility
+  reproduces legacy raw-string (tryEvaluators/super.decide + emergency + ensureValidResponse + outer mutation),
+  never hits baseline decide() throw. Minor note: invoked-then-rejected defensive branch uses super.decide()
+  vs legacy evaluator — no real-input delta.
+- Deliverable #3 (A+C vs PULL_PARENT overlap) — **PASS** (m00637). Dispatch DRAW→A+C→PULL, disjoint origin
+  claim sets + wire-shape guard = order-independent; 1 authorized game-state read; snapshot reused.
+- ALL THREE A+C REVIEW DELIVERABLES CLOSED. No hard stop.
+- **A+C DEPLOYED + INDEPENDENTLY VERIFIED (2026-07-14 ~07:28Z, m00642).** HEAD 7205159f0 (now 822202e1f w/
+  Codex doc-fix). Bytecode-confirmed in live web.jar (SHA 9fcbea25...8e89, exact match): PassEvaluator
+  INTEGER guard live both bots (CASE A fix), ForceActivation origin gate live (getDecisionOrigin→ACTIVATE_
+  AMOUNT/ALLOWANCE), new A+C classes present (genuine rebuild), container restartCount 0, HTTP up.
+  NOTE: javap needs the CONTAINER (no JDK on host).
+- **NEXT PHASE = Objective facts/adapters** (packet afda65ec, step 5). K-2 bounded preflight DONE (m00645,
+  evidence scratchpad/OBJECTIVE_PHASE_PREFLIGHT_2026-07-14.md). 3 corrections + dead-ObjectiveHandler
+  landmine CONFIRMED. MISMATCHES: (A) ACCEPTED — NO ObjectivePullAdapter/any
+  Objective*Adapter exists; all 5 net-new; Codex builds ObjectivePullAdapter fresh, only its objective-source
+  parent/child authoritative. (B) WITHDRAWN (verified m00647) — V193 child 2000f DOES exist, in
+  CardSelectionEvaluator:2288 (v193csWeight 400 + 1600 = 2000f), distinct from parent 400f (DeployEvaluator
+  :1600-1602); my preflight agent missed it by searching only the deploy path. Refinements: correction #3 half-done (findProfile
+  already blueprint-first); correction #2 leak unreachable in hall path (fresh bot/game); front/back parse
+  currently DEAD. Landmines: production builds NO snapshot (trace-gated, must hoist); double snapshot builder;
+  3x/decision analyzer refresh; objective truth summed across many evaluators (emit-once fan-out); temp-id trap.
+  Codex to reconcile mismatches, then implement; K-2 reviews his commit + verifies deploy.
+- OBJECTIVE PHASE pre-commit GATE (worktree /Users/steve/gemp-swccg-objective-phase, branch
+  codex/objective-facts-adapters, base 822202e1f, uncommitted): K-2 independent verdict = **PASS WITH NOTES**
+  (m00654, evidence scratchpad/OBJECTIVE_PHASE_GATE_VERDICT_2026-07-14.md). All 10 checklist items PASS
+  (purity/one-refresh/front-back/reset-ref/one-snapshot/facts-only/shadow-adapters/parity; ObjectiveHandler
+  untouched; engine changes minimal+behavior-neutral). 2 CLOSE-BEFORE-DEPLOY: (1) CONCERN — authoritative
+  ObjectivePullAdapter yields 0 on UNKNOWN objective identity vs legacy 1500/500 (likely unreachable; prove via
+  fixture or add legacy fallback); (2) DISCIPLINE — legacy parent tier arm DELETED not commented (restore comment).
+  Codex to close both, then commit → his gate → deploy. K-2 will bytecode-verify deploy like A+C.
+- OBJECTIVE PHASE COMMITTED 1fa153eaf (parent 822202e1f). K-2 gate: SHA == reviewed state + ObjectiveFactsSource
+  comment tweak = valid CHECKPOINT (commit PASS). **CLOSE-ITEM 1 ESCALATED (m00657) to CONFIRMED PRE-DEPLOY
+  BLOCKER:** traced ActionTextEvaluator (rando) 5137-5176 — v192ObjectiveSource is FORCED true by engine
+  srcCat==OBJECTIVE (:5146), DECOUPLED from ObjectiveFacts identity; on identity UNKNOWN/mismatch the
+  authoritative adapter returns null → v192Tier=0.0f (:5175, "Unknown facts contribute zero") where legacy gave
+  1500. Real reachable 1500→0 regression (Steve #1 discipline). FIX: when v192ObjectiveSource && adapter==null,
+  fall back to legacy 1500 (both bots), OR fixture proving identity always ID-matches. DO NOT DEPLOY 1fa153eaf
+  as-is. Close-item 2 (parent-arm comment breadcrumb) minor, still open. Codex to fix → re-commit → K-2 re-gates delta.
+- OBJECTIVE PHASE both notes CLOSED in replacement commit **978527306** (supersedes 1fa153eaf; parent
+  822202e1f). K-2 re-gate = **GATE PASS** (m00659, verified delta). Item1: ObjectivePullAdapter.adaptParent/
+  adaptChildAtOrdinal legacy 1500/500 fallback guarded to (physicalObjectiveSource && identity unknown &&
+  eligibleNonFailure && correct route && real ordinal && predecessor-only for child); NOT on BLOCK/net-new/known.
+  Item2: +1500 arm comment retained. Parity identical, 172 tests. CLEAR TO DEPLOY after Codex gate + no-live-game.
+  K-2 will bytecode-verify live jar (javap in-container; host has no JDK).
+- OBJECTIVE FINAL SHA **3a4214866** (supersedes 978527306+1fa153eaf; parent 822202e1f). K-2 re-gate = **GATE
+  PASS** (m00662). Broadened the pull fallback: dropped the `!identity().isUnknown()` guard in adaptParent+
+  adaptChildAtOrdinal so legacy 1500/500 fires whenever parentContributions-empty (UNKNOWN OR known-id-mismatch)
+  + physicalObjectiveSource + eligibleNonFailure + route + ordinal (+predecessor-child). Faithful to legacy;
+  no double (gated on normal-path-empty); BLOCK/failed/net-new still 0. Parity identical, 173 tests.
+  NOTE (honesty): my 978527306 PASS was INCOMPLETE — its isUnknown()-only guard left known-id-mismatch at 0;
+  I flagged both in m00657 but didn't catch the half-cover on re-gate. Codex broadened it; 3a4214866 covers both.
+  CLEAR TO DEPLOY after Codex gate + no-live-game. K-2 bytecode-verifies live jar (javap in-container).
+- **OBJECTIVE PHASE DEPLOYED + INDEPENDENTLY VERIFIED (2026-07-14 ~10:01Z, m00665).** HEAD 3a4214866,
+  host jar SHA ea1fac050...eafec (exact match), container restartCount 0 startedAt 10:01:52Z, HTTP 200.
+  Bytecode (javap in-container): ObjectiveFactsProducer/ObjectivePullAdapter/ObjectiveSetupAdapter/
+  ObjectiveDeployAdapter present (rebuild); adaptParent 5-arg + adaptChildAtOrdinal 7-arg fallback overloads
+  compiled in; 'Unknown facts contribute zero' string = 0 (regression GONE both bots); 'OBJECTIVE-ADAPTER' = 2.
+  4 PHASES NOW LIVE+VERIFIED: DRAW, PULL, ACTIVATE+CONTROL, OBJECTIVE.
+- NEXT = DEPLOY owner (manifest step 6, packet CODEX_DEPLOY_PHASE_PACKET_2026-07-13.md, SHA
+  6ba53824...). K-2 to start bounded preflight when Codex releases it.
+- DEPLOY-owner phase (step 6, packet 6ba53824) bounded preflight DONE (m00668, evidence
+  scratchpad/DEPLOY_PHASE_PREFLIGHT_2026-07-14.md). Shadow ObjectiveDeployAdapter deployed but DISCARDED
+  (zero delta today); all risk at exclusive-owner flip. MATERIAL FLAGS: (1) VERIFIED obj-site VALUE MISMATCH —
+  adapter OBJECTIVE_SITE=200f flat vs legacy 3-way split 200 post-flip-protect/150 PRE-FLIP/0; flip shifts
+  pre-flip +50 (silent regression unless adapter models flip state); (2) My Lord disable OVER-REACH —
+  getDeployObjectiveAdjustments loop (DeployEvaluator:1425) mixes My Lord (owned) + V86/V99 (keep); suppress
+  per-rule not call site; (3) V193 child same value 2000 but DIFFERENT gate (ability>=1&&cost<=4 vs
+  !controls&&holdsGate) — parity risk; (4) obj-site TWO consumers (CardSelectionEvaluator:1742+:7191). V170:
+  prompt-text gated + unknown-vs-zero drain conflated + malformed→0/1 default (all packet-forbidden). PullDeployRef
+  exists; DeployPhasePlanner needs substantial lifecycle extension. My Lord/V193-parent values MATCH.
+  Codex to reconcile before implementing; K-2 gates his commit.
+- DEPLOY split into sidecars. First: OBJECTIVE-EMITTER sidecar 07758a7c1 (parent 3a4214866, branch
+  codex/deploy-objective-emitter-sidecar) makes ObjectiveDeployAdapter the EXCLUSIVE live emitter for the
+  objective-deploy set. K-2 gate = **PASS WITH NOTES** (m00671): no double-count, byte-parity, all 4 preflight
+  flags closed (obj-site 150/200/0 split, My Lord per-rule w/ V86/V99 preserved, V193 child = legacy-branch
+  truth, both CS consumers). if(false) comment-out honored. HEADLINE DECISION (Steve's domain): legacy Deploy
+  §B obj-site was FLAT +200 (flip-unaware, CharacterDeploySiteEvaluator verified); consolidation moves it to
+  flip-aware 150/200/0 → EVERY objective deck: pre-flip 200->150, post-flip-nonprotect 200->0. Strategically
+  correct (CS already used 150/200/0) but a real scoring change; deviates from packet's literal 'exact 200f'.
+  Narrower notes: CS filter-rules obj-site gap (loader-rules objectives only); V193 child hardcoded 2000 vs
+  weight+1600 (step-11); V88 Senate substring->filter (theoretical). Author didn't run tests — recommend
+  runtime smoke (Endor + My Lord decks) before live.
+- Obj-site semantics RESOLVED: Codex made the objective-emitter sidecar BEHAVIOR-PRESERVING (Deploy flat+200
+  + CS 150/200/0 both stay EXACT; flip-aware unification deferred to step-11). Steve dismissed the canonical-
+  semantics question → default stands (behavior-preserving now).
+- DEPLOY owner commit 8fcb9fa9a = HOLD (Codex self-caught direct-entry lifecycle defect + found 6 open frozen
+  fixtures 2/5/6/9/10/11). m00678 was stale/retracted (m00679) — ignore. Do NOT gate/deploy 8fcb.
+- K-2 took DISJOINT SLICE **fixture 11** (DeploymentPlan.assessmentCopy purity) and CLOSED it (m00685):
+  DeploymentInstruction is mutable + DeployPhasePlanner binds ids during assessment → shallow copy leaked into
+  live plan (rule 11 break). Fix = deep-copy ctor + per-instruction copy in assessmentCopy (both bots, parity-
+  verified). Fixture DeploymentPlanAssessmentCopyPurityTest 2/2 PASS, BUILD SUCCESS. Patch /tmp/fixture11_deepcopy.patch
+  (base 8fcb9fa9a) for Codex to fold into amended SHA. K-2 worktree scratchpad/deploy-fix11. NOT committed/pushed.
+  Codex owns 2/5/6/9/10 + V170 + amended DEPLOY SHA; K-2 gates it + offered to take fixture 2 or 10 next.
+- K-2 fixture-11 patch ACKed by Codex (applying it); fixtures 2+10 already in his worktree (don't dup).
+- K-2 did DISJOINT REVIEW = optional/mandatory all-veto CombinedEvaluator coverage (m00690, both bots).
+  PARITY ok. 5 findings: (1) TWO veto notions — hard-veto isHardVetoed→fsAllVetoed path vs score-pseudo-veto
+  -9999→argmax+v148PassBar path; coverage needs both × optional/mandatory = 4 cases/bot (score-pseudo-veto is
+  the common untested one); (2) mandatory all-veto returns least-bad bestAction with NO typed forced-choice
+  marker (fixture-10 core, SAFE not a crash); (3) fsCanPass + v148 canPass DUPLICATE identical cancellability
+  logic (agree, redundant); (4) DEAD log branch `else if(canPass)` ~558 unreachable (log-only, no behavior);
+  (5) no dedicated all-veto fixture in baseline. Review-only, no edits.
+- MAILBOX GOTCHA: bodies with { } ( ) break `mailbox.py --body "..."` via zsh (parse error, send FAILS
+  silently). Send via python subprocess arg-list (read body from a file) — see the m00690 send pattern.
+- Watcher armed at seq-690 for Codex's amended DEPLOY SHA (fixtures 2/9/10/11 + V170) to gate.
+
+---
+
+
 **For any fresh session (Opus or otherwise) continuing this work.** Read this + `Handoffs/AI_WORK_QUEUE.md`
 (Codex co-maintains it) before touching anything. The standing rules in `~/.claude/projects/.../memory/MEMORY.md`
 all apply — especially: check-replays-not-logs, one-change-at-a-time, changelog-on-push, engine-files-need-Steve,

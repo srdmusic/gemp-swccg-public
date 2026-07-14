@@ -1,0 +1,1464 @@
+[
+  {
+    "inventoryRow": 54,
+    "frontBp": "222_30",
+    "backBp": "222_30_BACK",
+    "side": "DARK",
+    "objectiveTitleFront": "The Shield Will Be Down in Moments",
+    "objectiveTitleBack": "Imperial Troops Have Entered The Base!",
+    "abbreviation": "TSWBDIM",
+    "identity": {
+      "type": "NamedCardRef",
+      "blueprintIds": [
+        "222_30",
+        "222_30_BACK"
+      ],
+      "titleFragments": [
+        "the shield will be down in moments",
+        "imperial troops have entered the base"
+      ],
+      "side": "DARK",
+      "candidateSource": "JAVA_SOURCE_AND_DB"
+    },
+    "namedCards": [
+      {
+        "type": "NamedCardRef",
+        "label": "5th Marker",
+        "blueprintIds": [
+          "3_148",
+          "208_49"
+        ],
+        "titleFragments": [
+          "hoth: ice plains",
+          "5th marker"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Fifth_Marker",
+        "candidateSource": "DB",
+        "resolvedCount": 2,
+        "resolvedSample": [
+          "3_148",
+          "208_49"
+        ],
+        "notes": "Java has no set-icon restriction for this required setup pull."
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "[Set 17] 4th Marker",
+        "blueprintIds": [
+          "217_12"
+        ],
+        "titleFragments": [
+          "hoth: north ridge",
+          "4th marker"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "217_12"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "1st Marker / Main Power Generators",
+        "blueprintIds": [
+          "222_9"
+        ],
+        "titleFragments": [
+          "hoth: main power generators",
+          "1st marker"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.First_Marker",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "222_9"
+        ],
+        "notes": "Dark Reserve Deck setup target. Flip trigger uses title(Main Power Generators, true), so light-side copies can satisfy the blown-away trigger once on table."
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "[Set 9] Prepare For A Surface Attack",
+        "blueprintIds": [
+          "209_42"
+        ],
+        "titleFragments": [
+          "prepare for a surface attack"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack)",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "209_42"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Echo Base Sensors",
+        "blueprintIds": [
+          "13_17"
+        ],
+        "titleFragments": [
+          "echo base sensors"
+        ],
+        "side": "LIGHT",
+        "runtimeFilter": "Filters.title(\"Echo Base Sensors\")",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "13_17"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "You May Start Your Landing",
+        "blueprintIds": [
+          "11_77"
+        ],
+        "titleFragments": [
+          "you may start your landing"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.You_May_Start_Your_Landing",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "11_77"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Rebel Leadership",
+        "blueprintIds": [
+          "9_54",
+          "203_17"
+        ],
+        "titleFragments": [
+          "rebel leadership"
+        ],
+        "side": "LIGHT",
+        "runtimeFilter": "Filters.title(\"Rebel Leadership\")",
+        "candidateSource": "DB",
+        "resolvedCount": 2,
+        "resolvedSample": [
+          "9_54",
+          "203_17"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "We're Doomed",
+        "blueprintIds": [
+          "1_120",
+          "204_18"
+        ],
+        "titleFragments": [
+          "we're doomed",
+          "escape pod & we're doomed"
+        ],
+        "side": "LIGHT",
+        "runtimeFilter": "Filters.Were_Doomed",
+        "candidateSource": "DB",
+        "resolvedCount": 2,
+        "resolvedSample": [
+          "1_120",
+          "204_18"
+        ],
+        "notes": "Runtime filter is a named filter, not a raw exact-title string."
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Rebel Base Occupation / Sunsdown",
+        "blueprintIds": [
+          "7_237",
+          "1_230",
+          "10_50"
+        ],
+        "titleFragments": [
+          "rebel base occupation",
+          "sunsdown",
+          "sunsdown & too cold for speeders"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.or(Filters.Rebel_Base_Occupation, Filters.Sunsdown)",
+        "candidateSource": "DB",
+        "resolvedCount": 3,
+        "resolvedSample": [
+          "7_237",
+          "1_230",
+          "10_50"
+        ],
+        "notes": "May-not-deploy targets, not playbook pulls."
+      }
+    ],
+    "sites": [
+      {
+        "type": "LocationRequirement",
+        "label": "Hoth location",
+        "text": "Once per turn, deploy a Hoth location from Reserve Deck",
+        "planetOrSystemGroup": "HOTH",
+        "subtype": "ANY_LOCATION",
+        "battlegroundRequired": false,
+        "interiorExterior": "ANY",
+        "iconsRequired": [],
+        "exceptions": [],
+        "runtimeFilter": "Filters.Hoth_location",
+        "candidateSource": "DB_SNAPSHOT",
+        "resolvedCount": 22,
+        "resolvedSample": [
+          "3_144",
+          "3_145",
+          "3_148",
+          "208_49",
+          "217_12",
+          "222_9"
+        ]
+      },
+      {
+        "type": "LocationRequirement",
+        "label": "Hoth site occupied by durable occupier",
+        "text": "Back side stays in play only while you occupy a Hoth site with a piloted AT-AT, Imperial leader, or snowtrooper",
+        "planetOrSystemGroup": "HOTH",
+        "subtype": "SITE",
+        "battlegroundRequired": false,
+        "interiorExterior": "ANY",
+        "iconsRequired": [],
+        "exceptions": [],
+        "runtimeFilter": "Filters.and(Filters.Hoth_site, Filters.occupiesWith(playerId, self, Filters.or(Filters.and(Filters.AT_AT, Filters.piloted), Filters.Imperial_leader, Filters.snowtrooper)))",
+        "candidateSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": [
+          "3_144",
+          "3_148",
+          "208_49",
+          "217_12",
+          "222_9"
+        ]
+      }
+    ],
+    "characters": [
+      {
+        "type": "CharacterRequirement",
+        "label": "Imperial leader",
+        "text": "Back side adds attrition +1 per Imperial leader in battle and counts as a valid Hoth-site occupier",
+        "runtimeFilter": "Filters.Imperial_leader",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      },
+      {
+        "type": "CharacterRequirement",
+        "label": "Snowtrooper",
+        "text": "Back side may deploy a snowtrooper from Reserve Deck once per turn and snowtroopers count as valid Hoth-site occupiers",
+        "runtimeFilter": "Filters.snowtrooper",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      },
+      {
+        "type": "VehicleRequirement",
+        "label": "Piloted AT-AT",
+        "text": "A piloted AT-AT at a Hoth site prevents the back side from being placed out of play",
+        "runtimeFilter": "Filters.and(Filters.AT_AT, Filters.piloted)",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      }
+    ],
+    "pullChain": [
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.Fifth_Marker",
+          "label": "5th Marker"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card222_030.java lines 55-63 DeployCardFromReserveDeckEffect(Filters.Fifth_Marker)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)",
+          "label": "[Set 17] 4th Marker"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card222_030.java lines 64-70 DeployCardFromReserveDeckEffect(Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker))"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.First_Marker",
+          "label": "1st Marker / Main Power Generators"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card222_030.java lines 72-78 DeployCardFromReserveDeckEffect(Filters.First_Marker)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack)",
+          "label": "[Set 9] Prepare For A Surface Attack"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card222_030.java lines 80-86 DeployCardFromReserveDeckEffect(Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack))"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "PRE_FLIP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Hoth_location",
+          "label": "Hoth location"
+        },
+        "cadence": "ONCE_PER_TURN",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card222_030.java lines 116-130 DeployCardFromReserveDeckEffect(Filters.Hoth_location)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "POST_FLIP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.snowtrooper",
+          "label": "Snowtrooper"
+        },
+        "cadence": "ONCE_PER_TURN",
+        "cost": 0,
+        "enablesFlip": false,
+        "sourceEvidence": "Card222_030_BACK.java lines 106-121 DeployCardFromReserveDeckEffect(Filters.snowtrooper)"
+      }
+    ],
+    "flip": {
+      "type": "FlipRequirement",
+      "relation": "BLOWN_AWAY",
+      "target": {
+        "kind": "NamedCardRef",
+        "runtimeFilter": "Filters.title(Title.Main_Power_Generators, true)",
+        "label": "Main Power Generators"
+      },
+      "sourceEvidence": "Card222_030.java lines 137-145 flips when Main Power Generators is blown away"
+    },
+    "flipBack": null,
+    "hardLose": {
+      "condition": "NOT_OCCUPYING_REQUIRED_HOTH_SITE",
+      "target": {
+        "kind": "LocationRequirement",
+        "runtimeFilter": "Filters.and(Filters.Hoth_site, Filters.occupiesWith(playerId, self, Filters.or(Filters.and(Filters.AT_AT, Filters.piloted), Filters.Imperial_leader, Filters.snowtrooper)))",
+        "label": "Hoth site occupied by piloted AT-AT, Imperial leader, or snowtrooper"
+      },
+      "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+      "sourceEvidence": "Card222_030_BACK.java lines 127-143 PlaceCardOutOfPlayFromTableEffect if no qualifying Hoth-site occupier"
+    },
+    "randoMapping": {
+      "existingVtags": [
+        {
+          "vtag": "V160",
+          "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+          "line": 964,
+          "whatItDoes": "Detects Shield Will Be Down, adds Target The Main Generator, AT-AT Cannon, Prepare For A Surface Attack, and Hoth invasion location fragments."
+        },
+        {
+          "vtag": "V160",
+          "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/ActionTextEvaluator.java",
+          "line": 921,
+          "whatItDoes": "Adds +800 to Target The Main Generator action text."
+        }
+      ],
+      "newVsExisting": "Existing Rando covers Target The Main Generator pressure but not the objective's four required setup deploys, front once-per-turn Hoth-location download, back snowtrooper deploy, attrition, or hard-lose occupier requirement."
+    },
+    "weights": [
+      {
+        "situation": "Target The Main Generator related action while Shield Will Be Down is active",
+        "score": 800,
+        "sourceVtag": "V160"
+      }
+    ],
+    "verification": {
+      "confidence": "high",
+      "sourceFilesRead": [
+        "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030.java",
+        "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030_BACK.java"
+      ],
+      "verifiedFromSource": [
+        "front/back Java source read",
+        "runtime filters copied from Java source, not ObjectiveHandler.java",
+        "named card ids checked against card_blueprint_database.json",
+        "back id verified as 222_30_BACK",
+        "id errors: 0"
+      ],
+      "forK2ToCheck": [
+        "Filters.Fifth_Marker is not set-icon constrained in Java, so both 3_148 and 208_49 are legal DB matches even though the AI-variant seed prefers 208_49.",
+        "Main Power Generators flip trigger is title-based, so light-side Main Power Generators copies can satisfy the blown-away trigger after deployment.",
+        "No live Rando mapping found for the back-side hard-lose occupation condition."
+      ]
+    }
+  },
+  {
+    "inventoryRow": 55,
+    "frontBp": "225_32",
+    "backBp": "225_32_BACK",
+    "side": "DARK",
+    "objectiveTitleFront": "The First Order Reigns",
+    "objectiveTitleBack": "The Resistance Is Doomed",
+    "abbreviation": "TFOR",
+    "identity": {
+      "type": "NamedCardRef",
+      "blueprintIds": [
+        "225_32",
+        "225_32_BACK"
+      ],
+      "titleFragments": [
+        "the first order reigns",
+        "the resistance is doomed"
+      ],
+      "side": "DARK",
+      "candidateSource": "JAVA_SOURCE_AND_DB"
+    },
+    "namedCards": [
+      {
+        "type": "NamedCardRef",
+        "label": "D'Qar system",
+        "blueprintIds": [
+          "211_19"
+        ],
+        "titleFragments": [
+          "d'qar"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Dqar_system",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "211_19"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Crait system",
+        "blueprintIds": [
+          "225_15"
+        ],
+        "titleFragments": [
+          "crait"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Crait_system",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "225_15"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Crait: Salt Plateau",
+        "blueprintIds": [
+          "225_17"
+        ],
+        "titleFragments": [
+          "crait: salt plateau",
+          "salt plateau"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Crait_Salt_Plateau",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "225_17"
+        ],
+        "notes": "Actual Java deploys Salt Plateau. The inventory seed text that says Supremacy: Bridge is stale."
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Tracked Fleet",
+        "blueprintIds": [
+          "225_34"
+        ],
+        "titleFragments": [
+          "tracked fleet"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Tracked_Fleet",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "225_34"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Bow To The First Order",
+        "blueprintIds": [
+          "204_47"
+        ],
+        "titleFragments": [
+          "bow to the first order"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Bow_To_The_First_Order",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "204_47"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Supremacy-title cards",
+        "blueprintIds": [
+          "225_27",
+          "225_28",
+          "225_29"
+        ],
+        "titleFragments": [
+          "supremacy"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.titleContains(\"Supremacy\")",
+        "candidateSource": "DB",
+        "resolvedCount": 3,
+        "resolvedSample": [
+          "225_27",
+          "225_28",
+          "225_29"
+        ]
+      }
+    ],
+    "sites": [
+      {
+        "type": "LocationRequirement",
+        "label": "Episode VII battleground",
+        "text": "Once per turn, deploy a card with Supremacy in title or an Episode VII battleground",
+        "planetOrSystemGroup": "EPISODE_VII",
+        "subtype": "ANY_LOCATION",
+        "battlegroundRequired": true,
+        "interiorExterior": "ANY",
+        "iconsRequired": [
+          "EPISODE_VII"
+        ],
+        "exceptions": [],
+        "runtimeFilter": "Filters.and(Icon.EPISODE_VII, Filters.battleground)",
+        "candidateSource": "DB_HEURISTIC",
+        "resolvedCount": 28,
+        "resolvedSample": [
+          "204_51",
+          "204_53",
+          "208_52",
+          "208_53",
+          "211_19",
+          "225_15",
+          "225_17"
+        ],
+        "notes": "Count uses static both-player-force icon heuristic. Runtime Filters.battleground is the truth."
+      },
+      {
+        "type": "LocationRequirement",
+        "label": "Crait location",
+        "text": "Kylo occupying a Crait location enables +1 drains at qualifying battlegrounds",
+        "planetOrSystemGroup": "CRAIT",
+        "subtype": "ANY_LOCATION",
+        "battlegroundRequired": false,
+        "interiorExterior": "ANY",
+        "iconsRequired": [
+          "EPISODE_VII"
+        ],
+        "exceptions": [],
+        "runtimeFilter": "Filters.Crait_location",
+        "candidateSource": "DB",
+        "resolvedCount": 3,
+        "resolvedSample": [
+          "225_15",
+          "225_16",
+          "225_17"
+        ]
+      },
+      {
+        "type": "LocationRequirement",
+        "label": "Crait: Salt Plateau",
+        "text": "Kylo controlling Salt Plateau cancels opponent retrieval and blocks lone-character drains",
+        "planetOrSystemGroup": "CRAIT",
+        "subtype": "SITE",
+        "battlegroundRequired": true,
+        "interiorExterior": "EXTERIOR",
+        "iconsRequired": [
+          "EPISODE_VII"
+        ],
+        "exceptions": [],
+        "runtimeFilter": "Filters.Crait_Salt_Plateau",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "225_17"
+        ]
+      }
+    ],
+    "characters": [
+      {
+        "type": "CharacterRequirement",
+        "label": "Kylo",
+        "text": "Back-side drain bonus, Salt Plateau control lock, retrieval cancel, and hard-lose trigger all key off Kylo",
+        "runtimeFilter": "Filters.Kylo",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": [
+          "204_43",
+          "209_37"
+        ]
+      },
+      {
+        "type": "CharacterRequirement",
+        "label": "First Order character",
+        "text": "Two First Order characters at a battleground enable +1 Force drains while Kylo occupies a Crait location",
+        "runtimeFilter": "Filters.First_Order_character",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      },
+      {
+        "type": "CharacterRequirement",
+        "label": "Non-unique trooper or non-unique First Order vehicle",
+        "text": "Back side may deploy one from Lost Pile once per turn",
+        "runtimeFilter": "Filters.or(Filters.and(Filters.non_unique, Filters.trooper), Filters.and(Filters.non_unique, Icon.FIRST_ORDER, Filters.vehicle))",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      },
+      {
+        "type": "CharacterRequirement",
+        "label": "Han, Leia, or Luke",
+        "text": "If present at Salt Plateau when Kylo is just forfeited from a battle you lost there, objective is placed out of play",
+        "runtimeFilter": "Filters.or(Filters.Han, Filters.Leia, Filters.Luke)",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": [
+          "102_2",
+          "102_3",
+          "101_2",
+          "200_14",
+          "200_18",
+          "200_20"
+        ]
+      }
+    ],
+    "pullChain": [
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Dqar_system",
+          "label": "D'Qar system"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": false,
+        "sourceEvidence": "Card225_032.java lines 48-54 DeployCardFromReserveDeckEffect(Filters.Dqar_system)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Crait_system",
+          "label": "Crait system"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": false,
+        "sourceEvidence": "Card225_032.java lines 55-61 DeployCardFromReserveDeckEffect(Filters.Crait_system)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Crait_Salt_Plateau",
+          "label": "Crait: Salt Plateau"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": false,
+        "sourceEvidence": "Card225_032.java lines 62-68 DeployCardFromReserveDeckEffect(Filters.Crait_Salt_Plateau)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.Tracked_Fleet",
+          "label": "Tracked Fleet"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card225_032.java lines 69-75 DeployCardFromReserveDeckEffect(Filters.Tracked_Fleet)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "PRE_FLIP_AND_POST_FLIP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRefOrLocationRequirement",
+          "runtimeFilter": "Filters.or(Filters.titleContains(\"Supremacy\"), Filters.and(Icon.EPISODE_VII, Filters.battleground))",
+          "label": "Supremacy-title card or Episode VII battleground"
+        },
+        "cadence": "ONCE_PER_TURN",
+        "cost": 0,
+        "enablesFlip": false,
+        "sourceEvidence": "Card225_032.java lines 90-108 and Card225_032_BACK.java lines 50-64"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "POST_FLIP",
+        "verb": "deploy",
+        "sourceZone": "LOST_PILE",
+        "target": {
+          "kind": "CharacterOrVehicleRequirement",
+          "runtimeFilter": "Filters.or(Filters.and(Filters.non_unique, Filters.trooper), Filters.and(Filters.non_unique, Icon.FIRST_ORDER, Filters.vehicle))",
+          "label": "Non-unique trooper or non-unique First Order vehicle"
+        },
+        "cadence": "ONCE_PER_TURN",
+        "cost": 0,
+        "enablesFlip": false,
+        "sourceEvidence": "Card225_032_BACK.java lines 67-85 DeployCardFromLostPileEffect"
+      }
+    ],
+    "flip": {
+      "type": "FlipRequirement",
+      "relation": "BLOWN_AWAY",
+      "target": {
+        "kind": "NamedCardRef",
+        "runtimeFilter": "Filters.Tracked_Fleet",
+        "label": "Tracked Fleet"
+      },
+      "sourceEvidence": "Card225_032.java lines 123-138 flips when Tracked Fleet is blown away"
+    },
+    "flipBack": null,
+    "hardLose": {
+      "condition": "KYLO_FORFEITED_AT_SALT_PLATEAU_FROM_LOST_BATTLE_WITH_HAN_LEIA_OR_LUKE_PRESENT",
+      "target": {
+        "kind": "LocationRequirement",
+        "runtimeFilter": "Filters.and(Filters.Crait_Salt_Plateau, Filters.wherePresent(self, Filters.or(Filters.Han, Filters.Leia, Filters.Luke)))",
+        "label": "Salt Plateau with Han, Leia, or Luke present"
+      },
+      "effect": "PLACE_OBJECTIVE_OUT_OF_PLAY",
+      "sourceEvidence": "Card225_032_BACK.java lines 98-110 PlaceCardOutOfPlayFromTableEffect"
+    },
+    "randoMapping": {
+      "existingVtags": [],
+      "newVsExisting": "No live Rando mapping found outside ObjectiveHandler.java. ObjectiveHandler was deliberately ignored per task instructions."
+    },
+    "weights": [],
+    "verification": {
+      "confidence": "high",
+      "sourceFilesRead": [
+        "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032.java",
+        "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032_BACK.java"
+      ],
+      "verifiedFromSource": [
+        "front/back Java source read",
+        "runtime filters copied from Java source, not ObjectiveHandler.java",
+        "named card ids checked against card_blueprint_database.json",
+        "back id verified as 225_32_BACK",
+        "id errors: 0"
+      ],
+      "forK2ToCheck": [
+        "Inventory/frontGameText seed said Supremacy: Bridge, but actual Card225_032.java deploys Salt Plateau via Filters.Crait_Salt_Plateau.",
+        "Episode VII battleground resolvedCount is a static DB heuristic. Runtime Filters.battleground decides actual eligibility.",
+        "No live Rando mapping found outside ObjectiveHandler.java."
+      ]
+    }
+  },
+  {
+    "inventoryRow": 56,
+    "frontBp": "226_12",
+    "backBp": "226_12_BACK",
+    "side": "DARK",
+    "objectiveTitleFront": "This Deal Is Getting Worse All The Time",
+    "objectiveTitleBack": "Pray I Don't Alter It Any Further",
+    "abbreviation": "TDIGWATT",
+    "identity": {
+      "type": "NamedCardRef",
+      "blueprintIds": [
+        "226_12",
+        "226_12_BACK"
+      ],
+      "titleFragments": [
+        "this deal is getting worse all the time",
+        "pray i don't alter it any further"
+      ],
+      "side": "DARK",
+      "candidateSource": "JAVA_SOURCE_AND_DB"
+    },
+    "namedCards": [
+      {
+        "type": "NamedCardRef",
+        "label": "[Cloud City] I'm Sorry",
+        "blueprintIds": [
+          "226_6"
+        ],
+        "titleFragments": [
+          "i'm sorry"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.Im_Sorry)",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "226_6"
+        ],
+        "notes": "Title also exists as 11_72, but Java requires Icon.CLOUD_CITY."
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Dark Deal",
+        "blueprintIds": [
+          "5_115",
+          "223_9"
+        ],
+        "titleFragments": [
+          "dark deal"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Dark_Deal",
+        "candidateSource": "DB",
+        "resolvedCount": 2,
+        "resolvedSample": [
+          "5_115",
+          "223_9"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Vader's Bounty",
+        "blueprintIds": [
+          "5_125"
+        ],
+        "titleFragments": [
+          "vader's bounty"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Vaders_Bounty",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "5_125"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "[Special Edition] Bespin system",
+        "blueprintIds": [
+          "223_8"
+        ],
+        "titleFragments": [
+          "bespin"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.and(Icon.SPECIAL_EDITION, Filters.Bespin_system)",
+        "candidateSource": "DB",
+        "resolvedCount": 1,
+        "resolvedSample": [
+          "223_8"
+        ],
+        "notes": "Java requires Icon.SPECIAL_EDITION with Filters.Bespin_system; 223_8 is the Special Edition Bespin system. 5_164 is Cloud City Bespin and does not satisfy this upload filter. Corrected after verifier pass."
+      }
+    ],
+    "sites": [
+      {
+        "type": "LocationRequirement",
+        "label": "Cloud City battleground site",
+        "text": "Deploy a Cloud City battleground site from Reserve Deck",
+        "planetOrSystemGroup": "BESPIN_CLOUD_CITY",
+        "subtype": "SITE",
+        "battlegroundRequired": true,
+        "interiorExterior": "ANY",
+        "iconsRequired": [
+          "CLOUD_CITY"
+        ],
+        "exceptions": [],
+        "runtimeFilter": "Filters.Cloud_City_battleground_site",
+        "candidateSource": "DB_HEURISTIC",
+        "resolvedCount": 17,
+        "resolvedSample": [
+          "221_11",
+          "224_13",
+          "226_1",
+          "5_166",
+          "5_167",
+          "5_169"
+        ],
+        "notes": "Count uses static force-icon heuristic. Runtime Filters.battleground is the truth."
+      },
+      {
+        "type": "LocationRequirement",
+        "label": "Bespin location",
+        "text": "Flip and flip-back count controlled Bespin locations",
+        "planetOrSystemGroup": "BESPIN",
+        "subtype": "ANY_LOCATION",
+        "battlegroundRequired": false,
+        "interiorExterior": "ANY",
+        "iconsRequired": [],
+        "exceptions": [],
+        "runtimeFilter": "Filters.Bespin_location",
+        "candidateSource": "DB_SNAPSHOT",
+        "resolvedCount": null,
+        "resolvedSample": [
+          "5_164",
+          "5_165",
+          "5_166",
+          "5_167",
+          "226_1"
+        ]
+      }
+    ],
+    "characters": [
+      {
+        "type": "CharacterRequirement",
+        "label": "Lando",
+        "text": "Front and back allow your Lando to make a regular move during control phase; back also permits destiny modification in battles involving your Lando",
+        "runtimeFilter": "Filters.Lando",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      },
+      {
+        "type": "CharacterRequirement",
+        "label": "Lobot",
+        "text": "Back protects Force drain bonuses at same site as your Lobot and doubles Lando destiny-mod uses if Lobot is in battle",
+        "runtimeFilter": "Filters.Lobot",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      },
+      {
+        "type": "CharacterRequirement",
+        "label": "Vader at Bespin location",
+        "text": "Back cancels Admiral's Order game text while Vader is at a Bespin location",
+        "runtimeFilter": "new AtCondition(self, Filters.Vader, Filters.Bespin_location)",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      },
+      {
+        "type": "CharacterRequirement",
+        "label": "Alien and Imperial pair",
+        "text": "Back grants total battle destiny +2 if your alien is in battle with your Imperial",
+        "runtimeFilter": "Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.participatingInBattle)))",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      }
+    ],
+    "pullChain": [
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Cloud_City_battleground_site",
+          "label": "Cloud City battleground site"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card226_012.java lines 50-59 DeployCardFromReserveDeckEffect(Filters.Cloud_City_battleground_site)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.and(Icon.CLOUD_CITY, Filters.Im_Sorry)",
+          "label": "[Cloud City] I'm Sorry"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card226_012.java lines 60-66 DeployCardFromReserveDeckEffect(Filters.and(Icon.CLOUD_CITY, Filters.Im_Sorry))"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "PRE_FLIP_AND_POST_FLIP",
+        "verb": "take",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.or(Filters.Dark_Deal, Filters.Vaders_Bounty, Filters.and(Icon.SPECIAL_EDITION, Filters.Bespin_system))",
+          "label": "Dark Deal, Vader's Bounty, or [Special Edition] Bespin"
+        },
+        "cadence": "ONCE_DURING_YOUR_TURN",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card226_012.java lines 106-121 and Card226_012_BACK.java lines 106-120"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "PRE_FLIP_AND_POST_FLIP",
+        "verb": "move",
+        "sourceZone": "TABLE",
+        "target": {
+          "kind": "CharacterRequirement",
+          "runtimeFilter": "Filters.and(Filters.your(playerId), Filters.Lando, Filters.movableAsRegularMove(playerId, false, 0, false, Filters.any))",
+          "label": "Your Lando"
+        },
+        "cadence": "ONCE_DURING_CONTROL_PHASE",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card226_012.java lines 83-103 and Card226_012_BACK.java lines 84-103"
+      }
+    ],
+    "flip": {
+      "type": "FlipRequirement",
+      "relation": "CONTROL_COUNT",
+      "count": 3,
+      "target": {
+        "kind": "LocationRequirement",
+        "runtimeFilter": "Filters.Bespin_location",
+        "label": "Bespin location"
+      },
+      "opponentConstraint": {
+        "relation": "CONTROLS",
+        "comparator": "LESS_THAN",
+        "count": 3,
+        "runtimeFilter": "Filters.Bespin_location"
+      },
+      "sourceEvidence": "Card226_012.java lines 131-144 flips if you control 3 Bespin locations and opponent controls fewer than 3"
+    },
+    "flipBack": {
+      "type": "FlipRequirement",
+      "relation": "OPPONENT_CONTROLS_MORE_THAN_YOU",
+      "target": {
+        "kind": "LocationRequirement",
+        "runtimeFilter": "Filters.Bespin_location",
+        "label": "Bespin location"
+      },
+      "sourceEvidence": "Card226_012_BACK.java lines 133-148 flips back if opponent controls more Bespin locations than you"
+    },
+    "hardLose": null,
+    "randoMapping": {
+      "existingVtags": [
+        {
+          "vtag": "V22.5",
+          "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+          "line": 1432,
+          "whatItDoes": "needsBespinSystemPresence detects Bespin/Cloud City objective text."
+        },
+        {
+          "vtag": "V29",
+          "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/strategy/ObjectiveAnalyzer.java",
+          "line": 1450,
+          "whatItDoes": "objectiveForbidsDeployingExecutor uses the objective's own text to forbid Executor for the virtual TDIGWATT clause."
+        },
+        {
+          "vtag": "V24.10",
+          "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/CardSelectionEvaluator.java",
+          "line": 2149,
+          "whatItDoes": "Executor-to-Bespin scoring for TDIGWATT-style Bespin system presence."
+        }
+      ],
+      "newVsExisting": "Existing Rando has TDIGWATT/Bespin support and Executor-ban awareness, but the actual 226_12 Java upload list omits Cloud City Occupation."
+    },
+    "weights": [
+      {
+        "situation": "Executor location selection to Bespin when Bespin-system presence is needed",
+        "score": 500,
+        "sourceVtag": "V24.10"
+      },
+      {
+        "situation": "Executor location selection to non-Bespin system when Bespin-system presence is needed",
+        "score": -9999,
+        "sourceVtag": "V24.10"
+      }
+    ],
+    "verification": {
+      "confidence": "high",
+      "sourceFilesRead": [
+        "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012.java",
+        "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012_BACK.java"
+      ],
+      "verifiedFromSource": [
+        "front/back Java source read",
+        "runtime filters copied from Java source, not ObjectiveHandler.java",
+        "named card ids checked against card_blueprint_database.json",
+        "back id verified as 226_12_BACK",
+        "id errors: 0",
+        "Verifier correction: [Special Edition] Bespin upload target resolved to 223_8, not 5_164, because Java filter requires Icon.SPECIAL_EDITION."
+      ],
+      "forK2ToCheck": [
+        "Seed intel and old logs mention Cloud City Occupation, but actual Card226_012.java and Card226_012_BACK.java upload only Dark Deal, Vader's Bounty, or [Special Edition] Bespin.",
+        "Cloud City battleground resolvedCount is a static DB heuristic. Runtime Filters.battleground decides actual eligibility.",
+        "Rando TDIGWATT mappings are broad Bespin/Cloud City heuristics, not a complete objective playbook.",
+        "Corrected verifier blocker: [Special Edition] Bespin for 226_12 is 223_8, not 5_164. Keep broad Bespin_location samples separate from this specific upload target."
+      ]
+    }
+  },
+  {
+    "inventoryRow": 57,
+    "frontBp": "301_4",
+    "backBp": "301_4_BACK",
+    "side": "DARK",
+    "objectiveTitleFront": "Twin Suns Of Tatooine",
+    "objectiveTitleBack": "Well Trained In The Jedi Arts",
+    "abbreviation": "TSOT",
+    "identity": {
+      "type": "NamedCardRef",
+      "blueprintIds": [
+        "301_4",
+        "301_4_BACK"
+      ],
+      "titleFragments": [
+        "twin suns of tatooine",
+        "well trained in the jedi arts"
+      ],
+      "side": "DARK",
+      "candidateSource": "JAVA_SOURCE_AND_DB"
+    },
+    "namedCards": [
+      {
+        "type": "NamedCardRef",
+        "label": "Tatooine system",
+        "blueprintIds": [
+          "1_127",
+          "1_289",
+          "12_84",
+          "12_175",
+          "203_33"
+        ],
+        "titleFragments": [
+          "tatooine"
+        ],
+        "side": "ANY",
+        "runtimeFilter": "Filters.Tatooine_system",
+        "candidateSource": "DB",
+        "resolvedCount": 5,
+        "resolvedSample": [
+          "1_127",
+          "1_289",
+          "12_84",
+          "12_175",
+          "203_33"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Tatooine Occupation",
+        "blueprintIds": [
+          "7_244",
+          "221_32"
+        ],
+        "titleFragments": [
+          "tatooine occupation"
+        ],
+        "side": "DARK",
+        "runtimeFilter": "Filters.Tatooine_Occupation",
+        "candidateSource": "DB",
+        "resolvedCount": 2,
+        "resolvedSample": [
+          "7_244",
+          "221_32"
+        ]
+      },
+      {
+        "type": "NamedCardRef",
+        "label": "Sandwhirl",
+        "blueprintIds": [
+          "6_57",
+          "6_148"
+        ],
+        "titleFragments": [
+          "sandwhirl"
+        ],
+        "side": "ANY",
+        "runtimeFilter": "Filters.Sandwhirl",
+        "candidateSource": "DB",
+        "resolvedCount": 2,
+        "resolvedSample": [
+          "6_57",
+          "6_148"
+        ],
+        "notes": "May-not-deploy target, not a pull target."
+      }
+    ],
+    "sites": [
+      {
+        "type": "LocationRequirement",
+        "label": "Non-Jabba's Palace Tatooine site",
+        "text": "Deploy one non-Jabba's Palace Tatooine site from Reserve Deck",
+        "planetOrSystemGroup": "TATOOINE",
+        "subtype": "SITE",
+        "battlegroundRequired": false,
+        "interiorExterior": "ANY",
+        "iconsRequired": [],
+        "exceptions": [
+          "Filters.Jabbas_Palace_site"
+        ],
+        "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site))",
+        "candidateSource": "DB_HEURISTIC",
+        "resolvedCount": 52,
+        "resolvedSample": [
+          "1_128",
+          "1_129",
+          "1_290",
+          "11_43",
+          "12_176",
+          "221_33"
+        ],
+        "notes": "Static count uses DB title/icon approximation. Runtime Jabbas_Palace_site keyword filter is authoritative."
+      },
+      {
+        "type": "LocationRequirement",
+        "label": "Tatooine battleground site",
+        "text": "Front side may deploy one from Reserve Deck for 1 Force; flip requires control of two, at least one with Dark Jedi",
+        "planetOrSystemGroup": "TATOOINE",
+        "subtype": "SITE",
+        "battlegroundRequired": true,
+        "interiorExterior": "ANY",
+        "iconsRequired": [],
+        "exceptions": [],
+        "runtimeFilter": "Filters.Tatooine_battleground_site",
+        "candidateSource": "DB_HEURISTIC",
+        "resolvedCount": 45,
+        "resolvedSample": [
+          "1_128",
+          "1_129",
+          "1_290",
+          "11_43",
+          "12_176",
+          "221_33"
+        ],
+        "notes": "Count uses static both-player-force icon heuristic. Runtime Filters.battleground is the truth."
+      },
+      {
+        "type": "LocationRequirement",
+        "label": "Tatooine system",
+        "text": "Setup deploys Tatooine system; flip requires you occupy Tatooine system",
+        "planetOrSystemGroup": "TATOOINE",
+        "subtype": "SYSTEM",
+        "battlegroundRequired": false,
+        "interiorExterior": "ANY",
+        "iconsRequired": [],
+        "exceptions": [],
+        "runtimeFilter": "Filters.Tatooine_system",
+        "candidateSource": "DB",
+        "resolvedCount": 5,
+        "resolvedSample": [
+          "1_127",
+          "1_289",
+          "12_84",
+          "12_175",
+          "203_33"
+        ]
+      }
+    ],
+    "characters": [
+      {
+        "type": "CharacterRequirement",
+        "label": "Dark Jedi",
+        "text": "Flip requires at least one controlled Tatooine battleground site with a Dark Jedi; back makes opponent movement away from same site as your Dark Jedi cost +1 Force",
+        "runtimeFilter": "Filters.Dark_Jedi",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": [],
+        "notes": "Runtime keyword/subtype filter, not a title list."
+      },
+      {
+        "type": "CharacterRequirement",
+        "label": "Opponent character or vehicle",
+        "text": "Back-side movement tax applies to opponent character or vehicle from same site as your Dark Jedi",
+        "runtimeFilter": "Filters.and(Filters.opponents(self), Filters.or(Filters.character, Filters.vehicle))",
+        "matchSource": "JAVA_RUNTIME_FILTER",
+        "resolvedCount": null,
+        "resolvedSample": []
+      }
+    ],
+    "pullChain": [
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Tatooine_system",
+          "label": "Tatooine system"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card301_004.java lines 45-53 DeployCardFromReserveDeckEffect(Filters.Tatooine_system)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "SETUP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site))",
+          "label": "Non-Jabba's Palace Tatooine site"
+        },
+        "cadence": "ON_DEPLOY",
+        "cost": 0,
+        "enablesFlip": true,
+        "sourceEvidence": "Card301_004.java lines 54-60 DeployCardFromReserveDeckEffect(Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site)))"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "PRE_FLIP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Tatooine_site AND Filters.battleground",
+          "label": "Tatooine battleground site"
+        },
+        "cadence": "ONCE_PER_TURN",
+        "cost": 1,
+        "enablesFlip": true,
+        "sourceEvidence": "Card301_004.java lines 74-94 DeployCardFromReserveDeckEffect(Filters.Tatooine_site, Filters.battleground, true)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "POST_FLIP",
+        "verb": "deploy",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "NamedCardRef",
+          "runtimeFilter": "Filters.Tatooine_Occupation",
+          "label": "Tatooine Occupation"
+        },
+        "cadence": "ONCE_PER_GAME",
+        "cost": 0,
+        "enablesFlip": false,
+        "sourceEvidence": "Card301_004_BACK.java lines 50-64 DeployCardFromReserveDeckEffect(Filters.Tatooine_Occupation)"
+      },
+      {
+        "type": "PullOrDeployAction",
+        "phase": "POST_FLIP",
+        "verb": "peekAndTake",
+        "sourceZone": "RESERVE",
+        "target": {
+          "kind": "AnyCard",
+          "runtimeFilter": "top two Reserve Deck cards",
+          "label": "One of top two Reserve Deck cards"
+        },
+        "cadence": "ONCE_DURING_CONTROL_PHASE",
+        "cost": 0,
+        "enablesFlip": false,
+        "sourceEvidence": "Card301_004_BACK.java lines 67-83 PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect"
+      }
+    ],
+    "flip": {
+      "type": "FlipRequirement",
+      "relation": "CONTROL_AND_OCCUPY",
+      "count": 2,
+      "target": {
+        "kind": "LocationRequirement",
+        "runtimeFilter": "Filters.Tatooine_battleground_site",
+        "label": "Tatooine battleground site"
+      },
+      "byWhom": {
+        "kind": "CharacterRequirement",
+        "runtimeFilter": "Filters.Dark_Jedi",
+        "label": "Dark Jedi at one controlled Tatooine battleground site"
+      },
+      "additionalRequirement": {
+        "relation": "YOU_OCCUPY",
+        "target": {
+          "kind": "LocationRequirement",
+          "runtimeFilter": "Filters.Tatooine_system",
+          "label": "Tatooine system"
+        }
+      },
+      "opponentConstraint": {
+        "relation": "CONTROLS",
+        "comparator": "EQUALS",
+        "count": 0,
+        "runtimeFilter": "Filters.Tatooine_site"
+      },
+      "sourceEvidence": "Card301_004.java lines 104-119 controls two Tatooine battleground sites, controlsWith Dark Jedi, occupies Tatooine system, and opponent controls no Tatooine site"
+    },
+    "flipBack": {
+      "type": "FlipRequirement",
+      "relation": "OPPONENT_CONTROLS_MORE_THAN_YOU",
+      "target": {
+        "kind": "LocationRequirement",
+        "runtimeFilter": "Filters.Tatooine_site",
+        "label": "Tatooine site"
+      },
+      "sourceEvidence": "Card301_004_BACK.java lines 101-115 flips back if opponent controls more Tatooine sites than you"
+    },
+    "hardLose": null,
+    "randoMapping": {
+      "existingVtags": [],
+      "newVsExisting": "No live Rando mapping found outside ObjectiveHandler.java. ObjectiveHandler was deliberately ignored per task instructions."
+    },
+    "weights": [],
+    "verification": {
+      "confidence": "high",
+      "sourceFilesRead": [
+        "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java",
+        "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004_BACK.java"
+      ],
+      "verifiedFromSource": [
+        "front/back Java source read",
+        "runtime filters copied from Java source, not ObjectiveHandler.java",
+        "named card ids checked against card_blueprint_database.json",
+        "back id verified as 301_4_BACK",
+        "id errors: 0"
+      ],
+      "forK2ToCheck": [
+        "Tatooine site and battleground counts are static DB heuristics. Runtime Filters.Jabbas_Palace_site and Filters.battleground decide actual eligibility.",
+        "Dark Jedi is a runtime filter, not a stable title list.",
+        "No live Rando mapping found outside ObjectiveHandler.java."
+      ]
+    }
+  }
+]
