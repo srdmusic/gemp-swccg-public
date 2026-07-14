@@ -1,9 +1,6 @@
 package com.gempukku.swccgo.ai.models.curator;
 
-import com.gempukku.swccgo.ai.AiDecisionResult;
-import com.gempukku.swccgo.ai.DecisionRejectionKind;
 import com.gempukku.swccgo.ai.SwccgAiController;
-import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
 import com.gempukku.swccgo.ai.models.rando.RandoCalAi;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -75,7 +72,7 @@ public class CuratorAi implements SwccgAiController {
     private static final Pattern REASON_RE = Pattern.compile("REASON:\\s*(.+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern THINK_RE = Pattern.compile("<think>.*?</think>", Pattern.DOTALL);
 
-    private final RandoCalAi rando;
+    private final RandoCalAi rando = new RandoCalAi();
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10)).build();
     private final Gson gson = new Gson();
@@ -84,20 +81,8 @@ public class CuratorAi implements SwccgAiController {
     private String deckName;
 
     public CuratorAi() {
-        this.rando = new RandoCalAi();
         LOG.warn("🧠 CuratorAi created (increment 2: Q8 brain — model={}, useModel={}, url={})",
                 MODEL, USE_MODEL, OLLAMA_URL);
-    }
-
-    /**
-     * FINALIZER RUNTIME (2026-07-13,
-     * Handoffs/CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md §6): package-private
-     * constructor injecting the wrapped RandoCalAi, for deterministic lifecycle-forwarding
-     * tests with NO network. Production always uses the public constructor's real Rando.
-     */
-    CuratorAi(RandoCalAi wrapped) {
-        this.rando = wrapped;
-        LOG.warn("🧠 CuratorAi created with injected Rando (lifecycle-forwarding seam)");
     }
 
     @Override
@@ -107,98 +92,10 @@ public class CuratorAi implements SwccgAiController {
         // Advisor: what would Rando do here? (this is also a valid engine response)
         String randoPick = rando.decide(playerId, decision, gameState);
 
-        ConsultOutcome override = consultOverride(decision, gameState, randoPick);
-        logDecision(decision, gameState, randoPick, override.chosen, override.overrode, override.reason);
-        return override.chosen;
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // ═══ FINALIZER RUNTIME (2026-07-13,
-    //     Handoffs/CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md §6) ═══
-    // The history-aware mediator-facing path forwards the SAME immutable RejectionHistory to
-    // the wrapped Rando's history-aware method (NOT raw decide(), NOT empty()). A typed
-    // rejection bypasses consultation and is returned unchanged. A model override replaces ONLY
-    // the wire response (preserving wrapped lifecycle metadata) via the pure applyOverride
-    // helper, so the accepted mutation records the actual engine-accepted Curator response.
-    // The disposition callbacks forward exactly once to the wrapped Rando. The wrapped Rando
-    // response is advisory until Curator returns; the trace's proposed-wire evidence is
-    // recorded from the outer result inside the disposition callback, so a Curator override
-    // records the actual submitted wire.
-    // ═══════════════════════════════════════════════════════════
-
-    @Override
-    public AiDecisionResult decideForEngine(String playerId, AwaitingDecision decision,
-                                            GameState gameState) {
-        return decideForEngine(playerId, decision, gameState, RejectionHistory.empty());
-    }
-
-    @Override
-    public AiDecisionResult decideForEngine(String playerId, AwaitingDecision decision,
-                                            GameState gameState, RejectionHistory history) {
-        this.playerId = playerId;
-
-        AiDecisionResult randoResult = rando.decideForEngine(playerId, decision, gameState, history);
-        // Typed pre-engine rejection from wrapped Rando bypasses consultation, returned unchanged.
-        if (randoResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
-            return randoResult;
-        }
-
-        String randoPick = randoResult.wireResponse();
-        ConsultOutcome override = consultOverride(decision, gameState, randoPick);
-        logDecision(decision, gameState, randoPick, override.chosen, override.overrode, override.reason);
-        return override.overrode ? applyOverride(randoResult, override.chosen) : randoResult;
-    }
-
-    @Override
-    public void onDecisionAccepted(String playerId, AwaitingDecision decision,
-                                   GameState gameState, AiDecisionResult result) {
-        rando.onDecisionAccepted(playerId, decision, gameState, result);
-    }
-
-    @Override
-    public void onDecisionRejected(String playerId, AwaitingDecision decision,
-                                   GameState gameState, AiDecisionResult result,
-                                   DecisionRejectionKind kind, String detail) {
-        rando.onDecisionRejected(playerId, decision, gameState, result, kind, detail);
-    }
-
-    @Override
-    public void onDecisionAttemptFailed(String playerId, AwaitingDecision decision,
-                                        GameState gameState, String detail) {
-        rando.onDecisionAttemptFailed(playerId, decision, gameState, detail);
-    }
-
-    /**
-     * FINALIZER RUNTIME §6: the PURE package-private override-application helper. Replaces ONLY
-     * the wire response while preserving every lifecycle metadata field (mutation mode, decision
-     * id, typed-finalizer flag, and — rebuilt with the override wire — the tracker mutation
-     * descriptor). Production consultation uses this helper; it contacts no network.
-     */
-    static AiDecisionResult applyOverride(AiDecisionResult wrapped, String overrideWire) {
-        return wrapped.withWireResponse(overrideWire);
-    }
-
-    /** Result of a consultation: the chosen wire, whether it overrode Rando, and the log reason. */
-    private static final class ConsultOutcome {
-        final String chosen;
-        final boolean overrode;
-        final String reason;
-        ConsultOutcome(String chosen, boolean overrode, String reason) {
-            this.chosen = chosen;
-            this.overrode = overrode;
-            this.reason = reason;
-        }
-    }
-
-    /**
-     * Shared consultation logic used by both {@link #decide} and the mediator-facing path.
-     * Identical semantics to the original inline decide() consult: any failure falls back to
-     * Rando's pick and never breaks the game.
-     */
-    private ConsultOutcome consultOverride(AwaitingDecision decision, GameState gameState, String randoPick) {
         String chosen = randoPick;
         boolean overrode = false;
         String reason = "passthrough";
+
         try {
             if (USE_MODEL && shouldConsult(decision, gameState)) {
                 Consult c = consultModel(decision, gameState, randoPick);
@@ -223,7 +120,9 @@ public class CuratorAi implements SwccgAiController {
             reason = "exception — followed Rando: " + e.getMessage();
             LOG.debug("CuratorAi consult error: {}", e.getMessage());
         }
-        return new ConsultOutcome(chosen, overrode, reason);
+
+        logDecision(decision, gameState, randoPick, chosen, overrode, reason);
+        return chosen;
     }
 
     // ── Consult filter: consequential decisions only ────────────────────────

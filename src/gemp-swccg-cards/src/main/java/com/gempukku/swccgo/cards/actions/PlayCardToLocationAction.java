@@ -53,8 +53,7 @@ public class PlayCardToLocationAction extends AbstractPlayCardAction {
      * @param deployTargetFilter the filter for where the card can be deployed
      */
     public PlayCardToLocationAction(PhysicalCard sourceCard, final PhysicalCard cardToDeploy, PlayCardOption playCardOption, boolean forFree, float changeInCost, ReactActionOption reactActionOption, final Filter deployTargetFilter) {
-        super(cardToDeploy, sourceCard,
-                cardToDeploy.getBlueprint().isCardTypeDeployed());
+        super(cardToDeploy, sourceCard);
         setPerformingPlayer(cardToDeploy.getOwner());
         _that = this;
         _playCardOption = playCardOption;
@@ -68,11 +67,6 @@ public class PlayCardToLocationAction extends AbstractPlayCardAction {
 
         appendTargeting(
                 new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose location where to " + _text.toLowerCase() + " " + GameUtils.getCardLink(cardToDeploy), deployTargetFilter) {
-                    @Override
-                    protected boolean isPullDestinationSelection() {
-                        return true;
-                    }
-
                     @Override
                     protected void cardSelected(PhysicalCard target) {
                         _target = target;

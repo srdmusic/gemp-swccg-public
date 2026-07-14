@@ -6505,3 +6505,13 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     production consumer) + ActivateControlRouteInput carrying recipient AND turn-player as distinct fields
     (no trace-schema expansion). clean-tree gate 900 server / 906 reactor (deferred untracked fixtures excluded; K-2 in-tree 909 was contaminated, corrected per Codex m00538). Live cutover/owners/drain/finalizer/deletion
     DEFERRED to Phase B (needs a verification harness, no sandbox). Capture off. NOT deployed.
+
+  ════ EMERGENCY ENGINE RESTORATION (2026-07-14): phase wire removed after player-choice leak ════
+    Jyn Erso's Undercover-spy Yes/No prompt exposed internal deploy metadata as extra choices.
+    Root cause: DEPLOY commit 494d6f4bc wrote AI provenance into the player-visible awaiting-
+    decision params map. Complete src/ restored to ec886934b, the last AI-only boundary before
+    F1/F2 and phase engine-wire work. DRAW/PULL/ACTIVATE-CONTROL/OBJECTIVE/DEPLOY/BATTLE cutovers
+    are therefore removed from the live source together, while their branches and local backup
+    remain preserved. Offline package and logic tests pass; YesNoDecision exposes only Yes/No.
+    Permanent boundary: AI work may not modify common, logic, cards, async/client, mediator, or
+    player-decision wire code. Details in AI_CHANGELOG 2026-07-14.

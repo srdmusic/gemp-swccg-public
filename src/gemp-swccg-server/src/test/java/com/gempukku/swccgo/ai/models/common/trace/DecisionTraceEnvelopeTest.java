@@ -39,9 +39,7 @@ public class DecisionTraceEnvelopeTest {
     private static final TraceFinalization EMPTY_FINALIZATION = new TraceFinalization(
         null, null, false, null, false, null,
         null, null, null,
-        null, null, null, List.of(), null, false, false,
-        // FINALIZER RUNTIME §7 lifecycle fields: no engine disposition (direct-call shape).
-        null, false, null, null, null, false);
+        null, null, null, List.of(), null, false, false);
 
     private static TraceCaptureFailure failure(String detail) {
         return new TraceCaptureFailure(TraceCaptureFailure.Stage.SNAPSHOT, "test-failure", detail);
@@ -107,8 +105,7 @@ public class DecisionTraceEnvelopeTest {
             TraceCorrection.Kind.SELECTABLE_CLAMP, "x", "y", "clamped")));
         TraceFinalization finalization = new TraceFinalization(null, null, false, null,
             false, null, null, null, null,
-            null, null, null, corrections, "y", true, false,
-            null, false, null, null, null, false);
+            null, null, null, corrections, "y", true, false);
         corrections.clear();
         assertEquals(1, finalization.corrections().size());
     }

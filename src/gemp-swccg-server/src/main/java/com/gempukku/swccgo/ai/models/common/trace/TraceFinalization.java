@@ -43,68 +43,13 @@ public record TraceFinalization(
         // 7. whether the route skipped the common finalizer under legacy behavior
         //    (true for the five direct interceptors, which return before outer
         //    emergency validation and decision recording)
-        boolean skippedCommonFinalizer,
-        // ── FINALIZER RUNTIME (2026-07-13,
-        //    Handoffs/CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md §7): the
-        //    closed engine-disposition lifecycle evidence, recorded in the disposition
-        //    callback AFTER the engine reports acceptance/rejection/failure. Absent
-        //    (disposition == null) for a DIRECT decide() call, which keeps the legacy
-        //    finalResponse meaning. ──
-        // 8. the exact wire SUBMITTED to the engine; recorded from the outer result inside
-        //    the disposition callback so a Curator override records the actual submitted wire.
-        //    The recorded flag lets Pass "" differ from "no submitted wire".
-        String proposedWireResponse,
-        boolean proposedWireRecorded,
-        // 9. the one closed engine disposition; nonblank detail required for every
-        //    non-accepted disposition.
-        Disposition disposition,
-        String dispositionDetail,
-        // 10. accepted-mutation mode + whether that mutation actually completed (ENGINE_ACCEPTED
-        //     only). finalResponse is populated ONLY on ENGINE_ACCEPTED (or a direct call).
-        MutationMode acceptedMutationMode,
-        boolean acceptedMutationCompleted) {
-
-    /** The one closed engine disposition of a mediator-facing attempt. */
-    public enum Disposition {
-        ENGINE_ACCEPTED,
-        ENGINE_REJECTED,
-        TYPED_REJECTION,
-        ATTEMPT_FAILED
-    }
-
-    /** Post-acceptance outer-mutation ownership recorded on an ENGINE_ACCEPTED disposition. */
-    public enum MutationMode {
-        NONE,
-        OUTER_COMMON
-    }
+        boolean skippedCommonFinalizer) {
 
     public TraceFinalization {
         Objects.requireNonNull(corrections, "corrections");
         corrections = List.copyOf(corrections);
         if (!finalResponseRecorded && finalResponse != null) {
             throw new IllegalArgumentException("finalResponse present but finalResponseRecorded=false");
-        }
-        if (!proposedWireRecorded && proposedWireResponse != null) {
-            throw new IllegalArgumentException(
-                "proposedWireResponse present but proposedWireRecorded=false");
-        }
-        if (disposition == null) {
-            // Direct decide() / legacy call: no engine disposition lifecycle.
-            if (dispositionDetail != null || acceptedMutationMode != null || acceptedMutationCompleted) {
-                throw new IllegalArgumentException(
-                    "disposition lifecycle fields present without a recorded disposition");
-            }
-        } else {
-            requireNonBlankWhenPresent(dispositionDetail, "dispositionDetail");
-            if (disposition == Disposition.ENGINE_ACCEPTED) {
-                Objects.requireNonNull(acceptedMutationMode,
-                    "ENGINE_ACCEPTED requires an accepted-mutation mode");
-            } else {
-                if (acceptedMutationMode != null || acceptedMutationCompleted) {
-                    throw new IllegalArgumentException(
-                        "only ENGINE_ACCEPTED carries an accepted-mutation mode/outcome");
-                }
-            }
         }
         // P0-3: winner value fields require the recorded flag (a null actionId can still
         // be RECORDED — the evaluator lane ran and produced no winner).

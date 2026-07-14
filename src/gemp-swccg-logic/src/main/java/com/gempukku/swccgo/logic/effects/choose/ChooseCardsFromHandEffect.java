@@ -1,8 +1,6 @@
 package com.gempukku.swccgo.logic.effects.choose;
 
 import com.gempukku.swccgo.common.Filterable;
-import com.gempukku.swccgo.common.DecisionActionSemantic;
-import com.gempukku.swccgo.common.DeployPhysicalCardRef;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -141,9 +139,6 @@ public abstract class ChooseCardsFromHandEffect extends AbstractStandardEffect i
         // Adjust the min and max card counts
         int maximum = Math.min(_maximum, selectableCards.size());
         int minimum = Math.min(_minimum, maximum);
-        final Collection<PhysicalCard> deployBuddyCandidates =
-                List.copyOf(selectableCards);
-        prepareDeployBuddyMetadata(deployBuddyCandidates);
 
         String choiceText = getChoiceText(maximum);
 
@@ -158,19 +153,11 @@ public abstract class ChooseCardsFromHandEffect extends AbstractStandardEffect i
                 cardsSelected(game, Collections.<PhysicalCard>emptySet());
             }
             else if (selectableCards.size() == minimum && !_action.isAllowAbort()) {
-                recordSelectedDeployBuddy(selectableCards);
                 cardsSelected(game, selectableCards);
             }
             else {
                 game.getUserFeedback().sendAwaitingDecision(_playerId,
                         new CardsSelectionDecision(choiceText + (_action.isAllowAbort() ? ", or click 'Done' to cancel" : ""), selectableCards, _action.isAllowAbort() ? 0 : minimum, maximum) {
-                            {
-                                if (_forDeployment) {
-                                    setDeployBuddySelectionMetadata(
-                                            _action, deployBuddyCandidates);
-                                }
-                            }
-
                             @Override
                             public void decisionMade(String result) throws DecisionResultInvalidException {
                                 List<PhysicalCard> selectedCards = getSelectedCardsByResponse(result);
@@ -179,7 +166,6 @@ public abstract class ChooseCardsFromHandEffect extends AbstractStandardEffect i
                                     return;
                                 }
 
-                                recordSelectedDeployBuddy(selectedCards);
                                 cardsSelected(game, selectedCards);
                             }
                         }
@@ -189,13 +175,6 @@ public abstract class ChooseCardsFromHandEffect extends AbstractStandardEffect i
         else if (!_skipIfNoneFound || !selectableCards.isEmpty()) {
             game.getUserFeedback().sendAwaitingDecision(_playerId,
                     new ArbitraryCardsSelectionDecision(choiceText + (_action.isAllowAbort() ? ", or click 'Done' to cancel" : ""), cardsInHand, selectableCards, minimum, maximum) {
-                        {
-                            if (_forDeployment) {
-                                setDeployBuddySelectionMetadata(
-                                        _action, deployBuddyCandidates);
-                            }
-                        }
-
                         @Override
                         public void decisionMade(String result) throws DecisionResultInvalidException {
                             List<PhysicalCard> selectedCards = getSelectedCardsByResponse(result);
@@ -204,7 +183,6 @@ public abstract class ChooseCardsFromHandEffect extends AbstractStandardEffect i
                                 return;
                             }
 
-                            recordSelectedDeployBuddy(selectedCards);
                             cardsSelected(game, selectedCards);
                         }
                     }
@@ -212,33 +190,6 @@ public abstract class ChooseCardsFromHandEffect extends AbstractStandardEffect i
         }
 
         return new FullEffectResult(true);
-    }
-
-    private void prepareDeployBuddyMetadata(Collection<PhysicalCard> candidates) {
-        if (!_forDeployment
-                || _action.getDecisionActionSemantic() != DecisionActionSemantic.DEPLOY_CARD
-                || _action.getDeployActionMetadata() == null) {
-            return;
-        }
-        List<DeployPhysicalCardRef> refs = candidates.stream()
-                .map(card -> new DeployPhysicalCardRef(
-                        card.getPermanentCardId(), card.getCardId()))
-                .toList();
-        _action.setDeployActionMetadata(
-                _action.getDeployActionMetadata().withBuddyCandidates(refs));
-    }
-
-    private void recordSelectedDeployBuddy(Collection<PhysicalCard> selectedCards) {
-        if (!_forDeployment || selectedCards.size() != 1
-                || _action.getDecisionActionSemantic() != DecisionActionSemantic.DEPLOY_CARD
-                || _action.getDeployActionMetadata() == null) {
-            return;
-        }
-        PhysicalCard selected = selectedCards.iterator().next();
-        _action.setDeployActionMetadata(
-                _action.getDeployActionMetadata().withSelectedBuddy(
-                        new DeployPhysicalCardRef(
-                                selected.getPermanentCardId(), selected.getCardId())));
     }
 
     @Override

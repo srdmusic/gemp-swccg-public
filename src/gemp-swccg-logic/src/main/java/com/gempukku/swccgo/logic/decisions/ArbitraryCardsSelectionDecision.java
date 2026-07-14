@@ -1,13 +1,7 @@
 package com.gempukku.swccgo.logic.decisions;
 
 import com.gempukku.swccgo.common.CardCategory;
-import com.gempukku.swccgo.common.DecisionOrigin;
-import com.gempukku.swccgo.common.DeployDecisionWire;
-import com.gempukku.swccgo.common.PullDecisionWire;
-import com.gempukku.swccgo.common.PullDeployRef;
-import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.*;
 
@@ -142,88 +136,6 @@ public abstract class ArbitraryCardsSelectionDecision extends AbstractAwaitingDe
         for (int i = 0; i < physicalCards.size(); i++)
             result[i] = "temp" + i;
         return result;
-    }
-
-    /** Stamps exact engine-owned PULL identity without using prompt text. */
-    protected final void setPullDecisionMetadata(Action parentAction, Zone sourceZone,
-                                                  String sourceZoneOwner, DecisionOrigin origin) {
-        Objects.requireNonNull(parentAction, "parentAction");
-        Objects.requireNonNull(sourceZone, "sourceZone");
-        Objects.requireNonNull(sourceZoneOwner, "sourceZoneOwner");
-        Objects.requireNonNull(origin, "origin");
-        setDecisionOrigin(origin);
-
-        Integer parentDecisionId = parentAction.getAcceptedDecisionId();
-        Integer parentOrdinal = parentAction.getAcceptedDecisionOrdinal();
-        Long transactionId = parentAction.getAcceptedPullTransactionId();
-        if (transactionId != null) {
-            setParam(PullDecisionWire.TRANSACTION_ID, String.valueOf(transactionId));
-        }
-        if (parentDecisionId != null && parentOrdinal != null) {
-            setParam(PullDecisionWire.PARENT_DECISION_ID, String.valueOf(parentDecisionId));
-            setParam(PullDecisionWire.PARENT_ACTION_ORDINAL, String.valueOf(parentOrdinal));
-        }
-        if (parentAction.getPerformingPlayer() != null) {
-            setParam(PullDecisionWire.PLAYER_ID, parentAction.getPerformingPlayer());
-        }
-
-        PhysicalCard source = parentAction.getActionSource();
-        if (source != null) {
-            setParam(PullDecisionWire.SOURCE_CARD_ID, String.valueOf(source.getCardId()));
-            setParam(PullDecisionWire.SOURCE_PERMANENT_CARD_ID,
-                    String.valueOf(source.getPermanentCardId()));
-        }
-        if ((parentAction.isFromGameText() || parentAction.isFromPlayingInterrupt())
-                && parentAction.getGameTextActionId() != null) {
-            setParam(PullDecisionWire.GAME_TEXT_ACTION_ID,
-                    parentAction.getGameTextActionId().name());
-        }
-        setParam(PullDecisionWire.SOURCE_ZONE, sourceZone.name());
-        setParam(PullDecisionWire.SOURCE_ZONE_OWNER, sourceZoneOwner);
-        setParam(PullDecisionWire.PHYSICAL_CARD_ID, getPhysicalCardIds(_physicalCards, false));
-        setParam(PullDecisionWire.PHYSICAL_PERMANENT_CARD_ID,
-                getPhysicalCardIds(_physicalCards, true));
-
-        PullDeployRef ref = parentAction.getPullDeployRef();
-        if (ref != null) {
-            setParam(PullDecisionWire.TRANSACTION_ID, String.valueOf(ref.transactionId()));
-            setParam(PullDecisionWire.SELECTED_CARD_ID,
-                    String.valueOf(ref.selectedCard().currentCardId()));
-            setParam(PullDecisionWire.SELECTED_PERMANENT_CARD_ID,
-                    String.valueOf(ref.selectedCard().permanentCardId()));
-            setParam(PullDecisionWire.DESTINATION_CARD_ID,
-                    ref.orderedDestinationCards().stream()
-                            .map(card -> String.valueOf(card.currentCardId())).toArray(String[]::new));
-            setParam(PullDecisionWire.DESTINATION_PERMANENT_CARD_ID,
-                    ref.orderedDestinationCards().stream()
-                            .map(card -> String.valueOf(card.permanentCardId())).toArray(String[]::new));
-            if (ref.forcedDestinationCard() != null) {
-                setParam(PullDecisionWire.FORCED_DESTINATION_CARD_ID,
-                        String.valueOf(ref.forcedDestinationCard().currentCardId()));
-                setParam(PullDecisionWire.FORCED_DESTINATION_PERMANENT_CARD_ID,
-                        String.valueOf(ref.forcedDestinationCard().permanentCardId()));
-            }
-        }
-    }
-
-    private String[] getPhysicalCardIds(Collection<PhysicalCard> physicalCards, boolean permanent) {
-        String[] result = new String[physicalCards.size()];
-        int index = 0;
-        for (PhysicalCard physicalCard : physicalCards) {
-            result[index++] = String.valueOf(permanent
-                    ? physicalCard.getPermanentCardId() : physicalCard.getCardId());
-        }
-        return result;
-    }
-
-    /** Stamps legal buddy metadata plus temp-id-aligned physical identities. */
-    protected final void setDeployBuddySelectionMetadata(
-            Action action, Collection<PhysicalCard> buddies) {
-        setDeployBuddyMetadata(action, buddies);
-        setParam(DeployDecisionWire.BUDDY_CARD_ID,
-                getPhysicalCardIds(_physicalCards, false));
-        setParam(DeployDecisionWire.BUDDY_PERMANENT_CARD_ID,
-                getPhysicalCardIds(_physicalCards, true));
     }
 
     /**
@@ -387,3 +299,4 @@ public abstract class ArbitraryCardsSelectionDecision extends AbstractAwaitingDe
         return result;
     }
 }
+

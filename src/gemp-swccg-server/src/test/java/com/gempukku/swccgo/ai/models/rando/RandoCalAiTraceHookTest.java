@@ -17,13 +17,6 @@ import com.gempukku.swccgo.ai.models.common.trace.state.HeuristicStateUpdateEven
 import com.gempukku.swccgo.ai.models.common.trace.state.MutationOutcome;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategyBattleOrderRefreshEvent;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategyBattleResultRecordEvent;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerOwner;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategyFocusDeployRecordEvent;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategyResetEvent;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategySideSetEvent;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategyStartTurnEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerBlockResponseEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerClearEvent;
@@ -31,7 +24,6 @@ import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerPhaseChangeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerUpdateStateEvent;
-import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -40,7 +32,6 @@ import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -200,21 +191,6 @@ public class RandoCalAiTraceHookTest {
         }
     }
 
-    /** TRACE 4B2 (packet "Exact Reachability" item 2): a null GameState returns before
-     *  every controller call, so no StrategyController owner event may exist on a route
-     *  that never got past trackGameState's null guard. */
-    private static void assertNoStrategyControllerEvents(List<TraceStateEvent> events) {
-        for (TraceStateEvent e : events) {
-            assertFalse("no StrategyController event may exist here: " + e,
-                e instanceof StrategySideSetEvent
-                    || e instanceof StrategyResetEvent
-                    || e instanceof StrategyStartTurnEvent
-                    || e instanceof StrategyFocusDeployRecordEvent
-                    || e instanceof StrategyBattleOrderRefreshEvent
-                    || e instanceof StrategyBattleResultRecordEvent);
-        }
-    }
-
     // =========================================================================
     // Direct interceptor (V45): distinct route + final response, skipped finalizer
     // =========================================================================
@@ -258,8 +234,6 @@ public class RandoCalAiTraceHookTest {
         assertEquals("42", trace.getDecisionId());
         // TRACE 4B1: the direct interceptor never reaches super.decide
         assertNoHeuristicMemoryEvents(trace.getStateEvents());
-        // TRACE 4B2: null GameState returns before every controller call
-        assertNoStrategyControllerEvents(trace.getStateEvents());
         assertTrue("bot model is the bot source-package identifier",
             trace.getBotModel().contains("models"));
 
@@ -404,8 +378,6 @@ public class RandoCalAiTraceHookTest {
         // still-empty state hash suppresses the single-response and recent-response
         // owners, and the type guards suppress the rest: zero heuristic-memory events
         assertNoHeuristicMemoryEvents(events);
-        // TRACE 4B2: the null game state also returns before every controller call
-        assertNoStrategyControllerEvents(events);
         PendingDeployEvent deploySet = (PendingDeployEvent) events.get(2);
         assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
         assertNull(deploySet.typeBefore());
@@ -458,10 +430,9 @@ public class RandoCalAiTraceHookTest {
         assertEquals(TraceRoute.V45_OPTIONAL_FORFEIT, trace1.getRoute().selected());
         List<TraceStateEvent> events1 = trace1.getStateEvents();
         // exact source order, exactly ONE event per legacy call: pending-concede
-        // new-game clear, then tracker CLEAR, then the four new-game controller events
-        // (SIDE_SET, RESET, START_TURN, BATTLE_ORDER_REFRESH), then tracker UPDATE_STATE
-        assertEquals("expected pending-concede clear + tracker CLEAR + 4 controller + UPDATE_STATE: "
-            + events1, 7, events1.size());
+        // new-game clear, then tracker CLEAR, then tracker UPDATE_STATE
+        assertEquals("expected pending-concede clear + tracker CLEAR + UPDATE_STATE: " + events1,
+            3, events1.size());
         assertTrue(events1.get(0) instanceof PendingConcedeEvent);
 
         TrackerClearEvent clear = (TrackerClearEvent) events1.get(1);
@@ -470,29 +441,7 @@ public class RandoCalAiTraceHookTest {
         // fresh tracker: the unconditional new-game clear had nothing to erase
         assertEquals(MutationOutcome.NO_OP, clear.outcome());
 
-        // TRACE 4B2: new-game controller SIDE_SET then RESET, at their unchanged positions
-        StrategySideSetEvent sideSet = (StrategySideSetEvent) events1.get(2);
-        assertEquals(StrategyControllerOwner.RANDO, sideSet.owner());
-        assertEquals(Side.DARK, sideSet.side());
-        assertEquals(null, sideSet.before().side());
-        assertEquals(Side.DARK, sideSet.after().side());
-        assertEquals(MutationOutcome.CHANGED, sideSet.outcome());
-        StrategyResetEvent reset = (StrategyResetEvent) events1.get(3);
-        assertEquals(StrategyControllerOwner.RANDO, reset.owner());
-        // fresh controller after side assignment: reset had nothing to move
-        assertEquals(MutationOutcome.NO_OP, reset.outcome());
-        // TRACE 4B2: START_TURN then the once-per-decision BATTLE_ORDER_REFRESH
-        StrategyStartTurnEvent startTurn = (StrategyStartTurnEvent) events1.get(4);
-        assertEquals(StrategyControllerOwner.RANDO, startTurn.owner());
-        assertEquals(1, startTurn.turnNumber());
-        assertEquals("early", startTurn.after().phase());
-        assertEquals(MutationOutcome.CHANGED, startTurn.outcome());
-        StrategyBattleOrderRefreshEvent battleOrder = (StrategyBattleOrderRefreshEvent) events1.get(5);
-        assertEquals(StrategyControllerOwner.RANDO, battleOrder.owner());
-        // empty board (StubGameState.getAllPermanentCards() is empty): honest NO_OP
-        assertEquals(MutationOutcome.NO_OP, battleOrder.outcome());
-
-        TrackerUpdateStateEvent update = (TrackerUpdateStateEvent) events1.get(6);
+        TrackerUpdateStateEvent update = (TrackerUpdateStateEvent) events1.get(2);
         assertEquals(TrackerOwner.OUTER_RANDO, update.owner());
         // the EXACT legacy call arguments from the stub state
         assertEquals(0, update.handSize());
@@ -527,14 +476,9 @@ public class RandoCalAiTraceHookTest {
         assertEquals("", second);
         assertEquals(2, sink.getTraces().size());
         List<TraceStateEvent> events2 = sink.getTraces().get(1).getStateEvents();
-        // same game (no SIDE_SET/RESET), same turn (no START_TURN): only the
-        // once-per-decision BATTLE_ORDER_REFRESH, then the one UPDATE_STATE
-        assertEquals("same-game repeat: BATTLE_ORDER_REFRESH + one UPDATE_STATE, no clear: " + events2,
-            2, events2.size());
-        StrategyBattleOrderRefreshEvent battleOrder2 = (StrategyBattleOrderRefreshEvent) events2.get(0);
-        assertEquals(StrategyControllerOwner.RANDO, battleOrder2.owner());
-        assertEquals(MutationOutcome.NO_OP, battleOrder2.outcome());
-        TrackerUpdateStateEvent repeat = (TrackerUpdateStateEvent) events2.get(1);
+        assertEquals("same-game repeat: exactly one UPDATE_STATE, no clear: " + events2,
+            1, events2.size());
+        TrackerUpdateStateEvent repeat = (TrackerUpdateStateEvent) events2.get(0);
         assertEquals(TrackerOwner.OUTER_RANDO, repeat.owner());
         assertEquals(repeat.before(), repeat.after());
         assertEquals(MutationOutcome.NO_OP, repeat.outcome());
@@ -587,43 +531,26 @@ public class RandoCalAiTraceHookTest {
         DecisionTrace trace = sink.single();
         assertEquals(TraceRoute.HEURISTIC_FALLBACK, trace.getRoute().selected());
         List<TraceStateEvent> events = trace.getStateEvents();
-        assertEquals("expected the full outer+controller+shared+heuristic fallback stream: " + events,
-            14, events.size());
+        assertEquals("expected the full outer+shared+heuristic fallback stream: " + events,
+            10, events.size());
 
         // outer events first, exactly as 4A1/4A2a landed them
         assertTrue(events.get(0) instanceof PendingConcedeEvent);
         TrackerClearEvent clear = (TrackerClearEvent) events.get(1);
         assertEquals(TrackerOwner.OUTER_RANDO, clear.owner());
-        // TRACE 4B2: the four new-game controller events land between the tracker CLEAR
-        // and the outer UPDATE_STATE, in exact source order
-        StrategySideSetEvent sideSet = (StrategySideSetEvent) events.get(2);
-        assertEquals(StrategyControllerOwner.RANDO, sideSet.owner());
-        assertEquals(Side.DARK, sideSet.side());
-        assertEquals(MutationOutcome.CHANGED, sideSet.outcome());
-        StrategyResetEvent reset = (StrategyResetEvent) events.get(3);
-        assertEquals(StrategyControllerOwner.RANDO, reset.owner());
-        assertEquals(MutationOutcome.NO_OP, reset.outcome());
-        StrategyStartTurnEvent startTurn = (StrategyStartTurnEvent) events.get(4);
-        assertEquals(StrategyControllerOwner.RANDO, startTurn.owner());
-        assertEquals(1, startTurn.turnNumber());
-        assertEquals(MutationOutcome.CHANGED, startTurn.outcome());
-        StrategyBattleOrderRefreshEvent battleOrder = (StrategyBattleOrderRefreshEvent) events.get(5);
-        assertEquals(StrategyControllerOwner.RANDO, battleOrder.owner());
-        assertEquals(MutationOutcome.NO_OP, battleOrder.outcome());
-
-        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events.get(6);
+        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events.get(2);
         assertEquals(TrackerOwner.OUTER_RANDO, outerUpdate.owner());
         assertEquals(MutationOutcome.CHANGED, outerUpdate.outcome());
 
         // shared events inside super.decide, in the packet's exact order
-        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events.get(7);
+        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events.get(3);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, phase.owner());
         assertEquals("DEPLOY", phase.phase());
         assertEquals("", phase.before().lastPhase());
         assertEquals("DEPLOY", phase.after().lastPhase());
         assertEquals(MutationOutcome.CHANGED, phase.outcome());
 
-        TrackerUpdateStateEvent sharedUpdate = (TrackerUpdateStateEvent) events.get(8);
+        TrackerUpdateStateEvent sharedUpdate = (TrackerUpdateStateEvent) events.get(4);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedUpdate.owner());
         assertEquals(MutationOutcome.CHANGED, sharedUpdate.outcome());
         // the packet's HIGHEST OVERLAP RISK: identical call arguments, distinct owners,
@@ -638,7 +565,7 @@ public class RandoCalAiTraceHookTest {
 
         // TRACE 4B1: the heuristic STATE_UPDATE summary lands immediately after the
         // nested shared UPDATE_STATE, exactly as the packet orders the two summaries
-        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events.get(9);
+        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events.get(5);
         assertEquals(sharedUpdate.handSize(), heuristicState.handSize());
         assertEquals(sharedUpdate.turn(), heuristicState.turn());
         assertEquals("", heuristicState.before().currentStateHash());
@@ -649,26 +576,26 @@ public class RandoCalAiTraceHookTest {
         // TRACE 4B1: SINGLE_RESPONSE_RECORD lands immediately before the shared
         // RECORD_RESPONSE; the other heuristic owners stay guard-suppressed here
         HeuristicSingleResponseRecordEvent singleResponse =
-            (HeuristicSingleResponseRecordEvent) events.get(10);
+            (HeuristicSingleResponseRecordEvent) events.get(6);
         assertEquals("MULTIPLE_CHOICE", singleResponse.decisionType());
         assertEquals(tracedResult, singleResponse.rawResponse());
         assertEquals(1, singleResponse.after().lastDecisionRepeatCount());
         assertEquals(MutationOutcome.CHANGED, singleResponse.outcome());
 
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(11);
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(7);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
         assertEquals("77", sharedRecord.decisionId());
         assertEquals(MutationOutcome.CHANGED, sharedRecord.outcome());
         // the shared call records the same heuristic tracking response 4B1 observed
         assertEquals(singleResponse.trackingResponse(), sharedRecord.response());
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(12);
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(8);
         assertEquals(TrackerOwner.OUTER_RANDO, outerRecord.owner());
         assertEquals(tracedResult, outerRecord.response());
         // shared trackingResponse (choice text) vs outer final result (index)
         assertFalse("the two owners' recorded responses legitimately differ",
             sharedRecord.response().equals(outerRecord.response()));
 
-        PendingDeployEvent deploySet = (PendingDeployEvent) events.get(13);
+        PendingDeployEvent deploySet = (PendingDeployEvent) events.get(9);
         assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
         assertEquals("character", deploySet.typeAfter());
     }
@@ -708,26 +635,20 @@ public class RandoCalAiTraceHookTest {
 
         DecisionTrace trace = sink.single();
         List<TraceStateEvent> events = trace.getStateEvents();
-        assertEquals("expected the fallback stream with 4 controller events + the shared BLOCK_RESPONSE: "
-            + events, 14, events.size());
+        assertEquals("expected the fallback stream with the shared BLOCK_RESPONSE: " + events,
+            10, events.size());
         assertTrue(events.get(0) instanceof PendingConcedeEvent);
         assertEquals(TrackerOwner.OUTER_RANDO, ((TrackerClearEvent) events.get(1)).owner());
-        // TRACE 4B2: the four new-game controller events between CLEAR and outer UPDATE_STATE
-        assertEquals(StrategyControllerOwner.RANDO, ((StrategySideSetEvent) events.get(2)).owner());
-        assertEquals(StrategyControllerOwner.RANDO, ((StrategyResetEvent) events.get(3)).owner());
-        assertEquals(StrategyControllerOwner.RANDO, ((StrategyStartTurnEvent) events.get(4)).owner());
-        assertEquals(StrategyControllerOwner.RANDO,
-            ((StrategyBattleOrderRefreshEvent) events.get(5)).owner());
-        assertEquals(TrackerOwner.OUTER_RANDO, ((TrackerUpdateStateEvent) events.get(6)).owner());
-        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerPhaseChangeEvent) events.get(7)).owner());
-        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerUpdateStateEvent) events.get(8)).owner());
+        assertEquals(TrackerOwner.OUTER_RANDO, ((TrackerUpdateStateEvent) events.get(2)).owner());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerPhaseChangeEvent) events.get(3)).owner());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerUpdateStateEvent) events.get(4)).owner());
 
         // TRACE 4B1: heuristic STATE_UPDATE immediately after the shared UPDATE_STATE
-        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events.get(9);
+        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events.get(5);
         assertEquals(MutationOutcome.CHANGED, heuristicState.outcome());
         assertEquals("0:4:20:1:0", heuristicState.after().currentStateHash());
 
-        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events.get(10);
+        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events.get(6);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, block.owner());
         assertEquals("CARD_SELECTION", block.decisionType());
         assertEquals("Choose device to steal, or click Done to cancel", block.decisionText());
@@ -738,14 +659,14 @@ public class RandoCalAiTraceHookTest {
         // TRACE 4B1: the empty response takes the reset exit of the single-response
         // owner; the writes executed on already-reset fields, a real NO_OP event
         HeuristicSingleResponseRecordEvent singleResponse =
-            (HeuristicSingleResponseRecordEvent) events.get(11);
+            (HeuristicSingleResponseRecordEvent) events.get(7);
         assertEquals("", singleResponse.rawResponse());
         assertEquals("", singleResponse.trackingResponse());
         assertEquals(MutationOutcome.NO_OP, singleResponse.outcome());
 
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(12);
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(8);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(13);
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(9);
         assertEquals(TrackerOwner.OUTER_RANDO, outerRecord.owner());
     }
 
@@ -815,17 +736,14 @@ public class RandoCalAiTraceHookTest {
         long injected = failureTrace.getCaptureFailures().stream().filter(failure ->
             failure.stage() == TraceCaptureFailure.Stage.STATE_EVENT
                 && failure.detail().contains("injected state-event append failure")).count();
-        // pending-concede clear, outer CLEAR, controller SIDE_SET, controller RESET,
-        // controller START_TURN, controller BATTLE_ORDER_REFRESH, outer UPDATE_STATE,
-        // shared PHASE_CHANGE, shared UPDATE_STATE, heuristic STATE_UPDATE, heuristic
-        // SINGLE_RESPONSE_RECORD, shared RECORD_RESPONSE, pending-deploy SET = 13 appends
-        // (TRACE 4B2 adds the four new-game controller boundaries this MULTIPLE_CHOICE
-        // route reaches; FOCUS_DEPLOY_RECORD needs a prior-turn pending deploy and battle
-        // result needs battle text, so neither fires here; the outer RECORD_RESPONSE hook
-        // is traceOpened-guarded and the bot never owned this session, so its append was
-        // never attempted)
+        // pending-concede clear, outer CLEAR, outer UPDATE_STATE, shared PHASE_CHANGE,
+        // shared UPDATE_STATE, heuristic STATE_UPDATE, heuristic SINGLE_RESPONSE_RECORD,
+        // shared RECORD_RESPONSE, pending-deploy SET = 9 appends (TRACE 4B1 adds the
+        // two heuristic-memory boundaries this MULTIPLE_CHOICE route reaches; the
+        // outer RECORD_RESPONSE hook is traceOpened-guarded and the bot never owned
+        // this session, so its append was never attempted)
         assertEquals("one typed failure per attempted append: " + failureTrace.getCaptureFailures(),
-            13, injected);
+            9, injected);
 
         // run 2: normal capture on the SAME bot; the owners' before-snapshots prove
         // every run-1 legacy mutator ran exactly once
@@ -838,19 +756,11 @@ public class RandoCalAiTraceHookTest {
 
         DecisionTrace trace2 = sink.single();
         List<TraceStateEvent> events2 = trace2.getStateEvents();
-        // same game (no SIDE_SET/RESET), same turn (no START_TURN): the once-per-decision
-        // BATTLE_ORDER_REFRESH leads, then the full fallback stream
-        assertEquals("same game: BATTLE_ORDER_REFRESH + full fallback stream: " + events2,
-            9, events2.size());
-
-        // TRACE 4B2: the controller BATTLE_ORDER_REFRESH also ran once in run 1 despite
-        // the failed append; run 2's repeat is an honest NO_OP (flag still false)
-        StrategyBattleOrderRefreshEvent battleOrder = (StrategyBattleOrderRefreshEvent) events2.get(0);
-        assertEquals(StrategyControllerOwner.RANDO, battleOrder.owner());
-        assertEquals(MutationOutcome.NO_OP, battleOrder.outcome());
+        assertEquals("same game: no concede/clear events, full fallback stream: " + events2,
+            8, events2.size());
 
         // outer updateState ran once in run 1: run 2's before already carries turn 1
-        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events2.get(1);
+        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events2.get(0);
         assertEquals(TrackerOwner.OUTER_RANDO, outerUpdate.owner());
         assertEquals(1, outerUpdate.before().lastTurn());
         assertEquals("0:4:20:1:0", outerUpdate.before().lastStateHash());
@@ -859,26 +769,26 @@ public class RandoCalAiTraceHookTest {
         assertEquals(1, outerUpdate.before().decisionState().sequenceRows().size());
 
         // shared onPhaseChange ran once in run 1: run 2's repeat is an honest NO_OP
-        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events2.get(2);
+        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events2.get(1);
         assertEquals("DEPLOY", phase.before().lastPhase());
         assertEquals(MutationOutcome.NO_OP, phase.outcome());
 
         // shared updateState ran once in run 1: lifecycle state already present
-        TrackerUpdateStateEvent sharedUpdate = (TrackerUpdateStateEvent) events2.get(3);
+        TrackerUpdateStateEvent sharedUpdate = (TrackerUpdateStateEvent) events2.get(2);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedUpdate.owner());
         assertEquals(1, sharedUpdate.before().lastTurn());
         assertEquals(MutationOutcome.NO_OP, sharedUpdate.outcome());
 
         // TRACE 4B1: the heuristic state writes ran once in run 1 despite the failed
         // appends: run 2's before already carries the run-1 hash, an executed NO_OP
-        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events2.get(4);
+        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events2.get(3);
         assertEquals("0:4:20:1:0", heuristicState.before().currentStateHash());
         assertEquals(MutationOutcome.NO_OP, heuristicState.outcome());
 
         // TRACE 4B1: the single-response owner ran EXACTLY ONCE in run 1: run 2's
         // repeat count moves 1 to 2 and folds the threshold local block into this event
         HeuristicSingleResponseRecordEvent singleResponse =
-            (HeuristicSingleResponseRecordEvent) events2.get(5);
+            (HeuristicSingleResponseRecordEvent) events2.get(4);
         assertEquals(1, singleResponse.before().lastDecisionRepeatCount());
         assertEquals(2, singleResponse.after().lastDecisionRepeatCount());
         assertTrue(singleResponse.before().localBlockedResponses().isEmpty());
@@ -886,19 +796,19 @@ public class RandoCalAiTraceHookTest {
         assertEquals(MutationOutcome.CHANGED, singleResponse.outcome());
 
         // shared recordDecision ran EXACTLY ONCE in run 1: one row before, two after
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(6);
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(5);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
         assertEquals(1, sharedRecord.before().sequenceRows().size());
         assertEquals(2, sharedRecord.after().sequenceRows().size());
 
         // outer recordDecision ran EXACTLY ONCE in run 1: one row before, two after
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(7);
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(6);
         assertEquals(TrackerOwner.OUTER_RANDO, outerRecord.owner());
         assertEquals(1, outerRecord.before().sequenceRows().size());
         assertEquals(2, outerRecord.after().sequenceRows().size());
 
         // the run-1 pending-deploy write happened: run 2's rewrite is a NO_OP SET
-        PendingDeployEvent deploySet = (PendingDeployEvent) events2.get(8);
+        PendingDeployEvent deploySet = (PendingDeployEvent) events2.get(7);
         assertEquals(PendingDeployEvent.Operation.SET, deploySet.operation());
         assertEquals("character", deploySet.typeBefore());
         assertEquals("character", deploySet.typeAfter());
@@ -965,16 +875,14 @@ public class RandoCalAiTraceHookTest {
         long injected = failureTrace.getCaptureFailures().stream().filter(failure ->
             failure.stage() == TraceCaptureFailure.Stage.STATE_EVENT
                 && failure.detail().contains("injected state-event append failure")).count();
-        // pending-concede clear, outer CLEAR, controller SIDE_SET, controller RESET,
-        // controller START_TURN, controller BATTLE_ORDER_REFRESH, outer UPDATE_STATE,
-        // shared PHASE_CHANGE, shared UPDATE_STATE, heuristic STATE_UPDATE, shared
-        // BLOCK_RESPONSE, heuristic SINGLE_RESPONSE_RECORD, shared RECORD_RESPONSE = 13
-        // (TRACE 4B2 adds the four new-game controller boundaries this empty
-        // CARD_SELECTION route reaches; no pending-deploy write: the decision text has no
-        // deploy subject, and no battle text; the outer RECORD_RESPONSE hook is
-        // traceOpened-guarded on this refused nested open)
+        // pending-concede clear, outer CLEAR, outer UPDATE_STATE, shared PHASE_CHANGE,
+        // shared UPDATE_STATE, heuristic STATE_UPDATE, shared BLOCK_RESPONSE, heuristic
+        // SINGLE_RESPONSE_RECORD, shared RECORD_RESPONSE = 9 (TRACE 4B1 adds the two
+        // heuristic-memory boundaries this empty CARD_SELECTION route reaches; no
+        // pending-deploy write: the decision text has no deploy subject; the outer
+        // RECORD_RESPONSE hook is traceOpened-guarded on this refused nested open)
         assertEquals("exactly one append per boundary including the direct block: "
-            + failureTrace.getCaptureFailures(), 13, injected);
+            + failureTrace.getCaptureFailures(), 9, injected);
 
         // run 2: normal capture on the SAME bot. The empty cancel response never
         // enters sequenceRows (the owner tracks non-pass responses only), so the
@@ -991,21 +899,19 @@ public class RandoCalAiTraceHookTest {
         String cancelKey = "CARD_SELECTION:Choose device to steal, or click Done to cancel";
         DecisionTrace trace2 = sink.single();
         List<TraceStateEvent> events2 = trace2.getStateEvents();
-        assertEquals("same game: BATTLE_ORDER_REFRESH + full fallback stream with the block boundary: "
-            + events2, 9, events2.size());
-        assertEquals(StrategyControllerOwner.RANDO,
-            ((StrategyBattleOrderRefreshEvent) events2.get(0)).owner());
-        assertEquals(TrackerOwner.OUTER_RANDO, ((TrackerUpdateStateEvent) events2.get(1)).owner());
-        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerPhaseChangeEvent) events2.get(2)).owner());
-        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerUpdateStateEvent) events2.get(3)).owner());
+        assertEquals("same game: full fallback stream with the block boundary: " + events2,
+            8, events2.size());
+        assertEquals(TrackerOwner.OUTER_RANDO, ((TrackerUpdateStateEvent) events2.get(0)).owner());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerPhaseChangeEvent) events2.get(1)).owner());
+        assertEquals(TrackerOwner.HEURISTIC_SHARED, ((TrackerUpdateStateEvent) events2.get(2)).owner());
 
         // TRACE 4B1: run 1's heuristic state writes happened despite the failed
         // appends: run 2's before carries them and the repeat is an executed NO_OP
-        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events2.get(4);
+        HeuristicStateUpdateEvent heuristicState = (HeuristicStateUpdateEvent) events2.get(3);
         assertEquals("0:4:20:1:0", heuristicState.before().currentStateHash());
         assertEquals(MutationOutcome.NO_OP, heuristicState.outcome());
 
-        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events2.get(5);
+        TrackerBlockResponseEvent block = (TrackerBlockResponseEvent) events2.get(4);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, block.owner());
         assertFalse(block.blocked());
         assertEquals(MutationOutcome.NO_OP, block.outcome());
@@ -1013,12 +919,12 @@ public class RandoCalAiTraceHookTest {
         // TRACE 4B1: run 1 already executed the empty-key reset, so run 2's reset
         // rewrite is an executed-write NO_OP folded boundary event
         HeuristicSingleResponseRecordEvent singleResponse =
-            (HeuristicSingleResponseRecordEvent) events2.get(6);
+            (HeuristicSingleResponseRecordEvent) events2.get(5);
         assertEquals("", singleResponse.rawResponse());
         assertEquals("", singleResponse.trackingResponse());
         assertEquals(MutationOutcome.NO_OP, singleResponse.outcome());
 
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(7);
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events2.get(6);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
         assertEquals(cancelKey, sharedRecord.before().consecutiveCancelKey());
         assertEquals(1, sharedRecord.before().consecutiveCancelCount());
@@ -1027,7 +933,7 @@ public class RandoCalAiTraceHookTest {
         assertEquals(0, sharedRecord.before().sequenceRows().size());
         assertEquals(0, sharedRecord.after().sequenceRows().size());
         assertEquals(MutationOutcome.CHANGED, sharedRecord.outcome());
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(8);
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events2.get(7);
         assertEquals(TrackerOwner.OUTER_RANDO, outerRecord.owner());
         assertEquals(cancelKey, outerRecord.before().consecutiveCancelKey());
         assertEquals(1, outerRecord.before().consecutiveCancelCount());
@@ -1091,22 +997,13 @@ public class RandoCalAiTraceHookTest {
         DecisionTrace trace = sink.single();
         assertEquals(TraceRoute.HEURISTIC_FALLBACK, trace.getRoute().selected());
         List<TraceStateEvent> events = trace.getStateEvents();
-        assertEquals("expected the 4 controller events + fallback stream WITHOUT the shared UPDATE_STATE: "
-            + events, 11, events.size());
+        assertEquals("expected the fallback stream WITHOUT the shared UPDATE_STATE: " + events,
+            7, events.size());
         assertTrue(events.get(0) instanceof PendingConcedeEvent);
         assertEquals(TrackerOwner.OUTER_RANDO, ((TrackerClearEvent) events.get(1)).owner());
 
-        // TRACE 4B2: the four new-game controller events are UNAFFECTED by the poisoned
-        // hand read (they read controller state, and BATTLE_ORDER_REFRESH scans the empty
-        // permanent-card list, not the throwing getHand)
-        assertEquals(StrategyControllerOwner.RANDO, ((StrategySideSetEvent) events.get(2)).owner());
-        assertEquals(StrategyControllerOwner.RANDO, ((StrategyResetEvent) events.get(3)).owner());
-        assertEquals(StrategyControllerOwner.RANDO, ((StrategyStartTurnEvent) events.get(4)).owner());
-        assertEquals(StrategyControllerOwner.RANDO,
-            ((StrategyBattleOrderRefreshEvent) events.get(5)).owner());
-
         // the OUTER helper survived the throw and updated with zero defaults
-        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events.get(6);
+        TrackerUpdateStateEvent outerUpdate = (TrackerUpdateStateEvent) events.get(2);
         assertEquals(TrackerOwner.OUTER_RANDO, outerUpdate.owner());
         assertEquals(0, outerUpdate.handSize());
         assertEquals(0, outerUpdate.forcePile());
@@ -1115,7 +1012,7 @@ public class RandoCalAiTraceHookTest {
         assertEquals(0, outerUpdate.cardsInPlay());
 
         // the shared PHASE_CHANGE still fired (phase was non-null)
-        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events.get(7);
+        TrackerPhaseChangeEvent phase = (TrackerPhaseChangeEvent) events.get(3);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, phase.owner());
         assertEquals("DEPLOY", phase.phase());
 
@@ -1128,23 +1025,24 @@ public class RandoCalAiTraceHookTest {
         }
         // TRACE 4B1: the same failed read returns before any heuristic-memory write
         // (no STATE_UPDATE), and the still-empty state hash makes the single-response
-        // helper return before any owned write, so no heuristic-memory event appears
+        // helper return before any owned write, so the stream stays at seven
         assertNoHeuristicMemoryEvents(events);
 
         // the shared RECORD_RESPONSE still appears, in source order, before the outer's
-        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(8);
+        TrackerRecordResponseEvent sharedRecord = (TrackerRecordResponseEvent) events.get(4);
         assertEquals(TrackerOwner.HEURISTIC_SHARED, sharedRecord.owner());
-        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(9);
+        TrackerRecordResponseEvent outerRecord = (TrackerRecordResponseEvent) events.get(5);
         assertEquals(TrackerOwner.OUTER_RANDO, outerRecord.owner());
-        assertTrue(events.get(10) instanceof PendingDeployEvent);
+        assertTrue(events.get(6) instanceof PendingDeployEvent);
     }
 
     // =========================================================================
     // TRACE 4A2b (packet "Primary evaluator route" fixture, m00447/m00451): a REAL
     // decide() whose selected route IS the evaluator lane produces ZERO
     // HEURISTIC_SHARED events because super.decide(...) was never called. The
-    // deterministic carrier is a typed ACTIVATE_AMOUNT INTEGER decision, which the
-    // ForceActivationEvaluator owns. The route is asserted from the trace before relying
+    // deterministic carrier is an INTEGER decision: ForceActivationEvaluator handles
+    // every INTEGER and always emits an action (a CARD_ACTION_CHOICE was tried first
+    // and empirically fell back). The route is asserted from the trace before relying
     // on it; the V45 fixture above covers the direct-interceptor (non-super) routes
     // but is NOT this proof.
     // =========================================================================
@@ -1154,8 +1052,6 @@ public class RandoCalAiTraceHookTest {
         Map<String, String[]> params = new HashMap<>();
         params.put("min", new String[]{"1"});
         params.put("max", new String[]{"3"});
-        params.put(DecisionOrigin.WIRE_PARAMETER,
-            new String[]{DecisionOrigin.ACTIVATE_AMOUNT.name()});
 
         // untraced twin proves behavior parity on the evaluator lane too
         RandoCalAi untraced = new RandoCalAi();
@@ -1192,155 +1088,6 @@ public class RandoCalAiTraceHookTest {
             }
         }
         assertTrue("the outer tracker must still record on the evaluator lane", outerRecordSeen);
-    }
-
-    /** The ordered subsequence of the six StrategyController events plus the outer
-     *  pending-deploy events, extracted so a controller-ordering assertion does not depend
-     *  on the surrounding shared/heuristic event count. */
-    private static List<TraceStateEvent> controllerAndDeployEvents(List<TraceStateEvent> events) {
-        List<TraceStateEvent> filtered = new ArrayList<>();
-        for (TraceStateEvent e : events) {
-            if (e instanceof StrategySideSetEvent || e instanceof StrategyResetEvent
-                || e instanceof StrategyStartTurnEvent || e instanceof StrategyFocusDeployRecordEvent
-                || e instanceof StrategyBattleOrderRefreshEvent
-                || e instanceof StrategyBattleResultRecordEvent
-                || e instanceof PendingDeployEvent) {
-                filtered.add(e);
-            }
-        }
-        return filtered;
-    }
-
-    // =========================================================================
-    // TRACE 4B2 (packet "Turn fixtures"): a new turn with a pending deploy from the prior
-    // turn records START_TURN, then the optional FOCUS_DEPLOY_RECORD (a real NO_OP under
-    // the balanced production focus), then the outer pending-deploy CLEAR, in exact source
-    // order; BATTLE_ORDER_REFRESH then follows and the next pending-deploy SET closes it.
-    // =========================================================================
-
-    @Test
-    public void newTurnWithPendingDeployRecordsStartTurnFocusThenClear() {
-        Map<String, String[]> params = new HashMap<>();
-        params.put("results", new String[]{"Option A", "Option B"});
-        params.put("min", new String[]{"0"});
-        params.put("max", new String[]{"1"});
-        params.put("noPass", new String[]{"true"});
-
-        RandoCalAi traced = new RandoCalAi();
-        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
-        traced.setDecisionTraceSinkForTesting(sink);
-
-        // turn 1 decision: new game, sets lastPendingDeployType = "character"
-        traced.decide("tester",
-            decision(70, AwaitingDecisionType.MULTIPLE_CHOICE,
-                "Deploy which character to your site?", params),
-            new StubGameState(1));
-        assertFalse(TraceSession.isActive());
-
-        // turn 2 decision, SAME game: the turn-changed branch confirms the pending deploy
-        traced.decide("tester",
-            decision(71, AwaitingDecisionType.MULTIPLE_CHOICE,
-                "Deploy which character to your site?", params),
-            new StubGameState(2));
-        assertFalse(TraceSession.isActive());
-
-        List<TraceStateEvent> events2 = sink.getTraces().get(1).getStateEvents();
-        // no SIDE_SET/RESET (same game); the controller + pending-deploy subsequence is
-        // exactly START_TURN, FOCUS_DEPLOY_RECORD, pending-deploy CLEAR, BATTLE_ORDER_REFRESH,
-        // then the new pending-deploy SET
-        List<TraceStateEvent> controller = controllerAndDeployEvents(events2);
-        assertEquals("controller + deploy subsequence: " + controller, 5, controller.size());
-
-        StrategyStartTurnEvent startTurn = (StrategyStartTurnEvent) controller.get(0);
-        assertEquals(2, startTurn.turnNumber());
-        assertEquals("early", startTurn.after().phase());
-        assertEquals(MutationOutcome.CHANGED, startTurn.outcome());
-
-        // the optional FOCUS_DEPLOY_RECORD: the exact card-type argument, a real NO_OP
-        // under the balanced production focus (setFocus is never called in production)
-        StrategyFocusDeployRecordEvent focus = (StrategyFocusDeployRecordEvent) controller.get(1);
-        assertEquals(StrategyControllerOwner.RANDO, focus.owner());
-        assertEquals("character", focus.cardType());
-        assertEquals("balanced", focus.before().focus());
-        assertEquals(MutationOutcome.NO_OP, focus.outcome());
-
-        // then the outer pending-deploy CLEAR, exactly as 4A1 landed it
-        PendingDeployEvent clear = (PendingDeployEvent) controller.get(2);
-        assertEquals(PendingDeployEvent.Operation.CLEAR, clear.operation());
-        assertEquals("character", clear.typeBefore());
-        assertNull(clear.typeAfter());
-
-        assertEquals(StrategyControllerOwner.RANDO,
-            ((StrategyBattleOrderRefreshEvent) controller.get(3)).owner());
-        assertEquals(PendingDeployEvent.Operation.SET,
-            ((PendingDeployEvent) controller.get(4)).operation());
-    }
-
-    // =========================================================================
-    // TRACE 4B2 (packet "Strategic-event fixtures", item 8/9): a decision whose text
-    // carries both a deploy subject and a winning battle result records the outer
-    // pending-deploy SET BEFORE the controller BATTLE_RESULT_RECORD; repeating the exact
-    // decision repeats the mutation (no dedupe).
-    // =========================================================================
-
-    @Test
-    public void pendingDeploySetPrecedesBattleResultAndRepeatsWithoutDedupe() {
-        Map<String, String[]> params = new HashMap<>();
-        params.put("results", new String[]{"Option A", "Option B"});
-        params.put("min", new String[]{"0"});
-        params.put("max", new String[]{"1"});
-        params.put("noPass", new String[]{"true"});
-
-        RandoCalAi traced = new RandoCalAi();
-        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
-        traced.setDecisionTraceSinkForTesting(sink);
-
-        // text carries a deploy subject ("deploy ... character") AND a win ("battle ... you won")
-        String text = "Deploy a character now that you won the battle";
-        traced.decide("tester",
-            decision(80, AwaitingDecisionType.MULTIPLE_CHOICE, text, params),
-            new StubGameState(1));
-        assertFalse(TraceSession.isActive());
-
-        List<TraceStateEvent> controller1 = controllerAndDeployEvents(
-            sink.getTraces().get(0).getStateEvents());
-        // find the SET and the battle result; the SET must come first (item 8)
-        int setIndex = -1;
-        int battleIndex = -1;
-        for (int i = 0; i < controller1.size(); i++) {
-            TraceStateEvent e = controller1.get(i);
-            if (e instanceof PendingDeployEvent pd && pd.operation() == PendingDeployEvent.Operation.SET) {
-                setIndex = i;
-            }
-            if (e instanceof StrategyBattleResultRecordEvent) {
-                battleIndex = i;
-            }
-        }
-        assertTrue("pending-deploy SET must be present", setIndex >= 0);
-        assertTrue("battle-result must be present", battleIndex >= 0);
-        assertTrue("pending-deploy SET must precede the battle result", setIndex < battleIndex);
-
-        StrategyBattleResultRecordEvent win1 =
-            (StrategyBattleResultRecordEvent) controller1.get(battleIndex);
-        assertTrue(win1.won());
-        assertEquals(1, win1.after().battlesWon());
-        assertEquals(MutationOutcome.CHANGED, win1.outcome());
-
-        // repeat the EXACT decision, same game/turn: no dedupe, wins advance 1 -> 2
-        traced.decide("tester",
-            decision(81, AwaitingDecisionType.MULTIPLE_CHOICE, text, params),
-            new StubGameState(1));
-        List<TraceStateEvent> controller2 = controllerAndDeployEvents(
-            sink.getTraces().get(1).getStateEvents());
-        StrategyBattleResultRecordEvent win2 = null;
-        for (TraceStateEvent e : controller2) {
-            if (e instanceof StrategyBattleResultRecordEvent b) {
-                win2 = b;
-            }
-        }
-        assertNotNull("the repeated battle text fires again (no dedupe)", win2);
-        assertEquals(1, win2.before().battlesWon());
-        assertEquals(2, win2.after().battlesWon());
     }
 
     // =========================================================================

@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.common.Phase;
-import com.gempukku.swccgo.ai.models.common.strategy.ForceObligationVector;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
 
@@ -41,19 +40,8 @@ public class PassEvaluator extends ActionEvaluator {
         super("Pass");
     }
 
-    static ForceObligationVector forceObligations(DecisionContext context) {
-        return context.getForceObligations();
-    }
-
     @Override
     public boolean canEvaluate(DecisionContext context) {
-        // INTEGER responses are values, not pass actions. Typed activation amounts are
-        // owned by ForceActivationEvaluator; every other INTEGER belongs to the shared
-        // heuristic value picker. Returning an empty pass here means "choose zero".
-        if ("INTEGER".equals(context.getDecisionType())) {
-            return false;
-        }
-
         // Can only pass if:
         // 1. noPass=false (passing is allowed)
         // 2. AND min=0 (no minimum selection required)
@@ -205,7 +193,7 @@ public class PassEvaluator extends ActionEvaluator {
                     // (opponent-owned "draw their fire", in-play gate). Old inline
                     // scan removed in cleanup batch 1.7 (see git history);
                     // V27.1 weights (20/40/60) untouched.
-                    boolean dtfActive = forceObligations(context).drawTheirFireActive();
+                    boolean dtfActive = context.getForceReserveFacts().dtfActive;
                     if (dtfActive) {
                         // Need 3 Force minimum: 1 for DTF defender loss, 1 for interrupt tax, 1 for the interrupt
                         int dtfReserveNeeded = 3;
@@ -239,7 +227,7 @@ public class PassEvaluator extends ActionEvaluator {
                     // basis, in-play gate; old inline scan removed in cleanup
                     // batch 1.7, see git history). V27 weights
                     // (25/50) untouched.
-                    int maintenanceCostTotal = forceObligations(context).maintenanceObligation();
+                    int maintenanceCostTotal = context.getForceReserveFacts().maintenanceObligation;
                     if (maintenanceCostTotal > 0 && forcePile <= maintenanceCostTotal + 1) {
                         // Force pile is at or below maintenance requirement — STRONGLY prefer pass
                         float maintBonus = 25.0f;

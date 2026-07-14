@@ -1,66 +1,20 @@
 package com.gempukku.swccgo.ai.models.chosenone;
 
-import com.gempukku.swccgo.ai.AiDecisionResult;
-import com.gempukku.swccgo.ai.DecisionRejectionKind;
 import com.gempukku.swccgo.ai.models.HeuristicAiBase;
-import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFactsProducer;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFactsSource;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveBattleAdapter;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveMoveAdapter;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectivePullAdapter;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveSetupAdapter;
-import com.gempukku.swccgo.ai.models.common.decision.FactValue;
-import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
-import com.gempukku.swccgo.ai.models.common.phase.ActivateControlPhaseOwner;
-import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRoute;
-import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRouteInput;
-import com.gempukku.swccgo.ai.models.common.phase.ActivateControlRouteResolver;
-import com.gempukku.swccgo.ai.models.common.phase.BattleAssessment;
-import com.gempukku.swccgo.ai.models.common.phase.BattleDeployIntent;
-import com.gempukku.swccgo.ai.models.common.phase.BattleFacts;
-import com.gempukku.swccgo.ai.models.common.phase.BattlePhaseOwner;
-import com.gempukku.swccgo.ai.models.common.phase.BattlePredictionAssessment;
-import com.gempukku.swccgo.ai.models.common.phase.BattleRouteInput;
-import com.gempukku.swccgo.ai.models.common.phase.BattleRouteResolver;
-import com.gempukku.swccgo.ai.models.common.phase.BattleWindowRoute;
-import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseOwner;
-import com.gempukku.swccgo.ai.models.common.phase.DrawRoute;
-import com.gempukku.swccgo.ai.models.common.phase.DrawRouteInput;
-import com.gempukku.swccgo.ai.models.common.phase.DrawRouteResolver;
-import com.gempukku.swccgo.ai.models.common.phase.DeployAssessment;
-import com.gempukku.swccgo.ai.models.common.phase.DeployFacts;
-import com.gempukku.swccgo.ai.models.common.phase.DeployPhaseOwner;
-import com.gempukku.swccgo.ai.models.common.phase.DeployRoute;
-import com.gempukku.swccgo.ai.models.common.phase.DeployRouteInput;
-import com.gempukku.swccgo.ai.models.common.phase.DeployRouteResolver;
-import com.gempukku.swccgo.ai.models.common.phase.RevertApprovalPhaseOwner;
-import com.gempukku.swccgo.ai.models.common.phase.PullAssessment;
-import com.gempukku.swccgo.ai.models.common.phase.PullFacts;
-import com.gempukku.swccgo.ai.models.common.phase.PullPhaseOwner;
-import com.gempukku.swccgo.ai.models.common.phase.PullRoute;
-import com.gempukku.swccgo.ai.models.common.phase.PullRouteInput;
-import com.gempukku.swccgo.ai.models.common.phase.PullRouteResolver;
-import com.gempukku.swccgo.ai.models.common.strategy.ForceObligationVector;
-import com.gempukku.swccgo.ai.models.common.trace.TraceFinalization;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.ContestStatus;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.LocationAnalysis;
 import com.gempukku.swccgo.ai.common.AiChatManager;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.chosenone.evaluators.CombinedEvaluator;
-import com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionType;
 import com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext;
 import com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript;
-import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
-import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyControllerTraceAccess;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -72,12 +26,9 @@ import com.gempukku.swccgo.ai.models.common.trace.state.DecisionTrackerSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.EngineCallOutcome;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingConcedeEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.PendingDeployEvent;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerOwner;
-import com.gempukku.swccgo.ai.models.common.trace.state.StrategyControllerSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerClearEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerOwner;
 import com.gempukku.swccgo.common.CardCategory;
-import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
@@ -112,6 +63,7 @@ import org.apache.logging.log4j.Logger;
 public class TheChosenOneAi extends HeuristicAiBase {
 
     private static final Logger LOG = RandoLogger.getLogger();
+
     // Chat manager for personality messages
     private final AiChatManager chatManager;
 
@@ -151,8 +103,6 @@ public class TheChosenOneAi extends HeuristicAiBase {
     private RandoContext context;
     private SwccgGame currentGame;
     private Random random = new Random();
-    private PendingDeployDecision pendingDeployDecision;
-    private PendingPullDeployDecision pendingPullDeployDecision;
 
     // State tracking
     private String currentGameId;
@@ -191,10 +141,6 @@ public class TheChosenOneAi extends HeuristicAiBase {
     /** TRACE ORACLE V2: package-visible pure-harness seam (JUnit only; production never calls). */
     void setDecisionTraceSinkForTesting(TraceSink sink) {
         this.decisionTraceSink = (sink != null) ? sink : NoOpTraceSink.INSTANCE;
-    }
-
-    ObjectiveFactsSource objectiveFactsSourceForTesting() {
-        return objectiveAnalyzer;
     }
 
     // V29.15: Deck name for saga-aware Epic Event choices
@@ -581,283 +527,29 @@ public class TheChosenOneAi extends HeuristicAiBase {
     //   + Rando_Section_Manifest_2026-07-06.xlsx.
     // ═══════════════════════════════════════════════════════════
 
-    // ═══════════════════════════════════════════════════════════
-    // ═══ FINALIZER RUNTIME (2026-07-13,
-    //     Handoffs/CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md §4) ═══
-    // Exact mirror of RandoCalAi's split (typed owner label OUTER_CHOSENONE aside): decide()
-    // computes + applies the outer common mutation inline + closes the trace inline;
-    // decideForEngine() defers both to the synchronous disposition callback. Trace close is
-    // CALL-PATH-aware, never mutation-mode-aware — a mediator-facing NONE interceptor keeps
-    // the trace open until a disposition callback closes it.
-    // ═══════════════════════════════════════════════════════════
-
-    /** Immutable carrier from the shared computation: the wire plus its accepted-mutation mode. */
-    private static final class OuterDecision {
-        final String wireResponse;
-        final AiDecisionResult.MutationMode mode;
-        final AiDecisionResult engineResult;
-        OuterDecision(String wireResponse, AiDecisionResult.MutationMode mode) {
-            this.wireResponse = wireResponse;
-            this.mode = mode;
-            this.engineResult = null;
-        }
-        OuterDecision(AiDecisionResult engineResult) {
-            this.engineResult = engineResult;
-            this.wireResponse = engineResult.status() == AiDecisionResult.Status.WIRE_RESPONSE
-                ? engineResult.wireResponse() : null;
-            this.mode = engineResult.mutationMode();
-        }
-    }
-
-    private record PendingDeployDecision(
-            DeployFacts facts,
-            DeployAssessment assessment,
-            DeploymentPlan plan) {
-    }
-
-    private record PendingPullDeployDecision(
-            PullFacts facts,
-            DeploymentPlan plan) {
-    }
-
     @Override
     public String decide(String playerId, AwaitingDecision decision, GameState gameState) {
-        OuterDecision computed = computeDecision(playerId, decision, gameState,
-            RejectionHistory.empty(), false);
-        if (computed.engineResult != null
-                && computed.engineResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
-            throw new IllegalStateException("typed decision rejection: "
-                + computed.engineResult.rejectionCode() + ": "
-                + computed.engineResult.rejectionDetail());
-        }
-        return computed.wireResponse;
-    }
-
-    @Override
-    public AiDecisionResult decideForEngine(String playerId, AwaitingDecision decision,
-                                            GameState gameState) {
-        return decideForEngine(playerId, decision, gameState, RejectionHistory.empty());
-    }
-
-    @Override
-    public AiDecisionResult decideForEngine(String playerId, AwaitingDecision decision,
-                                            GameState gameState, RejectionHistory history) {
-        // Owned DRAW, PULL, and V44/V67j routes consume the exact immutable history.
-        // Legacy routes carry it without modifying or persisting it.
-        OuterDecision computed = computeDecision(playerId, decision, gameState, history, true);
-        if (computed.engineResult != null) {
-            return computed.engineResult;
-        }
-        return AiDecisionResult.wire(computed.wireResponse, computed.mode,
-            String.valueOf(decision.getAwaitingDecisionId()));
-    }
-
-    @Override
-    public void onDecisionAccepted(String playerId, AwaitingDecision decision,
-                                   GameState gameState, AiDecisionResult result) {
-        try {
-            if (pendingDeployDecision != null
-                    && pendingDeployDecision.facts().decisionId()
-                        .equals(String.valueOf(decision.getAwaitingDecisionId()))) {
-                deployPhasePlanner.acceptDecision(
-                        pendingDeployDecision.facts(),
-                        pendingDeployDecision.assessment(),
-                        pendingDeployDecision.plan(),
-                        result.wireResponse(), currentGame);
-            }
-            if (pendingPullDeployDecision != null
-                    && pendingPullDeployDecision.facts().decisionId()
-                        .equals(String.valueOf(decision.getAwaitingDecisionId()))) {
-                deployPhasePlanner.acceptPullDeployChild(
-                        pendingPullDeployDecision.facts(),
-                        result.wireResponse(), pendingPullDeployDecision.plan(), currentGame);
-            }
-        } catch (RuntimeException lifecycleFault) {
-            LOG.error("DEPLOY accepted-response lifecycle update failed", lifecycleFault);
-        } finally {
-            pendingDeployDecision = null;
-            pendingPullDeployDecision = null;
-        }
-        applyAcceptedDisposition(decision, result);
-    }
-
-    @Override
-    public void onDecisionRejected(String playerId, AwaitingDecision decision,
-                                   GameState gameState, AiDecisionResult result,
-                                   DecisionRejectionKind kind, String detail) {
-        try {
-            if (pendingDeployDecision != null) {
-                deployPhasePlanner.rejectDecision(
-                        pendingDeployDecision.facts(),
-                        "engine rejected DEPLOY response: " + nonBlankDetail(detail, kind.name()));
-            }
-        } finally {
-            pendingDeployDecision = null;
-            pendingPullDeployDecision = null;
-        }
-        applyRejectedDisposition(result, kind, detail);
-    }
-
-    @Override
-    public void onDecisionAttemptFailed(String playerId, AwaitingDecision decision,
-                                        GameState gameState, String detail) {
-        if (pendingDeployDecision != null || pendingPullDeployDecision != null) {
-            deployPhasePlanner.failCurrentAttempt(
-                    "DEPLOY decision attempt failed: "
-                        + nonBlankDetail(detail, "attempt failed before a result"));
-        }
-        pendingDeployDecision = null;
-        pendingPullDeployDecision = null;
-        applyAttemptFailedDisposition(detail);
-    }
-
-    /** FINALIZER RUNTIME §4: accepted callback — mirror of RandoCalAi.applyAcceptedDisposition. */
-    private void applyAcceptedDisposition(AwaitingDecision decision, AiDecisionResult result) {
-        boolean traceActive = TraceSession.isActive();
-        boolean outerCommon = result.mutationMode() == AiDecisionResult.MutationMode.OUTER_COMMON;
-        String wire = result.wireResponse();
-        String decisionType = decision.getDecisionType() != null
-            ? decision.getDecisionType().name() : "UNKNOWN";
-        String decisionText = decision.getText() != null ? decision.getText() : "";
-        boolean mutationCompleted = false;
-        RuntimeException mutationFault = null;
-        try {
-            if (outerCommon) {
-                applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceActive);
-                mutationCompleted = true;
-            }
-        } catch (RuntimeException e) {
-            mutationFault = e;
-        } finally {
-            if (traceActive) {
-                try {
-                    TraceSession.recordProposedWire(wire);
-                    TraceSession.recordEngineDisposition(TraceFinalization.Disposition.ENGINE_ACCEPTED,
-                        outerCommon ? TraceFinalization.MutationMode.OUTER_COMMON
-                                    : TraceFinalization.MutationMode.NONE,
-                        mutationCompleted,
-                        mutationFault == null ? null
-                            : "outer accepted mutation failed: " + mutationFault.getClass().getName());
-                    TraceSession.recordFinalResponse(wire, !outerCommon);
-                    if (mutationFault != null) {
-                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                            mutationFault.getClass().getName(),
-                            "outer accepted mutation threw; accepted trace marked incomplete (mutation outcome false)");
-                    }
-                } finally {
-                    TraceSession.closeAndEmit(decisionTraceSink);
-                }
-            }
-            context = null;
-        }
-        if (mutationFault != null) {
-            throw mutationFault;  // rethrow for mediator logging; disposition remains ENGINE_ACCEPTED
-        }
-    }
-
-    /** FINALIZER RUNTIME §4: rejection callback — mirror of RandoCalAi.applyRejectedDisposition. */
-    private void applyRejectedDisposition(AiDecisionResult result, DecisionRejectionKind kind,
-                                          String detail) {
-        boolean traceActive = TraceSession.isActive();
-        try {
-            if (traceActive) {
-                boolean hasWire = result != null
-                    && result.status() == AiDecisionResult.Status.WIRE_RESPONSE;
-                if (hasWire) {
-                    TraceSession.recordProposedWire(result.wireResponse());
-                }
-                TraceFinalization.Disposition disposition;
-                switch (kind) {
-                    case ENGINE_REJECTED: disposition = TraceFinalization.Disposition.ENGINE_REJECTED; break;
-                    case TYPED_REJECTION: disposition = TraceFinalization.Disposition.TYPED_REJECTION; break;
-                    default:              disposition = TraceFinalization.Disposition.ATTEMPT_FAILED; break;
-                }
-                TraceSession.recordEngineDisposition(disposition, null, false,
-                    nonBlankDetail(detail, kind.name()));
-            }
-        } finally {
-            if (traceActive) {
-                TraceSession.closeAndEmit(decisionTraceSink);
-            }
-            context = null;
-        }
-    }
-
-    /** FINALIZER RUNTIME §4: attempt-failed callback — mirror of RandoCalAi.applyAttemptFailedDisposition. */
-    private void applyAttemptFailedDisposition(String detail) {
-        boolean traceActive = TraceSession.isActive();
-        try {
-            if (traceActive) {
-                TraceSession.recordEngineDisposition(TraceFinalization.Disposition.ATTEMPT_FAILED,
-                    null, false, nonBlankDetail(detail, "attempt failed before a result"));
-            }
-        } finally {
-            if (traceActive) {
-                TraceSession.closeAndEmit(decisionTraceSink);
-            }
-            context = null;
-        }
-    }
-
-    private static String nonBlankDetail(String detail, String fallback) {
-        return (detail != null && !detail.isBlank()) ? detail : fallback;
-    }
-
-    /** FINALIZER RUNTIME §4: outer common mutation — mirror of RandoCalAi (owner OUTER_CHOSENONE). */
-    private void applyOuterCommonTrackerAndStrategic(AwaitingDecision decision, String decisionType,
-                                                     String decisionText, String result,
-                                                     boolean traceActive) {
-        DecisionTrackerSnapshot traceTrackerBefore =
-            traceActive ? decisionTracker.traceSnapshot() : null;
-        decisionTracker.recordDecision(decisionType, decisionText,
-            String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "");
-        if (traceActive) {
-            TraceSession.recordTrackerRecordResponse(TrackerOwner.OUTER_CHOSENONE,
-                decisionType, String.valueOf(decision.getAwaitingDecisionId()),
-                decisionTracker.traceDecisionKey(decisionType, decisionText),
-                result != null ? result : "",
-                traceTrackerBefore, decisionTracker.traceSnapshot());
-        }
-        trackStrategicEvents(decision, decisionText, result);
-    }
-
-    /** FINALIZER RUNTIME §4: direct-interceptor result (mode NONE) — mirror of RandoCalAi. */
-    private OuterDecision interceptorResult(String wire, boolean mediatorFacing) {
-        if (!mediatorFacing) {
-            TraceSession.recordFinalResponse(wire, true);
-        }
-        return new OuterDecision(wire, AiDecisionResult.MutationMode.NONE);
-    }
-
-    private OuterDecision computeDecision(String playerId, AwaitingDecision decision,
-                                          GameState gameState, RejectionHistory history,
-                                          boolean mediatorFacing) {
         // Build context for this decision
         context = RandoContext.build(playerId, gameState, currentGame);
 
         String decisionType = decision.getDecisionType() != null ? decision.getDecisionType().name() : "UNKNOWN";
         String decisionText = decision.getText() != null ? decision.getText() : "";
         Phase phase = gameState != null ? gameState.getCurrentPhase() : null;
-        pendingDeployDecision = null;
-        pendingPullDeployDecision = null;
-        deployPhasePlanner.observeGameState(
-                currentGame, gameState, playerId, phase);
 
         LOG.info("[TheChosenOneAi] decide() called: type={}, phase={}, text='{}'",
             decisionType, phase,
             decisionText.length() > 50 ? decisionText.substring(0, 50) + "..." : decisionText);
 
-        // Build one immutable boundary snapshot for every mediated decision. The trace
-        // sink may observe it, but trace state never controls whether facts are produced.
+        // TRACE ORACLE V2 (2026-07-13, CODEX_TRACE_ORACLE_V2_CONTRACT "Trace ownership"):
+        // open the bot-boundary session — full frozen raw input + shadow snapshot — when
+        // the sink is enabled. OBSERVATION ONLY per the route map's shadow authority:
+        // no interceptor return moves, no extra RNG draw, no behavior change. Production
+        // default sink is disabled, so this whole block no-ops.
         boolean traceOpened = false;
-        TraceSnapshots.Result boundarySnapshot = captureDecisionSnapshot(
-            playerId, decision, gameState, decisionType, decisionText, phase);
-        observeObjectiveAdapters(boundarySnapshot.snapshot(), phase,
-            decision.getDecisionParameters());
         try {
             if (decisionTraceSink.isEnabled()) {
-                traceOpened = openDecisionTraceSession(decision, decisionType, decisionText,
-                    boundarySnapshot);
+                traceOpened = openDecisionTraceSession(playerId, decision, gameState,
+                    decisionType, decisionText, phase);
             }
         } catch (Throwable traceT) {
             traceOpened = false;
@@ -932,48 +624,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
             String[] actionIds = params != null ? params.get("actionId") : null;
             String[] cardIds = params != null ? params.get("cardId") : null;
 
-            BattleRouteInput battleInput = BattleRouteInput.capture(phase, decision);
-            BattleWindowRoute battleRoute = BattleRouteResolver.resolve(battleInput);
-            if (battleRoute != BattleWindowRoute.LEGACY_UNOWNED) {
-                FactValue<BattleFacts> battleFactsValue = BattleFacts.parse(
-                        boundarySnapshot.snapshot(), battleInput, battleRoute);
-                if (battleFactsValue.isKnown()) {
-                    BattleFacts battleFacts = battleFactsValue.value();
-                    int battleTurn = gameState != null
-                            ? gameState.getPlayersLatestTurnNumber(playerId) : -1;
-                    BattleDeployIntent deployIntent = BattleDeployIntent.from(
-                            deployPhasePlanner.getLastTerminalTransaction(),
-                            battleTurn, playerId);
-                    BattleAssessment battleAssessment = BattleAssessment.capture(
-                            battleFacts, deployIntent, currentGame, gameState,
-                            playerId,
-                            (ourPower, ourWeaponBonus, ourDraws,
-                             opponentPower, opponentWeaponBonus, opponentDraws) -> {
-                                com.gempukku.swccgo.ai.models.chosenone.evaluators.BattlePredictor.BattleOutcome outcome =
-                                        com.gempukku.swccgo.ai.models.chosenone.evaluators.BattlePredictor.predictBattle(
-                                                (int) (ourPower + ourWeaponBonus), ourDraws,
-                                                (int) (opponentPower + opponentWeaponBonus), opponentDraws,
-                                                deckOracle, opponentDeckTracker);
-                                return new BattlePredictionAssessment(
-                                        true, outcome.winProbability,
-                                        outcome.expectedDamageDealt,
-                                        outcome.expectedDamageTaken);
-                            });
-                    String compatibilityWire = battleAssessment.optionalImmuneForfeit()
-                            ? null
-                            : exactLegacyBattleWire(
-                                playerId, decision, gameState,
-                                boundarySnapshot.snapshot(), battleFacts,
-                                battleAssessment);
-                    return decideOwnedBattle(
-                            decision, history, boundarySnapshot.snapshot(),
-                            battleFacts, battleAssessment, compatibilityWire,
-                            traceOpened, mediatorFacing, decisionType, decisionText);
-                }
-            }
-
             // V45: NEVER forfeit when all cards are immune to attrition
-            { // Typed BATTLE_FORFEIT returns above; untyped legacy decisions retain V45.
+            {
                 String dtLower = decisionText.toLowerCase(java.util.Locale.ROOT);
                 if (dtLower.contains("forfeit") && dtLower.contains("if desired")) {
                     LOG.warn("V45 IMMUNE FORFEIT: All cards immune — PASSING on optional forfeit! Text: '{}'", decisionText);
@@ -985,8 +637,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                         // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                         TraceSession.recordEvaluatorLaneNotApplicable(
                             "direct interceptor V45: evaluator lane never runs on this route");
+                        TraceSession.recordFinalResponse("", true);
                     }
-                    return interceptorResult("", mediatorFacing);  // Empty = select nothing = pass
+                    return "";  // Empty = select nothing = pass
                 }
             }
 
@@ -998,68 +651,33 @@ public class TheChosenOneAi extends HeuristicAiBase {
             // if the array isn't available or no clear positive option found.
             if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
                     && decisionText.toLowerCase(java.util.Locale.ROOT).contains("revert")) {
+                int yesIndex = 0;
+                String yesText = "(default index 0)";
                 String[] revertResults = params != null ? params.get("results") : null;
-                RevertApprovalPhaseOwner.LegacySelection selection =
-                    RevertApprovalPhaseOwner.legacySelection(revertResults);
+                if (revertResults != null && revertResults.length > 0) {
+                    for (int ri = 0; ri < revertResults.length; ri++) {
+                        String r = revertResults[ri] != null
+                            ? revertResults[ri].toLowerCase(java.util.Locale.ROOT) : "";
+                        if (r.equals("yes") || r.contains("allow") || r.contains("accept")
+                            || r.contains("ok") || r.equals("revert")) {
+                            yesIndex = ri;
+                            yesText = revertResults[ri];
+                            break;
+                        }
+                    }
+                }
                 LOG.warn("V44/V67j REVERT: Accepting revert request (index={} = '{}') text: '{}'",
-                    selection.ordinal(), selection.resultText(), decisionText);
+                    yesIndex, yesText, decisionText);
                 // TRACE ORACLE V2: route + final-response observation ONLY.
                 if (traceOpened) {
                     TraceSession.recordRoute(TraceRoute.V44_V67J_REVERT_APPROVAL,
                         "MULTIPLE_CHOICE + decision text contains 'revert'", null);
+                    // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                     TraceSession.recordEvaluatorLaneNotApplicable(
-                        mediatorFacing
-                            ? "typed finalizer owner V44/V67j: evaluator lane never runs on this route"
-                            : "direct interceptor V44/V67j: evaluator lane never runs on this route");
+                        "direct interceptor V44/V67j: evaluator lane never runs on this route");
+                    TraceSession.recordFinalResponse(String.valueOf(yesIndex), true);
                 }
-                String revertWire = String.valueOf(selection.ordinal());
-                if (!mediatorFacing) {
-                    return interceptorResult(revertWire, mediatorFacing);
-                }
-                return new OuterDecision(RevertApprovalPhaseOwner.decide(
-                    boundarySnapshot.snapshot(), history, selection));
-            }
-
-            DeployRouteInput deployInput = DeployRouteInput.capture(phase, decision);
-            DeployRoute deployRoute = DeployRouteResolver.resolve(deployInput);
-            if (deployRoute != DeployRoute.LEGACY_UNOWNED) {
-                FactValue<DeployFacts> deployFactsValue = DeployFacts.parse(
-                        boundarySnapshot.snapshot(), deployInput, deployRoute, currentGame);
-                if (deployFactsValue.isKnown()) {
-                    DeployFacts deployFacts = deployFactsValue.value();
-                    DeploymentPlan deployPlan = deployPhasePlanner.planForDecision(
-                            currentGame, playerId, gameState.getSide(playerId));
-                    ForceObligationVector deployObligations =
-                            deployPhasePlanner.forceObligationsForDecision(
-                                    deployFacts, currentGame);
-                    DeployAssessment deployAssessment = deployRoute
-                            == DeployRoute.DEPLOY_PARENT
-                            ? null
-                            : deployPhasePlanner.assessDecision(
-                                deployFacts, null, deployPlan,
-                                deployObligations, currentGame);
-                    String compatibilityWire = deployRoute
-                            == DeployRoute.DEPLOY_V170_UNDERCOVER
-                            ? null
-                            : exactLegacyDeployWire(
-                                playerId, decision, gameState,
-                                boundarySnapshot.snapshot(),
-                                deployFacts, deployAssessment,
-                                deployPlan, deployObligations);
-                    if (deployAssessment == null) {
-                        deployAssessment = deployPhasePlanner.assessDecision(
-                                deployFacts, compatibilityWire, deployPlan,
-                                deployObligations, currentGame);
-                    }
-                    if (deployAssessment != null) {
-                        return decideOwnedDeploy(
-                                playerId, decision, gameState, history,
-                                boundarySnapshot.snapshot(), deployFacts,
-                                deployAssessment, deployPlan, compatibilityWire,
-                                traceOpened, mediatorFacing,
-                                decisionType, decisionText);
-                    }
-                }
+                return String.valueOf(yesIndex);
             }
 
             // === V170 (Steve, 2026-06): UNDERCOVER SPY — the cheap drain blocker ===
@@ -1073,8 +691,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
             // (bonus-aware, getForceDrainAmount over sites they occupy); NO when there is
             // nothing to block yet — keep the spy as a normal body with power/presence.
             // V67j discipline: scan the results array for the actual Yes/No indexes.
-            if (false /* DeployPhaseOwner owns exact PlayCharacterAction V170 provenance */
-                    && decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
+            if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
                     && decisionText.toLowerCase(java.util.Locale.ROOT).contains("undercover spy")) {
                 int v170OppDrain = 0;
                 try {
@@ -1119,8 +736,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                     // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                     TraceSession.recordEvaluatorLaneNotApplicable(
                         "direct interceptor V170: evaluator lane never runs on this route");
+                    TraceSession.recordFinalResponse(String.valueOf(v170Pick), true);
                 }
-                return interceptorResult(String.valueOf(v170Pick), mediatorFacing);
+                return String.valueOf(v170Pick);
             }
 
             // V61 EPIC EVENT SAGA CHOICE — "The Force Is Strong In My Family"
@@ -1180,8 +798,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
                                 // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                                 TraceSession.recordEvaluatorLaneNotApplicable(
                                     "direct interceptor V61: evaluator lane never runs on this route");
+                                TraceSession.recordFinalResponse(String.valueOf(pick), true);
                             }
-                            return interceptorResult(String.valueOf(pick), mediatorFacing);
+                            return String.valueOf(pick);
                         }
                     }
                 }
@@ -1205,41 +824,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 }
                 result = super.decide(playerId, decision, gameState);
             } else {
-                DrawRoute drawRoute = DrawRouteResolver.resolve(
-                    DrawRouteInput.capture(currentPhase, decision));
-                if (drawRoute == DrawRoute.DRAW_TOP_LEVEL) {
-                    return decideOwnedDraw(playerId, decision, gameState, history,
-                        boundarySnapshot.snapshot(), traceOpened, mediatorFacing,
-                        decisionType, decisionText);
-                }
-
-                String currentTurnPlayer = gameState != null
-                    ? gameState.getCurrentPlayerId() : null;
-                if (currentTurnPlayer != null && !currentTurnPlayer.isBlank()) {
-                    ActivateControlRouteInput activateControlInput =
-                        ActivateControlRouteInput.capture(currentPhase, decision,
-                            playerId, currentTurnPlayer);
-                    ActivateControlRoute activateControlRoute =
-                        ActivateControlRouteResolver.resolve(activateControlInput);
-                    if (activateControlRoute != ActivateControlRoute.LEGACY_UNOWNED) {
-                        return decideOwnedActivateControl(playerId, decision, gameState, history,
-                            boundarySnapshot.snapshot(), activateControlInput,
-                            activateControlRoute, traceOpened, mediatorFacing,
-                            decisionType, decisionText);
-                    }
-                }
-
-                PullRouteInput pullInput = PullRouteInput.capture(decision);
-                PullRoute pullRoute = PullRouteResolver.resolve(pullInput);
-                if (pullRoute != PullRoute.LEGACY_UNOWNED) {
-                    return decideOwnedPull(playerId, decision, gameState, history,
-                        boundarySnapshot.snapshot(), pullInput, pullRoute, traceOpened,
-                        mediatorFacing, decisionType, decisionText);
-                }
-
                 // Try evaluator system for supported decision types
-                String evaluatorResult = tryEvaluators(
-                    playerId, decision, gameState, boundarySnapshot.snapshot());
+                String evaluatorResult = tryEvaluators(playerId, decision, gameState);
                 if (evaluatorResult != null) {
                     // TRACE ORACLE V2: normal CombinedEvaluator route.
                     if (traceOpened) {
@@ -1314,16 +900,33 @@ public class TheChosenOneAi extends HeuristicAiBase {
             }
             result = validated[0];
 
-            // FINALIZER RUNTIME §4: the COMMON BOUNDARY (OUTER_COMMON). Mirror of RandoCalAi.
-            //   - mediator-facing: DEFER the outer mutation AND the trace close to the accepted
-            //     disposition callback; return the wire only, trace stays open.
-            //   - direct decide(): apply the outer mutation inline (before-snapshot taken inside
-            //     applyOuterCommonTrackerAndStrategic, immediately before recordDecision) and record
-            //     the final response, exactly as before; the finally closes and emits inline.
-            if (mediatorFacing) {
-                return new OuterDecision(result, AiDecisionResult.MutationMode.OUTER_COMMON);
+            // Record the decision for loop tracking
+            // TRACE 4A1 (m00372 Option A, accepted m00373; matrix correction): the
+            // RECORD_RESPONSE observation is captured AFTER the legacy call, with the
+            // complete decision-affecting owner snapshots before/after from the pure
+            // traceSnapshot() seam. DISABLED capture calls NEITHER pure accessor: both
+            // snapshot builds sit under the traceOpened guard. The legacy call itself
+            // is byte-for-byte unchanged and runs exactly once either way.
+            DecisionTrackerSnapshot traceTrackerBefore =
+                traceOpened ? decisionTracker.traceSnapshot() : null;
+            decisionTracker.recordDecision(decisionType, decisionText,
+                String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "");
+            if (traceOpened) {
+                TraceSession.recordTrackerRecordResponse(TrackerOwner.OUTER_CHOSENONE,
+                    decisionType, String.valueOf(decision.getAwaitingDecisionId()),
+                    decisionTracker.traceDecisionKey(decisionType, decisionText),
+                    result != null ? result : "",
+                    traceTrackerBefore, decisionTracker.traceSnapshot());
             }
-            applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, result, traceOpened);
+
+            // Track strategic events for learning
+            // TRACE 4A1: the wrapper-level strategic-intent event is REMOVED. State
+            // events are emitted only at the actual direct writes inside
+            // trackStrategicEvents (pending-deploy SET) and trackGameState (its CLEAR);
+            // the wrapper's StrategyController calls stay unobserved until that owner's
+            // increment (4B).
+            trackStrategicEvents(decision, decisionText, result);
+
             LOG.info("[TheChosenOneAi] decide() result: '{}' ✅", result != null ? result : "(pass)");
             // TRACE ORACLE V2: the AI's ACTUAL final answer, after safety (contract
             // "Finalization record" item 6). The five direct interceptors record theirs
@@ -1331,17 +934,16 @@ public class TheChosenOneAi extends HeuristicAiBase {
             if (traceOpened) {
                 TraceSession.recordFinalResponse(result, false);
             }
-            return new OuterDecision(result, AiDecisionResult.MutationMode.OUTER_COMMON);
+            return result;
         } finally {
-            // FINALIZER RUNTIME §4/§7: trace close is CALL-PATH-aware. Direct decide() closes +
-            // emits inline on every path including a computation exception; a mediator-facing call
-            // never closes here — the synchronous disposition callback owns the close, and a
-            // mediator-facing computation exception is closed by onDecisionAttemptFailed.
-            // GATE P0-2 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): closeAndEmit is the one typed
-            // emission channel — a finish() failure emits the fallback INCOMPLETE envelope, a sink
-            // accept() failure re-offers the trace once. Never throws into the decision path.
-            context = null;  // per-decision context; the disposition callbacks never read it
-            if (!mediatorFacing && traceOpened) {
+            context = null;
+            // TRACE ORACLE V2: only the opener closes and emits; the thread-local is
+            // ALWAYS cleared (TraceSession.close clears in its own finally).
+            // GATE P0-2 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): closeAndEmit is
+            // the one typed emission channel — a finish() failure emits the fallback
+            // INCOMPLETE envelope, a sink accept() failure re-offers the trace once
+            // with a typed SINK failure appended. Never throws into the decision path.
+            if (traceOpened) {
                 TraceSession.closeAndEmit(decisionTraceSink);
             }
         }
@@ -1349,18 +951,15 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
     /**
      * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
-     * "Frozen input and candidate order"): capture the bot-boundary snapshot with the
+     * "Frozen input and candidate order"): open the bot-boundary session with the
      * COMPLETE raw decision arrays (verbatim, unfiltered — unlike buildEvaluatorContext,
-     * which drops null/empty entries). This boundary prepares ObjectiveAnalyzer once;
-     * ObjectiveFactsProducer then projects it without mutation. Trace, evaluators, and
-     * adapters reuse the exact result.
+     * which drops null/empty entries) plus the shadow DecisionSnapshot. Pure reads only:
+     * decision params, DecisionTracker.getBlockedResponses (pure), and plain GameState
+     * getters. No evaluator, strategy service, or cache-mutating call.
      */
-    private TraceSnapshots.Result captureDecisionSnapshot(String playerId,
-                                                          AwaitingDecision decision,
-                                                          GameState gameState,
-                                                          String decisionType,
-                                                          String decisionText,
-                                                          Phase phase) {
+    private boolean openDecisionTraceSession(String playerId, AwaitingDecision decision,
+                                             GameState gameState, String decisionType,
+                                             String decisionText, Phase phase) {
         Map<String, String[]> params = decision.getDecisionParameters();
         TraceSnapshots.Input in = new TraceSnapshots.Input();
         in.producerId = "bot-decide-boundary";
@@ -1413,55 +1012,11 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 // leave unknown — never fabricate an observation
             }
         }
-        try {
-            if (currentGame != null) {
-                objectiveAnalyzer.analyze(currentGame, playerId, mySide);
-            }
-            in.objectiveFacts = ObjectiveFactsProducer.produce(
-                currentGame, gameState, playerId, objectiveAnalyzer);
-        } catch (RuntimeException e) {
-            in.objectiveFacts = ObjectiveFacts.unknown(
-                "objective boundary preparation failed: " + e.getClass().getSimpleName());
-        }
-        return TraceSnapshots.build(in);
-    }
-
-    private static void observeObjectiveAdapters(DecisionSnapshot snapshot,
-                                                 Phase phase,
-                                                 Map<String, String[]> params) {
-        if (snapshot == null) {
-            return;
-        }
-        if (phase == Phase.MOVE) {
-            ObjectiveMoveAdapter.adapt(snapshot);
-        } else if (phase == Phase.BATTLE) {
-            ObjectiveBattleAdapter.adapt(snapshot);
-        }
-
-        String[] origins = params != null ? params.get(DecisionOrigin.WIRE_PARAMETER) : null;
-        DecisionOrigin origin = origins != null && origins.length == 1
-            ? DecisionOrigin.fromWire(origins[0]) : null;
-        if (origin == DecisionOrigin.SETUP_STARTING_LOCATION
-                || origin == DecisionOrigin.SETUP_STARTING_INTERRUPT) {
-            ObjectiveSetupAdapter.adapt(snapshot);
-        }
-    }
-
-    /** Open the trace with the same immutable snapshot later consumed by an owned route. */
-    private boolean openDecisionTraceSession(AwaitingDecision decision,
-                                             String decisionType,
-                                             String decisionText,
-                                             TraceSnapshots.Result snapshot) {
-        Map<String, String[]> params = decision.getDecisionParameters();
-        java.util.List<String> actionIds = params != null
-            ? traceRawList(params.get("actionId")) : null;
-        java.util.List<String> cardIds = params != null
-            ? traceRawList(params.get("cardId")) : null;
-        java.util.List<String> results = params != null
-            ? traceRawList(params.get("results")) : null;
+        TraceSnapshots.Result snapshot = TraceSnapshots.build(in);
         return TraceSession.open(getClass().getPackageName(),
-            String.valueOf(decision.getAwaitingDecisionId()), decisionType, decisionText,
-            TraceSnapshots.rawCandidateIds(decisionType, actionIds, cardIds, results),
+            in.decisionId, decisionType, decisionText,
+            TraceSnapshots.rawCandidateIds(decisionType, in.actionIds, in.cardIds,
+                in.multipleChoiceResults),
             snapshot.snapshot(), snapshot.issues(), true);
     }
 
@@ -1541,519 +1096,16 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
     }
 
-    /** Execute one exact-provenance DEPLOY stage through the shared finalizer. */
-    private OuterDecision decideOwnedDeploy(String playerId,
-                                             AwaitingDecision decision,
-                                             GameState gameState,
-                                             RejectionHistory history,
-                                             DecisionSnapshot snapshot,
-                                             DeployFacts facts,
-                                             DeployAssessment assessment,
-                                             DeploymentPlan plan,
-                                             String compatibilityWire,
-                                             boolean traceOpened,
-                                             boolean mediatorFacing,
-                                             String decisionType,
-                                             String decisionText) {
-        if (traceOpened) {
-            TraceSession.recordRoute(traceRouteForDeploy(facts.route()),
-                    "typed DEPLOY transaction stage " + facts.route(), null);
-            if (facts.route() == DeployRoute.DEPLOY_V170_UNDERCOVER) {
-                TraceSession.recordEvaluatorLaneNotApplicable(
-                        "typed V170 owner uses source-proven opponent drain and original result order");
-            }
-        }
-
-        AiDecisionResult ownedResult = DeployPhaseOwner.decide(
-                snapshot, history, facts, assessment,
-                (route, ignoredFacts, ignoredAssessment) -> compatibilityWire);
-        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
-            return new OuterDecision(ownedResult);
-        }
-
-        String wire = ownedResult.wireResponse();
-        if (mediatorFacing) {
-            pendingDeployDecision = new PendingDeployDecision(
-                    facts, assessment, plan);
-        } else {
-            // Direct callers have no disposition callback. Their established contract
-            // applies accepted mutation inline after finalization.
-            deployPhasePlanner.acceptDecision(
-                    facts, assessment, plan, wire, currentGame);
-        }
-        if (!mediatorFacing) {
-            applyOuterCommonTrackerAndStrategic(
-                    decision, decisionType, decisionText, wire, traceOpened);
-            LOG.info("[TheChosenOneAi] owned DEPLOY {} result: '{}'",
-                    facts.route(), wire.isEmpty() ? "(pass)" : wire);
-            if (traceOpened) {
-                TraceSession.recordFinalResponse(wire, false);
-            }
-        }
-        return new OuterDecision(ownedResult);
-    }
-
-    /** Execute one typed BATTLE decision through one compatibility lane and finalizer. */
-    private OuterDecision decideOwnedBattle(AwaitingDecision decision,
-                                             RejectionHistory history,
-                                             DecisionSnapshot snapshot,
-                                             BattleFacts facts,
-                                             BattleAssessment assessment,
-                                             String compatibilityWire,
-                                             boolean traceOpened,
-                                             boolean mediatorFacing,
-                                             String decisionType,
-                                             String decisionText) {
-        if (traceOpened) {
-            TraceSession.recordRoute(traceRouteForBattle(facts.route()),
-                    "typed BATTLE route " + facts.route(), null);
-            if (assessment.optionalImmuneForfeit()) {
-                TraceSession.recordEvaluatorLaneNotApplicable(
-                        "typed optional immune forfeit uses engine-owned immunity fact");
-            }
-        }
-
-        AiDecisionResult ownedResult = BattlePhaseOwner.decide(
-                snapshot, history, facts, assessment,
-                (ignoredFacts, ignoredAssessment) -> compatibilityWire);
-        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
-            return new OuterDecision(ownedResult);
-        }
-        String wire = ownedResult.wireResponse();
-        if (!mediatorFacing) {
-            applyOuterCommonTrackerAndStrategic(
-                    decision, decisionType, decisionText, wire, traceOpened);
-            LOG.info("[TheChosenOneAi] owned BATTLE {} result: '{}'",
-                    facts.route(), wire.isEmpty() ? "(pass)" : wire);
-            if (traceOpened) {
-                TraceSession.recordFinalResponse(wire, false);
-            }
-        }
-        return new OuterDecision(ownedResult);
-    }
-
-    /** Frozen evaluator/fallback mapping used by the typed BATTLE owner. */
-    private String exactLegacyBattleWire(String playerId,
-                                         AwaitingDecision decision,
-                                         GameState gameState,
-                                         DecisionSnapshot snapshot,
-                                         BattleFacts battleFacts,
-                                         BattleAssessment battleAssessment) {
-        String wire = tryEvaluators(
-                playerId, decision, gameState, snapshot,
-                null, null, null, null, null, null,
-                battleFacts, battleAssessment);
-        if (wire == null) {
-            wire = super.decide(playerId, decision, gameState);
-        }
-        Map<String, String[]> params = decision.getDecisionParameters();
-        String[] actionIds = params != null ? params.get("actionId") : null;
-        String[] cardIds = params != null ? params.get("cardId") : null;
-        String[] noPass = params != null ? params.get("noPass") : null;
-        boolean mustChoose = noPass != null && noPass.length > 0
-                && Boolean.parseBoolean(noPass[0]);
-        if ((wire == null || wire.isEmpty()) && mustChoose) {
-            wire = DecisionSafety.getEmergencyResponse(
-                    decision, actionIds, cardIds).value;
-        }
-        String[] options = actionIds != null && actionIds.length > 0
-                ? actionIds : cardIds;
-        return DecisionSafety.ensureValidResponse(decision, wire, options)[0];
-    }
-
-    private static TraceRoute traceRouteForBattle(BattleWindowRoute route) {
-        return switch (route) {
-            case INITIATE -> TraceRoute.BATTLE_INITIATE;
-            case FIRE -> TraceRoute.BATTLE_FIRE;
-            case ADD_DESTINY -> TraceRoute.BATTLE_ADD_DESTINY;
-            case TACTIC -> TraceRoute.BATTLE_TACTIC;
-            default -> throw new IllegalArgumentException(
-                    "unowned BATTLE route " + route);
-        };
-    }
-
-    /** Frozen evaluator/fallback mapping used as the compatibility wire inside the owner. */
-    private String exactLegacyDeployWire(String playerId,
-                                         AwaitingDecision decision,
-                                         GameState gameState,
-                                         DecisionSnapshot snapshot,
-                                         DeployFacts deployFacts,
-                                         DeployAssessment deployAssessment,
-                                         DeploymentPlan deployPlan,
-                                         ForceObligationVector deployObligations) {
-        String wire = tryEvaluators(
-                playerId, decision, gameState, snapshot,
-                null, null, deployFacts, deployAssessment,
-                deployObligations, deployPlan, null, null);
-        if (wire == null) {
-            wire = super.decide(playerId, decision, gameState);
-        }
-        Map<String, String[]> params = decision.getDecisionParameters();
-        String[] actionIds = params != null ? params.get("actionId") : null;
-        String[] cardIds = params != null ? params.get("cardId") : null;
-        String[] noPass = params != null ? params.get("noPass") : null;
-        boolean mustChoose = noPass != null && noPass.length > 0
-                && Boolean.parseBoolean(noPass[0]);
-        if ((wire == null || wire.isEmpty()) && mustChoose) {
-            wire = DecisionSafety.getEmergencyResponse(
-                    decision, actionIds, cardIds).value;
-        }
-        String[] options = actionIds != null && actionIds.length > 0
-                ? actionIds : cardIds;
-        return DecisionSafety.ensureValidResponse(decision, wire, options)[0];
-    }
-
-    private static TraceRoute traceRouteForDeploy(DeployRoute route) {
-        return switch (route) {
-            case DEPLOY_PARENT -> TraceRoute.DEPLOY_PARENT;
-            case DEPLOY_DESTINATION -> TraceRoute.DEPLOY_DESTINATION;
-            case DEPLOY_BUDDY -> TraceRoute.DEPLOY_BUDDY;
-            case DEPLOY_V170_UNDERCOVER -> TraceRoute.DEPLOY_UNDERCOVER;
-            case DEPLOY_CAPACITY -> TraceRoute.DEPLOY_CAPACITY;
-            case DEPLOY_CONFIRMATION -> TraceRoute.DEPLOY_CONFIRMATION;
-            default -> throw new IllegalArgumentException(
-                    "unowned DEPLOY route " + route);
-        };
-    }
-
-    /**
-     * Execute the one typed canonical DRAW owner. No owned result re-enters the
-     * legacy safety, fallback, or evaluator lanes.
-     */
-    private OuterDecision decideOwnedDraw(String playerId,
-                                          AwaitingDecision decision,
-                                          GameState gameState,
-                                          RejectionHistory history,
-                                          DecisionSnapshot snapshot,
-                                          boolean traceOpened,
-                                          boolean mediatorFacing,
-                                          String decisionType,
-                                          String decisionText) {
-        if (traceOpened) {
-            TraceSession.recordRoute(TraceRoute.DRAW_TOP_LEVEL,
-                "typed canonical Force-Pile draw action", null);
-        }
-
-        DecisionContext evalContext = buildEvaluatorContext(
-            playerId, decision, gameState, snapshot);
-        AiDecisionResult ownedResult;
-        if (evalContext == null) {
-            ownedResult = AiDecisionResult.typedRejection(
-                com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
-                "owned DRAW route could not build the evaluator context",
-                String.valueOf(decision.getAwaitingDecisionId()));
-        } else {
-            ownedResult = DrawPhaseOwner.decide(snapshot, history, () -> {
-                EvaluatedAction bestAction = combinedEvaluator.evaluateDecision(evalContext);
-                if (bestAction == null) {
-                    return null;
-                }
-                return bestAction.getActionType() == ActionType.PASS
-                    ? DrawPhaseOwner.Evaluation.passResult()
-                    : DrawPhaseOwner.Evaluation.candidate(bestAction.getActionId());
-            });
-        }
-
-        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
-            return new OuterDecision(ownedResult);
-        }
-
-        String wire = ownedResult.wireResponse();
-        if (!mediatorFacing) {
-            applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceOpened);
-            LOG.info("[TheChosenOneAi] owned DRAW result: '{}'", wire.isEmpty() ? "(pass)" : wire);
-            if (traceOpened) {
-                TraceSession.recordFinalResponse(wire, false);
-            }
-        }
-        return new OuterDecision(ownedResult);
-    }
-
-    /** Execute one stamped ACTIVATE/CONTROL route without re-entering legacy safety. */
-    private OuterDecision decideOwnedActivateControl(String playerId,
-                                                      AwaitingDecision decision,
-                                                      GameState gameState,
-                                                      RejectionHistory history,
-                                                      DecisionSnapshot snapshot,
-                                                      ActivateControlRouteInput routeInput,
-                                                      ActivateControlRoute route,
-                                                      boolean traceOpened,
-                                                      boolean mediatorFacing,
-                                                      String decisionType,
-                                                      String decisionText) {
-        if (traceOpened) {
-            TraceSession.recordRoute(traceRouteForActivateControl(route),
-                "typed ACTIVATE/CONTROL route " + route, null);
-            if (route == ActivateControlRoute.ACTIVATE_ZERO_CONFIRM
-                    || route == ActivateControlRoute.ACTIVATE_ACK) {
-                TraceSession.recordEvaluatorLaneNotApplicable(
-                    "typed ACTIVATE label owner selects the original result ordinal");
-            }
-        }
-
-        boolean[] selectionInvoked = {false};
-        ActivateControlPhaseOwner.Selection[] selected = {null};
-        AiDecisionResult ownedResult = ActivateControlPhaseOwner.decide(
-            snapshot, history, route, () -> {
-                selectionInvoked[0] = true;
-                selected[0] = selectOwnedActivateControl(
-                    playerId, decision, gameState, snapshot, routeInput, route);
-                return selected[0];
-            });
-        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
-            if (mediatorFacing) {
-                return new OuterDecision(ownedResult);
-            }
-            String compatibilityWire = selected[0] != null && !selected[0].isRejected()
-                ? selected[0].wire() : null;
-            if (!selectionInvoked[0]) {
-                compatibilityWire = tryEvaluators(
-                    playerId, decision, gameState, snapshot);
-            }
-            return completeDirectActivateControlCompatibility(
-                playerId, decision, gameState, compatibilityWire,
-                traceOpened, decisionType, decisionText, route);
-        }
-
-        String wire = ownedResult.wireResponse();
-        if (!mediatorFacing) {
-            applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceOpened);
-            LOG.info("[TheChosenOneAi] owned {} result: '{}'", route,
-                wire.isEmpty() ? "(pass)" : wire);
-            if (traceOpened) {
-                TraceSession.recordFinalResponse(wire, false);
-            }
-        }
-        return new OuterDecision(ownedResult);
-    }
-
-    /** Preserve the frozen raw-string decide() mapping after a typed owner rejection. */
-    private OuterDecision completeDirectActivateControlCompatibility(
-            String playerId,
-            AwaitingDecision decision,
-            GameState gameState,
-            String compatibilityWire,
-            boolean traceOpened,
-            String decisionType,
-            String decisionText,
-            ActivateControlRoute route) {
-        String wire = compatibilityWire;
-        if (wire == null) {
-            wire = super.decide(playerId, decision, gameState);
-        }
-
-        Map<String, String[]> params = decision.getDecisionParameters();
-        String[] actionIds = params != null ? params.get("actionId") : null;
-        String[] cardIds = params != null ? params.get("cardId") : null;
-        String[] noPass = params != null ? params.get("noPass") : null;
-        boolean rawNoPass = noPass != null && noPass.length > 0
-            && Boolean.parseBoolean(noPass[0]);
-        if ((wire == null || wire.isEmpty()) && rawNoPass) {
-            wire = DecisionSafety.getEmergencyResponse(decision, actionIds, cardIds).value;
-        }
-        String[] options = actionIds != null && actionIds.length > 0 ? actionIds : cardIds;
-        wire = DecisionSafety.ensureValidResponse(decision, wire, options)[0];
-
-        applyOuterCommonTrackerAndStrategic(
-            decision, decisionType, decisionText, wire, traceOpened);
-        LOG.warn("[TheChosenOneAi] direct {} compatibility result after typed rejection: '{}'",
-            route, wire != null && !wire.isEmpty() ? wire : "(pass)");
-        if (traceOpened) {
-            TraceSession.recordFinalResponse(wire, false);
-        }
-        return new OuterDecision(wire, AiDecisionResult.MutationMode.OUTER_COMMON);
-    }
-
-    private ActivateControlPhaseOwner.Selection selectOwnedActivateControl(
-            String playerId,
-            AwaitingDecision decision,
-            GameState gameState,
-            DecisionSnapshot snapshot,
-            ActivateControlRouteInput routeInput,
-            ActivateControlRoute route) {
-        switch (route) {
-            case ACTIVATE_TOP_LEVEL:
-            case ACTIVATE_AMOUNT:
-            case ACTIVATE_ALLOWANCE:
-            case CONTROL_TOP_LEVEL:
-                String wire = tryEvaluators(playerId, decision, gameState, snapshot);
-                return wire != null
-                    ? ActivateControlPhaseOwner.Selection.wire(wire)
-                    : ActivateControlPhaseOwner.Selection.rejected(
-                        com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.NO_LEGAL_FALLBACK,
-                        "owned ACTIVATE/CONTROL evaluator lane produced no result");
-            case ACTIVATE_ZERO_CONFIRM:
-                DecisionContext zeroContext = buildEvaluatorContext(
-                    playerId, decision, gameState, snapshot);
-                if (zeroContext == null) {
-                    return ActivateControlPhaseOwner.Selection.rejected(
-                        com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
-                        "owned ACTIVATE zero confirmation could not build evaluator context");
-                }
-                boolean keepThree = zeroContext.getReserveDeckSize() <= 3
-                    && zeroContext.isBattlePlausibleThisTurn();
-                return ActivateControlPhaseOwner.zeroConfirmation(routeInput.results(), keepThree);
-            case ACTIVATE_ACK:
-                if (buildEvaluatorContext(playerId, decision, gameState, snapshot) == null) {
-                    return ActivateControlPhaseOwner.Selection.rejected(
-                        com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
-                        "owned ACTIVATE acknowledgement could not build evaluator context");
-                }
-                return ActivateControlPhaseOwner.interruptionAcknowledgement(routeInput.results());
-            default:
-                return ActivateControlPhaseOwner.Selection.rejected(
-                    com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
-                    "unowned ACTIVATE/CONTROL route reached selection");
-        }
-    }
-
-    private static TraceRoute traceRouteForActivateControl(ActivateControlRoute route) {
-        return switch (route) {
-            case ACTIVATE_TOP_LEVEL -> TraceRoute.ACTIVATE_TOP_LEVEL;
-            case ACTIVATE_AMOUNT -> TraceRoute.ACTIVATE_AMOUNT;
-            case ACTIVATE_ALLOWANCE -> TraceRoute.ACTIVATE_ALLOWANCE;
-            case ACTIVATE_ZERO_CONFIRM -> TraceRoute.ACTIVATE_ZERO_CONFIRM;
-            case ACTIVATE_ACK -> TraceRoute.ACTIVATE_ACK;
-            case CONTROL_TOP_LEVEL -> TraceRoute.CONTROL_TOP_LEVEL;
-            default -> throw new IllegalArgumentException("unowned ACTIVATE/CONTROL route " + route);
-        };
-    }
-
-    /**
-     * Execute the one typed PULL owner. Owned results and typed rejections do not
-     * re-enter the legacy fallback or safety lanes.
-     */
-    private OuterDecision decideOwnedPull(String playerId,
-                                          AwaitingDecision decision,
-                                          GameState gameState,
-                                          RejectionHistory history,
-                                          DecisionSnapshot snapshot,
-                                          PullRouteInput pullInput,
-                                          PullRoute pullRoute,
-                                          boolean traceOpened,
-                                          boolean mediatorFacing,
-                                          String decisionType,
-                                          String decisionText) {
-        if (traceOpened) {
-            TraceSession.recordRoute(traceRouteForPull(pullRoute),
-                "typed PULL transaction stage " + pullRoute, null);
-            if (pullRoute == PullRoute.PULL_FAILED_VERIFY) {
-                TraceSession.recordEvaluatorLaneNotApplicable(
-                    "failed PULL verification finalizes an empty selection without scoring");
-            }
-        }
-
-        FactValue<PullFacts> factsValue = PullFacts.parse(snapshot, pullInput, pullRoute);
-        DeploymentPlan deployPlan = factsValue.isKnown()
-                ? deployPhasePlanner.planForDecision(
-                    currentGame, playerId, gameState.getSide(playerId))
-                : null;
-        AiDecisionResult ownedResult;
-        if (factsValue.isUnknown()) {
-            ownedResult = AiDecisionResult.typedRejection(
-                com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
-                "owned PULL facts are unknown: " + factsValue.unknownReason(),
-                String.valueOf(decision.getAwaitingDecisionId()));
-        } else {
-            PullFacts facts = factsValue.value();
-            PullAssessment assessment = PullAssessment.compatibility(facts);
-            if (pullRoute == PullRoute.PULL_FAILED_VERIFY) {
-                ObjectivePullAdapter.adaptFailedVerify(snapshot, facts, assessment);
-            }
-            ownedResult = PullPhaseOwner.decide(snapshot, history, pullRoute, facts, assessment,
-                (route, ignoredFacts, ignoredAssessment) ->
-                    tryEvaluators(
-                        playerId, decision, gameState, snapshot,
-                        facts, assessment, null, null, null, deployPlan,
-                        null, null));
-        }
-
-        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
-            return new OuterDecision(ownedResult);
-        }
-
-        String wire = ownedResult.wireResponse();
-        if (pullRoute == PullRoute.PULL_DEPLOY_CHILD) {
-            if (mediatorFacing) {
-                pendingPullDeployDecision = new PendingPullDeployDecision(
-                        factsValue.value(), deployPlan);
-            } else {
-                // Direct callers have no disposition callback. Start only the accepted
-                // deployment transition; PULL retains search ownership.
-                deployPhasePlanner.acceptPullDeployChild(
-                        factsValue.value(), wire, deployPlan, currentGame);
-            }
-        }
-
-        if (!mediatorFacing) {
-            applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceOpened);
-            LOG.info("[TheChosenOneAi] owned PULL {} result: '{}'", pullRoute,
-                wire.isEmpty() ? "(pass)" : wire);
-            if (traceOpened) {
-                TraceSession.recordFinalResponse(wire, false);
-            }
-        }
-        return new OuterDecision(ownedResult);
-    }
-
-    private static TraceRoute traceRouteForPull(PullRoute route) {
-        return switch (route) {
-            case PULL_PARENT -> TraceRoute.PULL_PARENT;
-            case PULL_DEPLOY_CHILD -> TraceRoute.PULL_DEPLOY_CHILD;
-            case PULL_TAKE_CHILD -> TraceRoute.PULL_TAKE_CHILD;
-            case PULL_DESTINATION -> TraceRoute.PULL_DESTINATION;
-            case PULL_FAILED_VERIFY -> TraceRoute.PULL_FAILED_VERIFY;
-            default -> throw new IllegalArgumentException("unowned PULL route " + route);
-        };
-    }
-
     /**
      * Try to use the evaluator system for this decision.
      *
      * @return result from evaluator, or null if evaluators don't handle this decision
      */
-    private String tryEvaluators(String playerId, AwaitingDecision decision,
-                                 GameState gameState, DecisionSnapshot snapshot) {
-        return tryEvaluators(
-                playerId, decision, gameState, snapshot,
-                null, null, null, null, null, null, null, null);
-    }
-
-    private String tryEvaluators(String playerId, AwaitingDecision decision,
-                                 GameState gameState, DecisionSnapshot snapshot,
-                                 PullFacts pullFacts, PullAssessment pullAssessment) {
-        return tryEvaluators(
-                playerId, decision, gameState, snapshot,
-                pullFacts, pullAssessment, null, null, null, null, null, null);
-    }
-
-    private String tryEvaluators(String playerId, AwaitingDecision decision,
-                                 GameState gameState, DecisionSnapshot snapshot,
-                                 PullFacts pullFacts, PullAssessment pullAssessment,
-                                 DeployFacts deployFacts, DeployAssessment deployAssessment,
-                                 ForceObligationVector deployForceObligations,
-                                 DeploymentPlan deployPlan,
-                                 BattleFacts battleFacts,
-                                 BattleAssessment battleAssessment) {
+    private String tryEvaluators(String playerId, AwaitingDecision decision, GameState gameState) {
         // Build DecisionContext for evaluators
-        DecisionContext evalContext = buildEvaluatorContext(
-            playerId, decision, gameState, snapshot);
+        DecisionContext evalContext = buildEvaluatorContext(playerId, decision, gameState);
         if (evalContext == null) {
             return null;
-        }
-        if (pullFacts != null && pullAssessment != null) {
-            evalContext.setPullTransaction(pullFacts, pullAssessment);
-        }
-        if (deployPlan != null) {
-            evalContext.setAssessedDeploymentPlan(deployPlan);
-        }
-        if (deployFacts != null && deployPlan != null) {
-            evalContext.setDeployTransaction(
-                    deployFacts, deployAssessment,
-                    deployForceObligations, deployPlan);
-        }
-        if (battleFacts != null && battleAssessment != null) {
-            evalContext.setBattleTransaction(battleFacts, battleAssessment);
         }
 
         // Check if evaluators can handle this decision
@@ -2133,9 +1185,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
     /**
      * Build a DecisionContext for evaluators from AwaitingDecision.
      */
-    private DecisionContext buildEvaluatorContext(String playerId, AwaitingDecision decision,
-                                                   GameState gameState,
-                                                   DecisionSnapshot snapshot) {
+    private DecisionContext buildEvaluatorContext(String playerId, AwaitingDecision decision, GameState gameState) {
         if (decision == null) {
             return null;
         }
@@ -2146,21 +1196,17 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
 
         Phase phase = gameState != null ? gameState.getCurrentPhase() : null;
-        Map<String, String[]> params = decision.getDecisionParameters();
-        String[] originValues = params != null ? params.get(DecisionOrigin.WIRE_PARAMETER) : null;
-        DecisionOrigin decisionOrigin = originValues != null && originValues.length == 1
-            ? DecisionOrigin.fromWire(originValues[0]) : null;
         DecisionContext evalContext = new DecisionContext(
             gameState,
             playerId,
             decisionType.name(),  // "INTEGER", "CARD_ACTION_CHOICE", etc.
             decision.getText(),
             String.valueOf(decision.getAwaitingDecisionId()),
-            phase,
-            decisionOrigin
+            phase
         );
 
         // Parse parameters from decision
+        Map<String, String[]> params = decision.getDecisionParameters();
         if (params != null) {
             // For INTEGER decisions
             String[] minVal = params.get("min");
@@ -2313,15 +1359,18 @@ public class TheChosenOneAi extends HeuristicAiBase {
         // Set game context for advanced analysis
         evalContext.setGame(currentGame);
         evalContext.setSide(mySide);
-        if (snapshot != null) {
-            evalContext.setDecisionSnapshot(snapshot);
-        }
 
         // Set strategy components so evaluators can use them
         evalContext.setStrategyController(strategyController);
         evalContext.setObjectiveHandler(objectiveHandler);
         evalContext.setObjectiveAnalyzer(objectiveAnalyzer);
 
+        if (!objectiveAnalyzer.isAnalyzed() && currentGame != null && mySide != null) {
+            objectiveAnalyzer.analyze(currentGame, playerId, mySide);
+        } else if (objectiveAnalyzer.isAnalyzed() && currentGame != null) {
+            // V29.7: Refresh flip status each evaluation so we detect when objective actually flips
+            objectiveAnalyzer.refreshFlipStatus(currentGame.getGameState(), playerId);
+        }
         evalContext.setShieldStrategy(shieldStrategy);
         deployPhasePlanner.setObjectiveAnalyzer(objectiveAnalyzer);
         evalContext.setDeployPhasePlanner(deployPhasePlanner);
@@ -2378,12 +1427,6 @@ public class TheChosenOneAi extends HeuristicAiBase {
      * Called by game mediator before decisions.
      */
     public void setCurrentGame(SwccgGame game) {
-        if (this.currentGame != game) {
-            objectiveHandler.reset();
-            objectiveAnalyzer.reset();
-            deployPhasePlanner.reset();
-            deckOracle.reset();
-        }
         this.currentGame = game;
     }
 
@@ -2438,11 +1481,6 @@ public class TheChosenOneAi extends HeuristicAiBase {
     @Override
     protected boolean shouldSkipOptionalResponses() {
         return false;  // Rando Cal handles optional responses
-    }
-
-    @Override
-    protected boolean isLegacyFailedSearchMemoryEnabled() {
-        return false;
     }
 
     @Override
@@ -2838,53 +1876,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
             seenOwnShields.clear();  // Clear own shield tracking for pacing
 
             // Reset and update strategy components with new side
-            // TRACE 4B2 (Handoffs/CODEX_TRACE_STAGE4_4B2_STRATEGY_CONTROLLER_PREFLIGHT_2026-07-13.md
-            // "Exact Reachability, Guards, and Order" item 4): observe the new-game
-            // controller SIDE_SET then RESET, each at its unchanged source position, each
-            // its own event. Snapshots build only under an active session; failure marks
-            // STATE_EVENT and never skips, repeats, or alters the legacy call.
-            StrategyControllerSnapshot traceSideBefore = null;
-            if (TraceSession.isActive()) {
-                try {
-                    traceSideBefore = StrategyControllerTraceAccess.snapshot(strategyController);
-                } catch (Throwable traceT) {
-                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                        traceT.getClass().getName(),
-                        "SIDE_SET before-snapshot failed; legacy setSide unaffected");
-                }
-            }
             strategyController.setSide(mySide);
-            if (traceSideBefore != null) {
-                try {
-                    TraceSession.recordStrategySideSet(StrategyControllerOwner.CHOSENONE, mySide,
-                        traceSideBefore, StrategyControllerTraceAccess.snapshot(strategyController));
-                } catch (Throwable traceT) {
-                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                        traceT.getClass().getName(),
-                        "SIDE_SET after-snapshot/record failed; legacy setSide already ran");
-                }
-            }
-            StrategyControllerSnapshot traceResetBefore = null;
-            if (TraceSession.isActive()) {
-                try {
-                    traceResetBefore = StrategyControllerTraceAccess.snapshot(strategyController);
-                } catch (Throwable traceT) {
-                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                        traceT.getClass().getName(),
-                        "RESET before-snapshot failed; legacy reset unaffected");
-                }
-            }
             strategyController.reset();
-            if (traceResetBefore != null) {
-                try {
-                    TraceSession.recordStrategyReset(StrategyControllerOwner.CHOSENONE,
-                        traceResetBefore, StrategyControllerTraceAccess.snapshot(strategyController));
-                } catch (Throwable traceT) {
-                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                        traceT.getClass().getName(),
-                        "RESET after-snapshot/record failed; legacy reset already ran");
-                }
-            }
             objectiveHandler.reset();
             objectiveAnalyzer.reset();
             shieldStrategy.setSide(mySide);
@@ -2938,29 +1931,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
         if (currentTurn > lastTurn) {
             lastTurn = currentTurn;
             chatManager.setCurrentTurn(currentTurn);
-            // TRACE 4B2 (packet item 5): observe the controller START_TURN at its
-            // unchanged source position; snapshots build only under an active session.
-            StrategyControllerSnapshot traceStartTurnBefore = null;
-            if (TraceSession.isActive()) {
-                try {
-                    traceStartTurnBefore = StrategyControllerTraceAccess.snapshot(strategyController);
-                } catch (Throwable traceT) {
-                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                        traceT.getClass().getName(),
-                        "START_TURN before-snapshot failed; legacy startNewTurn unaffected");
-                }
-            }
             strategyController.startNewTurn(currentTurn);
-            if (traceStartTurnBefore != null) {
-                try {
-                    TraceSession.recordStrategyStartTurn(StrategyControllerOwner.CHOSENONE, currentTurn,
-                        traceStartTurnBefore, StrategyControllerTraceAccess.snapshot(strategyController));
-                } catch (Throwable traceT) {
-                    TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                        traceT.getClass().getName(),
-                        "START_TURN after-snapshot/record failed; legacy startNewTurn already ran");
-                }
-            }
 
             LOG.info("🎲 Turn changed to {} (was {})", currentTurn, lastTurn - 1);
 
@@ -2991,32 +1962,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
             // Confirm any pending deploy from last turn succeeded (strategy learning)
             if (lastPendingDeployType != null) {
-                // TRACE 4B2 (packet item 5): observe the optional controller
-                // FOCUS_DEPLOY_RECORD at its unchanged source position, BEFORE the outer
-                // pending-deploy CLEAR below; the exact card-type argument is captured
-                // while lastPendingDeployType is still non-null.
-                StrategyControllerSnapshot traceFocusBefore = null;
-                if (TraceSession.isActive()) {
-                    try {
-                        traceFocusBefore = StrategyControllerTraceAccess.snapshot(strategyController);
-                    } catch (Throwable traceT) {
-                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                            traceT.getClass().getName(),
-                            "FOCUS_DEPLOY_RECORD before-snapshot failed; legacy onSuccessfulDeploy unaffected");
-                    }
-                }
                 strategyController.onSuccessfulDeploy(lastPendingDeployType);
-                if (traceFocusBefore != null) {
-                    try {
-                        TraceSession.recordStrategyFocusDeployRecord(StrategyControllerOwner.CHOSENONE,
-                            lastPendingDeployType, traceFocusBefore,
-                            StrategyControllerTraceAccess.snapshot(strategyController));
-                    } catch (Throwable traceT) {
-                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                            traceT.getClass().getName(),
-                            "FOCUS_DEPLOY_RECORD after-snapshot/record failed; legacy onSuccessfulDeploy already ran");
-                    }
-                }
                 String traceDeployTypeBefore = lastPendingDeployType;
                 lastPendingDeployType = null;
                 // TRACE 4A1: typed PENDING_DEPLOY CLEAR at the direct-write site. The
@@ -3035,31 +1981,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
         // Check for Battle Order/Plan cards in play and update strategy
         // This enables proper force drain cost calculation (+3 when under Battle Order rules)
-        // TRACE 4B2 (packet item 6): observe the once-per-decision controller
-        // BATTLE_ORDER_REFRESH at its unchanged source position. No GameState reference is
-        // ever stored; the internal setUnderBattleOrderRules write stays folded into this
-        // single event, whose outcome follows controller-snapshot equality.
-        StrategyControllerSnapshot traceBattleOrderBefore = null;
-        if (TraceSession.isActive()) {
-            try {
-                traceBattleOrderBefore = StrategyControllerTraceAccess.snapshot(strategyController);
-            } catch (Throwable traceT) {
-                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                    traceT.getClass().getName(),
-                    "BATTLE_ORDER_REFRESH before-snapshot failed; legacy updateBattleOrderFromGameState unaffected");
-            }
-        }
         strategyController.updateBattleOrderFromGameState(gameState);
-        if (traceBattleOrderBefore != null) {
-            try {
-                TraceSession.recordStrategyBattleOrderRefresh(StrategyControllerOwner.CHOSENONE,
-                    traceBattleOrderBefore, StrategyControllerTraceAccess.snapshot(strategyController));
-            } catch (Throwable traceT) {
-                TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                    traceT.getClass().getName(),
-                    "BATTLE_ORDER_REFRESH after-snapshot/record failed; legacy updateBattleOrderFromGameState already ran");
-            }
-        }
 
         // Track phase changes for battle message
         Phase currentPhase = gameState.getCurrentPhase();
@@ -3381,55 +2303,13 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
         // Track battle results from decision text
         // Battle result prompts typically contain "won" or "lost"
-        // TRACE 4B2 (packet item 9): the two win/loss lexical hooks share one operation
-        // kind; each observes onBattleResult at its unchanged source position AFTER the
-        // outer pending-deploy SET above, snapshots built only under an active session.
+        // TRACE 4A1: strategyController.onBattleResult stays UNOBSERVED here; its event lands with the StrategyController owner increment (4B).
         if (textLower.contains("battle")) {
             if (textLower.contains("you won") || textLower.contains("you have won")) {
-                StrategyControllerSnapshot traceBattleWonBefore = null;
-                if (TraceSession.isActive()) {
-                    try {
-                        traceBattleWonBefore = StrategyControllerTraceAccess.snapshot(strategyController);
-                    } catch (Throwable traceT) {
-                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                            traceT.getClass().getName(),
-                            "BATTLE_RESULT_RECORD before-snapshot failed; legacy onBattleResult unaffected");
-                    }
-                }
                 strategyController.onBattleResult(true);
-                if (traceBattleWonBefore != null) {
-                    try {
-                        TraceSession.recordStrategyBattleResultRecord(StrategyControllerOwner.CHOSENONE, true,
-                            traceBattleWonBefore, StrategyControllerTraceAccess.snapshot(strategyController));
-                    } catch (Throwable traceT) {
-                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                            traceT.getClass().getName(),
-                            "BATTLE_RESULT_RECORD after-snapshot/record failed; legacy onBattleResult already ran");
-                    }
-                }
                 LOG.debug("Battle won - updating strategy controller");
             } else if (textLower.contains("you lost") || textLower.contains("you have lost")) {
-                StrategyControllerSnapshot traceBattleLostBefore = null;
-                if (TraceSession.isActive()) {
-                    try {
-                        traceBattleLostBefore = StrategyControllerTraceAccess.snapshot(strategyController);
-                    } catch (Throwable traceT) {
-                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                            traceT.getClass().getName(),
-                            "BATTLE_RESULT_RECORD before-snapshot failed; legacy onBattleResult unaffected");
-                    }
-                }
                 strategyController.onBattleResult(false);
-                if (traceBattleLostBefore != null) {
-                    try {
-                        TraceSession.recordStrategyBattleResultRecord(StrategyControllerOwner.CHOSENONE, false,
-                            traceBattleLostBefore, StrategyControllerTraceAccess.snapshot(strategyController));
-                    } catch (Throwable traceT) {
-                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
-                            traceT.getClass().getName(),
-                            "BATTLE_RESULT_RECORD after-snapshot/record failed; legacy onBattleResult already ran");
-                    }
-                }
                 LOG.debug("Battle lost - updating strategy controller");
             }
         }

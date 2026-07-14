@@ -35,7 +35,7 @@ public class PlayDejarikAction extends AbstractPlayCardAction {
      * @param forFree true if deploying card for free, otherwise false
      */
     public PlayDejarikAction(final PhysicalCard sourceCard, final PhysicalCard cardToDeploy, boolean forFree) {
-        super(cardToDeploy, sourceCard, true);
+        super(cardToDeploy, sourceCard);
         setPerformingPlayer(cardToDeploy.getOwner());
         _cardToPlay = cardToDeploy;
         _forFree = forFree;
@@ -43,11 +43,6 @@ public class PlayDejarikAction extends AbstractPlayCardAction {
 
         appendTargeting(
                 new ChooseCardOnTableEffect(this, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(cardToDeploy), Filters.holosite) {
-                    @Override
-                    protected boolean isPullDestinationSelection() {
-                        return true;
-                    }
-
                     @Override
                     protected void cardSelected(PhysicalCard target) {
                         _target = target;

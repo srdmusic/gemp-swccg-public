@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.logic.timing.processes.turn.general;
 
-import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
@@ -46,10 +45,6 @@ public class PlayersPlayPhaseActionsInOrderGameProcess implements GameProcess {
         // Ask the player to choose an action or pass
         game.getUserFeedback().sendAwaitingDecision(playerId,
                 new CardActionSelectionDecision(1, "Choose " + game.getGameState().getCurrentPhase().getHumanReadable() + " action or Pass", playableActions, playerId.equals(game.getGameState().getCurrentPlayerId()), true, false, false, true) {
-                    // ACTIVATE/CONTROL Option 2 seam (2026-07-13): the top-level
-                    // phase-action decision. Stamped for every phase; the shadow
-                    // resolver owns only ACTIVATE/CONTROL and bypasses the rest.
-                    { setDecisionOrigin(DecisionOrigin.PHASE_ACTION); }
                     @Override
                     public void decisionMade(String result) throws DecisionResultInvalidException {
                         // Check if revert to previous game state was chosen
@@ -86,9 +81,6 @@ public class PlayersPlayPhaseActionsInOrderGameProcess implements GameProcess {
 
                                     game.getUserFeedback().sendAwaitingDecision(playerId,
                                             new YesNoDecision("You have not activated Force. Do you want to Pass?") {
-                                                // ACTIVATE/CONTROL Option 2 seam (2026-07-13):
-                                                // zero-activation Pass confirmation.
-                                                { setDecisionOrigin(DecisionOrigin.ACTIVATE_ZERO_CONFIRM); }
                                                 @Override
                                                 protected void yes() {
                                                     playerPassed(game, playerId);

@@ -53,7 +53,7 @@ public class PlayCardAsAttachedAction extends AbstractPlayCardAction {
      * @param deployTargetFilter the filter for where the card can be deployed
      */
     public PlayCardAsAttachedAction(final PhysicalCard sourceCard, final PhysicalCard cardToPlay, PlayCardOption playCardOption, boolean forFree, float changeInCost, final ReactActionOption reactActionOption, final Map<InactiveReason, Boolean> spotOverrides, final Filter deployTargetFilter) {
-        super(cardToPlay, sourceCard, cardToPlay.getBlueprint().isCardTypeDeployed());
+        super(cardToPlay, sourceCard);
         setPerformingPlayer(cardToPlay.getOwner());
         _that = this;
         _cardToPlay = cardToPlay;
@@ -68,11 +68,6 @@ public class PlayCardAsAttachedAction extends AbstractPlayCardAction {
 
         appendTargeting(
                 new TargetCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to " + _text.toLowerCase() + " " + GameUtils.getCardLink(_cardToPlay) + " as attached", spotOverrides, TargetingReason.TO_BE_DEPLOYED_ON, deployTargetFilter) {
-                    @Override
-                    protected boolean isPullDestinationSelection() {
-                        return true;
-                    }
-
                     @Override
                     protected void cardTargeted(int targetGroupId, PhysicalCard target) {
                         _target = target;

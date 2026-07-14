@@ -67,13 +67,6 @@ public abstract class MultipleChoiceAwaitingDecision extends AbstractAwaitingDec
         } catch (NumberFormatException exp) {
             throw new DecisionResultInvalidException("Unknown response number");
         }
-        // F1 (2026-07-13): validate the ordinal range BEFORE indexing. An out-of-range
-        // wire ordinal used to index _possibleResults directly and throw unchecked
-        // ArrayIndexOutOfBoundsException, escaping the mediator's checked
-        // DecisionResultInvalidException catch and stranding AI scheduling
-        // (Handoffs/CODEX_FINALIZER_FIXTURE_RETRY_PACKET_2026-07-13.md, F1; audit P0 #1).
-        if (index < 0 || index >= _possibleResults.length)
-            throw new DecisionResultInvalidException("Unknown response number");
         validDecisionMade(index, _possibleResults[index]);
     }
 

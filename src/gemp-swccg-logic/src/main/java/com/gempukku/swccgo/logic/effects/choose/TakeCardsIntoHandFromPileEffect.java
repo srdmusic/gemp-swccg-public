@@ -1,7 +1,5 @@
 package com.gempukku.swccgo.logic.effects.choose;
 
-import com.gempukku.swccgo.common.DecisionActionSemantic;
-import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -67,7 +65,6 @@ abstract class TakeCardsIntoHandFromPileEffect extends AbstractSubActionEffect i
         _reshuffle = reshuffle;
         _hidden = true;
         _that = this;
-        action.setDecisionActionSemantic(DecisionActionSemantic.PULL_TAKE_INTO_HAND_FROM_PILE);
     }
 
     /**
@@ -95,7 +92,6 @@ abstract class TakeCardsIntoHandFromPileEffect extends AbstractSubActionEffect i
         _reshuffle = reshuffle;
         _hidden = false;
         _that = this;
-        action.setDecisionActionSemantic(DecisionActionSemantic.PULL_TAKE_INTO_HAND_FROM_PILE);
     }
 
     /**
@@ -143,7 +139,6 @@ abstract class TakeCardsIntoHandFromPileEffect extends AbstractSubActionEffect i
         _reshuffle = reshuffle;
         _hidden = hidden;
         _that = this;
-        action.setDecisionActionSemantic(DecisionActionSemantic.PULL_TAKE_INTO_HAND_FROM_PILE);
     }
 
     /**
@@ -261,19 +256,6 @@ abstract class TakeCardsIntoHandFromPileEffect extends AbstractSubActionEffect i
 
     private StandardEffect getChooseOneCardToTakeIntoHandEffect(final SubAction subAction) {
         return new ChooseCardsFromPileEffect(subAction, _playerId, _zone, _cardPileOwner, _numTakenIntoHand < _minimum ? 1 : 0, 1, _maximum - _numTakenIntoHand, false, _topmost, _filters) {
-            @Override
-            protected DecisionOrigin getPullDecisionOrigin() {
-                return TakeCardsIntoHandFromPileEffect.this._action.getDecisionActionSemantic()
-                                == DecisionActionSemantic.PULL_TAKE_INTO_HAND_FROM_PILE
-                        && TakeCardsIntoHandFromPileEffect.this._action.getAcceptedPullTransactionId() != null
-                        ? DecisionOrigin.PULL_TAKE_CHILD : null;
-            }
-
-            @Override
-            protected Action getPullParentAction() {
-                return TakeCardsIntoHandFromPileEffect.this._action;
-            }
-
             @Override
             public String getChoiceText(int numCardsToChoose) {
                 return "Choose card" + GameUtils.s(numCardsToChoose) + " to take into hand";

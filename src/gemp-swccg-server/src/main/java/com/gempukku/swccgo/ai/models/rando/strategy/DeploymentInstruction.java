@@ -8,8 +8,6 @@ package com.gempukku.swccgo.ai.models.rando.strategy;
 public class DeploymentInstruction {
     private String cardBlueprintId;
     private String cardName;
-    private Integer cardPermanentCardId;
-    private Integer cardCurrentCardId;
     private String targetLocationId;       // null for locations (they deploy to table)
     private String targetLocationName;
     private int priority;                  // Lower = deploy first (0 = locations, 1 = reinforce, 2 = establish)
@@ -33,7 +31,7 @@ public class DeploymentInstruction {
     private String targetLocationBlueprintId;
 
     public DeploymentInstruction(String cardBlueprintId, String cardName, String targetLocationId,
-                                 String targetLocationName, int priority, String reason) {
+                                  String targetLocationName, int priority, String reason) {
         this.cardBlueprintId = cardBlueprintId;
         this.cardName = cardName;
         this.targetLocationId = targetLocationId;
@@ -49,41 +47,12 @@ public class DeploymentInstruction {
         }
     }
 
-    /** Detached copy used while evaluating a plan. */
-    public DeploymentInstruction(DeploymentInstruction other) {
-        this.cardBlueprintId = other.cardBlueprintId;
-        this.cardName = other.cardName;
-        this.cardPermanentCardId = other.cardPermanentCardId;
-        this.cardCurrentCardId = other.cardCurrentCardId;
-        this.targetLocationId = other.targetLocationId;
-        this.targetLocationName = other.targetLocationName;
-        this.priority = other.priority;
-        this.reason = other.reason;
-        this.powerContribution = other.powerContribution;
-        this.deployCost = other.deployCost;
-        this.abilityContribution = other.abilityContribution;
-        this.backupLocationId = other.backupLocationId;
-        this.backupLocationName = other.backupLocationName;
-        this.backupReason = other.backupReason;
-        this.aboardShipName = other.aboardShipName;
-        this.aboardShipBlueprintId = other.aboardShipBlueprintId;
-        this.aboardShipCardId = other.aboardShipCardId;
-        this.targetLocationPending = other.targetLocationPending;
-        this.targetLocationBlueprintId = other.targetLocationBlueprintId;
-    }
-
     // Getters and setters
     public String getCardBlueprintId() { return cardBlueprintId; }
     public void setCardBlueprintId(String cardBlueprintId) { this.cardBlueprintId = cardBlueprintId; }
 
     public String getCardName() { return cardName; }
     public void setCardName(String cardName) { this.cardName = cardName; }
-
-    public Integer getCardPermanentCardId() { return cardPermanentCardId; }
-    public void setCardPermanentCardId(Integer cardPermanentCardId) { this.cardPermanentCardId = cardPermanentCardId; }
-
-    public Integer getCardCurrentCardId() { return cardCurrentCardId; }
-    public void setCardCurrentCardId(Integer cardCurrentCardId) { this.cardCurrentCardId = cardCurrentCardId; }
 
     public String getTargetLocationId() { return targetLocationId; }
     public void setTargetLocationId(String targetLocationId) { this.targetLocationId = targetLocationId; }

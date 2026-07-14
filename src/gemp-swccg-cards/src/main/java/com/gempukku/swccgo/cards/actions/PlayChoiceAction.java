@@ -42,9 +42,6 @@ public class PlayChoiceAction extends AbstractPlayCardAction {
                             @Override
                             protected void validDecisionMade(int index, String result) {
                                 PlayCardAction actionChosen = _playCardActionChoices.get(index);
-                                if (_that.getPullDeployRef() != null) {
-                                    actionChosen.setPullDeployRef(_that.getPullDeployRef());
-                                }
                                 actionChosen.setReshuffle(_reshuffle);
                                 actionChosen.setPlaceOutOfPlay(_placeOutOfPlay);
                                 appendEffect(

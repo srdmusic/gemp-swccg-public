@@ -38,7 +38,7 @@ public class TraceStateEventTest {
     public void hierarchyIsSealedToThePermittedFamilies() {
         assertTrue(TraceStateEvent.class.isSealed());
         Class<?>[] permitted = TraceStateEvent.class.getPermittedSubclasses();
-        assertEquals(20, permitted.length);
+        assertEquals(14, permitted.length);
         List<String> names = new ArrayList<>();
         for (Class<?> c : permitted) {
             names.add(c.getSimpleName());
@@ -61,15 +61,6 @@ public class TraceStateEventTest {
         assertTrue(names.contains("HeuristicSingleResponseRecordEvent"));
         assertTrue(names.contains("HeuristicRecentResponseAppendEvent"));
         assertTrue(names.contains("HeuristicReassignmentRecordEvent"));
-        // TRACE STAGE 4B2: the six closed StrategyController families; the internal
-        // setUnderBattleOrderRules write stays FOLDED into BATTLE_ORDER_REFRESH and the
-        // two win/loss hooks share BATTLE_RESULT_RECORD, so no seventh 4B2 family exists
-        assertTrue(names.contains("StrategySideSetEvent"));
-        assertTrue(names.contains("StrategyResetEvent"));
-        assertTrue(names.contains("StrategyStartTurnEvent"));
-        assertTrue(names.contains("StrategyFocusDeployRecordEvent"));
-        assertTrue(names.contains("StrategyBattleOrderRefreshEvent"));
-        assertTrue(names.contains("StrategyBattleResultRecordEvent"));
     }
 
     // =========================================================================

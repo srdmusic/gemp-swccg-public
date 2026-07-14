@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.finalization;
 
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -18,13 +19,10 @@ import static org.junit.Assert.fail;
  *
  * Every assertion uses a FRESH decision instance from {@link EngineDecisionFixtures}
  * and every accepted/rejected contract runs TWICE to expose retained fixture state
- * (packet F0 rules). All contracts here describe CURRENT engine behavior and pass.
- * F1 UPDATE (2026-07-13, same hunk-set as the MultipleChoiceAwaitingDecision bounds
- * guard): the checked multiple-choice bounds contract
- * ({@link #fcMultipleChoiceBounds_checkedAfterF1}) is ACTIVE (un-{@code @Ignore}d),
- * and the old unchecked-AIOOBE pin was CONVERTED into the positive mapping contract
- * ({@link #fcMultipleChoiceBounds_validOrdinalMappingAndNonNumeric}) per packet F1:
- * "Do not keep both contradictory contracts active."
+ * (packet F0 rules). All contracts here describe CURRENT engine behavior and pass;
+ * the post-F1 multiple-choice bounds target is isolated and named below
+ * ({@link #fcMultipleChoiceBounds_checkedAfterF1}) and NOT weakened — it stays
+ * {@code @Ignore}d until the F1 engine repair (a separate commit) lands.
  *
  * ── Pinned mediator P0 evidence (SwccgGameMediator.maybeLetAiPlay, source-anchored
  * here because the F2 test seam — package-private mediator constructor — is an
@@ -176,18 +174,18 @@ public class EngineAwaitingDecisionContractTest {
         }
     }
 
-    // ── fcMultipleChoiceBounds (positive mapping + non-numeric) ──────────────
-    // A valid ordinal maps to the result at that ordinal; non-numeric input is
-    // checked-rejected ("Unknown response number",
-    // MultipleChoiceAwaitingDecision.java:66-68). F1 CONVERSION NOTE: the pre-F1
-    // version of this test (fcMultipleChoiceBounds_todayUncheckedOrdinalPinned)
-    // PINNED the unchecked defect: out-of-range ordinals indexed _possibleResults
-    // with no range guard and threw ArrayIndexOutOfBoundsException, bypassing the
-    // mediator's checked catch (audit P0 #1). The F1 bounds guard retired that pin;
-    // out-of-range ordinals now belong to the ACTIVE checked contract below
-    // (packet F1: "Do not keep both contradictory contracts active").
+    // ── fcMultipleChoiceBounds (today's pinned defect) ───────────────────────
+    // A valid ordinal maps to the result at that ordinal. TODAY, negative and
+    // >=size ordinals throw UNCHECKED ArrayIndexOutOfBoundsException — the parsed
+    // int indexes _possibleResults with NO range guard
+    // (MultipleChoiceAwaitingDecision.java:59-70). Unchecked means it BYPASSES the
+    // mediator's checked DecisionResultInvalidException catch
+    // (SwccgGameMediator.java:1327-1329) and can strand scheduling (audit P0 #1).
+    // This test PINS the defect so any engine change is caught; the checked target
+    // is the named, isolated red contract below (packet F0 gate: "isolated and
+    // named. Do not weaken their expected engine behavior").
     @Test
-    public void fcMultipleChoiceBounds_validOrdinalMappingAndNonNumeric() throws Exception {
+    public void fcMultipleChoiceBounds_todayUncheckedOrdinalPinned() throws Exception {
         for (int run = 0; run < RUNS; run++) {
             EngineDecisionFixtures.RecordingMultipleChoice decision =
                     EngineDecisionFixtures.freshMultipleChoice();
@@ -197,7 +195,23 @@ public class EngineAwaitingDecisionContractTest {
             assertEquals("No", decision.chosenResult);
             assertEquals(1, decision.callbackCount);
 
-            // non-numeric is checked-rejected (:66-68)
+            for (String bad : new String[]{"2", "-1"}) { // exactly size, negative
+                EngineDecisionFixtures.RecordingMultipleChoice fresh =
+                        EngineDecisionFixtures.freshMultipleChoice();
+                try {
+                    fresh.decisionMade(bad);
+                    fail("run " + run + ": today's engine must throw on ordinal '" + bad + "'");
+                } catch (ArrayIndexOutOfBoundsException documentedDefect) {
+                    // TODAY: unchecked — NOT DecisionResultInvalidException — escapes
+                    // the mediator catch. F1 (separate commit) owns the repair.
+                } catch (DecisionResultInvalidException e) {
+                    fail("engine grew a range guard: promote fcMultipleChoiceBounds_checkedAfterF1"
+                            + " and retire this pin (F1 landed?)");
+                }
+                assertEquals(0, fresh.callbackCount);
+            }
+
+            // non-numeric IS already checked today (:66-68)
             EngineDecisionFixtures.RecordingMultipleChoice nonNumeric =
                     EngineDecisionFixtures.freshMultipleChoice();
             try {
@@ -206,27 +220,25 @@ public class EngineAwaitingDecisionContractTest {
             } catch (DecisionResultInvalidException expected) {
                 // engine contract holds
             }
-            assertEquals(0, nonNumeric.callbackCount);
         }
     }
 
-    // ── fcMultipleChoiceBounds (checked bounds, ACTIVE since F1) ─────────────
+    // ── fcMultipleChoiceBounds (post-F1 target — ISOLATED AND NAMED, not weakened) ──
     // Packet F0: "Negative and size ordinals must become checked invalid results
-    // after F1." The F1 engine repair (MultipleChoiceAwaitingDecision range guard
-    // before indexing) landed in the same hunk-set that un-ignored this contract.
+    // after F1." F1 is a separate engine commit (MultipleChoiceAwaitingDecision
+    // bounds guard) not delivered by this lane; un-ignore when it lands.
+    @Ignore("RED until F1 lands: MultipleChoiceAwaitingDecision has no ordinal bounds guard"
+            + " (packet CODEX_FINALIZER_FIXTURE_RETRY_PACKET_2026-07-13.md §F1)")
     @Test
     public void fcMultipleChoiceBounds_checkedAfterF1() throws Exception {
-        for (int run = 0; run < RUNS; run++) {
-            for (String bad : new String[]{"2", "-1"}) { // exactly size, negative
-                EngineDecisionFixtures.RecordingMultipleChoice fresh =
-                        EngineDecisionFixtures.freshMultipleChoice();
-                try {
-                    fresh.decisionMade(bad);
-                    fail("run " + run + ": ordinal '" + bad + "' must be checked-rejected after F1");
-                } catch (DecisionResultInvalidException expected) {
-                    // F1 contract: checked, so the mediator's retry path can catch it
-                }
-                assertEquals("no callback on rejection", 0, fresh.callbackCount);
+        for (String bad : new String[]{"2", "-1"}) {
+            EngineDecisionFixtures.RecordingMultipleChoice fresh =
+                    EngineDecisionFixtures.freshMultipleChoice();
+            try {
+                fresh.decisionMade(bad);
+                fail("ordinal '" + bad + "' must be checked-rejected after F1");
+            } catch (DecisionResultInvalidException expected) {
+                // F1 target contract
             }
         }
     }

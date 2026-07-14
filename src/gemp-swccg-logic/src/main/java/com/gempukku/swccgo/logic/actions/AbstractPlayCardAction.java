@@ -1,19 +1,13 @@
 package com.gempukku.swccgo.logic.actions;
 
 import com.gempukku.swccgo.common.Zone;
-import com.gempukku.swccgo.common.DecisionActionSemantic;
-import com.gempukku.swccgo.common.DeployActionMetadata;
-import com.gempukku.swccgo.common.DeployPhysicalCardRef;
 import com.gempukku.swccgo.game.PhysicalCard;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
  * An abstract action that has the base implementation for all play card actions.
  */
 public abstract class AbstractPlayCardAction extends AbstractAction implements PlayCardAction {
-    private static final AtomicLong NEXT_DEPLOY_ATTEMPT_ID = new AtomicLong();
     protected PhysicalCard _actionSource;
     protected PhysicalCard _cardToPlay;
     protected Zone _playedFromZone;
@@ -30,20 +24,6 @@ public abstract class AbstractPlayCardAction extends AbstractAction implements P
         _cardToPlay = cardToPlay;
         _playedFromZone = cardToPlay.getZone();
         _actionSource = actionSource;
-    }
-
-    /** Constructor used only by real deploy/play actions, not PlayChoiceAction. */
-    protected AbstractPlayCardAction(PhysicalCard cardToPlay, PhysicalCard actionSource,
-                                     boolean deployAction) {
-        this(cardToPlay, actionSource);
-        if (deployAction) {
-            setDecisionActionSemantic(DecisionActionSemantic.DEPLOY_CARD);
-            setDeployAttemptId("DEPLOY-ACTION-" + NEXT_DEPLOY_ATTEMPT_ID.incrementAndGet());
-            setDeployActionMetadata(DeployActionMetadata.unknownDestinations(
-                    new DeployPhysicalCardRef(
-                            cardToPlay.getPermanentCardId(), cardToPlay.getCardId()),
-                    cardToPlay.getZone()));
-        }
     }
 
     @Override

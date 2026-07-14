@@ -1,9 +1,5 @@
 package com.gempukku.swccgo.logic.effects.choose;
 
-import com.gempukku.swccgo.common.DecisionActionSemantic;
-import com.gempukku.swccgo.common.DecisionOrigin;
-import com.gempukku.swccgo.common.PullDeployRef;
-import com.gempukku.swccgo.common.PullPhysicalCardRef;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -143,9 +139,6 @@ public class DeployCardFromPileEffect extends AbstractSubActionEffect {
         _asReact = asReact;
         _reshuffle = reshuffle;
         _that = this;
-        if (cardFilter != null) {
-            action.setDecisionActionSemantic(DecisionActionSemantic.PULL_DEPLOY_FROM_PILE);
-        }
     }
 
     /**
@@ -278,19 +271,6 @@ public class DeployCardFromPileEffect extends AbstractSubActionEffect {
             subAction.appendEffect(
                     new ChooseCardFromPileEffect(subAction, subAction.getPerformingPlayer(), _cardPile, _cardPileOwner, _cardFilter) {
                         @Override
-                        protected DecisionOrigin getPullDecisionOrigin() {
-                            return DeployCardFromPileEffect.this.isTypedPullParent()
-                                    && DeployCardFromPileEffect.this._action
-                                            .getAcceptedPullTransactionId() != null
-                                    ? DecisionOrigin.PULL_DEPLOY_CHILD : null;
-                        }
-
-                        @Override
-                        protected Action getPullParentAction() {
-                            return DeployCardFromPileEffect.this._action;
-                        }
-
-                        @Override
                         protected void cardSelected(final SwccgGame game, final PhysicalCard selectedCard) {
                             _cardSelected = true;
                             if (_forFreeCardFilter != null) {
@@ -317,10 +297,6 @@ public class DeployCardFromPileEffect extends AbstractSubActionEffect {
                             else
                                 playCardAction = selectedCard.getBlueprint().getPlayCardAction(subAction.getPerformingPlayer(), game, selectedCard, _action.getActionSource(), _forFree, changeInCostToUse, _deploymentOption, _deploymentRestrictionsOption, _deployAsCaptiveOption, reactActionOption, null, false, 0, _targetFilter, _specialLocationConditions);
 
-                            PullDeployRef pullDeployRef = createPullDeployRef(selectedCard);
-                            if (pullDeployRef != null) {
-                                playCardAction.setPullDeployRef(pullDeployRef);
-                            }
                             playCardAction.setReshuffle(_reshuffle);
                             subAction.insertEffect(
                                     new StackActionEffect(subAction, playCardAction),
@@ -377,10 +353,6 @@ public class DeployCardFromPileEffect extends AbstractSubActionEffect {
 
                             _cardSelected = true;
 
-                            PullDeployRef pullDeployRef = createPullDeployRef(_cardToDeploy);
-                            if (pullDeployRef != null) {
-                                playCardAction.setPullDeployRef(pullDeployRef);
-                            }
                             playCardAction.setReshuffle(_reshuffle);
                             subAction.insertEffect(
                                     new StackActionEffect(subAction, playCardAction),
@@ -396,36 +368,6 @@ public class DeployCardFromPileEffect extends AbstractSubActionEffect {
             );
         }
         return subAction;
-    }
-
-    private PullDeployRef createPullDeployRef(PhysicalCard selectedCard) {
-        Long transactionId = _action.getAcceptedPullTransactionId();
-        if (!isTypedPullParent() || transactionId == null) {
-            return null;
-        }
-        PhysicalCard source = _action.getActionSource();
-        return new PullDeployRef(
-                transactionId,
-                _action.getAcceptedDecisionId(),
-                _action.getAcceptedDecisionOrdinal(),
-                _playerId,
-                source != null ? toPullCardRef(source) : null,
-                _action.isFromGameText() || _action.isFromPlayingInterrupt()
-                        ? _action.getGameTextActionId() : null,
-                _cardPile,
-                _cardPileOwner,
-                toPullCardRef(selectedCard),
-                java.util.List.of(),
-                null);
-    }
-
-    private boolean isTypedPullParent() {
-        return _action.getDecisionActionSemantic()
-                == DecisionActionSemantic.PULL_DEPLOY_FROM_PILE;
-    }
-
-    private PullPhysicalCardRef toPullCardRef(PhysicalCard card) {
-        return new PullPhysicalCardRef(card.getPermanentCardId(), card.getCardId());
     }
 
     @Override

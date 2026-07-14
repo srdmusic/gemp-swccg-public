@@ -34,14 +34,6 @@ public abstract class AbstractAction implements Action {
     private boolean _virtualCardAction;
     private boolean _allowAbort;
     private boolean _choosingTargetsComplete;
-    private DecisionActionSemantic _decisionActionSemantic = DecisionActionSemantic.UNKNOWN;
-    private boolean _decisionActionSemanticConflict;
-    private Integer _acceptedDecisionId;
-    private Integer _acceptedDecisionOrdinal;
-    private Long _acceptedPullTransactionId;
-    private PullDeployRef _pullDeployRef;
-    private String _deployAttemptId;
-    private DeployActionMetadata _deployActionMetadata;
 
     protected int _latestTargetGroupId;
     protected Map<Integer, String> _targetingTextMap = new HashMap<Integer, String>();
@@ -83,14 +75,6 @@ public abstract class AbstractAction implements Action {
         snapshot._virtualCardAction = _virtualCardAction;
         snapshot._allowAbort = _allowAbort;
         snapshot._choosingTargetsComplete = _choosingTargetsComplete;
-        snapshot._decisionActionSemantic = _decisionActionSemantic;
-        snapshot._decisionActionSemanticConflict = _decisionActionSemanticConflict;
-        snapshot._acceptedDecisionId = _acceptedDecisionId;
-        snapshot._acceptedDecisionOrdinal = _acceptedDecisionOrdinal;
-        snapshot._acceptedPullTransactionId = _acceptedPullTransactionId;
-        snapshot._pullDeployRef = _pullDeployRef;
-        snapshot._deployAttemptId = _deployAttemptId;
-        snapshot._deployActionMetadata = _deployActionMetadata;
         snapshot._latestTargetGroupId = _latestTargetGroupId;
         snapshot._targetingTextMap.putAll(_targetingTextMap);
         snapshot._minimumMap.putAll(_minimumMap);
@@ -124,100 +108,6 @@ public abstract class AbstractAction implements Action {
             }
         }
         snapshot._secondaryTargetFiltersList.addAll(_secondaryTargetFiltersList);
-    }
-
-    @Override
-    public DecisionActionSemantic getDecisionActionSemantic() {
-        return _decisionActionSemantic;
-    }
-
-    @Override
-    public void setDecisionActionSemantic(DecisionActionSemantic semantic) {
-        if (_decisionActionSemanticConflict || semantic == null || semantic == DecisionActionSemantic.UNKNOWN) {
-            return;
-        }
-        if (_decisionActionSemantic == DecisionActionSemantic.UNKNOWN) {
-            _decisionActionSemantic = semantic;
-        } else if (_decisionActionSemantic != semantic) {
-            _decisionActionSemantic = DecisionActionSemantic.UNKNOWN;
-            _decisionActionSemanticConflict = true;
-        }
-    }
-
-    @Override
-    public void setAcceptedDecisionIdentity(int decisionId, int actionOrdinal) {
-        if (decisionId < 0 || actionOrdinal < 0) {
-            throw new IllegalArgumentException("accepted decision identity must be non-negative");
-        }
-        _acceptedDecisionId = decisionId;
-        _acceptedDecisionOrdinal = actionOrdinal;
-    }
-
-    @Override
-    public Integer getAcceptedDecisionId() {
-        return _acceptedDecisionId;
-    }
-
-    @Override
-    public Integer getAcceptedDecisionOrdinal() {
-        return _acceptedDecisionOrdinal;
-    }
-
-    @Override
-    public void setAcceptedPullTransactionId(long transactionId) {
-        if (transactionId <= 0) {
-            throw new IllegalArgumentException("PULL transaction id must be > 0");
-        }
-        _acceptedPullTransactionId = transactionId;
-    }
-
-    @Override
-    public Long getAcceptedPullTransactionId() {
-        return _acceptedPullTransactionId;
-    }
-
-    @Override
-    public void setPullDeployRef(PullDeployRef pullDeployRef) {
-        _pullDeployRef = Objects.requireNonNull(pullDeployRef, "pullDeployRef");
-        if (_deployAttemptId == null || _deployAttemptId.startsWith("DEPLOY-ACTION-")) {
-            _deployAttemptId = "PULL-" + pullDeployRef.transactionId();
-        }
-        if (_acceptedDecisionId == null && pullDeployRef.parentDecisionId() != null
-                && pullDeployRef.parentActionOrdinal() != null) {
-            setAcceptedDecisionIdentity(
-                    pullDeployRef.parentDecisionId(), pullDeployRef.parentActionOrdinal());
-        }
-    }
-
-    @Override
-    public PullDeployRef getPullDeployRef() {
-        return _pullDeployRef;
-    }
-
-    @Override
-    public void setDeployAttemptId(String attemptId) {
-        if (attemptId == null || attemptId.isBlank()) {
-            throw new IllegalArgumentException("deploy attempt id must be nonblank");
-        }
-        if (_deployAttemptId != null && !_deployAttemptId.equals(attemptId)) {
-            throw new IllegalStateException("deploy attempt identity cannot change");
-        }
-        _deployAttemptId = attemptId;
-    }
-
-    @Override
-    public String getDeployAttemptId() {
-        return _deployAttemptId;
-    }
-
-    @Override
-    public void setDeployActionMetadata(DeployActionMetadata metadata) {
-        _deployActionMetadata = Objects.requireNonNull(metadata, "metadata");
-    }
-
-    @Override
-    public DeployActionMetadata getDeployActionMetadata() {
-        return _deployActionMetadata;
     }
 
     /**

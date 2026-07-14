@@ -31,50 +31,6 @@ public enum TraceRoute {
     CHAOS_FALLBACK,
     /** Normal lane: CombinedEvaluator handled the decision. */
     COMBINED_EVALUATOR,
-    /** Canonical top-level DRAW decision owned by the typed DRAW finalizer lane. */
-    DRAW_TOP_LEVEL,
-    /** Typed top-level ACTIVATE action chooser. */
-    ACTIVATE_TOP_LEVEL,
-    /** Typed Force-activation amount. */
-    ACTIVATE_AMOUNT,
-    /** Typed opponent activation allowance amount. */
-    ACTIVATE_ALLOWANCE,
-    /** Typed zero-activation Yes/No confirmation. */
-    ACTIVATE_ZERO_CONFIRM,
-    /** Typed activation-interruption acknowledgement. */
-    ACTIVATE_ACK,
-    /** Typed top-level CONTROL action chooser. */
-    CONTROL_TOP_LEVEL,
-    /** Typed PULL parent action choice. */
-    PULL_PARENT,
-    /** Typed deploy-from-pile child card choice. */
-    PULL_DEPLOY_CHILD,
-    /** Typed take-into-hand child card choice. */
-    PULL_TAKE_CHILD,
-    /** Typed pulled-card deployment destination choice. */
-    PULL_DESTINATION,
-    /** Typed empty verification response after a failed standard search. */
-    PULL_FAILED_VERIFY,
-    /** Typed top-level physical-card DEPLOY action choice. */
-    DEPLOY_PARENT,
-    /** Typed DEPLOY destination choice bound to an accepted parent attempt. */
-    DEPLOY_DESTINATION,
-    /** Typed simultaneous buddy choice bound to an accepted parent attempt. */
-    DEPLOY_BUDDY,
-    /** Typed source-proven Undercover Yes/No choice. */
-    DEPLOY_UNDERCOVER,
-    /** Typed capacity-slot choice bound to an accepted DEPLOY attempt. */
-    DEPLOY_CAPACITY,
-    /** Typed confirmation choice bound to an accepted DEPLOY attempt. */
-    DEPLOY_CONFIRMATION,
-    /** Typed top-level BATTLE initiation chooser. */
-    BATTLE_INITIATE,
-    /** Typed active-battle fire/tactic chooser containing a fire candidate. */
-    BATTLE_FIRE,
-    /** Typed battle-destiny draw choice. */
-    BATTLE_ADD_DESTINY,
-    /** Typed BATTLE tactic, forfeit, or destiny-selection decision. */
-    BATTLE_TACTIC,
     /** No evaluator handled the decision: HeuristicAiBase.decide ran. */
     HEURISTIC_FALLBACK,
     /** Outer emergency: result null (or empty with raw noPass=true), emergency response used. */
@@ -103,38 +59,6 @@ public enum TraceRoute {
             case V61_SAGA_CHOICE:
             case V79B_PARSEC_CHOICE:
                 return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
-            case DRAW_TOP_LEVEL:
-            case PULL_PARENT:
-            case DEPLOY_PARENT:
-            case ACTIVATE_TOP_LEVEL:
-            case CONTROL_TOP_LEVEL:
-                return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE;
-            case ACTIVATE_AMOUNT:
-            case ACTIVATE_ALLOWANCE:
-                return frozenShape == DecisionFacts.DecisionRoute.INTEGER;
-            case ACTIVATE_ZERO_CONFIRM:
-            case ACTIVATE_ACK:
-            case DEPLOY_UNDERCOVER:
-            case DEPLOY_CAPACITY:
-            case DEPLOY_CONFIRMATION:
-                return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
-            case PULL_DEPLOY_CHILD:
-            case PULL_TAKE_CHILD:
-            case PULL_FAILED_VERIFY:
-                return frozenShape == DecisionFacts.DecisionRoute.ARBITRARY_CARDS;
-            case PULL_DESTINATION:
-            case DEPLOY_DESTINATION:
-            case DEPLOY_BUDDY:
-                return frozenShape == DecisionFacts.DecisionRoute.CARD_SELECTION;
-            case BATTLE_INITIATE:
-            case BATTLE_FIRE:
-                return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE;
-            case BATTLE_ADD_DESTINY:
-                return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
-            case BATTLE_TACTIC:
-                return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE
-                        || frozenShape == DecisionFacts.DecisionRoute.CARD_SELECTION
-                        || frozenShape == DecisionFacts.DecisionRoute.ARBITRARY_CARDS;
             default:
                 return true;
         }

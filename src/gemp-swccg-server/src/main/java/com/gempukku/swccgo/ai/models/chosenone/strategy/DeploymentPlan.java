@@ -49,25 +49,6 @@ public class DeploymentPlan {
         this.reason = reason;
     }
 
-    /** Detached evaluator view. Mutations cannot leak into the accepted phase state. */
-    public DeploymentPlan assessmentCopy() {
-        DeploymentPlan copy = new DeploymentPlan(strategy, reason);
-        copy.instructions = new ArrayList<>();
-        for (DeploymentInstruction instruction : instructions) {
-            copy.instructions.add(new DeploymentInstruction(instruction));
-        }
-        copy.holdBackCards = new HashSet<>(holdBackCards);
-        copy.totalForceAvailable = totalForceAvailable;
-        copy.forceReservedForBattle = forceReservedForBattle;
-        copy.forceToSpend = forceToSpend;
-        copy.phaseStarted = phaseStarted;
-        copy.deploymentsMade = deploymentsMade;
-        copy.forceAllowExtras = forceAllowExtras;
-        copy.waitingForPlannedCards = waitingForPlannedCards;
-        copy.originalPlanCost = originalPlanCost;
-        return copy;
-    }
-
     /**
      * Check if a card is in our deployment plan.
      */
@@ -84,22 +65,6 @@ public class DeploymentPlan {
             .filter(inst -> blueprintId.equals(inst.getCardBlueprintId()))
             .findFirst()
             .orElse(null);
-    }
-
-    /** Exact physical lookup. Blueprint fallback is only for retained legacy fixtures. */
-    public DeploymentInstruction getInstructionForPhysicalCard(int permanentCardId,
-                                                               int currentCardId,
-                                                               String blueprintId) {
-        return instructions.stream()
-            .filter(inst -> inst.getCardPermanentCardId() != null
-                    && inst.getCardCurrentCardId() != null
-                    && inst.getCardPermanentCardId() == permanentCardId
-                    && inst.getCardCurrentCardId() == currentCardId)
-            .findFirst()
-            .orElseGet(() -> instructions.stream()
-                .filter(inst -> inst.getCardPermanentCardId() == null
-                        && blueprintId.equals(inst.getCardBlueprintId()))
-                .findFirst().orElse(null));
     }
 
     /**
@@ -137,24 +102,6 @@ public class DeploymentPlan {
     public void recordDeployment(String blueprintId) {
         instructions.removeIf(inst -> blueprintId.equals(inst.getCardBlueprintId()));
         deploymentsMade++;
-    }
-
-    /** Removes only the accepted physical copy; duplicate blueprints remain planned. */
-    public void recordDeployment(int permanentCardId, int currentCardId, String blueprintId) {
-        DeploymentInstruction exact = getInstructionForPhysicalCard(
-                permanentCardId, currentCardId, blueprintId);
-        if (exact != null) {
-            instructions.remove(exact);
-            deploymentsMade++;
-        }
-    }
-
-    /** Removes one exact unusable instruction without claiming a deployment occurred. */
-    public void removeInstructionForPhysicalCard(int permanentCardId, int currentCardId) {
-        instructions.removeIf(inst -> inst.getCardPermanentCardId() != null
-                && inst.getCardCurrentCardId() != null
-                && inst.getCardPermanentCardId() == permanentCardId
-                && inst.getCardCurrentCardId() == currentCardId);
     }
 
     /**

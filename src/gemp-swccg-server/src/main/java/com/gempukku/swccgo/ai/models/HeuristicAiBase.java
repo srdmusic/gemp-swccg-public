@@ -240,11 +240,6 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         return true;
     }
 
-    /** Beginner and Advanced retain the legacy fallback memory until their own migration. */
-    protected boolean isLegacyFailedSearchMemoryEnabled() {
-        return true;
-    }
-
     protected abstract KeywordWeight[] getActionWeights();
 
     protected abstract KeywordWeight[] getActionPenalties();
@@ -478,19 +473,17 @@ public abstract class HeuristicAiBase implements SwccgAiController {
             if (recentReassignment) {
                 score -= RECENT_REASSIGNMENT_PENALTY;
             }
-            if (isLegacyFailedSearchMemoryEnabled()) {
-                if (!actionText.isEmpty() && failedSearchActionTexts.contains(actionText)) {
-                    score -= FAILED_SEARCH_PENALTY;
-                }
-                if (!actionCardId.isEmpty() && failedSearchCardIds.contains(actionCardId)) {
-                    score -= FAILED_SEARCH_PENALTY;
-                }
-                if (!actionBlueprintId.isEmpty()
-                        && !"inplay".equals(actionBlueprintId)
-                        && !"rules".equals(actionBlueprintId)
-                        && failedSearchBlueprintIds.contains(actionBlueprintId)) {
-                    score -= FAILED_SEARCH_PENALTY;
-                }
+            if (!actionText.isEmpty() && failedSearchActionTexts.contains(actionText)) {
+                score -= FAILED_SEARCH_PENALTY;
+            }
+            if (!actionCardId.isEmpty() && failedSearchCardIds.contains(actionCardId)) {
+                score -= FAILED_SEARCH_PENALTY;
+            }
+            if (!actionBlueprintId.isEmpty()
+                    && !"inplay".equals(actionBlueprintId)
+                    && !"rules".equals(actionBlueprintId)
+                    && failedSearchBlueprintIds.contains(actionBlueprintId)) {
+                score -= FAILED_SEARCH_PENALTY;
             }
             if (shouldAvoidReserveDeckAction(actionText, reserveDeck)) {
                 score -= MISSING_RESERVE_DECK_TITLE_PENALTY;
@@ -1335,8 +1328,7 @@ public abstract class HeuristicAiBase implements SwccgAiController {
 
     private void handleFailedSearchVerification(AwaitingDecision decision, Map<String, String[]> params,
                                                GameState gameState, String playerId) {
-        if (!isLegacyFailedSearchMemoryEnabled()
-                || !isFailedSearchVerification(decision, params, gameState, playerId)) {
+        if (!isFailedSearchVerification(decision, params, gameState, playerId)) {
             return;
         }
         // TRACE 4B1 (packet owner table, FAILED_SEARCH_ADD): a mismatch returned above

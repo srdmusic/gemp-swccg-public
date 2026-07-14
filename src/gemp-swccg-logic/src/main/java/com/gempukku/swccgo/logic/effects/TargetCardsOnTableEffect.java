@@ -2,12 +2,6 @@ package com.gempukku.swccgo.logic.effects;
 
 import com.gempukku.swccgo.common.Filterable;
 import com.gempukku.swccgo.common.InactiveReason;
-import com.gempukku.swccgo.common.DecisionActionSemantic;
-import com.gempukku.swccgo.common.DeployActionMetadata;
-import com.gempukku.swccgo.common.DeployDestinationRef;
-import com.gempukku.swccgo.common.DeployPhysicalCardRef;
-import com.gempukku.swccgo.common.PullDeployRef;
-import com.gempukku.swccgo.common.PullPhysicalCardRef;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.TargetingType;
 import com.gempukku.swccgo.filters.Filters;
@@ -343,11 +337,6 @@ public abstract class TargetCardsOnTableEffect extends AbstractTargetCardsEffect
         return false;
     }
 
-    /** True only at the primary deploy destination construction boundary. */
-    protected boolean isPullDestinationSelection() {
-        return false;
-    }
-
     /**
      * Determines whether stacked cards can be targeted.
      */
@@ -407,12 +396,6 @@ public abstract class TargetCardsOnTableEffect extends AbstractTargetCardsEffect
         // Lets get the counts realistic
         int maximum = Math.min(_maximum, matchingCards.size());
         final int minimum = _minimum;
-        boolean autoSelected = maximum > 0 && matchingCards.size() == minimum
-                && (getUseShortcut() || !_action.isAllowAbort());
-        final PullDeployRef pullDeployRef =
-                preparePullDeployRef(matchingCards, autoSelected);
-        prepareDeployMetadata(matchingCards, autoSelected);
-        final Collection<PhysicalCard> deployDestinations = matchingCards;
 
         if (maximum == 0) {
             cardsTargeted(-1, Collections.<PhysicalCard>emptySet());
@@ -430,14 +413,6 @@ public abstract class TargetCardsOnTableEffect extends AbstractTargetCardsEffect
         else {
             game.getUserFeedback().sendAwaitingDecision(_playerId,
                     new CardsSelectionDecision(_choiceText + (_action.isAllowAbort() ? ", or click 'Done' to cancel" : ""), matchingCards, _action.isAllowAbort() ? 0 : minimum, maximum) {
-                        {
-                            if (pullDeployRef != null) {
-                                setPullDestinationMetadata(pullDeployRef);
-                            } else {
-                                setDeployDestinationMetadata(_action, deployDestinations);
-                            }
-                        }
-
                         @Override
                         public void decisionMade(String result) throws DecisionResultInvalidException {
                             List<PhysicalCard> selectedCards = getSelectedCardsByResponse(result);
@@ -459,40 +434,6 @@ public abstract class TargetCardsOnTableEffect extends AbstractTargetCardsEffect
         }
 
         return new FullEffectResult(true);
-    }
-
-    private PullDeployRef preparePullDeployRef(Collection<PhysicalCard> destinations,
-                                               boolean autoSelected) {
-        PullDeployRef ref = _action.getPullDeployRef();
-        if (!isPullDestinationSelection() || ref == null) {
-            return null;
-        }
-        List<PullPhysicalCardRef> orderedCards = new ArrayList<>();
-        for (PhysicalCard destination : destinations) {
-            orderedCards.add(new PullPhysicalCardRef(
-                    destination.getPermanentCardId(), destination.getCardId()));
-        }
-        PullDeployRef updated = ref.withDestinations(orderedCards, autoSelected);
-        _action.setPullDeployRef(updated);
-        return updated;
-    }
-
-    private void prepareDeployMetadata(Collection<PhysicalCard> destinations,
-                                       boolean autoSelected) {
-        if (_action.getDecisionActionSemantic() != DecisionActionSemantic.DEPLOY_CARD
-                || _action.getDeployActionMetadata() == null) {
-            return;
-        }
-        List<DeployDestinationRef> orderedCards = new ArrayList<>();
-        for (PhysicalCard destination : destinations) {
-            orderedCards.add(new DeployDestinationRef.Card(
-                    new DeployPhysicalCardRef(
-                            destination.getPermanentCardId(), destination.getCardId())));
-        }
-        DeployActionMetadata updated = _action.getDeployActionMetadata()
-                .withDestinations(orderedCards)
-                .withForcedDestination(autoSelected && orderedCards.size() == 1);
-        _action.setDeployActionMetadata(updated);
     }
 
     @Override

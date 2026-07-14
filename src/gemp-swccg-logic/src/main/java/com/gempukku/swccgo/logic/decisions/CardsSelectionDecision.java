@@ -1,10 +1,6 @@
 package com.gempukku.swccgo.logic.decisions;
 
-import com.gempukku.swccgo.common.DecisionOrigin;
-import com.gempukku.swccgo.common.PullDecisionWire;
-import com.gempukku.swccgo.common.PullDeployRef;
 import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -54,59 +50,6 @@ public abstract class CardsSelectionDecision extends AbstractAwaitingDecision {
         for (int i = 0; i < physicalCards.size(); i++)
             result[i] = String.valueOf(physicalCards.get(i).getCardId());
         return result;
-    }
-
-    /** Stamps an immutable deploy-from-pile handoff onto the destination decision. */
-    protected final void setPullDestinationMetadata(PullDeployRef ref) {
-        setDecisionOrigin(DecisionOrigin.PULL_DESTINATION);
-        setParam(PullDecisionWire.TRANSACTION_ID, String.valueOf(ref.transactionId()));
-        if (ref.parentDecisionId() != null && ref.parentActionOrdinal() != null) {
-            setParam(PullDecisionWire.PARENT_DECISION_ID,
-                    String.valueOf(ref.parentDecisionId()));
-            setParam(PullDecisionWire.PARENT_ACTION_ORDINAL,
-                    String.valueOf(ref.parentActionOrdinal()));
-        }
-        setParam(PullDecisionWire.PLAYER_ID, ref.playerId());
-        if (ref.sourceCard() != null) {
-            setParam(PullDecisionWire.SOURCE_CARD_ID,
-                    String.valueOf(ref.sourceCard().currentCardId()));
-            setParam(PullDecisionWire.SOURCE_PERMANENT_CARD_ID,
-                    String.valueOf(ref.sourceCard().permanentCardId()));
-        }
-        if (ref.gameTextActionId() != null) {
-            setParam(PullDecisionWire.GAME_TEXT_ACTION_ID, ref.gameTextActionId().name());
-        }
-        setParam(PullDecisionWire.SOURCE_ZONE, ref.sourceZone().name());
-        setParam(PullDecisionWire.SOURCE_ZONE_OWNER, ref.sourceZoneOwner());
-        setParam(PullDecisionWire.SELECTED_CARD_ID,
-                String.valueOf(ref.selectedCard().currentCardId()));
-        setParam(PullDecisionWire.SELECTED_PERMANENT_CARD_ID,
-                String.valueOf(ref.selectedCard().permanentCardId()));
-        setParam(PullDecisionWire.DESTINATION_CARD_ID,
-                ref.orderedDestinationCards().stream()
-                        .map(card -> String.valueOf(card.currentCardId())).toArray(String[]::new));
-        setParam(PullDecisionWire.DESTINATION_PERMANENT_CARD_ID,
-                ref.orderedDestinationCards().stream()
-                        .map(card -> String.valueOf(card.permanentCardId())).toArray(String[]::new));
-        if (ref.forcedDestinationCard() != null) {
-            setParam(PullDecisionWire.FORCED_DESTINATION_CARD_ID,
-                    String.valueOf(ref.forcedDestinationCard().currentCardId()));
-            setParam(PullDecisionWire.FORCED_DESTINATION_PERMANENT_CARD_ID,
-                    String.valueOf(ref.forcedDestinationCard().permanentCardId()));
-        }
-    }
-
-    /** Stamps one prompted DEPLOY destination choice with exact parent identity. */
-    protected final void setDeployDestinationMetadata(Action action,
-                                                      Collection<PhysicalCard> destinations) {
-        setDeployTransactionMetadata(
-                action, DecisionOrigin.DEPLOY_DESTINATION, destinations, false);
-    }
-
-    /** Stamps one prompted DEPLOY buddy choice with exact physical candidates. */
-    protected final void setDeployBuddySelectionMetadata(
-            Action action, Collection<PhysicalCard> buddies) {
-        setDeployBuddyMetadata(action, buddies);
     }
 
     /**

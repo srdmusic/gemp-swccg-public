@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.logic.timing.actions.battle;
 
-import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -182,8 +181,6 @@ public class BattlePowerSegmentAction extends SystemQueueAction {
                     // Ask player if they want to draw battle destiny
                     game.getUserFeedback().sendAwaitingDecision(_playerId,
                             new MultipleChoiceAwaitingDecision(text, new String[]{"Yes", "No"}) {
-                                { setDecisionOrigin(DecisionOrigin.BATTLE_POWER); }
-
                                 @Override
                                 protected void validDecisionMade(int index, String result) {
                                     if ("Yes".equals(result)) {

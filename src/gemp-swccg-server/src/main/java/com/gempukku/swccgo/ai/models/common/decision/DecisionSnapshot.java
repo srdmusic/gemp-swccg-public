@@ -1,7 +1,5 @@
 package com.gempukku.swccgo.ai.models.common.decision;
 
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -11,7 +9,7 @@ import java.util.Objects;
 
 // ═══════════════════════════════════════════════════════════
 // ═══ SECTION: FACTS-MODEL / DECISION SNAPSHOT (2026-07-13) ═══
-// Batch-2 typed-facts foundation, now consumed at the mediated decision boundary.
+// Batch-2 typed-facts foundation, increment 1 (no production consumer yet).
 // Contract: Handoffs/CODEX_RANDO_FACTS_ASSESSMENTS_CONTRACT_2026-07-13.md §"Minimal shared model".
 // Gate delta applied: Handoffs/CODEX_B2_TYPE_HARDENING_GATE_FA0F254AC_2026-07-13.md item 4
 // (evidence CandidateShape is validated against the actual ActionFacts rows).
@@ -33,7 +31,6 @@ public record DecisionSnapshot(
         DecisionFacts decisionFacts,
         List<ActionFacts> actionFacts,
         ServiceFacts serviceFacts,
-        ObjectiveFacts objectiveFacts,
         RawDecision rawDecision,
         int snapshotVersion) {
 
@@ -43,15 +40,13 @@ public record DecisionSnapshot(
      *  (Handoffs/CODEX_B2_INCREMENT1_GATE_E4E0AA213_2026-07-13.md deltas);
      *  version 3 adds the verbatim RawDecision component (trace-V2 gate
      *  Handoffs/CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md P0 "the snapshot
-     *  does not preserve the complete raw decision"); version 4 adds the one
-     *  immutable ObjectiveFacts view shared by trace, evaluators, and adapters. */
-    public static final int CURRENT_VERSION = 4;
+     *  does not preserve the complete raw decision"). */
+    public static final int CURRENT_VERSION = 3;
 
     public DecisionSnapshot {
         Objects.requireNonNull(decisionFacts, "decisionFacts");
         Objects.requireNonNull(actionFacts, "actionFacts");
         Objects.requireNonNull(serviceFacts, "serviceFacts");
-        Objects.requireNonNull(objectiveFacts, "objectiveFacts");
         Objects.requireNonNull(rawDecision, "rawDecision");
         if (snapshotVersion < 1) {
             // Gate item 6: positive snapshot versions only. Zero/negative would

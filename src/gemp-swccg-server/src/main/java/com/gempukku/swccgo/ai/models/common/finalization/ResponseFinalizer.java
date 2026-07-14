@@ -203,10 +203,9 @@ public final class ResponseFinalizer {
         }
     }
 
-    // ── CandidateOrdinal: the MULTIPLE_CHOICE ordinal bounds guard. F1 now supplies the
-    // engine-side range check (audit P0 #1 — MultipleChoiceAwaitingDecision previously
-    // indexed _possibleResults with no range guard); this finalizer guard is the pure
-    // shadow of that repair and stays as the typed pre-engine verdict. ──
+    // ── CandidateOrdinal: the bounds guard the engine lacks for MULTIPLE_CHOICE
+    // (MultipleChoiceAwaitingDecision.java:59-70 throws UNCHECKED on an
+    // out-of-range ordinal — audit P0 #1; F1 owns the engine repair). ──
     private static FinalizedResponse finalizeCandidateOrdinal(ResponseContract contract,
                                                               ResponseIntent.CandidateOrdinal intent,
                                                               String decisionId, int prior) {

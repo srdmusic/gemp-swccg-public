@@ -8,9 +8,6 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.CardKnowledge;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveContribution;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveDeployAdapter;
-import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.common.Phase;
@@ -343,9 +340,8 @@ public class DeployEvaluator extends ActionEvaluator {
         LOG.debug("[DeployEvaluator] Resources: force={}, lifeForce={}, handSize={}, actions={}",
             availableForce, lifeForce, hand != null ? hand.size() : 0, actionIds.size());
 
-        // The bot owner supplies a detached plan assessment. Legacy-unowned decisions
-        // may request the same detached view, but evaluators never mutate owner state.
-        DeploymentPlan plan = context.getAssessedDeploymentPlan();
+        // === USE DEPLOY PHASE PLANNER ===
+        DeploymentPlan plan = null;
         DeployPhasePlanner planner = context.getDeployPhasePlanner();
         SwccgGame game = context.getGame();
         Side side = context.getSide();
@@ -358,19 +354,59 @@ public class DeployEvaluator extends ActionEvaluator {
             side != null ? side : "NULL",
             playerId);
 
-        if (plan == null && planner != null && game != null && side != null) {
-            plan = planner.planForDecision(game, playerId, side);
-        }
-        if (plan != null) {
-            LOG.info("[DeployEvaluator] Got detached deployment plan: strategy={}, instructions={}",
-                plan.getStrategy(), plan.getInstructions().size());
-            if (plan.isPlanComplete()) {
-                LOG.info("Deploy plan: COMPLETE ({} deployed)", plan.getDeploymentsMade());
+        if (planner != null && game != null && side != null) {
+            LOG.info("[DeployEvaluator] Calling planner.createPlan()...");
+            plan = planner.createPlan(game, playerId, side);
+            if (plan != null) {
+                LOG.info("[DeployEvaluator] ✅ Got deployment plan: strategy={}, instructions={}",
+                    plan.getStrategy(), plan.getInstructions().size());
+
+                // === AUTO-CLEANUP: Detect deployed cards ===
+                // Check if any planned cards are no longer in hand - they were deployed!
+                // This fixes the STALE PLAN bug where recordDeployment() was never called
+                if (!plan.getInstructions().isEmpty() && hand != null) {
+                    Set<String> handBlueprintIds = new HashSet<>();
+                    for (PhysicalCard card : hand) {
+                        if (card != null) {
+                            String bpId = card.getBlueprintId(true);
+                            if (bpId != null) {
+                                handBlueprintIds.add(bpId);
+                            }
+                        }
+                    }
+
+                    // Find instructions for cards no longer in hand
+                    List<DeploymentInstruction> deployedCards = new ArrayList<>();
+                    for (DeploymentInstruction instruction : plan.getInstructions()) {
+                        if (!handBlueprintIds.contains(instruction.getCardBlueprintId())) {
+                            deployedCards.add(instruction);
+                        }
+                    }
+
+                    // Record deployments for cards that left hand
+                    for (DeploymentInstruction instruction : deployedCards) {
+                        LOG.info("📋 Auto-detected deployment: {} left hand", instruction.getCardName());
+                        planner.recordDeployment(instruction.getCardBlueprintId());
+                    }
+                }
+
+                // Log plan status
+                if (plan.isPlanComplete()) {
+                    LOG.info("📋 Deploy plan: COMPLETE ({} deployed)", plan.getDeploymentsMade());
+                } else {
+                    int remaining = plan.getInstructions().size();
+                    int done = plan.getDeploymentsMade();
+                    LOG.info("📋 Deploy plan: {} - {} ({} remaining, {} done)",
+                        plan.getStrategy().getValue(), plan.getReason(), remaining, done);
+                }
             } else {
-                LOG.info("Deploy plan: {} - {} ({} remaining, {} done)",
-                    plan.getStrategy().getValue(), plan.getReason(),
-                    plan.getInstructions().size(), plan.getDeploymentsMade());
+                LOG.warn("[DeployEvaluator] ⚠️ Planner returned null plan");
             }
+        } else {
+            LOG.warn("[DeployEvaluator] ⚠️ Cannot call planner - missing: {}{}{}",
+                planner == null ? "planner " : "",
+                game == null ? "game " : "",
+                side == null ? "side " : "");
         }
 
         // === STALE PLAN DETECTION ===
@@ -1365,9 +1401,6 @@ public class DeployEvaluator extends ActionEvaluator {
                 if (blueprint != null) {
                     action.setCardName(card.getTitle());
 
-                    ObjectiveDeployAdapter.Result objectiveDeployResult = observeObjectiveDeployAdapter(
-                        context, i, card, blueprint, actionText);
-
                     // === OBJECTIVE DEPLOY DECISIONS (consolidated 2026-07-07 per Steve) ===
                     // The deploy phase CHECKS the objective brain (ObjectiveAnalyzer) for objective-specific
                     // deploy scoring instead of inlining it here. V83/V110/V108/V86/V88 (My Lord / Invasion,
@@ -1384,16 +1417,7 @@ public class DeployEvaluator extends ActionEvaluator {
                             for (com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.ScoreNote note
                                     : objDeploy.getDeployObjectiveAdjustments(
                                         game, gameState, playerId, card, blueprint, actionText)) {
-                                ObjectiveContribution.Rule adapterRule = myLordAdapterRule(note.reason);
-                                if (adapterRule != null) {
-                                    if (false /* ObjectiveDeployAdapter owns My Lord V83/V88/V108/V110 */) {
-                                        action.addReasoning(note.reason, note.score);
-                                    }
-                                    applyObjectiveDeployContribution(
-                                        action, objectiveDeployResult, adapterRule, note.reason);
-                                } else {
-                                    action.addReasoning(note.reason, note.score);
-                                }
+                                action.addReasoning(note.reason, note.score);
                             }
                         }
                     }
@@ -1494,9 +1518,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     v136Hand,
                                     v136ForceAvail,
                                     v136Turn,
-                                    0 /* deckShipCount: TODO wire */,
-                                    false /* perSiteEffectActive: TODO wire */,
-                                    false /* ObjectiveDeployAdapter owns only the V136 §B +200 */);
+                                    0 /* deckShipCount — TODO wire */,
+                                    false /* perSiteEffectActive — TODO wire */);
                             if (v136Score != 0f) {
                                 action.addReasoning(
                                     "V136 unified deploy-site score → " + v136Candidate.getTitle()
@@ -1505,10 +1528,6 @@ public class DeployEvaluator extends ActionEvaluator {
                                 LOG.info("V136 [{}]: {} → {} score={}", playerId,
                                     card.getTitle(), v136Candidate.getTitle(), v136Score);
                             }
-                            applyObjectiveDeployContribution(
-                                action, objectiveDeployResult,
-                                ObjectiveContribution.Rule.OBJECTIVE_SITE,
-                                "OBJECTIVE LOCATION - deploy here helps flip!");
 
                             // === V193 (Steve, 2026-07-07): BUNKER-CONTROL BONUS (Endor Operations flip gate) ===
                             // Endor Operations (dark) flips once Ominous Rumors + Establish Secret Base are
@@ -1580,15 +1599,11 @@ public class DeployEvaluator extends ActionEvaluator {
                                             v193Playbook = v136Obj.getActivePlaybook();
                                         float v193Bonus = (v193Playbook != null)
                                             ? v193Playbook.weights.deployFlipGateSite : 400.0f;
-                                        String v193Reason = "V193 FLIP-GATE CONTROL: steer one body to '"
-                                            + v136Candidate.getTitle()
-                                            + "' to enable '" + v193GateCard + "' (objective flip gate)";
-                                        if (false /* ObjectiveDeployAdapter owns V193 parent */) {
-                                            action.addReasoning(v193Reason, v193Bonus);
-                                        }
-                                        applyObjectiveDeployContribution(
-                                            action, objectiveDeployResult,
-                                            ObjectiveContribution.Rule.V193_PARENT, v193Reason);
+                                        action.addReasoning(
+                                            "V193 FLIP-GATE CONTROL: steer one body to '"
+                                                + v136Candidate.getTitle()
+                                                + "' to enable '" + v193GateCard + "' (objective flip gate)",
+                                            v193Bonus);
                                         LOG.warn("V193 FLIP-GATE CONTROL [{}]: {} → {} +{} (seize flip-gate, card={})",
                                             playerId, card.getTitle(), v136Candidate.getTitle(), v193Bonus, v193GateCard);
                                     }
@@ -1805,12 +1820,16 @@ public class DeployEvaluator extends ActionEvaluator {
                             int pendingDeployCost = 0;
                             int battleReserve = 2;
                             try {
-                                if (plan != null && blueprintId != null) {
-                                    for (DeploymentInstruction ins : plan.getInstructions()) {
-                                        if (ins == null) continue;
-                                        // Skip the card we're currently evaluating (its cost already subtracted)
-                                        if (blueprintId.equals(ins.getCardBlueprintId())) continue;
-                                        pendingDeployCost += ins.getDeployCost();
+                                DeployPhasePlanner maintPlanner = context.getDeployPhasePlanner();
+                                if (maintPlanner != null) {
+                                    DeploymentPlan maintPlan = maintPlanner.getCurrentPlan();
+                                    if (maintPlan != null && blueprintId != null) {
+                                        for (DeploymentInstruction ins : maintPlan.getInstructions()) {
+                                            if (ins == null) continue;
+                                            // Skip the card we're currently evaluating (its cost already subtracted)
+                                            if (blueprintId.equals(ins.getCardBlueprintId())) continue;
+                                            pendingDeployCost += ins.getDeployCost();
+                                        }
                                     }
                                 }
                             } catch (Exception e) {
@@ -5248,152 +5267,6 @@ public class DeployEvaluator extends ActionEvaluator {
 
         LOG.info("[DeployEvaluator] Evaluated {} deploy actions", actions.size());
         return actions;
-    }
-
-    private static ObjectiveContribution.Rule myLordAdapterRule(String reason) {
-        if (reason == null) return null;
-        if (reason.startsWith("V83 MY LORD:")) return ObjectiveContribution.Rule.MY_LORD_V83;
-        if (reason.startsWith("V88 MY LORD:")) return ObjectiveContribution.Rule.MY_LORD_V88;
-        if (reason.startsWith("V108 MY LORD:")) return ObjectiveContribution.Rule.MY_LORD_V108;
-        if (reason.startsWith("V110 MY LORD:")) return ObjectiveContribution.Rule.MY_LORD_V110;
-        return null;
-    }
-
-    private static void applyObjectiveDeployContribution(EvaluatedAction action,
-                                                         ObjectiveDeployAdapter.Result result,
-                                                         ObjectiveContribution.Rule rule,
-                                                         String reason) {
-        if (result == null) return;
-        for (ObjectiveContribution contribution : result.contributions()) {
-            if (contribution.rule() == rule) {
-                action.addReasoning(reason, contribution.value());
-                return;
-            }
-        }
-    }
-
-    private static ObjectiveDeployAdapter.Result observeObjectiveDeployAdapter(
-                                                       DecisionContext context,
-                                                       int candidateOrdinal,
-                                                       PhysicalCard card,
-                                                       SwccgCardBlueprint blueprint,
-                                                       String actionText) {
-        if (context.getDecisionSnapshot() == null || context.getGameState() == null
-                || card == null || blueprint == null || actionText == null) {
-            return null;
-        }
-
-        PhysicalCard destination = null;
-        String actionLower = actionText.toLowerCase(Locale.ROOT);
-        for (PhysicalCard location : context.getGameState().getTopLocations()) {
-            if (location != null && location.getTitle() != null
-                    && actionLower.contains(location.getTitle().toLowerCase(Locale.ROOT))) {
-                destination = location;
-                break;
-            }
-        }
-
-        ObjectiveFacts facts = context.getDecisionSnapshot().objectiveFacts();
-        boolean targetsFlipCriticalSite = false;
-        boolean flipCriticalCardAvailable = false;
-        if (facts.strategy().isKnown()) {
-            ObjectiveFacts.StrategyFacts strategy = facts.strategy().value();
-            targetsFlipCriticalSite = destination != null
-                    && strategy.flipCriticalControlSite().isKnown()
-                    && strategy.flipCriticalControlSite().value()
-                    .equalsIgnoreCase(destination.getTitle());
-            flipCriticalCardAvailable = flipCriticalCardAvailable(context, strategy);
-        }
-
-        boolean filtersSenator = false;
-        if (context.getGame() != null) {
-            try {
-                filtersSenator = com.gempukku.swccgo.filters.Filters.senator.accepts(
-                    context.getGameState(), context.getGame().getModifiersQuerying(), card);
-            } catch (Exception ignore) { /* false */ }
-        }
-        boolean keywordOrLoreSenator = isKeywordOrLoreSenator(blueprint);
-        boolean objectiveRelevantLocation = false;
-        if (destination != null && context.getGame() != null
-                && context.getPlayerId() != null && context.getObjectiveAnalyzer() != null
-                && context.getObjectiveAnalyzer().isAnalyzed()) {
-            objectiveRelevantLocation = context.getObjectiveAnalyzer()
-                .isObjectiveRelevantLocation(destination, context.getGame(), context.getPlayerId());
-        }
-        boolean v193ParentLegacyBranchEmits = false;
-        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v193Analyzer =
-            context.getObjectiveAnalyzer();
-        if (destination != null && destination.getTitle() != null
-                && context.getGame() != null && context.getPlayerId() != null
-                && v193Analyzer != null && v193Analyzer.isAnalyzed()) {
-            String legacyGateSite = v193Analyzer.getFlipCriticalControlSite();
-            boolean legacyTargetsGate = legacyGateSite != null
-                && legacyGateSite.equalsIgnoreCase(destination.getTitle());
-            boolean legacyHoldsGate = flipCriticalCardAvailable(
-                context, v193Analyzer.getFlipCriticalControlCardIds(),
-                v193Analyzer.getFlipCriticalControlCard());
-            v193ParentLegacyBranchEmits = legacyTargetsGate && legacyHoldsGate
-                && !com.gempukku.swccgo.cards.GameConditions.controls(
-                    context.getGame(), context.getPlayerId(), destination);
-        }
-
-        Float ability = blueprint.hasAbilityAttribute() ? blueprint.getAbility() : null;
-        return ObjectiveDeployAdapter.adapt(
-                context.getDecisionSnapshot(),
-                new ObjectiveDeployAdapter.CandidateFacts(
-                        candidateOrdinal,
-                        ObjectiveDeployAdapter.Stage.PARENT_ACTION,
-                        card.getCardId(),
-                        blueprint.getCardCategory() == CardCategory.CHARACTER,
-                        filtersSenator,
-                        keywordOrLoreSenator,
-                        destination != null ? destination.getCardId() : null,
-                        targetsFlipCriticalSite,
-                        flipCriticalCardAvailable,
-                        true,
-                        objectiveRelevantLocation,
-                        v193ParentLegacyBranchEmits,
-                        false,
-                        ability,
-                        blueprint.getDeployCost()));
-    }
-
-    private static boolean isKeywordOrLoreSenator(SwccgCardBlueprint blueprint) {
-        if (blueprint == null) return false;
-        if (blueprint.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) return true;
-        String lore = blueprint.getLore();
-        return lore != null && lore.toLowerCase(Locale.ROOT).contains("senator");
-    }
-
-    private static boolean flipCriticalCardAvailable(
-            DecisionContext context,
-            ObjectiveFacts.StrategyFacts strategy) {
-        return flipCriticalCardAvailable(
-            context, strategy.flipCriticalControlCardIds(),
-            strategy.flipCriticalControlCard().isKnown()
-                ? strategy.flipCriticalControlCard().value() : null);
-    }
-
-    private static boolean flipCriticalCardAvailable(
-            DecisionContext context,
-            java.util.Set<String> blueprintIds,
-            String fallbackTitle) {
-        if (context.getDeckOracle() == null) {
-            return false;
-        }
-        if (blueprintIds != null) {
-            for (String blueprintId : blueprintIds) {
-                if (context.getDeckOracle().isCardInHand(blueprintId)
-                        || context.getDeckOracle().isCardInReserve(blueprintId)) {
-                    return true;
-                }
-            }
-        }
-        if ((blueprintIds == null || blueprintIds.isEmpty()) && fallbackTitle != null) {
-            return context.getDeckOracle().isCardInHand(fallbackTitle)
-                    || context.getDeckOracle().isCardInReserve(fallbackTitle);
-        }
-        return false;
     }
 
     /**

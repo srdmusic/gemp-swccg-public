@@ -91,25 +91,6 @@ public class CharacterDeploySiteEvaluator {
             int currentTurn,
             int deckShipCount,
             boolean perSiteEffectActive) {
-        return evaluateSite(
-            game, deployingCard, candidateSite, playerId, isObjectiveRelevantSite,
-            friendlyHand, availableForceForDeploys, currentTurn, deckShipCount,
-            perSiteEffectActive, true);
-    }
-
-    /** Keeps objective relevance policy while allowing its numeric term to move owners. */
-    public static float evaluateSite(
-            SwccgGame game,
-            PhysicalCard deployingCard,
-            PhysicalCard candidateSite,
-            String playerId,
-            boolean isObjectiveRelevantSite,
-            List<PhysicalCard> friendlyHand,
-            int availableForceForDeploys,
-            int currentTurn,
-            int deckShipCount,
-            boolean perSiteEffectActive,
-            boolean includeObjectiveSiteContribution) {
 
         if (game == null || deployingCard == null || candidateSite == null || playerId == null) {
             return 0f;  // fail-open
@@ -154,8 +135,7 @@ public class CharacterDeploySiteEvaluator {
         // ─── §B strategic position ─────────────────────────────────────
         float scoreB = computeStrategicPosition(
             gs, mq, deployingCard, candidateSite, playerId, opponentId,
-            currentTurn, isObjectiveRelevantSite, perSiteEffectActive,
-            includeObjectiveSiteContribution);
+            currentTurn, isObjectiveRelevantSite, perSiteEffectActive);
 
         // ─── §C modifiers ──────────────────────────────────────────────
         float scoreC = computeModifiers(
@@ -628,8 +608,7 @@ public class CharacterDeploySiteEvaluator {
             PhysicalCard deployingCard, PhysicalCard candidateSite,
             String playerId, String opponentId,
             int currentTurn, boolean isObjectiveRelevantSite,
-            boolean perSiteEffectActive,
-            boolean includeObjectiveSiteContribution) {
+            boolean perSiteEffectActive) {
 
         float score = 0f;
 
@@ -639,7 +618,7 @@ public class CharacterDeploySiteEvaluator {
         } catch (Exception e) { /* false */ }
 
         if (isBG) score += 100f;
-        if (isObjectiveRelevantSite && includeObjectiveSiteContribution) score += 200f;
+        if (isObjectiveRelevantSite) score += 200f;
 
         // NBG penalty (two-tier, override-able)
         boolean nbgOverride = isObjectiveRelevantSite || perSiteEffectActive;

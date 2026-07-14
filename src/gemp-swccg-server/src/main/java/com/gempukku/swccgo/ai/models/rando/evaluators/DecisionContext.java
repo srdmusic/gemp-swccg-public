@@ -1,22 +1,12 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
-import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
-import com.gempukku.swccgo.ai.models.common.phase.BattleAssessment;
-import com.gempukku.swccgo.ai.models.common.phase.BattleFacts;
-import com.gempukku.swccgo.ai.models.common.phase.DeployAssessment;
-import com.gempukku.swccgo.ai.models.common.phase.DeployFacts;
-import com.gempukku.swccgo.ai.models.common.phase.PullAssessment;
-import com.gempukku.swccgo.ai.models.common.phase.PullFacts;
-import com.gempukku.swccgo.ai.models.common.strategy.ForceObligationVector;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle;
 import com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
-import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
-import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -45,7 +35,6 @@ public class DecisionContext {
     private final String decisionType;  // CARD_ACTION_CHOICE, CARD_SELECTION, INTEGER, etc.
     private final String decisionText;  // Human-readable prompt
     private final String decisionId;
-    private final DecisionOrigin decisionOrigin;
 
     // Phase info
     private final Phase phase;
@@ -95,30 +84,14 @@ public class DecisionContext {
     private DeckOracle deckOracle;  // V22.6: Full deck knowledge
     private OpponentDeckTracker opponentDeckTracker;  // V24.7: Opponent destiny intel
     private String deckName;  // V29.15: Deck name for saga-aware Epic Event choices
-    private DecisionSnapshot decisionSnapshot;
-    private BattleFacts battleFacts;
-    private BattleAssessment battleAssessment;
-    private DeployFacts deployFacts;
-    private DeployAssessment deployAssessment;
-    private ForceObligationVector forceObligations;
-    private DeploymentPlan assessedDeploymentPlan;
-    private PullFacts pullFacts;
-    private PullAssessment pullAssessment;
 
     public DecisionContext(GameState gameState, String playerId, String decisionType,
                           String decisionText, String decisionId, Phase phase) {
-        this(gameState, playerId, decisionType, decisionText, decisionId, phase, null);
-    }
-
-    public DecisionContext(GameState gameState, String playerId, String decisionType,
-                          String decisionText, String decisionId, Phase phase,
-                          DecisionOrigin decisionOrigin) {
         this.gameState = gameState;
         this.playerId = playerId;
         this.decisionType = decisionType;
         this.decisionText = decisionText;
         this.decisionId = decisionId;
-        this.decisionOrigin = decisionOrigin;
         this.phase = phase;
         this.turnNumber = gameState != null ? gameState.getPlayersLatestTurnNumber(playerId) : 1;
         this.isMyTurn = gameState != null && playerId.equals(gameState.getCurrentPlayerId());
@@ -164,10 +137,6 @@ public class DecisionContext {
 
     public String getDecisionId() {
         return decisionId;
-    }
-
-    public DecisionOrigin getDecisionOrigin() {
-        return decisionOrigin;
     }
 
     public Phase getPhase() {
@@ -346,9 +315,9 @@ public class DecisionContext {
     // Bias toward keeping 3 when unsure: any null/error => TRUE (battle plausible), because a
     // false "no battle" re-opens the no-destiny bug for a turn, while a false "battle" only
     // costs a little activation.
-    // One predicate shared by all three V61c sites: ActivateAmountPolicy,
-    // ActionTextEvaluator's V168 carve-out, and the typed ACTIVATE_ZERO_CONFIRM owner.
-    // The original V61c bug was exactly these sites disagreeing.
+    // ONE predicate shared by ALL THREE V61c sites (ForceActivationEvaluator keep-3 cap,
+    // ActionTextEvaluator V168 carve-out, ActionTextEvaluator V38.3 confirm carve-out) — the
+    // original V61c bug was exactly these sites disagreeing.
     public boolean isBattlePlausibleThisTurn() {
         if (game == null || gameState == null || playerId == null) return true;  // can't tell — keep 3
         try {
@@ -406,87 +375,6 @@ public class DecisionContext {
 
     public void setObjectiveAnalyzer(ObjectiveAnalyzer objectiveAnalyzer) {
         this.objectiveAnalyzer = objectiveAnalyzer;
-    }
-
-    public DecisionSnapshot getDecisionSnapshot() {
-        return decisionSnapshot;
-    }
-
-    public void setDecisionSnapshot(DecisionSnapshot decisionSnapshot) {
-        this.decisionSnapshot = Objects.requireNonNull(decisionSnapshot, "decisionSnapshot");
-    }
-
-    public DeployFacts getDeployFacts() {
-        return deployFacts;
-    }
-
-    public DeployAssessment getDeployAssessment() {
-        return deployAssessment;
-    }
-
-    /** One immutable vector for DEPLOY and its adjacent Pass/Move consumers. */
-    public ForceObligationVector getForceObligations() {
-        if (forceObligations == null) {
-            forceObligations = ForceObligationVector.from(getForceReserveFacts(), 0);
-        }
-        return forceObligations;
-    }
-
-    public DeploymentPlan getAssessedDeploymentPlan() {
-        return assessedDeploymentPlan;
-    }
-
-    public void setAssessedDeploymentPlan(DeploymentPlan assessedDeploymentPlan) {
-        this.assessedDeploymentPlan = Objects.requireNonNull(
-                assessedDeploymentPlan, "assessedDeploymentPlan");
-    }
-
-    public void setDeployTransaction(DeployFacts deployFacts,
-                                     DeployAssessment deployAssessment,
-                                     ForceObligationVector forceObligations,
-                                     DeploymentPlan assessedDeploymentPlan) {
-        this.deployFacts = Objects.requireNonNull(deployFacts, "deployFacts");
-        this.deployAssessment = deployAssessment;
-        this.forceObligations = Objects.requireNonNull(
-                forceObligations, "forceObligations");
-        if (deployAssessment != null
-                && deployAssessment.forceObligations() != forceObligations) {
-            throw new IllegalArgumentException(
-                    "DeployAssessment must retain the injected ForceObligationVector");
-        }
-        setAssessedDeploymentPlan(assessedDeploymentPlan);
-    }
-
-    public PullFacts getPullFacts() {
-        return pullFacts;
-    }
-
-    public PullAssessment getPullAssessment() {
-        return pullAssessment;
-    }
-
-    public void setPullTransaction(PullFacts pullFacts, PullAssessment pullAssessment) {
-        this.pullFacts = Objects.requireNonNull(pullFacts, "pullFacts");
-        this.pullAssessment = Objects.requireNonNull(pullAssessment, "pullAssessment");
-    }
-
-    public BattleFacts getBattleFacts() {
-        return battleFacts;
-    }
-
-    public BattleAssessment getBattleAssessment() {
-        return battleAssessment;
-    }
-
-    public void setBattleTransaction(BattleFacts battleFacts,
-                                     BattleAssessment battleAssessment) {
-        this.battleFacts = Objects.requireNonNull(battleFacts, "battleFacts");
-        this.battleAssessment = Objects.requireNonNull(
-                battleAssessment, "battleAssessment");
-        if (battleFacts.route() != battleAssessment.route()) {
-            throw new IllegalArgumentException(
-                    "BattleFacts and BattleAssessment must share one route");
-        }
     }
 
     // V22.6: DeckOracle — full deck knowledge
