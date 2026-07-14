@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.decision;
 
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -36,6 +37,10 @@ import static org.junit.Assert.fail;
 public class DecisionSnapshotTest {
 
     private static final String PRODUCER = "test-producer";
+
+    private static ObjectiveFacts objectiveFacts() {
+        return ObjectiveFacts.unknown("decision snapshot fixture has no objective");
+    }
 
     private static FactValue<Set<DecisionFacts.ObligationFlag>> knownObligations() {
         return FactValue.known(Set.of(DecisionFacts.ObligationFlag.NO_PASS),
@@ -178,6 +183,7 @@ public class DecisionSnapshotTest {
                 decisionFacts(actionCount),
                 actions,
                 new DecisionSnapshot.ServiceFacts(FactValue.known(3, PRODUCER, "ForceReserveService.maintenanceObligation")),
+                objectiveFacts(),
                 rawDecision(actionCount),
                 DecisionSnapshot.CURRENT_VERSION);
     }
@@ -203,8 +209,8 @@ public class DecisionSnapshotTest {
     public void snapshotVersionIsPresent() {
         DecisionSnapshot snap = snapshot(1);
         assertEquals(DecisionSnapshot.CURRENT_VERSION, snap.snapshotVersion());
-        // Version 3 = the RawDecision-bearing shape (trace-V2 gate P0-1).
-        assertEquals(3, snap.snapshotVersion());
+        // Version 4 adds the immutable ObjectiveFacts view shared by every consumer.
+        assertEquals(4, snap.snapshotVersion());
     }
 
     @Test
@@ -619,6 +625,7 @@ public class DecisionSnapshotTest {
         try {
             new DecisionSnapshot(decisionFacts(2), reversed,
                     new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                    objectiveFacts(),
                     rawDecision(2), DecisionSnapshot.CURRENT_VERSION);
             fail("snapshot must reject action facts not ordered by original ordinal");
         } catch (IllegalArgumentException expected) {
@@ -635,6 +642,7 @@ public class DecisionSnapshotTest {
         try {
             new DecisionSnapshot(decisionFacts(3), List.of(actionFacts(0)),
                     new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                    objectiveFacts(),
                     rawDecision(3), DecisionSnapshot.CURRENT_VERSION);
             fail("evidence claiming more candidates than the snapshot has rows must be rejected");
         } catch (IllegalArgumentException expected) {
@@ -645,6 +653,7 @@ public class DecisionSnapshotTest {
             new DecisionSnapshot(decisionFacts(2),
                     List.of(actionFacts(0), actionFacts(1), actionFacts(2)),
                     new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                    objectiveFacts(),
                     rawDecision(2), DecisionSnapshot.CURRENT_VERSION);
             fail("a row with a raw id beyond the claimed candidate count must be rejected");
         } catch (IllegalArgumentException expected) {
@@ -655,6 +664,7 @@ public class DecisionSnapshotTest {
         DecisionSnapshot ghostRow = new DecisionSnapshot(decisionFacts(2),
                 List.of(actionFacts(0), actionFacts(1), allUnknownAction(2)),
                 new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                objectiveFacts(),
                 rawDecision(2), DecisionSnapshot.CURRENT_VERSION);
         assertEquals(3, ghostRow.actionFacts().size());
     }
@@ -684,6 +694,7 @@ public class DecisionSnapshotTest {
         source.add(actionFacts(0));
         DecisionSnapshot snap = new DecisionSnapshot(decisionFacts(1), source,
                 new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                objectiveFacts(),
                 rawDecision(1), DecisionSnapshot.CURRENT_VERSION);
         source.add(actionFacts(9)); // mutate the source AFTER construction
         assertEquals(1, snap.actionFacts().size());
@@ -914,6 +925,7 @@ public class DecisionSnapshotTest {
             try {
                 new DecisionSnapshot(decisionFacts(1), List.of(actionFacts(0)),
                         new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                        objectiveFacts(),
                         rawDecision(1), version);
                 fail("snapshotVersion " + version + " must be rejected");
             } catch (IllegalArgumentException expected) {
@@ -1010,6 +1022,7 @@ public class DecisionSnapshotTest {
         try {
             new DecisionSnapshot(decisionFacts(1), List.of(actionFacts(0)),
                     new DecisionSnapshot.ServiceFacts(FactValue.known(0, PRODUCER, "k")),
+                    objectiveFacts(),
                     null, DecisionSnapshot.CURRENT_VERSION);
             fail("snapshot without the raw-decision component must be rejected");
         } catch (NullPointerException expected) {

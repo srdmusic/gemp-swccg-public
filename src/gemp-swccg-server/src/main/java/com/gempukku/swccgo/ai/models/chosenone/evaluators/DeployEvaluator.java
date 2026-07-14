@@ -8,6 +8,8 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.CardKnowledge;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveDeployAdapter;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.common.Phase;
@@ -1400,6 +1402,9 @@ public class DeployEvaluator extends ActionEvaluator {
                 SwccgCardBlueprint blueprint = card.getBlueprint();
                 if (blueprint != null) {
                     action.setCardName(card.getTitle());
+
+                    observeObjectiveDeployAdapter(
+                        context, i, card, blueprint, actionText);
 
                     // === OBJECTIVE DEPLOY DECISIONS (consolidated 2026-07-07 per Steve) ===
                     // The deploy phase CHECKS the objective brain (ObjectiveAnalyzer) for objective-specific
@@ -5267,6 +5272,74 @@ public class DeployEvaluator extends ActionEvaluator {
 
         LOG.info("[DeployEvaluator] Evaluated {} deploy actions", actions.size());
         return actions;
+    }
+
+    private static void observeObjectiveDeployAdapter(DecisionContext context,
+                                                       int candidateOrdinal,
+                                                       PhysicalCard card,
+                                                       SwccgCardBlueprint blueprint,
+                                                       String actionText) {
+        if (context.getDecisionSnapshot() == null || context.getGameState() == null
+                || card == null || blueprint == null || actionText == null) {
+            return;
+        }
+
+        PhysicalCard destination = null;
+        String actionLower = actionText.toLowerCase(Locale.ROOT);
+        for (PhysicalCard location : context.getGameState().getTopLocations()) {
+            if (location != null && location.getTitle() != null
+                    && actionLower.contains(location.getTitle().toLowerCase(Locale.ROOT))) {
+                destination = location;
+                break;
+            }
+        }
+
+        ObjectiveFacts facts = context.getDecisionSnapshot().objectiveFacts();
+        boolean targetsFlipCriticalSite = false;
+        boolean flipCriticalCardAvailable = false;
+        if (facts.strategy().isKnown()) {
+            ObjectiveFacts.StrategyFacts strategy = facts.strategy().value();
+            targetsFlipCriticalSite = destination != null
+                    && strategy.flipCriticalControlSite().isKnown()
+                    && strategy.flipCriticalControlSite().value()
+                    .equalsIgnoreCase(destination.getTitle());
+            flipCriticalCardAvailable = flipCriticalCardAvailable(context, strategy);
+        }
+
+        Float ability = blueprint.hasAbilityAttribute() ? blueprint.getAbility() : null;
+        ObjectiveDeployAdapter.adapt(
+                context.getDecisionSnapshot(),
+                new ObjectiveDeployAdapter.CandidateFacts(
+                        candidateOrdinal,
+                        ObjectiveDeployAdapter.Stage.PARENT_ACTION,
+                        card.getCardId(),
+                        blueprint.getCardCategory() == CardCategory.CHARACTER,
+                        destination != null ? destination.getCardId() : null,
+                        targetsFlipCriticalSite,
+                        flipCriticalCardAvailable,
+                        ability,
+                        blueprint.getDeployCost()));
+    }
+
+    private static boolean flipCriticalCardAvailable(
+            DecisionContext context,
+            ObjectiveFacts.StrategyFacts strategy) {
+        if (context.getDeckOracle() == null) {
+            return false;
+        }
+        for (String blueprintId : strategy.flipCriticalControlCardIds()) {
+            if (context.getDeckOracle().isCardInHand(blueprintId)
+                    || context.getDeckOracle().isCardInReserve(blueprintId)) {
+                return true;
+            }
+        }
+        if (strategy.flipCriticalControlCardIds().isEmpty()
+                && strategy.flipCriticalControlCard().isKnown()) {
+            String title = strategy.flipCriticalControlCard().value();
+            return context.getDeckOracle().isCardInHand(title)
+                    || context.getDeckOracle().isCardInReserve(title);
+        }
+        return false;
     }
 
     /**

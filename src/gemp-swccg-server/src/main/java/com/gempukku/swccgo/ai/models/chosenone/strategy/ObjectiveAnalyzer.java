@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.ai.models.chosenone.strategy;
 
 import com.gempukku.swccgo.ai.models.chosenone.RandoLogger;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFactsSource;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
@@ -46,8 +48,13 @@ import java.util.regex.Pattern;
  *
  * This is Approach B: universal, no hardcoded per-objective knowledge needed.
  */
-public class ObjectiveAnalyzer {
+public class ObjectiveAnalyzer implements ObjectiveFactsSource {
     private static final Logger LOG = RandoLogger.getStrategyLogger();
+
+    private static ObjectiveFacts.ProfileResolution noProfileResolution() {
+        return new ObjectiveFacts.ProfileResolution(
+            ObjectiveFacts.ProfileResolution.MatchKind.NONE, "", false, false, false);
+    }
 
     private final Set<String> flipConditionLocations = new HashSet<>();
     private final Set<String> flipConditionLocationFragments = new HashSet<>();
@@ -118,6 +125,7 @@ public class ObjectiveAnalyzer {
     // ObjectivePlaybook pilot (2026-07-07): the active objective's typed profile, or null. Selected
     // in analyze() when the objective matches a known playbook; consumed via getActivePlaybook().
     private ObjectivePlaybook activePlaybook = null;
+    private ObjectiveFacts.ProfileResolution profileResolution = noProfileResolution();
     // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + TYPED steer data. The +400
     // Starkiller-system pick and +1000 preferred-starting-effect pick in CardSelectionEvaluator
     // used to hardcode these ids/titles inline; they now read these slots. Populated title-derived
@@ -182,11 +190,18 @@ public class ObjectiveAnalyzer {
                 return;
             }
 
-            SwccgCardBlueprint blueprint = objectiveCard.getBlueprint();
-            if (blueprint == null) return;
+            SwccgCardBlueprint currentBlueprint = objectiveCard.getBlueprint();
+            SwccgCardBlueprint oppositeBlueprint = objectiveCard.getOtherSideBlueprint();
+            if (currentBlueprint == null || oppositeBlueprint == null) return;
 
-            String title = objectiveCard.getTitle();
-            String gameText = blueprint.getGameText();
+            boolean physicallyFlipped = objectiveCard.isFlipped();
+            SwccgCardBlueprint frontBlueprint = physicallyFlipped
+                ? oppositeBlueprint : currentBlueprint;
+            SwccgCardBlueprint backBlueprint = physicallyFlipped
+                ? currentBlueprint : oppositeBlueprint;
+            String title = frontBlueprint.getTitle();
+            String gameText = frontBlueprint.getGameText();
+            String backGameText = backBlueprint.getGameText();
 
             if (gameText == null || gameText.isEmpty()) {
                 LOG.warn("[ObjectiveAnalyzer] Objective '{}' has no game text", title);
@@ -214,7 +229,8 @@ public class ObjectiveAnalyzer {
             // compiled statics (My Lord/Endor) — the loaderEnabled=false path. prof/loaderOn reused post-parse
             // for slot hydration (one lookup). buildPlaybookFromProfile weights == the compiled statics for the
             // two enabled pilots (boundary-verified), so this is behavior-neutral today.
-            JsonProfile prof = findProfile(bpId, title);
+            ProfileMatch profileMatch = findProfile(bpId, title);
+            JsonProfile prof = profileMatch != null ? profileMatch.profile : null;
             boolean loaderOn = prof != null && Boolean.TRUE.equals(prof.loaderEnabled);
             this.activePlaybook = loaderOn ? buildPlaybookFromProfile(prof)
                                 : this.isMyLord ? MY_LORD_PLAYBOOK
@@ -236,7 +252,7 @@ public class ObjectiveAnalyzer {
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Analyzing objective: '{}'", title);
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Game text: {}", gameText);
 
-            parseGameText(gameText);
+            parseGameText(gameText, backGameText);
             // ObjectivePlaybook JSON hydration (2026-07-08): pull scoring-slot data from the single
             // runtime source (objective_playbooks.json) for the active objective. ADDITIVE + idempotent
             // — runs AFTER the text parser / hardcoded blocks, so where both fill a slot the values are
@@ -245,6 +261,20 @@ public class ObjectiveAnalyzer {
             // profiles, but only boundary-math-VERIFIED objectives (My Lord + Endor today) hydrate. This
             // prevents the 56 un-verified profiles from silently altering behavior.
             if (loaderOn) hydrateFromProfile(prof);
+            boolean compiledFallback = !loaderOn && (this.isMyLord || this.isEndor);
+            String profileLabel = prof != null && prof.label != null && !prof.label.isBlank()
+                ? prof.label
+                : this.isMyLord ? MY_LORD_PLAYBOOK.label
+                : this.isEndor ? ENDOR_PLAYBOOK.label
+                : "";
+            this.profileResolution = new ObjectiveFacts.ProfileResolution(
+                profileMatch != null
+                    ? profileMatch.matchKind
+                    : ObjectiveFacts.ProfileResolution.MatchKind.NONE,
+                profileLabel,
+                loaderOn,
+                hydratedFromJson,
+                compiledFallback);
             updateFlipStatus(objectiveCard);
             this.analyzed = true;
 
@@ -350,6 +380,9 @@ public class ObjectiveAnalyzer {
     public boolean isAnalyzed() { return analyzed; }
     public boolean isFlipped() { return isFlipped; }
     public String getObjectiveTitle() { return objectiveTitle; }
+    public String getObjectiveBlueprintId() { return objectiveBlueprintId; }
+    public String getObjectiveGameText() { return objectiveGameText; }
+    public ObjectiveFacts.ProfileResolution getProfileResolution() { return profileResolution; }
     public String getFlipConditionText() { return flipConditionText; }
     // V193 (Steve, 2026-07-07): the site Rando must CONTROL to enable an objective flip
     // (e.g. Endor: Bunker for Establish Secret Base (V)). null when the objective has none.
@@ -398,6 +431,7 @@ public class ObjectiveAnalyzer {
     //    table, not on the objective, so it stays a typed-Filter check, NOT isMyLord()-gated.)
     public boolean isInvasion() { return isInvasion; }
     public boolean isMyLord() { return isMyLord; }
+    public boolean isEndorOperations() { return isEndor; }
     // V186 CONSOLIDATED accessors (2026-07-07): consumers = CardSelectionEvaluator V186
     // (+400 Starkiller-SYSTEM starting-location pick, +1000 preferred starting-effect pick).
     public boolean isWantThatMap() { return isWantThatMap; }
@@ -647,20 +681,39 @@ public class ObjectiveAnalyzer {
         }
     }
 
+    private static final class ProfileMatch {
+        private final JsonProfile profile;
+        private final ObjectiveFacts.ProfileResolution.MatchKind matchKind;
+
+        private ProfileMatch(JsonProfile profile,
+                             ObjectiveFacts.ProfileResolution.MatchKind matchKind) {
+            this.profile = profile;
+            this.matchKind = matchKind;
+        }
+    }
+
     /** Active objective's JSON profile, matched by blueprint id first then title fragment. null if none. */
-    private JsonProfile findProfile(String bpId, String title) {
+    private ProfileMatch findProfile(String bpId, String title) {
         List<JsonProfile> profs = profiles();
         if (profs.isEmpty()) return null;
         if (bpId != null) {
             for (JsonProfile p : profs) {
-                if (p.blueprintIds != null && p.blueprintIds.contains(bpId)) return p;
+                if (p.blueprintIds != null && p.blueprintIds.contains(bpId)) {
+                    return new ProfileMatch(p,
+                        ObjectiveFacts.ProfileResolution.MatchKind.BLUEPRINT_ID);
+                }
             }
         }
         if (title != null) {
             String tl = title.toLowerCase(Locale.ROOT);
             for (JsonProfile p : profs) {
                 if (p.titleFragments == null) continue;
-                for (String f : p.titleFragments) if (f != null && !f.isEmpty() && tl.contains(f)) return p;
+                for (String f : p.titleFragments) {
+                    if (f != null && !f.isEmpty() && tl.contains(f)) {
+                        return new ProfileMatch(p,
+                            ObjectiveFacts.ProfileResolution.MatchKind.TITLE_COMPATIBILITY);
+                    }
+                }
             }
         }
         return null;
@@ -1190,6 +1243,7 @@ public class ObjectiveAnalyzer {
         isMyLord = false;
         isEndor = false;
         activePlaybook = null;
+        profileResolution = noProfileResolution();
         // V186 CONSOLIDATED: I Want That Map identity + typed steer data
         isWantThatMap = false;
         iwtmSystemBpIds.clear();
@@ -1253,7 +1307,7 @@ public class ObjectiveAnalyzer {
         }
     }
 
-    private void parseGameText(String gameText) {
+    private void parseGameText(String gameText, String backGameText) {
         flipConditionLocations.clear();
         flipConditionLocationFragments.clear();
         requiredCardsOnTable.clear();
@@ -1270,7 +1324,7 @@ public class ObjectiveAnalyzer {
         parseFlipCondition(gameText);
         parsePullableCards(gameText);
         parseLocationReferences(gameText);
-        parseBackSideText(gameText);
+        parseBackSideText(backGameText);
     }
 
     /**
@@ -1638,8 +1692,7 @@ public class ObjectiveAnalyzer {
     }
 
     /**
-     * V22.2: Parse the back side of the objective card to understand flip-back conditions.
-     * SWCCG objectives have two sides separated by "[Back Side]" or "\\[Back Side]" in game text.
+     * V22.2: Parse the actual opposite-side blueprint text to understand flip-back conditions.
      * The back side tells us what conditions would cause the objective to flip BACK —
      * which means we lose our advantage. We need to prevent that.
      *
@@ -1651,20 +1704,9 @@ public class ObjectiveAnalyzer {
     private void parseBackSideText(String gameText) {
         if (gameText == null) return;
 
-        // Find the back side text
-        String backText = null;
-        int backIdx = gameText.indexOf("[Back Side]");
-        if (backIdx >= 0) {
-            backText = gameText.substring(backIdx + "[Back Side]".length()).trim();
-        } else {
-            backIdx = gameText.indexOf("\\[Back Side]");
-            if (backIdx >= 0) {
-                backText = gameText.substring(backIdx + "\\[Back Side]".length()).trim();
-            }
-        }
-
-        if (backText == null || backText.isEmpty()) {
-            LOG.warn("[ObjectiveAnalyzer] No [Back Side] text found — single-sided objective?");
+        String backText = gameText.trim();
+        if (backText.isEmpty()) {
+            LOG.warn("[ObjectiveAnalyzer] Opposite-side objective text is empty");
             return;
         }
 

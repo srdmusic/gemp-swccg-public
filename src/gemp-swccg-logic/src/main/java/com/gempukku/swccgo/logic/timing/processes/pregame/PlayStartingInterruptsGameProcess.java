@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.logic.timing.processes.pregame;
 
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -106,8 +107,10 @@ public class PlayStartingInterruptsGameProcess implements GameProcess {
         _nextProcess = _followingGameProcess;
     }
 
-    private AwaitingDecision createChooseStartingInterruptDecision(final SwccgGame game, final String playerId, final Collection<PhysicalCard> possibleStartingInterrupts) {
+    AwaitingDecision createChooseStartingInterruptDecision(final SwccgGame game, final String playerId, final Collection<PhysicalCard> possibleStartingInterrupts) {
         return new ArbitraryCardsSelectionDecision("Choose starting interrupt", new LinkedList<PhysicalCard>(possibleStartingInterrupts), 0, 1) {
+            { setDecisionOrigin(DecisionOrigin.SETUP_STARTING_INTERRUPT); }
+
             @Override
             public void decisionMade(String result) throws DecisionResultInvalidException {
                 List<PhysicalCard> selectedInterrupts = getSelectedCardsByResponse(result);

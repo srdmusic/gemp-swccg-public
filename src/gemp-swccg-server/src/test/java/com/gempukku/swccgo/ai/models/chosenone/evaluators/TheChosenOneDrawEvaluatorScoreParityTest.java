@@ -5,6 +5,7 @@ import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOp;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOperation;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSnapshots;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import org.junit.Test;
@@ -103,6 +104,7 @@ public class TheChosenOneDrawEvaluatorScoreParityTest extends AbstractDrawEvalua
             CANONICAL_DRAW_TEXT,
             "Deploy unique Alpha to battleground site",
             "Deploy unique Beta to battleground site"));
+        attachSnapshot(context);
         return context;
     }
 
@@ -121,7 +123,35 @@ public class TheChosenOneDrawEvaluatorScoreParityTest extends AbstractDrawEvalua
         }
         context.setActionIds(actionIds);
         context.setActionTexts(actionTexts);
+        attachSnapshot(context);
         return context;
+    }
+
+    private static void attachSnapshot(DecisionContext context) {
+        TraceSnapshots.Input in = new TraceSnapshots.Input();
+        in.producerId = "draw-parity-test";
+        in.decisionId = context.getDecisionId();
+        in.decisionTypeName = context.getDecisionType();
+        in.decisionText = context.getDecisionText();
+        in.phase = context.getPhase();
+        in.turn = context.getTurnNumber();
+        in.currentPlayer = context.getPlayerId();
+        in.side = context.getSide();
+        in.noPassParam = context.isNoPass();
+        in.minParam = context.getMin();
+        in.maxParam = context.getMax();
+        in.blockedResponses = context.getBlockedResponses();
+        in.actionIds = TraceSnapshots.contextListOrAbsent(context.getActionIds());
+        in.actionTexts = TraceSnapshots.contextListOrAbsent(context.getActionTexts());
+        in.cardIds = TraceSnapshots.contextListOrAbsent(context.getCardIds());
+        in.blueprintIds = TraceSnapshots.contextListOrAbsent(context.getBlueprints());
+        in.testingTexts = TraceSnapshots.contextListOrAbsent(context.getTestingTexts());
+        in.selectable = TraceSnapshots.contextListOrAbsent(context.getSelectable());
+        TraceSnapshots.Result result = TraceSnapshots.build(in);
+        if (result.snapshot() == null) {
+            throw new AssertionError("test snapshot construction failed: " + result.issues());
+        }
+        context.setDecisionSnapshot(result.snapshot());
     }
 
     private static ActionEvaluator alwaysApplicable(ActionEvaluator delegate) {

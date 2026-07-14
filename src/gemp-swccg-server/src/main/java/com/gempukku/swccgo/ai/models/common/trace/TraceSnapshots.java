@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.models.common.decision.ActionFacts;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionFacts;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
 import com.gempukku.swccgo.ai.models.common.decision.FactValue;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
@@ -83,6 +84,9 @@ public final class TraceSnapshots {
          *  CombinedEvaluator seam) — build() then stages a CONTEXT_EFFECTIVE raw record
          *  from the already-parsed fields above, honestly source-marked. */
         public Map<String, String[]> rawParameters;
+        /** The one boundary-produced objective view. null is explicit UNKNOWN for
+         *  unmediated legacy test seams only. */
+        public ObjectiveFacts objectiveFacts;
     }
 
     /**
@@ -184,6 +188,28 @@ public final class TraceSnapshots {
             type, in.phase, null, obligations,
             new DecisionFacts.CandidateShape(size(in.actionIds), size(in.cardIds)), route);
 
+        ObjectiveFacts objectiveFacts = in.objectiveFacts != null
+            ? in.objectiveFacts
+            : ObjectiveFacts.unknown("objective producer was not available on this unmediated seam");
+        FactValue<String> objectiveIdentity = objectiveFacts.identity().isKnown()
+            ? FactValue.known(
+                objectiveFacts.identity().value().canonicalFrontBlueprintId(),
+                ObjectiveFacts.PRODUCER,
+                "ObjectiveFacts.Identity.canonicalFrontBlueprintId")
+            : FactValue.unknown(
+                ObjectiveFacts.PRODUCER,
+                "ObjectiveFacts.Identity.canonicalFrontBlueprintId",
+                objectiveFacts.identity().unknownReason());
+        FactValue<Boolean> objectiveFlipped = objectiveFacts.identity().isKnown()
+            ? FactValue.known(
+                objectiveFacts.identity().value().flipped(),
+                ObjectiveFacts.PRODUCER,
+                "ObjectiveFacts.Identity.flipped")
+            : FactValue.unknown(
+                ObjectiveFacts.PRODUCER,
+                "ObjectiveFacts.Identity.flipped",
+                objectiveFacts.identity().unknownReason());
+
         DecisionFacts decisionFacts = DecisionFacts.builder()
             .decisionId(in.decisionId)
             .decisionType(type)
@@ -202,10 +228,8 @@ public final class TraceSnapshots {
             .lifeForceCardCount(observed(in, in.lifeForceCardCount, "GameState.getPlayerLifeForce"))
             .handSize(observed(in, in.handSize, "GameState.getHand().size"))
             .reserveDeckSize(observed(in, in.reserveDeckSize, "GameState.getReserveDeckSize"))
-            .objectiveIdentity(FactValue.unknown(in.producerId, "ObjectiveAnalyzer",
-                "objective analyzer not consulted at trace boundary (pure-read discipline)"))
-            .objectiveFlipped(FactValue.unknown(in.producerId, "ObjectiveAnalyzer",
-                "objective analyzer not consulted at trace boundary (pure-read discipline)"))
+            .objectiveIdentity(objectiveIdentity)
+            .objectiveFlipped(objectiveFlipped)
             .selectedRoute(route)
             .routeSelectionEvidence(evidence)
             .build();
@@ -214,7 +238,7 @@ public final class TraceSnapshots {
             FactValue.unknown(in.producerId, "ForceReserveService",
                 "ForceReserveService not consulted at trace boundary (cache-mutation hazard)"));
 
-        return new DecisionSnapshot(decisionFacts, actionFacts, serviceFacts,
+        return new DecisionSnapshot(decisionFacts, actionFacts, serviceFacts, objectiveFacts,
             buildRawDecision(in), DecisionSnapshot.CURRENT_VERSION);
     }
 

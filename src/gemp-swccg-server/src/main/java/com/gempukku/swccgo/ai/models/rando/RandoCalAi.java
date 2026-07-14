@@ -4,6 +4,13 @@ import com.gempukku.swccgo.ai.AiDecisionResult;
 import com.gempukku.swccgo.ai.DecisionRejectionKind;
 import com.gempukku.swccgo.ai.models.HeuristicAiBase;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFactsProducer;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFactsSource;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveBattleAdapter;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveMoveAdapter;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectivePullAdapter;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveSetupAdapter;
 import com.gempukku.swccgo.ai.models.common.decision.FactValue;
 import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateControlPhaseOwner;
@@ -166,6 +173,10 @@ public class RandoCalAi extends HeuristicAiBase {
     /** TRACE ORACLE V2: package-visible pure-harness seam (JUnit only; production never calls). */
     void setDecisionTraceSinkForTesting(TraceSink sink) {
         this.decisionTraceSink = (sink != null) ? sink : NoOpTraceSink.INSTANCE;
+    }
+
+    ObjectiveFactsSource objectiveFactsSourceForTesting() {
+        return objectiveAnalyzer;
     }
 
     // V29.15: Deck name for saga-aware Epic Event choices
@@ -796,17 +807,15 @@ public class RandoCalAi extends HeuristicAiBase {
             decisionType, phase,
             decisionText.length() > 50 ? decisionText.substring(0, 50) + "..." : decisionText);
 
-        // TRACE ORACLE V2 (2026-07-13, CODEX_TRACE_ORACLE_V2_CONTRACT "Trace ownership"):
-        // open the bot-boundary session — full frozen raw input + shadow snapshot — when
-        // the sink is enabled. OBSERVATION ONLY per the route map's shadow authority:
-        // no interceptor return moves, no extra RNG draw, no behavior change. Production
-        // default sink is disabled, so this whole block no-ops.
+        // Build one immutable boundary snapshot for every mediated decision. The trace
+        // sink may observe it, but trace state never controls whether facts are produced.
         boolean traceOpened = false;
-        TraceSnapshots.Result boundarySnapshot = null;
+        TraceSnapshots.Result boundarySnapshot = captureDecisionSnapshot(
+            playerId, decision, gameState, decisionType, decisionText, phase);
+        observeObjectiveAdapters(boundarySnapshot.snapshot(), phase,
+            decision.getDecisionParameters());
         try {
             if (decisionTraceSink.isEnabled()) {
-                boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
-                    decisionType, decisionText, phase);
                 traceOpened = openDecisionTraceSession(decision, decisionType, decisionText,
                     boundarySnapshot);
             }
@@ -926,10 +935,6 @@ public class RandoCalAi extends HeuristicAiBase {
                 String revertWire = String.valueOf(selection.ordinal());
                 if (!mediatorFacing) {
                     return interceptorResult(revertWire, mediatorFacing);
-                }
-                if (boundarySnapshot == null) {
-                    boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
-                        decisionType, decisionText, phase);
                 }
                 return new OuterDecision(RevertApprovalPhaseOwner.decide(
                     boundarySnapshot.snapshot(), history, selection));
@@ -1097,8 +1102,12 @@ public class RandoCalAi extends HeuristicAiBase {
                         boolean v79bStayParked = false;
                         Integer v79bCurrentParsec = null;
                         try {
-                            objectiveAnalyzer.refreshFlipStatus(gameState, playerId);
-                            if (objectiveAnalyzer.isAnalyzed() && objectiveAnalyzer.isFlipped()) {
+                            ObjectiveFacts frozenObjective = boundarySnapshot.snapshot() != null
+                                ? boundarySnapshot.snapshot().objectiveFacts() : null;
+                            boolean objectiveFlipped = frozenObjective != null
+                                && frozenObjective.identity().isKnown()
+                                && frozenObjective.identity().value().flipped();
+                            if (objectiveFlipped) {
                                 for (PhysicalCard pc : gameState.getAllPermanentCards()) {
                                     if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
                                     if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
@@ -1221,10 +1230,6 @@ public class RandoCalAi extends HeuristicAiBase {
                 DrawRoute drawRoute = DrawRouteResolver.resolve(
                     DrawRouteInput.capture(currentPhase, decision));
                 if (drawRoute == DrawRoute.DRAW_TOP_LEVEL) {
-                    if (boundarySnapshot == null) {
-                        boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
-                            decisionType, decisionText, phase);
-                    }
                     return decideOwnedDraw(playerId, decision, gameState, history,
                         boundarySnapshot.snapshot(), traceOpened, mediatorFacing,
                         decisionType, decisionText);
@@ -1239,10 +1244,6 @@ public class RandoCalAi extends HeuristicAiBase {
                     ActivateControlRoute activateControlRoute =
                         ActivateControlRouteResolver.resolve(activateControlInput);
                     if (activateControlRoute != ActivateControlRoute.LEGACY_UNOWNED) {
-                        if (boundarySnapshot == null) {
-                            boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
-                                decisionType, decisionText, phase);
-                        }
                         return decideOwnedActivateControl(playerId, decision, gameState, history,
                             boundarySnapshot.snapshot(), activateControlInput,
                             activateControlRoute, traceOpened, mediatorFacing,
@@ -1253,17 +1254,14 @@ public class RandoCalAi extends HeuristicAiBase {
                 PullRouteInput pullInput = PullRouteInput.capture(decision);
                 PullRoute pullRoute = PullRouteResolver.resolve(pullInput);
                 if (pullRoute != PullRoute.LEGACY_UNOWNED) {
-                    if (boundarySnapshot == null) {
-                        boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
-                            decisionType, decisionText, phase);
-                    }
                     return decideOwnedPull(playerId, decision, gameState, history,
                         boundarySnapshot.snapshot(), pullInput, pullRoute, traceOpened,
                         mediatorFacing, decisionType, decisionText);
                 }
 
                 // Try evaluator system for supported decision types
-                String evaluatorResult = tryEvaluators(playerId, decision, gameState);
+                String evaluatorResult = tryEvaluators(
+                    playerId, decision, gameState, boundarySnapshot.snapshot());
                 if (evaluatorResult != null) {
                     // TRACE ORACLE V2: normal CombinedEvaluator route.
                     if (traceOpened) {
@@ -1381,9 +1379,9 @@ public class RandoCalAi extends HeuristicAiBase {
      * TRACE ORACLE V2 (2026-07-13, Handoffs/CODEX_TRACE_ORACLE_V2_CONTRACT_2026-07-13.md
      * "Frozen input and candidate order"): capture the bot-boundary snapshot with the
      * COMPLETE raw decision arrays (verbatim, unfiltered — unlike buildEvaluatorContext,
-     * which drops null/empty entries) plus the shadow DecisionSnapshot. Pure reads only:
-     * decision params, DecisionTracker.getBlockedResponses (pure), and plain GameState
-     * getters. No evaluator, strategy service, or cache-mutating call.
+     * which drops null/empty entries). This boundary prepares ObjectiveAnalyzer once;
+     * ObjectiveFactsProducer then projects it without mutation. Trace, evaluators, and
+     * adapters reuse the exact result.
      */
     private TraceSnapshots.Result captureDecisionSnapshot(String playerId,
                                                           AwaitingDecision decision,
@@ -1443,7 +1441,38 @@ public class RandoCalAi extends HeuristicAiBase {
                 // leave unknown — never fabricate an observation
             }
         }
+        try {
+            if (currentGame != null) {
+                objectiveAnalyzer.analyze(currentGame, playerId, mySide);
+            }
+            in.objectiveFacts = ObjectiveFactsProducer.produce(
+                currentGame, gameState, playerId, objectiveAnalyzer);
+        } catch (RuntimeException e) {
+            in.objectiveFacts = ObjectiveFacts.unknown(
+                "objective boundary preparation failed: " + e.getClass().getSimpleName());
+        }
         return TraceSnapshots.build(in);
+    }
+
+    private static void observeObjectiveAdapters(DecisionSnapshot snapshot,
+                                                 Phase phase,
+                                                 Map<String, String[]> params) {
+        if (snapshot == null) {
+            return;
+        }
+        if (phase == Phase.MOVE) {
+            ObjectiveMoveAdapter.adapt(snapshot);
+        } else if (phase == Phase.BATTLE) {
+            ObjectiveBattleAdapter.adapt(snapshot);
+        }
+
+        String[] origins = params != null ? params.get(DecisionOrigin.WIRE_PARAMETER) : null;
+        DecisionOrigin origin = origins != null && origins.length == 1
+            ? DecisionOrigin.fromWire(origins[0]) : null;
+        if (origin == DecisionOrigin.SETUP_STARTING_LOCATION
+                || origin == DecisionOrigin.SETUP_STARTING_INTERRUPT) {
+            ObjectiveSetupAdapter.adapt(snapshot);
+        }
     }
 
     /** Open the trace with the same immutable snapshot later consumed by an owned route. */
@@ -1558,7 +1587,8 @@ public class RandoCalAi extends HeuristicAiBase {
                 "typed canonical Force-Pile draw action", null);
         }
 
-        DecisionContext evalContext = buildEvaluatorContext(playerId, decision, gameState);
+        DecisionContext evalContext = buildEvaluatorContext(
+            playerId, decision, gameState, snapshot);
         AiDecisionResult ownedResult;
         if (evalContext == null) {
             ownedResult = AiDecisionResult.typedRejection(
@@ -1620,7 +1650,7 @@ public class RandoCalAi extends HeuristicAiBase {
             snapshot, history, route, () -> {
                 selectionInvoked[0] = true;
                 selected[0] = selectOwnedActivateControl(
-                    playerId, decision, gameState, routeInput, route);
+                    playerId, decision, gameState, snapshot, routeInput, route);
                 return selected[0];
             });
         if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
@@ -1630,7 +1660,8 @@ public class RandoCalAi extends HeuristicAiBase {
             String compatibilityWire = selected[0] != null && !selected[0].isRejected()
                 ? selected[0].wire() : null;
             if (!selectionInvoked[0]) {
-                compatibilityWire = tryEvaluators(playerId, decision, gameState);
+                compatibilityWire = tryEvaluators(
+                    playerId, decision, gameState, snapshot);
             }
             return completeDirectActivateControlCompatibility(
                 playerId, decision, gameState, compatibilityWire,
@@ -1690,6 +1721,7 @@ public class RandoCalAi extends HeuristicAiBase {
             String playerId,
             AwaitingDecision decision,
             GameState gameState,
+            DecisionSnapshot snapshot,
             ActivateControlRouteInput routeInput,
             ActivateControlRoute route) {
         switch (route) {
@@ -1697,14 +1729,15 @@ public class RandoCalAi extends HeuristicAiBase {
             case ACTIVATE_AMOUNT:
             case ACTIVATE_ALLOWANCE:
             case CONTROL_TOP_LEVEL:
-                String wire = tryEvaluators(playerId, decision, gameState);
+                String wire = tryEvaluators(playerId, decision, gameState, snapshot);
                 return wire != null
                     ? ActivateControlPhaseOwner.Selection.wire(wire)
                     : ActivateControlPhaseOwner.Selection.rejected(
                         com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.NO_LEGAL_FALLBACK,
                         "owned ACTIVATE/CONTROL evaluator lane produced no result");
             case ACTIVATE_ZERO_CONFIRM:
-                DecisionContext zeroContext = buildEvaluatorContext(playerId, decision, gameState);
+                DecisionContext zeroContext = buildEvaluatorContext(
+                    playerId, decision, gameState, snapshot);
                 if (zeroContext == null) {
                     return ActivateControlPhaseOwner.Selection.rejected(
                         com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
@@ -1714,7 +1747,7 @@ public class RandoCalAi extends HeuristicAiBase {
                     && zeroContext.isBattlePlausibleThisTurn();
                 return ActivateControlPhaseOwner.zeroConfirmation(routeInput.results(), keepThree);
             case ACTIVATE_ACK:
-                if (buildEvaluatorContext(playerId, decision, gameState) == null) {
+                if (buildEvaluatorContext(playerId, decision, gameState, snapshot) == null) {
                     return ActivateControlPhaseOwner.Selection.rejected(
                         com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
                         "owned ACTIVATE acknowledgement could not build evaluator context");
@@ -1773,9 +1806,12 @@ public class RandoCalAi extends HeuristicAiBase {
         } else {
             PullFacts facts = factsValue.value();
             PullAssessment assessment = PullAssessment.compatibility(facts);
+            if (pullRoute == PullRoute.PULL_FAILED_VERIFY) {
+                ObjectivePullAdapter.adaptFailedVerify(snapshot, facts, assessment);
+            }
             ownedResult = PullPhaseOwner.decide(snapshot, history, pullRoute, facts, assessment,
                 (route, ignoredFacts, ignoredAssessment) ->
-                    tryEvaluators(playerId, decision, gameState));
+                    tryEvaluators(playerId, decision, gameState, snapshot, facts, assessment));
         }
 
         if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
@@ -1810,11 +1846,22 @@ public class RandoCalAi extends HeuristicAiBase {
      *
      * @return result from evaluator, or null if evaluators don't handle this decision
      */
-    private String tryEvaluators(String playerId, AwaitingDecision decision, GameState gameState) {
+    private String tryEvaluators(String playerId, AwaitingDecision decision,
+                                 GameState gameState, DecisionSnapshot snapshot) {
+        return tryEvaluators(playerId, decision, gameState, snapshot, null, null);
+    }
+
+    private String tryEvaluators(String playerId, AwaitingDecision decision,
+                                 GameState gameState, DecisionSnapshot snapshot,
+                                 PullFacts pullFacts, PullAssessment pullAssessment) {
         // Build DecisionContext for evaluators
-        DecisionContext evalContext = buildEvaluatorContext(playerId, decision, gameState);
+        DecisionContext evalContext = buildEvaluatorContext(
+            playerId, decision, gameState, snapshot);
         if (evalContext == null) {
             return null;
+        }
+        if (pullFacts != null && pullAssessment != null) {
+            evalContext.setPullTransaction(pullFacts, pullAssessment);
         }
 
         // Check if evaluators can handle this decision
@@ -1894,7 +1941,9 @@ public class RandoCalAi extends HeuristicAiBase {
     /**
      * Build a DecisionContext for evaluators from AwaitingDecision.
      */
-    private DecisionContext buildEvaluatorContext(String playerId, AwaitingDecision decision, GameState gameState) {
+    private DecisionContext buildEvaluatorContext(String playerId, AwaitingDecision decision,
+                                                   GameState gameState,
+                                                   DecisionSnapshot snapshot) {
         if (decision == null) {
             return null;
         }
@@ -2072,18 +2121,13 @@ public class RandoCalAi extends HeuristicAiBase {
         // Set game context for advanced analysis
         evalContext.setGame(currentGame);
         evalContext.setSide(mySide);
+        evalContext.setDecisionSnapshot(snapshot);
 
         // Set strategy components so evaluators can use them
         evalContext.setStrategyController(strategyController);
         evalContext.setObjectiveHandler(objectiveHandler);
         evalContext.setObjectiveAnalyzer(objectiveAnalyzer);
 
-        if (!objectiveAnalyzer.isAnalyzed() && currentGame != null && mySide != null) {
-            objectiveAnalyzer.analyze(currentGame, playerId, mySide);
-        } else if (objectiveAnalyzer.isAnalyzed() && currentGame != null) {
-            // V29.7: Refresh flip status each evaluation so we detect when objective actually flips
-            objectiveAnalyzer.refreshFlipStatus(currentGame.getGameState(), playerId);
-        }
         evalContext.setShieldStrategy(shieldStrategy);
         deployPhasePlanner.setObjectiveAnalyzer(objectiveAnalyzer);
         evalContext.setDeployPhasePlanner(deployPhasePlanner);
@@ -2140,6 +2184,12 @@ public class RandoCalAi extends HeuristicAiBase {
      * Called by game mediator before decisions.
      */
     public void setCurrentGame(SwccgGame game) {
+        if (this.currentGame != game) {
+            objectiveHandler.reset();
+            objectiveAnalyzer.reset();
+            deployPhasePlanner.reset();
+            deckOracle.reset();
+        }
         this.currentGame = game;
     }
 

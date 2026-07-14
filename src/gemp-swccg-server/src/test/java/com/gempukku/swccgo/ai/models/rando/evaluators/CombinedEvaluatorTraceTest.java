@@ -8,6 +8,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceOperation;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSnapshots;
 import com.gempukku.swccgo.ai.models.common.trace.TraceStatus;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
 import com.gempukku.swccgo.common.Phase;
@@ -23,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -66,7 +68,35 @@ public class CombinedEvaluatorTraceTest {
         ctx.setMin(0);
         ctx.setSide(Side.DARK);
         ctx.setActionIds(new ArrayList<>(Arrays.asList(rawActionIds)));
+        attachSnapshot(ctx);
         return ctx;
+    }
+
+    private static void attachSnapshot(DecisionContext context) {
+        TraceSnapshots.Input in = new TraceSnapshots.Input();
+        in.producerId = "combined-evaluator-test";
+        in.decisionId = context.getDecisionId();
+        in.decisionTypeName = context.getDecisionType();
+        in.decisionText = context.getDecisionText();
+        in.phase = context.getPhase();
+        in.turn = context.getTurnNumber();
+        in.currentPlayer = context.getPlayerId();
+        in.side = context.getSide();
+        in.noPassParam = context.isNoPass();
+        in.minParam = context.getMin();
+        in.maxParam = context.getMax();
+        in.blockedResponses = context.getBlockedResponses();
+        in.actionIds = TraceSnapshots.contextListOrAbsent(context.getActionIds());
+        in.actionTexts = TraceSnapshots.contextListOrAbsent(context.getActionTexts());
+        in.cardIds = TraceSnapshots.contextListOrAbsent(context.getCardIds());
+        in.blueprintIds = TraceSnapshots.contextListOrAbsent(context.getBlueprints());
+        in.testingTexts = TraceSnapshots.contextListOrAbsent(context.getTestingTexts());
+        in.selectable = TraceSnapshots.contextListOrAbsent(context.getSelectable());
+        TraceSnapshots.Result result = TraceSnapshots.build(in);
+        if (result.snapshot() == null) {
+            throw new AssertionError("test snapshot construction failed: " + result.issues());
+        }
+        context.setDecisionSnapshot(result.snapshot());
     }
 
     private static EvaluatedAction action(String id, float score, String text) {
@@ -76,7 +106,12 @@ public class CombinedEvaluatorTraceTest {
     private static DecisionTrace capture(List<ActionEvaluator> evaluators, DecisionContext ctx) {
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         new CombinedEvaluator(evaluators, sink).evaluateDecision(ctx);
-        return sink.single();
+        DecisionTrace trace = sink.single();
+        assertSame("CombinedEvaluator and trace must share the boundary snapshot",
+                ctx.getDecisionSnapshot(), trace.getSnapshot());
+        assertSame("objective adapters must see the same ObjectiveFacts instance",
+                ctx.getDecisionSnapshot().objectiveFacts(), trace.getSnapshot().objectiveFacts());
+        return trace;
     }
 
     private static TraceOperation findFirst(DecisionTrace trace, TraceOp op) {
@@ -409,6 +444,7 @@ public class CombinedEvaluatorTraceTest {
         DecisionContext forced = passableContext("A", "");
         forced.setNoPass(true);
         forced.setMin(1);
+        attachSnapshot(forced);
         TraceTestSupport.CaptureSink forcedSink = new TraceTestSupport.CaptureSink();
         EvaluatedAction forcedResult = new CombinedEvaluator(allBadAgain, forcedSink).evaluateDecision(forced);
         assertEquals("A", forcedResult.getActionId());
@@ -511,6 +547,7 @@ public class CombinedEvaluatorTraceTest {
         ctx2.setMin(0);
         ctx2.setSide(Side.DARK);
         ctx2.setActionIds(new ArrayList<>(Arrays.asList("A", "B")));
+        attachSnapshot(ctx2);
 
         DecisionTrace t1 = capture(pairScenario("A", 100.0f, "B", 50.0f), ctx1);
         DecisionTrace t2 = capture(pairScenario("A", 100.0f, "B", 50.0f), ctx2);

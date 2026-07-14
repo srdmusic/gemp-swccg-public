@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.logic.timing.processes.pregame;
 
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -327,9 +328,11 @@ public class PlayStartingLocationsAndObjectivesGameProcess implements GameProces
         }
     }
 
-    private AwaitingDecision createChooseLocationDecision(final SwccgGame game, final String playerId, final Collection<PhysicalCard> possibleCharacters) {
+    AwaitingDecision createChooseLocationDecision(final SwccgGame game, final String playerId, final Collection<PhysicalCard> possibleCharacters) {
         return new ArbitraryCardsSelectionDecision("Choose starting location",
                 new LinkedList<PhysicalCard>(possibleCharacters), 1, 1) {
+            { setDecisionOrigin(DecisionOrigin.SETUP_STARTING_LOCATION); }
+
             @Override
             public void decisionMade(String result) throws DecisionResultInvalidException {
                 List<PhysicalCard> selectedLocations = getSelectedCardsByResponse(result);

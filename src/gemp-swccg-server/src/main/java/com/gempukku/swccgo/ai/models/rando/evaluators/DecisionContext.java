@@ -1,5 +1,8 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.phase.PullAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.PullFacts;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle;
 import com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
@@ -86,6 +89,9 @@ public class DecisionContext {
     private DeckOracle deckOracle;  // V22.6: Full deck knowledge
     private OpponentDeckTracker opponentDeckTracker;  // V24.7: Opponent destiny intel
     private String deckName;  // V29.15: Deck name for saga-aware Epic Event choices
+    private DecisionSnapshot decisionSnapshot;
+    private PullFacts pullFacts;
+    private PullAssessment pullAssessment;
 
     public DecisionContext(GameState gameState, String playerId, String decisionType,
                           String decisionText, String decisionId, Phase phase) {
@@ -388,6 +394,27 @@ public class DecisionContext {
 
     public void setObjectiveAnalyzer(ObjectiveAnalyzer objectiveAnalyzer) {
         this.objectiveAnalyzer = objectiveAnalyzer;
+    }
+
+    public DecisionSnapshot getDecisionSnapshot() {
+        return decisionSnapshot;
+    }
+
+    public void setDecisionSnapshot(DecisionSnapshot decisionSnapshot) {
+        this.decisionSnapshot = Objects.requireNonNull(decisionSnapshot, "decisionSnapshot");
+    }
+
+    public PullFacts getPullFacts() {
+        return pullFacts;
+    }
+
+    public PullAssessment getPullAssessment() {
+        return pullAssessment;
+    }
+
+    public void setPullTransaction(PullFacts pullFacts, PullAssessment pullAssessment) {
+        this.pullFacts = Objects.requireNonNull(pullFacts, "pullFacts");
+        this.pullAssessment = Objects.requireNonNull(pullAssessment, "pullAssessment");
     }
 
     // V22.6: DeckOracle — full deck knowledge

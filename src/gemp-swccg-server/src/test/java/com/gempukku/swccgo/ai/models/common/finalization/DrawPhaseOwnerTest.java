@@ -140,6 +140,7 @@ public class DrawPhaseOwnerTest {
                 snapshot.decisionFacts(),
                 snapshot.actionFacts(),
                 snapshot.serviceFacts(),
+                snapshot.objectiveFacts(),
                 rawDecision,
                 snapshot.snapshotVersion());
     }

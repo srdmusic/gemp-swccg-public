@@ -4,6 +4,8 @@ import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveContribution;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectivePullAdapter;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -5132,6 +5134,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         // Determine source category from the source card's blueprint.
                         int v67aiTier = 0;
                         String v67aiTierName = "unclassified";
+                        boolean v192PhysicalObjectiveSource = false;
+                        boolean v192ObjectiveSource = false;
                         if (cardId != null && pullGs != null) {
                             try {
                                 PhysicalCard srcPc = pullGs.findCardById(Integer.parseInt(cardId));
@@ -5139,7 +5143,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     com.gempukku.swccgo.common.CardCategory srcCat =
                                         srcPc.getBlueprint().getCardCategory();
                                     if (srcCat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE) {
-                                        v67aiTier = 1; v67aiTierName = "OBJECTIVE";
+                                        v192PhysicalObjectiveSource = true;
+                                        v192ObjectiveSource = true;
+                                        v67aiTier = 1;
+                                        v67aiTierName = "OBJECTIVE";
                                     } else if (srcCat == com.gempukku.swccgo.common.CardCategory.EFFECT) {
                                         v67aiTier = 2; v67aiTierName = "EFFECT";
                                     } else if (srcCat == com.gempukku.swccgo.common.CardCategory.INTERRUPT) {
@@ -5152,6 +5159,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
                             } catch (Exception e) { /* fall through to default */ }
                         }
+                        Float v192ObjectiveTier = objectivePullParentContribution(
+                            context, i, v192PhysicalObjectiveSource);
+                        if (v192ObjectiveTier != null) {
+                            v192ObjectiveSource = true;
+                            v67aiTier = 1;
+                            v67aiTierName = "OBJECTIVE-ADAPTER";
+                        } else if (v192PhysicalObjectiveSource) {
+                            v67aiTierName = "OBJECTIVE-ADAPTER-NO-CONTRIBUTION";
+                        }
                         // Old V67ai magnitudes commented out 2026-07-06 (V192 re-size):
                         // switch (v67aiTier) {
                         //     case 1: v67aiBonus = 2000.0f; break;
@@ -5159,11 +5175,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         //     case 3: v67aiBonus = 1600.0f; break;
                         //     default: v67aiBonus = 1500.0f; break;  // legacy V67l score for unknown sources
                         // }
-                        switch (v67aiTier) {
-                            case 1: v192Tier = 1500.0f; break;
-                            case 2: v192Tier = 1400.0f; break;
-                            case 3: v192Tier = 1300.0f; break;
-                            default: v192Tier = 1200.0f; break;
+                        // Retained V192 predecessor arm for step-10 caller proof:
+                        // case 1: v192Tier = 1500.0f; break;
+                        if (v192ObjectiveSource) {
+                            // ObjectivePullAdapter owns the old objective-source +1500 arm,
+                            // including exact legacy fallback when immutable identity cannot match.
+                            v192Tier = v192ObjectiveTier != null ? v192ObjectiveTier : 0.0f;
+                        } else {
+                            switch (v67aiTier) {
+                                case 2: v192Tier = 1400.0f; break;
+                                case 3: v192Tier = 1300.0f; break;
+                                default: v192Tier = 1200.0f; break;
+                            }
                         }
                         v192IsLocationTier = true;
                         v192TierDesc = String.format("LOCATION Tier %d %s — %s",
@@ -6448,5 +6471,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
             logger.debug("Error checking weapon targets: {}", e.getMessage());
             return true;  // Default to allowing fire on error
         }
+    }
+
+    private static Float objectivePullParentContribution(DecisionContext context,
+                                                         int candidateOrdinal,
+                                                         boolean physicalObjectiveSource) {
+        if (context.getDecisionSnapshot() == null
+                || context.getPullFacts() == null
+                || context.getPullAssessment() == null) {
+            return null;
+        }
+        ObjectivePullAdapter.Result result = ObjectivePullAdapter.adaptParent(
+                context.getDecisionSnapshot(), context.getPullFacts(),
+                context.getPullAssessment(), candidateOrdinal, physicalObjectiveSource);
+        if (result.parentContributions().size() != 1) {
+            return null;
+        }
+        ObjectiveContribution contribution = result.parentContributions().get(0);
+        return contribution.rule() == ObjectiveContribution.Rule.V192_PULL_PARENT
+                ? contribution.value() : null;
     }
 }

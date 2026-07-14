@@ -72,6 +72,18 @@ public class RandoCalAiLifecycleTest {
         };
     }
 
+    private static RandoCalAi aiWithSide() {
+        RandoCalAi ai = new RandoCalAi();
+        try {
+            Field side = RandoCalAi.class.getDeclaredField("mySide");
+            side.setAccessible(true);
+            side.set(ai, Side.DARK);
+            return ai;
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("test fixture could not initialize bot side", e);
+        }
+    }
+
     @Test
     public void unownedOptionalGainIntegerUsesHeuristicMaximum() {
         IntegerAwaitingDecision decision = new IntegerAwaitingDecision(
@@ -79,7 +91,7 @@ public class RandoCalAiLifecycleTest {
             @Override public void decisionMade(int result) { }
         };
 
-        AiDecisionResult result = new RandoCalAi().decideForEngine(
+        AiDecisionResult result = aiWithSide().decideForEngine(
                 "tester", decision, null, RejectionHistory.empty());
 
         assertEquals("3", result.wireResponse());
@@ -120,7 +132,7 @@ public class RandoCalAiLifecycleTest {
     // ── direct decide() closes inline, records finalResponse, no disposition ─────
     @Test
     public void directDecideClosesTraceInline() {
-        RandoCalAi ai = new RandoCalAi();
+        RandoCalAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
 
@@ -137,7 +149,7 @@ public class RandoCalAiLifecycleTest {
     // ── mediator-facing NONE interceptor DEFERS close to the accepted callback ───
     @Test
     public void mediatorNoneInterceptorDefersCloseUntilAccepted() {
-        RandoCalAi ai = new RandoCalAi();
+        RandoCalAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AwaitingDecision decision = forfeitDecision();
@@ -165,10 +177,7 @@ public class RandoCalAiLifecycleTest {
 
     @Test
     public void revertFinalizerNoneClosesOnAcceptedExactWire() throws Exception {
-        RandoCalAi ai = new RandoCalAi();
-        Field side = RandoCalAi.class.getDeclaredField("mySide");
-        side.setAccessible(true);
-        side.set(ai, Side.DARK);
+        RandoCalAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AwaitingDecision decision = revertDecision();
@@ -202,7 +211,7 @@ public class RandoCalAiLifecycleTest {
     // ── accepted NONE callback records the SUBMITTED (post-override) wire as final ──
     @Test
     public void acceptedCallbackRecordsSubmittedWireAsFinalResponse() {
-        RandoCalAi ai = new RandoCalAi();
+        RandoCalAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AwaitingDecision decision = forfeitDecision();
@@ -221,7 +230,7 @@ public class RandoCalAiLifecycleTest {
 
     @Test
     public void acceptedOuterMutationFailureRetainsFinalWireAndClosesIncompleteTrace() {
-        RandoCalAi ai = new RandoCalAi();
+        RandoCalAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AiDecisionResult result = ai.decideForEngine("tester", integerDecision(), null,
@@ -253,7 +262,7 @@ public class RandoCalAiLifecycleTest {
     // ── mediator rejection closes without mutation or final response ─────────────
     @Test
     public void mediatorRejectionClosesWithoutTrackerOrFinalResponse() {
-        RandoCalAi ai = new RandoCalAi();
+        RandoCalAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AwaitingDecision decision = forfeitDecision();
@@ -275,7 +284,7 @@ public class RandoCalAiLifecycleTest {
     // ── attempt-failed disposition closes the session ───────────────────────────
     @Test
     public void attemptFailedDispositionClosesSession() {
-        RandoCalAi ai = new RandoCalAi();
+        RandoCalAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AwaitingDecision decision = forfeitDecision();
@@ -291,7 +300,7 @@ public class RandoCalAiLifecycleTest {
     // ── OUTER_COMMON route defers the outer tracker record to acceptance ─────────
     @Test
     public void outerCommonAppliesTrackerOnAcceptOnly() {
-        RandoCalAi accepted = new RandoCalAi();
+        RandoCalAi accepted = aiWithSide();
         TraceTestSupport.CaptureSink acceptedSink = new TraceTestSupport.CaptureSink();
         accepted.setDecisionTraceSinkForTesting(acceptedSink);
         IntegerAwaitingDecision acceptDecision = integerDecision();
@@ -312,7 +321,7 @@ public class RandoCalAiLifecycleTest {
         assertTrue("acceptance applies the outer tracker record once",
                 hasOuterTrackerRecord(acceptedTrace));
 
-        RandoCalAi rejected = new RandoCalAi();
+        RandoCalAi rejected = aiWithSide();
         TraceTestSupport.CaptureSink rejectedSink = new TraceTestSupport.CaptureSink();
         rejected.setDecisionTraceSinkForTesting(rejectedSink);
         IntegerAwaitingDecision rejectDecision = integerDecision();
@@ -327,12 +336,12 @@ public class RandoCalAiLifecycleTest {
     // ── trace-disabled and trace-enabled wire results are identical ──────────────
     @Test
     public void traceDisabledWireEqualsTraceEnabledWire() {
-        RandoCalAi disabled = new RandoCalAi(); // default NoOpTraceSink
+        RandoCalAi disabled = aiWithSide(); // default NoOpTraceSink
         AiDecisionResult disabledResult = disabled.decideForEngine("tester", forfeitDecision(), null,
                 RejectionHistory.empty());
         assertFalse("no session opens under the disabled default sink", TraceSession.isActive());
 
-        RandoCalAi enabled = new RandoCalAi();
+        RandoCalAi enabled = aiWithSide();
         enabled.setDecisionTraceSinkForTesting(new TraceTestSupport.CaptureSink());
         AiDecisionResult enabledResult = enabled.decideForEngine("tester", forfeitDecision(), null,
                 RejectionHistory.empty());

@@ -6,6 +6,9 @@ import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveDeployAdapter;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.objective.ObjectivePullAdapter;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -824,7 +827,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         // V186 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isWantThatMap().
         boolean v186IsWantThatMap = v186oa != null && v186oa.isAnalyzed() && v186oa.isWantThatMap();
 
+        int objectiveCandidateOrdinal = 0;
         for (String cardId : context.getCardIds()) {
+            int currentObjectiveCandidateOrdinal = objectiveCandidateOrdinal++;
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
                 ActionType.DEPLOY,
@@ -2133,6 +2138,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                     if (v136DeployingCard != null) {
+                                        observeObjectiveDeployAdapter(
+                                            context, currentObjectiveCandidateOrdinal,
+                                            v136DeployingCard, v136DepBp, location);
+
                                         // FORMATION SAFETY (2026-07-11c): L3/L4 deploy vetoes — un-outvotable.
                                         // (Codex audit incident 1: Greedo ability 1 deployed solo at 1420 while
                                         // two affordable buddies sat in hand; every guard was additive.)
@@ -7555,10 +7564,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // If the location is NOT among the reserve deck options, the game engine
             // already filtered it out (it's in hand, on table, or not in deck), so
             // pulling other cards is fine — no extra hand/table checks needed here.
-            if (category == CardCategory.LOCATION) {
-                action.addReasoning("V22.6 LOCATION PRIORITY: locations are prerequisites — pull before effects/characters", 500.0f);
-                logger.warn("🌍 V22.6 LOCATION PRIORITY: {} gets +500 (always pull locations first from objective)", cardTitle);
+            Float objectiveChildRank = objectivePullChildRank(context, i, category, true);
+            if (objectiveChildRank != null) {
+                action.addReasoning("V22.6 OBJECTIVE PULL ADAPTER: locations are prerequisites, pull before effects/characters", objectiveChildRank);
+                logger.warn("V22.6 OBJECTIVE PULL ADAPTER: {} gets +{}", cardTitle, (int) objectiveChildRank.floatValue());
             }
+            // Retained predecessor for the step-10 caller proof. ObjectivePullAdapter
+            // is now the sole live emitter for this objective child contribution.
+            // if (category == CardCategory.LOCATION) {
+            //     action.addReasoning("V22.6 LOCATION PRIORITY: locations are prerequisites, pull before effects/characters", 500.0f);
+            // }
 
             // === V22.6: FAILED PULL AVOIDANCE (DeckOracle) ===
             // If we've tried to pull this card 2+ times and failed, it's likely not in the
@@ -7868,6 +7883,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             action.setCardName(cardTitle);
             if (blueprintId != null) {
                 action.setBlueprintId(blueprintId);
+            }
+
+            Float objectiveChildRank = objectivePullChildRank(context, i, category, false);
+            if (objectiveChildRank != null) {
+                action.addReasoning("V22.6 OBJECTIVE PULL ADAPTER: locations are prerequisites, deploy before other pulled cards", objectiveChildRank);
+                logger.warn("V22.6 OBJECTIVE PULL ADAPTER (deploy child): {} gets +{}",
+                    cardTitle, (int) objectiveChildRank.floatValue());
             }
 
             // V70 (Steve, 2026-05-12): ONE-WEAPON-PER-CHARACTER rule in
@@ -9475,5 +9497,94 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         float score = 1500f + savings * 80f - waste * 30f;
         if (savings >= damage / 2) score += 200f;  // significant chunk of the damage
         return score + v178Armed;
+    }
+
+    private static void observeObjectiveDeployAdapter(DecisionContext context,
+                                                       int candidateOrdinal,
+                                                       PhysicalCard deployingCard,
+                                                       SwccgCardBlueprint deployingBlueprint,
+                                                       PhysicalCard destination) {
+        if (context.getDecisionSnapshot() == null || deployingCard == null
+                || deployingBlueprint == null || destination == null) {
+            return;
+        }
+
+        ObjectiveFacts facts = context.getDecisionSnapshot().objectiveFacts();
+        boolean targetsFlipCriticalSite = false;
+        boolean flipCriticalCardAvailable = false;
+        if (facts.strategy().isKnown()) {
+            ObjectiveFacts.StrategyFacts strategy = facts.strategy().value();
+            targetsFlipCriticalSite = destination.getTitle() != null
+                    && strategy.flipCriticalControlSite().isKnown()
+                    && strategy.flipCriticalControlSite().value()
+                    .equalsIgnoreCase(destination.getTitle());
+            flipCriticalCardAvailable = flipCriticalCardAvailable(context, strategy);
+        }
+
+        Float ability = deployingBlueprint.hasAbilityAttribute()
+                ? deployingBlueprint.getAbility() : null;
+        ObjectiveDeployAdapter.adapt(
+                context.getDecisionSnapshot(),
+                new ObjectiveDeployAdapter.CandidateFacts(
+                        candidateOrdinal,
+                        ObjectiveDeployAdapter.Stage.CHILD_DESTINATION,
+                        deployingCard.getCardId(),
+                        deployingBlueprint.getCardCategory() == CardCategory.CHARACTER,
+                        destination.getCardId(),
+                        targetsFlipCriticalSite,
+                        flipCriticalCardAvailable,
+                        ability,
+                        deployingBlueprint.getDeployCost()));
+    }
+
+    private static boolean flipCriticalCardAvailable(
+            DecisionContext context,
+            ObjectiveFacts.StrategyFacts strategy) {
+        if (context.getDeckOracle() == null) {
+            return false;
+        }
+        for (String blueprintId : strategy.flipCriticalControlCardIds()) {
+            if (context.getDeckOracle().isCardInHand(blueprintId)
+                    || context.getDeckOracle().isCardInReserve(blueprintId)) {
+                return true;
+            }
+        }
+        if (strategy.flipCriticalControlCardIds().isEmpty()
+                && strategy.flipCriticalControlCard().isKnown()) {
+            String title = strategy.flipCriticalControlCard().value();
+            return context.getDeckOracle().isCardInHand(title)
+                    || context.getDeckOracle().isCardInReserve(title);
+        }
+        return false;
+    }
+
+    private static Float objectivePullChildRank(DecisionContext context,
+                                                int candidateOrdinal,
+                                                CardCategory category,
+                                                boolean legacyFallbackAllowed) {
+        if (category != CardCategory.LOCATION
+                || context.getDecisionSnapshot() == null
+                || context.getPullFacts() == null
+                || context.getPullAssessment() == null) {
+            return null;
+        }
+        ObjectivePullAdapter.Result result = ObjectivePullAdapter.adaptChildAtOrdinal(
+                context.getDecisionSnapshot(), context.getPullFacts(),
+                context.getPullAssessment(),
+                candidateOrdinal, ObjectivePullAdapter.ChildKind.LOCATION,
+                isPhysicalObjectivePullSource(context), legacyFallbackAllowed);
+        return result.childRanks().size() == 1
+                ? result.childRanks().get(0).rank() : null;
+    }
+
+    private static boolean isPhysicalObjectivePullSource(DecisionContext context) {
+        if (context.getGameState() == null || context.getPullFacts() == null
+                || context.getPullFacts().sourceCard().isUnknown()) {
+            return false;
+        }
+        PhysicalCard source = context.getGameState().findCardById(
+                context.getPullFacts().sourceCard().value().currentCardId());
+        return source != null && source.getBlueprint() != null
+                && source.getBlueprint().getCardCategory() == CardCategory.OBJECTIVE;
     }
 }

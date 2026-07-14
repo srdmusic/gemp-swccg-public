@@ -152,6 +152,7 @@ public class PullPhaseOwnerTest {
         DecisionSnapshot ambiguous = new DecisionSnapshot(
                 owned.snapshot().decisionFacts(), owned.snapshot().actionFacts(),
                 owned.snapshot().serviceFacts(),
+                owned.snapshot().objectiveFacts(),
                 new DecisionSnapshot.RawDecision(owned.snapshot().rawDecision().source(), raw),
                 owned.snapshot().snapshotVersion());
         AtomicInteger finalizerCalls = new AtomicInteger();

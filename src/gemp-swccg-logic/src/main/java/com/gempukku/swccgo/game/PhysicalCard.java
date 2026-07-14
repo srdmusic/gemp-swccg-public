@@ -79,6 +79,7 @@ public interface PhysicalCard extends Filterable, Snapshotable<PhysicalCard> {
     boolean isDoubleSided();
     String getBlueprintId(boolean alwaysShowCardFront);
     String getBlueprintId(GameState gameState, boolean alwaysShowCardFront);
+    String getOtherSideBlueprintId();
     SwccgCardBlueprint getBlueprint();
     SwccgCardBlueprint getOtherSideBlueprint();
     String getTestingText(GameState gameState, boolean alwaysShowCardFront, boolean showOtherSide);

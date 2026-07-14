@@ -32,7 +32,9 @@ public enum DecisionOrigin {
     PULL_DEPLOY_CHILD("ARBITRARY_CARDS"),
     PULL_TAKE_CHILD("ARBITRARY_CARDS"),
     PULL_DESTINATION("CARD_SELECTION"),
-    PULL_FAILED_VERIFY("ARBITRARY_CARDS");
+    PULL_FAILED_VERIFY("ARBITRARY_CARDS"),
+    SETUP_STARTING_LOCATION("ARBITRARY_CARDS"),
+    SETUP_STARTING_INTERRUPT("ARBITRARY_CARDS");
 
     /** The single wire parameter key the engine stamps the origin name into. */
     public static final String WIRE_PARAMETER = "decisionOrigin";

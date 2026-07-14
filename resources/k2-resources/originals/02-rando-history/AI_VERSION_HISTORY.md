@@ -1,3 +1,22 @@
+  ════ OBJECTIVE FACTS AND ADAPTER PHASE (2026-07-14, Steve-approved, both bots) ════
+One immutable ObjectiveFacts view is now built before trace selection for every mediated decision and carried by
+DecisionSnapshot v4. Trace, CombinedEvaluator, and every objective adapter consume that exact instance. Physical
+identity uses current plus opposite blueprints and exact ids, so canonical front/back truth survives a flip while
+current/opposite orientation swaps. Objective state resets on a new SwccgGame object reference, not opponent name.
+Profiles resolve by blueprint id first, title compatibility second, then compiled My Lord/Endor fallback when no
+usable JSON profile exists. Common DEPLOY, MOVE, BATTLE, PULL, and SETUP adapters translate typed facts without
+general legality. DEPLOY/MOVE/BATTLE/SETUP remain shadow. DEPLOY covers the closed V83/V88/V108/V110, objective-site
++200, and V193 +400/+2000 set without absorbing V99/V86/V121 or formation policy. ObjectivePullAdapter is the sole
+live owner of objective-source parent +1500, child-location +500, and canonical failed-verify intent; ARBITRARY temp
+wire ids resolve by ordinal through typed physical-card identities. If immutable identity is unavailable or its ids
+disagree but physical type proves the source is an objective, the adapter preserves the exact legacy parent score and the predecessor child route
+preserves its exact legacy rank; blocked assessments never fall back. Replaced PULL emitters remain disabled in place for
+later caller proof. Hidden Path, Corridor, Hunt, and starting-process inputs are typed. UNKNOWN stays unknown; facts
+carry no score/rank/veto/weights. Boundary: 173/0/0/0 focused tests, affected reactor package success, diff clean, six
+mirrored evaluator/analyzer files normalized identical. Independent audits caught and closed the temp-wire child seam
+and identity-mismatch fallback gap before deployment. Revert the single phase commit. No game simulation and no push.
+See AI_CHANGELOG 2026-07-14.
+
   ════ ACTIVATE + CONTROL PHASE B CUTOVER (2026-07-14, Steve-approved, both bots) ════
 Six stamped ACTIVATE and CONTROL routes now have one shared typed owner after the existing chaos gate and before PULL
 or legacy evaluation. Amount arithmetic is consolidated in ActivateAmountPolicy; CONTROL drain scoring is consolidated

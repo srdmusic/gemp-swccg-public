@@ -333,6 +333,14 @@ public class PhysicalCardImpl implements PhysicalCard, Cloneable {
     }
 
     @Override
+    public String getOtherSideBlueprintId() {
+        if (!isDoubleSided()) {
+            return null;
+        }
+        return isFlipped() ? _frontBlueprintId : _backBlueprintId;
+    }
+
+    @Override
     public String getTestingText(GameState gameState, boolean alwaysShowCardFront, boolean showOtherSide) {
         if (alwaysShowCardFront) {
             if (showOtherSide)

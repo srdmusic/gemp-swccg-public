@@ -73,6 +73,18 @@ public class TheChosenOneAiLifecycleTest {
         };
     }
 
+    private static TheChosenOneAi aiWithSide() {
+        TheChosenOneAi ai = new TheChosenOneAi();
+        try {
+            Field side = TheChosenOneAi.class.getDeclaredField("mySide");
+            side.setAccessible(true);
+            side.set(ai, Side.DARK);
+            return ai;
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("test fixture could not initialize bot side", e);
+        }
+    }
+
     @Test
     public void unownedOptionalGainIntegerUsesHeuristicMaximum() {
         IntegerAwaitingDecision decision = new IntegerAwaitingDecision(
@@ -80,7 +92,7 @@ public class TheChosenOneAiLifecycleTest {
             @Override public void decisionMade(int result) { }
         };
 
-        AiDecisionResult result = new TheChosenOneAi().decideForEngine(
+        AiDecisionResult result = aiWithSide().decideForEngine(
                 "tester", decision, null, RejectionHistory.empty());
 
         assertEquals("3", result.wireResponse());
@@ -109,7 +121,7 @@ public class TheChosenOneAiLifecycleTest {
 
     @Test
     public void directDecideClosesInlineNoDisposition() {
-        TheChosenOneAi ai = new TheChosenOneAi();
+        TheChosenOneAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
 
@@ -123,7 +135,7 @@ public class TheChosenOneAiLifecycleTest {
 
     @Test
     public void mediatorNoneInterceptorDefersCloseUntilAccepted() {
-        TheChosenOneAi ai = new TheChosenOneAi();
+        TheChosenOneAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AwaitingDecision decision = forfeitDecision();
@@ -143,10 +155,7 @@ public class TheChosenOneAiLifecycleTest {
 
     @Test
     public void revertFinalizerNoneClosesOnAcceptedExactWire() throws Exception {
-        TheChosenOneAi ai = new TheChosenOneAi();
-        Field side = TheChosenOneAi.class.getDeclaredField("mySide");
-        side.setAccessible(true);
-        side.set(ai, Side.DARK);
+        TheChosenOneAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AwaitingDecision decision = revertDecision();
@@ -179,7 +188,7 @@ public class TheChosenOneAiLifecycleTest {
 
     @Test
     public void acceptedOuterMutationFailureRetainsFinalWireAndClosesIncompleteTrace() {
-        TheChosenOneAi ai = new TheChosenOneAi();
+        TheChosenOneAi ai = aiWithSide();
         TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
         ai.setDecisionTraceSinkForTesting(sink);
         AiDecisionResult result = ai.decideForEngine("tester", integerDecision(), null,
@@ -210,7 +219,7 @@ public class TheChosenOneAiLifecycleTest {
 
     @Test
     public void outerCommonAppliesTrackerOnAcceptSkipsOnReject() {
-        TheChosenOneAi accepted = new TheChosenOneAi();
+        TheChosenOneAi accepted = aiWithSide();
         TraceTestSupport.CaptureSink acceptedSink = new TraceTestSupport.CaptureSink();
         accepted.setDecisionTraceSinkForTesting(acceptedSink);
         IntegerAwaitingDecision acceptDecision = integerDecision();
@@ -224,7 +233,7 @@ public class TheChosenOneAiLifecycleTest {
         assertTrue("acceptance applies the outer tracker record once",
                 hasOuterTrackerRecord(acceptedSink.getTraces().get(0)));
 
-        TheChosenOneAi rejected = new TheChosenOneAi();
+        TheChosenOneAi rejected = aiWithSide();
         TraceTestSupport.CaptureSink rejectedSink = new TraceTestSupport.CaptureSink();
         rejected.setDecisionTraceSinkForTesting(rejectedSink);
         IntegerAwaitingDecision rejectDecision = integerDecision();

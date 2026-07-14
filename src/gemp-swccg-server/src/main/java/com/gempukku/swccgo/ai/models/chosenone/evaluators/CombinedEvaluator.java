@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.chosenone.RandoLogger;
+import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -88,7 +89,7 @@ public class CombinedEvaluator {
         // The bot entry point (RandoCalAi) owns the per-decide() session; when one is
         // already active this method only RECORDS into it and never closes it. The pure
         // JUnit seam owns its own session: it opens one here (raw candidate arrays +
-        // shadow snapshot from the DecisionContext) only when none is active, and only
+        // the exact boundary snapshot attached to the DecisionContext) only when none is active, and only
         // the opener closes and emits. Instrumentation must never throw into the
         // decision path, hence the blanket guards.
         boolean externallyOwned = false;
@@ -145,41 +146,20 @@ public class CombinedEvaluator {
 
     /**
      * TRACE ORACLE V2 (2026-07-13): open a seam-owned session from the DecisionContext —
-     * COMPLETE raw candidate arrays (per decision shape) + shadow DecisionSnapshot. Pure
-     * reads only. Used only when no bot-boundary session is active.
+     * COMPLETE raw candidate arrays (per decision shape) plus the exact DecisionSnapshot
+     * already attached to the context. It never rebuilds facts. Used only when no
+     * bot-boundary session is active.
      */
     private boolean openSeamSession(DecisionContext context) {
-        TraceSnapshots.Input in = new TraceSnapshots.Input();
-        in.producerId = "combined-evaluator-seam";
-        in.decisionId = context.getDecisionId();
-        in.decisionTypeName = context.getDecisionType();
-        in.decisionText = context.getDecisionText();
-        in.phase = context.getPhase();
-        in.turn = context.getTurnNumber();
-        in.currentPlayer = context.getPlayerId();
-        in.side = context.getSide();
-        // Context values are the EFFECTIVE values the legacy pipeline decides with
-        // (parsed-or-default); the bot-boundary session records raw param presence.
-        // GATE P0-1: DecisionContext defaults its arrays to EMPTY lists, so it cannot
-        // represent present-empty-versus-absent — contextListOrAbsent stages empty as
-        // ABSENT here, and build() marks the raw record Source.CONTEXT_EFFECTIVE. The
-        // verbatim raw distinction is owned by the bot boundary's rawParameters.
-        in.noPassParam = context.isNoPass();
-        in.minParam = context.getMin();
-        in.maxParam = context.getMax();
-        in.blockedResponses = context.getBlockedResponses();
-        in.actionIds = TraceSnapshots.contextListOrAbsent(context.getActionIds());
-        in.actionTexts = TraceSnapshots.contextListOrAbsent(context.getActionTexts());
-        in.cardIds = TraceSnapshots.contextListOrAbsent(context.getCardIds());
-        in.blueprintIds = TraceSnapshots.contextListOrAbsent(context.getBlueprints());
-        in.testingTexts = TraceSnapshots.contextListOrAbsent(context.getTestingTexts());
-        in.selectable = TraceSnapshots.contextListOrAbsent(context.getSelectable());
-        TraceSnapshots.Result snapshot = TraceSnapshots.build(in);
+        DecisionSnapshot snapshot = context.getDecisionSnapshot();
+        if (snapshot == null) {
+            return false;
+        }
         boolean opened = TraceSession.open(getClass().getPackageName(),
             context.getDecisionId(), context.getDecisionType(), context.getDecisionText(),
             TraceSnapshots.rawCandidateIds(context.getDecisionType(),
                 context.getActionIds(), context.getCardIds(), null),
-            snapshot.snapshot(), snapshot.issues(), false);
+            snapshot, List.of(), false);
         if (opened) {
             TraceSession.recordRoute(TraceRoute.COMBINED_EVALUATOR,
                 "seam session: decisionType=" + context.getDecisionType(), null);
