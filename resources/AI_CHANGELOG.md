@@ -4,6 +4,17 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-13 — V44/V67j REVERT-APPROVAL FINALIZER PILOT (Steve-approved, both bots) — one shared owner, exact legacy wire, no outer mutation
+- Why: the opponent-revert interceptor was the lowest-risk route still bypassing typed response finalization. It had duplicate label scans in Rando and ChosenOne and returned directly before the common finalizer boundary.
+- `RevertApprovalPhaseOwner` now owns the label predicate and the single `ResponseFinalizer` call for both bots. The direct `decide()` path still returns the exact legacy ordinal: first case-insensitive `yes`/`allow`/`accept`/contains-`ok`/exact-`revert`, otherwise ordinal zero.
+- The mediator-facing path captures one immutable snapshot, forwards the exact immutable `RejectionHistory`, consumes zero RNG, preserves the exact ordinal wire, and returns terminal typed rejection without safety or legacy fallback.
+- Accepted revert responses use typed-finalizer mutation mode `NONE`. `AiDecisionResult` and `FinalizedResponseAdapter` now distinguish that from the existing default `OUTER_COMMON` mode, so no tracker descriptor or strategic mutation is invented for a route that never had one.
+- Malformed absent/empty `results` deliberately changes from an engine-invalid wire `"0"` to typed `ORDINAL_OUT_OF_BOUNDS`, with no submission, retry, or fallback. Every valid non-empty input remains wire-identical.
+- The prior runtime entry's historical "no production finalizer caller" statement is superseded by DRAW, PULL, and this shared revert owner. This pilot adds one shared owner implementation, not one duplicated owner per bot.
+- Revert: revert this single pilot commit. The previous direct V44/V67j block and adapter invariant return together.
+- Phase boundary: 77 focused finalizer/adapter/owner/integration/lifecycle/DRAW/PULL/mediator tests, 0 failures, 0 errors, 0 skipped; `git diff --check` clean; one shared owner implementation and normalized-identical bot route blocks. The first run caught a fixture-side snapshot gap before commit; setting the bots' known side restored the production-shaped immutable snapshot without adding a board-state dependency.
+- Deployment disposition: local `bin/gemp reload-ai` after the no-live-game gate.
+
 ## 2026-07-13 — PULL PHASE CUTOVER (Steve-approved, Codex frozen packet) — typed transaction owner, engine-only failed-search authority, both bots
 - Why: parent pull actions, deploy/take children, destination prompts, and failed verification previously crossed multiple prompt-driven paths. That allowed identity loss and duplicate failed-search memory. This phase gives the standard pull chain one typed transaction and one explicit owner without changing existing evaluator arithmetic.
 - Canonical PULL actions now carry closed semantics plus an opaque transaction id, accepted parent decision/ordinal, exact source current/permanent identity, `GameTextActionId`, source zone/owner, selected physical child identity, and ordered destination evidence. ARBITRARY wire ids remain distinct from physical card ids.

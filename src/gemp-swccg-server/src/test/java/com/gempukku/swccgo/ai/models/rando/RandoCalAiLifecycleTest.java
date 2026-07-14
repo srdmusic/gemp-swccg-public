@@ -11,6 +11,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceStatus;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
 import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
@@ -18,6 +19,7 @@ import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
 import org.junit.After;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,6 +51,13 @@ public class RandoCalAiLifecycleTest {
         // V45 direct interceptor (mode NONE): text contains "forfeit" + "if desired".
         return decision(3, AwaitingDecisionType.MULTIPLE_CHOICE, "Forfeit a card if desired",
                 new HashMap<>());
+    }
+
+    private static AwaitingDecision revertDecision() {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("results", new String[]{"No", "Allow revert"});
+        return decision(44, AwaitingDecisionType.MULTIPLE_CHOICE,
+                "Opponent requests a revert. Allow revert?", params);
     }
 
     private static IntegerAwaitingDecision integerDecision() {
@@ -136,6 +145,42 @@ public class RandoCalAiLifecycleTest {
         assertFalse("NONE mutation did not execute", fin.acceptedMutationCompleted());
         assertFalse("NONE interceptor records NO outer tracker mutation",
                 hasOuterTrackerRecord(sink.getTraces().get(0)));
+    }
+
+    @Test
+    public void revertFinalizerNoneClosesOnAcceptedExactWire() throws Exception {
+        RandoCalAi ai = new RandoCalAi();
+        Field side = RandoCalAi.class.getDeclaredField("mySide");
+        side.setAccessible(true);
+        side.set(ai, Side.DARK);
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        ai.setDecisionTraceSinkForTesting(sink);
+        AwaitingDecision decision = revertDecision();
+
+        AiDecisionResult result = ai.decideForEngine(
+                "tester", decision, null, RejectionHistory.empty());
+
+        assertEquals(AiDecisionResult.Status.WIRE_RESPONSE, result.status());
+        assertEquals("1", result.wireResponse());
+        assertEquals(AiDecisionResult.MutationMode.NONE, result.mutationMode());
+        assertTrue("revert wire came through the typed finalizer", result.fromTypedFinalizer());
+        assertNull("NONE carries no outer mutation descriptor", result.trackerMutation());
+        assertTrue("trace remains open until disposition", TraceSession.isActive());
+
+        ai.onDecisionAccepted("tester", decision, null, result);
+
+        assertFalse(TraceSession.isActive());
+        assertEquals("one disposition closes one trace", 1, sink.getTraces().size());
+        DecisionTrace trace = sink.getTraces().get(0);
+        TraceFinalization fin = trace.getFinalization();
+        assertEquals("1", fin.proposedWireResponse());
+        assertEquals("1", fin.finalResponse());
+        assertEquals(TraceFinalization.Disposition.ENGINE_ACCEPTED, fin.disposition());
+        assertEquals(TraceFinalization.MutationMode.NONE, fin.acceptedMutationMode());
+        assertFalse("NONE executes no accepted mutation", fin.acceptedMutationCompleted());
+        assertTrue("common finalizer tail remains skipped", fin.skippedCommonFinalizer());
+        assertFalse("revert acceptance records no outer tracker mutation",
+                hasOuterTrackerRecord(trace));
     }
 
     // ── accepted NONE callback records the SUBMITTED (post-override) wire as final ──

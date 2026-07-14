@@ -10,6 +10,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRoute;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRouteInput;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRouteResolver;
+import com.gempukku.swccgo.ai.models.common.phase.RevertApprovalPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.PullAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.PullFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullPhaseOwner;
@@ -83,7 +84,6 @@ import org.apache.logging.log4j.Logger;
 public class TheChosenOneAi extends HeuristicAiBase {
 
     private static final Logger LOG = RandoLogger.getLogger();
-
     // Chat manager for personality messages
     private final AiChatManager chatManager;
 
@@ -597,6 +597,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
     @Override
     public AiDecisionResult decideForEngine(String playerId, AwaitingDecision decision,
                                             GameState gameState, RejectionHistory history) {
+        // Owned DRAW, PULL, and V44/V67j routes consume the exact immutable history.
+        // Legacy routes carry it without modifying or persisting it.
         OuterDecision computed = computeDecision(playerId, decision, gameState, history, true);
         if (computed.engineResult != null) {
             return computed.engineResult;
@@ -869,32 +871,30 @@ public class TheChosenOneAi extends HeuristicAiBase {
             // if the array isn't available or no clear positive option found.
             if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
                     && decisionText.toLowerCase(java.util.Locale.ROOT).contains("revert")) {
-                int yesIndex = 0;
-                String yesText = "(default index 0)";
                 String[] revertResults = params != null ? params.get("results") : null;
-                if (revertResults != null && revertResults.length > 0) {
-                    for (int ri = 0; ri < revertResults.length; ri++) {
-                        String r = revertResults[ri] != null
-                            ? revertResults[ri].toLowerCase(java.util.Locale.ROOT) : "";
-                        if (r.equals("yes") || r.contains("allow") || r.contains("accept")
-                            || r.contains("ok") || r.equals("revert")) {
-                            yesIndex = ri;
-                            yesText = revertResults[ri];
-                            break;
-                        }
-                    }
-                }
+                RevertApprovalPhaseOwner.LegacySelection selection =
+                    RevertApprovalPhaseOwner.legacySelection(revertResults);
                 LOG.warn("V44/V67j REVERT: Accepting revert request (index={} = '{}') text: '{}'",
-                    yesIndex, yesText, decisionText);
+                    selection.ordinal(), selection.resultText(), decisionText);
                 // TRACE ORACLE V2: route + final-response observation ONLY.
                 if (traceOpened) {
                     TraceSession.recordRoute(TraceRoute.V44_V67J_REVERT_APPROVAL,
                         "MULTIPLE_CHOICE + decision text contains 'revert'", null);
-                    // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                     TraceSession.recordEvaluatorLaneNotApplicable(
-                        "direct interceptor V44/V67j: evaluator lane never runs on this route");
+                        mediatorFacing
+                            ? "typed finalizer owner V44/V67j: evaluator lane never runs on this route"
+                            : "direct interceptor V44/V67j: evaluator lane never runs on this route");
                 }
-                return interceptorResult(String.valueOf(yesIndex), mediatorFacing);
+                String revertWire = String.valueOf(selection.ordinal());
+                if (!mediatorFacing) {
+                    return interceptorResult(revertWire, mediatorFacing);
+                }
+                if (boundarySnapshot == null) {
+                    boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
+                        decisionType, decisionText, phase);
+                }
+                return new OuterDecision(RevertApprovalPhaseOwner.decide(
+                    boundarySnapshot.snapshot(), history, selection));
             }
 
             // === V170 (Steve, 2026-06): UNDERCOVER SPY — the cheap drain blocker ===

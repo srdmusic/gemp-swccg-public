@@ -11,12 +11,14 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceStatus;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
 import com.gempukku.swccgo.ai.models.common.trace.state.TraceStateEvent;
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEvent;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
 import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
 import org.junit.After;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,6 +48,20 @@ public class TheChosenOneAiLifecycleTest {
             @Override public String getText() { return "Forfeit a card if desired"; }
             @Override public AwaitingDecisionType getDecisionType() { return AwaitingDecisionType.MULTIPLE_CHOICE; }
             @Override public Map<String, String[]> getDecisionParameters() { return new HashMap<>(); }
+            @Override public void decisionMade(String result) { }
+        };
+    }
+
+    private static AwaitingDecision revertDecision() {
+        return new AwaitingDecision() {
+            @Override public int getAwaitingDecisionId() { return 44; }
+            @Override public String getText() { return "Opponent requests a revert. Allow revert?"; }
+            @Override public AwaitingDecisionType getDecisionType() { return AwaitingDecisionType.MULTIPLE_CHOICE; }
+            @Override public Map<String, String[]> getDecisionParameters() {
+                Map<String, String[]> params = new HashMap<>();
+                params.put("results", new String[]{"No", "Allow revert"});
+                return params;
+            }
             @Override public void decisionMade(String result) { }
         };
     }
@@ -107,6 +123,42 @@ public class TheChosenOneAiLifecycleTest {
         assertEquals(TraceFinalization.Disposition.ENGINE_ACCEPTED, fin.disposition());
         assertEquals(TraceFinalization.MutationMode.NONE, fin.acceptedMutationMode());
         assertFalse(hasOuterTrackerRecord(sink.getTraces().get(0)));
+    }
+
+    @Test
+    public void revertFinalizerNoneClosesOnAcceptedExactWire() throws Exception {
+        TheChosenOneAi ai = new TheChosenOneAi();
+        Field side = TheChosenOneAi.class.getDeclaredField("mySide");
+        side.setAccessible(true);
+        side.set(ai, Side.DARK);
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        ai.setDecisionTraceSinkForTesting(sink);
+        AwaitingDecision decision = revertDecision();
+
+        AiDecisionResult result = ai.decideForEngine(
+                "tester", decision, null, RejectionHistory.empty());
+
+        assertEquals(AiDecisionResult.Status.WIRE_RESPONSE, result.status());
+        assertEquals("1", result.wireResponse());
+        assertEquals(AiDecisionResult.MutationMode.NONE, result.mutationMode());
+        assertTrue("revert wire came through the typed finalizer", result.fromTypedFinalizer());
+        assertNull("NONE carries no outer mutation descriptor", result.trackerMutation());
+        assertTrue("trace remains open until disposition", TraceSession.isActive());
+
+        ai.onDecisionAccepted("tester", decision, null, result);
+
+        assertFalse(TraceSession.isActive());
+        assertEquals("one disposition closes one trace", 1, sink.getTraces().size());
+        DecisionTrace trace = sink.getTraces().get(0);
+        TraceFinalization fin = trace.getFinalization();
+        assertEquals("1", fin.proposedWireResponse());
+        assertEquals("1", fin.finalResponse());
+        assertEquals(TraceFinalization.Disposition.ENGINE_ACCEPTED, fin.disposition());
+        assertEquals(TraceFinalization.MutationMode.NONE, fin.acceptedMutationMode());
+        assertFalse("NONE executes no accepted mutation", fin.acceptedMutationCompleted());
+        assertTrue("common finalizer tail remains skipped", fin.skippedCommonFinalizer());
+        assertFalse("revert acceptance records no outer tracker mutation",
+                hasOuterTrackerRecord(trace));
     }
 
     @Test

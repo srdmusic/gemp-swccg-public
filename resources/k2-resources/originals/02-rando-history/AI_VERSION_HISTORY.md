@@ -1,3 +1,18 @@
+  ════ V44/V67j REVERT-APPROVAL FINALIZER PILOT (2026-07-13, Steve-approved, both bots) ════
+The opponent-revert interceptor now has one shared RevertApprovalPhaseOwner for Rando and ChosenOne. Its shared
+legacySelection preserves the exact old positive-label predicate and ordinal-zero fallback; direct decide() remains
+wire-identical. The mediator-facing path captures one immutable snapshot, forwards the exact RejectionHistory, calls
+ResponseFinalizer once with a no-RNG generator, and preserves the exact ordinal wire. Accepted results use explicit
+typed-finalizer mutation mode NONE, so the route carries no tracker descriptor and applies no outer tracker or
+strategic mutation. AiDecisionResult and FinalizedResponseAdapter retain the existing two-argument OUTER_COMMON
+default while enforcing NONE carries no descriptor. Absent/empty results now produce typed ORDINAL_OUT_OF_BOUNDS
+before engine submission instead of the legacy invalid wire "0"; this is the only intentional behavior correction.
+The earlier runtime note saying ResponseFinalizer had no production caller is historical and now superseded by DRAW,
+PULL, and this shared revert owner. Revert the single pilot commit to restore the direct block and old adapter
+invariant. Phase boundary: 77/0/0/0 focused tests, diff clean, one shared owner implementation, normalized-identical
+bot route blocks. The first run caught and fixed a fixture-side snapshot gap before commit. No game simulation and
+no push. See AI_CHANGELOG 2026-07-13.
+
   ════ PULL PHASE CUTOVER (2026-07-13, Steve-approved, both bots) ════
 Standard pull chains now carry one closed typed transaction across parent action, deploy/take child, destination,
 and failed verification. The immutable evidence includes opaque transaction id, accepted parent id/ordinal, exact

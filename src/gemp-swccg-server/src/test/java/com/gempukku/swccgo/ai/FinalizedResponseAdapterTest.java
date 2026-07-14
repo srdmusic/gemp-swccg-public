@@ -48,6 +48,34 @@ public class FinalizedResponseAdapterTest {
     }
 
     @Test
+    public void acceptedExplicitNonePreservesTypedWireWithoutTrackerDescriptor() {
+        FinalizedResponse fr = acceptedWire("42", "3");
+        AiDecisionResult result = FinalizedResponseAdapter.toDecisionResult(fr, "42",
+                AiDecisionResult.MutationMode.NONE);
+
+        assertEquals(AiDecisionResult.Status.WIRE_RESPONSE, result.status());
+        assertEquals("3", result.wireResponse());
+        assertEquals(AiDecisionResult.MutationMode.NONE, result.mutationMode());
+        assertTrue("typed-finalizer origin is retained", result.fromTypedFinalizer());
+        assertNull("NONE carries no tracker mutation", result.trackerMutation());
+        assertEquals("42", result.decisionId());
+        assertEquals("the pure adapter does not alter the finalizer value", "3",
+                fr.trackerMutation().wireResponse());
+    }
+
+    @Test
+    public void noneTypedFinalizerRejectsTrackerDescriptor() {
+        FinalizedResponse fr = acceptedWire("42", "3");
+        try {
+            AiDecisionResult.finalizerWire("3", "42", AiDecisionResult.MutationMode.NONE,
+                    fr.trackerMutation());
+            fail("NONE typed-finalizer result must not carry a tracker descriptor");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("NONE"));
+        }
+    }
+
+    @Test
     public void rejectedMapsToTypedRejectionWithExactReason() {
         FinalizedResponse fr = new FinalizedResponse(
                 new ResponseIntent.Pass(),

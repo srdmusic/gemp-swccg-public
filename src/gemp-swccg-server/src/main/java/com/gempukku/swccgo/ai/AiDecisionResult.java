@@ -50,7 +50,7 @@ public final class AiDecisionResult {
     private final String rejectionDetail;
     /** Accepted-mutation mode; non-null iff {@code WIRE_RESPONSE}. */
     private final MutationMode mutationMode;
-    /** Immutable tracker mutation request; non-null only for a typed-finalizer wire result. */
+    /** Immutable tracker mutation request; non-null only for an OUTER_COMMON typed-finalizer wire. */
     private final FinalizedResponse.TrackerMutationRequest trackerMutation;
     /** Immutable diagnostic decision id. Object identity remains the mediator's retry/terminal key. */
     private final String decisionId;
@@ -77,19 +77,20 @@ public final class AiDecisionResult {
                 throw new IllegalArgumentException("WIRE_RESPONSE carries no rejection code or detail");
             }
             if (fromTypedFinalizer) {
-                Objects.requireNonNull(trackerMutation,
-                    "a typed-finalizer wire result requires a tracker mutation request");
-                if (mutationMode != MutationMode.OUTER_COMMON) {
+                if (mutationMode == MutationMode.OUTER_COMMON) {
+                    Objects.requireNonNull(trackerMutation,
+                        "an OUTER_COMMON typed-finalizer wire requires a tracker mutation request");
+                    if (!trackerMutation.wireResponse().equals(wireResponse)) {
+                        throw new IllegalArgumentException(
+                            "tracker mutation must record the exact wire response");
+                    }
+                    if (!trackerMutation.decisionId().equals(decisionId)) {
+                        throw new IllegalArgumentException(
+                            "tracker mutation decision id must match the result");
+                    }
+                } else if (trackerMutation != null) {
                     throw new IllegalArgumentException(
-                        "a typed-finalizer wire result is OUTER_COMMON");
-                }
-                if (!trackerMutation.wireResponse().equals(wireResponse)) {
-                    throw new IllegalArgumentException(
-                        "tracker mutation must record the exact wire response");
-                }
-                if (!trackerMutation.decisionId().equals(decisionId)) {
-                    throw new IllegalArgumentException(
-                        "tracker mutation decision id must match the result");
+                        "a NONE typed-finalizer wire carries no tracker mutation request");
                 }
             } else if (trackerMutation != null) {
                 throw new IllegalArgumentException(
@@ -124,6 +125,14 @@ public final class AiDecisionResult {
                                                  FinalizedResponse.TrackerMutationRequest trackerMutation) {
         return new AiDecisionResult(Status.WIRE_RESPONSE, wireResponse, null, null,
             MutationMode.OUTER_COMMON, trackerMutation, decisionId, true);
+    }
+
+    /** Typed-finalizer wire response with explicit accepted-mutation ownership. */
+    public static AiDecisionResult finalizerWire(String wireResponse, String decisionId,
+                                                 MutationMode mutationMode,
+                                                 FinalizedResponse.TrackerMutationRequest trackerMutation) {
+        return new AiDecisionResult(Status.WIRE_RESPONSE, wireResponse, null, null,
+            mutationMode, trackerMutation, decisionId, true);
     }
 
     /** Typed pre-engine rejection carrying the exact typed reason and nonblank detail. */
