@@ -466,6 +466,38 @@ public final class TraceSession {
         }
     }
 
+    // ── FINALIZER RUNTIME (2026-07-13,
+    //    Handoffs/CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md §7): the closed
+    //    engine-disposition lifecycle, recorded from the disposition callback AFTER the engine
+    //    reports its outcome. Self-guarded like every other record* static: no open session,
+    //    no event; capture failure marks INCOMPLETE, never a fabricated disposition. ──
+
+    /** The exact wire SUBMITTED to the engine (post-Curator-override), recorded in the
+     *  disposition callback so a NONE override records the actual submitted wire. */
+    public static void recordProposedWire(String wireResponse) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordProposedWire(wireResponse);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
+        }
+    }
+
+    /** The one closed engine disposition + accepted-mutation outcome. Detail must be nonblank
+     *  for every non-accepted disposition (the collector's completeness law enforces this). */
+    public static void recordEngineDisposition(TraceFinalization.Disposition disposition,
+                                               TraceFinalization.MutationMode acceptedMutationMode,
+                                               boolean acceptedMutationCompleted, String detail) {
+        TraceCollector c = CURRENT.get();
+        if (c == null) return;
+        try {
+            c.recordEngineDisposition(disposition, acceptedMutationMode, acceptedMutationCompleted, detail);
+        } catch (Throwable t) {
+            failQuietly(c, TraceCaptureFailure.Stage.FINALIZATION, t);
+        }
+    }
+
     // ── TRACE STAGE 4A1 (Handoffs/CODEX_TRACE_STAGE4_4A0_MUTATOR_EVENT_MATRIX_2026-07-13.md
     //    "First Java slice after review"): one typed recording method per state-event
     //    family. Each checks CURRENT first, then constructs and appends the record

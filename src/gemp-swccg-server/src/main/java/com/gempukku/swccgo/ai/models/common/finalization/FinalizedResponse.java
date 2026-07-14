@@ -126,7 +126,14 @@ public record FinalizedResponse(
         /** A fact the verdict depends on is UNKNOWN in the snapshot — the
          *  finalizer's declared unknown policy is typed rejection, never a
          *  fabricated default (facts-model law). */
-        CONTRACT_FACT_UNKNOWN
+        CONTRACT_FACT_UNKNOWN,
+        /** FINALIZER RUNTIME (2026-07-13,
+         *  Handoffs/CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md §2): the
+         *  ENGINE-OWNED reason a submitted wire was rejected by the concrete engine
+         *  decision (checked DecisionResultInvalidException). The mediator retry loop is the
+         *  ONLY party that stamps this into RejectionHistory; ResponseFinalizer NEVER produces
+         *  it (the finalizer reasons about unsendable intents, not engine-returned rejections). */
+        ENGINE_DECISION_INVALID
     }
 
     public record Correction(CorrectionReason reason, String detail) {

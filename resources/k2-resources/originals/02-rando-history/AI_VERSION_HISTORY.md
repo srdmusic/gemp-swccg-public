@@ -1,3 +1,29 @@
+  ════ FINALIZER-RUNTIME + ACCEPTED-RESPONSE LIFECYCLE PREREQUISITE (2026-07-13, ENGINE, Steve-approved, both bots) ════
+FIRST behavioral-migration ENGINE phase (Codex packet bc430fee). Fixes record-before-acceptance: the AI wrote its
+decision into its own memory inside decide() BEFORE the engine validated it, so a checked rejection + F2 retry left
+the tracker mutated by a move that never happened. Moves the outer Rando/ChosenOne tracker + strategic commit to
+AFTER engine acceptance. NEW AiDecisionResult (typed WIRE_RESPONSE/TYPED_REJECTION, mutation mode NONE/OUTER_COMMON)
++ DecisionRejectionKind + pure FinalizedResponseAdapter. SwccgAiController: decide() kept; +decideForEngine (3-arg +
+history-aware 4-arg) + onDecisionAccepted/Rejected/AttemptFailed callbacks; RejectionHistory.append + ENGINE_DECISION_INVALID.
+SwccgGameMediator AI-path only (human path byte-for-byte unchanged): calls only decideForEngine; loop-local immutable
+RejectionHistory (counts 0->1, no map/field/ThreadLocal); acceptance latches then onDecisionAccepted BEFORE carryOut/
+startClocks; accepted-callback fault logged + continues (no retry); ATTEMPT_FAILED replaces TraceSession.abandon().
+Rando/ChosenOne decide/decideForEngine split (outer mutation deferred to the accepted callback; direct decide() inline
+unchanged; before-snapshot moved with recordDecision); trace close CALL-PATH-aware (mediator-facing NONE defers close;
+direct closes inline). TraceFinalization disposition-aware completeness (ENGINE_ACCEPTED/REJECTED/TYPED_REJECTION/
+ATTEMPT_FAILED; no fabricated finalResponse). Curator forwards same history + callbacks; injected ctor + pure applyOverride;
+no network in tests. HeuristicAiBase residual FROZEN pre-accept. BEHAVIOR-NEUTRAL (no wire/score/route/RNG/retry/policy
+change); NoOpTraceSink default; ResponseFinalizer still no production caller (V44/V67j pilot step 1b is first). Codex gate
+caught 4 contract contradictions pre-code (m00579), council-confirmed + amplified, corrected packet AGREE (m00585). 12
+modified + 9 new files, all gemp-swccg-server. Codex m00603 then caught two lifecycle leaks: requeue dispatch failure
+could skip ENGINE_REJECTED, and accepted outer-mutation failure could lose the accepted wire. Amendment closes rejection
+in a requeue-then-callback finally block and records the accepted wire before marking mutation capture incomplete. Three
+exact regressions added. Focused phase pass 216/0/0/0 BUILD SUCCESS; guard/mediator/parity(149 lines)/NoOpTraceSink
+static proofs pass; diff-check clean. Watch-point: post-accept
+recordDecision omits an engine-invalid attempt from the OUTER tracker; checkSequenceLoop short-circuits <4 so no loop-
+detection flip on any tested path; only an already-looping game differs, where not-recording is intended. Codex aggregate
+lean independent phase gate pending; per-phase deployment follows immediately on PASS. No push. See AI_CHANGELOG 2026-07-13.
+
   ════ ACTIVATE+CONTROL DECIDE-EQUIVALENT HARNESS (2026-07-13, TEST-ONLY, both bots) ════
 Prereq for deferred Phase B (the ACTIVATE/CONTROL live cutover). Freezes the CURRENT decision boundary as
 executable baseline evidence before any route is wired to a bot entry point. Three NEW test files only (zero

@@ -58,6 +58,9 @@ atomic DEPLOY parent+child → BATTLE → MOVE → SETUP.
   via pure traceSnapshot()/traceDecisionKey() seams; concede; PLAYER_LOST w/ distinct EngineCallOutcome;
   pending-deploy), envelope SCHEMA_VERSION 3, 10 observation hooks/bot.
 - Fact repair 978b58e1d ADVANCE (MaintenanceFacts card-id swap + Battle Order comment truth).
+- ACTIVATE+CONTROL Option-2 shadow 443248a65 PASS (m00543): DecisionOrigin seam + pure ActivateControlRouteResolver,
+  zero production consumer. THEN decide-equivalent HARNESS ad8f59385 PASS (m00560): test-only baseline freeze,
+  6 pure fixtures, full raw-decision fidelity, 64/0/0/0 — the verifiable baseline that unblocks Phase B.
 
 ## IN FLIGHT at handoff
 1. **F1/F2 agent running** (engine files, Steve-approved): F1 = MultipleChoice checked bounds (flip the
@@ -147,9 +150,32 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
        validation, and finally the deploy decision.
   Foundation != behavioral migration. The program is mid-flight, not near-done.
 
-- PHASE COMMITTED (2026-07-13, awaiting Codex independent gate): decide-equivalent HARNESS phase, test-only.
-  Both fidelity corrections applied + re-frozen; focused pass 64/0/0/0 DUMP=false; both bots show candidate/score/veto/route/response parity, operation streams byte-identical (botModel intentionally bot-specific);
-  no src/**/main change; deferred seed fixtures untracked. SHA in git log HEAD; reported to Codex for his gate.
+- PHASE CLOSED — GATE PASS m00560 (2026-07-13): decide-equivalent HARNESS phase, test-only, gated SHA ad8f59385
+  (was 385373457; amended once for Codex gate HOLD m00556 [raw-param fidelity assertion had been decisionOrigin-only
+  + doc precision] + wording precision m00557; re-gated PASS m00560 on clean detached worktree). Focused pass 64/0/0/0
+  DUMP=false; FULL raw-decision fidelity asserted (source==ENGINE_PARAMETERS + verbatim param map, key order,
+  present-empty); both bots candidate/score/veto/route/response parity, operation streams byte-identical (botModel
+  intentionally bot-specific); no src/**/main change; deferred seed fixtures untracked; NoOpTraceSink default intact.
+  UNBLOCKS deferred Phase B (the ACTIVATE/CONTROL live cutover) — now has its verifiable baseline. NEXT packet is
+  Codex's to release; K-2 starts NO Java without a released frozen packet.
+- PHASE B PREREQUISITE DISCOVERED (Codex m00563 preflight + K-2 verify m00564): Phase B section 7 (route consumer)
+  cannot freeze until the finalizer has a PRODUCTION CONSUMER and tracker mutation moves to POST-ACCEPTANCE. Verified
+  source: ResponseFinalizer = NO PRODUCTION CONSUMER (fixture-only); AI.decide() returns raw String + does
+  DecisionSafety+recordDecision BEFORE engine acceptance (RandoCalAi:1060 / TheChosenOneAi:915); SwccgGameMediator
+  :1351-1378 = decide->decisionMade with only the F2 retry, no typed acceptance callback. K-2 RULING to Codex
+  (m00564): this must be a SEPARATE major prerequisite phase, NOT bundled into ACTIVATE/CONTROL — it's GLOBAL (every
+  route/AI), ENGINE-TOUCHING (SwccgGameMediator + SwccgAiController interface — needs STEVE approval like F1/F2),
+  CROSS-AI (3 impls incl CuratorAi), needs its own global parity gate, and must stay independently revertable.
+  Suggested shape: P-a SHADOW (route decide through finalizer, produce trackerMutation request, legacy authoritative,
+  zero-divergence gate, test-only) -> P-b CUTOVER (typed acceptance callback in mediator+controller [Steve-approved
+  engine change], move recordDecision to post-acceptance in HeuristicAiBase/both bots/CuratorAi, flip finalizer
+  authoritative). Only after P-b gates can Phase B route through the consumer.
+- CODEX DECISION (m00565): AGREED separate major prerequisite. He is drafting ONE global finalizer-runtime
+  prerequisite packet (NOT the P-a/P-b split — one coherent phase per Steve's cadence: one edit, one verify, one
+  commit), covering engine/API blast radius, Curator compatibility, accepted/rejected callback semantics, focused
+  no-game test matrix. STAYS UNRELEASED until STEVE explicitly approves the SwccgAiController + SwccgGameMediator
+  PRODUCTION changes (engine gate, like F1/F2). After the draft hash Codex asks K-2 for ONE council/source check
+  before release. K-2 holds read-only until then; the Phase B Java packet is also withheld until this lands.
   ORIGINAL IN-FLIGHT NOTES (retained for context): Packet
   CODEX_ACTIVATE_CONTROL_DECIDE_HARNESS_PACKET_2026-07-13.md (sha e65b3878...), released m00545 at baseline
   443248a65. Codex m00544 preflight: harness is TEST-ONLY — existing DecisionTrace already exposes candidate/
@@ -175,9 +201,128 @@ fresh bot per game; same-game dual-tracker IS confirmed); trace stages 4A2b+ per
   FIRST agent run (pre-correction) had passed 64/0/0/0 with DUMP=false but on the OLD min=1/no-cardId fixtures.
   Deferred Phase B (the actual behavior cutover: kill wrong-Yes-to-pass, INTEGER cross-talk, drain consolidation)
   still unreleased until AFTER this harness gates.
-- HARNESS PHASE COMMITTED: SHA 385373457 (test-only, 6 files, 64/0/0/0, no src/**/main change). Gate requested from
-  Codex at m00554 (full evidence). Awaiting his independent gate; task #26 stays open until his PASS.
-- Mailbox watermark: m00554 (own GATE REQUEST; last Codex action mail = m00552 packet-fidelity correction, sha 40fff3d1).
+- HARNESS PHASE COMMITTED: HEAD = amended harness commit ad8f59385 (was 385373457; test-only, 6 files, 64/0/0/0,
+  no src/**/main change). Codex gate HOLD m00556 + wording m00557 both applied via one-phase amend; re-gate
+  requested m00558 (full evidence). Awaiting his PASS; task #26 stays open until then.
+- FINALIZER-RUNTIME PREREQUISITE PACKET REVIEWED (draft CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md,
+  sha e9e4d8a95fdf). K-2 review = 4 parallel read-only source agents + council (num_thread=4): VERDICT AGREE — design
+  sound + source-verified. ThreadLocal-through-callback question ANSWERED SAFE (GEMP pull model: decisionMade does
+  NOT re-enter ai.decide; child re-entry at SwccgGameMediator:1398 is AFTER onDecisionAccepted per §3 step5;
+  TraceSession single-slot, refuses nested opens :77-79, clears in finally :133-135). Returned to Codex (m00568):
+  ONE correction (§9 Curator override fixture unbuildable — override gated behind static-final USE_MODEL+private
+  shouldConsult, no seam, no CuratorAi test exists; Codex must authorize a minimal override test seam or relax the
+  fixture) + THREE gate-guards (onDecisionAccepted must fire before :1397/:1398; trace-clearing finally must be
+  MEDIATOR-side spanning the whole attempt not just the callback, else a RuntimeException leaks the session across
+  pooled-thread games; item-4 closeAndEmit must become MODE-AWARE so it is not double-closed/leaked, and the tracker
+  before-snapshot moves with recordDecision). PACKET STILL AWAITS: (a) Codex's Curator-fixture fix, (b) STEVE's
+  explicit engine approval of SwccgAiController + SwccgGameMediator production changes before ANY Java.
+- PACKET FROZEN FOR STEVE APPROVAL: Codex incorporated all 3 gate-guards + the Curator seam (package-private
+  injected-Rando ctor + pure applyOverride helper) into CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md,
+  new frozen sha 68939339cd2a... (m00570). ONE addendum outstanding (K-2 m00571, sent AFTER his freeze): the
+  mediator trace-clearing finally must wrap the decideForEngine CALL ITSELF (not just 'successful decideForEngine
+  through disposition'), because Curator's SYNCHRONOUS 300s callOllama consult runs INSIDE decideForEngine after the
+  wrapped Rando trace is already open (CuratorAi:69 CONSULT_TIMEOUT_S=300, :318 http.send; USE_MODEL default TRUE) —
+  an unchecked throw there must still clear the session; + add a Curator-consult-throw/timeout -> no-leak fixture.
+  NEXT: once Codex reconciles m00571 and locks the FINAL hash, K-2 presents Steve the explicit engine-approval
+  decision (SwccgAiController + SwccgGameMediator) on that exact hash. NO Java until Steve approves.
+- FINAL PACKET LOCKED (Codex m00573): CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md sha
+  9b3d1afc84a4dd2b78a9ec5c98518b1be97fce2e97c59fe851057e72f2a07ca0 — all K-2 corrections + gate-guards + the
+  Curator 300s-consult window + mediator last-resort leak guard + caught-timeout fallback fixture + unchecked-consult
+  no-leak/no-mutation fixture incorporated; git diff --check PASS. Codex also wrote a plain brief at
+  CODEX_FINALIZER_RUNTIME_APPROVAL_BRIEF_2026-07-13.md (sha a3419d0d...). K-2 delivered Steve a readable approval
+  ARTIFACT (tables) at claude.ai/code/artifact/4c0cf125-b0ac-4171-8aff-5e1d3da8c607. AWAITING STEVE'S EXPLICIT
+  APPROVAL of the engine changes (SwccgAiController + SwccgGameMediator). On 'approve': K-2 implements ONE phase ->
+  ONE verify -> Codex independent gate -> commit; still NO deploy (aggregate gate + Fable + Codex final still apply).
+- STEVE APPROVED + FULL AUTONOMY GRANTED (2026-07-13): 'I've said I approve ... Pull the trigger on all the
+  phases and let me know when it's finished. No need to ask any more permissions until the job is done. We have
+  backups.' => Execute ALL remaining phases autonomously to DEPLOY; NO per-phase permission asks. KEEP the
+  verification gates (Codex per-phase + final Fable review + aggregate) as SAFETY, not permission (they are what
+  makes backups a fallback not the plan). Deploy at the end after the triple-lock passes; report at phase
+  boundaries + when finished. Only surface to Steve on a genuine unrecoverable blocker or completion.
+- PHASE IN FLIGHT: finalizer-runtime prerequisite RELEASED (Codex m00574) sha 413b1658 (= approved 9b3d1afc
+  substance + RELEASED status flip; verified on disk, baseline ad8f59385). Implementation agent ace3f514 running
+  the full phase (packet sections 1-9, one coherent tranche). K-2 will run the §10 focused pass, review, commit,
+  return §12 evidence for Codex's aggregate gate. Asked Codex (m00575) to PIPELINE the next packet (ACTIVATE/CONTROL
+  behavioral cutover) while this implements, then objective adapters/BATTLE/PULL/MOVE per frozen order.
+- HARD STOP on released 413b1658 (Codex independent source gate m00579): FOUR load-bearing contradictions —
+  (a) trace ownership must be ORTHOGONAL to mutation mode: even mode NONE must DEFER trace close on the
+  mediator-facing path (Curator can override a NONE/V45 result, inline close records the wrong accepted response);
+  (b) F2 retry/rejection history must reach the AI via a backward-compatible OVERLOAD (+ ENGINE_DECISION_INVALID
+  reason + Curator forwarding, no maps/fields/threadlocals) so Phase B RejectionHistory is truthful not .empty();
+  (c) rejected attempts close COMPLETE on proposed-wire + engine-disposition evidence, NO fabricated accepted
+  finalResponse; (d) accepted disposition LATCHES before the callback, callback fault takes runtime-fault path,
+  never rejection/retry (no double-submit). Worker had written ZERO code (still studying) -> clean tree ad8f59385,
+  no reconciliation debt; its planned design would have tripped (a)+(c) — gate caught it pre-code. Codex correcting
+  the packet + will send new hash; K-2 resumes the SAME worker (source already loaded) on the corrected packet.
+  Council inspecting the 4 points async; ordering-tail workflow (w3rr9x640) still running.
+- FULL-TAIL ORDER delivered to Codex (m00582) for master-order freeze — dep-map agent (over 8 lane audits + plan +
+  FACTS_CONTRACT + old CUTOVER_ORDER) + council: AUTHORITATIVE dependency-safe tail AFTER combined ACTIVATE+CONTROL =
+  DRAW -> PULL -> objective-adapters -> DEPLOY -> BATTLE -> MOVE -> SETUP -> interceptors(retirement); then
+  deploy-weight/solo tuning as final follow-on (through DeployPlan owner only) -> deploy. Key edges: PULL before
+  objective (ObjectivePullAdapter needs pull txn key); objective before deploy/battle/move; SETUP near-LAST (NOT
+  low-risk: shares CardSelectionEvaluator + objective bootstrap); interceptors LAST (retire after each owner:
+  V45->BATTLE V170->DEPLOY V61->SETUP V79b->MOVE waiver V44/V67j->finalizer); MOVE after DEPLOY (V169 3-arm). 8
+  per-lane gate-guards attached (SETUP-early trap, interceptor early-retire, forced-here pull guard till DEPLOY,
+  V169, pseudo-veto conversion per-arm only, deploy-weight last, shared CardSelectionEvaluator). Council (m00583)
+  CONFIRMED all 4 runtime corrections + amplified (4): harden accepted-callback partial-failure (trace closes in
+  finally, callback throw = runtime fault, no half-tracker corrupting next decision).
+- CORRECTED finalizer packet ac62724a REVIEWED -> AGREE (m00585): verified all 4 contradiction fixes
+  (trace-orthogonal-to-mode §1/§4/§7; backward-compat RejectionHistory overload §2; disposition-aware completeness
+  no-fake-finalResponse §7; acceptance-latch-before-callback §3) + council 5th amplification (partial-mutation:
+  §4 240-243 + fixture) + new ATTEMPT_FAILED replacing abandon() + Curator 300s consult handled. No new contradiction;
+  baseline ad8f59385. Worker ace3f514 had ZERO edits -> clean-from-scratch impl. Flagged ONE gate watch-point
+  (outer-tracker-read-shapes-retry, inert per source, covered by no-wire-change hard-stop + fixtures). Did NOT re-run
+  council (already confirmed the 4 points m00583; faithful impl). AWAITING Codex RELEASE (status flip + hash) to
+  resume worker ace3f514 on that exact hash with the 4 fixes+amplification+ATTEMPT_FAILED baked into its brief.
+- MASTER ORDER FROZEN (Codex m00586, CODEX_PHASE_CUTOVER_ORDER_2026-07-13.md sha f390d1a3, was 4e3c5a1f, m00592 corrected: DRAW owns CARD_ACTION_CHOICE only + typed DRAW_CARD_INTO_HAND_FROM_FORCE_PILE semantic) = K-2's m00582
+  recommendation exactly: runtime -> ACTIVATE+CONTROL -> DRAW -> PULL -> objective -> DEPLOY -> BATTLE -> MOVE ->
+  SETUP -> interceptor retirement -> deploy-weight/solo tuning -> triple-lock/deploy, 8 lane guards.
+- RUNTIME PACKET RELEASED (Codex m00587) sha bc430fee = reviewed ac62724a + status flip + my retry-parity watch-point
+  added to gate (verified on disk; baseline ad8f59385). Worker ace3f514 RESUMED on bc430fee (re-read corrected packet;
+  6 deltas flagged). Implementing one coherent tranche; K-2 runs §10 focused pass + static proofs, reviews, commits,
+  returns §12 evidence for Codex aggregate gate. THEN Phase B (ACTIVATE+CONTROL) draft 72bb2a1f releases post-gate.
+- PIPELINED DRAFTS (Codex m00592 sidecar gates, unreleased, review at their turn): Phase B/ACTIVATE+CONTROL a650fbe1
+  (ACTIVATE_ACK runs legacy context prep once w/o scoring; zero-confirm V61c = reserve<=3 AND battlePlausible);
+  master order f390d1a3; deploy-weight contract 0508bb5c (closed Constraint->IntentRank->BoundedFine comparator,
+  narrow V193 exemption, physical transaction cursor separate from lastPendingDeployType, scalar domination math).
+  V44/V67j finalizer-owner placement RESOLVED (agent a5cc308d, sent Codex m00593): V44/V67j = the always-accept
+  'approve revert' MULTIPLE_CHOICE interceptor (RandoCalAi:655-683, reads NO board state), route
+  V44_V67J_REVERT_APPROVAL. NO owner exists (ResponseFinalizer has zero prod callers; runtime seam not landed).
+  Standalone: hard-deps ONLY on step-1 runtime + fixture RR_V44_REVERT_REORDERED; NO dep on the 8 lanes; full
+  Rando/Chosen parity. Placement: DEFAULT convert-then-delete inside step-10 interceptor retirement (frozen-doc
+  faithful); K-2 ACTIVELY RECOMMENDS considering a tiny finalizer-owner PILOT right after step-1/before ACTIVATE+
+  CONTROL (lowest-risk end-to-end proof of the decideForEngine->CandidateOrdinal->ResponseFinalizer->adapter->
+  post-accept seam; de-risks the cutover given the runtime's 4-correction history). Codex's architect call.
+- PILOT ADOPTED (Codex decision m00594): V44/V67j finalizer-owner pilot inserted as step 1b (after runtime,
+  before ACTIVATE+CONTROL). K-2 updated the frozen order (CODEX_PHASE_CUTOVER_ORDER new sha 654b3954, sent Codex
+  m00595) + DRAFTED the pilot packet; Codex CONFIRMED NONE-mode + FROZE it (m00596) at
+  Handoffs/K2_V44V67J_FINALIZER_PILOT_PACKET_DRAFT_2026-07-13.md sha 7f2ee78c (order re-frozen 654b3954). Codex
+  correction: production calls PUBLIC ResponseFinalizer.finalize(...) not the private helper; add smallest
+  explicit-mode FinalizedResponseAdapter overload + AiDecisionResult invariant (OUTER_COMMON carries tracker
+  descriptor; NONE carries/applies none; typed rejection unchanged; existing 2-arg adapter stays OUTER_COMMON).
+  Fixtures prove both modes + history forwarding + no fallthrough + reordered labels/ordinal-0 + zero RNG + one
+  callback + parity. FROZEN/unreleased until runtime commit passes Codex gate. First ResponseFinalizer phase-owner
+  caller; gated only on runtime commit + RR_V44_REVERT_REORDERED; both bots; no game.
+  NEW SEQUENCE: runtime -> V44/V67j pilot -> ACTIVATE+CONTROL -> DRAW -> PULL -> objective -> DEPLOY -> BATTLE ->
+  MOVE -> SETUP -> interceptor retirement(minus V44/V67j) -> deploy-weight tuning -> triple-lock/deploy.
+- PULL DESIGN (Codex m00597, downstream, freezing PULL packet): do NOT add engine-to-AI failed-search callback,
+  do NOT reconnect DeckOracle.recordFailedPull/clearFailedPulls — engine's CantSearchCardPileModifier +
+  ModifiersQuerying.isSearchingCardPileProhibited already own same-turn failed-search suppression authoritatively
+  (AI reconstruction would duplicate a stronger engine rule; modifier expires end-of-turn). SUPERSEDES the
+  'reconnect DeckOracle.recordFailedPull' note in the tail-order rationale above. PULL STILL installs the typed
+  parent/child/destination transaction (physical source, search identity/filter, selected child, forced destination,
+  accepted/canceled/failed/successful outcome) — just not the suppression. Dead DeckOracle maps retire only after caller proof.
+- PIPELINE INDEX (Codex m00598): Handoffs/CODEX_PHASE_EXECUTION_MANIFEST_2026-07-13.md sha 8aea92b9 is the durable
+  index of exact packet hashes for every phase (runtime, pilot, A+C, DRAW, PULL, objective, DEPLOY, BATTLE, MOVE,
+  SETUP, retirement, tuning, final lock). Downstream packets are FROZEN/pipelined, NOT released. DISCIPLINE: read
+  ONLY the active packet at each phase; no mailbox/history replay (do not re-mirror downstream hashes in this handoff).
+- PHASE 1 (RUNTIME) AMENDMENT READY: Codex m00603 found two P1 lifecycle leaks in 5be61d054. Codex took ownership,
+  fixed both, and added the three exact mediator/Rando/Chosen regressions. Focused phase pass: 216/0/0/0, Maven exit 0;
+  git diff --check clean. K-2 owns one lean independent review; on PASS amend the same commit and deploy immediately.
+  Deferred ActivateControl fixtures remain excluded.
+- Steve changed cadence: each independent phase deploys after its one phase gate. Before every reload confirm no live
+  game; verify the running artifact afterward. Never push. Then continue directly to the next phase without permission.
+- Mailbox watermark: m00616. Codex owns runtime amend/commit/deploy; K-2 owns lean gate plus step 1b pilot preparation.
 
 ## PRIOR LIVE STATUS (m00427, superseded)
 - HEAD 0bad33598. Role split ACCEPTED (m00425): Codex = preflights end-to-end, boundary math/tables, fixture

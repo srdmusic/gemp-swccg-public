@@ -122,6 +122,15 @@ class TraceCollector {
     private boolean finalResponseRecorded;
     private boolean skippedCommonFinalizer;
 
+    // FINALIZER RUNTIME (2026-07-13, packet §7): closed engine-disposition lifecycle staging,
+    // populated by the disposition callback after the engine reports its outcome.
+    private String proposedWireResponse;
+    private boolean proposedWireRecorded;
+    private TraceFinalization.Disposition disposition;
+    private String dispositionDetail;
+    private TraceFinalization.MutationMode acceptedMutationMode;
+    private boolean acceptedMutationCompleted;
+
     TraceCollector(String botModel, String decisionId, String decisionType, String decisionText,
                    List<String> rawCandidateIds, DecisionSnapshot snapshot,
                    List<String> snapshotIssues, boolean expectsFinalResponse) {
@@ -249,6 +258,22 @@ class TraceCollector {
         this.skippedCommonFinalizer = skippedCommonFinalizer;
     }
 
+    // FINALIZER RUNTIME (2026-07-13, packet §7): the disposition callback records the exact
+    // wire SUBMITTED to the engine (post-Curator-override) and the one closed disposition.
+    void recordProposedWire(String wireResponse) {
+        this.proposedWireResponse = wireResponse;
+        this.proposedWireRecorded = true;
+    }
+
+    void recordEngineDisposition(TraceFinalization.Disposition disposition,
+                                 TraceFinalization.MutationMode acceptedMutationMode,
+                                 boolean acceptedMutationCompleted, String detail) {
+        this.disposition = disposition;
+        this.acceptedMutationMode = acceptedMutationMode;
+        this.acceptedMutationCompleted = acceptedMutationCompleted;
+        this.dispositionDetail = detail;
+    }
+
     /** TRACE STAGE 4A1: append one typed, already-constructed state event (TraceSession
      *  constructs it after the CURRENT check, inside its own try/catch). Immutable
      *  records; list position is the authoritative order. */
@@ -296,9 +321,74 @@ class TraceCollector {
                 "no route observation recorded for this decision");
         }
 
-        if (expectsFinalResponse && !finalResponseRecorded) {
-            markFailure(TraceCaptureFailure.Stage.FINALIZATION, "final-response",
-                "bot-boundary session closed without a recorded final response");
+        // ── FINALIZER RUNTIME (2026-07-13, packet §7): completeness is disposition-aware.
+        //    A DIRECT call records no disposition and keeps the legacy final-response rule.
+        //    A mediator-facing attempt records exactly one closed disposition; a clean engine
+        //    rejection or failed attempt can be COMPLETE WITHOUT a final response, and a clean
+        //    rejection is NEVER relabeled a capture failure just because no accepted response
+        //    exists. finalResponse stays the engine-accepted (or direct) response only. ──
+        if (disposition == null) {
+            if (expectsFinalResponse && !finalResponseRecorded) {
+                markFailure(TraceCaptureFailure.Stage.FINALIZATION, "final-response",
+                    "bot-boundary session closed without a recorded final response");
+            }
+        } else {
+            switch (disposition) {
+                case ENGINE_ACCEPTED:
+                    if (!proposedWireRecorded) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "ENGINE_ACCEPTED without a recorded proposed wire");
+                    }
+                    if (!finalResponseRecorded) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "ENGINE_ACCEPTED without a recorded final response");
+                    }
+                    if (acceptedMutationMode == null) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "ENGINE_ACCEPTED without a recorded accepted-mutation outcome");
+                    }
+                    break;
+                case ENGINE_REJECTED:
+                    if (!proposedWireRecorded) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "ENGINE_REJECTED without a recorded proposed wire");
+                    }
+                    if (dispositionDetail == null || dispositionDetail.isBlank()) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "ENGINE_REJECTED without nonblank detail");
+                    }
+                    if (finalResponseRecorded) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "ENGINE_REJECTED must not populate a final response");
+                    }
+                    break;
+                case TYPED_REJECTION:
+                    if (dispositionDetail == null || dispositionDetail.isBlank()) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "TYPED_REJECTION without nonblank detail");
+                    }
+                    if (proposedWireRecorded) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "TYPED_REJECTION carries no submitted wire");
+                    }
+                    if (finalResponseRecorded) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "TYPED_REJECTION must not populate a final response");
+                    }
+                    break;
+                case ATTEMPT_FAILED:
+                    if (dispositionDetail == null || dispositionDetail.isBlank()) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "ATTEMPT_FAILED without nonblank detail");
+                    }
+                    if (finalResponseRecorded) {
+                        markFailure(TraceCaptureFailure.Stage.FINALIZATION, "disposition",
+                            "ATTEMPT_FAILED must not fabricate a final response");
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         // ── GATE P0-3: route-specific completeness matrix. COMPLETE requires every
@@ -349,7 +439,9 @@ class TraceCollector {
             preSafetyWinnerVetoReason, preSafetyWinnerRecorded, preSafetyWinnerNotApplicableReason,
             passEligible, passEligibilityFacts, passEligibilityNotApplicableReason,
             multiSelectResponse, emergencyResponse, emergencyReason,
-            corrections, finalResponse, finalResponseRecorded, skippedCommonFinalizer);
+            corrections, finalResponse, finalResponseRecorded, skippedCommonFinalizer,
+            proposedWireResponse, proposedWireRecorded, disposition, dispositionDetail,
+            acceptedMutationMode, acceptedMutationCompleted);
 
         TraceStatus status = failures.isEmpty() ? TraceStatus.COMPLETE : TraceStatus.INCOMPLETE;
 
@@ -392,7 +484,8 @@ class TraceCollector {
         TraceFinalization emptyFinalization = new TraceFinalization(
             null, null, false, null, false, null,
             null, null, null,
-            null, null, null, List.of(), null, false, false);
+            null, null, null, List.of(), null, false, false,
+            null, false, null, null, null, false);
         return new DecisionTrace(DecisionTrace.SCHEMA_VERSION, botModel,
             decisionId, decisionType, decisionText,
             null, TraceStatus.INCOMPLETE, fallbackFailures, null,

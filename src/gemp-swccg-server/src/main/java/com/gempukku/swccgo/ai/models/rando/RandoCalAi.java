@@ -1,6 +1,10 @@
 package com.gempukku.swccgo.ai.models.rando;
 
+import com.gempukku.swccgo.ai.AiDecisionResult;
+import com.gempukku.swccgo.ai.DecisionRejectionKind;
 import com.gempukku.swccgo.ai.models.HeuristicAiBase;
+import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
+import com.gempukku.swccgo.ai.models.common.trace.TraceFinalization;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.ContestStatus;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.LocationAnalysis;
@@ -530,8 +534,219 @@ public class RandoCalAi extends HeuristicAiBase {
     //   + Rando_Section_Manifest_2026-07-06.xlsx.
     // ═══════════════════════════════════════════════════════════
 
+    // ═══════════════════════════════════════════════════════════
+    // ═══ FINALIZER RUNTIME (2026-07-13,
+    //     Handoffs/CODEX_FINALIZER_RUNTIME_PREREQUISITE_PACKET_2026-07-13.md §4) ═══
+    // decide() (direct callers) computes AND applies the outer common mutation inline and
+    // closes the trace inline, exactly as before. decideForEngine() computes the SAME wire
+    // but DEFERS both the outer mutation and the trace close to the synchronous disposition
+    // callback the mediator invokes after engine acceptance/rejection. Trace close is
+    // CALL-PATH-aware (never mutation-mode-aware): a mediator-facing result — including a
+    // mode-NONE interceptor — keeps the trace open until one disposition callback closes it,
+    // because Curator may replace even a NONE/V45 wire before it reaches the engine.
+    // ═══════════════════════════════════════════════════════════
+
+    /** Immutable carrier from the shared computation: the wire plus its accepted-mutation mode. */
+    private static final class OuterDecision {
+        final String wireResponse;
+        final AiDecisionResult.MutationMode mode;
+        OuterDecision(String wireResponse, AiDecisionResult.MutationMode mode) {
+            this.wireResponse = wireResponse;
+            this.mode = mode;
+        }
+    }
+
     @Override
     public String decide(String playerId, AwaitingDecision decision, GameState gameState) {
+        // Direct callers: compute + apply outer common mutation inline + close inline.
+        return computeDecision(playerId, decision, gameState, false).wireResponse;
+    }
+
+    @Override
+    public AiDecisionResult decideForEngine(String playerId, AwaitingDecision decision,
+                                            GameState gameState) {
+        return decideForEngine(playerId, decision, gameState, RejectionHistory.empty());
+    }
+
+    @Override
+    public AiDecisionResult decideForEngine(String playerId, AwaitingDecision decision,
+                                            GameState gameState, RejectionHistory history) {
+        // Mediator-facing: compute the SAME wire, DEFER the outer mutation and trace close.
+        // The immutable history is carried but, until a phase owner calls ResponseFinalizer,
+        // legacy routes do not modify or persist it.
+        OuterDecision computed = computeDecision(playerId, decision, gameState, true);
+        return AiDecisionResult.wire(computed.wireResponse, computed.mode,
+            String.valueOf(decision.getAwaitingDecisionId()));
+    }
+
+    @Override
+    public void onDecisionAccepted(String playerId, AwaitingDecision decision,
+                                   GameState gameState, AiDecisionResult result) {
+        applyAcceptedDisposition(decision, result);
+    }
+
+    @Override
+    public void onDecisionRejected(String playerId, AwaitingDecision decision,
+                                   GameState gameState, AiDecisionResult result,
+                                   DecisionRejectionKind kind, String detail) {
+        applyRejectedDisposition(result, kind, detail);
+    }
+
+    @Override
+    public void onDecisionAttemptFailed(String playerId, AwaitingDecision decision,
+                                        GameState gameState, String detail) {
+        applyAttemptFailedDisposition(detail);
+    }
+
+    /**
+     * FINALIZER RUNTIME §4: the accepted callback applies the outer common mutation exactly
+     * once. It records the submitted wire + ENGINE_ACCEPTED disposition, runs the outer
+     * tracker record + strategic events (OUTER_COMMON only), records the accepted-mutation
+     * outcome and the exact accepted final response, and closes/emits in finally. For mode
+     * NONE, the tracker/strategic steps are skipped and the outcome says no mutation executed.
+     * If the outer mutation throws, the trace is marked incomplete (mutation outcome false),
+     * closed in finally, and the fault is rethrown for mediator logging; the disposition stays
+     * ENGINE_ACCEPTED (the engine already accepted and cannot be rolled back).
+     */
+    private void applyAcceptedDisposition(AwaitingDecision decision, AiDecisionResult result) {
+        boolean traceActive = TraceSession.isActive();
+        boolean outerCommon = result.mutationMode() == AiDecisionResult.MutationMode.OUTER_COMMON;
+        String wire = result.wireResponse();
+        String decisionType = decision.getDecisionType() != null
+            ? decision.getDecisionType().name() : "UNKNOWN";
+        String decisionText = decision.getText() != null ? decision.getText() : "";
+        boolean mutationCompleted = false;
+        RuntimeException mutationFault = null;
+        try {
+            if (outerCommon) {
+                applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceActive);
+                mutationCompleted = true;
+            }
+        } catch (RuntimeException e) {
+            mutationFault = e;
+        } finally {
+            if (traceActive) {
+                try {
+                    TraceSession.recordProposedWire(wire);
+                    TraceSession.recordEngineDisposition(TraceFinalization.Disposition.ENGINE_ACCEPTED,
+                        outerCommon ? TraceFinalization.MutationMode.OUTER_COMMON
+                                    : TraceFinalization.MutationMode.NONE,
+                        mutationCompleted,
+                        mutationFault == null ? null
+                            : "outer accepted mutation failed: " + mutationFault.getClass().getName());
+                    // The engine accepted this exact wire even if the post-acceptance outer mutation
+                    // failed. Preserve the accepted response, then mark the mutation evidence incomplete.
+                    TraceSession.recordFinalResponse(wire, !outerCommon);
+                    if (mutationFault != null) {
+                        TraceSession.markCaptureFailure(TraceCaptureFailure.Stage.STATE_EVENT,
+                            mutationFault.getClass().getName(),
+                            "outer accepted mutation threw; accepted trace marked incomplete (mutation outcome false)");
+                    }
+                } finally {
+                    TraceSession.closeAndEmit(decisionTraceSink);
+                }
+            }
+            context = null;
+        }
+        if (mutationFault != null) {
+            throw mutationFault;  // rethrow for mediator logging; disposition remains ENGINE_ACCEPTED
+        }
+    }
+
+    /**
+     * FINALIZER RUNTIME §4: the rejection callback applies NO tracker or strategic mutation.
+     * It records the actual submitted wire when one exists, the typed disposition + nonblank
+     * detail, and closes/clears the attempt trace.
+     */
+    private void applyRejectedDisposition(AiDecisionResult result, DecisionRejectionKind kind,
+                                          String detail) {
+        boolean traceActive = TraceSession.isActive();
+        try {
+            if (traceActive) {
+                boolean hasWire = result != null
+                    && result.status() == AiDecisionResult.Status.WIRE_RESPONSE;
+                if (hasWire) {
+                    TraceSession.recordProposedWire(result.wireResponse());
+                }
+                TraceFinalization.Disposition disposition;
+                switch (kind) {
+                    case ENGINE_REJECTED: disposition = TraceFinalization.Disposition.ENGINE_REJECTED; break;
+                    case TYPED_REJECTION: disposition = TraceFinalization.Disposition.TYPED_REJECTION; break;
+                    default:              disposition = TraceFinalization.Disposition.ATTEMPT_FAILED; break;
+                }
+                TraceSession.recordEngineDisposition(disposition, null, false,
+                    nonBlankDetail(detail, kind.name()));
+            }
+        } finally {
+            if (traceActive) {
+                TraceSession.closeAndEmit(decisionTraceSink);
+            }
+            context = null;
+        }
+    }
+
+    /**
+     * FINALIZER RUNTIME §4: the attempt-failed callback records ATTEMPT_FAILED, closes/emits
+     * any active attempt, and fabricates neither a wire nor an accepted response.
+     */
+    private void applyAttemptFailedDisposition(String detail) {
+        boolean traceActive = TraceSession.isActive();
+        try {
+            if (traceActive) {
+                TraceSession.recordEngineDisposition(TraceFinalization.Disposition.ATTEMPT_FAILED,
+                    null, false, nonBlankDetail(detail, "attempt failed before a result"));
+            }
+        } finally {
+            if (traceActive) {
+                TraceSession.closeAndEmit(decisionTraceSink);
+            }
+            context = null;
+        }
+    }
+
+    private static String nonBlankDetail(String detail, String fallback) {
+        return (detail != null && !detail.isBlank()) ? detail : fallback;
+    }
+
+    /**
+     * FINALIZER RUNTIME §4: the outer common mutation — outer tracker record (with its
+     * before-snapshot taken HERE, in the callback, so the before/after delta stays correct)
+     * plus strategic events. The real game-state mutations run unconditionally; only the trace
+     * snapshot/record calls are guarded by the active session. Shared by the direct decide()
+     * inline path and the accepted callback.
+     */
+    private void applyOuterCommonTrackerAndStrategic(AwaitingDecision decision, String decisionType,
+                                                     String decisionText, String result,
+                                                     boolean traceActive) {
+        DecisionTrackerSnapshot traceTrackerBefore =
+            traceActive ? decisionTracker.traceSnapshot() : null;
+        decisionTracker.recordDecision(decisionType, decisionText,
+            String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "");
+        if (traceActive) {
+            TraceSession.recordTrackerRecordResponse(TrackerOwner.OUTER_RANDO,
+                decisionType, String.valueOf(decision.getAwaitingDecisionId()),
+                decisionTracker.traceDecisionKey(decisionType, decisionText),
+                result != null ? result : "",
+                traceTrackerBefore, decisionTracker.traceSnapshot());
+        }
+        trackStrategicEvents(decision, decisionText, result);
+    }
+
+    /**
+     * FINALIZER RUNTIME §4: a direct-interceptor result (mutation mode NONE). The final
+     * response is recorded inline ONLY for a direct decide() call; a mediator-facing call
+     * defers it to the accepted disposition callback so a Curator override records the actual
+     * submitted wire (recordFinalResponse self-guards on the active session).
+     */
+    private OuterDecision interceptorResult(String wire, boolean mediatorFacing) {
+        if (!mediatorFacing) {
+            TraceSession.recordFinalResponse(wire, true);
+        }
+        return new OuterDecision(wire, AiDecisionResult.MutationMode.NONE);
+    }
+
+    private OuterDecision computeDecision(String playerId, AwaitingDecision decision,
+                                          GameState gameState, boolean mediatorFacing) {
         // Build context for this decision
         context = RandoContext.build(playerId, gameState, currentGame);
 
@@ -640,9 +855,8 @@ public class RandoCalAi extends HeuristicAiBase {
                         // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                         TraceSession.recordEvaluatorLaneNotApplicable(
                             "direct interceptor V45: evaluator lane never runs on this route");
-                        TraceSession.recordFinalResponse("", true);
                     }
-                    return "";  // Empty = select nothing = pass
+                    return interceptorResult("", mediatorFacing);  // Empty = select nothing = pass
                 }
             }
 
@@ -678,9 +892,8 @@ public class RandoCalAi extends HeuristicAiBase {
                     // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                     TraceSession.recordEvaluatorLaneNotApplicable(
                         "direct interceptor V44/V67j: evaluator lane never runs on this route");
-                    TraceSession.recordFinalResponse(String.valueOf(yesIndex), true);
                 }
-                return String.valueOf(yesIndex);
+                return interceptorResult(String.valueOf(yesIndex), mediatorFacing);
             }
 
             // === V170 (Steve, 2026-06): UNDERCOVER SPY — the cheap drain blocker ===
@@ -739,9 +952,8 @@ public class RandoCalAi extends HeuristicAiBase {
                     // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                     TraceSession.recordEvaluatorLaneNotApplicable(
                         "direct interceptor V170: evaluator lane never runs on this route");
-                    TraceSession.recordFinalResponse(String.valueOf(v170Pick), true);
                 }
-                return String.valueOf(v170Pick);
+                return interceptorResult(String.valueOf(v170Pick), mediatorFacing);
             }
 
             // V61 EPIC EVENT SAGA CHOICE — "The Force Is Strong In My Family"
@@ -801,9 +1013,8 @@ public class RandoCalAi extends HeuristicAiBase {
                                 // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                                 TraceSession.recordEvaluatorLaneNotApplicable(
                                     "direct interceptor V61: evaluator lane never runs on this route");
-                                TraceSession.recordFinalResponse(String.valueOf(pick), true);
                             }
-                            return String.valueOf(pick);
+                            return interceptorResult(String.valueOf(pick), mediatorFacing);
                         }
                     }
                 }
@@ -876,9 +1087,8 @@ public class RandoCalAi extends HeuristicAiBase {
                                         // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                                         TraceSession.recordEvaluatorLaneNotApplicable(
                                             "direct interceptor V79b: evaluator lane never runs on this route");
-                                        TraceSession.recordFinalResponse(String.valueOf(i), true);
                                     }
-                                    return String.valueOf(i);
+                                    return interceptorResult(String.valueOf(i), mediatorFacing);
                                 }
                             }
                             if (v79bCurrentParsec != null) {
@@ -899,9 +1109,8 @@ public class RandoCalAi extends HeuristicAiBase {
                                                     // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                                                     TraceSession.recordEvaluatorLaneNotApplicable(
                                                         "direct interceptor V79b: evaluator lane never runs on this route");
-                                                    TraceSession.recordFinalResponse(String.valueOf(i), true);
                                                 }
-                                                return String.valueOf(i);
+                                                return interceptorResult(String.valueOf(i), mediatorFacing);
                                             }
                                         } catch (Exception e) { /* ignore */ }
                                     }
@@ -923,9 +1132,8 @@ public class RandoCalAi extends HeuristicAiBase {
                                     // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                                     TraceSession.recordEvaluatorLaneNotApplicable(
                                         "direct interceptor V79b: evaluator lane never runs on this route");
-                                    TraceSession.recordFinalResponse(String.valueOf(i), true);
                                 }
-                                return String.valueOf(i);
+                                return interceptorResult(String.valueOf(i), mediatorFacing);
                             }
                             java.util.regex.Matcher mm = java.util.regex.Pattern.compile("(\\d+)").matcher(r);
                             if (mm.find()) {
@@ -946,9 +1154,8 @@ public class RandoCalAi extends HeuristicAiBase {
                                 // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                                 TraceSession.recordEvaluatorLaneNotApplicable(
                                     "direct interceptor V79b: evaluator lane never runs on this route");
-                                TraceSession.recordFinalResponse(String.valueOf(v79bBest), true);
                             }
-                            return String.valueOf(v79bBest);
+                            return interceptorResult(String.valueOf(v79bBest), mediatorFacing);
                         }
                     }
                 }
@@ -1048,33 +1255,19 @@ public class RandoCalAi extends HeuristicAiBase {
             }
             result = validated[0];
 
-            // Record the decision for loop tracking
-            // TRACE 4A1 (m00372 Option A, accepted m00373; matrix correction): the
-            // RECORD_RESPONSE observation is captured AFTER the legacy call, with the
-            // complete decision-affecting owner snapshots before/after from the pure
-            // traceSnapshot() seam. DISABLED capture calls NEITHER pure accessor: both
-            // snapshot builds sit under the traceOpened guard. The legacy call itself
-            // is byte-for-byte unchanged and runs exactly once either way.
-            DecisionTrackerSnapshot traceTrackerBefore =
-                traceOpened ? decisionTracker.traceSnapshot() : null;
-            decisionTracker.recordDecision(decisionType, decisionText,
-                String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "");
-            if (traceOpened) {
-                TraceSession.recordTrackerRecordResponse(TrackerOwner.OUTER_RANDO,
-                    decisionType, String.valueOf(decision.getAwaitingDecisionId()),
-                    decisionTracker.traceDecisionKey(decisionType, decisionText),
-                    result != null ? result : "",
-                    traceTrackerBefore, decisionTracker.traceSnapshot());
+            // FINALIZER RUNTIME §4: the COMMON BOUNDARY (chaos / CombinedEvaluator /
+            // heuristic-fallback). This is the OUTER_COMMON route.
+            //   - mediator-facing: DEFER the outer mutation AND the trace close to the accepted
+            //     disposition callback. Return the wire only; nothing outer is recorded yet, the
+            //     trace stays open (the finally below skips the close on this call path).
+            //   - direct decide(): apply the outer mutation inline and record the final response,
+            //     exactly as before (the outer tracker before-snapshot is taken inside
+            //     applyOuterCommonTrackerAndStrategic, immediately before recordDecision, so the
+            //     before/after delta is unchanged); the finally closes and emits inline.
+            if (mediatorFacing) {
+                return new OuterDecision(result, AiDecisionResult.MutationMode.OUTER_COMMON);
             }
-
-            // Track strategic events for learning
-            // TRACE 4A1: the wrapper-level strategic-intent event is REMOVED. State
-            // events are emitted only at the actual direct writes inside
-            // trackStrategicEvents (pending-deploy SET) and trackGameState (its CLEAR);
-            // the wrapper's StrategyController calls stay unobserved until that owner's
-            // increment (4B).
-            trackStrategicEvents(decision, decisionText, result);
-
+            applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, result, traceOpened);
             LOG.info("[RandoCalAi] decide() result: '{}' ✅", result != null ? result : "(pass)");
             // TRACE ORACLE V2: the AI's ACTUAL final answer, after safety (contract
             // "Finalization record" item 6). The five direct interceptors record theirs
@@ -1082,16 +1275,20 @@ public class RandoCalAi extends HeuristicAiBase {
             if (traceOpened) {
                 TraceSession.recordFinalResponse(result, false);
             }
-            return result;
+            return new OuterDecision(result, AiDecisionResult.MutationMode.OUTER_COMMON);
         } finally {
-            context = null;
-            // TRACE ORACLE V2: only the opener closes and emits; the thread-local is
-            // ALWAYS cleared (TraceSession.close clears in its own finally).
-            // GATE P0-2 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): closeAndEmit is
-            // the one typed emission channel — a finish() failure emits the fallback
-            // INCOMPLETE envelope, a sink accept() failure re-offers the trace once
-            // with a typed SINK failure appended. Never throws into the decision path.
-            if (traceOpened) {
+            // FINALIZER RUNTIME §4/§7: trace close is CALL-PATH-aware, never mutation-mode-aware.
+            //   - direct decide() (mediatorFacing=false): close + emit inline, exactly as before,
+            //     on every path INCLUDING a computation exception.
+            //   - mediator-facing decideForEngine (mediatorFacing=true): do NOT close here on any
+            //     path — the synchronous disposition callback owns the close (accepted / rejected /
+            //     attempt-failed). A mediator-facing computation exception leaves the trace open and
+            //     is closed by onDecisionAttemptFailed; context is still nulled here.
+            // GATE P0-2 (CODEX_TRACE_V2_GATE_97D2CB65A_2026-07-13.md): closeAndEmit is the one typed
+            // emission channel — a finish() failure emits the fallback INCOMPLETE envelope, a sink
+            // accept() failure re-offers the trace once. Never throws into the decision path.
+            context = null;  // per-decision context; the disposition callbacks never read it
+            if (!mediatorFacing && traceOpened) {
                 TraceSession.closeAndEmit(decisionTraceSink);
             }
         }
