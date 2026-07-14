@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.logic.effects.choose;
 
 import com.gempukku.swccgo.common.Filterable;
+import com.gempukku.swccgo.common.DecisionOrigin;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Zone;
@@ -89,6 +90,16 @@ public abstract class ChooseCardsFromPileEffect extends AbstractStandardEffect i
         return false;
     }
 
+    /** Typed PULL stage for standard deploy/take subclasses; null keeps legacy routing. */
+    protected DecisionOrigin getPullDecisionOrigin() {
+        return null;
+    }
+
+    /** The parent action whose accepted ordinal and source identify this pull. */
+    protected Action getPullParentAction() {
+        return _action;
+    }
+
     @Override
     protected FullEffectResult playEffectReturningResult(final SwccgGame game) {
         GameState gameState = game.getGameState();
@@ -150,6 +161,14 @@ public abstract class ChooseCardsFromPileEffect extends AbstractStandardEffect i
         if (success || isPerformedEvenIfMinimumNotReached()) {
             game.getUserFeedback().sendAwaitingDecision(_playerId,
                     new ArbitraryCardsSelectionDecision(getChoiceText(maximum), onlyShowSelectable ? selectableCards : cardPile, selectableCards, minimum, _maximum) {
+                        {
+                            DecisionOrigin origin = ChooseCardsFromPileEffect.this.getPullDecisionOrigin();
+                            if (origin != null) {
+                                setPullDecisionMetadata(ChooseCardsFromPileEffect.this.getPullParentAction(),
+                                        _zone, _zoneOwner, origin);
+                            }
+                        }
+
                         @Override
                         public void decisionMade(String result) throws DecisionResultInvalidException {
                             cardsSelected(game, getSelectedCardsByResponse(result));
@@ -173,6 +192,13 @@ public abstract class ChooseCardsFromPileEffect extends AbstractStandardEffect i
             if (!isPerformedEvenIfMinimumNotReached()) {
                 game.getUserFeedback().sendAwaitingDecision(_playerId,
                         new ArbitraryCardsSelectionDecision("Verify " + _zone.getHumanReadable() + " after unsuccessful attempt to '" + getChoiceText(_maximum) + "'", cardPile, Collections.<PhysicalCard>emptyList(), 0, 0) {
+                            {
+                                if (ChooseCardsFromPileEffect.this.getPullDecisionOrigin() != null) {
+                                    setPullDecisionMetadata(ChooseCardsFromPileEffect.this.getPullParentAction(),
+                                            _zone, _zoneOwner, DecisionOrigin.PULL_FAILED_VERIFY);
+                                }
+                            }
+
                             @Override
                             public void decisionMade(String result) {
                             }

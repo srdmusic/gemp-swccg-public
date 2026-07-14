@@ -69,6 +69,11 @@ public class PlayCardAsAttachedAction extends AbstractPlayCardAction {
         appendTargeting(
                 new TargetCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to " + _text.toLowerCase() + " " + GameUtils.getCardLink(_cardToPlay) + " as attached", spotOverrides, TargetingReason.TO_BE_DEPLOYED_ON, deployTargetFilter) {
                     @Override
+                    protected boolean isPullDestinationSelection() {
+                        return true;
+                    }
+
+                    @Override
                     protected void cardTargeted(int targetGroupId, PhysicalCard target) {
                         _target = target;
                         _cardToPlay.setTargetedCard(TargetId.DEPLOY_TARGET, targetGroupId, target, deployTargetFilter);

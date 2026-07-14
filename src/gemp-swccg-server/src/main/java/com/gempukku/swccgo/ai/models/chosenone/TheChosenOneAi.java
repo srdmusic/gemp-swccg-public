@@ -4,11 +4,18 @@ import com.gempukku.swccgo.ai.AiDecisionResult;
 import com.gempukku.swccgo.ai.DecisionRejectionKind;
 import com.gempukku.swccgo.ai.models.HeuristicAiBase;
 import com.gempukku.swccgo.ai.models.common.decision.DecisionSnapshot;
+import com.gempukku.swccgo.ai.models.common.decision.FactValue;
 import com.gempukku.swccgo.ai.models.common.finalization.RejectionHistory;
 import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseOwner;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRoute;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRouteInput;
 import com.gempukku.swccgo.ai.models.common.phase.DrawRouteResolver;
+import com.gempukku.swccgo.ai.models.common.phase.PullAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.PullFacts;
+import com.gempukku.swccgo.ai.models.common.phase.PullPhaseOwner;
+import com.gempukku.swccgo.ai.models.common.phase.PullRoute;
+import com.gempukku.swccgo.ai.models.common.phase.PullRouteInput;
+import com.gempukku.swccgo.ai.models.common.phase.PullRouteResolver;
 import com.gempukku.swccgo.ai.models.common.trace.TraceFinalization;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.ContestStatus;
@@ -1044,6 +1051,18 @@ public class TheChosenOneAi extends HeuristicAiBase {
                         decisionType, decisionText);
                 }
 
+                PullRouteInput pullInput = PullRouteInput.capture(decision);
+                PullRoute pullRoute = PullRouteResolver.resolve(pullInput);
+                if (pullRoute != PullRoute.LEGACY_UNOWNED) {
+                    if (boundarySnapshot == null) {
+                        boundarySnapshot = captureDecisionSnapshot(playerId, decision, gameState,
+                            decisionType, decisionText, phase);
+                    }
+                    return decideOwnedPull(playerId, decision, gameState, history,
+                        boundarySnapshot.snapshot(), pullInput, pullRoute, traceOpened,
+                        mediatorFacing, decisionType, decisionText);
+                }
+
                 // Try evaluator system for supported decision types
                 String evaluatorResult = tryEvaluators(playerId, decision, gameState);
                 if (evaluatorResult != null) {
@@ -1366,6 +1385,72 @@ public class TheChosenOneAi extends HeuristicAiBase {
             }
         }
         return new OuterDecision(ownedResult);
+    }
+
+    /**
+     * Execute the one typed PULL owner. Owned results and typed rejections do not
+     * re-enter the legacy fallback or safety lanes.
+     */
+    private OuterDecision decideOwnedPull(String playerId,
+                                          AwaitingDecision decision,
+                                          GameState gameState,
+                                          RejectionHistory history,
+                                          DecisionSnapshot snapshot,
+                                          PullRouteInput pullInput,
+                                          PullRoute pullRoute,
+                                          boolean traceOpened,
+                                          boolean mediatorFacing,
+                                          String decisionType,
+                                          String decisionText) {
+        if (traceOpened) {
+            TraceSession.recordRoute(traceRouteForPull(pullRoute),
+                "typed PULL transaction stage " + pullRoute, null);
+            if (pullRoute == PullRoute.PULL_FAILED_VERIFY) {
+                TraceSession.recordEvaluatorLaneNotApplicable(
+                    "failed PULL verification finalizes an empty selection without scoring");
+            }
+        }
+
+        FactValue<PullFacts> factsValue = PullFacts.parse(snapshot, pullInput, pullRoute);
+        AiDecisionResult ownedResult;
+        if (factsValue.isUnknown()) {
+            ownedResult = AiDecisionResult.typedRejection(
+                com.gempukku.swccgo.ai.models.common.finalization.FinalizedResponse.RejectReason.CONTRACT_FACT_UNKNOWN,
+                "owned PULL facts are unknown: " + factsValue.unknownReason(),
+                String.valueOf(decision.getAwaitingDecisionId()));
+        } else {
+            PullFacts facts = factsValue.value();
+            PullAssessment assessment = PullAssessment.compatibility(facts);
+            ownedResult = PullPhaseOwner.decide(snapshot, history, pullRoute, facts, assessment,
+                (route, ignoredFacts, ignoredAssessment) ->
+                    tryEvaluators(playerId, decision, gameState));
+        }
+
+        if (ownedResult.status() == AiDecisionResult.Status.TYPED_REJECTION) {
+            return new OuterDecision(ownedResult);
+        }
+
+        String wire = ownedResult.wireResponse();
+        if (!mediatorFacing) {
+            applyOuterCommonTrackerAndStrategic(decision, decisionType, decisionText, wire, traceOpened);
+            LOG.info("[TheChosenOneAi] owned PULL {} result: '{}'", pullRoute,
+                wire.isEmpty() ? "(pass)" : wire);
+            if (traceOpened) {
+                TraceSession.recordFinalResponse(wire, false);
+            }
+        }
+        return new OuterDecision(ownedResult);
+    }
+
+    private static TraceRoute traceRouteForPull(PullRoute route) {
+        return switch (route) {
+            case PULL_PARENT -> TraceRoute.PULL_PARENT;
+            case PULL_DEPLOY_CHILD -> TraceRoute.PULL_DEPLOY_CHILD;
+            case PULL_TAKE_CHILD -> TraceRoute.PULL_TAKE_CHILD;
+            case PULL_DESTINATION -> TraceRoute.PULL_DESTINATION;
+            case PULL_FAILED_VERIFY -> TraceRoute.PULL_FAILED_VERIFY;
+            default -> throw new IllegalArgumentException("unowned PULL route " + route);
+        };
     }
 
     /**
@@ -1753,6 +1838,11 @@ public class TheChosenOneAi extends HeuristicAiBase {
     @Override
     protected boolean shouldSkipOptionalResponses() {
         return false;  // Rando Cal handles optional responses
+    }
+
+    @Override
+    protected boolean isLegacyFailedSearchMemoryEnabled() {
+        return false;
     }
 
     @Override

@@ -2,6 +2,8 @@ package com.gempukku.swccgo.logic.effects.choose;
 
 import com.gempukku.swccgo.common.Filterable;
 import com.gempukku.swccgo.common.InactiveReason;
+import com.gempukku.swccgo.common.PullDeployRef;
+import com.gempukku.swccgo.common.PullPhysicalCardRef;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -163,6 +165,11 @@ public abstract class ChooseCardsOnTableEffect extends AbstractStandardEffect im
         return false;
     }
 
+    /** True only at the primary deploy destination construction boundary. */
+    protected boolean isPullDestinationSelection() {
+        return false;
+    }
+
     @Override
     public boolean isPlayableInFull(SwccgGame game) {
         if (_cards != null)
@@ -205,6 +212,10 @@ public abstract class ChooseCardsOnTableEffect extends AbstractStandardEffect im
         // Adjust the min and max card counts
         int maximum = Math.min(_maximum, selectableCards.size());
         final int minimum = _minimum;
+        boolean autoSelected = maximum > 0 && selectableCards.size() == minimum
+                && (getUseShortcut() || !_action.isAllowAbort());
+        final PullDeployRef pullDeployRef =
+                preparePullDeployRef(selectableCards, autoSelected);
 
         if (maximum == 0) {
             cardsSelected(Collections.<PhysicalCard>emptySet());
@@ -215,6 +226,12 @@ public abstract class ChooseCardsOnTableEffect extends AbstractStandardEffect im
         else {
             game.getUserFeedback().sendAwaitingDecision(_playerId,
                     new CardsSelectionDecision(_choiceText + ((minimum > 0 && _action.isAllowAbort()) ? ", or click 'Done' to cancel" : ""), selectableCards, _action.isAllowAbort() ? 0 : minimum, maximum) {
+                        {
+                            if (pullDeployRef != null) {
+                                setPullDestinationMetadata(pullDeployRef);
+                            }
+                        }
+
                         @Override
                         public void decisionMade(String result) throws DecisionResultInvalidException {
                             List<PhysicalCard> selectedCards = getSelectedCardsByResponse(result);
@@ -230,6 +247,22 @@ public abstract class ChooseCardsOnTableEffect extends AbstractStandardEffect im
         }
 
         return new FullEffectResult(true);
+    }
+
+    private PullDeployRef preparePullDeployRef(Collection<PhysicalCard> destinations,
+                                               boolean autoSelected) {
+        PullDeployRef ref = _action.getPullDeployRef();
+        if (!isPullDestinationSelection() || ref == null) {
+            return null;
+        }
+        List<PullPhysicalCardRef> orderedCards = new ArrayList<>();
+        for (PhysicalCard destination : destinations) {
+            orderedCards.add(new PullPhysicalCardRef(
+                    destination.getPermanentCardId(), destination.getCardId()));
+        }
+        PullDeployRef updated = ref.withDestinations(orderedCards, autoSelected);
+        _action.setPullDeployRef(updated);
+        return updated;
     }
 
     @Override

@@ -403,7 +403,11 @@ class TraceCollector {
                         + " (record a value or an explicit not-applicable)");
             }
             if (selectedRoute == TraceRoute.COMBINED_EVALUATOR
-                    || selectedRoute == TraceRoute.DRAW_TOP_LEVEL) {
+                    || selectedRoute == TraceRoute.DRAW_TOP_LEVEL
+                    || selectedRoute == TraceRoute.PULL_PARENT
+                    || selectedRoute == TraceRoute.PULL_DEPLOY_CHILD
+                    || selectedRoute == TraceRoute.PULL_TAKE_CHILD
+                    || selectedRoute == TraceRoute.PULL_DESTINATION) {
                 // the evaluator route PRODUCES a pre-safety winner and operations —
                 // not-applicable is not an option here (gate: "evaluator routes do not
                 // legitimately lack ops").

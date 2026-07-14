@@ -1,3 +1,21 @@
+  ════ PULL PHASE CUTOVER (2026-07-13, Steve-approved, both bots) ════
+Standard pull chains now carry one closed typed transaction across parent action, deploy/take child, destination,
+and failed verification. The immutable evidence includes opaque transaction id, accepted parent id/ordinal, exact
+source and selected-card current/permanent identity, GTA, source zone/owner, and ordered destination candidates.
+ARBITRARY temp wire ids remain distinct from physical ids. Five prompt-text-free routes are owned: PULL_PARENT,
+PULL_DEPLOY_CHILD, PULL_TAKE_CHILD, PULL_DESTINATION, and PULL_FAILED_VERIFY; incomplete/conflicting metadata stays
+legacy with exact response parity. PullPhaseOwner invokes the existing CombinedEvaluator compatibility lane once
+and ResponseFinalizer once; failed verify returns empty without evaluator scoring, and typed rejection never re-enters
+fallback. Prompted destination candidates are never mislabeled forced; only the engine no-prompt auto-select records
+forced evidence. Rando/ChosenOne disable inherited failed-search writes, penalties, and FAILED_SEARCH_ADD because the
+engine CantSearchCardPileModifier is sole end-of-turn authority; Beginner/Advanced are unchanged, and the opponent
+verification prompt stays legacy. Boundary: no legacy scorer, formation/objective guard, custom-search exception, or
+shared predecessor body is deleted. DEPLOY later consumes PullDeployRef. Revert the single phase commit to restore
+the pre-cutover owner; retained legacy routes remain available. Boundary: 178/0/0/0 focused tests, affected package
+gate exit 0, diff clean, prompt-free routing, failed-memory ownership proof, and normalized-identical bot owners. The
+first gate caught and fixed an ordinary-action query leak before commit. Immediate local reload authorized; no games
+and no push. See AI_CHANGELOG 2026-07-13.
+
   ════ DRAW PHASE CUTOVER (2026-07-13, Steve-approved, both bots) ════
 Canonical top-level Force-Pile draw actions now carry the closed engine semantic DRAW_CARD_INTO_HAND_FROM_FORCE_PILE;
 CardActionSelectionDecision emits one aligned actionSemantic per offered action and UNKNOWN for unstamped actions. The

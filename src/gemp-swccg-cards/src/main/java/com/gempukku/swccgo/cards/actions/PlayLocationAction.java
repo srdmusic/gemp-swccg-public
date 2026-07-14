@@ -147,6 +147,11 @@ public class PlayLocationAction extends AbstractPlayCardAction {
                         // Choose the parent starship or vehicle
                         appendTargeting(new ChooseCardOnTableEffect(_that, getPerformingPlayer(), msgText, Filters.in(parentStarshipOrVehicle)) {
                             @Override
+                            protected boolean isPullDestinationSelection() {
+                                return true;
+                            }
+
+                            @Override
                             protected void cardSelected(PhysicalCard parentCard) {
                                 _parentChosen = true;
                                 _parentStarshipOrVehicle = parentCard;
@@ -192,6 +197,11 @@ public class PlayLocationAction extends AbstractPlayCardAction {
                         }
 
                         appendTargeting(new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose the system (or location related to the system) to deploy " + GameUtils.getCardLink(_location) + " as a related location", chooseParentFilter) {
+                            @Override
+                            protected boolean isPullDestinationSelection() {
+                                return true;
+                            }
+
                             @Override
                             protected void cardSelected(PhysicalCard relatedLocation) {
                                 _parentChosen = true;
@@ -239,6 +249,11 @@ public class PlayLocationAction extends AbstractPlayCardAction {
                     else {
                         // Choose the card to deploy next to (or convert)
                         appendTargeting(new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose a location to deploy " + GameUtils.getCardLink(_location) + " next to (or convert)", Filters.in(otherCards.keySet())) {
+                            @Override
+                            protected boolean isPullDestinationSelection() {
+                                return true;
+                            }
+
                             @Override
                             protected void cardSelected(PhysicalCard otherCard) {
                                 _placement = otherCards.get(otherCard);

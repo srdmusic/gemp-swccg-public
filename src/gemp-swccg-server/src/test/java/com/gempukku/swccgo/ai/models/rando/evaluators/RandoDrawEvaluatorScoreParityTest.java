@@ -1,12 +1,19 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.evaluators.AbstractDrawEvaluatorScoreParityTest;
+import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.TraceTestSupport;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOp;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOperation;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /** Rando package adapter for the shared DRAW evaluator score contract. */
 public class RandoDrawEvaluatorScoreParityTest extends AbstractDrawEvaluatorScoreParityTest {
@@ -30,6 +37,73 @@ public class RandoDrawEvaluatorScoreParityTest extends AbstractDrawEvaluatorScor
         EvaluatedAction winner = new CombinedEvaluator(evaluators, sink).evaluateDecision(context);
         return new Captured(winner.getActionId(), Float.floatToRawIntBits(winner.getScore()),
             winner.isHardVetoed(), winner.getReasoningString(), sink.single());
+    }
+
+    @Test
+    public void fullEightEvaluatorDrawWindowKeepsBattleCrossTalkTieAndPassLedger() {
+        DecisionContext context = fullStackContext();
+
+        List<ActionEvaluator> evaluators = new ArrayList<>(new CombinedEvaluator().getEvaluators());
+        assertEquals(List.of("ForceActivation", "Deploy", "Battle", "Move", "Draw",
+            "CardSelection", "ActionText", "Pass"),
+            evaluators.stream().map(ActionEvaluator::getName).toList());
+        assertTrue(evaluators.get(2) instanceof BattleEvaluator);
+
+        // The pure harness has no GameState, so preserve the real Draw scoring via its delegate.
+        evaluators.set(4, alwaysApplicable(evaluators.get(4)));
+        TraceTestSupport.StrictFixtureSink sink = new TraceTestSupport.StrictFixtureSink();
+        EvaluatedAction winner = new CombinedEvaluator(evaluators, sink).evaluateDecision(context);
+        DecisionTrace trace = sink.single();
+
+        assertEquals("deploy-a", winner.getActionId());
+        assertEquals(ActionType.BATTLE, winner.getActionType());
+        assertEquals(bits(100.0f), bits(winner.getScore()));
+        assertEquals(Boolean.TRUE, trace.getFinalization().passEligible());
+        assertEquals(List.of("draw", "deploy-a", "deploy-b"), trace.getRawCandidateOrder());
+        assertEquals(List.of("deploy-a", "deploy-b", "draw", ""), trace.getMergeOrder());
+        record Op(TraceOp type, int ordinal, String actionId, String evaluatorId,
+                  Integer beforeBits, Integer deltaBits, Integer afterBits, boolean vetoed) {
+        }
+        List<Op> operations = trace.getOperations().stream()
+            .map(operation -> new Op(operation.getOp(), operation.getCandidateOrdinal(),
+                operation.getActionId(), operation.getEvaluatorId(), operation.getBeforeBits(),
+                operation.getDeltaBits(), operation.getAfterBits(), operation.isVetoed()))
+            .toList();
+        assertEquals(List.of(
+            new Op(TraceOp.INITIAL, 1, "deploy-a", "Battle", null, null, bits(100.0f), false),
+            new Op(TraceOp.INITIAL, 2, "deploy-b", "Battle", null, null, bits(100.0f), false),
+            new Op(TraceOp.INITIAL, 0, "draw", "Draw", null, null, bits(0.0f), false),
+            new Op(TraceOp.ADD, 0, "draw", "Draw", bits(0.0f), bits(0.0f), bits(0.0f), false),
+            new Op(TraceOp.INITIAL, 0, "draw", "ActionText", null, null, bits(0.0f), false),
+            new Op(TraceOp.ADD, 0, "draw", "ActionText", bits(0.0f), bits(0.0f), bits(0.0f), false),
+            new Op(TraceOp.INITIAL, 1, "deploy-a", "ActionText", null, null, bits(0.0f), false),
+            new Op(TraceOp.INITIAL, 2, "deploy-b", "ActionText", null, null, bits(0.0f), false),
+            new Op(TraceOp.MERGE, 0, "draw", "ActionText", bits(0.0f), null, bits(0.0f), false),
+            new Op(TraceOp.INITIAL, TraceOperation.ORDINAL_UNKNOWN, "", "Pass",
+                null, null, bits(5.0f), false),
+            new Op(TraceOp.ADD, TraceOperation.ORDINAL_UNKNOWN, "", "Pass",
+                bits(5.0f), bits(0.0f), bits(5.0f), false),
+            new Op(TraceOp.ADD, TraceOperation.ORDINAL_UNKNOWN, "", "Pass",
+                bits(5.0f), bits(-3.0f), bits(PASS_SCORE), false),
+            new Op(TraceOp.RANK, 1, "deploy-a", TraceOperation.PRODUCER_COMBINED_EVALUATOR,
+                null, null, bits(100.0f), false),
+            new Op(TraceOp.SELECT, 1, "deploy-a", TraceOperation.PRODUCER_COMBINED_EVALUATOR,
+                null, null, bits(100.0f), false)
+        ), operations);
+    }
+
+    private static DecisionContext fullStackContext() {
+        DecisionContext context = new DecisionContext(null, "tester", "CARD_ACTION_CHOICE",
+            "Choose draw action or Pass", "draw-parity-full-stack", Phase.DRAW);
+        context.setNoPass(false);
+        context.setMin(0);
+        context.setSide(Side.DARK);
+        context.setActionIds(List.of("draw", "deploy-a", "deploy-b"));
+        context.setActionTexts(List.of(
+            CANONICAL_DRAW_TEXT,
+            "Deploy unique Alpha to battleground site",
+            "Deploy unique Beta to battleground site"));
+        return context;
     }
 
     private static DecisionContext context(Scenario scenario) {
@@ -78,5 +152,9 @@ public class RandoDrawEvaluatorScoreParityTest extends AbstractDrawEvaluatorScor
                     scenario.drawAdjustment(), draw.actionText()));
             }
         };
+    }
+
+    private static int bits(float value) {
+        return Float.floatToRawIntBits(value);
     }
 }

@@ -88,6 +88,11 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
             appendTargeting(
                     new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(_starshipOrVehicle), deployWithoutPilotTargetFilter) {
                         @Override
+                        protected boolean isPullDestinationSelection() {
+                            return true;
+                        }
+
+                        @Override
                         protected void cardSelected(PhysicalCard target) {
                             _target = target;
 
@@ -157,6 +162,11 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
                                             appendTargeting(
                                                     new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(_starshipOrVehicle) + " and " + GameUtils.getCardLink(_pilot) + " simultaneously", deployWithPilotFilter) {
                                                         @Override
+                                                        protected boolean isPullDestinationSelection() {
+                                                            return true;
+                                                        }
+
+                                                        @Override
                                                         protected void cardSelected(PhysicalCard selectedCard) {
                                                             _target = selectedCard;
 
@@ -206,6 +216,11 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
                             // Choose where to deploy starship/vehicle
                             appendTargeting(
                                     new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(_starshipOrVehicle), deployWithoutPilotTargetFilter) {
+                                        @Override
+                                        protected boolean isPullDestinationSelection() {
+                                            return true;
+                                        }
+
                                         @Override
                                         protected void cardSelected(PhysicalCard selectedCard) {
                                             _target = selectedCard;
@@ -266,6 +281,11 @@ public class PlayStarshipOrVehicleAction extends AbstractPlayCardAction {
                             // Choose where to deploy starship/vehicle and pilot/driver
                             appendTargeting(
                                     new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(_starshipOrVehicle) + " and " + GameUtils.getCardLink(_pilot) + " simultaneously", deployWithPilotFilter) {
+                                        @Override
+                                        protected boolean isPullDestinationSelection() {
+                                            return true;
+                                        }
+
                                         @Override
                                         protected void cardSelected(PhysicalCard selectedCard) {
                                             _target = selectedCard;

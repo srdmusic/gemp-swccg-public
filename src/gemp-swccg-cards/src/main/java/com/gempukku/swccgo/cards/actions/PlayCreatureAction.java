@@ -52,6 +52,11 @@ public class PlayCreatureAction extends AbstractPlayCardAction {
         appendTargeting(
                 new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(creature), deployTargetFilter) {
                     @Override
+                    protected boolean isPullDestinationSelection() {
+                        return true;
+                    }
+
+                    @Override
                     protected void cardSelected(PhysicalCard target) {
                         _target = target;
 

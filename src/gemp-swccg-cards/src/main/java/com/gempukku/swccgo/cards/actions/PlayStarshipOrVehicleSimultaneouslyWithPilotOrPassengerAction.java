@@ -90,6 +90,11 @@ public class PlayStarshipOrVehicleSimultaneouslyWithPilotOrPassengerAction exten
                         appendTargeting(
                                 new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(_starshipOrVehicle) + " and " + GameUtils.getCardLink(_character) + " simultaneously", deployWithCharacterFilter) {
                                     @Override
+                                    protected boolean isPullDestinationSelection() {
+                                        return true;
+                                    }
+
+                                    @Override
                                     protected void cardSelected(PhysicalCard selectedCard) {
                                         _target = selectedCard;
 

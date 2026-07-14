@@ -33,6 +33,16 @@ public enum TraceRoute {
     COMBINED_EVALUATOR,
     /** Canonical top-level DRAW decision owned by the typed DRAW finalizer lane. */
     DRAW_TOP_LEVEL,
+    /** Typed PULL parent action choice. */
+    PULL_PARENT,
+    /** Typed deploy-from-pile child card choice. */
+    PULL_DEPLOY_CHILD,
+    /** Typed take-into-hand child card choice. */
+    PULL_TAKE_CHILD,
+    /** Typed pulled-card deployment destination choice. */
+    PULL_DESTINATION,
+    /** Typed empty verification response after a failed standard search. */
+    PULL_FAILED_VERIFY,
     /** No evaluator handled the decision: HeuristicAiBase.decide ran. */
     HEURISTIC_FALLBACK,
     /** Outer emergency: result null (or empty with raw noPass=true), emergency response used. */
@@ -62,7 +72,14 @@ public enum TraceRoute {
             case V79B_PARSEC_CHOICE:
                 return frozenShape == DecisionFacts.DecisionRoute.MULTIPLE_CHOICE;
             case DRAW_TOP_LEVEL:
+            case PULL_PARENT:
                 return frozenShape == DecisionFacts.DecisionRoute.CARD_ACTION_CHOICE;
+            case PULL_DEPLOY_CHILD:
+            case PULL_TAKE_CHILD:
+            case PULL_FAILED_VERIFY:
+                return frozenShape == DecisionFacts.DecisionRoute.ARBITRARY_CARDS;
+            case PULL_DESTINATION:
+                return frozenShape == DecisionFacts.DecisionRoute.CARD_SELECTION;
             default:
                 return true;
         }

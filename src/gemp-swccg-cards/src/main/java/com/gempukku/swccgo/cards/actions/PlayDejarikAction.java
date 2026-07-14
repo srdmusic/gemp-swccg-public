@@ -44,6 +44,11 @@ public class PlayDejarikAction extends AbstractPlayCardAction {
         appendTargeting(
                 new ChooseCardOnTableEffect(this, getPerformingPlayer(), "Choose where to deploy " + GameUtils.getCardLink(cardToDeploy), Filters.holosite) {
                     @Override
+                    protected boolean isPullDestinationSelection() {
+                        return true;
+                    }
+
+                    @Override
                     protected void cardSelected(PhysicalCard target) {
                         _target = target;
                     }

@@ -68,6 +68,11 @@ public class PlayCardToLocationAction extends AbstractPlayCardAction {
         appendTargeting(
                 new ChooseCardOnTableEffect(_that, getPerformingPlayer(), "Choose location where to " + _text.toLowerCase() + " " + GameUtils.getCardLink(cardToDeploy), deployTargetFilter) {
                     @Override
+                    protected boolean isPullDestinationSelection() {
+                        return true;
+                    }
+
+                    @Override
                     protected void cardSelected(PhysicalCard target) {
                         _target = target;
                     }

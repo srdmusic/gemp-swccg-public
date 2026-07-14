@@ -2,15 +2,18 @@ package com.gempukku.swccgo.logic.decisions;
 
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.DecisionActionSemantic;
+import com.gempukku.swccgo.common.PullDecisionWire;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A decision that involves choosing a card from the table (or hand) on the User Interface to perform an action.
  */
 public abstract class CardActionSelectionDecision extends AbstractAwaitingDecision {
+    private static final AtomicLong NEXT_PULL_TRANSACTION_ID = new AtomicLong();
     private List<Action> _actions;
 
     /**
@@ -35,6 +38,11 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
         setParam("horizontal", getHorizontalsForVirtualActions(actions));
         setParam("actionText", getActionTexts(actions));
         setParam(DecisionActionSemantic.WIRE_PARAMETER, getActionSemantics(actions));
+        if (hasPullAction(actions)) {
+            setParam(PullDecisionWire.SOURCE_CARD_ID, getActionSourceCardIds(actions));
+            setParam(PullDecisionWire.SOURCE_PERMANENT_CARD_ID, getActionSourcePermanentCardIds(actions));
+            setParam(PullDecisionWire.GAME_TEXT_ACTION_ID, getGameTextActionIds(actions));
+        }
         setParam("yourTurn", String.valueOf(yourTurn));
         setParam("autoPassEligible", String.valueOf(autoPassEligible));
         setParam("noPass", String.valueOf(noPass));
@@ -170,6 +178,62 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
         return result;
     }
 
+    /** Gets ordinal-aligned physical source identities for typed action routes. */
+    private String[] getActionSourceCardIds(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            PhysicalCard source = actions.get(i).getActionSource();
+            result[i] = source != null ? String.valueOf(source.getCardId()) : "";
+        }
+        return result;
+    }
+
+    private boolean hasPullAction(List<Action> actions) {
+        for (Action action : actions) {
+            DecisionActionSemantic semantic = action.getDecisionActionSemantic();
+            if (semantic == DecisionActionSemantic.PULL_DEPLOY_FROM_PILE
+                    || semantic == DecisionActionSemantic.PULL_TAKE_INTO_HAND_FROM_PILE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Gets ordinal-aligned permanent physical identities for typed action routes. */
+    private String[] getActionSourcePermanentCardIds(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            PhysicalCard source = actions.get(i).getActionSource();
+            result[i] = source != null ? String.valueOf(source.getPermanentCardId()) : "";
+        }
+        return result;
+    }
+
+    /** Gets ordinal-aligned search-function identities where the engine exposes one. */
+    private String[] getGameTextActionIds(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            Action action = actions.get(i);
+            DecisionActionSemantic semantic = action.getDecisionActionSemantic();
+            boolean isPull = semantic == DecisionActionSemantic.PULL_DEPLOY_FROM_PILE
+                    || semantic == DecisionActionSemantic.PULL_TAKE_INTO_HAND_FROM_PILE;
+            if (!isPull) {
+                result[i] = "";
+                continue;
+            }
+            if (!action.isFromGameText() && !action.isFromPlayingInterrupt()) {
+                result[i] = "";
+                continue;
+            }
+            com.gempukku.swccgo.common.GameTextActionId gameTextActionId =
+                    action.getGameTextActionId();
+            result[i] = gameTextActionId != null
+                    ? gameTextActionId.name()
+                    : "";
+        }
+        return result;
+    }
+
     /**
      * Gets the action the player selected during the decision.
      * @param result the result
@@ -185,7 +249,14 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
             if (actionIndex < 0 || actionIndex >= _actions.size())
                 throw new DecisionResultInvalidException();
 
-            return _actions.get(actionIndex);
+            Action selected = _actions.get(actionIndex);
+            DecisionActionSemantic semantic = selected.getDecisionActionSemantic();
+            if (semantic == DecisionActionSemantic.PULL_DEPLOY_FROM_PILE
+                    || semantic == DecisionActionSemantic.PULL_TAKE_INTO_HAND_FROM_PILE) {
+                selected.setAcceptedDecisionIdentity(getAwaitingDecisionId(), actionIndex);
+                selected.setAcceptedPullTransactionId(NEXT_PULL_TRANSACTION_ID.incrementAndGet());
+            }
+            return selected;
         } catch (NumberFormatException exp) {
             throw new DecisionResultInvalidException();
         }

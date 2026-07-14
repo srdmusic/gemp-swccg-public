@@ -4,8 +4,9 @@ package com.gempukku.swccgo.common;
 // ═══ SECTION: ACTIVATE/CONTROL OPTION 2 / DECISION ORIGIN SEAM (2026-07-13) ═══
 // Packet: Handoffs/CODEX_ACTIVATE_CONTROL_PHASE_PACKET_2026-07-13.md §1.
 //
-// The engine-owned identity of WHY a decision was created. The five values below
-// name the five exact ACTIVATE/CONTROL decision creation sites the engine stamps
+// The engine-owned identity of WHY a decision was created. The ACTIVATE/CONTROL
+// values name the five exact decision creation sites that phase stamps. The PULL
+// values name the standard deploy/take child, destination, and failed-verify sites.
 // (PlayersPlayPhaseActionsInOrderGameProcess top-level + zero-activation confirm;
 // AbstractSwccgCardBlueprint.getCardPilePhaseActions amount + opponent allowance +
 // interruption acknowledgement). This is stamped as the single wire parameter
@@ -19,15 +20,19 @@ package com.gempukku.swccgo.common;
 // name; a resolver-side fixture asserts every name parses back to a real
 // AwaitingDecisionType, so a rename cannot drift silently.
 //
-// This enum is a CLOSED set: it names only the five in-scope creation sites. Nothing
-// in a live decide() path reads it in this phase (shadow only).
+// This enum is a CLOSED set. New values require one exact engine construction site
+// and one matching route fixture; prompt text is never an origin substitute.
 // ═══════════════════════════════════════════════════════════
 public enum DecisionOrigin {
     PHASE_ACTION("CARD_ACTION_CHOICE"),
     ACTIVATE_AMOUNT("INTEGER"),
     ACTIVATE_ALLOWANCE("INTEGER"),
     ACTIVATE_ZERO_CONFIRM("MULTIPLE_CHOICE"),
-    ACTIVATE_INTERRUPTION_ACK("MULTIPLE_CHOICE");
+    ACTIVATE_INTERRUPTION_ACK("MULTIPLE_CHOICE"),
+    PULL_DEPLOY_CHILD("ARBITRARY_CARDS"),
+    PULL_TAKE_CHILD("ARBITRARY_CARDS"),
+    PULL_DESTINATION("CARD_SELECTION"),
+    PULL_FAILED_VERIFY("ARBITRARY_CARDS");
 
     /** The single wire parameter key the engine stamps the origin name into. */
     public static final String WIRE_PARAMETER = "decisionOrigin";
@@ -48,7 +53,7 @@ public enum DecisionOrigin {
 
     /**
      * Parse a wire value into a typed origin. Returns null when the value is absent or
-     * is not one of the five closed values (the resolver's "unowned" state). Never
+     * is not one of the closed values (the resolver's "unowned" state). Never
      * throws on an unrecognized value.
      */
     public static DecisionOrigin fromWire(String wireValue) {

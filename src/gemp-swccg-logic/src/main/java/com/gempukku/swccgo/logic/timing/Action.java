@@ -32,6 +32,26 @@ public interface Action extends Snapshotable<Action> {
         return DecisionActionSemantic.UNKNOWN;
     }
 
+    /** Marks one engine-owned candidate semantic before the action is offered. */
+    void setDecisionActionSemantic(DecisionActionSemantic semantic);
+
+    /** Records the exact parent decision and original ordinal accepted by the engine. */
+    void setAcceptedDecisionIdentity(int decisionId, int actionOrdinal);
+
+    Integer getAcceptedDecisionId();
+
+    Integer getAcceptedDecisionOrdinal();
+
+    /** Opaque engine identity for one accepted PULL parent attempt. */
+    void setAcceptedPullTransactionId(long transactionId);
+
+    Long getAcceptedPullTransactionId();
+
+    /** Carries immutable deploy-from-pile identity into deploy targeting. */
+    void setPullDeployRef(PullDeployRef pullDeployRef);
+
+    PullDeployRef getPullDeployRef();
+
     /**
      * Gets the card that is the source of the action or null if the action from a game rule not from a specified card.
      * @return the card, or null
