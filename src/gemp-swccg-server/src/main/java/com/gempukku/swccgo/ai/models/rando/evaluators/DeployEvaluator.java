@@ -366,8 +366,10 @@ public class DeployEvaluator extends ActionEvaluator {
                 // This fixes the STALE PLAN bug where recordDeployment() was never called
                 if (!plan.getInstructions().isEmpty() && hand != null) {
                     Set<String> handBlueprintIds = new HashSet<>();
+                    Set<Integer> handPermanentIds = new HashSet<>();
                     for (PhysicalCard card : hand) {
                         if (card != null) {
+                            handPermanentIds.add(card.getPermanentCardId());
                             String bpId = card.getBlueprintId(true);
                             if (bpId != null) {
                                 handBlueprintIds.add(bpId);
@@ -378,7 +380,10 @@ public class DeployEvaluator extends ActionEvaluator {
                     // Find instructions for cards no longer in hand
                     List<DeploymentInstruction> deployedCards = new ArrayList<>();
                     for (DeploymentInstruction instruction : plan.getInstructions()) {
-                        if (!handBlueprintIds.contains(instruction.getCardBlueprintId())) {
+                        boolean stillInHand = instruction.getCardPermanentCardId() != null
+                            ? handPermanentIds.contains(instruction.getCardPermanentCardId())
+                            : handBlueprintIds.contains(instruction.getCardBlueprintId());
+                        if (!stillInHand) {
                             deployedCards.add(instruction);
                         }
                     }
@@ -386,9 +391,18 @@ public class DeployEvaluator extends ActionEvaluator {
                     // Record deployments for cards that left hand
                     for (DeploymentInstruction instruction : deployedCards) {
                         LOG.info("📋 Auto-detected deployment: {} left hand", instruction.getCardName());
-                        planner.recordDeployment(instruction.getCardBlueprintId());
+                        if (instruction.getCardPermanentCardId() != null
+                                && instruction.getCardCurrentCardId() != null) {
+                            planner.recordDeployment(
+                                instruction.getCardPermanentCardId(),
+                                instruction.getCardCurrentCardId(),
+                                instruction.getCardBlueprintId());
+                        } else {
+                            planner.recordDeployment(instruction.getCardBlueprintId());
+                        }
                     }
                 }
+                plan = plan.assessmentCopy();
 
                 // Log plan status
                 if (plan.isPlanComplete()) {
@@ -420,9 +434,11 @@ public class DeployEvaluator extends ActionEvaluator {
 
             // First, check if any planned cards are still in hand
             Set<String> handBlueprintIds = new HashSet<>();
+            Set<Integer> handPermanentIds = new HashSet<>();
             if (hand != null) {
                 for (PhysicalCard handCard : hand) {
                     if (handCard != null) {
+                        handPermanentIds.add(handCard.getPermanentCardId());
                         String bpId = handCard.getBlueprintId(true);
                         if (bpId != null) {
                             handBlueprintIds.add(bpId);
@@ -434,7 +450,10 @@ public class DeployEvaluator extends ActionEvaluator {
             StringBuilder planInHandCards = new StringBuilder();
             StringBuilder planNotInHandCards = new StringBuilder();
             for (DeploymentInstruction inst : plan.getInstructions()) {
-                if (handBlueprintIds.contains(inst.getCardBlueprintId())) {
+                boolean inHand = inst.getCardPermanentCardId() != null
+                    ? handPermanentIds.contains(inst.getCardPermanentCardId())
+                    : handBlueprintIds.contains(inst.getCardBlueprintId());
+                if (inHand) {
                     planCardsStillInHand = true;
                     planInHandCards.append(inst.getCardName()).append(" (").append(inst.getCardBlueprintId()).append("), ");
                 } else {
@@ -456,15 +475,16 @@ public class DeployEvaluator extends ActionEvaluator {
 
                 // Get blueprint ID using cardId lookup (most reliable)
                 String bpId = null;
+                PhysicalCard actionCard = null;
                 String cardIdStr = (cardIdList != null && i < cardIdList.size()) ? cardIdList.get(i) : null;
 
                 // Method 1: Look up card by cardId in game state to get its blueprint
                 if (cardIdStr != null && !cardIdStr.isEmpty() && gameState != null) {
                     try {
                         int cardIdNum = Integer.parseInt(cardIdStr);
-                        PhysicalCard card = gameState.findCardById(cardIdNum);
-                        if (card != null) {
-                            bpId = card.getBlueprintId(true);
+                        actionCard = gameState.findCardById(cardIdNum);
+                        if (actionCard != null) {
+                            bpId = actionCard.getBlueprintId(true);
                         }
                     } catch (NumberFormatException e) {
                         // Not a number - ignore
@@ -480,7 +500,11 @@ public class DeployEvaluator extends ActionEvaluator {
                 }
 
                 // Check if this blueprint is in the plan
-                if (bpId != null && plan.getInstructionForCard(bpId) != null) {
+                DeploymentInstruction matchingInstruction = actionCard != null
+                    ? plan.getInstructionForPhysicalCard(
+                        actionCard.getPermanentCardId(), actionCard.getCardId(), bpId)
+                    : bpId != null ? plan.getInstructionForCard(bpId) : null;
+                if (matchingInstruction != null) {
                     planCardsAvailable = true;
                     LOG.debug("   Found plan card {} in action: {}", bpId, actionText.substring(0, Math.min(60, actionText.length())));
                     break;
@@ -507,7 +531,6 @@ public class DeployEvaluator extends ActionEvaluator {
                 }
             }
         }
-
         // Check if we're behind on board (need to deploy more aggressively)
         boolean needsReinforcement = false;
         if (gameState != null) {
@@ -1690,7 +1713,8 @@ public class DeployEvaluator extends ActionEvaluator {
                     if (plan != null) {
                         if (!plan.getInstructions().isEmpty()) {
                             // Plan has pending instructions - check if this card is in plan
-                            DeploymentInstruction instruction = plan.getInstructionForCard(blueprintId);
+                            DeploymentInstruction instruction = plan.getInstructionForPhysicalCard(
+                                card.getPermanentCardId(), card.getCardId(), blueprintId);
 
                             if (instruction != null) {
                                 // Card is in plan - high priority!

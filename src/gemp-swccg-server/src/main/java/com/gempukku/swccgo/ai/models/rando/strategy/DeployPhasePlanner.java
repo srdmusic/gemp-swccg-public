@@ -1364,6 +1364,8 @@ public class DeployPhasePlanner {
                     String.valueOf(ship.getCardId()), ship.getTitle(),
                     1, String.format("Re-pilot %s", ship.getTitle())
                 );
+                inst.setCardPermanentCardId(bestPilot.card.getPermanentCardId());
+                inst.setCardCurrentCardId(bestPilot.card.getCardId());
                 inst.setDeployCost(bestPilot.cost);
                 inst.setPowerContribution(bestPilot.power);
                 plan.addInstruction(inst);
@@ -1514,6 +1516,8 @@ public class DeployPhasePlanner {
                 for (CardInfo loc : locationDeploys) {
                     DeploymentInstruction inst = new DeploymentInstruction(
                         loc.blueprintId, loc.name, null, null, 0, "Deploy location");
+                    inst.setCardPermanentCardId(loc.card.getPermanentCardId());
+                    inst.setCardCurrentCardId(loc.card.getCardId());
                     inst.setDeployCost(loc.cost);
                     locationPlan.addInstruction(inst);
                 }
@@ -1539,6 +1543,8 @@ public class DeployPhasePlanner {
         for (CardInfo loc : locationDeploys) {
             DeploymentInstruction inst = new DeploymentInstruction(
                 loc.blueprintId, loc.name, null, null, 0, "Deploy location first");
+            inst.setCardPermanentCardId(loc.card.getPermanentCardId());
+            inst.setCardCurrentCardId(loc.card.getCardId());
             inst.setDeployCost(loc.cost);
             finalPlan.addInstruction(inst);
         }
@@ -1576,6 +1582,8 @@ public class DeployPhasePlanner {
             String.valueOf(loc.location.getCardId()), loc.location.getTitle(),
             priority, reason
         );
+        inst.setCardPermanentCardId(card.getPermanentCardId());
+        inst.setCardCurrentCardId(card.getCardId());
         inst.setDeployCost(cost);
         inst.setPowerContribution(power);
         plan.addInstruction(inst);
@@ -1753,6 +1761,12 @@ public class DeployPhasePlanner {
     public void recordDeployment(String blueprintId) {
         if (currentPlan != null) {
             currentPlan.recordDeployment(blueprintId);
+        }
+    }
+
+    public void recordDeployment(int permanentCardId, int currentCardId, String blueprintId) {
+        if (currentPlan != null) {
+            currentPlan.recordDeployment(permanentCardId, currentCardId, blueprintId);
         }
     }
 

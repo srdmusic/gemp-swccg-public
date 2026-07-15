@@ -49,6 +49,25 @@ public class DeploymentPlan {
         this.reason = reason;
     }
 
+    /** Detached evaluator view. Mutations cannot leak into the accepted phase state. */
+    public DeploymentPlan assessmentCopy() {
+        DeploymentPlan copy = new DeploymentPlan(strategy, reason);
+        copy.instructions = new ArrayList<>();
+        for (DeploymentInstruction instruction : instructions) {
+            copy.instructions.add(new DeploymentInstruction(instruction));
+        }
+        copy.holdBackCards = new HashSet<>(holdBackCards);
+        copy.totalForceAvailable = totalForceAvailable;
+        copy.forceReservedForBattle = forceReservedForBattle;
+        copy.forceToSpend = forceToSpend;
+        copy.phaseStarted = phaseStarted;
+        copy.deploymentsMade = deploymentsMade;
+        copy.forceAllowExtras = forceAllowExtras;
+        copy.waitingForPlannedCards = waitingForPlannedCards;
+        copy.originalPlanCost = originalPlanCost;
+        return copy;
+    }
+
     /**
      * Check if a card is in our deployment plan.
      */
@@ -61,10 +80,49 @@ public class DeploymentPlan {
      * Get the deployment instruction for a specific card.
      */
     public DeploymentInstruction getInstructionForCard(String blueprintId) {
-        return instructions.stream()
-            .filter(inst -> blueprintId.equals(inst.getCardBlueprintId()))
+        DeploymentInstruction match = null;
+        for (DeploymentInstruction instruction : instructions) {
+            if (!blueprintId.equals(instruction.getCardBlueprintId())) {
+                continue;
+            }
+            if (match != null) {
+                return null;
+            }
+            match = instruction;
+        }
+        return match;
+    }
+
+    /**
+     * Find the instruction for one physical copy. Blueprint fallback exists only
+     * for plans created before physical identity was recorded.
+     */
+    public DeploymentInstruction getInstructionForPhysicalCard(int permanentCardId,
+                                                               int currentCardId,
+                                                               String blueprintId) {
+        DeploymentInstruction exact = instructions.stream()
+            .filter(inst -> inst.getCardPermanentCardId() != null
+                && inst.getCardCurrentCardId() != null
+                && inst.getCardPermanentCardId() == permanentCardId
+                && inst.getCardCurrentCardId() == currentCardId)
             .findFirst()
             .orElse(null);
+        if (exact != null) {
+            return exact;
+        }
+        DeploymentInstruction legacyMatch = null;
+        for (DeploymentInstruction instruction : instructions) {
+            if (instruction.getCardPermanentCardId() != null
+                    || blueprintId == null
+                    || !blueprintId.equals(instruction.getCardBlueprintId())) {
+                continue;
+            }
+            if (legacyMatch != null) {
+                return null;
+            }
+            legacyMatch = instruction;
+        }
+        return legacyMatch;
     }
 
     /**
@@ -100,8 +158,21 @@ public class DeploymentPlan {
      * Remove a deployment instruction (after card is deployed).
      */
     public void recordDeployment(String blueprintId) {
-        instructions.removeIf(inst -> blueprintId.equals(inst.getCardBlueprintId()));
-        deploymentsMade++;
+        DeploymentInstruction instruction = getInstructionForCard(blueprintId);
+        if (instruction != null) {
+            instructions.remove(instruction);
+            deploymentsMade++;
+        }
+    }
+
+    /** Remove only the accepted physical copy; duplicate blueprints remain planned. */
+    public void recordDeployment(int permanentCardId, int currentCardId, String blueprintId) {
+        DeploymentInstruction exact = getInstructionForPhysicalCard(
+            permanentCardId, currentCardId, blueprintId);
+        if (exact != null) {
+            instructions.remove(exact);
+            deploymentsMade++;
+        }
     }
 
     /**

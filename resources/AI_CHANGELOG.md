@@ -4,6 +4,16 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-15: V196 AI-ONLY DEPLOY PHYSICAL IDENTITY AND COPY ISOLATION (both bots)
+- Why: deployment plans identified cards only by blueprint. Two physical copies of the same blueprint could therefore share the first instruction, target, cleanup, and deployment count. Evaluator-only stale-plan flags could also mutate the accepted planner state while merely scoring a decision.
+- Physical identity: every planner-created instruction now records permanent and current card ids. Plan lookup, action matching, hand-departure reconciliation, per-card scoring, and deployment recording use that exact pair. Removing one deployed copy leaves another copy of the same blueprint planned.
+- Ambiguity boundary: blueprint-only lookup succeeds only when exactly one instruction matches. Zero or multiple matches return no instruction. The unique legacy fallback remains for fixtures and retained callers that do not carry physical ids. Unknown exact records do not remove instructions or increment the deployment count.
+- Copy isolation: `DeploymentPlan.assessmentCopy()` deep-copies instructions and mutable collections after accepted hand-departure reconciliation but before evaluator-only stale and availability flags. Candidate assessment can no longer alter the planner's accepted phase state.
+- Engine boundary: all production changes remain under `gemp-swccg-server/.../ai/**`. No decision parameters, metadata, card action, game logic, mediator, serialization, or client source changes are included.
+- Boundary math: deployment weights, affordability, formation policy, candidate order, response wires, and Pass scoring are unchanged. V196 fixes identity and state isolation only.
+- Verification: 5 focused physical-identity and copy-purity tests passed. The full affected reactor passed 881 tests with 0 failures and 0 errors (26 skipped). Rando and Chosen One changed streams normalize identically and `git diff --check` is clean.
+- Revert: revert the V196 commit. No non-AI production source is part of the change.
+
 ## 2026-07-15: V195 AI-ONLY ACTIVATE AND CONTROL CONSOLIDATION (both bots)
 - Why: the engine-metadata rollback correctly removed the typed ACTIVATE and CONTROL owner, but it also restored two large mirrored copies of the same amount and drain calculations. Keeping those copies made later fixes vulnerable to Rando and Chosen One drift.
 - ACTIVATE: `ActivateAmountPolicy` is now the shared pure owner of the existing V57 full-activation, V61c keep-three, V67at low-life keep-two, V43 minimum, and legal min/max clamp arithmetic. Both `ForceActivationEvaluator` classes delegate to it. Universal legacy INTEGER routing remains unchanged.

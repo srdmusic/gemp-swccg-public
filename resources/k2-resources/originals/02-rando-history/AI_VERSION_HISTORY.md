@@ -1,3 +1,15 @@
+  ════ V196 AI-ONLY DEPLOY PHYSICAL IDENTITY AND COPY ISOLATION (2026-07-15, both bots) ════
+Deployment plans now distinguish permanent and current physical card ids instead of allowing duplicate blueprint
+copies to share the first matching instruction. Every planner-created instruction records exact identity; action
+matching, hand-departure reconciliation, scoring, and deployment recording consume it. Blueprint-only lookup now
+requires one unambiguous match, while one unique legacy instruction remains compatible. Unknown exact records do not
+mutate the plan or deployment count. Evaluators receive a deep assessment copy after accepted reconciliation and
+before stale-plan scoring flags, preventing score-time mutation of accepted planner state. Deployment weights,
+formation policy, candidate order, response wires, and Pass scoring are unchanged. Production changes remain inside
+the AI package. Gate: 5 focused tests plus the full affected reactor totaled 881 tests with 0 failures and 0 errors
+(26 skipped); mirrored bot changes normalize identically and diff check is clean. Revert the single V196 commit.
+See AI_CHANGELOG 2026-07-15.
+
   ════ V195 AI-ONLY ACTIVATE AND CONTROL CONSOLIDATION (2026-07-15, both bots) ════
 After the engine-metadata rollback, Rando and Chosen One again carried mirrored copies of ACTIVATE amount arithmetic
 and CONTROL drain scoring. V195 keeps the normal engine boundary and consolidates only those calculations inside the
