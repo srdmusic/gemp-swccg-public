@@ -126,6 +126,44 @@ public class DeploymentPlan {
     }
 
     /**
+     * V201: return the cheapest exact physical CHARACTER companion that this
+     * detached plan sends to the same destination as the deploying instruction.
+     * The caller supplies the permanent ids of characters still in hand, which
+     * prevents locations, ships, stale instructions, and mere hand presence from
+     * masquerading as a companion plan.
+     */
+    public Float getCheapestPlannedCharacterBuddyCost(DeploymentInstruction deployingInstruction,
+                                                       String targetLocationId,
+                                                       Set<Integer> characterPermanentIdsInHand) {
+        if (deployingInstruction == null || targetLocationId == null
+                || characterPermanentIdsInHand == null || characterPermanentIdsInHand.isEmpty()
+                || !instructions.contains(deployingInstruction)
+                || deployingInstruction.getCardPermanentCardId() == null
+                || deployingInstruction.getCardCurrentCardId() == null
+                || !targetLocationId.equals(deployingInstruction.getTargetLocationId())) {
+            return null;
+        }
+
+        Float cheapest = null;
+        for (DeploymentInstruction instruction : instructions) {
+            if (instruction == deployingInstruction
+                    || instruction.getCardPermanentCardId() == null
+                    || instruction.getCardCurrentCardId() == null
+                    || !targetLocationId.equals(instruction.getTargetLocationId())
+                    || !characterPermanentIdsInHand.contains(instruction.getCardPermanentCardId())) {
+                continue;
+            }
+            if (instruction.getCardPermanentCardId().equals(deployingInstruction.getCardPermanentCardId())
+                    && instruction.getCardCurrentCardId().equals(deployingInstruction.getCardCurrentCardId())) {
+                continue;
+            }
+            float cost = instruction.getDeployCost();
+            if (cheapest == null || cost < cheapest) cheapest = cost;
+        }
+        return cheapest;
+    }
+
+    /**
      * Get the target location for a card, if any.
      */
     public String getTargetForCard(String blueprintId) {

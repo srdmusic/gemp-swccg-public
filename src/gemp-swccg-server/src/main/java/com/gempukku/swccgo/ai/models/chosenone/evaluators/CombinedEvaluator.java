@@ -31,6 +31,17 @@ public class CombinedEvaluator {
     // V116's +100 reserve-deck baseline (plus per-card bonuses) and clear it.
     private static final float NON_BUCKET_EPILOGUE_FLOOR = 50.0f;
 
+    private static boolean isPassLegal(DecisionContext context) {
+        if (context == null || context.getMin() != 0) return false;
+        String decisionText = context.getDecisionText() != null
+            ? context.getDecisionText().toLowerCase() : "";
+        boolean textOffersCancel = decisionText.contains("done")
+            || decisionText.contains("cancel")
+            || decisionText.contains("if desired")
+            || decisionText.contains("optional");
+        return !context.isNoPass() || textOffersCancel;
+    }
+
     private final List<ActionEvaluator> evaluators;
     private final Random random = new Random();
     // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): per-decision trace sink.
@@ -319,6 +330,9 @@ public class CombinedEvaluator {
         java.util.List<java.util.Set<String>> buckets = context.getStepBuckets();
         java.util.List<String> bucketLabels = context.getStepBucketLabels();
         if (buckets != null && !buckets.isEmpty()) {
+            EvaluatedAction v201AdmissibleFallback = null;
+            EvaluatedAction v201DeferredFallback = null;
+            EvaluatedAction v201HardFallback = null;
             for (int b = 0; b < buckets.size(); b++) {
                 java.util.Set<String> bucket = buckets.get(b);
                 String label = (bucketLabels != null && b < bucketLabels.size()) ? bucketLabels.get(b) : ("step#" + b);
@@ -334,16 +348,40 @@ public class CombinedEvaluator {
                 }
                 // B0-TIE-DETERMINISM (m00228): explicit first-seen tie retention.
                 EvaluatedAction bestInBucket = null;
+                EvaluatedAction bestDeferredInBucket = null;
+                EvaluatedAction bestHardInBucket = null;
                 for (EvaluatedAction ba : bucketActions) {
-                    if (ba.isHardVetoed()) continue;  // FORMATION SAFETY 2026-07-11c
+                    if (ba.isHardVetoed()) {
+                        if (bestHardInBucket == null
+                                || Float.compare(ba.getScore(), bestHardInBucket.getScore()) > 0) {
+                            bestHardInBucket = ba;
+                        }
+                        continue;
+                    }
+                    if (ba.isDeferred()) {
+                        if (bestDeferredInBucket == null
+                                || Float.compare(ba.getScore(), bestDeferredInBucket.getScore()) > 0) {
+                            bestDeferredInBucket = ba;
+                        }
+                        continue;
+                    }
                     if (bestInBucket == null || Float.compare(ba.getScore(), bestInBucket.getScore()) > 0) {
                         bestInBucket = ba;
                     }
                 }
+                if (v201AdmissibleFallback == null && bestInBucket != null) {
+                    v201AdmissibleFallback = bestInBucket;
+                }
+                if (v201DeferredFallback == null && bestDeferredInBucket != null) {
+                    v201DeferredFallback = bestDeferredInBucket;
+                }
+                if (v201HardFallback == null && bestHardInBucket != null) {
+                    v201HardFallback = bestHardInBucket;
+                }
                 if (bestInBucket == null) {
                     // TRACE HOOK (2026-07-13): empty rank, bucket had no eligible action.
                     if (traced) TraceSession.recordRank(null, null, null,
-                        "V67bc bucket step=" + label + ": no eligible (all vetoed)");
+                        "V67bc bucket step=" + label + ": no admissible (deferred or vetoed)");
                     continue;
                 }
                 // TRACE HOOK (2026-07-13): bucket-walk rank.
@@ -380,6 +418,8 @@ public class CombinedEvaluator {
                 v67bcAllBucketIds.addAll(v67bcBkt);
             }
             EvaluatedAction v67bcBestNonBucket = null;
+            EvaluatedAction v201BestDeferredNonBucket = null;
+            EvaluatedAction v201BestHardNonBucket = null;
             for (EvaluatedAction ea : allActions) {
                 // Skip pass-like entries: PassEvaluator emits actionId "" OR a
                 // real "Cancel" actionId (ACTION_CHOICE) typed PASS — its
@@ -387,11 +427,33 @@ public class CombinedEvaluator {
                 // picking Cancel here would just be PASS with extra steps.
                 if (ea.getActionType() == ActionType.PASS) continue;
                 if (ea.getActionId() == null || ea.getActionId().isEmpty()) continue;
-                if (ea.isHardVetoed()) continue;  // FORMATION SAFETY 2026-07-12 (Codex m00194 P0#1): epilogue must not resurrect vetoed actions
                 if (v67bcAllBucketIds.contains(ea.getActionId())) continue;
+                if (ea.isHardVetoed()) {
+                    if (v201BestHardNonBucket == null
+                            || Float.compare(ea.getScore(), v201BestHardNonBucket.getScore()) > 0) {
+                        v201BestHardNonBucket = ea;
+                    }
+                    continue;
+                }
+                if (ea.isDeferred()) {
+                    if (v201BestDeferredNonBucket == null
+                            || Float.compare(ea.getScore(), v201BestDeferredNonBucket.getScore()) > 0) {
+                        v201BestDeferredNonBucket = ea;
+                    }
+                    continue;
+                }
                 if (v67bcBestNonBucket == null || ea.getScore() > v67bcBestNonBucket.getScore()) {
                     v67bcBestNonBucket = ea;
                 }
+            }
+            if (v201AdmissibleFallback == null && v67bcBestNonBucket != null) {
+                v201AdmissibleFallback = v67bcBestNonBucket;
+            }
+            if (v201DeferredFallback == null) {
+                v201DeferredFallback = v201BestDeferredNonBucket;
+            }
+            if (v201HardFallback == null) {
+                v201HardFallback = v201BestHardNonBucket;
             }
             if (v67bcBestNonBucket != null
                     && v67bcBestNonBucket.getScore() >= NON_BUCKET_EPILOGUE_FLOOR) {
@@ -410,7 +472,30 @@ public class CombinedEvaluator {
                     NON_BUCKET_EPILOGUE_FLOOR);
             }
 
-            // All buckets exhausted with all-bad scores — true PASS time.
+            // V201: once all viable buckets and the epilogue are exhausted, a legal
+            // Pass beats every deferred or hard-blocked action. If passing is illegal,
+            // preserve constraint order before taking the least-bad fallback.
+            boolean v201CanPass = isPassLegal(context);
+            if (!v201CanPass) {
+                EvaluatedAction v201ForcedFallback = v201AdmissibleFallback != null
+                    ? v201AdmissibleFallback
+                    : v201DeferredFallback != null ? v201DeferredFallback : v201HardFallback;
+                if (v201ForcedFallback != null) {
+                    LOG.warn("V201 DPS FORCED FALLBACK: choosing '{}' constraint={} score={}",
+                        v201ForcedFallback.getDisplayText(),
+                        v201ForcedFallback.isHardVetoed() ? "HARD_BLOCK"
+                            : v201ForcedFallback.isDeferred() ? "DEFER" : "ADMISSIBLE",
+                        v201ForcedFallback.getScore());
+                    if (traced) TraceSession.recordSelect(v201ForcedFallback,
+                        v201ForcedFallback.getActionId(), Float.valueOf(v201ForcedFallback.getScore()),
+                        v201ForcedFallback.isHardVetoed(), v201ForcedFallback.getVetoReason(),
+                        "V201 DPS mandatory constraint fallback");
+                    return v201ForcedFallback;
+                }
+            }
+
+            // All buckets exhausted with all-bad scores, or only deferred/blocked
+            // actions remained while Pass was legal.
             LOG.warn("V67bc DPS WALK: every bucket all-bad → PASS");
             EvaluatedAction passAction = new EvaluatedAction(
                 "",
@@ -469,17 +554,27 @@ public class CombinedEvaluator {
         // is vetoed, fall back to the least-bad vetoed action ONLY when passing is impossible
         // (never hang: a bad decision still beats no decision — DecisionSafety doctrine).
         java.util.List<EvaluatedAction> nonVetoed = new java.util.ArrayList<>();
+        java.util.List<EvaluatedAction> admissible = new java.util.ArrayList<>();
         for (EvaluatedAction a : allActions) {
             if (a.isHardVetoed()) {
                 LOG.warn("FORMATION SAFETY: '{}' vetoed — {}", a.getDisplayText(), a.getVetoReason());
             } else {
                 nonVetoed.add(a);
+                if (a.isDeferred()) {
+                    LOG.warn("V201 DEFER: '{}' held behind admissible actions/Pass: {}",
+                        a.getDisplayText(), a.getDeferReason());
+                } else {
+                    admissible.add(a);
+                }
             }
         }
         boolean fsAllVetoed = nonVetoed.isEmpty() && !allActions.isEmpty();
+        boolean v201AllDeferred = !nonVetoed.isEmpty() && admissible.isEmpty();
         // B0-TIE-DETERMINISM (m00228): explicit first-seen tie retention.
         EvaluatedAction bestAction = null;
-        for (EvaluatedAction ca : (fsAllVetoed ? allActions : nonVetoed)) {
+        java.util.List<EvaluatedAction> selectionPool = fsAllVetoed
+            ? allActions : v201AllDeferred ? nonVetoed : admissible;
+        for (EvaluatedAction ca : selectionPool) {
             if (bestAction == null || Float.compare(ca.getScore(), bestAction.getScore()) > 0) {
                 bestAction = ca;
             }
@@ -488,16 +583,14 @@ public class CombinedEvaluator {
         if (traced && bestAction != null) {
             TraceSession.recordRank(bestAction, bestAction.getActionId(),
                 Float.valueOf(bestAction.getScore()),
-                fsAllVetoed ? "pre-final best (all vetoed, least-bad)" : "pre-final best");
+                fsAllVetoed ? "pre-final best (all vetoed, least-bad)"
+                    : v201AllDeferred ? "pre-final best (all deferred, least-bad)" : "pre-final best");
         }
         if (fsAllVetoed && bestAction != null) {
             // ADJUSTED 2026-07-12 (Codex m00194 P0#2): use V148's cancellability semantics — optional
             // CARD_SELECTION prompts commonly carry noPass=true with min=0 + a Done/Cancel button;
             // the old (!noPass) test would have FORCED a vetoed destination instead of cancelling.
-            String fsDtext = context.getDecisionText() != null ? context.getDecisionText().toLowerCase() : "";
-            boolean fsTextCancel = fsDtext.contains("done") || fsDtext.contains("cancel")
-                || fsDtext.contains("if desired") || fsDtext.contains("optional");
-            boolean fsCanPass = context.getMin() == 0 && (!context.isNoPass() || fsTextCancel);
+            boolean fsCanPass = isPassLegal(context);
             if (fsCanPass) {
                 LOG.warn("FORMATION SAFETY: ALL actions vetoed and pass is legal — passing instead of '{}'",
                     bestAction.getDisplayText());
@@ -514,6 +607,26 @@ public class CombinedEvaluator {
                 return fsPass;
             }
             LOG.warn("FORMATION SAFETY: ALL actions vetoed but must choose — taking least-bad '{}'",
+                bestAction.getDisplayText());
+        }
+
+        if (v201AllDeferred && bestAction != null) {
+            boolean v201CanPass = isPassLegal(context);
+            if (v201CanPass) {
+                LOG.warn("V201 DEFER: every non-vetoed action deferred and Pass is legal; passing instead of '{}'",
+                    bestAction.getDisplayText());
+                EvaluatedAction v201Pass = new EvaluatedAction("", ActionType.PASS, 0.0f,
+                    "Pass (all actions deferred)");
+                v201Pass.addReasoning("V201: every candidate lacked a complete formation plan");
+                if (traced) {
+                    TraceSession.markSynthetic(v201Pass, "V201_DEFERRED_PASS");
+                    TraceSession.recordSelect(v201Pass, v201Pass.getActionId(),
+                        Float.valueOf(v201Pass.getScore()), false, null,
+                        "V201 all-deferred pass (synthetic)");
+                }
+                return v201Pass;
+            }
+            LOG.warn("V201 DEFER: every non-vetoed action deferred but choice is mandatory; taking least-bad '{}'",
                 bestAction.getDisplayText());
         }
 
@@ -548,14 +661,7 @@ public class CombinedEvaluator {
             // passable (!noPass) OR the prompt text offers Done/Cancel/optional. The
             // DecisionSafety.mustChoose() guard is updated in lockstep so the empty
             // response isn't force-corrected back into a pick.
-            String dtext = context.getDecisionText() != null
-                ? context.getDecisionText().toLowerCase() : "";
-            boolean textOffersCancel = dtext.contains("done")
-                || dtext.contains("cancel")
-                || dtext.contains("if desired")
-                || dtext.contains("optional");
-            boolean canPass = context.getMin() == 0
-                && (!context.isNoPass() || textOffersCancel);
+            boolean canPass = isPassLegal(context);
 
             // V24.5: No randomness — always pass when all actions are bad
             if (canPass) {

@@ -71,6 +71,12 @@ public class CombinedEvaluatorTieTest {
         return new EvaluatedAction(id, ActionType.UNKNOWN, score, text);
     }
 
+    private static EvaluatedAction deferredAction(String id, float score, String text) {
+        EvaluatedAction action = action(id, score, text);
+        action.defer("unsupported solo");
+        return action;
+    }
+
     private static EvaluatedAction winner(List<ActionEvaluator> evaluators, DecisionContext ctx) {
         return new CombinedEvaluator(evaluators, NoOpTraceSink.INSTANCE).evaluateDecision(ctx);
     }
@@ -198,5 +204,84 @@ public class CombinedEvaluatorTieTest {
         assertTrue(replaced.isHardVetoed());
         assertEquals("one-ULP-higher later vetoed candidate must win", "B", replaced.getActionId());
         assertEquals(Float.floatToRawIntBits(higher), Float.floatToRawIntBits(replaced.getScore()));
+    }
+
+    @Test
+    public void deferredMarkerOrMergesAndCannotBeRevivedByPositiveScores() {
+        ScriptedEvaluator scoring = new ScriptedEvaluator("scores", ctx -> Arrays.asList(
+            action("A", 5000.0f, "Unsupported solo"),
+            action("B", 1.0f, "Admissible deploy")));
+        ScriptedEvaluator constraint = new ScriptedEvaluator("constraint", ctx -> Arrays.asList(
+            deferredAction("A", -800.0f, "Unsupported solo")));
+
+        EvaluatedAction result = winner(Arrays.asList(scoring, constraint), passableContext());
+
+        assertEquals("B", result.getActionId());
+    }
+
+    @Test
+    public void legalPassBeatsEveryDeferredActionRegardlessOfScore() {
+        EvaluatedAction result = winner(single(ctx -> Arrays.asList(
+            deferredAction("A", 5000.0f, "Unsupported solo"),
+            deferredAction("B", 1000.0f, "Other unsupported solo"))), passableContext());
+
+        assertEquals(ActionType.PASS, result.getActionType());
+        assertEquals("", result.getActionId());
+    }
+
+    @Test
+    public void mandatoryChoiceUsesLeastBadDeferredBeforeHardBlock() {
+        EvaluatedAction result = winner(single(ctx -> {
+            EvaluatedAction hard = action("A", 9000.0f, "Hard blocked");
+            hard.hardVeto("contested weak solo");
+            return Arrays.asList(
+                hard,
+                deferredAction("B", -500.0f, "Deferred B"),
+                deferredAction("C", -400.0f, "Deferred C"));
+        }), forcedContext());
+
+        assertEquals("C", result.getActionId());
+        assertTrue(result.isDeferred());
+        assertNotEquals(ActionType.PASS, result.getActionType());
+    }
+
+    @Test
+    public void dpsWalkSkipsDeferredBucketForLaterAdmissibleBucket() {
+        DecisionContext ctx = passableContext();
+        ctx.setStepBuckets(Arrays.asList(
+            (java.util.Set<String>) new java.util.LinkedHashSet<>(Arrays.asList("A")),
+            (java.util.Set<String>) new java.util.LinkedHashSet<>(Arrays.asList("B"))));
+        ctx.setStepBucketLabels(Arrays.asList("STEP1", "STEP2"));
+
+        EvaluatedAction result = winner(single(ignored -> Arrays.asList(
+            deferredAction("A", 5000.0f, "Deferred first step"),
+            action("B", 100.0f, "Admissible second step"))), ctx);
+
+        assertEquals("B", result.getActionId());
+    }
+
+    @Test
+    public void dpsEpilogueCannotResurrectDeferredNonBucketAction() {
+        DecisionContext ctx = bucketedContext();
+        EvaluatedAction result = winner(single(ignored -> Arrays.asList(
+            action("A", -200.0f, "Bad bucket action"),
+            deferredAction("X", 5000.0f, "Deferred non-bucket action"))), ctx);
+
+        assertEquals(ActionType.PASS, result.getActionType());
+    }
+
+    @Test
+    public void forcedDpsFallbackKeepsAdmissibleAheadOfDeferred() {
+        DecisionContext ctx = forcedContext();
+        ctx.setStepBuckets(Arrays.asList(
+            (java.util.Set<String>) new java.util.LinkedHashSet<>(Arrays.asList("A"))));
+        ctx.setStepBucketLabels(Arrays.asList("STEP1"));
+
+        EvaluatedAction result = winner(single(ignored -> Arrays.asList(
+            action("A", -200.0f, "Low admissible bucket action"),
+            deferredAction("X", 5000.0f, "Deferred non-bucket action"))), ctx);
+
+        assertEquals("A", result.getActionId());
+        assertTrue(!result.isDeferred());
     }
 }

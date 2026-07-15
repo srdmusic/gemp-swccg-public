@@ -1,3 +1,17 @@
+  ==== V201 AI-ONLY UNSUPPORTED-SOLO DEFER TIER (2026-07-15, both bots) ====
+The L3 weak-solo rule's additive -800 could be revived by existing destination and forced-pull bonus stacks. V201
+adds an OR-merged DEFER marker and makes both normal and ordered-bucket selection compare constraint class before
+score. Any admissible action or legal Pass beats DEFER; mandatory prompts choose admissible, then the best deferred,
+then the least-bad hard block. A companion now requires another exact physical character in the detached deployment
+plan, still in hand, assigned to the same destination, with enough printed plan budget after the first deploy.
+Duplicate/unknown blueprint identity, mere hand presence, forced Reserve pulls, and speculative movement do not claim
+a plan. Existing undercover, objective flip-gate, friendly-support, ability-4, and dominance allowances remain.
+The retained -800 ranks only mandatory all-deferred fallbacks. This is deliberately narrower than the full frozen
+deploy-weight contract: engine-backed sequence legality, movement, retreat obligations, and V169/contact/overpower
+owner migration remain later AI-only work. Gate: 65 focused tests; full affected reactor 928 tests, 0 failures,
+0 errors, 26 skipped; mirror, forbidden-metadata, production-boundary, and diff checks pass. Revert the single V201
+commit. See AI_CHANGELOG 2026-07-15.
+
   ════ V200 AI-ONLY OBJECTIVE FRONT/BACK NORMALIZATION (2026-07-15, both bots) ════
 ObjectiveAnalyzer previously analyzed whichever blueprint side was currently face up and searched that text for a
 literal [Back Side] marker that no objective blueprint contains. Shared AI-only ObjectiveSideBlueprints now derives

@@ -35,6 +35,11 @@ public class EvaluatedAction {
     // never selects a vetoed action regardless of score.
     private boolean hardVeto = false;
     private String vetoReason = null;
+    // V201: non-additive middle tier for strategically unsupported actions. An
+    // admissible action or legal Pass always beats DEFER, while a mandatory
+    // choice may still take the best deferred action instead of a hard veto.
+    private boolean deferred = false;
+    private String deferReason = null;
 
     public EvaluatedAction(String actionId, ActionType actionType, float score, String displayText) {
         this.actionId = actionId;
@@ -104,6 +109,10 @@ public class EvaluatedAction {
             this.hardVeto = true;
             if (this.vetoReason == null) this.vetoReason = other.vetoReason;
         }
+        if (other.deferred) {
+            this.deferred = true;
+            if (this.deferReason == null) this.deferReason = other.deferReason;
+        }
 
         // Add the other action's score to this one
         this.score += other.score;
@@ -150,6 +159,24 @@ public class EvaluatedAction {
 
     public boolean isHardVetoed() { return hardVeto; }
     public String getVetoReason() { return vetoReason; }
+
+    /**
+     * V201: mark an action deferred without making it impossible. The optional
+     * ranking delta is compared only when no admissible action or legal Pass
+     * exists, so later positive score stacks cannot revive the action.
+     */
+    public void defer(String reason, float mandatoryFallbackDelta) {
+        this.deferred = true;
+        if (this.deferReason == null) this.deferReason = reason;
+        addReasoning("DEFER: " + reason, mandatoryFallbackDelta);
+    }
+
+    public void defer(String reason) {
+        defer(reason, 0.0f);
+    }
+
+    public boolean isDeferred() { return deferred; }
+    public String getDeferReason() { return deferReason; }
 
     // Getters and setters
     public String getActionId() {

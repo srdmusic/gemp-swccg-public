@@ -657,6 +657,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         String plannedTargetId = null;
         String plannedTargetName = null;
         String deployingBlueprintId = extractBlueprintFromDecisionText(context.getDecisionText());
+        DeploymentPlan deploymentPlanSnapshot = null;
+        DeploymentInstruction plannedDeployInstruction = null;
 
         // V29.3: BLUEPRINT-BASED CARD TYPE DETECTION
         // The decision text "Choose where to deploy •Lobot, Lando's Broker" does NOT contain
@@ -781,28 +783,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         if (deployPhasePlanner != null) {
             DeploymentPlan currentPlan = deployPhasePlanner.getCurrentPlan();
             if (currentPlan != null && !currentPlan.getInstructions().isEmpty()) {
-                // FIXED: Look up the instruction for the SPECIFIC card being deployed
+                // V201: evaluators read a detached plan. Blueprint fallback is accepted
+                // only when it identifies one instruction; duplicate physical copies or
+                // an unknown source never inherit the first unrelated destination.
+                deploymentPlanSnapshot = currentPlan.assessmentCopy();
                 if (deployingBlueprintId != null) {
-                    DeploymentInstruction matchingInstruction = currentPlan.getInstructionForCard(deployingBlueprintId);
-                    if (matchingInstruction != null && matchingInstruction.getTargetLocationId() != null) {
-                        plannedTargetId = matchingInstruction.getTargetLocationId();
-                        plannedTargetName = matchingInstruction.getTargetLocationName();
+                    plannedDeployInstruction = deploymentPlanSnapshot.getInstructionForCard(deployingBlueprintId);
+                    if (plannedDeployInstruction != null && plannedDeployInstruction.getTargetLocationId() != null) {
+                        plannedTargetId = plannedDeployInstruction.getTargetLocationId();
+                        plannedTargetName = plannedDeployInstruction.getTargetLocationName();
                         logger.info("📋 Deploy plan says: {} ({}) -> {}",
-                            matchingInstruction.getCardName(), deployingBlueprintId, plannedTargetName);
+                            plannedDeployInstruction.getCardName(), deployingBlueprintId, plannedTargetName);
                     } else {
-                        logger.info("📋 No matching instruction for blueprint {}", deployingBlueprintId);
+                        logger.info("📋 No unique matching instruction for blueprint {}", deployingBlueprintId);
                     }
                 } else {
-                    // Fallback: use first instruction if we can't determine the card
-                    logger.warn("⚠️ Could not extract blueprint from decision text, using first instruction");
-                    for (DeploymentInstruction instruction : currentPlan.getInstructions()) {
-                        if (instruction.getTargetLocationId() != null) {
-                            plannedTargetId = instruction.getTargetLocationId();
-                            plannedTargetName = instruction.getTargetLocationName();
-                            logger.info("📋 Deploy plan fallback: {} -> {}", deployingCardName, plannedTargetName);
-                            break;
-                        }
-                    }
+                    logger.warn("⚠️ Could not extract deploy blueprint; refusing blind plan-target fallback");
                 }
             }
         }
@@ -2126,7 +2122,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         && v136DepBp.getCardCategory() == com.gempukku.swccgo.common.CardCategory.CHARACTER) {
                                     // Find the actual PhysicalCard in hand by matching blueprintId
                                     PhysicalCard v136DeployingCard = null;
+                                    if (plannedDeployInstruction != null
+                                            && plannedDeployInstruction.getCardPermanentCardId() != null
+                                            && plannedDeployInstruction.getCardCurrentCardId() != null) {
+                                        for (PhysicalCard h : gameState.getHand(context.getPlayerId())) {
+                                            if (h != null
+                                                    && h.getPermanentCardId() == plannedDeployInstruction.getCardPermanentCardId()
+                                                    && h.getCardId() == plannedDeployInstruction.getCardCurrentCardId()) {
+                                                v136DeployingCard = h;
+                                                break;
+                                            }
+                                        }
+                                    }
                                     for (PhysicalCard h : gameState.getHand(context.getPlayerId())) {
+                                        if (v136DeployingCard != null) break;
                                         if (h == null) continue;
                                         if (deployingBlueprintId.equals(h.getBlueprintId(false))) {
                                             v136DeployingCard = h;
@@ -2141,43 +2150,47 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             SwccgCardBlueprint fsDepBp = v136DeployingCard.getBlueprint();
                                             if (fsDepBp != null && fsDepBp.getCardCategory() == CardCategory.CHARACTER
                                                     && context.getGame() != null) {
-                                                // ADJUSTED 2026-07-12 (Codex m00194 P0#3): pair-budget facts —
-                                                // cheapest OTHER deployable character in hand (null = no plan).
+                                                // V201: a companion is real only when the detached deployment
+                                                // plan names another exact physical character at this destination.
                                                 float fsForce = gameState.getForcePileSize(context.getPlayerId());
                                                 Float fsThisCost = fsDepBp.getDeployCost();
                                                 Float fsBuddyCost = null;
+                                                java.util.Set<Integer> fsCharacterIdsInHand = new java.util.HashSet<>();
                                                 for (PhysicalCard fsH : gameState.getHand(context.getPlayerId())) {
                                                     if (fsH == null || fsH.getBlueprint() == null) continue;
-                                                    if (fsH.getCardId() == v136DeployingCard.getCardId()) continue;
                                                     if (fsH.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                                    Float fsC = fsH.getBlueprint().getDeployCost();
-                                                    if (fsC == null) continue;
-                                                    if (fsBuddyCost == null || fsC < fsBuddyCost) fsBuddyCost = fsC;
+                                                    fsCharacterIdsInHand.add(fsH.getPermanentCardId());
+                                                }
+                                                boolean fsExactPlanCard = plannedDeployInstruction != null
+                                                    && plannedDeployInstruction.getCardPermanentCardId() != null
+                                                    && plannedDeployInstruction.getCardCurrentCardId() != null
+                                                    && v136DeployingCard.getPermanentCardId() == plannedDeployInstruction.getCardPermanentCardId()
+                                                    && v136DeployingCard.getCardId() == plannedDeployInstruction.getCardCurrentCardId();
+                                                if (fsExactPlanCard && deploymentPlanSnapshot != null) {
+                                                    fsBuddyCost = deploymentPlanSnapshot.getCheapestPlannedCharacterBuddyCost(
+                                                        plannedDeployInstruction, String.valueOf(location.getCardId()),
+                                                        fsCharacterIdsInHand);
                                                 }
                                                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer fsObj =
                                                     context.getObjectiveAnalyzer();
                                                 String fsFlipGate = (fsObj != null && fsObj.isAnalyzed())
                                                     ? fsObj.getFlipCriticalControlSite() : null;
-                                                String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
-                                                    .vetoCharacterDeploy(context.getGame(), gameState, context.getPlayerId(),
+                                                com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployVerdict fsVerdict =
+                                                    com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                                                    .assessCharacterDeploy(context.getGame(), gameState, context.getPlayerId(),
                                                         v136DeployingCard,
                                                         fsDepBp.hasPowerAttribute() ? fsDepBp.getPower() : null,
                                                         fsDepBp.hasAbilityAttribute() ? fsDepBp.getAbility() : null,
                                                         v136DeployingCard.isUndercover(),
                                                         location, fsForce, fsThisCost, fsBuddyCost, fsFlipGate);
-                                                if (fsV != null) {
-                                                    action.hardVeto(fsV);
-                                                    logger.warn("FORMATION SAFETY (deploy-site): {}", fsV);
-                                                } else if (com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
-                                                        .weakSoloNoPlan(context.getGame(), gameState, context.getPlayerId(),
-                                                            fsDepBp.hasAbilityAttribute() ? fsDepBp.getAbility() : null,
-                                                            v136DeployingCard.isUndercover(), location, fsBuddyCost)) {
-                                                    // L3 NO-PLAN (Steve 2026-07-12): weak solo with NO buddy plan —
-                                                    // heavy penalty (holds unless it's genuinely the only useful play).
-                                                    action.addReasoning(
-                                                        "L3 NO-PLAN SOLO: weak body would land alone with no deployable buddy in hand",
-                                                        -800.0f);
-                                                    logger.warn("FORMATION SAFETY (deploy-site): L3 NO-PLAN SOLO -800 at {}", title);
+                                                if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.HARD_BLOCK) {
+                                                    action.hardVeto(fsVerdict.reason());
+                                                    logger.warn("FORMATION SAFETY (deploy-site): {}", fsVerdict.reason());
+                                                } else if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.DEFER_UNSUPPORTED_SOLO) {
+                                                    action.defer(fsVerdict.reason(), -800.0f);
+                                                    logger.warn("V201 DEPLOY DEFER: {}", fsVerdict.reason());
+                                                } else if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.UNKNOWN) {
+                                                    action.addReasoning("V201 formation assessment unknown: " + fsVerdict.reason());
                                                 }
                                             }
                                         } catch (Exception fsE) { /* fail-open */ }

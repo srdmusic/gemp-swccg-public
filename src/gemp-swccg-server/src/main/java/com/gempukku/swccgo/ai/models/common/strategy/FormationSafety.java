@@ -11,18 +11,18 @@ import java.util.Locale;
 
 // ═══════════════════════════════════════════════════════════
 // ═══ SECTION: SVC-SAFETY / FORMATION SAFETY (2026-07-11c) ═══
-// Steve's FOUR LAWS as VETO-class invariants, enforced identically on every scoring route.
+// Steve's FOUR LAWS as non-additive constraints, enforced identically on every scoring route.
 // Born from the Codex root-cause audit (Handoffs/CODEX_SOLO_ABILITY_ROOT_CAUSE_AUDIT_2026-07-11.md)
 // + council review: ~20 prior fixes coded these basics as -150..-500 additive penalties that the
 // R2 +6000 move band and +600 bonus stacks outvoted (H2), or that lived on only one of the five
 // scoring routes (H1). This class is SHARED by both bots (like CharacterDeploySiteEvaluator), so
-// it cannot mirror-drift. Callers mark actions with EvaluatedAction.hardVeto(reason); the
-// CombinedEvaluator never selects a vetoed action regardless of additive score.
+// it cannot mirror-drift. Callers map the closed deploy verdict to hardVeto or defer;
+// CombinedEvaluator applies constraint order before additive score.
 //
 // THE FOUR LAWS:
 //  L1 never leave a solo character behind          -> vetoMoveOrigin
 //  L2 never voluntarily battle with zero battle-destiny draws -> vetoInitiateBattle
-//  L3 never deploy a weak solo when a buddy is in hand        -> vetoSoloDeploy
+//  L3 defer a weak solo without an exact same-destination plan -> deploy verdict
 //  L4 never move a weak solo into an enemy-held site           -> vetoMoveDestination
 //
 // EXEMPTIONS (explicit, testable — from Steve's rulings):
@@ -39,6 +39,7 @@ import java.util.Locale;
 // TYPED Icon.PERMANENT_WEAPON, NOT a game-text substring ("mentions" cards false-positived).
 // All weapon-adjustment math here uses the typed icon.
 // Returns from veto*(): null = allowed; non-null = human-readable veto reason.
+// Deploy assessment instead returns ALLOW, DEFER, HARD_BLOCK, or UNKNOWN.
 // Partial information rule (council): if a route lacks the facts, DON'T call — never veto blind.
 // ═══════════════════════════════════════════════════════════
 public final class FormationSafety {
@@ -202,74 +203,98 @@ public final class FormationSafety {
         return null;
     }
 
-    /** L3/L4-deploy: veto reason for deploying a character to a site, or null.
-     *  flipGateSiteTitle: objective flip-gate control site (V193-class steer) — exempt.
-     *  forceAvailable/thisDeployCost/cheapestBuddyCost: pair-budget facts from the caller
-     *  (cheapestBuddyCost null = NO other deployable character in hand).
-     *  L3 SEMANTICS (ADJUSTED 2026-07-12, Codex m00194 P0#3 — old version deadlocked a
-     *  two-weak-body pair and inverted Steve's no-plan rule):
-     *   - buddy affordable AND budget after this deploy still affords the buddy → ALLOW
-     *     (the pair is formable this phase; deploy-first-body is the plan).
-     *   - buddy exists but THIS deploy starves the pair budget → VETO (wrong order/turn).
-     *   - NO buddy at all ("no plan") → NOT a veto here; caller applies the heavy
-     *     weakSoloNoPlan penalty (Steve: 'more negative', not un-playable). */
-    public static String vetoCharacterDeploy(SwccgGame game, GameState gs, String playerId,
-                                             PhysicalCard cardBeingDeployed, /* may be null pre-table */
-                                             Float deployPower, Float deployAbility, boolean deployIsUndercover,
-                                             PhysicalCard destination,
-                                             float forceAvailable, Float thisDeployCost, Float cheapestBuddyCost,
-                                             String flipGateSiteTitle) {
-        if (game == null || gs == null || playerId == null || destination == null) return null;
+    /** V201 deploy safety is a closed, non-additive result instead of two callers
+     *  independently combining a hard veto and an outvotable scalar. */
+    public enum DeployConstraint {
+        ALLOW,
+        DEFER_UNSUPPORTED_SOLO,
+        HARD_BLOCK,
+        UNKNOWN
+    }
+
+    public record DeployVerdict(DeployConstraint constraint, String reason) {}
+
+    /**
+     * L3/L4 deploy assessment for one exact candidate destination.
+     *
+     * plannedBuddyCost is not "some character in hand." It is supplied only
+     * when the AI deployment plan contains another exact physical character at
+     * this same destination. Movement is deliberately not an exemption because
+     * the current AI has no exact move-mode, cost, and Force-reservation proof.
+     */
+    public static DeployVerdict assessCharacterDeploy(SwccgGame game, GameState gs, String playerId,
+                                                       PhysicalCard cardBeingDeployed,
+                                                       Float deployPower, Float deployAbility,
+                                                       boolean deployIsUndercover,
+                                                       PhysicalCard destination,
+                                                       float forceAvailable, Float thisDeployCost,
+                                                       Float plannedBuddyCost,
+                                                       String flipGateSiteTitle) {
+        if (game == null || gs == null || playerId == null || destination == null) {
+            return new DeployVerdict(DeployConstraint.UNKNOWN, "deploy formation facts incomplete");
+        }
         try {
-            if (deployIsUndercover) return null;  // spies solo by design
+            if (deployIsUndercover) {
+                return new DeployVerdict(DeployConstraint.ALLOW, "undercover deployment is solo by design");
+            }
             if (flipGateSiteTitle != null && destination.getTitle() != null
-                    && flipGateSiteTitle.equalsIgnoreCase(destination.getTitle())) return null;  // V193-class steer
+                    && flipGateSiteTitle.equalsIgnoreCase(destination.getTitle())) {
+                return new DeployVerdict(DeployConstraint.ALLOW, "objective flip-gate deployment");
+            }
+
             float power = deployPower != null ? deployPower : 0f;
             float ability = deployAbility != null ? deployAbility : 0f;
             String opp = gs.getOpponent(playerId);
-            float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(gs, destination, opp, false, false);
-            float ourThere = game.getModifiersQuerying().getTotalPowerAtLocation(gs, destination, playerId, false, false);
-            // V194: ability-zero friendly characters are still physical support.
+            float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                gs, destination, opp, false, false);
+            float ourThere = game.getModifiersQuerying().getTotalPowerAtLocation(
+                gs, destination, playerId, false, false);
             boolean landsSolo = countFriendlyNonUndercoverCharacters(
                 gs.getCardsAtLocation(destination), playerId) == 0;
+
             if (oppPower > 0) {
-                // Contested destination: dominance or a real wave is required for a WEAK body.
                 float oppEff = oppPower + weaponBonusAt(gs, destination, opp);
                 float ourEff = ourThere + power;
-                if (ourEff >= DOMINANCE_MULTIPLE * oppEff) return null;  // Steve's dominance rule
-                if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD) {
-                    return String.format(
-                        "L4 WEAK SOLO INTO CONTESTED: ability %.0f alone into %s (their eff %.0f)",
-                        ability, destination.getTitle(), oppEff);
+                if (ourEff >= DOMINANCE_MULTIPLE * oppEff) {
+                    return new DeployVerdict(DeployConstraint.ALLOW,
+                        "solo-dominance deployment");
                 }
-            } else if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD
-                    && cheapestBuddyCost != null && thisDeployCost != null
-                    && forceAvailable - thisDeployCost < cheapestBuddyCost) {
-                // L3: the buddy exists but deploying THIS body now leaves too little Force to
-                // complete the pair this phase — hold for the turn the pair fits.
-                return String.format(
-                    "L3 PAIR-BUDGET: deploying this ability-%.0f body (cost %.0f) leaves %.0f Force < buddy cost %.0f — pair unformable this phase",
-                    ability, thisDeployCost, forceAvailable - thisDeployCost, cheapestBuddyCost);
+                if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD) {
+                    return new DeployVerdict(DeployConstraint.HARD_BLOCK, String.format(
+                        "L4 WEAK SOLO INTO CONTESTED: ability %.0f alone into %s (their eff %.0f)",
+                        ability, destination.getTitle(), oppEff));
+                }
+                return new DeployVerdict(DeployConstraint.ALLOW,
+                    "contested deployment has formation support");
             }
-        } catch (Exception e) { /* fail-open */ }
-        return null;
-    }
 
-    /** L3 'no plan' check (Steve 2026-07-12): weak solo landing with NO other deployable character
-     *  in hand — not vetoed (may be the only play) but callers apply a heavy penalty. */
-    public static boolean weakSoloNoPlan(SwccgGame game, GameState gs, String playerId,
-                                         Float deployAbility, boolean deployIsUndercover,
-                                         PhysicalCard destination, Float cheapestBuddyCost) {
-        if (game == null || gs == null || playerId == null || destination == null) return false;
-        try {
-            if (deployIsUndercover) return false;
-            float ability = deployAbility != null ? deployAbility : 0f;
-            if (ability >= DESTINY_ABILITY_THRESHOLD) return false;
-            if (cheapestBuddyCost != null) return false;  // a plan exists
-            // V194: ability-zero friendly characters are still physical support.
-            boolean landsSolo = countFriendlyNonUndercoverCharacters(
-                gs.getCardsAtLocation(destination), playerId) == 0;
-            return landsSolo;
-        } catch (Exception e) { return false; }
+            if (!landsSolo || ability >= DESTINY_ABILITY_THRESHOLD) {
+                return new DeployVerdict(DeployConstraint.ALLOW,
+                    "deployment is supported or battle-destiny eligible");
+            }
+
+            if (plannedBuddyCost == null) {
+                String cardName = cardBeingDeployed != null && cardBeingDeployed.getTitle() != null
+                    ? cardBeingDeployed.getTitle() : "weak character";
+                return new DeployVerdict(DeployConstraint.DEFER_UNSUPPORTED_SOLO,
+                    "L3 NO-PLAN SOLO: " + cardName + " would land alone at "
+                        + destination.getTitle() + " with no exact same-destination companion plan");
+            }
+
+            if (thisDeployCost == null) {
+                return new DeployVerdict(DeployConstraint.UNKNOWN,
+                    "planned companion exists but first deploy cost is unknown");
+            }
+            if (forceAvailable - thisDeployCost < plannedBuddyCost) {
+                return new DeployVerdict(DeployConstraint.HARD_BLOCK, String.format(
+                    "L3 PAIR-BUDGET: deploying this ability-%.0f body (cost %.0f) leaves %.0f Force < planned companion cost %.0f",
+                    ability, thisDeployCost, forceAvailable - thisDeployCost, plannedBuddyCost));
+            }
+            return new DeployVerdict(DeployConstraint.ALLOW,
+                "exact same-destination companion remains affordable");
+        } catch (Exception e) {
+            return new DeployVerdict(DeployConstraint.UNKNOWN,
+                "deploy formation assessment failed: " + e.getClass().getSimpleName());
+        }
     }
 }
