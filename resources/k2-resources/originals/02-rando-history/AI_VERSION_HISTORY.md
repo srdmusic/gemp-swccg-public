@@ -1,3 +1,15 @@
+  ════ V198 AI-ONLY BATTLE TARGET AND CARD-FACT CORRECTION (2026-07-15, both bots) ════
+Stock CardActionSelectionDecision already carries the selected battle location's cardId at the same ordinal as each
+action, but BattleEvaluator and V25 ignored it and parsed display text. Generic "Initiate battle" therefore lost target
+identity and allowed V22.4/V25/V61/Formation/V76 facts from another site to influence the candidate. A shared AI-only
+BattleTargetResolver now resolves the aligned stock cardId first, with named text retained only as a legacy fallback.
+V61 uses the selected target's margin when known. Weapon facts now use getPermanentWeapon plus active attachments;
+Vader/Inquisitor/Hatred use stock filters, so disarmed permanent weapons, another character's weapon, IHYN alone,
+arbitrary stacks, and opponent-stacked cards cannot produce their old false positives. All score magnitudes and thresholds
+are unchanged. Focused gate: 11 resolver/weapon/parity tests. Full affected reactor: 898 tests, 0 failures,
+0 errors, 26 skipped; bot streams normalize identically.
+Production changes are AI-only. Revert the single V198 commit. See AI_CHANGELOG 2026-07-15.
+
   ════ V197 AI-ONLY ACTIVATE AMOUNT CORRELATION AND ZERO-CONFIRM LABELS (2026-07-15, both bots) ════
 The activation amount evaluator no longer claims every INTEGER decision. Selecting the exact top-level Activate Force
 action arms one game/player/turn/phase-scoped latch, and only the immediate matching INTEGER consumes it. Drift or an

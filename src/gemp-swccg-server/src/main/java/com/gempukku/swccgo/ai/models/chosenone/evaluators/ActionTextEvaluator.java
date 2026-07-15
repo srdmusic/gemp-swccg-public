@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
 import com.gempukku.swccgo.common.CardCategory;
@@ -4302,60 +4303,58 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
                     if (bOpponentId != null) {
                         try {
-                            // Find which location this battle targets
-                            for (PhysicalCard bLoc : bGs.getTopLocations()) {
+                            PhysicalCard bLoc = BattleTargetResolver.resolve(
+                                    bGs.getTopLocations(), cardId, actionText);
+                            if (bLoc != null) {
                                 String bLocTitle = bLoc.getTitle();
-                                if (bLocTitle != null && actionText.contains(bLocTitle)) {
-                                    float ourPower = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
-                                        bGs, bLoc, bPlayerId, false, false);
-                                    float theirPower = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
-                                        bGs, bLoc, bOpponentId, false, false);
-                                    float ourAbility = battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
-                                        bGs, bPlayerId, bLoc);
-                                    float theirAbility = battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
-                                        bGs, bOpponentId, bLoc);
-                                    float powerDiff = ourPower - theirPower;
-                                    float abilityDiff = ourAbility - theirAbility;
-                                    // Ability matters: each point of ability = roughly 2.5 power via destiny draws
-                                    float effectiveDiff = powerDiff + (abilityDiff * 2.5f);
+                                float ourPower = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
+                                    bGs, bLoc, bPlayerId, false, false);
+                                float theirPower = battleGame.getModifiersQuerying().getTotalPowerAtLocation(
+                                    bGs, bLoc, bOpponentId, false, false);
+                                float ourAbility = battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
+                                    bGs, bPlayerId, bLoc);
+                                float theirAbility = battleGame.getModifiersQuerying().getTotalAbilityAtLocation(
+                                    bGs, bOpponentId, bLoc);
+                                float powerDiff = ourPower - theirPower;
+                                float abilityDiff = ourAbility - theirAbility;
+                                // Ability matters: each point of ability = roughly 2.5 power via destiny draws
+                                float effectiveDiff = powerDiff + (abilityDiff * 2.5f);
 
-                                    logger.warn("V25 BATTLE EVAL at {}: our power={} ability={}, their power={} ability={}, effectiveDiff={}",
-                                        bLocTitle, (int)ourPower, (int)ourAbility, (int)theirPower, (int)theirAbility, (int)effectiveDiff);
+                                logger.warn("V25 BATTLE EVAL at {}: our power={} ability={}, their power={} ability={}, effectiveDiff={}",
+                                    bLocTitle, (int)ourPower, (int)ourAbility, (int)theirPower, (int)theirAbility, (int)effectiveDiff);
 
-                                    if (theirPower <= 0) {
-                                        // No opponent here — can't battle
-                                        action.addReasoning("V25 BATTLE: No opponent at " + bLocTitle, -100.0f);
-                                    } else if (theirPower > ourPower * 2 && theirPower > 6) {
-                                        // Suicidal — hard block
-                                        action.addReasoning(String.format("V25 BATTLE SUICIDE: %.0f vs %.0f at %s — NEVER!",
-                                            ourPower, theirPower, bLocTitle), -500.0f);
-                                    } else if (effectiveDiff >= 8) {
-                                        // Crushing advantage
-                                        action.addReasoning(String.format("V25 BATTLE CRUSH at %s: %.0f vs %.0f — ATTACK!",
-                                            bLocTitle, ourPower, theirPower), 200.0f);
-                                    } else if (effectiveDiff >= 5) {
-                                        // Strong advantage
-                                        action.addReasoning(String.format("V25 BATTLE FAVORABLE at %s: %.0f vs %.0f",
-                                            bLocTitle, ourPower, theirPower), 120.0f);
-                                    } else if (effectiveDiff >= 2) {
-                                        // Marginal advantage
-                                        action.addReasoning(String.format("V25 BATTLE MARGINAL at %s: %.0f vs %.0f",
-                                            bLocTitle, ourPower, theirPower), 60.0f);
-                                    } else if (effectiveDiff >= -2) {
-                                        // Even — slight positive to encourage aggression
-                                        action.addReasoning(String.format("V25 BATTLE EVEN at %s: %.0f vs %.0f — risky but worth trying",
-                                            bLocTitle, ourPower, theirPower), 20.0f);
-                                    } else {
-                                        // Unfavorable
-                                        float penalty = -60.0f;
-                                        if (effectiveDiff < -8) penalty = -120.0f;
-                                        if (effectiveDiff < -15) penalty = -250.0f;
-                                        action.addReasoning(String.format("V25 BATTLE UNFAVORABLE at %s: %.0f vs %.0f — avoid!",
-                                            bLocTitle, ourPower, theirPower), penalty);
-                                    }
-                                    battleScored = true;
-                                    break;
+                                if (theirPower <= 0) {
+                                    // No opponent here — can't battle
+                                    action.addReasoning("V25 BATTLE: No opponent at " + bLocTitle, -100.0f);
+                                } else if (theirPower > ourPower * 2 && theirPower > 6) {
+                                    // Suicidal — hard block
+                                    action.addReasoning(String.format("V25 BATTLE SUICIDE: %.0f vs %.0f at %s — NEVER!",
+                                        ourPower, theirPower, bLocTitle), -500.0f);
+                                } else if (effectiveDiff >= 8) {
+                                    // Crushing advantage
+                                    action.addReasoning(String.format("V25 BATTLE CRUSH at %s: %.0f vs %.0f — ATTACK!",
+                                        bLocTitle, ourPower, theirPower), 200.0f);
+                                } else if (effectiveDiff >= 5) {
+                                    // Strong advantage
+                                    action.addReasoning(String.format("V25 BATTLE FAVORABLE at %s: %.0f vs %.0f",
+                                        bLocTitle, ourPower, theirPower), 120.0f);
+                                } else if (effectiveDiff >= 2) {
+                                    // Marginal advantage
+                                    action.addReasoning(String.format("V25 BATTLE MARGINAL at %s: %.0f vs %.0f",
+                                        bLocTitle, ourPower, theirPower), 60.0f);
+                                } else if (effectiveDiff >= -2) {
+                                    // Even — slight positive to encourage aggression
+                                    action.addReasoning(String.format("V25 BATTLE EVEN at %s: %.0f vs %.0f — risky but worth trying",
+                                        bLocTitle, ourPower, theirPower), 20.0f);
+                                } else {
+                                    // Unfavorable
+                                    float penalty = -60.0f;
+                                    if (effectiveDiff < -8) penalty = -120.0f;
+                                    if (effectiveDiff < -15) penalty = -250.0f;
+                                    action.addReasoning(String.format("V25 BATTLE UNFAVORABLE at %s: %.0f vs %.0f — avoid!",
+                                        bLocTitle, ourPower, theirPower), penalty);
                                 }
+                                battleScored = true;
                             }
                         } catch (Exception e) {
                             logger.warn("V25 BATTLE: Error evaluating battle: {}", e.getMessage());
