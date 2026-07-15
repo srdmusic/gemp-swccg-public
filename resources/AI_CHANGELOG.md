@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-15: V199 AI-ONLY MOVE PHYSICAL-MOVER CONSOLIDATION (both bots)
+- Why: V169 retreat, V156 join-group, and Formation Safety independently recovered a physical mover from the stock blueprint hint. Their three loops treated an earlier off-table copy differently. V156 aborted before finding the live copy, while Formation Safety could hard-veto a destination using the off-table copy's missing origin, undercover state, and weapon state.
+- Consolidation: shared `MovePhysicalCardResolver` now returns the first owned, matching, on-table physical card and its origin in stock permanent-card iteration order. All three MOVE consumers use the same resolution result in both bots.
+- Safety correction: incomplete mover facts now remain unknown and cannot call Formation Safety. This preserves the existing "never veto blind" contract. V156 skips off-table duplicates and can still recognize the real on-table weak solo, restoring its existing join-group and V41-exemption behavior.
+- Boundary math: no MOVE score, threshold, action order, candidate order, Pass/Done behavior, or engine decision parameter changed. The phase only removes inconsistent physical-card lookup and false hard-veto inputs.
+- Engine boundary: all production changes remain under `gemp-swccg-server/.../ai/**`. No game engine, action, decision, card, mediator, serializer, or client source changed.
+- Verification: 10 focused resolver/formation tests and the full affected reactor passed, totaling 902 tests with 0 failures and 0 errors (26 skipped). Rando and Chosen One `CardSelectionEvaluator` streams normalize identically and `git diff --check` is clean.
+- Revert: revert the V199 commit. No non-AI production source is part of the change.
+
 ## 2026-07-15: V198 AI-ONLY BATTLE TARGET AND CARD-FACT CORRECTION (both bots)
 - Why: stock `CardActionSelectionDecision` already supplies one location `cardId` aligned with each battle action, but both battle scorers ignored it and tried to recover the location from display text. Standard `Initiate battle` text has no location name, so V25, V22.4, V76, Formation Safety, and V61 could read another contested site or fall into locationless scoring.
 - Exact target: the shared `BattleTargetResolver` selects a top location by the aligned stock card id first and retains named action text only as a compatibility fallback. Both `BattleEvaluator` and the additive V25 block in `ActionTextEvaluator` use that same target. V61's overpower exception uses the selected target's power margin when known instead of the best margin elsewhere. The existing V76 predictor call now runs on the exact target through its existing single candidate call site.

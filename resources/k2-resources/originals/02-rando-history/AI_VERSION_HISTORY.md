@@ -1,3 +1,13 @@
+  ════ V199 AI-ONLY MOVE PHYSICAL-MOVER CONSOLIDATION (2026-07-15, both bots) ════
+V169 retreat, V156 join-group, and Formation Safety had three different loops for recovering a physical mover from
+the stock blueprint hint. An earlier off-table duplicate could abort V156 or feed Formation Safety missing origin,
+undercover, and weapon facts, allowing a false hard veto. Shared AI-only MovePhysicalCardResolver now returns the
+first owned, matching, on-table physical card plus its origin in existing stock iteration order. All three consumers
+use it in both bots. No scores, thresholds, candidate order, Pass/Done behavior, or engine decision data changed.
+Gate: 10 focused resolver/formation tests; full affected reactor 902 tests, 0 failures, 0 errors, 26 skipped; mirrored
+CardSelectionEvaluator streams normalize identically. Production changes are AI-only. Revert the single V199 commit.
+See AI_CHANGELOG 2026-07-15.
+
   ════ V198 AI-ONLY BATTLE TARGET AND CARD-FACT CORRECTION (2026-07-15, both bots) ════
 Stock CardActionSelectionDecision already carries the selected battle location's cardId at the same ordinal as each
 action, but BattleEvaluator and V25 ignored it and parsed display text. Generic "Initiate battle" therefore lost target

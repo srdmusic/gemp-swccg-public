@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
@@ -5652,19 +5653,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         if (game != null && gameState != null && playerId != null) {
             try {
                 String v169MoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
-                if (v169MoverBp != null) {
-                    for (PhysicalCard v169Pc : gameState.getAllPermanentCards()) {
-                        if (v169Pc == null || !playerId.equals(v169Pc.getOwner())) continue;
-                        if (!v169MoverBp.equals(v169Pc.getBlueprintId(true))) continue;
-                        PhysicalCard v169Loc = v169Pc.getAtLocation();
-                        if (v169Loc == null) continue;
-                        if (v169OppPowerExcessAt(game, gameState, playerId, v169Loc) > 0) {
-                            v169RetreatMode = true;
-                            v169FromTitle = v169Loc.getTitle();
-                            logger.warn("V169 RETREAT MODE: mover '{}' is endangered at {} — safe destinations boosted, V41 gated",
-                                v169Pc.getTitle(), v169FromTitle);
-                        }
-                        break;
+                MovePhysicalCardResolver.ResolvedMover v169Mover =
+                    MovePhysicalCardResolver.resolveOnTable(
+                        gameState.getAllPermanentCards(), playerId, v169MoverBp);
+                if (v169Mover != null) {
+                    PhysicalCard v169Pc = v169Mover.card();
+                    PhysicalCard v169Loc = v169Mover.origin();
+                    if (v169OppPowerExcessAt(game, gameState, playerId, v169Loc) > 0) {
+                        v169RetreatMode = true;
+                        v169FromTitle = v169Loc.getTitle();
+                        logger.warn("V169 RETREAT MODE: mover '{}' is endangered at {} — safe destinations boosted, V41 gated",
+                            v169Pc.getTitle(), v169FromTitle);
                     }
                 }
             } catch (Exception e) { logger.debug("V169 retreat-mode error: {}", e.getMessage()); }
@@ -5690,18 +5689,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         if (game != null && gameState != null && playerId != null) {
             try {
                 String v156MoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
-                if (v156MoverBp != null) {
-                    for (PhysicalCard v156Pc : gameState.getAllPermanentCards()) {
-                        if (v156Pc == null || !playerId.equals(v156Pc.getOwner())) continue;
-                        if (!v156MoverBp.equals(v156Pc.getBlueprintId(true))) continue;
-                        if (v156Pc.getBlueprint() == null
-                            || v156Pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) break;
-                        if (v156Pc.isUndercover()) break;  // V170 parked spies sit
-                        Float v156Ab = v156Pc.getBlueprint().hasAbilityAttribute()
-                            ? v156Pc.getBlueprint().getAbility() : null;
-                        if (v156Ab == null || v156Ab >= 4f) break;  // weak band only
-                        PhysicalCard v156Loc = v156Pc.getAtLocation();
-                        if (v156Loc == null) break;
+                MovePhysicalCardResolver.ResolvedMover v156Mover =
+                    MovePhysicalCardResolver.resolveOnTable(
+                        gameState.getAllPermanentCards(), playerId, v156MoverBp);
+                if (v156Mover != null) {
+                    PhysicalCard v156Pc = v156Mover.card();
+                    PhysicalCard v156Loc = v156Mover.origin();
+                    SwccgCardBlueprint v156Bp = v156Pc.getBlueprint();
+                    Float v156Ab = v156Bp != null
+                        && v156Bp.getCardCategory() == CardCategory.CHARACTER
+                        && !v156Pc.isUndercover()
+                        && v156Bp.hasAbilityAttribute()
+                            ? v156Bp.getAbility() : null;
+                    if (v156Ab != null && v156Ab < 4f) {
                         boolean v156Alone = true;
                         for (PhysicalCard c : gameState.getCardsAtLocation(v156Loc)) {
                             if (c == null || c == v156Pc || !playerId.equals(c.getOwner())) continue;
@@ -5730,28 +5730,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             logger.warn("V156 JOIN-GROUP MODE: mover '{}' (ability {}) is a weak solo at {} — friendly-stack destinations boosted, V41 gated",
                                 v156Pc.getTitle(), (int) v156Ab.floatValue(), v156FromTitle);
                         }
-                        break;
                     }
                 }
             } catch (Exception e) { logger.debug("V156 join-mode error: {}", e.getMessage()); }
         }
 
         // FORMATION SAFETY (2026-07-11c): resolve the ACTUAL mover once for L1/L4 vetoes below.
-        // Same extraction the V169/V156 modes use; null mover => partial info => no vetoes (council
-        // rule: never veto blind).
+        // Same extraction the V169/V156 modes use; null mover/origin => partial info => no vetoes
+        // (council rule: never veto blind).
         PhysicalCard fsMover = null;
         PhysicalCard fsOrigin = null;
         if (game != null && gameState != null && playerId != null) {
             try {
                 String fsMoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
-                if (fsMoverBp != null) {
-                    for (PhysicalCard fsPc : gameState.getAllPermanentCards()) {
-                        if (fsPc == null || !playerId.equals(fsPc.getOwner())) continue;
-                        if (!fsMoverBp.equals(fsPc.getBlueprintId(true))) continue;
-                        fsMover = fsPc;
-                        fsOrigin = fsPc.getAtLocation();
-                        break;
-                    }
+                MovePhysicalCardResolver.ResolvedMover fsResolved =
+                    MovePhysicalCardResolver.resolveOnTable(
+                        gameState.getAllPermanentCards(), playerId, fsMoverBp);
+                if (fsResolved != null) {
+                    fsMover = fsResolved.card();
+                    fsOrigin = fsResolved.origin();
                 }
             } catch (Exception e) { /* partial info — no veto */ }
         }
@@ -5773,7 +5770,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                         // FORMATION SAFETY (2026-07-11c): L4 solo-charge + L1 abandon-solo vetoes —
                         // un-outvotable (Codex audit: V32 -300 + V22.2 -120 lost to R2 +6000 here).
-                        if (fsMover != null && game != null) {
+                        if (fsMover != null && fsOrigin != null && game != null) {
                             String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
                                 .vetoMoveDestination(game, gameState, playerId, fsMover, location);
                             if (fsV == null && fsOrigin != null
