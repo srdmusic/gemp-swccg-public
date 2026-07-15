@@ -1,3 +1,14 @@
+  ════ V200 AI-ONLY OBJECTIVE FRONT/BACK NORMALIZATION (2026-07-15, both bots) ════
+ObjectiveAnalyzer previously analyzed whichever blueprint side was currently face up and searched that text for a
+literal [Back Side] marker that no objective blueprint contains. Shared AI-only ObjectiveSideBlueprints now derives
+stable front/back identity from the stock getBlueprint, getOtherSideBlueprint, and isFlipped APIs. Both bots always
+use the front title/text and send the real back text through the existing flip-back parser. Single-sided cards keep
+front analysis. No score or threshold changed, but real back-side classification can now select existing protection,
+deploy, and move branches; the boundary audit recorded a theoretical +1080 deploy swing and the already-existing
+V47 -100000 veto when its survivability and location gates pass. Gate: 6 focused tests plus the full affected reactor,
+908 tests, 0 failures, 0 errors, 26 skipped. Production changes are AI-only. Revert the single V200 commit.
+See AI_CHANGELOG 2026-07-15.
+
   ════ V199 AI-ONLY MOVE PHYSICAL-MOVER CONSOLIDATION (2026-07-15, both bots) ════
 V169 retreat, V156 join-group, and Formation Safety had three different loops for recovering a physical mover from
 the stock blueprint hint. An earlier off-table duplicate could abort V156 or feed Formation Safety missing origin,

@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.rando.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.ObjectiveSideBlueprints;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Side;
@@ -182,11 +183,12 @@ public class ObjectiveAnalyzer {
                 return;
             }
 
-            SwccgCardBlueprint blueprint = objectiveCard.getBlueprint();
-            if (blueprint == null) return;
+            ObjectiveSideBlueprints sides = ObjectiveSideBlueprints.resolve(objectiveCard);
+            if (sides == null) return;
 
-            String title = objectiveCard.getTitle();
-            String gameText = blueprint.getGameText();
+            String title = sides.front().getTitle();
+            String gameText = sides.front().getGameText();
+            String backGameText = sides.back() != null ? sides.back().getGameText() : null;
 
             if (gameText == null || gameText.isEmpty()) {
                 LOG.warn("[ObjectiveAnalyzer] Objective '{}' has no game text", title);
@@ -236,7 +238,7 @@ public class ObjectiveAnalyzer {
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Analyzing objective: '{}'", title);
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Game text: {}", gameText);
 
-            parseGameText(gameText);
+            parseGameText(gameText, backGameText);
             // ObjectivePlaybook JSON hydration (2026-07-08): pull scoring-slot data from the single
             // runtime source (objective_playbooks.json) for the active objective. ADDITIVE + idempotent
             // — runs AFTER the text parser / hardcoded blocks, so where both fill a slot the values are
@@ -1253,7 +1255,7 @@ public class ObjectiveAnalyzer {
         }
     }
 
-    private void parseGameText(String gameText) {
+    private void parseGameText(String gameText, String backGameText) {
         flipConditionLocations.clear();
         flipConditionLocationFragments.clear();
         requiredCardsOnTable.clear();
@@ -1270,7 +1272,7 @@ public class ObjectiveAnalyzer {
         parseFlipCondition(gameText);
         parsePullableCards(gameText);
         parseLocationReferences(gameText);
-        parseBackSideText(gameText);
+        parseBackSideText(backGameText);
     }
 
     /**
@@ -1639,7 +1641,6 @@ public class ObjectiveAnalyzer {
 
     /**
      * V22.2: Parse the back side of the objective card to understand flip-back conditions.
-     * SWCCG objectives have two sides separated by "[Back Side]" or "\\[Back Side]" in game text.
      * The back side tells us what conditions would cause the objective to flip BACK —
      * which means we lose our advantage. We need to prevent that.
      *
@@ -1648,25 +1649,12 @@ public class ObjectiveAnalyzer {
      *   "Flip this card if you do not occupy [locations]"
      *   "Place out of play if [condition]"
      */
-    private void parseBackSideText(String gameText) {
-        if (gameText == null) return;
-
-        // Find the back side text
-        String backText = null;
-        int backIdx = gameText.indexOf("[Back Side]");
-        if (backIdx >= 0) {
-            backText = gameText.substring(backIdx + "[Back Side]".length()).trim();
-        } else {
-            backIdx = gameText.indexOf("\\[Back Side]");
-            if (backIdx >= 0) {
-                backText = gameText.substring(backIdx + "\\[Back Side]".length()).trim();
-            }
-        }
-
-        if (backText == null || backText.isEmpty()) {
-            LOG.warn("[ObjectiveAnalyzer] No [Back Side] text found — single-sided objective?");
+    private void parseBackSideText(String backGameText) {
+        if (backGameText == null || backGameText.trim().isEmpty()) {
+            LOG.debug("[ObjectiveAnalyzer] No back-side game text available");
             return;
         }
+        String backText = backGameText.trim();
 
         LOG.warn("\uD83D\uDEE1 [ObjectiveAnalyzer] Back side text: {}", backText);
 

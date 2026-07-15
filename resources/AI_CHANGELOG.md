@@ -4,6 +4,14 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-15: V200 AI-ONLY OBJECTIVE FRONT/BACK NORMALIZATION (both bots)
+- Why: `ObjectiveAnalyzer` read only the physical card's current blueprint. Once an objective flipped, the analyzer could treat the back title and text as the front. Its back-side parser searched the current game text for a literal `[Back Side]` marker that appears in zero objective blueprints, so real flip-back text was never parsed.
+- Stable sides: shared `ObjectiveSideBlueprints` derives front and back from the stock `getBlueprint()`, `getOtherSideBlueprint()`, and `isFlipped()` APIs. Both bots always analyze the front title/text and pass the real back game text to the existing flip-back parser. Single-sided cards retain front analysis and an absent current blueprint still fails closed.
+- Boundary math: no score, threshold, candidate order, Pass/Done behavior, or parser magnitude changed. Correct back-side classification can now select existing rules that were previously fed front-side fallback locations. Audited per-candidate deltas range from `+200` objective protection to a theoretical `+1080` deploy branch swing; the existing V47 Lando-stay `-100000` veto can now arm when its stock survivability and location gates both pass. These are existing rule values, newly supplied with the intended back-side location facts.
+- Engine boundary: every production edit is under `gemp-swccg-server/.../ai/**`. No game engine, blueprint, card, action, decision, mediator, serializer, or client source changed.
+- Verification: 6 focused side-resolution/parser tests and the full affected reactor passed, totaling 908 tests with 0 failures and 0 errors (26 skipped). Rando and Chosen One analyzer streams normalize identically and `git diff --check` is clean.
+- Revert: revert the V200 commit. No non-AI production source is part of the change.
+
 ## 2026-07-15: V199 AI-ONLY MOVE PHYSICAL-MOVER CONSOLIDATION (both bots)
 - Why: V169 retreat, V156 join-group, and Formation Safety independently recovered a physical mover from the stock blueprint hint. Their three loops treated an earlier off-table copy differently. V156 aborted before finding the live copy, while Formation Safety could hard-veto a destination using the off-table copy's missing origin, undercover state, and weapon state.
 - Consolidation: shared `MovePhysicalCardResolver` now returns the first owned, matching, on-table physical card and its origin in stock permanent-card iteration order. All three MOVE consumers use the same resolution result in both bots.
