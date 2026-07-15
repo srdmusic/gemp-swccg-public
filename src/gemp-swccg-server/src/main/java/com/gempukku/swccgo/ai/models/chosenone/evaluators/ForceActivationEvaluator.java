@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.phase.ActivateAmountPolicy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
 
@@ -170,58 +171,24 @@ public class ForceActivationEvaluator extends ActionEvaluator {
      * don't artificially hobble ourselves on the way there.
      */
     private int calculateActivationAmount(DecisionContext context, int maxAvailable) {
-        int currentForce = context.getForcePileSize();
         int reserveDeck = context.getReserveDeckSize();
         int lifeForce = context.getLifeForce();
-        int handSize = context.getHandSize();
+        boolean battlePlausible = context.isBattlePlausibleThisTurn();
+        ActivateAmountPolicy.Result result = ActivateAmountPolicy.assess(
+            new ActivateAmountPolicy.Input(
+                context.getMin(), maxAvailable, reserveDeck, lifeForce, battlePlausible));
 
-        // V67at (Steve, 2026-05-08, REVISED): END-GAME FORCE PRESERVATION.
-        //
-        // Steve's refined spec: 'He needs to save at bare minimum 2 force
-        // during activation in reserve if reserve, used and force pile total
-        // 10 or less.'
-        //
-        // Trigger: total life force (reserve + used + force pile) ≤ 10.
-        // Action: activate at most maxAvailable - 2 (save 2 from the
-        // generation). V43 minimum 1 still applies elsewhere — never zero.
-        //
-        // V57 ACTIVATE FULL preserved as default for early/mid-game when
-        // life force > 10.
-        // V61c (Steve, 2026-06-29 REVISED): ALWAYS keep 3 cards in the Reserve Deck for battle
-        // destiny + weapon destiny this turn. Force-pile condition removed per Steve — keep 3 for
-        // ANY battle. Cap activation so the Reserve Deck never drops below 3. (Engine requires >=1,
-        // so once the reserve is already <=3 we activate the minimum 1 — can't both keep 3 and
-        // activate when only 3 remain.) The earlier force-pile-gated version almost never fired
-        // (Rando draws its force to hand, so the pile rarely reached the trigger), so the reserve
-        // still drained to 0 and V61 blocked battles. This guarantees the destiny buffer.
-        // V61c UPDATED 2026-07-06: battle-intent bypass — the keep-3 cap now applies ONLY on turns
-        // a battle is plausible (any contested location, per the shared predicate
-        // DecisionContext.isBattlePlausibleThisTurn(), same scan V61b uses). Zero contested
-        // locations => Rando deploys and ends turn without battling => activate ALL. The SAME
-        // predicate gates the ActionTextEvaluator V168 + V38.3 carve-outs so all three sites agree.
-        // V61c pre-2026-07-06 (always-on buffer):
-        // int amount = Math.max(1, Math.min(maxAvailable, reserveDeck - 3));
-        int amount;
-        if (context.isBattlePlausibleThisTurn()) {
-            amount = Math.max(1, Math.min(maxAvailable, reserveDeck - 3));
-        } else {
-            amount = maxAvailable;
-            if (reserveDeck - 3 < maxAvailable) {
-                logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
-            }
+        if (!battlePlausible && reserveDeck - 3 < maxAvailable) {
+            logger.warn("V61c BATTLE-INTENT: no contested location, activating full");
         }
-        String mode = (amount < maxAvailable)
-            ? "V61c DESTINY BUFFER (keep 3 in reserve)" : "V57 ACTIVATE FULL";
-
-        if (lifeForce <= 10) {
-            // V67at end-game: ALSO save 2 Force from the generation — take the more conservative.
-            int v67at = Math.max(1, maxAvailable - 2);
-            if (v67at < amount) { amount = v67at; mode = "V67at END-GAME RESERVE-2 (lifeForce <= 10)"; }
-        }
-
+        String mode = switch (result.mode()) {
+            case ACTIVATE_FULL -> "V57 ACTIVATE FULL";
+            case KEEP_THREE_FOR_BATTLE -> "V61c DESTINY BUFFER (keep 3 in reserve)";
+            case KEEP_TWO_AT_LOW_LIFE -> "V67at END-GAME RESERVE-2 (lifeForce <= 10)";
+        };
         logger.warn("{}: activating {} of {} (reserve={}, forcePile={}, hand={}, lifeForce={})",
-            mode, amount, maxAvailable, reserveDeck, currentForce, handSize, lifeForce);
-
-        return amount;
+            mode, result.amount(), maxAvailable, reserveDeck, context.getForcePileSize(),
+            context.getHandSize(), lifeForce);
+        return result.amount();
     }
 }

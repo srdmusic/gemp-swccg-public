@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-15: V195 AI-ONLY ACTIVATE AND CONTROL CONSOLIDATION (both bots)
+- Why: the engine-metadata rollback correctly removed the typed ACTIVATE and CONTROL owner, but it also restored two large mirrored copies of the same amount and drain calculations. Keeping those copies made later fixes vulnerable to Rando and Chosen One drift.
+- ACTIVATE: `ActivateAmountPolicy` is now the shared pure owner of the existing V57 full-activation, V61c keep-three, V67at low-life keep-two, V43 minimum, and legal min/max clamp arithmetic. Both `ForceActivationEvaluator` classes delegate to it. Universal legacy INTEGER routing remains unchanged.
+- CONTROL: `ControlDrainAssessment` now owns the existing ordered score operations over immutable records supplied lazily by `ControlDrainFacts`. Both `ActionTextEvaluator` classes delegate to the same V24.15, V189, V25, Battle Order, V140, V104, V52, V48, multi-drain, and Hunt Down calculation.
+- Engine boundary: production changes remain entirely under `gemp-swccg-server/.../ai/**`. No decision metadata, origin stamp, wire DTO, mediator callback, card action, game logic, or client code is restored. The historical typed ACTIVATE and CONTROL entry below is not the current runtime architecture.
+- Boundary math: score magnitudes, terminal exits, fact-query order, candidate order, and response wires are unchanged. V195 removes 884 duplicated evaluator lines and replaces them with shared AI-only policy calls.
+- Verification: 17 focused policy tests and the full affected reactor passed, totaling 876 tests with 0 failures and 0 errors (26 skipped). Rando and Chosen One evaluator streams normalize identically, `git diff --check` is clean, and the affected reactor package succeeded.
+- Revert: revert the V195 commit. No non-AI production source is part of the change.
+
 ## 2026-07-14: V194 AI-ONLY RECOVERY AFTER ENGINE METADATA ROLLBACK (both bots)
 - Why: the typed phase cutovers stored AI routing metadata in engine decision parameters. Those parameters are also rendered as player choices, which exposed internal values in prompts such as Jyn Erso's undercover Yes/No decision. Steve set the permanent boundary: normal GEMP engine, card, logic, mediator, and client code must remain unchanged.
 - Engine boundary: V194 changes production code only under `gemp-swccg-server/.../ai/**`. It does not restore `DecisionOrigin`, `DecisionActionSemantic`, phase wire DTOs, mediator callbacks, card actions, decisions, or client rendering. The typed owner entries below remain historical and are not the current runtime architecture.

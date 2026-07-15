@@ -1,3 +1,15 @@
+  ════ V195 AI-ONLY ACTIVATE AND CONTROL CONSOLIDATION (2026-07-15, both bots) ════
+After the engine-metadata rollback, Rando and Chosen One again carried mirrored copies of ACTIVATE amount arithmetic
+and CONTROL drain scoring. V195 keeps the normal engine boundary and consolidates only those calculations inside the
+AI package. ActivateAmountPolicy owns the unchanged V57, V61c, V67at, V43, and bounds arithmetic.
+ControlDrainAssessment plus lazy ControlDrainFacts own the unchanged V24.15, V189, V25, Battle Order, V140, V104,
+V52, V48, multi-drain, and Hunt Down operation order. Both bots delegate to the same implementations. Universal
+legacy INTEGER routing, response wires, score magnitudes, terminal exits, candidate order, and fact-query order are
+unchanged. No origin stamp, wire DTO, mediator callback, card action, game logic, or client source is restored. The
+historical typed ACTIVATE and CONTROL owner below remains retired. Gate: 17 focused tests plus the full affected
+reactor totaled 876 tests with 0 failures and 0 errors (26 skipped); mirrored evaluator streams normalize exactly,
+the affected reactor packages, and diff check is clean. Revert the single V195 commit. See AI_CHANGELOG 2026-07-15.
+
   ════ V194 AI-ONLY RECOVERY AFTER ENGINE METADATA ROLLBACK (2026-07-14, both bots) ════
 Steve's permanent boundary keeps the normal GEMP engine, card scripts, logic, mediator, and client unchanged. The
 typed phase-owner work below remains historical because its engine decision metadata caused internal AI routing values
