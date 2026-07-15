@@ -178,7 +178,7 @@ public class CombinedEvaluator {
         boolean opened = TraceSession.open(getClass().getPackageName(),
             context.getDecisionId(), context.getDecisionType(), context.getDecisionText(),
             TraceSnapshots.rawCandidateIds(context.getDecisionType(),
-                context.getActionIds(), context.getCardIds(), null),
+                context.getActionIds(), context.getCardIds(), context.getActionTexts()),
             snapshot.snapshot(), snapshot.issues(), false);
         if (opened) {
             TraceSession.recordRoute(TraceRoute.COMBINED_EVALUATOR,

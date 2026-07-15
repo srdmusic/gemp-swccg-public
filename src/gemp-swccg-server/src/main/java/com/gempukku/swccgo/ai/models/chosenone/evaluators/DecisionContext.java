@@ -55,6 +55,7 @@ public class DecisionContext {
     private boolean noPass = true;  // Can we pass/cancel?
     private int min = 0;  // Minimum selection required
     private int max = 1;  // Maximum selection allowed
+    private boolean activationAmountDecision;
 
     // Additional context
     private Map<String, Object> extra = new HashMap<>();
@@ -241,6 +242,14 @@ public class DecisionContext {
 
     public void setMax(int max) {
         this.max = max;
+    }
+
+    public boolean isActivationAmountDecision() {
+        return activationAmountDecision;
+    }
+
+    public void setActivationAmountDecision(boolean activationAmountDecision) {
+        this.activationAmountDecision = activationAmountDecision;
     }
 
     public Map<String, Object> getExtra() {

@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.ActivateAmountPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
 
@@ -45,15 +46,15 @@ public class ForceActivationEvaluator extends ActionEvaluator {
 
     @Override
     public boolean canEvaluate(DecisionContext context) {
-        // Handle all INTEGER decisions - force activation is the most common
-        return "INTEGER".equals(context.getDecisionType());
+        return "INTEGER".equals(context.getDecisionType())
+            && (context.isActivationAmountDecision()
+                || ActivateDecisionRouting.isOpponentAllowancePrompt(context.getDecisionText()));
     }
 
     @Override
     public List<EvaluatedAction> evaluate(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
         GameState gameState = context.getGameState();
-        String textLower = context.getDecisionText().toLowerCase();
 
         // Parse min/max from context
         int minVal = context.getMin();
@@ -69,7 +70,7 @@ public class ForceActivationEvaluator extends ActionEvaluator {
         // Per Steve (2026-05-25): keep peer-priority with self-activate. Allowing
         // opponent to activate force is NORMAL play (standard SWCCG rule), not a
         // last-resort. V132 (which had dropped this to 10) reverted.
-        if (textLower.contains("allow opponent to activate") || textLower.contains("opponent to activate")) {
+        if (ActivateDecisionRouting.isOpponentAllowancePrompt(context.getDecisionText())) {
             EvaluatedAction action = new EvaluatedAction(
                 String.valueOf(maxVal),
                 ActionType.ACTIVATE_FORCE,

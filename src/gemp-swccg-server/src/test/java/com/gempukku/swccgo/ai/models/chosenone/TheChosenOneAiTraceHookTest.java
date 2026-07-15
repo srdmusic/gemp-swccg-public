@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.chosenone;
 
+import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCorrection;
@@ -95,9 +96,15 @@ public class TheChosenOneAiTraceHookTest {
      *  subclass is the minimum stand-in. */
     private static class StubGameState extends GameState {
         private final int turn;
+        private final Phase phase;
 
         StubGameState(int turn) {
+            this(turn, Phase.DEPLOY);
+        }
+
+        StubGameState(int turn, Phase phase) {
             this.turn = turn;
+            this.phase = phase;
         }
 
         @Override
@@ -117,7 +124,7 @@ public class TheChosenOneAiTraceHookTest {
 
         @Override
         public Phase getCurrentPhase() {
-            return Phase.DEPLOY;
+            return phase;
         }
 
         @Override
@@ -1040,11 +1047,8 @@ public class TheChosenOneAiTraceHookTest {
     // TRACE 4A2b (packet "Primary evaluator route" fixture, m00447/m00451): a REAL
     // decide() whose selected route IS the evaluator lane produces ZERO
     // HEURISTIC_SHARED events because super.decide(...) was never called. The
-    // deterministic carrier is an INTEGER decision: ForceActivationEvaluator handles
-    // every INTEGER and always emits an action (a CARD_ACTION_CHOICE was tried first
-    // and empirically fell back). The route is asserted from the trace before relying
-    // on it; the V45 fixture above covers the direct-interceptor (non-super) routes
-    // but is NOT this proof.
+    // deterministic carrier is the exact opponent-allowance INTEGER decision. Generic
+    // INTEGER decisions are deliberately left to the inherited heuristic route.
     // =========================================================================
 
     @Test
@@ -1057,7 +1061,7 @@ public class TheChosenOneAiTraceHookTest {
         TheChosenOneAi untraced = new TheChosenOneAi();
         String untracedResult = untraced.decide("tester",
             decision(91, AwaitingDecisionType.INTEGER,
-                "Choose amount to activate", params),
+                ActivateDecisionRouting.OPPONENT_ALLOWANCE_PROMPT, params),
             new StubGameState(1));
         assertFalse(TraceSession.isActive());
 
@@ -1066,7 +1070,7 @@ public class TheChosenOneAiTraceHookTest {
         traced.setDecisionTraceSinkForTesting(sink);
         String tracedResult = traced.decide("tester",
             decision(91, AwaitingDecisionType.INTEGER,
-                "Choose amount to activate", params),
+                ActivateDecisionRouting.OPPONENT_ALLOWANCE_PROMPT, params),
             new StubGameState(1));
         assertFalse(TraceSession.isActive());
         assertEquals(untracedResult, tracedResult);
@@ -1088,6 +1092,43 @@ public class TheChosenOneAiTraceHookTest {
             }
         }
         assertTrue("the outer tracker must still record on the evaluator lane", outerRecordSeen);
+    }
+
+    @Test
+    public void activateAmountRoutingIsOneShotAndZeroConfirmUsesResultOrdinals() {
+        TheChosenOneAi ai = new TheChosenOneAi();
+        TraceTestSupport.CaptureSink sink = new TraceTestSupport.CaptureSink();
+        ai.setDecisionTraceSinkForTesting(sink);
+        StubGameState state = new StubGameState(3, Phase.ACTIVATE);
+
+        Map<String, String[]> actions = new HashMap<>();
+        actions.put("actionId", new String[]{"pass", "activate"});
+        actions.put("actionText", new String[]{"Pass", "Activate Force"});
+        assertEquals("activate", ai.decide("tester",
+            decision(92, AwaitingDecisionType.CARD_ACTION_CHOICE,
+                "Choose an action", actions), state));
+
+        Map<String, String[]> amount = new HashMap<>();
+        amount.put("min", new String[]{"0"});
+        amount.put("max", new String[]{"3"});
+        ai.decide("tester", decision(93, AwaitingDecisionType.INTEGER,
+            "Choose amount of Force to activate", amount), state);
+        assertEquals("3", ai.decide("tester", decision(94, AwaitingDecisionType.INTEGER,
+            "Choose how many cards to draw", amount), state));
+
+        Map<String, String[]> confirm = new HashMap<>();
+        confirm.put("results", new String[]{"Yes", "No"});
+        assertEquals("1", ai.decide("tester",
+            decision(95, AwaitingDecisionType.MULTIPLE_CHOICE,
+                ActivateDecisionRouting.ZERO_CONFIRMATION_PROMPT, confirm), state));
+
+        List<DecisionTrace> traces = sink.getTraces();
+        assertEquals(4, traces.size());
+        assertEquals(TraceRoute.COMBINED_EVALUATOR, traces.get(0).getRoute().selected());
+        assertEquals(TraceRoute.COMBINED_EVALUATOR, traces.get(1).getRoute().selected());
+        assertEquals(TraceRoute.HEURISTIC_FALLBACK, traces.get(2).getRoute().selected());
+        assertEquals(TraceRoute.COMBINED_EVALUATOR, traces.get(3).getRoute().selected());
+        assertEquals(List.of("0", "1"), traces.get(3).getRawCandidateOrder());
     }
 
     // =========================================================================

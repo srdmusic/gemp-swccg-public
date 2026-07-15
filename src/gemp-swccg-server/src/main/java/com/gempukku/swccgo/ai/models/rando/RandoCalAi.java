@@ -15,6 +15,7 @@ import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
+import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -102,6 +103,8 @@ public class RandoCalAi extends HeuristicAiBase {
     // Game context (rebuilt each decision)
     private RandoContext context;
     private SwccgGame currentGame;
+    private final ActivateDecisionRouting.AmountLatch activationAmountLatch =
+        new ActivateDecisionRouting.AmountLatch();
     private Random random = new Random();
 
     // State tracking
@@ -535,6 +538,10 @@ public class RandoCalAi extends HeuristicAiBase {
         String decisionType = decision.getDecisionType() != null ? decision.getDecisionType().name() : "UNKNOWN";
         String decisionText = decision.getText() != null ? decision.getText() : "";
         Phase phase = gameState != null ? gameState.getCurrentPhase() : null;
+        int activationTurn = gameState != null
+            ? gameState.getPlayersLatestTurnNumber(playerId) : 0;
+        boolean activationAmountDecision = activationAmountLatch.consume(
+            gameState, playerId, activationTurn, phase, decisionType);
 
         LOG.info("[RandoCalAi] decide() called: type={}, phase={}, text='{}'",
             decisionType, phase,
@@ -970,7 +977,8 @@ public class RandoCalAi extends HeuristicAiBase {
                 result = super.decide(playerId, decision, gameState);
             } else {
                 // Try evaluator system for supported decision types
-                String evaluatorResult = tryEvaluators(playerId, decision, gameState);
+                String evaluatorResult = tryEvaluators(
+                    playerId, decision, gameState, activationAmountDecision);
                 if (evaluatorResult != null) {
                     // TRACE ORACLE V2: normal CombinedEvaluator route.
                     if (traceOpened) {
@@ -1044,6 +1052,15 @@ public class RandoCalAi extends HeuristicAiBase {
                 LOG.warn("🚨 Response corrected: {}", validated[1]);
             }
             result = validated[0];
+
+            if (ActivateDecisionRouting.selectedTopLevelActivate(
+                    phase, decisionType,
+                    params != null ? params.get("actionId") : null,
+                    params != null ? params.get("actionText") : null,
+                    result)) {
+                activationAmountLatch.arm(
+                    gameState, playerId, activationTurn, phase);
+            }
 
             // Record the decision for loop tracking
             // TRACE 4A1 (m00372 Option A, accepted m00373; matrix correction): the
@@ -1246,9 +1263,11 @@ public class RandoCalAi extends HeuristicAiBase {
      *
      * @return result from evaluator, or null if evaluators don't handle this decision
      */
-    private String tryEvaluators(String playerId, AwaitingDecision decision, GameState gameState) {
+    private String tryEvaluators(String playerId, AwaitingDecision decision, GameState gameState,
+                                 boolean activationAmountDecision) {
         // Build DecisionContext for evaluators
-        DecisionContext evalContext = buildEvaluatorContext(playerId, decision, gameState);
+        DecisionContext evalContext = buildEvaluatorContext(
+            playerId, decision, gameState, activationAmountDecision);
         if (evalContext == null) {
             return null;
         }
@@ -1330,7 +1349,9 @@ public class RandoCalAi extends HeuristicAiBase {
     /**
      * Build a DecisionContext for evaluators from AwaitingDecision.
      */
-    private DecisionContext buildEvaluatorContext(String playerId, AwaitingDecision decision, GameState gameState) {
+    private DecisionContext buildEvaluatorContext(String playerId, AwaitingDecision decision,
+                                                  GameState gameState,
+                                                  boolean activationAmountDecision) {
         if (decision == null) {
             return null;
         }
@@ -1349,6 +1370,7 @@ public class RandoCalAi extends HeuristicAiBase {
             String.valueOf(decision.getAwaitingDecisionId()),
             phase
         );
+        evalContext.setActivationAmountDecision(activationAmountDecision);
 
         // Parse parameters from decision
         Map<String, String[]> params = decision.getDecisionParameters();
@@ -1490,6 +1512,14 @@ public class RandoCalAi extends HeuristicAiBase {
                     }
                 }
             }
+
+            ActivateDecisionRouting.ChoiceLabels zeroConfirmation =
+                ActivateDecisionRouting.zeroConfirmationChoices(
+                    decisionType.name(), decision.getText(), params.get("results"));
+            if (zeroConfirmation.isPresent()) {
+                evalContext.setActionIds(zeroConfirmation.actionIds());
+                evalContext.setActionTexts(zeroConfirmation.actionTexts());
+            }
         }
 
         // Set blocked responses for loop prevention
@@ -1574,6 +1604,7 @@ public class RandoCalAi extends HeuristicAiBase {
     public void setCurrentGame(SwccgGame game) {
         // V194: game-scoped planning facts must not survive a rematch.
         if (this.currentGame != game) {
+            activationAmountLatch.reset();
             objectiveHandler.reset();
             objectiveAnalyzer.reset();
             deployPhasePlanner.reset();

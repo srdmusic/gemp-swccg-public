@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-15: V197 AI-ONLY ACTIVATE AMOUNT CORRELATION AND ZERO-CONFIRM LABELS (both bots)
+- Why: the legacy `ForceActivationEvaluator` claimed every `INTEGER` decision. Card effects and unrelated value prompts could therefore receive Force-activation arithmetic merely because they used the same wire shape. The zero-activation confirmation also reached V38.3/V61c without its `results` labels mapped to candidate ordinals.
+- Amount ownership: selecting the exact top-level `Activate Force` action arms a game/player/turn/phase-scoped one-shot latch. Only the immediate matching `INTEGER` decision consumes it. A different decision, game, player, turn, or phase clears the latch and fails closed. Unrelated integers continue through the inherited heuristic value route.
+- Compatibility routes: the unchanged engine's exact opponent-allowance prompt remains directly recognized. The exact zero-activation confirmation maps its one `Yes` and one `No` label to real ordinal action ids, so V38.3 and V61c remain label-order independent. Ambiguous or unrelated multiple-choice prompts are not claimed.
+- Trace boundary: seam-owned multiple-choice traces now derive ordinal candidate order from the same mapped result labels. No response parameter, decision metadata, serializer, mediator, card, logic, or client source changes are included.
+- Boundary math: V57, V61c, V67at, V43, V38.3, and all amount-policy score magnitudes are unchanged. V197 changes decision ownership and label identity only.
+- Verification: 39 focused policy, parity, trace, one-shot, fallback, and reordered-label tests passed. The full affected reactor passed 891 tests with 0 failures and 0 errors (26 skipped). Rando and Chosen One changed streams normalize identically and `git diff --check` is clean.
+- Revert: revert the V197 commit. No production source outside `gemp-swccg-server/.../ai/**` is part of the change.
+
 ## 2026-07-15: V196 AI-ONLY DEPLOY PHYSICAL IDENTITY AND COPY ISOLATION (both bots)
 - Why: deployment plans identified cards only by blueprint. Two physical copies of the same blueprint could therefore share the first instruction, target, cleanup, and deployment count. Evaluator-only stale-plan flags could also mutate the accepted planner state while merely scoring a decision.
 - Physical identity: every planner-created instruction now records permanent and current card ids. Plan lookup, action matching, hand-departure reconciliation, per-card scoring, and deployment recording use that exact pair. Removing one deployed copy leaves another copy of the same blueprint planned.

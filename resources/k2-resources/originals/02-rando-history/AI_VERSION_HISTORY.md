@@ -1,3 +1,15 @@
+  ════ V197 AI-ONLY ACTIVATE AMOUNT CORRELATION AND ZERO-CONFIRM LABELS (2026-07-15, both bots) ════
+The activation amount evaluator no longer claims every INTEGER decision. Selecting the exact top-level Activate Force
+action arms one game/player/turn/phase-scoped latch, and only the immediate matching INTEGER consumes it. Drift or an
+intervening decision clears the latch and fails closed; unrelated value decisions continue through the inherited
+heuristic route. The unchanged engine's exact opponent-allowance prompt remains directly recognized. The exact
+zero-activation confirmation maps its unique Yes and No labels to ordinal action ids, preserving V38.3 and V61c when
+the engine reorders labels. Ambiguous and unrelated choices remain unclaimed. Seam traces use those same labels for
+ordinal candidate order. V57, V61c, V67at, V43, V38.3, and every amount-policy magnitude remain unchanged. Production
+changes remain inside the AI package. Gate: 39 focused tests plus the full affected reactor totaled 891 tests with 0
+failures and 0 errors (26 skipped); mirrored bot changes normalize identically and diff check is clean. Revert the
+single V197 commit. See AI_CHANGELOG 2026-07-15.
+
   ════ V196 AI-ONLY DEPLOY PHYSICAL IDENTITY AND COPY ISOLATION (2026-07-15, both bots) ════
 Deployment plans now distinguish permanent and current physical card ids instead of allowing duplicate blueprint
 copies to share the first matching instruction. Every planner-created instruction records exact identity; action
