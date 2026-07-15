@@ -1572,6 +1572,13 @@ public class RandoCalAi extends HeuristicAiBase {
      * Called by game mediator before decisions.
      */
     public void setCurrentGame(SwccgGame game) {
+        // V194: game-scoped planning facts must not survive a rematch.
+        if (this.currentGame != game) {
+            objectiveHandler.reset();
+            objectiveAnalyzer.reset();
+            deployPhasePlanner.reset();
+            deckOracle.reset();
+        }
         this.currentGame = game;
     }
 
@@ -1626,6 +1633,12 @@ public class RandoCalAi extends HeuristicAiBase {
     @Override
     protected boolean shouldSkipOptionalResponses() {
         return false;  // Rando Cal handles optional responses
+    }
+
+    @Override
+    protected boolean isLegacyFailedSearchMemoryEnabled() {
+        // V194: the engine's turn-scoped search modifier is authoritative for Rando.
+        return false;
     }
 
     @Override

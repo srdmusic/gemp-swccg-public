@@ -1,3 +1,17 @@
+  ════ V194 AI-ONLY RECOVERY AFTER ENGINE METADATA ROLLBACK (2026-07-14, both bots) ════
+Steve's permanent boundary keeps the normal GEMP engine, card scripts, logic, mediator, and client unchanged. The
+typed phase-owner work below remains historical because its engine decision metadata caused internal AI routing values
+to appear as player choices, including Jyn Erso's undercover Yes/No prompt. V194 restores only behavior that compiles
+and runs entirely under the AI package: shared DRAW reserve arithmetic and reads; engine-authoritative failed-search
+handling for Rando/Chosen One; new-game objective/planner/deck state reset; physical ability-zero body presence for
+DEPLOY formation safety; Force Push versus Stunning Leader and cancel-redraw branch separation in BATTLE; and an
+INTEGER pass guard so optional value prompts do not silently choose zero. Beginner/Advanced failed-search memory is
+unchanged. No score magnitude changes. Legacy evaluators remain runtime phase owners outside these narrow corrections.
+No DecisionOrigin, DecisionActionSemantic, phase wire DTO, mediator lifecycle, card action, decision, or client source
+is restored. The affected reactor passed 859 tests with 0 failures and 0 errors (26 skipped), then packaged
+successfully. Source outside AI is byte-identical to ec886934b; the metadata scan is empty and diff check is clean.
+Revert the single V194 commit. See AI_CHANGELOG 2026-07-14.
+
   ════ BATTLE PHASE OWNER CUTOVER (2026-07-14, Steve-approved, both bots) ════
 Origin-stamped battle initiation, weapon fire, next-action, power, destiny-redraw, and optional-forfeit wires now
 route through one typed owner before the V45 compatibility path. Each initiation candidate receives one immutable

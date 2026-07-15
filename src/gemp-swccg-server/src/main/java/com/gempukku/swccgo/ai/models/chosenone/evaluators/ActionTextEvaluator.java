@@ -2994,7 +2994,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Stunning Leader excludes characters from battle. Good when DEFENDING
             // against a stronger opponent (saves Vader from certain death).
             // BAD when WE initiated (we started the fight to WIN).
-            else if (textLower.contains("stunning leader") || textLower.contains("exclude") && textLower.contains("from battle")) {
+            // V194: Force Push has its own battle/exchange policy below.
+            else if (textLower.contains("stunning leader")
+                    || (!textLower.contains("force push")
+                        && !v67uIsForcePushSource
+                        && textLower.contains("exclude")
+                        && textLower.contains("from battle"))) {
                 if (context.getPhase() == Phase.BATTLE && gameState != null) {
                     try {
                         com.gempukku.swccgo.game.state.BattleState bState = gameState.getBattleState();
@@ -3291,7 +3296,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                      (textLower.contains("interrupt") || textLower.contains("sense") ||
                       textLower.contains("alter") || textLower.contains("effect") ||
                       textLower.contains("force drain")) &&
-                     !textLower.contains("your")) {
+                     !textLower.contains("your")
+                     // V194: let the dedicated cancel-and-redraw branch score this action.
+                     && !(textLower.contains("redraw") && textLower.contains("destiny"))) {
                 action.setActionType(ActionType.CANCEL);
                 evaluateSenseCancel(action, context, actionText);
             }

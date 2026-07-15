@@ -42,6 +42,11 @@ public class PassEvaluator extends ActionEvaluator {
 
     @Override
     public boolean canEvaluate(DecisionContext context) {
+        // V194: INTEGER responses are values. An empty pass response silently means zero.
+        if ("INTEGER".equals(context.getDecisionType())) {
+            return false;
+        }
+
         // Can only pass if:
         // 1. noPass=false (passing is allowed)
         // 2. AND min=0 (no minimum selection required)

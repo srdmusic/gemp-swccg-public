@@ -4,6 +4,18 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-14: V194 AI-ONLY RECOVERY AFTER ENGINE METADATA ROLLBACK (both bots)
+- Why: the typed phase cutovers stored AI routing metadata in engine decision parameters. Those parameters are also rendered as player choices, which exposed internal values in prompts such as Jyn Erso's undercover Yes/No decision. Steve set the permanent boundary: normal GEMP engine, card, logic, mediator, and client code must remain unchanged.
+- Engine boundary: V194 changes production code only under `gemp-swccg-server/.../ai/**`. It does not restore `DecisionOrigin`, `DecisionActionSemantic`, phase wire DTOs, mediator callbacks, card actions, decisions, or client rendering. The typed owner entries below remain historical and are not the current runtime architecture.
+- DRAW: `DrawReserveAssessment` now owns the existing reserve arithmetic, and `DrawReserveLegacyReader` owns the duplicated board-read sequence. Both bot evaluators delegate to the same AI-only implementation with the original cap-before-Corridor ordering and fallback behavior.
+- PULL: Rando and Chosen One disable the inherited permanent failed-search memory because the unchanged engine's turn-scoped `CantSearchCardPileModifier` remains authoritative. Beginner and Advanced retain the legacy fallback memory.
+- DEPLOY: formation safety now counts friendly non-undercover character bodies directly. An ability-zero friendly character is support and no longer makes the destination look empty. Objective, planner, and deck-oracle state reset when a new `SwccgGame` reference is installed.
+- BATTLE: Force Push exclusion no longer falls through the unrelated Stunning Leader branch. Cancel-and-redraw destiny actions now reach their dedicated evaluator instead of the generic cancel-opponent branch.
+- ACTIVATE and other integer prompts: `PassEvaluator` no longer claims an optional `INTEGER` decision and returns an empty response, which silently meant zero. Integer values continue to the existing value evaluator.
+- Boundary math: no existing score magnitude changed. This is ownership and branch separation only. Legacy phase evaluators remain the runtime owners outside these narrow corrections.
+- Verification: the affected reactor passed 859 tests with 0 failures and 0 errors (26 skipped), then packaged successfully. Source outside the AI package is byte-identical to `ec886934b`; the removed metadata-type scan is empty; `git diff --check` is clean.
+- Revert: revert the V194 commit. No non-AI production source is part of the change.
+
 ## 2026-07-14: BATTLE PHASE OWNER CUTOVER (Steve-approved, both bots)
 - Why: battle initiation, weapon fire, power/destiny choices, and optional forfeits reached the bots through unrelated wire shapes. Initiation scoring also reread mutable board state and reran battle prediction while evaluating one candidate, allowing same-decision cross-talk and Rando/ChosenOne drift.
 - Origin-stamped engine decisions now identify battle initiation, weapon fire, next-action, power, destiny-redraw, and optional-forfeit routes. `BattleRouteResolver` rejects unknown or malformed shapes; phase text alone never claims ownership.

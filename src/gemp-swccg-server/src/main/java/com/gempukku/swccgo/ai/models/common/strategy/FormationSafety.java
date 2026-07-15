@@ -229,8 +229,9 @@ public final class FormationSafety {
             String opp = gs.getOpponent(playerId);
             float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(gs, destination, opp, false, false);
             float ourThere = game.getModifiersQuerying().getTotalPowerAtLocation(gs, destination, playerId, false, false);
-            boolean landsSolo = game.getModifiersQuerying()
-                .getTotalAbilityAtLocation(gs, playerId, destination) <= 0f;
+            // V194: ability-zero friendly characters are still physical support.
+            boolean landsSolo = countFriendlyNonUndercoverCharacters(
+                gs.getCardsAtLocation(destination), playerId) == 0;
             if (oppPower > 0) {
                 // Contested destination: dominance or a real wave is required for a WEAK body.
                 float oppEff = oppPower + weaponBonusAt(gs, destination, opp);
@@ -265,8 +266,9 @@ public final class FormationSafety {
             float ability = deployAbility != null ? deployAbility : 0f;
             if (ability >= DESTINY_ABILITY_THRESHOLD) return false;
             if (cheapestBuddyCost != null) return false;  // a plan exists
-            boolean landsSolo = game.getModifiersQuerying()
-                .getTotalAbilityAtLocation(gs, playerId, destination) <= 0f;
+            // V194: ability-zero friendly characters are still physical support.
+            boolean landsSolo = countFriendlyNonUndercoverCharacters(
+                gs.getCardsAtLocation(destination), playerId) == 0;
             return landsSolo;
         } catch (Exception e) { return false; }
     }

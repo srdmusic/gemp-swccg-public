@@ -53,7 +53,7 @@ import static org.junit.Assert.fail;
 public class HeuristicAiBaseMemoryTraceTest {
 
     /** Minimal concrete heuristic owner: empty weights, no context scoring. */
-    private static final class MemoryProbeAi extends HeuristicAiBase {
+    private static class MemoryProbeAi extends HeuristicAiBase {
         @Override
         protected KeywordWeight[] getActionWeights() {
             return new KeywordWeight[0];
@@ -77,6 +77,13 @@ public class HeuristicAiBaseMemoryTraceTest {
         @Override
         protected String[] getCardHints() {
             return new String[0];
+        }
+    }
+
+    private static final class NoFailedSearchMemoryProbeAi extends MemoryProbeAi {
+        @Override
+        protected boolean isLegacyFailedSearchMemoryEnabled() {
+            return false;
         }
     }
 
@@ -806,6 +813,29 @@ public class HeuristicAiBaseMemoryTraceTest {
             stateAfter.before().failedSearchActionTexts());
         assertEquals(List.of("7"), stateAfter.before().failedSearchCardIds());
         assertEquals(List.of("204_9"), stateAfter.before().failedSearchBlueprintIds());
+    }
+
+    @Test
+    public void disabledLegacyFailedSearchMemoryDoesNotRecordVerification() {
+        NoFailedSearchMemoryProbeAi ai = new NoFailedSearchMemoryProbeAi();
+        StubGameState state = new StubGameState(1);
+        decideTraced(ai, decision(37, AwaitingDecisionType.CARD_ACTION_CHOICE, "Choose action",
+            fireParams()), state);
+
+        TracedDecision verification = decideTraced(ai,
+            decision(38, AwaitingDecisionType.ARBITRARY_CARDS, VERIFY_TEXT,
+                verificationParams("200_1")),
+            new StubGameState(1, 4, List.of(reserveCard("200_1"))));
+        assertNone(verification.trace(), HeuristicFailedSearchAddEvent.class);
+
+        TracedDecision after = decideTraced(ai,
+            decision(39, AwaitingDecisionType.MULTIPLE_CHOICE, "Pick one",
+                multipleChoiceParams()), state);
+        HeuristicStateUpdateEvent stateAfter =
+            single(after.trace(), HeuristicStateUpdateEvent.class);
+        assertTrue(stateAfter.before().failedSearchActionTexts().isEmpty());
+        assertTrue(stateAfter.before().failedSearchCardIds().isEmpty());
+        assertTrue(stateAfter.before().failedSearchBlueprintIds().isEmpty());
     }
 
     // =========================================================================
