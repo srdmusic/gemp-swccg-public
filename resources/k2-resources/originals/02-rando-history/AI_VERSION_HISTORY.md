@@ -1,3 +1,21 @@
+  ==== V207 AI-ONLY SHARED OBJECTIVE/PLAYBOOK ANALYZER (2026-07-18, both bots) ====
+The two 1,936-line bot-local ObjectiveAnalyzer copies now have one exact shared implementation under
+ai/models/common/strategy and two 12-line no-argument compatibility facades. Each facade supplies its existing
+strategy logger and still creates a separate mutable analyzer instance. Public methods, inherited static nested
+playbook types, constants, consumers, score notes, call positions, early returns, profiles, and reason strings remain
+unchanged. The two behavior-identical lazy JSON caches become one logically immutable shared cache; its contract
+remains 58 profiles, 15 enabled, 43 disabled, with blueprint-first then title-fragment lookup. ObjectiveHandler,
+ObjectiveProgressAssessment, disabled profiles, setup/pull hydration, and every phase-local scorer remain untouched.
+Repository Java-source consumers remain compatible through inheritance, including six fully qualified bot-facade
+nested-type references in the two DeployEvaluator and CardSelectionEvaluator copies. The nested types now have the
+shared class as their binary owner, and the cache list is not structurally wrapped; repository scans found no
+reflection, serialization, precompiled external, or cache-mutation consumer. Those accepted boundaries are
+documented rather than hidden.
+Production edits are AI-only. Eight focused tests and the 1,023-test affected reactor passed with zero failures
+or errors (26 skipped). Package, normalized source-equivalence, inherited source API, separate-state, profile-contract,
+source-boundary, forbidden-symbol, artifact, and diff gates passed. Revert the single V207 commit.
+See AI_CHANGELOG 2026-07-18.
+
   ==== V206 AI-ONLY FORCE-LOSS PAYMENT POLICY OWNER (2026-07-18, both bots) ====
 Shared ForceLossFacts now owns the immutable decision/candidate reads and shared ForceLossPolicy owns the exact
 ordered standalone and combined-battle payment streams for V109, V153, V175a, V178-loss, V28-DTF, V21, and V25.

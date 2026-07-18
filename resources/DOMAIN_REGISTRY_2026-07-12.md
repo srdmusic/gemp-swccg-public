@@ -5,11 +5,11 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 - Built at HEAD `5ab16f8ac` (2026-07-12, batch-1 hotfixes included). Branch `rando-consolidation-2026-06-23`.
 - **AMENDED 2026-07-13** (gate `5e290559c`; evidence `Handoffs/CODEX_DOMAIN_REGISTRY_GATE_5E290559C_2026-07-13.md` + arm enumeration `Handoffs/CODEX_DOMAIN_REGISTRY_AMBIGUITY_RESOLUTION_2026-07-13.md`): the 13 ex-AMBIG summary rows are split into **21 exact arms** (authority table §5); V172 solo-dominance corrected to its live **+600** score; FS-enforcement re-homed solo-formation → loop-safety (generic constraint infrastructure, not formation-owned); §1/§2/§4/§7 tables and counts regenerated from the post-split inventory. All 21 arms re-verified against the live tree at HEAD `5240f36c6`: markers `grep -cF` counted per bot file, magnitudes read from the live `addReasoning`/`hardVeto` calls, no enclosing `if (false` on any arm, both bots checked.
 - **AMENDED 2026-07-13 (2)** (gate finding m00288 on 631ed4c13): the three live V27 sibling arms are minted as first-class rows — V27-maintenance-pass (PE, +25/+50), V27-maintenance-move (ME, -80) under force-budget; V27-buddy-protect (ME, -150/-250/-400) under solo-formation. Authority table = 24 rows (23 LIVE + the 1 INERT V37.4-empty-check); live total 364 → **367**.
-- Scope scanned: `src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/*.java`, `.../rando/strategy/*` (rules live in DPP, DPS, OA, SS, DO, AA), `.../models/common/strategy/*`, plus `RandoCalAi`/`DecisionSafety`/`DecisionContext` where manifest arms live there. `.bak` files and `if (false /* SUPERSEDED */)` blocks excluded.
+- Scope scanned: `src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/rando/evaluators/*.java`, `.../rando/strategy/*` (rules live in DPP, DPS, SS, DO, AA; OA is now a facade), `.../models/common/strategy/*` (including shared cOA), plus `RandoCalAi`/`DecisionSafety`/`DecisionContext` where manifest arms live there. `.bak` files and `if (false /* SUPERSEDED */)` blocks excluded.
 - Backbone: `resources/Rando_Section_Manifest_2026-07-06.xlsx` (340 single-owner arms, T0.3/T0.4), re-verified against the live tree; 30 rows added (manifest gaps + everything shipped 2026-07-07 → 2026-07-12: V192 pull hub, V193, FORMATION SAFETY, batch-1 hotfixes).
 - A *rule* = one V-tag arm (multi-arm tags appear once per arm, `Arm of` set). KIND per plan §4: VETO / ORDERING / BANDED.
 - **Anchor semantics**: `FILE:line` = first live occurrence of the base tag in that file at HEAD (block may start at a nearby comment); multi-arm tags share the base-tag anchor — grep the arm's log string for the exact block. Manifest 07-06 line refs inside Trigger text have drifted; re-grep before moving code.
-- File abbrevs: ATE=ActionTextEvaluator CSE=CardSelectionEvaluator DE=DeployEvaluator ME=MoveEvaluator BE=BattleEvaluator DrE=DrawEvaluator PE=PassEvaluator FAE=ForceActivationEvaluator CE=CombinedEvaluator DPP=DeployPhasePlanner DPS=DeployPhaseScript OA=ObjectiveAnalyzer SS=ShieldStrategy DO=DeckOracle SC=StrategyController AA=ActionAudit RCA=RandoCalAi DC=DecisionContext DSf=DecisionSafety / shared common: CDSE=CharacterDeploySiteEvaluator FS=FormationSafety FRS=ForceReserveService MF=MaintenanceFacts MP=MovePredicates ShF=ShieldFacts. The file IS the decision route (ATE=text-ranked top-level, CSE=card-selection prompts, DE=deploy scoring, ME=move destinations, BE=initiation, CE=merge/select).
+- File abbrevs: ATE=ActionTextEvaluator CSE=CardSelectionEvaluator DE=DeployEvaluator ME=MoveEvaluator BE=BattleEvaluator DrE=DrawEvaluator PE=PassEvaluator FAE=ForceActivationEvaluator CE=CombinedEvaluator DPP=DeployPhasePlanner DPS=DeployPhaseScript OA=bot-local ObjectiveAnalyzer facade SS=ShieldStrategy DO=DeckOracle SC=StrategyController AA=ActionAudit RCA=RandoCalAi DC=DecisionContext DSf=DecisionSafety / shared common: cOA=ObjectiveAnalyzer CDSE=CharacterDeploySiteEvaluator FS=FormationSafety FRS=ForceReserveService MF=MaintenanceFacts MP=MovePredicates ShF=ShieldFacts. The file IS the decision route (ATE=text-ranked top-level, CSE=card-selection prompts, DE=deploy scoring, ME=move destinations, BE=initiation, CE=merge/select).
 - Every rando evaluator has a **chosenone mirror**; `common/strategy` files are SHARED (no mirror drift). "Both bots" applies to every row unless noted.
 
 ## 1. Domain overview
@@ -32,11 +32,11 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | force-loss-payment | 8 | CSE FLF FLP (3) | FORCE-LOSS policy (hub = shared ForceLossPolicy; CSE is the stock-choice adapter) |
 | shields | 13 | ATE CSE RCA SS (4) | SHIELDS engine (ShieldStrategy + ShieldFacts) |
 | pull-search | 33 | AA ATE CE CSE DC DE DO RCA (8) | PULL ENGINE (hub = V192 in ATE since T4.2); facts stay SVC-ORACLE (DeckOracle) |
-| objective-intent | 7 | AA ATE BP CSE DC DE DPP OA ODT RCA (10) | SVC-INTEL (ObjectiveAnalyzer — the LIVE brain; ObjectiveHandler.java is DEAD, do not wire) |
+| objective-intent | 7 | AA ATE BP cOA CSE DC DE DPP ODT RCA (10) | SVC-INTEL (shared ObjectiveAnalyzer is the LIVE brain; bot OA files are compatibility facades; ObjectiveHandler.java is DEAD, do not wire) |
 | loop-safety | 10 | AA ATE CE CSE DSf DrE RCA EvaluatedAction.java (8) | SVC-SAFETY (DecisionSafety + ATE loop guards + CE finalizer incl. the generic hardVeto OR-merge/enforcement) |
 | pass-cancel | 2 | DE PE (2) | SVC-SAFETY (PassEvaluator; V148 cancellability semantics) |
 | response-routing | 6 | ATE CSE (2) | RESPONSE router (thin dispatcher; routes to callable sections) |
-| deck-playbook | 37 | ATE BE CSE DE DO DrE ME OA RCA (9) | PLAYBOOKS overlay (phase back-pointers per council condition) |
+| deck-playbook | 37 | ATE BE cOA CSE DE DO DrE ME RCA (9) | PLAYBOOKS overlay (shared cOA owns objective data; phase back-pointers retain score ownership) |
 | fact-services | 5 | BP CSE DC ODT RCA (5) | common/strategy services (MovePredicates, ShieldFacts, MaintenanceFacts, FRS) + SVC-ORACLE |
 
 ## 2. Registry by domain
@@ -59,7 +59,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V67x |  | SETUP | CSE:7815 | VETO | — | Ownership guard on V67q's pool check (CSE 7233, 7247): getAllPermanentCards() returns both players' cards; filter to Rando's own so opponent's Rise/Revenge never… | LIVE |
 | V80 |  | SETUP | CSE:8555 | ORDERING | — | Skywalker Epic Event required Effects (A Cunning Warrior / A Good Friend) must-pick: +1000 in evaluateUnknown (8068-8082) + reserve-pick mirror (8492-8502). +1000 is the… | LIVE |
 | V126x |  | SETUP | CSE | BANDED | starting-effect tier +400..+600 | EXPANDED STARTING-EFFECT BONUSES family inside the V22 turn-0 block: V126 header comment x1 (7985), V126a First Strike / free-battle-initiation +500 x3, V126b… | LIVE |
-| V186 |  | SETUP | CSE:809 OA:21 | ORDERING | — | I Want That Map turn-0 script: temp-ID-safe Starkiller Base SYSTEM +400 in evaluateDeployLocation (CSE 802-847, resolves blueprints via context.getBlueprints() - the… | LIVE |
+| V186 |  | SETUP | CSE:809 cOA:21 | ORDERING | — | I Want That Map turn-0 script: temp-ID-safe Starkiller Base SYSTEM +400 in evaluateDeployLocation (CSE 802-847, resolves blueprints via context.getBlueprints() - the… | LIVE |
 | V187 |  | SETUP | CSE:8520 DO:21 | BANDED | -300 demotion within starting-effect pool (below +1000/+500 tiers by design) | Duplicate starting-effect penalty (CSE 7938-7948): -300 to any candidate Effect duplicated in the decklist; only re-orders inside the pool, never blocks. DeckOracle hit… | LIVE |
 
 ### activation-amount — 7 rules
@@ -440,17 +440,17 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V192 |  | PULL-ENGINE | ATE:4484 | ORDERING (hub) + VETO chain | base +150 deploy-grade / +5500 activate-grade (P1 stand-down when V61c holds destiny buffer); location tier 1500/1400/1300/1200 by source cat, weapon 600, device 400; +50 [download], +25 chars-in-hand; clamp 1750 deploy / 7100 activate | THE merged pull scorer (T4.2, 2026-07-06): ONE emit per reserve-deck pull; vetoes (V60 guards, V66, V67h, V67ac, V95, V131, V67ar/V67ao/V149) run first and short-circuit | NEW since manifest (post-2026-07-06) |
 
 ### objective-intent — 7 rules
-*Objective detection, flip intel, objective deploy adjustments.* Target owner: SVC-INTEL (ObjectiveAnalyzer — the LIVE brain; ObjectiveHandler.java is DEAD, do not wire).
+*Objective detection, flip intel, objective deploy adjustments.* Owner: SVC-INTEL (shared cOA is the LIVE brain; bot OA files are compatibility facades; ObjectiveHandler.java is DEAD, do not wire).
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
-| V21-analyzer | V21 | SVC-INTEL | OA:32 DPP:23 AA:23 | ORDERING | — | §-arm per slice: ObjectiveAnalyzer runtime objective-text parser (V21 is its founding tag) + planner objective-awareness wiring; ActionAudit hit is a dormant… | LIVE |
+| V21-analyzer | V21 | SVC-INTEL | cOA:32 DPP:23 AA:23 | ORDERING | — | §-arm per slice: shared ObjectiveAnalyzer runtime objective-text parser (V21 is its founding tag) + planner objective-awareness wiring; ActionAudit hit is a dormant… | CONSOLIDATED V207 |
 | V24.7-intel |  | SVC-INTEL | RCA:82 BP:61 CSE:334 DC:85 ODT:6 | BANDED | n/a — intel service, no direct score | OpponentDeckTracker destiny-intel service (deck-peek scanning, average destiny) + BattlePredictor intel-aware prediction methods. NOTE:… | LIVE |
-| V25-detector | V25 | SVC-INTEL | OA:20 | ORDERING | — | §8 arm: Hunt Down V + ISB Operations objective detection (flip conditions, Vader-on-table checks, ISB agent counting, back-side flip-back detection). Detection service… | LIVE |
-| V29-objtext-intel | V29 | SVC-INTEL | OA:21 | ORDERING | — | FOUND IN REGION arm of V29, UPDATED 2026-07-06 (TDIGWATT bug B): stores raw objective game text + objectiveForbidsDeployingExecutor() predicate consumed by the… | LIVE |
-| V67ak |  | SVC-INTEL | ATE:1955 DE:3936 OA:21 | BANDED | +800 flip-critical tier | Universal KEY-CHARACTER token extractor (ObjectiveAnalyzer service, 235/323) with two scoring consumers: +800 pull priority (ATE 5102-5162) and +800 deploy priority (DE… | LIVE |
+| V25-detector | V25 | SVC-INTEL | cOA:20 | ORDERING | — | §8 arm: Hunt Down V + ISB Operations objective detection (flip conditions, Vader-on-table checks, ISB agent counting, back-side flip-back detection). Detection service… | CONSOLIDATED V207 |
+| V29-objtext-intel | V29 | SVC-INTEL | cOA:21 | ORDERING | — | FOUND IN REGION arm of V29, UPDATED 2026-07-06 (TDIGWATT bug B): stores raw objective game text + objectiveForbidsDeployingExecutor() predicate consumed by the… | CONSOLIDATED V207 |
+| V67ak |  | SVC-INTEL | ATE:1955 DE:3936 cOA:21 | BANDED | +800 flip-critical tier | Universal KEY-CHARACTER token extractor (ObjectiveAnalyzer service, 235/323) with two scoring consumers: +800 pull priority (ATE 5102-5162) and +800 deploy priority (DE… | CONSOLIDATED V207 |
 | V170-cover | V170 | SVC-INTEL | RCA:611 ATE:3754 | ORDERING | — | §8 arm 'cover decision': yes/no intercept in RandoCalAi 584-630 answering the engine's 'deploy as Undercover spy?' prompt (YES when opp total drain >= 1, NO early game).… | LIVE |
-| V193-intel | V193 | SVC-INTEL | OA:79 | ORDERING | no score — names the flip-gate control site | Objective flip-gate control-site intel (Endor: Bunker etc.); reset+reparse per detection; JSON-hydrated profiles supersede the hardcoded Endor block | NEW since manifest (post-2026-07-06) |
+| V193-intel | V193 | SVC-INTEL | cOA:79 | ORDERING | no score — names the flip-gate control site | Objective flip-gate control-site intel (Endor: Bunker etc.); reset+reparse per detection; JSON-hydrated profiles supersede the hardcoded Endor block | CONSOLIDATED V207 |
 
 ### loop-safety — 10 rules
 *Loop breaking, retry budgets, concede, dormant checks.* Target owner: SVC-SAFETY (DecisionSafety + ATE loop guards + CE).
@@ -494,8 +494,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
-| V22.2-flip | V22.2 | PLAYBOOKS | CSE:3447 ME:594 OA:20 | BANDED | +/-30..160 tier | Post-flip protection arm (slice-homed): deploy-to-protect +60, pre-flip fortify scaled penalties -30..-160, post-flip STAY/CONSOLIDATE move logic +/-30..160 (ME… | LIVE |
-| V22.5 |  | PLAYBOOKS | ATE:4249 DE:5686 ME:649 OA:1884 | BANDED | +100..300 tier | AMSD/Bespin ship priority (+300 no-ship-at-Bespin, +100 after; +120 pilot+ship combo) + PRE-FLIP CONSOLIDATION lone-outgunned move +100..160 (ME 1339-1399) +… | LIVE |
+| V22.2-flip | V22.2 | PLAYBOOKS | CSE:3447 ME:594 cOA:20 | BANDED | +/-30..160 tier | Post-flip protection arm (slice-homed): deploy-to-protect +60, pre-flip fortify scaled penalties -30..-160, post-flip STAY/CONSOLIDATE move logic +/-30..160 (ME… | LIVE |
+| V22.5 |  | PLAYBOOKS | ATE:4249 DE:5686 ME:649 cOA:1884 | BANDED | +100..300 tier | AMSD/Bespin ship priority (+300 no-ship-at-Bespin, +100 after; +120 pilot+ship combo) + PRE-FLIP CONSOLIDATION lone-outgunned move +100..160 (ME 1339-1399) +… | LIVE |
 | V22.7 |  | PLAYBOOKS | CSE:419 DE:4145 | VETO | — | CLOUD CITY OCCUPATION GUARD: block Dark Deal-style cards that self-cancel when we don't occupy Bespin (DE 3935-3988, hard block; +50 when safe) + MUST CONTEST… | LIVE |
 | V23 |  | PLAYBOOKS | ATE:1640 CSE:2409 DE:1137 | BANDED | +250..300 contest / -100..-300 guard | TDIGWATT/Bespin playbook: BESPIN CONTEST +300 / ship +250 (DE 1118, 5485-5513) + opponent-force-icon deploy preference (CSE 2192-2207). ATE arm = EMPTY PILE GUARD… | LIVE |
 | V24.1 |  | PLAYBOOKS | CSE:8064 DE:4561 | ORDERING | — | TDIGWATT pull-preference ladder: Endor Shield admiral pull Piett-first (V24.1A), Piett's commander pull Gherant-first +400 (V24.1B), Gherant deploy +150 (V24.1C in | LIVE |
@@ -513,7 +513,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V29.2 |  | PLAYBOOKS | DE:4566 | BANDED | +150..200 tier | Lando +200 / Lobot +150 deploy priority when backup present (title AND action-text | LIVE |
 | V29.3 |  | PLAYBOOKS | CSE:639 | ORDERING | — | Card-type detection fallback chain (decision text -> gameState -> FALLBACK_LIBRARY -> last-resort assume character). Detection service, no scoring; candidate to relabel… | LIVE |
 | V29.7-deck-scoring | V29.7 | PLAYBOOKS | ATE:684 CSE:908 DE:2139 | BANDED | +/-30..200 tier | Residual V29.7 arms beyond §8's four names, labeled so every hit maps: docking-bay strategy (first bay +200, extra empty bays -200/-50; ATE 3719-3778 + CSE 1591-1614),… | LIVE |
-| V29.7-flip | V29.7 | PLAYBOOKS | RCA:1201 OA:374 | ORDERING | — | §8 arm (flip): per-evaluation flip-status refresh (RandoCalAi:1115 -> ObjectiveAnalyzer.refreshFlipStatus). Service plumbing, no | LIVE |
+| V29.7-flip | V29.7 | PLAYBOOKS | RCA:1201 cOA:374 | ORDERING | — | §8 arm (flip): per-evaluation flip-status refresh (RandoCalAi:1115 -> ObjectiveAnalyzer.refreshFlipStatus). Service plumbing, no | LIVE |
 | V29.7-pull | V29.7 | PLAYBOOKS | ATE:684 DO:22 | ORDERING | — | §8 arm (pull): PULL FIRST +250 (pulls fire before deploys) + universal reserve-target validation -300..-500 fail guards per named source (Crush/IAYF/You Are Beaten/Blast… | LIVE |
 | V29.7-retreat | V29.7 | PLAYBOOKS | ATE:684 | BANDED | -300 tier | §8 arm (retreat): Vader's Castle retreat penalty -300 while Vader is draining (ATE | LIVE |
 | V29.7-weapon | V29.7 | PLAYBOOKS | BE:205 ME:100 | BANDED | weapon-adjusted diff tier | §8 arm (weapon): weapon-adjusted effective power diff for battle decisions (BattleEvaluator 191-474) + WEAPON HUNTER armed-character seek-battle move bonus (ME… | LIVE |
@@ -530,7 +530,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V62 |  | PLAYBOOKS | CSE:440 | BANDED | +200 / -500 / -1500 tiers | Hidden Path siting: SPLIT SITE +200 ideal / -500 duplicate-Jedi dest; SPY DILUTION -1500 (don't move onto our own undercover spy's site). V41 -9999 interplay documented… | LIVE |
 | V83/V88/V99-Senate |  | PLAYBOOKS |  | VETO | — | CROSS-REF STUB ONLY — per slice instruction PLAYBOOKS carries a pointer to the Senate rule family; the tags themselves are homed by the DEPLOY-cluster slice (do not… | LIVE |
 | V142 |  | PLAYBOOKS | ATE:677 | VETO | -2000 | We Must Accelerate Our Plans: deck-aware mode preconditions before playing (WMAOP misfire class) | LIVE (manifest gap — added batch 0) |
-| V160 |  | PLAYBOOKS | ATE:928 OA:21 | BANDED | +800 tier | Shield Will Be Down In Moments (Hoth invasion): push Target The Main Generator +800; ObjectiveAnalyzer detection | LIVE |
+| V160 |  | PLAYBOOKS | ATE:928 cOA:21 | BANDED | +800 tier | Shield Will Be Down In Moments (Hoth invasion): push Target The Main Generator +800; ObjectiveAnalyzer detection | LIVE |
 
 ### fact-services — 5 rules
 *No-score helpers: detection, predicates, wave projection, intel plumbing.* Target owner: common/strategy services (MovePredicates, ShieldFacts, MaintenanceFacts, FRS) + SVC-ORACLE.
@@ -683,7 +683,7 @@ Of the 367 live arms, only the 23 live arms in the §5 table above (+1 inert sib
 | V67bl, V67bt | Comment-only markers (behavior folded into V38 / spy-detection method notes) |
 | V47-reserve-solo (with V28 arm) | DELETED 2026-07-12 batch 1d (CSE ~8861; git + backup = undo) |
 | ObjectiveHandler.java | DEAD CODE — the live objective brain is ObjectiveAnalyzer; do not wire |
-| V193 hardcoded Endor block | SUPERSEDED 2026-07-08 `if(false)` — Endor now JSON-hydrated (OA:1447) |
+| V193 hardcoded Endor block | SUPERSEDED 2026-07-08 `if(false)` — Endor now JSON-hydrated (cOA:1447) |
 
 ## 7. Summary stats
 
