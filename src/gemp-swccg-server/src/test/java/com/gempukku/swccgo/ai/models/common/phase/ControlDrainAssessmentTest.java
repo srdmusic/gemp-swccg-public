@@ -1,13 +1,15 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class ControlDrainAssessmentTest {
 
@@ -15,21 +17,24 @@ public class ControlDrainAssessmentTest {
     public void nonpositiveDrainStopsAfterPrimary() {
         Facts facts = new Facts();
         facts.primary = primary(0, 0, 10, 0);
-        assertPlan(facts, List.of("primary"), op("V24.15", -9999, true));
+        assertPlan(facts, List.of("primary"),
+                op("V24.15-drain", -9999, TraceOutputKind.VETO));
     }
 
     @Test
     public void largeNetLossStopsAtV189() {
         Facts facts = new Facts();
         facts.primary = primary(1, 3, 10, 0);
-        assertPlan(facts, List.of("primary"), op("V189", -2000, true));
+        assertPlan(facts, List.of("primary"),
+                op("V189", -2000, TraceOutputKind.VETO));
     }
 
     @Test
     public void netMinusOneStopsWhenTurnPlanIsUnfunded() {
         Facts facts = new Facts();
         facts.primary = primary(2, 3, 5, 1);
-        assertPlan(facts, List.of("primary"), op("V189", -2000, true));
+        assertPlan(facts, List.of("primary"),
+                op("V189", -2000, TraceOutputKind.VETO));
     }
 
     @Test
@@ -37,7 +42,7 @@ public class ControlDrainAssessmentTest {
         Facts facts = new Facts();
         facts.simpleTricks = true;
         assertPlan(facts, List.of("primary", "simpleTricks"),
-                op("V25", -9999, true));
+                op("V25-SimpleTricks", -9999, TraceOutputKind.VETO));
     }
 
     @Test
@@ -45,12 +50,12 @@ public class ControlDrainAssessmentTest {
         Facts cannotAfford = new Facts();
         cannotAfford.economy = economy(true, 2, true, 1, 3);
         assertPlan(cannotAfford, List.of("primary", "simpleTricks", "economy"),
-                op("BATTLE_ORDER", -50, true));
+                op("CONTROL-battle-order-afford", -50, TraceOutputKind.BANDED));
 
         Facts noBody = new Facts();
         noBody.economy = economy(true, 8, false, Integer.MAX_VALUE, 3);
         assertPlan(noBody, List.of("primary", "simpleTricks", "economy"),
-                op("BATTLE_ORDER", 70, true));
+                op("CONTROL-battle-order-only-pressure", 70, TraceOutputKind.BANDED));
     }
 
     @Test
@@ -60,7 +65,7 @@ public class ControlDrainAssessmentTest {
         facts.costWaived = true;
         assertPlan(facts,
                 List.of("primary", "simpleTricks", "economy", "costWaived"),
-                op("V140", 60, true));
+                op("V140", 60, TraceOutputKind.ORDERING));
     }
 
     @Test
@@ -74,10 +79,10 @@ public class ControlDrainAssessmentTest {
         assertPlan(facts,
                 List.of("primary", "simpleTricks", "economy", "costWaived",
                         "drainValue", "multi", "huntDown"),
-                op("V104", -2000, false),
-                op("V52", 200, false),
-                op("V29.9", 40, false),
-                op("V29.9", 30, false));
+                op("V104", -2000, TraceOutputKind.VETO),
+                op("V52-multi-drain", 200, TraceOutputKind.BANDED),
+                op("V29.9-HuntDown-high", 40, TraceOutputKind.BANDED),
+                op("V29.9-HuntDown-drain", 30, TraceOutputKind.BANDED));
     }
 
     @Test
@@ -87,14 +92,14 @@ public class ControlDrainAssessmentTest {
         assertPlan(early,
                 List.of("primary", "simpleTricks", "economy", "costWaived",
                         "drainValue", "multi", "huntDown"),
-                op("V48", -50, false));
+                op("V48-drain", -50, TraceOutputKind.BANDED));
 
         Facts late = new Facts();
         late.economy = economy(true, 8, true, 2, 3);
         assertPlan(late,
                 List.of("primary", "simpleTricks", "economy", "costWaived",
                         "drainValue", "multi", "huntDown"),
-                op("V52", 50, false));
+                op("V52-drain-anyway", 50, TraceOutputKind.BANDED));
     }
 
     @Test
@@ -105,10 +110,10 @@ public class ControlDrainAssessmentTest {
 
         assertPlan(facts,
                 List.of("primary", "simpleTricks", "economy", "multi", "huntDown"),
-                op("CONTROL_BASE", 50, false),
-                op("V52", 300, false),
-                op("V29.9", 40, false),
-                op("V29.9", 30, false));
+                op("CONTROL-base-drain", 50, TraceOutputKind.BANDED),
+                op("V52-multi-drain", 300, TraceOutputKind.BANDED),
+                op("V29.9-HuntDown-high", 40, TraceOutputKind.BANDED),
+                op("V29.9-HuntDown-drain", 30, TraceOutputKind.BANDED));
     }
 
     @Test
@@ -127,8 +132,8 @@ public class ControlDrainAssessmentTest {
     }
 
     private static void assertDeltas(Facts facts, float... deltas) {
-        List<ControlDrainAssessment.Operation> operations =
-                ControlDrainAssessment.assess(facts).operations();
+        List<PolicyOperation> operations =
+                ControlDrainAssessment.assess("A", facts).operations();
         assertEquals(deltas.length, operations.size());
         for (int i = 0; i < deltas.length; i++) {
             assertEquals(Float.floatToRawIntBits(deltas[i]),
@@ -138,27 +143,25 @@ public class ControlDrainAssessmentTest {
 
     private static void assertPlan(Facts facts, List<String> expectedQueries,
                                    Expected... expected) {
-        List<ControlDrainAssessment.Operation> actual =
-                ControlDrainAssessment.assess(facts).operations();
+        List<PolicyOperation> actual =
+                ControlDrainAssessment.assess("A", facts).operations();
         assertEquals(expectedQueries, facts.queries);
         assertEquals(expected.length, actual.size());
         for (int i = 0; i < expected.length; i++) {
             Expected e = expected[i];
-            ControlDrainAssessment.Operation a = actual.get(i);
-            assertEquals(e.ruleId, a.ruleId());
+            PolicyOperation a = actual.get(i);
+            assertEquals("A", a.actionId());
+            assertEquals(e.ruleId, a.ruleArmId().id());
+            assertEquals(TraceDomainId.DRAIN_CONTROL, a.domainId());
+            assertEquals(e.outputKind, a.outputKind());
+            assertEquals(PolicyOperationKind.ADD, a.kind());
             assertEquals(Float.floatToRawIntBits(e.delta),
                     Float.floatToRawIntBits(a.delta()));
-            assertEquals(e.terminal, a.terminal());
-            if (e.terminal) {
-                assertTrue(a.terminal());
-            } else {
-                assertFalse(a.terminal());
-            }
         }
     }
 
-    private static Expected op(String ruleId, float delta, boolean terminal) {
-        return new Expected(ruleId, delta, terminal);
+    private static Expected op(String ruleId, float delta, TraceOutputKind outputKind) {
+        return new Expected(ruleId, delta, outputKind);
     }
 
     private static ControlDrainAssessment.Primary primary(float amount, float cost,
@@ -174,7 +177,7 @@ public class ControlDrainAssessmentTest {
                 battleOrder, force, deployable, cheapest, turn);
     }
 
-    private record Expected(String ruleId, float delta, boolean terminal) { }
+    private record Expected(String ruleId, float delta, TraceOutputKind outputKind) { }
 
     private static final class Facts implements ControlDrainAssessment.Facts {
         private final List<String> queries = new ArrayList<>();

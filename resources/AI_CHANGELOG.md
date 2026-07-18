@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-18: V204 AI-ONLY CONTROL PHASE POLICY OWNER (both bots)
+- Why: V195 removed the duplicated 403-line drain calculations, but its shared assessment still emitted untyped operations and four live CONTROL card-text arms remained embedded in both large `ActionTextEvaluator` mirrors. That left rule identity and single-contribution ownership implicit.
+- Consolidation: `ControlDrainAssessment` now emits the ordered typed CONTROL operation stream directly. `ControlActionPolicy` owns the unchanged V29.14 No Escape retrieval, V24.2 optional drain modifier, and V52 self-cancel contributions. Both bot evaluators retain stock action recognition and response position, then apply the shared stream through `PolicyContributionLedger` and their mirrored adapters.
+- Behavior boundary: all score deltas, reasoning strings, early returns, V104 turn-logic suppression, lazy fact-query order, candidate order, response timing, logger calls, and Pass behavior are preserved. Registry VETO remains descriptive for the historical `-9999`/`-2000` additive arms; V204 does not convert them into structural hard vetoes. Distinct V52 and V29.9 sub-arm ids prevent duplicate contribution without combining or reordering scores.
+- Ownership boundary: CONTROL owns drain go/no-go, Battle Order drain economics, multi-drain priority, Hunt Down drain pressure, No Escape retrieval, the optional `+1` drain response, and self-cancel protection. PULL, SHIELDS, BATTLE, objective/playbook, generic retrieval, and maintenance arms remain in their later phase owners.
+- Engine boundary: every production edit is under `gemp-swccg-server/.../ai/**`. No game engine, decision metadata, card, action, mediator, serializer, client, deck, or database source changed.
+- Verification: 24 focused CONTROL/policy/ledger/parity tests passed. The full affected reactor passed 974 tests with 0 failures and 0 errors (26 skipped), and the package gate passed. Rando and Chosen One adapters normalize identically; source-boundary, forbidden-symbol, and diff checks are clean.
+- Revert: revert the single V204 commit. V203 remains the deployed DRAW owner and V195 remains the behavior-neutral CONTROL extraction baseline.
+
 ## 2026-07-18: V203 AI-ONLY DRAW PHASE POLICY OWNER (both bots)
 - Why: the mirrored 813-line DRAW evaluators each owned the same recognition, board reads, helper arithmetic, score ordering, and early returns. Keeping two live copies made rule ownership ambiguous and allowed Rando and Chosen One to drift.
 - Consolidation: shared `DrawPhasePolicy` now owns the exact ordered DRAW contribution stream. Shared `DrawPhaseFactsReader` owns the duplicated force-generation, V182 offensive-bank, expensive-card, and force-starved reads. Each bot keeps only stock decision recognition, bot-specific facts/oracle adaptation, the existing reserve reader, and typed operation application.

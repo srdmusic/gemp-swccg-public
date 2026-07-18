@@ -3,8 +3,10 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
+import com.gempukku.swccgo.ai.models.common.phase.ControlActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -96,6 +98,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
         List<String> actionTexts = context.getActionTexts();
         List<String> cardIds = context.getCardIds();
         Set<String> blocked = context.getBlockedResponses();
+        String decisionId = context.getDecisionId();
+        PolicyContributionLedger controlLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "control-action-decision" : decisionId);
 
         for (int i = 0; i < actionIds.size(); i++) {
             String actionId = actionIds.get(i);
@@ -1656,7 +1662,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 if (textLower.contains("take top card") && textLower.contains("lost pile")) {
                     int lostSize = gameState.getLostPile(pid).size();
                     if (lostSize > 0) {
-                        action.addReasoning("V29.14 NO ESCAPE: Free card from Lost Pile — always take it!", 200.0f);
+                        controlLedger.register(ControlActionPolicy.noEscapeRetrieval(actionId));
+                        PolicyOperationAdapter.apply(action, controlLedger);
                         logger.warn("V29.14 NO ESCAPE: '{}' — Lost Pile has {} cards, taking top card!", actionText, lostSize);
                         actions.add(action);
                         continue;
@@ -2576,7 +2583,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Force Drain ==========
             else if (actionText.equals("Force drain")) {
                 action.setActionType(ActionType.FORCE_DRAIN);
-                evaluateForceDrain(action, context, cardId);
+                evaluateForceDrain(action, context, cardId, controlLedger);
             }
 
             // ========== Race Destiny ==========
@@ -3073,7 +3080,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             else if ((actionText.contains("+1") || actionText.contains("+ 1") || textLower.contains("add 1"))
                      && textLower.contains("force drain")) {
                 action.setActionType(ActionType.FORCE_DRAIN);
-                action.addReasoning("V24.2 FORCE DRAIN BONUS: +1 to force drain — always use!", VERY_GOOD_DELTA + 30.0f);
+                controlLedger.register(ControlActionPolicy.forceDrainModifier(actionId));
+                PolicyOperationAdapter.apply(action, controlLedger);
                 logger.warn("V24.2 DRAIN BONUS: Accepting +1 force drain — '{}'", actionText);
             }
 
@@ -3303,7 +3311,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                      // V194: let the dedicated cancel-and-redraw branch score this action.
                      && !(textLower.contains("redraw") && textLower.contains("destiny"))) {
                 action.setActionType(ActionType.CANCEL);
-                evaluateSenseCancel(action, context, actionText);
+                evaluateSenseCancel(action, context, actionText, controlLedger);
             }
 
             // ========== V37: Cancel/Redraw Destiny — CHECK CURRENT VALUE FIRST ==========
@@ -4182,7 +4190,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Force Drain Cancellation ==========
             else if (actionText.contains("Cancel Force drain")) {
                 if (context.isMyTurn()) {
-                    action.addReasoning("V52 NEVER SELF-CANCEL: Don't cancel own force drain!", -9999.0f);
+                    controlLedger.register(ControlActionPolicy.selfCancelDrain(actionId,
+                            "V52 NEVER SELF-CANCEL: Don't cancel own force drain!"));
+                    PolicyOperationAdapter.apply(action, controlLedger);
                     logger.warn("V52 SELF-CANCEL BLOCKED: Cancel Force drain on own turn — HARD BLOCKED!");
                 } else {
                     action.addReasoning("Cancel opponent's force drain", GOOD_DELTA);
@@ -5808,7 +5818,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
     // Cross-refs: MOVE (interleave), PLAYBOOKS (V24.x TDIGWATT drain rules), RESPONSE (the two
     // drain-response timings). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
     // ═══════════════════════════════════════════════════════════
-    private void evaluateForceDrain(EvaluatedAction action, DecisionContext context, String locationCardId) {
+    private void evaluateForceDrain(EvaluatedAction action, DecisionContext context,
+                                    String locationCardId,
+                                    PolicyContributionLedger controlLedger) {
         ControlDrainFacts facts = new ControlDrainFacts(
             context.getGameState(),
             context.getGame(),
@@ -5820,10 +5832,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             () -> context.getObjectiveAnalyzer() != null
                 && context.getObjectiveAnalyzer().isAnalyzed()
                 && context.getObjectiveAnalyzer().isHuntDownV());
-        ControlDrainAssessment.Result assessment = ControlDrainAssessment.assess(facts);
-        for (ControlDrainAssessment.Operation operation : assessment.operations()) {
-            action.addReasoning(operation.detail(), operation.delta());
-        }
+        controlLedger.register(ControlDrainAssessment.assess(action.getActionId(), facts));
+        PolicyOperationAdapter.apply(action, controlLedger);
     }
 
     private void evaluatePlayCard(EvaluatedAction action, DecisionContext context) {
@@ -5854,7 +5864,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
         }
     }
 
-    private void evaluateSenseCancel(EvaluatedAction action, DecisionContext context, String actionText) {
+    private void evaluateSenseCancel(EvaluatedAction action, DecisionContext context,
+                                     String actionText,
+                                     PolicyContributionLedger controlLedger) {
         String textLower = actionText.toLowerCase();
         boolean isDestinyBased = textLower.contains("draw destiny") || textLower.contains("if destiny");
 
@@ -5900,7 +5912,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
         } else if (textLower.contains("force drain")) {
             // V52: NEVER cancel your OWN force drain! Surprise Assault on own drain = self-sabotage.
             if (context.isMyTurn()) {
-                action.addReasoning("V52 NEVER SELF-CANCEL DRAIN: Canceling own force drain is suicide!", -9999.0f);
+                controlLedger.register(ControlActionPolicy.selfCancelDrain(action.getActionId(),
+                        "V52 NEVER SELF-CANCEL DRAIN: Canceling own force drain is suicide!"));
+                PolicyOperationAdapter.apply(action, controlLedger);
                 logger.warn("V52 SELF-CANCEL BLOCKED: Tried to cancel OWN force drain — HARD BLOCKED!");
             } else {
                 action.addReasoning("Cancel opponent's force drain", GOOD_DELTA + 5.0f);

@@ -1,3 +1,16 @@
+  ==== V204 AI-ONLY CONTROL PHASE POLICY OWNER (2026-07-18, both bots) ====
+The shared CONTROL drain assessment now emits the ordered typed policy stream directly, and a small shared
+ControlActionPolicy owns the existing V29.14 No Escape retrieval, V24.2 optional +1 drain, and V52 self-cancel
+contributions that still lived in both ActionTextEvaluator mirrors. Stock action recognition and response positions
+remain in each bot adapter. Score deltas, raw float order, reasoning, logger calls, early returns, V104 suppression,
+lazy query order, candidate order, and Pass behavior are unchanged. Registry VETO labels remain additive historical
+scores, not structural hard vetoes. PULL, SHIELDS, BATTLE, playbook, generic retrieval, and maintenance logic remain
+with their later owners. Production edits are AI-only and contain no engine decision metadata. Gate: 24 focused
+CONTROL/policy/ledger/parity tests; full affected reactor 974 tests, 0 failures, 0 errors, 26 skipped; package,
+mirror, source-boundary, forbidden-symbol, and diff checks pass.
+Revert the single V204 commit.
+See AI_CHANGELOG 2026-07-18.
+
   ==== V203 AI-ONLY DRAW PHASE POLICY OWNER (2026-07-18, both bots) ====
 The two 813-line mirrored DRAW evaluators now use one shared AI-only DrawPhasePolicy for the exact ordered score
 stream and one DrawPhaseFactsReader for duplicated force-generation, V182 offensive-bank, expensive-card, and

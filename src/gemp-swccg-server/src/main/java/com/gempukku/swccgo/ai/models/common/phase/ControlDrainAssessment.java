@@ -1,5 +1,11 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -43,42 +49,30 @@ public final class ControlDrainAssessment {
     public record HuntDown(boolean active, int opponentIcons) {
     }
 
-    public record Operation(String ruleId, String detail, float delta, boolean terminal) {
-        public Operation {
-            Objects.requireNonNull(ruleId, "ruleId");
-            Objects.requireNonNull(detail, "detail");
-        }
-    }
-
-    public record Result(List<Operation> operations) {
-        public Result {
-            operations = List.copyOf(operations);
-        }
-    }
-
     private ControlDrainAssessment() {
     }
 
-    public static Result assess(Facts facts) {
+    public static PolicyResult assess(String actionId, Facts facts) {
+        Objects.requireNonNull(actionId, "actionId");
         Objects.requireNonNull(facts, "facts");
-        List<Operation> operations = new ArrayList<>();
+        List<PolicyOperation> operations = new ArrayList<>();
 
         Primary primary = facts.primary();
         if (primary != null) {
             if (primary.drainAmount() <= 0f) {
-                return terminal(operations, "V24.15",
+                return terminal(operations, actionId, "V24.15-drain", TraceOutputKind.VETO,
                     "V24.15 DRAIN BLOCK: Force drain would be 0 - pointless and opens us to Surprise Assault!",
                     -9999.0f);
             }
             if (primary.initiateCost() > primary.drainAmount()) {
                 if (primary.initiateCost() - primary.drainAmount() >= 2.0f) {
-                    return terminal(operations, "V189", String.format(
+                    return terminal(operations, actionId, "V189", TraceOutputKind.VETO, String.format(
                         "V189 DRAIN NET-VALUE BLOCK: initiate cost %.0f > drain %.0f at %s - net <= -2, never worth it",
                         primary.initiateCost(), primary.drainAmount(), primary.locationTitle()), -2000.0f);
                 }
                 if (primary.forcePile() - primary.initiateCost()
                         < primary.plannedDeploySpend() + primary.moveAllowance()) {
-                    return terminal(operations, "V189", String.format(
+                    return terminal(operations, actionId, "V189", TraceOutputKind.VETO, String.format(
                         "V189 DRAIN NET-VALUE BLOCK: net -1 but budget fails - %d Force - %.0f cost < %d planned deploys + %d move allowance at %s",
                         primary.forcePile(), primary.initiateCost(), primary.plannedDeploySpend(),
                         primary.moveAllowance(), primary.locationTitle()), -2000.0f);
@@ -87,7 +81,7 @@ public final class ControlDrainAssessment {
         }
 
         if (facts.simpleTricksBlocks()) {
-            return terminal(operations, "V25",
+            return terminal(operations, actionId, "V25-SimpleTricks", TraceOutputKind.VETO,
                 "V25 SIMPLE TRICKS: Non-battleground drain will be CANCELLED by Simple Tricks And Nonsense!",
                 -9999.0f);
         }
@@ -97,7 +91,8 @@ public final class ControlDrainAssessment {
         if (economy.underBattleOrder()) {
             final int battleOrderCost = 3;
             if (economy.forceAvailable() < battleOrderCost) {
-                return terminal(operations, "BATTLE_ORDER",
+                return terminal(operations, actionId, "CONTROL-battle-order-afford",
+                    TraceOutputKind.BANDED,
                     "Under Battle Order but can't afford drain (need " + battleOrderCost
                         + ", have " + economy.forceAvailable() + ")", -50.0f);
             }
@@ -105,81 +100,100 @@ public final class ControlDrainAssessment {
                     && economy.cheapestDeployCost() < Integer.MAX_VALUE
                     && economy.forceAvailable() - battleOrderCost
                         < economy.cheapestDeployCost()) {
-                return terminal(operations, "BATTLE_ORDER",
+                return terminal(operations, actionId, "CONTROL-battle-order-save-deploy",
+                    TraceOutputKind.BANDED,
                     "Under Battle Order - saving force for deploy (cost "
                         + economy.cheapestDeployCost() + ")", -50.0f);
             }
             if (!economy.hasDeployableCard()) {
-                return terminal(operations, "BATTLE_ORDER",
+                return terminal(operations, actionId, "CONTROL-battle-order-only-pressure",
+                    TraceOutputKind.BANDED,
                     "Under Battle Order but NO deployable cards - drain is our only pressure!", 70.0f);
             }
             if (facts.battleOrderCostWaived()) {
-                return terminal(operations, "V140",
+                return terminal(operations, actionId, "V140", TraceOutputKind.ORDERING,
                     "V140 BATTLE ORDER COST WAIVED: engine initiate-cost is 0 - drain is FREE!", 60.0f);
             }
 
             DrainValue drainValue = facts.battleOrderDrainValue();
             if (drainValue != null && drainValue.amount() <= 1.0f) {
-                operations.add(new Operation("V104", String.format(
+                add(operations, actionId, "V104", TraceOutputKind.VETO, String.format(
                     "V104 BATTLE ORDER + DRAIN <= 1: drain %.0f at %s, pay 3 = net %.0f - hard block",
                     drainValue.amount(), drainValue.locationTitle(), drainValue.amount() - 3.0f),
-                    -2000.0f, false));
+                    -2000.0f);
                 suppressTurnLogic = true;
             }
             if (!suppressTurnLogic) {
                 if (economy.turnNumber() >= 3) {
-                    operations.add(new Operation("V52",
+                    add(operations, actionId, "V52-drain-anyway", TraceOutputKind.BANDED,
                         "V52 DRAIN ANYWAY: Turn " + economy.turnNumber()
                             + " - any drain is damage, pay the Battle Order cost!",
-                        50.0f, false));
+                        50.0f);
                 } else {
-                    operations.add(new Operation("V48",
+                    add(operations, actionId, "V48-drain", TraceOutputKind.BANDED,
                         "V48 BATTLE ORDER EARLY: Turn " + economy.turnNumber()
                             + " - save force for deploys",
-                        -50.0f, false));
+                        -50.0f);
                 }
             }
         } else if (!economy.hasDeployableCard()) {
-            operations.add(new Operation("CONTROL_BASE",
-                "Force drain (no deployable cards - our only pressure!)", 70.0f, false));
+            add(operations, actionId, "CONTROL-base-no-deploy", TraceOutputKind.BANDED,
+                "Force drain (no deployable cards - our only pressure!)", 70.0f);
         } else {
-            operations.add(new Operation("CONTROL_BASE", "Force drain is good", 50.0f, false));
+            add(operations, actionId, "CONTROL-base-drain", TraceOutputKind.BANDED,
+                "Force drain is good", 50.0f);
         }
 
         MultiDrain multi = facts.multiDrain();
         if (multi != null) {
             if (multi.thisDrainAmount() >= 3.0f) {
-                operations.add(new Operation("V52", "V52 MULTI-DRAIN: Drain "
-                    + (int) multi.thisDrainAmount() + " - top priority drain site!", 300.0f, false));
+                add(operations, actionId, "V52-multi-drain", TraceOutputKind.BANDED,
+                    "V52 MULTI-DRAIN: Drain " + (int) multi.thisDrainAmount()
+                        + " - top priority drain site!", 300.0f);
             } else if (multi.thisDrainAmount() >= 2.0f) {
-                operations.add(new Operation("V52", "V52 MULTI-DRAIN: Drain "
-                    + (int) multi.thisDrainAmount() + " - high value drain!", 200.0f, false));
+                add(operations, actionId, "V52-multi-drain", TraceOutputKind.BANDED,
+                    "V52 MULTI-DRAIN: Drain " + (int) multi.thisDrainAmount()
+                        + " - high value drain!", 200.0f);
             } else if (multi.drainCapableSites() >= 2) {
-                operations.add(new Operation("V52", "V52 MULTI-DRAIN: "
-                    + multi.drainCapableSites() + " drain sites - drain everywhere!", 100.0f, false));
+                add(operations, actionId, "V52-multi-drain", TraceOutputKind.BANDED,
+                    "V52 MULTI-DRAIN: " + multi.drainCapableSites()
+                        + " drain sites - drain everywhere!", 100.0f);
             }
         }
 
         HuntDown huntDown = facts.huntDown();
         if (huntDown.active()) {
             if (huntDown.opponentIcons() >= 2) {
-                operations.add(new Operation("V29.9",
+                add(operations, actionId, "V29.9-HuntDown-high", TraceOutputKind.BANDED,
                     "V29.9 HUNT DOWN DRAIN: High-value drain location ("
-                        + huntDown.opponentIcons() + " opponent icons)!", 40.0f, false));
+                        + huntDown.opponentIcons() + " opponent icons)!", 40.0f);
             }
-            operations.add(new Operation("V29.9",
+            add(operations, actionId, "V29.9-HuntDown-drain", TraceOutputKind.BANDED,
                 "V29.9 HUNT DOWN: Force drains are critical - Visage adds +1, keep pressure on!",
-                30.0f, false));
+                30.0f);
         }
 
-        return new Result(operations);
+        return result(operations);
     }
 
-    private static Result terminal(List<Operation> operations,
-                                   String ruleId,
-                                   String detail,
-                                   float delta) {
-        operations.add(new Operation(ruleId, detail, delta, true));
-        return new Result(operations);
+    private static void add(List<PolicyOperation> operations, String actionId,
+                            String ruleId, TraceOutputKind outputKind,
+                            String detail, float delta) {
+        operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.DRAIN_CONTROL, outputKind, delta, detail));
+    }
+
+    private static PolicyResult terminal(List<PolicyOperation> operations,
+                                         String actionId,
+                                         String ruleId,
+                                         TraceOutputKind outputKind,
+                                         String detail,
+                                         float delta) {
+        add(operations, actionId, ruleId, outputKind, detail, delta);
+        return result(operations);
+    }
+
+    private static PolicyResult result(List<PolicyOperation> operations) {
+        return new PolicyResult("CONTROL_DRAIN_POLICY", operations);
     }
 }
