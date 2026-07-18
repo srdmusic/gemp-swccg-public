@@ -4,6 +4,15 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-18: V203 AI-ONLY DRAW PHASE POLICY OWNER (both bots)
+- Why: the mirrored 813-line DRAW evaluators each owned the same recognition, board reads, helper arithmetic, score ordering, and early returns. Keeping two live copies made rule ownership ambiguous and allowed Rando and Chosen One to drift.
+- Consolidation: shared `DrawPhasePolicy` now owns the exact ordered DRAW contribution stream. Shared `DrawPhaseFactsReader` owns the duplicated force-generation, V182 offensive-bank, expensive-card, and force-starved reads. Each bot keeps only stock decision recognition, bot-specific facts/oracle adaptation, the existing reserve reader, and typed operation application.
+- Behavior boundary: candidate filtering, raw float deltas, reasoning strings, logger order, V42/V58/V167/V182/V24.10 boundaries, early returns, reserve arithmetic, Pass behavior, and candidate order are preserved. V182 remains an additive `-300` followed by an early return; its historical VETO label does not become a hard veto. Existing reserve-reader quirks and fallbacks are deliberately unchanged.
+- Single-owner boundary: each live DRAW rule arm contributes once through `PolicyContributionLedger`; `CombinedEvaluator` remains the sole selector. No new score or objective-specific DRAW rule was added.
+- Engine boundary: every production edit is under `gemp-swccg-server/.../ai/**`. No game engine, decision metadata, card, action, mediator, serializer, client, deck, or database source changed.
+- Verification: 61 focused DRAW/policy/ledger/trace tests passed. The full affected reactor passed 967 tests with 0 failures and 0 errors (26 skipped), and the package gate passed. Rando and Chosen One adapters normalize identically; source-boundary, forbidden-symbol, and diff checks are clean.
+- Revert: revert the single V203 commit. V202 remains a behavior-neutral foundation and no non-AI production source is part of V203.
+
 ## 2026-07-18: V202 AI-ONLY SELECTION FOUNDATION (both bots, shadow only)
 - Why: phase extraction needs one typed, ordered contribution stream and one exact parent-to-child identity contract before any live rule arm moves. Without that foundation, new phase owners could duplicate legacy scores or repeat the abandoned engine-metadata mistake.
 - Operation contract: shared `PolicyOperation`, `PolicyResult`, and `PolicyContributionLedger` preserve action id, rule-arm id, domain, manifest kind, operation kind, raw float delta, reason, and order. The ledger requires each `(decision, actionId, ruleArmId)` contribution exactly once, including rejecting repeats from the same producer. Mirrored adapters require the validated ledger and apply its stream through the existing `EvaluatedAction` ADD, HARD_VETO, and DEFER choke points.

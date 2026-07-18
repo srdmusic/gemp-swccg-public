@@ -1,3 +1,15 @@
+  ==== V203 AI-ONLY DRAW PHASE POLICY OWNER (2026-07-18, both bots) ====
+The two 813-line mirrored DRAW evaluators now use one shared AI-only DrawPhasePolicy for the exact ordered score
+stream and one DrawPhaseFactsReader for duplicated force-generation, V182 offensive-bank, expensive-card, and
+force-starved reads. Each bot retains stock recognition, bot-specific fact/oracle adaptation, the existing reserve
+reader, and typed operation application. Candidate filtering, raw float deltas, reasoning and logger order, early
+returns, reserve arithmetic, Pass behavior, and candidate order are preserved. V182 remains additive -300 plus an
+early return, not a hard veto. CombinedEvaluator remains the only selector. Production changes are confined to
+gemp-swccg-server AI source; no engine or decision metadata changed. Gate: 61 focused tests; full affected reactor
+967 tests, 0 failures, 0 errors, 26 skipped; package, mirror, forbidden-symbol, source-boundary, and diff checks pass.
+Revert the single V203 commit.
+See AI_CHANGELOG 2026-07-18.
+
   ==== V202 AI-ONLY SELECTION FOUNDATION (2026-07-18, both bots, shadow only) ====
 Phase extraction now has a shared typed operation stream before any live rule arm moves. PolicyOperation and
 PolicyResult preserve action, rule-arm, domain, manifest kind, operation kind, raw float delta, reason, and order;
