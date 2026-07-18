@@ -171,6 +171,14 @@ public class EvaluatedAction {
         addReasoning("DEFER: " + reason, mandatoryFallbackDelta);
     }
 
+    /** V202: typed policy overload. Selection behavior is identical to the legacy overload. */
+    public void defer(String reason, float mandatoryFallbackDelta, TraceRuleId ruleId,
+                      TraceDomainId domainId, TraceOutputKind outputKind) {
+        this.deferred = true;
+        if (this.deferReason == null) this.deferReason = reason;
+        addReasoning("DEFER: " + reason, mandatoryFallbackDelta, ruleId, domainId, outputKind);
+    }
+
     public void defer(String reason) {
         defer(reason, 0.0f);
     }

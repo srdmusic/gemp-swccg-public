@@ -3,8 +3,10 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOp;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOperation;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
@@ -196,6 +198,24 @@ public class CombinedEvaluatorTraceTest {
         assertEquals(TraceOp.SELECT, winner.getOp());
         assertEquals("A", winner.getActionId());
         assertEquals("winner", winner.getDetail());
+    }
+
+    @Test
+    public void legacyDeferKeepsLegacyTraceIdentityAndRawDelta() {
+        ScriptedEvaluator evaluator = new ScriptedEvaluator("legacy-defer", ctx -> {
+            EvaluatedAction deferred = action("A", 10.0f, "Unsupported solo");
+            deferred.defer("unsupported solo", -800.0f);
+            return Arrays.asList(deferred);
+        });
+
+        DecisionTrace trace = capture(Arrays.asList((ActionEvaluator) evaluator), passableContext("A"));
+        TraceOperation add = findFirst(trace, TraceOp.ADD);
+
+        assertEquals(TraceRuleId.LEGACY_UNTAGGED, add.getRuleId());
+        assertEquals(TraceDomainId.LEGACY_UNTAGGED, add.getDomainId());
+        assertEquals(TraceOutputKind.LEGACY_UNTAGGED, add.getOutputKind());
+        assertEquals(Float.floatToRawIntBits(-800.0f), add.getDeltaBits().intValue());
+        assertEquals("DEFER: unsupported solo", add.getDetail());
     }
 
     // =========================================================================

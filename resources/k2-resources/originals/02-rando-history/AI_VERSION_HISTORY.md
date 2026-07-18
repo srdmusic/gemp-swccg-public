@@ -1,3 +1,17 @@
+  ==== V202 AI-ONLY SELECTION FOUNDATION (2026-07-18, both bots, shadow only) ====
+Phase extraction now has a shared typed operation stream before any live rule arm moves. PolicyOperation and
+PolicyResult preserve action, rule-arm, domain, manifest kind, operation kind, raw float delta, reason, and order;
+PolicyContributionLedger requires one exact decision/action/rule contribution and rejects repeats even from the same
+producer. Mirrored adapters require that validated ledger and apply
+ADD, HARD_VETO, and DEFER through the existing EvaluatedAction choke points. ObjectiveProgressAssessment and
+TurnResourcePlan are facts-only. PendingAiIntent stores exact action or physical-card constraints only inside AI
+memory and clears on terminal, expiry, missing, ambiguous, or consumed-child paths. It stores no score, blueprint-only
+identity, engine object, or decision parameter. The existing DecisionSnapshot remains the immutable stock-decision
+snapshot and CombinedEvaluator is unchanged. Nothing is wired to a live policy route in V202. Gate: 110 focused
+foundation/selection/trace tests and the full affected reactor at 951 tests, 0 failures, 0 errors, 26 skipped; mirror, source-boundary,
+forbidden-symbol, and diff checks pass. Production changes are AI-only. Revert the single V202 commit.
+See AI_CHANGELOG 2026-07-18.
+
   ==== V201 AI-ONLY UNSUPPORTED-SOLO DEFER TIER (2026-07-15, both bots) ====
 The L3 weak-solo rule's additive -800 could be revived by existing destination and forced-pull bonus stacks. V201
 adds an OR-merged DEFER marker and makes both normal and ordered-bucket selection compare constraint class before
