@@ -2,6 +2,8 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
@@ -4026,16 +4028,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     // ═══════════════════════════════════════════════════════════
     // ═══ SECTION: FORCE-LOSS — Loss-Source Picker (reorg 2026-07-06) ═══
     // Owns: V153 two-tier zone order (protect characters when life force >= 4;
-    // survival mode < 4) + bolt-ons V109 (senators -300), V175a (weapon-protect
+    // survival mode < 4) + bolt-ons V109 (senators -300), V175a (battle-interrupt
     // turn-4 gate), V178-loss (wielded-weapon zone rerank 600→150), V28-DTF
     // (Draw Their Fire force-pile protect), V21/V25 protections. Hub: V153 LIVE.
     // KIND mix + key magnitudes: ORDERING via zone bands; HAND FLOOR -700,
-    // PRIORITY CARD -100, V21 hard bans on flip-required/objective-pullable cards.
+    // PRIORITY CARD -100, V21 additive veto bands on objective-critical cards.
     // Absorbed (V127, V101, V119, V29.8-zone): the old //-commented zone-scoring
     // blocks were DELETED 2026-07-12 batch 1.5 — revert path = git history.
-    // NOTE: the zone order is DUPLICATED in evaluateForceLossOrForfeit (battle
-    // handler, further down this file) — byte-identical parity pair, EDIT BOTH
-    // TOGETHER until an extract-method pass.
+    // V206: shared ForceLossFacts + ForceLossPolicy own the immutable snapshot and
+    // exact route-specific contribution stream. This class only adapts stock choices.
     // Cross-refs: BATTLE-3 (forfeit side of the combined lose-or-forfeit prompt),
     // RESPONSE (pay-loss route). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 +
     // Rando_Section_Manifest_2026-07-06.xlsx.
@@ -4047,366 +4048,83 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         List<EvaluatedAction> actions = new ArrayList<>();
         GameState gameState = context.getGameState();
         String playerId = context.getPlayerId();
-
-        // V21: Count hand size and reserves for hand protection
-        int handSize = 0;
-        int totalReserves = 0;
-        // V153 THIN RESERVE (Steve, 2026-07-07): reserve DECK size in isolation (NOT the
-        // life-force sum totalReserves) — used by the thin-reserve guard below to spare
-        // destiny-draw fuel when the deck runs low.
-        int reserveDeckSize = 0;
-        if (gameState != null && playerId != null) {
-            try {
-                handSize = gameState.getHand(playerId).size();
-                reserveDeckSize = gameState.getReserveDeckSize(playerId);
-                totalReserves = reserveDeckSize
-                    + gameState.getUsedPile(playerId).size()
-                    + gameState.getForcePileSize(playerId);
-            } catch (Exception e) {
-                // Fallback
-            }
-        }
+        ForceLossFacts.DecisionFacts decisionFacts = ForceLossFacts.readDecision(
+                gameState, playerId, context.getTurnNumber());
+        String decisionId = context.getDecisionId();
+        PolicyContributionLedger forceLossLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "force-loss-decision" : decisionId + "-force-loss");
 
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
-                cardId,
-                ActionType.UNKNOWN,
-                50.0f,
-                "Lose force (card " + cardId + ")"
-            );
+                    cardId,
+                    ActionType.UNKNOWN,
+                    50.0f,
+                    "Lose force (card " + cardId + ")");
 
             if (gameState != null) {
                 try {
                     PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
                     if (card != null) {
-                        SwccgCardBlueprint blueprint = card.getBlueprint();
                         String title = card.getTitle();
                         if (title != null) {
                             action.setDisplayText("Lose " + title);
                         }
-
-                        // =======================================================
-                        // V29.8: ZONE-AWARE FORCE LOSS — RESERVE/USED FIRST, HAND LAST
-                        // When life force is healthy (reserve+used+force > 10):
-                        //   STRONGLY prefer losing from Reserve/Used/Force Pile.
-                        //   Cards in those piles can't be played — they're just life force.
-                        //   Cards in hand = deploy options = your entire next turn.
-                        //   Losing your whole hand = nothing to deploy = death spiral.
-                        // When life force is critical (<= 10):
-                        //   Reluctantly lose from hand to preserve life force.
-                        //
-                        // V29.8 FIX: Previous scoring was too weak (+30 reserve vs -100 hand).
-                        // Card-specific penalties (destiny, unique, priority) applied to ALL zones
-                        // equally, which swamped the zone preference. Now:
-                        //   - Zone scoring is MASSIVE (+500 for reserve when healthy)
-                        //   - Card-specific penalties only apply to hand cards (not pile cards)
-                        // =======================================================
-                        com.gempukku.swccgo.common.Zone zone = card.getZone();
-                        boolean isFromHand = (zone != null && zone.name().contains("HAND"));
-                        boolean isFromReserve = (zone != null && zone.name().contains("RESERVE"));
-                        boolean isFromUsedPile = (zone != null && zone.name().contains("USED"));
-                        boolean isFromForcePile = (zone != null && zone.name().contains("FORCE_PILE"));
-
-                        // === V127 (Steve, 2026-05-22): FORCE-LOSS CONSOLIDATION ===
-                        // V101 (May 20) DELETED. V101 added a blanket Used+500/Reserve+300/
-                        // Hand-500 layer on top of V29.8 below, which silently dominated V29.8's
-                        // conditional duplicate-detection and life-force-low logic. Net effect:
-                        // a duplicate hand interrupt healthy scored -750, while any pile card
-                        // scored +1000. Hand always lost by 1750 — the V13-era priority order
-                        // (Duplicate Hand > Used > Reserve > Hand > Force Pile) was inverted.
-                        //
-                        // V127 collapses V101's used > reserve ordering INTO V29.8 below, where
-                        // it can interact with the duplicate + life-force-low logic correctly.
-                        // See V29.8 block immediately below for the new tiered magnitudes.
-                        //
-                        // V119 (V101's mirror in evaluateForceLossOrForfeit) is also deleted —
-                        // V29.8 is now mirrored into that handler instead.
-
-                        // === V109 (Steve, 2026-05-20): MY LORD — DON'T LOSE/COST SENATORS ===
-                        // Per Steve: "Let's never put a senator in used pile or lost pile
-                        // for this deck if we can avoid. hard block like -300"
-                        // Applied here at every force-loss / cost / forfeit decision.
-                        // Senator detection via lore + keyword.
-                        if (card.getBlueprint() != null) {
-                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v109Obj =
-                                context.getObjectiveAnalyzer();
-                            if (v109Obj != null && v109Obj.isAnalyzed()
-                                    && v109Obj.getObjectiveTitle() != null) {
-                                // V109 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isMyLord().
-                                boolean v109IsMyLord = v109Obj.isMyLord();
-                                if (v109IsMyLord) {
-                                    boolean v109IsSenator = false;
-                                    if (card.getBlueprint().hasKeyword(
-                                            com.gempukku.swccgo.common.Keyword.SENATOR)) {
-                                        v109IsSenator = true;
-                                    } else {
-                                        String v109Lore = card.getBlueprint().getLore();
-                                        if (v109Lore != null && v109Lore.toLowerCase(
-                                                java.util.Locale.ROOT).contains("senator")) {
-                                            v109IsSenator = true;
-                                        }
-                                    }
-                                    if (v109IsSenator) {
-                                        action.addReasoning(
-                                            "V109 MY LORD: PROTECT senator '" + title
-                                                + "' — never discard/lose senators in this deck -300",
-                                            -300.0f);
-                                        logger.warn("V109 MY LORD: PROTECT senator {} from loss/cost → -300",
-                                            title);
-                                    }
-                                }
-                            }
-                        }
-
-                        // === V153 (Steve, 2026-05-28): UNIFIED FORCE-LOSS ORDER (char/life-force tiers) ==
-                        // Replaces the old V127/V29.8 healthy/low zone scoring, which was
-                        // INVERTED from Steve's intended order (it dumped HAND first when low,
-                        // and lost RESERVE before HAND when healthy — backwards). Replay
-                        // 6x8e5hyqgajpe045: Grievous lost off Reserve to a drain while spare
-                        // interrupts sat in hand.
-                        //
-                        // MECHANIC (verified in engine): life force = Reserve + Force Pile +
-                        // Used Pile (GameState.getPlayerLifeForce). HAND and TABLE are NOT life
-                        // force, so losing from hand / forfeiting does NOT move you toward the
-                        // lose condition; losing from reserve/used/force DOES. Defeat fires when
-                        // life force <= 0 (checkLifeForceDepleted). So when critically low we
-                        // dump hand to preserve the life-force piles; otherwise we keep our
-                        // deployable hand (esp. characters) to mount the comeback.
-                        //
-                        // Steve's order (lose FIRST -> LAST), by life force tier:
-                        //   >= 4 (protect characters): Dup hand > Used > hand junk > Reserve
-                        //                              > HAND CHARACTERS > Force pile
-                        //   <  4 (survival, save life-force piles): Dup hand > hand junk
-                        //                              > HAND CHARACTERS > Used > Reserve > Force pile
-                        // Within hand, every non-character is lost before a character (chars are
-                        // the comeback). At >=4 we spend Reserve to keep characters; below 4 we
-                        // dump the whole hand (junk then chars) to keep the life-force piles off
-                        // the deck-out line. Force pile is ALWAYS last (deploy/activation fuel).
-                        // Hand floor: keep >=4 cards in hand while life force >= 10.
-                        //
-                        // SCOPE: this block = regular force loss (drains, First Strike, "lose X
-                        // Force"). The SAME order is mirrored into the battle handler
-                        // evaluateForceLossOrForfeit (force-loss side).
-                        //
-                        // Preserved protections (bolted on below): V109 senator (above, all
-                        // zones), V28 Draw Their Fire force-pile, V21 objective-critical, V25
-                        // Hunt-Down lightsaber, AiPriorityCards (hand + used), duplicate bonus.
-                        // ================================================================
-
-                        // --- duplicate-in-hand detection (needed by the tier below) ---
-                        boolean isDuplicate = false;
-                        if (isFromHand && title != null) {
-                            try {
-                                int copiesInHand = 0;
-                                boolean copyOnTable = false;
-                                java.util.List<PhysicalCard> myHand = gameState.getHand(playerId);
-                                if (myHand != null) {
-                                    for (PhysicalCard hc : myHand) {
-                                        if (hc != null && title.equals(hc.getTitle())) {
-                                            copiesInHand++;
-                                        }
-                                    }
-                                }
-                                for (PhysicalCard tc : gameState.getAllPermanentCards()) {
-                                    if (tc != null && playerId.equals(tc.getOwner())
-                                        && title.equals(tc.getTitle())
-                                        && tc.getZone() != null && tc.getZone().isInPlay()) {
-                                        copyOnTable = true;
-                                        break;
-                                    }
-                                }
-                                isDuplicate = (copiesInHand >= 2 || copyOnTable);
-                            } catch (Exception e) { /* ignore */ }
-                        }
-
-                        // --- V153 tier: >=4 protect characters; <4 survival (dump hand to save life force) ---
-                        boolean v153ProtectChars = (totalReserves >= 4);
-                        CardCategory v153Cat = (isFromHand && blueprint != null) ? blueprint.getCardCategory() : null;
-                        boolean v153HandChar = (v153Cat == CardCategory.CHARACTER);
-                        boolean v153HandShip = (v153Cat == CardCategory.STARSHIP || v153Cat == CardCategory.VEHICLE);
-
-                        // Base zone score (higher = lose first).
-                        float v153Zone;
-                        if (isFromHand) {
-                            if (isDuplicate) {
-                                v153Zone = 1000.0f;                                  // redundant copy — lose first
-                            } else if (v153HandChar) {
-                                v153Zone = v153ProtectChars ? 100.0f : 700.0f;       // protected vs dumped
-                            } else if (v153HandShip) {
-                                v153Zone = v153ProtectChars ? 500.0f : 750.0f;
-                            } else {
-                                v153Zone = v153ProtectChars ? 600.0f : 850.0f;       // hand junk (interrupt/effect)
-                            }
-                        } else if (isFromUsedPile) {
-                            v153Zone = v153ProtectChars ? 800.0f : 400.0f;           // spent cards; below hand when surviving
-                        } else if (isFromReserve) {
-                            v153Zone = v153ProtectChars ? 400.0f : 300.0f;
-                        } else if (isFromForcePile) {
-                            v153Zone = 50.0f;                                        // ALWAYS last
-                        } else {
-                            v153Zone = 100.0f;                                       // unknown zone fallback
-                        }
-                        action.addReasoning("V153 ZONE (" + (zone != null ? zone.name() : "?")
-                            + ", lifeForce=" + totalReserves + ", protectChars=" + v153ProtectChars + ")", v153Zone);
-                        if (isFromHand && v153HandChar) {
-                            logger.warn("V153 HAND CHAR: {} protectChars={} lifeForce={} → zone {}", title, v153ProtectChars, totalReserves, v153Zone);
-                        }
-
-                        // === V153 THIN RESERVE (Steve, 2026-07-07): spare destiny fuel when the
-                        // reserve DECK runs thin. PROTECT-CHARS tier only (life force >= 4). Mistake
-                        // 3 (Endor Operations game): reserve deck was down near the last few destiny
-                        // cards, yet the protect-chars order keeps reserve (base 400) ABOVE hand
-                        // characters (100), so Rando kept eating reserve to protect deployable hand
-                        // pieces — burning the destiny draws it needed for battles. This demotes a
-                        // reserve loss BELOW hand characters (400 - 335 = 65) once the reserve DECK is
-                        // <=10, but keeps it ABOVE the force pile (50) so activation fuel is still lost
-                        // last. Keys on reserveDeckSize alone (life force can be comfortable while the
-                        // deck is thin — the rest is in used/force). Survival tier (protectChars=false,
-                        // life force <4) is intentionally NOT guarded: there reserve is already 300,
-                        // below hand junk/chars, and we WANT to preserve the life-force piles to avoid
-                        // decking out. Additive — nothing removed.
-                        // -335 window: must exceed 400-100=300 to drop reserve under hand chars, and
-                        // stay under 400-50=350 to remain above the force pile. Re-derive if the V153
-                        // base magnitudes (400/100/50) ever move.
-                        if (isFromReserve && v153ProtectChars && reserveDeckSize <= 10) {
-                            action.addReasoning("V153 THIN RESERVE (deck=" + reserveDeckSize
-                                + "): demote reserve below hand chars to preserve destiny", -335.0f);
-                            logger.warn("V153 THIN RESERVE: reserve deck={} (protectChars) — demote reserve loss 400 -> 65", reserveDeckSize);
-                        }
-
-                        // === V175 (Steve, 2026-06): PROTECT BATTLE INTERRUPTS FROM THE FODDER PILE ===
-                        // Log forensics (ROTS Dooku games): the force-loss picker repeatedly chose
-                        // "Lose Welcome Home, Lord Tyranus" — the destiny-substitute died in the
-                        // used pile before Tyranus ever battled, and the Sniper copies cycled into
-                        // payments/loss. Battle-relevant interrupts in hand (battle destiny /
-                        // 'hit' follow-ups / power pumps / substitutes) are the bot's only in-battle
-                        // tricks; they rank as "hand junk" (600) in the V153 order. -450 drops them
-                        // to 150 — right above HAND CHARACTERS (100), below Reserve (400): lost
-                        // near-last, like characters. Survival tier (<4) unchanged — when dumping
-                        // hand to stay alive, interrupts still go before characters.
-                        // V175a (Steve, 2026-06): TURN-GATED — protection starts on turn 4. Turns
-                        // 1-3, losing a known interrupt from hand BEATS blind reserve loss: the
-                        // deck is still dense with undeployed key cards, so an early reserve hit
-                        // has a much higher chance of killing something crucial. A hand interrupt
-                        // is a known, replaceable quantity early. After turn 3, the engine is on
-                        // the table and the in-battle tricks become the scarce resource — protect.
-                        if (isFromHand && v153Cat == CardCategory.INTERRUPT && v153ProtectChars
-                                && blueprint != null && !isDuplicate
-                                && context.getTurnNumber() > 3) {
-                            try {
-                                String v175Gt = blueprint.getGameText();
-                                String v175G = v175Gt != null ? v175Gt.toLowerCase(java.util.Locale.ROOT) : "";
-                                if (v175G.contains("battle destiny") || v175G.contains("during battle")
-                                        || v175G.contains("during a battle") || v175G.contains("'hit'")
-                                        || v175G.contains("substitute") || v175G.contains("power +")) {
-                                    action.addReasoning("V175 PROTECT BATTLE INTERRUPT: '" + title
-                                        + "' is an in-battle trick — lose it near-last, like a character", -450.0f);
-                                    logger.warn("V175 PROTECT BATTLE INTERRUPT: {} (zone 600 -> 150)", title);
-                                }
-                            } catch (Exception e) { /* ignore */ }
-                        }
-
-                        // === V178 (Steve, 2026-06): PROTECT WEAPONS THAT HAVE A WIELDER ===
-                        // Replay aab2jiaa5sca: Luke's Lightsaber was lost from hand as force fodder
-                        // (V153 scored it 650) while Young Skywalker (its Luke-persona wielder) was
-                        // in play — the deck's signature weapon thrown away, so Luke fought
-                        // bare-handed all game. A weapon in hand whose wielder exists (any
-                        // non-undercover friendly character on table, or a character in hand to
-                        // deploy it onto) is a key combat piece; rank it near-last like a character
-                        // (-450: 600 hand-junk -> 150). Turn-gated > 3 (same early-game reserve-loss
-                        // logic as V175a — turns 1-3 the deck is dense, lose the known weapon over a
-                        // blind reserve hit). Survival tier (<4 life force) and duplicates unchanged.
-                        if (isFromHand && v153Cat == CardCategory.WEAPON && v153ProtectChars
-                                && !isDuplicate && context.getTurnNumber() > 3) {
-                            try {
-                                boolean v178Wielder = false;
-                                for (PhysicalCard wp : gameState.getAllPermanentCards()) {
-                                    if (wp != null && playerId.equals(wp.getOwner()) && !wp.isUndercover()
-                                            && wp.getBlueprint() != null
-                                            && wp.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                        v178Wielder = true; break;
-                                    }
-                                }
-                                if (!v178Wielder) {
-                                    for (PhysicalCard hc : gameState.getHand(playerId)) {
-                                        if (hc != null && hc.getBlueprint() != null
-                                                && hc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                            v178Wielder = true; break;
-                                        }
-                                    }
-                                }
-                                if (v178Wielder) {
-                                    action.addReasoning("V178 PROTECT WEAPON: '" + title
-                                        + "' — we have a wielder; lose it near-last, like a character", -450.0f);
-                                    logger.warn("V178 PROTECT WEAPON: {} (zone 600 -> 150)", title);
-                                }
-                            } catch (Exception e) { /* ignore */ }
-                        }
-
-                        // Hand floor: keep >=4 cards in hand while life force >= 10.
-                        if (isFromHand && handSize <= 4 && totalReserves >= 10) {
-                            action.addReasoning("V153 HAND FLOOR: only " + handSize
-                                + " in hand (life force " + totalReserves + ">=10) — keep >=4, lose from piles instead -700", -700.0f);
-                            logger.warn("V153 HAND FLOOR: handSize={} lifeForce={} — protect hand (-700)", handSize, totalReserves);
-                        }
-
-                        // --- V28: Draw Their Fire — Force pile = interrupt ability, protect it ---
-                        if (isFromForcePile) {
-                            boolean dtfActive = false;
-                            try {
-                                String dtfOpId = gameState.getOpponent(playerId);
-                                for (PhysicalCard dtfC : gameState.getAllPermanentCards()) {
-                                    if (dtfC != null && dtfOpId != null && dtfOpId.equals(dtfC.getOwner())
-                                        && dtfC.getBlueprint() != null && dtfC.getBlueprint().getTitle() != null
-                                        && dtfC.getBlueprint().getTitle().toLowerCase(java.util.Locale.ROOT).contains("draw their fire")
-                                        && dtfC.getZone() != null && dtfC.getZone().isInPlay()) {
-                                        dtfActive = true;
-                                        break;
-                                    }
-                                }
-                            } catch (Exception e) { }
-                            if (dtfActive) {
-                                int forcePileSize = 0;
-                                try { forcePileSize = gameState.getForcePileSize(playerId); } catch (Exception e) { }
-                                float dtfForcePenalty = (forcePileSize <= 3) ? -400.0f : -200.0f;
-                                action.addReasoning(String.format("V28 DTF FORCE PILE PROTECT: Force pile=%d, DTF active — lose from reserve instead!", forcePileSize), dtfForcePenalty);
-                                logger.warn("V28 DTF FORCE PILE PROTECT: {} from Force pile, DTF active, pile={} — HEAVY PENALTY ({})", title, forcePileSize, dtfForcePenalty);
-                            }
-                        }
-
-                        // --- AiPriorityCards: protect known key cards in HAND or USED pile (V153 extends to Used) ---
-                        if ((isFromHand || isFromUsedPile) && !isDuplicate && title != null
-                                && AiPriorityCards.isPriorityCardByTitle(title)) {
-                            action.addReasoning("V153 PRIORITY CARD: protect '" + title + "' (hand/used) -100", -100.0f);
-                        }
-
-                        // --- V21 / V25: objective-critical + Hunt-Down lightsaber protection (hand only) ---
-                        if (isFromHand && title != null) {
-                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objAnalyzer = context.getObjectiveAnalyzer();
-                            if (objAnalyzer != null && objAnalyzer.isAnalyzed()) {
-                                if (objAnalyzer.isRequiredCardForFlip(title)) {
-                                    action.addReasoning("OBJECTIVE CRITICAL IN HAND - NEVER LOSE!", -9999.0f);
-                                } else if (objAnalyzer.isPullableCard(title)) {
-                                    action.addReasoning("OBJECTIVE PULLABLE IN HAND - NEVER LOSE!", -9999.0f);
-                                }
-                                if (objAnalyzer.isHuntDownV()) {
-                                    String titleLower = title.toLowerCase(java.util.Locale.ROOT);
-                                    if (titleLower.contains("lightsaber")) {
-                                        action.addReasoning("V25 HUNT DOWN: PROTECT LIGHTSABER IN HAND!", -500.0f);
-                                    }
-                                }
-                            }
-                        }
+                        ForceLossFacts.CandidateFacts candidate =
+                                ForceLossFacts.readCandidate(gameState, playerId, card);
+                        forceLossLedger.register(ForceLossPolicy.score(
+                                cardId,
+                                ForceLossPolicy.Route.STANDALONE,
+                                decisionFacts,
+                                candidate,
+                                forceLossObjectiveFlags(context, candidate,
+                                        ForceLossPolicy.Route.STANDALONE)));
+                        PolicyOperationAdapter.apply(action, forceLossLedger);
                     }
-                } catch (NumberFormatException e) {
-                    // Ignore
+                } catch (NumberFormatException ignored) {
+                    // Preserve the legacy neutral fallback for malformed ids.
                 }
             }
-
             actions.add(action);
         }
-
         return actions;
+    }
+
+    private ForceLossPolicy.ObjectiveFlags forceLossObjectiveFlags(
+            DecisionContext context,
+            ForceLossFacts.CandidateFacts candidate,
+            ForceLossPolicy.Route route) {
+        var objectiveAnalyzer = context.getObjectiveAnalyzer();
+        if (objectiveAnalyzer == null || !objectiveAnalyzer.isAnalyzed()) {
+            return ForceLossPolicy.ObjectiveFlags.none();
+        }
+
+        String title = candidate.title();
+        boolean myLord = false;
+        boolean huntDown;
+        boolean required;
+        boolean pullable;
+        if (route == ForceLossPolicy.Route.STANDALONE) {
+            myLord = objectiveAnalyzer.getObjectiveTitle() != null
+                    && objectiveAnalyzer.isMyLord();
+            required = candidate.fromHand() && title != null
+                    && objectiveAnalyzer.isRequiredCardForFlip(title);
+            pullable = candidate.fromHand() && title != null && !required
+                    && objectiveAnalyzer.isPullableCard(title);
+            huntDown = candidate.fromHand() && title != null
+                    && objectiveAnalyzer.isHuntDownV();
+        } else {
+            huntDown = title != null && objectiveAnalyzer.isHuntDownV();
+            required = title != null
+                    && objectiveAnalyzer.isRequiredCardForFlip(title);
+            pullable = title != null && !required
+                    && objectiveAnalyzer.isPullableCard(title);
+        }
+        return new ForceLossPolicy.ObjectiveFlags(
+                myLord,
+                huntDown,
+                required,
+                pullable);
     }
 
     /**
@@ -4706,19 +4424,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         logger.info("🎯 Force loss OR forfeit (game state): attrition={}, damage={}", attritionRemaining, damageRemaining);
 
-        // V153 (Steve, 2026-05-28): life force = reserve + used + force pile (the lose
-        // condition; hand and table are excluded). Used by the V153 force-loss tier below.
-        int totalReservesV127 = 0;
-        // V153 THIN RESERVE (Steve, 2026-07-07): reserve DECK size in isolation (battle mirror).
-        int reserveDeckSizeV127 = 0;
-        if (gameState != null && playerId != null) {
-            try {
-                reserveDeckSizeV127 = gameState.getReserveDeckSize(playerId);
-                totalReservesV127 = reserveDeckSizeV127
-                    + gameState.getUsedPile(playerId).size()
-                    + gameState.getForcePileSize(playerId);
-            } catch (Exception e) { /* fallback to 0 */ }
-        }
+        ForceLossFacts.DecisionFacts forceLossDecision = ForceLossFacts.readCombinedDecision(
+                gameState, playerId, context.getTurnNumber());
+        String forceLossDecisionId = context.getDecisionId();
+        PolicyContributionLedger forceLossLedger = new PolicyContributionLedger(
+                forceLossDecisionId == null || forceLossDecisionId.isBlank()
+                        ? "combined-force-loss-decision"
+                        : forceLossDecisionId + "-combined-force-loss");
 
         // Track if we have any hit cards or dead cards available for forfeit
         boolean hasHitCards = false;
@@ -4798,16 +4510,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             if (gameState != null) {
                 try {
                     PhysicalCard zoneCheckCard = gameState.findCardById(Integer.parseInt(cardId));
-                    if (zoneCheckCard != null) {
-                        com.gempukku.swccgo.common.Zone cardZone = zoneCheckCard.getZone();
-                        if (cardZone != null) {
-                            String zoneName = cardZone.name();
-                            isForceLosSOption = zoneName.contains("HAND") ||
-                                zoneName.contains("RESERVE") ||
-                                zoneName.contains("FORCE_PILE") ||
-                                zoneName.contains("USED_PILE");
-                        }
-                    }
+                    isForceLosSOption = ForceLossFacts.isForceLossZone(zoneCheckCard);
                 } catch (NumberFormatException e) {
                     // Fallback — assume forfeit option
                 }
@@ -4872,123 +4575,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 //
                 // (No-op block: V67y deliberately not applied in this method.)
 
-                // V25: HUNT DOWN V — Protect lightsabers from Force loss
                 if (gameState != null) {
                     try {
-                        PhysicalCard lossCard = gameState.findCardById(Integer.parseInt(cardId));
-                        if (lossCard != null && lossCard.getTitle() != null) {
-                            String lossTitle = lossCard.getTitle().toLowerCase(java.util.Locale.ROOT);
-                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer lossOA = context.getObjectiveAnalyzer();
-                            if (lossOA != null && lossOA.isAnalyzed() && lossOA.isHuntDownV()
-                                && lossTitle.contains("lightsaber")) {
-                                action.addReasoning("V25 HUNT DOWN: PROTECT LIGHTSABER from loss!", -400.0f);
-                                logger.warn("V25 HUNT DOWN COMBINED-LOSS: {} is a lightsaber — PROTECT (-400)", lossCard.getTitle());
-                            }
+                        PhysicalCard lossCard =
+                                gameState.findCardById(Integer.parseInt(cardId));
+                        if (lossCard != null) {
+                            ForceLossFacts.CandidateFacts candidate =
+                                    ForceLossFacts.readCandidate(
+                                            gameState, playerId, lossCard);
+                            forceLossLedger.register(ForceLossPolicy.score(
+                                    cardId,
+                                    ForceLossPolicy.Route.COMBINED_BATTLE,
+                                    forceLossDecision,
+                                    candidate,
+                                    forceLossObjectiveFlags(context, candidate,
+                                            ForceLossPolicy.Route.COMBINED_BATTLE)));
+                            PolicyOperationAdapter.apply(action, forceLossLedger);
                         }
-                    } catch (NumberFormatException e) { /* ignore */ }
-                }
-
-                // === V153 (Steve, 2026-05-28): UNIFIED FORCE-LOSS ORDER — mirrored from
-                // evaluateForceLoss into the battle handler's force-loss side. Replaces the
-                // OLD inverted V127/V29.8 mirror. Same char/life-force tiers:
-                //   >= 4 (protect characters): Dup > Used > hand junk > Reserve > HAND CHARS > Force pile
-                //   <  4 (survival, save life-force piles): Dup > hand junk > HAND CHARS > Used > Reserve > Force pile
-                // life force = totalReservesV127 (reserve+used+force). Hand/forfeit are
-                // life-force-free; reserve/used/force are the lose-condition. This block scores
-                // only the force-loss (pile/hand) options; the forfeit side (V146/V67bd/V139/...)
-                // below is unchanged and still decides forfeit-vs-loss. V150/V22.3 forfeit-first
-                // nudges follow this block.
-                if (gameState != null) {
-                    try {
-                        PhysicalCard v153Card = gameState.findCardById(Integer.parseInt(cardId));
-                        if (v153Card != null) {
-                            com.gempukku.swccgo.common.Zone v153ZoneObj = v153Card.getZone();
-                            String v153ZoneName = v153ZoneObj != null ? v153ZoneObj.name() : "";
-                            String v153Title = v153Card.getTitle();
-                            SwccgCardBlueprint v153Bp = v153Card.getBlueprint();
-                            boolean v153FromUsed = v153ZoneName.contains("USED");
-                            boolean v153FromReserve = v153ZoneName.contains("RESERVE");
-                            boolean v153FromForcePile = v153ZoneName.contains("FORCE_PILE");
-                            boolean v153FromHand = v153ZoneName.contains("HAND");
-
-                            // duplicate-in-hand detection
-                            boolean v153IsDuplicate = false;
-                            if (v153FromHand && v153Title != null) {
-                                try {
-                                    int copies = 0;
-                                    boolean onTable = false;
-                                    java.util.List<PhysicalCard> h = gameState.getHand(playerId);
-                                    if (h != null) for (PhysicalCard hc : h) if (hc != null && v153Title.equals(hc.getTitle())) copies++;
-                                    for (PhysicalCard tc : gameState.getAllPermanentCards()) {
-                                        if (tc != null && playerId.equals(tc.getOwner()) && v153Title.equals(tc.getTitle())
-                                            && tc.getZone() != null && tc.getZone().isInPlay()) { onTable = true; break; }
-                                    }
-                                    v153IsDuplicate = (copies >= 2 || onTable);
-                                } catch (Exception e) { /* ignore */ }
-                            }
-
-                            boolean v153ProtectChars = (totalReservesV127 >= 4);
-                            CardCategory v153Cat = v153Bp != null ? v153Bp.getCardCategory() : null;
-                            boolean v153HandChar = (v153Cat == CardCategory.CHARACTER);
-                            boolean v153HandShip = (v153Cat == CardCategory.STARSHIP || v153Cat == CardCategory.VEHICLE);
-
-                            float v153Zone;
-                            if (v153FromHand) {
-                                if (v153IsDuplicate) v153Zone = 1000.0f;
-                                else if (v153HandChar) v153Zone = v153ProtectChars ? 100.0f : 700.0f;
-                                else if (v153HandShip) v153Zone = v153ProtectChars ? 500.0f : 750.0f;
-                                else v153Zone = v153ProtectChars ? 600.0f : 850.0f;
-                            } else if (v153FromUsed) {
-                                v153Zone = v153ProtectChars ? 800.0f : 400.0f;
-                            } else if (v153FromReserve) {
-                                v153Zone = v153ProtectChars ? 400.0f : 300.0f;
-                            } else if (v153FromForcePile) {
-                                v153Zone = 50.0f;
-                            } else {
-                                v153Zone = 100.0f;
-                            }
-                            action.addReasoning("V153 ZONE (" + v153ZoneName + ", lifeForce=" + totalReservesV127
-                                + ", protectChars=" + v153ProtectChars + ")", v153Zone);
-
-                            // === V153 THIN RESERVE (Steve, 2026-07-07): battle-mirror of the regular
-                            // block's thin-reserve guard. PROTECT-CHARS tier only. Reserve DECK <=10 ->
-                            // demote reserve loss below hand chars (400 - 335 = 65), still above the
-                            // force pile (50). Keys on reserveDeckSizeV127 alone. Survival tier
-                            // untouched. Additive. See the regular evaluateForceLoss block for the full
-                            // rationale + boundary window.
-                            if (v153FromReserve && v153ProtectChars && reserveDeckSizeV127 <= 10) {
-                                action.addReasoning("V153 THIN RESERVE (deck=" + reserveDeckSizeV127
-                                    + "): demote reserve below hand chars to preserve destiny", -335.0f);
-                                logger.warn("V153 THIN RESERVE (battle): reserve deck={} (protectChars) — demote reserve loss 400 -> 65", reserveDeckSizeV127);
-                            }
-
-                            // Hand floor: keep >=4 cards in hand while life force >= 10.
-                            if (v153FromHand) {
-                                int v153HandSize = 0;
-                                try { v153HandSize = gameState.getHand(playerId).size(); } catch (Exception e) { }
-                                if (v153HandSize <= 4 && totalReservesV127 >= 10) {
-                                    action.addReasoning("V153 HAND FLOOR: only " + v153HandSize
-                                        + " in hand (life force " + totalReservesV127 + ">=10) — keep >=4 -700", -700.0f);
-                                }
-                            }
-
-                            // Protections (mirror regular evaluateForceLoss): objective-critical + priority cards
-                            if (v153Title != null) {
-                                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v153OA = context.getObjectiveAnalyzer();
-                                if (v153OA != null && v153OA.isAnalyzed()) {
-                                    if (v153OA.isRequiredCardForFlip(v153Title)) {
-                                        action.addReasoning("OBJECTIVE CRITICAL - NEVER LOSE!", -9999.0f);
-                                    } else if (v153OA.isPullableCard(v153Title)) {
-                                        action.addReasoning("OBJECTIVE PULLABLE - NEVER LOSE!", -9999.0f);
-                                    }
-                                }
-                                if ((v153FromHand || v153FromUsed) && !v153IsDuplicate
-                                        && AiPriorityCards.isPriorityCardByTitle(v153Title)) {
-                                    action.addReasoning("V153 PRIORITY CARD: protect '" + v153Title + "' -100", -100.0f);
-                                }
-                            }
-                        }
-                    } catch (NumberFormatException e) { /* ignore */ }
+                    } catch (NumberFormatException ignored) {
+                        // Preserve the legacy neutral fallback for malformed ids.
+                    }
                 }
 
                 if (attritionRemaining > 0) {

@@ -29,7 +29,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | battle-forfeit | 13 | CSE RCA (2) | BATTLE pipeline / BATTLE-3 (hub = v159ForfeitScore, CSE) |
 | move | 49 | AA ATE CSE DE DPP ME RCA RandoConfig.java (8) | MOVE pipeline (T4 clobber ladder; dual-utility semantics) |
 | draw-count | 6 | DrE (1) | DRAW (DrE) |
-| force-loss-payment | 8 | CSE (1) | FORCE-LOSS engine (hub = V153, two byte-identical copies in CSE) |
+| force-loss-payment | 8 | CSE FLF FLP (3) | FORCE-LOSS policy (hub = shared ForceLossPolicy; CSE is the stock-choice adapter) |
 | shields | 13 | ATE CSE RCA SS (4) | SHIELDS engine (ShieldStrategy + ShieldFacts) |
 | pull-search | 33 | AA ATE CE CSE DC DE DO RCA (8) | PULL ENGINE (hub = V192 in ATE since T4.2); facts stay SVC-ORACLE (DeckOracle) |
 | objective-intent | 7 | AA ATE BP CSE DC DE DPP OA ODT RCA (10) | SVC-INTEL (ObjectiveAnalyzer — the LIVE brain; ObjectiveHandler.java is DEAD, do not wire) |
@@ -368,7 +368,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V182 |  | DRAW | DrE:22 | VETO | — | Offensive force-banking: computeOffensiveBank (591-667) finds contested sites winnable with hand characters affordable within ~2 turns of banking; when armed and hand >=… | LIVE |
 
 ### force-loss-payment — 8 rules
-*Which zone pays Force loss.* Target owner: FORCE-LOSS engine (hub = V153, two byte-identical copies in CSE).
+*Which zone pays Force loss.* Owner: shared `ForceLossPolicy` (hub = V153) over one immutable `ForceLossFacts` snapshot; CSE retains stock routing and battle-only ordering.
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
@@ -377,8 +377,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V28-DTF | V28 | FORCE-LOSS | CSE:4013 | ORDERING | — | Draw Their Fire arm: Force pile = interrupt ability, lose from reserve instead (heavy scaled penalty; live copy CSE 4115-4135, old copy 3890-3910 commented, + 3976… | LIVE |
 | V28-dtf-force-pile | V28 | FORCE-LOSS | CSE:4013 | BANDED | heavy penalty protecting Force pile when Draw Their Fire active | Live copy CSE 4115-4135 + priority comment 3976; older copy 3890-3910 is //-commented. Different rule sharing the V28 tag — belongs to the force-loss cluster, not… | LIVE |
 | V109 |  | FORCE-LOSS | CSE:4012 | BANDED | -300 tier | MY LORD: protect senators from loss/cost picks (-300) inside the loss-selection order (CSE 3825-3856, 3975 preserved-protections | LIVE |
-| V153 |  | FORCE-LOSS | CSE:4011 | ORDERING | — | FORCE-LOSS hub: unified loss order, char/life-force tiers (protect chars when lifeForce>=4, survival mode <4), HAND FLOOR -700, PRIORITY CARD -100. TWO COPIES (regular… | UPDATED 2026-07-07 (THIN RESERVE tier) |
-| V175a |  | FORCE-LOSS | CSE:4012 | ORDERING | — | Turn-gate on weapon protection inside the V153 order: protection starts turn 4; turns 1-3 the deck is dense, lose the known weapon (CSE 4049, 4079). Reorders, does not… | LIVE |
+| V153 |  | FORCE-LOSS | FLP | ORDERING | — | FORCE-LOSS hub: shared route-aware loss order, char/life-force tiers (protect chars when lifeForce>=4, survival mode <4), HAND FLOOR -700, PRIORITY CARD -100, THIN RESERVE -335. | CONSOLIDATED V206 |
+| V175a |  | FORCE-LOSS | FLP | ORDERING | — | Turn-gate on battle-interrupt protection inside the standalone V153 order: protection starts turn 4; turns 1-3 lose the known interrupt before a blind reserve hit. V178-loss separately protects weapons. | CONSOLIDATED V206 |
 | V178-loss | V178 | FORCE-LOSS | CSE:4013 | ORDERING | — | §8 arm split (forfeit vs force-loss): loss arm reranks wielded weapons zone 600 -> 150 (CSE 4071-4103). UNCLAIMED ARM: forfeit arm (CSE:9217, armed chars slightly… | LIVE |
 
 ### shields — 13 rules
@@ -549,7 +549,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 |---|---|---|
 | V136 <-> V137 | CDSE.evaluateSite winnability (deploy) <-> ME no-abandon veto (move) | Bot must not deploy to spots it immediately flees; both route winnability through MovePredicates.canWinAt (graded) — V181 is the deploy-side port of V137 |
 | V179 <-> V67ai | DPS location-keyword set <-> DE/ATE deploy-from-reserve keyword list | Lists MUST stay in sync or the DPS walk and pull scoring disagree on what counts as a location pull. NOTE: V67ai DE-copy magnitudes ABSORBED into V192 (2026-07-06); parity is now over the PREDICATE set (V179 <-> V67ai list <-> V192 location tier) |
-| V153 x2 | evaluateForceLoss <-> evaluateForceLossOrForfeit (CSE) | Byte-identical zone-order copies until an extract-method pass — edit BOTH |
+| V153 routes | evaluateForceLoss <-> evaluateForceLossOrForfeit (CSE adapters) | One shared ForceLossPolicy owns the common zone table; preserve the deliberate standalone-only and combined-battle scope differences pinned by V206 tests |
 | V159 x2 call sites | v159ForfeitScore() called from both forfeit paths (CSE) | Shared helper (lowercase, not grep-counted) must travel with the tag |
 | V88/V89/V193 DE<->CS | DeployEvaluator arm <-> CardSelectionEvaluator (CS) twin | Same rule on two decision routes. V88/V89: keep magnitudes in lockstep. V193: deliberately NOT lockstep — CS route = weight+1600 offset to beat the CS-route penalty stack (see V193-cs-route row); preserve the OFFSET, not equality (corrected 2026-07-13) |
 | V67z x2 | DrE transit reserve <-> DE deploy-phase twin | Same reservation on two phases |

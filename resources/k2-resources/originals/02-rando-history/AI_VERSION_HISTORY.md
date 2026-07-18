@@ -1,3 +1,16 @@
+  ==== V206 AI-ONLY FORCE-LOSS PAYMENT POLICY OWNER (2026-07-18, both bots) ====
+Shared ForceLossFacts now owns the immutable decision/candidate reads and shared ForceLossPolicy owns the exact
+ordered standalone and combined-battle payment streams for V109, V153, V175a, V178-loss, V28-DTF, V21, and V25.
+The common V153 healthy/survival table, duplicate override, thin-Reserve -335, hand floor -700, priority -100,
+thresholds, order, and reasons are unchanged. Deliberate route differences remain: V109/V175/V178/V28 and
+hand-only objective/V25 -500 are standalone-only; combined battle keeps all-zone objective protection and V25 -400.
+V154/V118 remain before the shared policy; V150/V22.3, the forfeit branch, and v159ForfeitScore remain after it in
+BATTLE-3. Lost-pile alias routing remains; unknown loss is untouched. The registry's stale byte-identical claim and
+V175 weapon mislabel is corrected. Production edits are AI-only. Gate: 28 focused tests; full affected reactor
+1,017 tests, 0 failures, 0 errors, 26 skipped; package, mirror, source-boundary, forbidden-symbol, artifact, and diff
+checks pass. Revert the single V206 commit.
+See AI_CHANGELOG 2026-07-18.
+
   ==== V205 AI-ONLY SHIELDS PHASE POLICY OWNER (2026-07-18, both bots) ====
 One shared ShieldStrategy now owns the unchanged shield tables, state, pacing, activation counts, and base score.
 ShieldFacts owns the existing board reads, while ShieldPolicy owns the typed V124/V102/V29.1 parent stream,
