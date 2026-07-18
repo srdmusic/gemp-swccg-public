@@ -3,10 +3,13 @@ package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
+import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
-import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
+import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -7780,6 +7783,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      */
     private List<EvaluatedAction> evaluateUnknown(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
+        String shieldDecisionId = context.getDecisionId();
+        PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
+                shieldDecisionId == null || shieldDecisionId.isBlank()
+                        ? "shield-unknown-decision" : shieldDecisionId + "-shields");
         GameState gameState = context.getGameState();
         SwccgGame game = context.getGame();
         List<String> cardIds = context.getCardIds();
@@ -7914,44 +7921,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // battleground site AND a battleground system simultaneously. Otherwise
             // Battle Order/Plan normally requires Rando to use 3 Force per drain; occupation
             // waives that cost, and Battle Plan also suppresses the Battle Order modifier.
-            if (cardTitle != null) {
-                String v112TitleLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
-                if (v112TitleLower.contains("battle order") || v112TitleLower.contains("battle plan")) {
-                    // V112 UPDATED 2026-07-06: engine occupies predicate (occupiesBothTheaters)
-                    // replaces the hand-rolled loop (old loop commented out below per
-                    // feedback_comment_out_old_rules) — same V140-class fix as V51.
-                    if (!occupiesBothTheaters(context.getGame(), context.getPlayerId())) {
-                        action.addReasoning("V112 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
-                        logger.warn("V112 BATTLE ORDER GATE: '{}' blocked — occupiesBothTheaters=false", cardTitle);
-                    }
-                    // OLD hand-rolled occupation loop (superseded 2026-07-06):
-                    // boolean v112BGSite = false; boolean v112BGSystem = false;
-                    // try {
-                    //     GameState gs112 = context.getGameState(); SwccgGame g112 = context.getGame(); String pid112 = context.getPlayerId();
-                    //     if (g112 != null && gs112 != null && pid112 != null) {
-                    //         for (PhysicalCard loc112 : gs112.getAllPermanentCards()) {
-                    //             if (loc112 == null || loc112.getBlueprint() == null) continue;
-                    //             com.gempukku.swccgo.common.Zone lz112 = loc112.getZone();
-                    //             if (lz112 == null || lz112 != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
-                    //             boolean isBG112 = false;
-                    //             try { isBG112 = g112.getModifiersQuerying().isBattleground(gs112, loc112, null); } catch (Exception e2) { }
-                    //             if (!isBG112) continue;
-                    //             boolean weOccupy112 = false;
-                    //             for (PhysicalCard atLoc : gs112.getCardsAtLocation(loc112)) {
-                    //                 if (atLoc == null || !pid112.equals(atLoc.getOwner())) continue;
-                    //                 CardCategory cat112 = atLoc.getBlueprint() != null ? atLoc.getBlueprint().getCardCategory() : null;
-                    //                 if (cat112 == CardCategory.CHARACTER || cat112 == CardCategory.STARSHIP || cat112 == CardCategory.VEHICLE) { weOccupy112 = true; break; }
-                    //             }
-                    //             if (weOccupy112) {
-                    //                 com.gempukku.swccgo.common.CardSubtype sub112 = loc112.getBlueprint().getCardSubtype();
-                    //                 if (sub112 == com.gempukku.swccgo.common.CardSubtype.SYSTEM) v112BGSystem = true;
-                    //                 else if (sub112 == com.gempukku.swccgo.common.CardSubtype.SITE) v112BGSite = true;
-                    //             }
-                    //         }
-                    //     }
-                    // } catch (Exception e) { logger.debug("V112 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
-                    // if (!v112BGSite || !v112BGSystem) { action.addReasoning("V112 BATTLE ORDER GATE: ...", -9999.0f); ... }
-                }
+            boolean v112IsBattleOrder = ShieldPolicy.isBattleOrderOrPlan(cardTitle);
+            boolean v112OccupiesBoth = !v112IsBattleOrder
+                    || ShieldFacts.occupiesBothTheaters(
+                        context.getGame(), context.getPlayerId());
+            shieldLedger.register(ShieldPolicy.unknownBattleOrderGate(
+                    cardId, cardTitle, v112OccupiesBoth));
+            if (v112IsBattleOrder && !v112OccupiesBoth) {
+                logger.warn("V112 BATTLE ORDER GATE: '{}' blocked - occupiesBothTheaters=false",
+                        cardTitle);
             }
 
             // === V117 (Steve, 2026-05-22): UNIVERSAL 4TH-SHIELD HARD BLOCK (evaluateUnknown) ===
@@ -7964,71 +7942,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // route through evaluateUnknown when isShieldSelectionByContent() returns false
             // (<50% shields in stacked). V112 covered Battle Order/Plan specifically.
             // V117 closes the gap for ALL shields: when 3 defensive shields are already on
-            // Rando's table, hard-block any 4th shield unless ShieldStrategy.prefers4thSlot()
+            // Rando's table, hard-block any 4th shield unless the shared fourth-slot policy
             // returns this specific shield title (V105 Battle Order/Plan or V107 Resistance/
             // Ultimatum trigger active).
-            if (category == CardCategory.DEFENSIVE_SHIELD
-                    && cardTitle != null) {
-                try {
-                    GameState gs117 = context.getGameState();
-                    String pid117 = context.getPlayerId();
-                    int v117ShieldsOnTable = 0;
-                    if (gs117 != null && pid117 != null) {
-                        for (PhysicalCard sc : gs117.getAllPermanentCards()) {
-                            if (sc == null || sc.getBlueprint() == null) continue;
-                            if (!pid117.equals(sc.getOwner())) continue;
-                            if (sc.getBlueprint().getCardCategory() != CardCategory.DEFENSIVE_SHIELD) continue;
-                            com.gempukku.swccgo.common.Zone sz = sc.getZone();
-                            if (sz == null || !sz.isInPlay()) continue;
-                            v117ShieldsOnTable++;
-                        }
-                    }
-                    if (v117ShieldsOnTable >= 3) {
-                        // 4th-slot territory — consult ShieldStrategy to see if this exact
-                        // shield is the V105/V107-preferred one. If not, hard-block.
-                        ShieldStrategy v117Strat = context.getShieldStrategy();
-                        String v117Preferred = null;
-                        if (v117Strat != null) {
-                            try {
-                                v117Preferred = v117Strat.prefers4thSlot(gs117, context.getGame(), pid117);
-                            } catch (Exception e) {
-                                logger.debug("V117 prefers4thSlot error: {}", e.getMessage());
-                            }
-                        }
-                        // V117 UPDATED 2026-07-06 (Verge twin of the V105 deadlock): only
-                        // pursue the preferred card if it is actually on the menu this
-                        // decision; else HOLD the slot closed instead of hard-blocking every
-                        // real shield for a card that can't be picked.
-                        if (v117Preferred == null || !preferredShieldInCandidates(context, v117Preferred)) {
-                            action.addReasoning(
-                                "V117 4TH SHIELD HOLD: " + v117ShieldsOnTable
-                                    + " shields on table, no available preferred card — slot closed!",
-                                -9999.0f);
-                            logger.warn("V117 4TH SHIELD HOLD: '{}' blocked — {} shields on table, preferred={} not on menu / no trigger",
-                                cardTitle, v117ShieldsOnTable, v117Preferred);
-                        } else {
-                            String v117tLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
-                            String v117pLower = v117Preferred.toLowerCase(java.util.Locale.ROOT);
-                            if (!v117tLower.contains(v117pLower)) {
-                                action.addReasoning(
-                                    "V117 4TH SHIELD: '" + cardTitle + "' not preferred (we want '"
-                                        + v117Preferred + "') — block",
-                                    -9999.0f);
-                                logger.warn("V117 4TH SHIELD: '{}' blocked — prefer '{}' instead",
-                                    cardTitle, v117Preferred);
-                            } else {
-                                action.addReasoning(
-                                    "V117 4TH SHIELD BOOST: matches preferred '" + v117Preferred + "' +2000",
-                                    2000.0f);
-                                logger.warn("V117 4TH SHIELD BOOST: '{}' matches preferred '{}' +2000",
-                                    cardTitle, v117Preferred);
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.debug("V117 shield-count check error: {}", e.getMessage());
+            if (category == CardCategory.DEFENSIVE_SHIELD && cardTitle != null) {
+                int shieldsOnTable = ShieldFacts.shieldsOnTable(
+                        context.getGameState(), context.getPlayerId());
+                ShieldStrategy shieldStrategy = context.getShieldStrategy();
+                ShieldPolicy.FourthSlotPick fourthSlot =
+                        new ShieldPolicy.FourthSlotPick(null, false,
+                                ShieldPolicy.FourthSlotTrigger.CLOSED);
+                if (shieldsOnTable >= 3 && shieldStrategy != null) {
+                    fourthSlot = shieldStrategy.fourthSlotPick(
+                            context.getGameState(), context.getGame(), context.getPlayerId(),
+                            preferred -> preferredShieldInCandidates(context, preferred));
+                }
+                shieldLedger.register(ShieldPolicy.unknownFourthSlot(
+                        cardId, shieldsOnTable, cardTitle, fourthSlot));
+                if (shieldsOnTable >= 3) {
+                    logger.warn("V117 4TH SHIELD: '{}' evaluated with preferred={} pursue={}",
+                            cardTitle, fourthSlot.preferred(), fourthSlot.pursue());
                 }
             }
+            PolicyOperationAdapter.apply(action, shieldLedger);
 
             // === V22 STARTING EFFECTS: BAN + OBJECTIVE-AWARE PREFERENCE ===
             if (context.getTurnNumber() <= 0 && cardTitle != null) {
@@ -8434,6 +8370,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      */
     private List<EvaluatedAction> evaluateReserveDeckSelection(DecisionContext context, String textLower) {
         List<EvaluatedAction> actions = new ArrayList<>();
+        String decisionId = context.getDecisionId();
+        PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "shield-reserve-decision" : decisionId + "-shield-reserve");
         List<String> blueprints = context.getBlueprints();
         ShieldStrategy shieldStrategy = context.getShieldStrategy();
         DeployPhasePlanner planner = context.getDeployPhasePlanner();
@@ -8665,54 +8605,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     logger.info("[ReserveDeck] Shield {}: score={} ({})", blueprintId, shieldScore, description);
                 }
 
-                // === V51: BATTLE ORDER GATE ===
-                // Battle Order requires occupying BOTH a battleground site AND a battleground system.
-                // If we don't occupy both, deploying Battle Order is a waste — it does nothing.
-                if (cardTitleLower.contains("battle order") || cardTitleLower.contains("battle plan")) {
-                    // V51 UPDATED 2026-07-06 (Verge game): engine occupies predicate
-                    // (occupiesBothTheaters) replaces the hand-rolled loop — old loop
-                    // commented out below per feedback_comment_out_old_rules.
-                    if (!occupiesBothTheaters(game, playerId)) {
-                        action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
-                        logger.warn("V51 BATTLE ORDER GATE: occupiesBothTheaters=false — BLOCKED!");
-                    } else {
-                        action.addReasoning("V51 BATTLE ORDER: Occupy BG site + BG system — ready!", 50.0f);
-                        logger.warn("V51 BATTLE ORDER: Requirements met — deploying!");
-                        // V51 EARLY-DEPLOY (EXTENDED 2026-07-06, Steve): +200 so Battle Order/Plan
-                        // deploys turns 1-2 the moment Rando occupies both theaters (tax compounds).
-                        // Guard shieldScore > -50 so a V43 redundant / pacing / not-played rejection
-                        // still wins. Occupy-only gate per Steve ("does not matter if opponent occupies").
-                        if (shieldScore > -50f) {
-                            action.addReasoning("V51 BATTLE ORDER EARLY-DEPLOY: occupy BG site + system — deploy now, tax compounds +200", 200.0f);
-                            logger.warn("V51 BATTLE ORDER: both theaters — +200 EARLY-DEPLOY (base {})", shieldScore);
-                        }
-                    }
-                    // OLD hand-rolled occupation loop (superseded 2026-07-06):
-                    // boolean hasBGSite = false; boolean hasBGSystem = false;
-                    // try {
-                    //     GameState gsBO = (game != null) ? game.getGameState() : null;
-                    //     if (game != null && gsBO != null && playerId != null) {
-                    //         for (PhysicalCard loc : gsBO.getAllPermanentCards()) {
-                    //             if (loc == null || loc.getBlueprint() == null) continue;
-                    //             com.gempukku.swccgo.common.Zone locZone = loc.getZone();
-                    //             if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
-                    //             SwccgCardBlueprint locBp = loc.getBlueprint();
-                    //             boolean isBattleground = false;
-                    //             try { com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = game.getModifiersQuerying();
-                    //                   if (mq != null) isBattleground = mq.isBattleground(gsBO, loc, null); } catch (Exception bgEx) { }
-                    //             if (!isBattleground) continue;
-                    //             boolean weOccupy = false;
-                    //             for (PhysicalCard atLoc : gsBO.getCardsAtLocation(loc)) {
-                    //                 if (atLoc != null && playerId.equals(atLoc.getOwner())) { weOccupy = true; break; }
-                    //             }
-                    //             if (weOccupy) {
-                    //                 if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) hasBGSystem = true;
-                    //                 else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) hasBGSite = true;
-                    //             }
-                    //         }
-                    //     }
-                    // } catch (Exception e) { logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
-                    // if (!hasBGSite || !hasBGSystem) { -9999 } else { +50 }
+                boolean occupiesBoth = !ShieldPolicy.isBattleOrderOrPlan(cardTitle)
+                        || ShieldFacts.occupiesBothTheaters(game, playerId);
+                shieldLedger.register(ShieldPolicy.reserveBattleOrderAdjustments(
+                        action.getActionId(), cardTitle, shieldScore, occupiesBoth));
+                PolicyOperationAdapter.apply(action, shieldLedger);
+                if (ShieldPolicy.isBattleOrderOrPlan(cardTitle)) {
+                    logger.warn("V51 BATTLE ORDER (reserve): occupiesBoth={} base={}",
+                            occupiesBoth, shieldScore);
                 }
             }
 
@@ -8766,7 +8666,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         // If majority are shields, treat as shield selection
-        boolean isShield = shieldCount > 0 && shieldCount >= cardIds.size() * 0.5;
+        boolean isShield = ShieldPolicy.isShieldSelection(shieldCount, cardIds.size());
         if (isShield) {
             logger.warn("V29.5 isShieldSelectionByContent: YES — {}/{} cards are shields (isArbitrary={})",
                 shieldCount, cardIds.size(), isArbitrary);
@@ -8778,37 +8678,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      * Defensive shield selection - use ShieldStrategy scoring.
      */
     /**
-     * V51/V112 (UPDATED 2026-07-06): mirror Battle Order's OWN occupation condition
-     * via the engine instead of a hand-rolled owner-present loop (the V140-class
-     * fix). Battle Order/Plan help Rando only while HE occupies both a battleground
-     * site AND a battleground system (opponent's drains then cost +3; Rando's are
-     * not taxed). canSpot(occupies + battleground_site/system) is exactly what the
-     * card's OccupiesCondition checks, so gate and card can never disagree again
-     * (the Verge game bug: the hand loop missed a Scarif SYSTEM occupation the
-     * engine predicate catches). Fails closed on any error (no false deploy).
-     */
-    private boolean occupiesBothTheaters(com.gempukku.swccgo.game.SwccgGame game, String playerId) {
-        if (game == null || playerId == null) return false;
-        try {
-            boolean site = com.gempukku.swccgo.filters.Filters.canSpot(game, null,
-                com.gempukku.swccgo.filters.Filters.and(
-                    com.gempukku.swccgo.filters.Filters.occupies(playerId),
-                    com.gempukku.swccgo.filters.Filters.battleground_site));
-            boolean sys = com.gempukku.swccgo.filters.Filters.canSpot(game, null,
-                com.gempukku.swccgo.filters.Filters.and(
-                    com.gempukku.swccgo.filters.Filters.occupies(playerId),
-                    com.gempukku.swccgo.filters.Filters.battleground_system));
-            return site && sys;
-        } catch (Exception e) {
-            logger.debug("occupiesBothTheaters error: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * V105/V117 (UPDATED 2026-07-06): is the 4th-slot preferred shield title
+     * V105/V117: is the fourth-slot preferred shield title
      * actually offered among THIS decision's candidates? The Verge game held the
-     * 4th shield slot hostage all game: prefers4thSlot returned "Battle Order"
+     * fourth shield slot hostage all game: the policy returned "Battle Order"
      * (Rando occupied both theaters) but Battle Order was never in the candidate
      * list, so the old code hard-blocked every real shield at -5000 (2760 fires)
      * and the slot deployed nothing. When the preferred card is not on the menu,
@@ -8847,6 +8719,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
     private List<EvaluatedAction> evaluateShieldSelection(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
+        String decisionId = context.getDecisionId();
+        PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "shield-selection-decision" : decisionId + "-shield-selection");
         GameState gameState = context.getGameState();
         ShieldStrategy shieldStrategy = context.getShieldStrategy();
         int turnNumber = context.getTurnNumber();
@@ -8909,113 +8785,30 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                         logger.warn("V29.5 [Shield] {}: score={} ({})", title, shieldScore, description);
 
-                        // === V105/V107 (Steve, 2026-05-20): 4TH-SLOT CONDITIONAL PICK ===
-                        // 4th-shield slot stays CLOSED INDEFINITELY until V105 (Battle
-                        // Order/Plan) OR V107 (Resistance/Ultimatum) trigger fires.
-                        // V106 (CHYBC/Simple Tricks) dropped per Steve 2026-05-20.
+                        ShieldPolicy.FourthSlotPick fourthSlot =
+                                new ShieldPolicy.FourthSlotPick(null, false,
+                                        ShieldPolicy.FourthSlotTrigger.CLOSED);
                         if (shieldStrategy.shieldsRemaining() <= 1) {
-                            String preferred = shieldStrategy.prefers4thSlot(
-                                context.getGameState(), context.getGame(), context.getPlayerId());
-                            // V105 UPDATED 2026-07-06 (Verge game unli50oa1ur8bdux): only pursue
-                            // the preferred card if it is actually offered in THIS decision.
-                            // Otherwise the 4th slot was held hostage all game — "prefer Battle
-                            // Order" fired while Battle Order was never in the candidate list, so
-                            // every real shield was hard-blocked at -5000 (2760 fires) and the
-                            // slot deployed nothing. When the preferred card is absent, fall
-                            // through to HOLD (slot stays closed, Steve's closed-by-default 4th
-                            // slot) instead of spamming a block for a card that can't be picked.
-                            boolean preferredOnMenu = preferred != null
-                                && preferredShieldInCandidates(context, preferred);
-                            if (preferredOnMenu) {
-                                String tLower = title.toLowerCase(java.util.Locale.ROOT);
-                                String pLower = preferred.toLowerCase(java.util.Locale.ROOT);
-                                if (tLower.contains(pLower)) {
-                                    action.addReasoning(
-                                        "V105/V107 4TH SLOT BOOST: '" + title
-                                            + "' matches preferred '" + preferred + "' +2000",
-                                        2000.0f);
-                                    logger.warn("V105/V107 4TH SLOT: BOOST '{}' (matches preferred '{}') +2000",
-                                        title, preferred);
-                                } else {
-                                    action.addReasoning(
-                                        "V105/V107 4TH SLOT: '" + title
-                                            + "' not preferred (we want '" + preferred + "') -5000",
-                                        -5000.0f);
-                                    logger.warn("V105/V107 4TH SLOT: HARD-BLOCK '{}' (prefer '{}', on menu) -5000",
-                                        title, preferred);
-                                }
-                            } else {
-                                // No trigger active, OR the preferred card is not on the menu
-                                // this decision — 4th slot stays CLOSED (hold), no spam.
-                                action.addReasoning(
-                                    "V105/V107 4TH SLOT HOLD: no available preferred card — keep slot closed -5000",
-                                    -5000.0f);
-                                logger.warn("V105/V107 4TH SLOT: HOLD '{}' — preferred={} not on menu / no trigger, slot closed -5000",
-                                    title, preferred);
-                            }
+                            fourthSlot = shieldStrategy.fourthSlotPick(
+                                    context.getGameState(), context.getGame(),
+                                    context.getPlayerId(),
+                                    preferred -> preferredShieldInCandidates(context, preferred));
                         }
+                        boolean occupiesBoth = !ShieldPolicy.isBattleOrderOrPlan(title)
+                                || ShieldFacts.occupiesBothTheaters(
+                                    context.getGame(), context.getPlayerId());
+                        shieldLedger.register(ShieldPolicy.shieldSelectionAdjustments(
+                                cardId, title, shieldScore, shieldStrategy.shieldsRemaining(),
+                                fourthSlot, occupiesBoth));
+                        PolicyOperationAdapter.apply(action, shieldLedger);
 
-                        // === V51: BATTLE ORDER GATE (shield selection path) ===
-                        // UPDATED 2026-07-06 (Verge game unli50oa1ur8bdux): detection swapped
-                        // to the engine occupies predicate (occupiesBothTheaters) — the old
-                        // hand-rolled owner-present loop below missed a Scarif SYSTEM occupation
-                        // while V105's power-based scan caught it, so the two disagreed. Old
-                        // loop commented out per feedback_comment_out_old_rules.
-                        if (title.toLowerCase(java.util.Locale.ROOT).contains("battle order")
-                                || title.toLowerCase(java.util.Locale.ROOT).contains("battle plan")) {
-                            if (!occupiesBothTheaters(context.getGame(), context.getPlayerId())) {
-                                action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f);
-                                logger.warn("V51 BATTLE ORDER GATE (shield): occupiesBothTheaters=false — BLOCKED!");
-                            } else {
-                                // V51 EARLY-DEPLOY (EXTENDED 2026-07-06, Steve): once Rando occupies
-                                // both theaters, his own drains stop being taxed and the opponent's
-                                // are taxed +3 — value that COMPOUNDS every turn, so deploy Battle
-                                // Order/Plan EARLY (turns 1-2 too), not only in the turn-3 4th slot.
-                                // Base SITUATIONAL_HIGH untriggered = 80, which loses to auto-play
-                                // shields (200). +200 → 280 beats them and deploys within the turn's
-                                // pacing budget; stays far under the 4th-slot V105 +2000 (rides on
-                                // top there, harmless). Gated on occupy-only per Steve ("does not
-                                // matter if opponent also occupies"). GUARD shieldScore > -50 so this
-                                // never resurrects a V43 redundant-shield block (-100, opponent
-                                // already has the equivalent), a pacing-cap -50, or a not-played -100.
-                                if (shieldScore > -50f) {
-                                    action.addReasoning("V51 BATTLE ORDER EARLY-DEPLOY: occupy BG site + system — deploy now, tax compounds +200", 200.0f);
-                                    logger.warn("V51 BATTLE ORDER (shield): both theaters — +200 EARLY-DEPLOY (base {})", shieldScore);
-                                } else {
-                                    logger.warn("V51 BATTLE ORDER (shield): both theaters but base {} <= -50 (V43/pacing) — boost suppressed", shieldScore);
-                                }
-                            }
-                            // OLD hand-rolled occupation loop (superseded 2026-07-06):
-                            // boolean hasBGSite = false;
-                            // boolean hasBGSystem = false;
-                            // try {
-                            //     GameState gs = context.getGameState();
-                            //     SwccgGame g = context.getGame();
-                            //     String pid = context.getPlayerId();
-                            //     if (g != null && gs != null && pid != null) {
-                            //         for (PhysicalCard loc : gs.getAllPermanentCards()) {
-                            //             if (loc == null || loc.getBlueprint() == null) continue;
-                            //             com.gempukku.swccgo.common.Zone locZone = loc.getZone();
-                            //             if (locZone == null || locZone != com.gempukku.swccgo.common.Zone.LOCATIONS) continue;
-                            //             SwccgCardBlueprint locBp = loc.getBlueprint();
-                            //             boolean isBattleground = false;
-                            //             try {
-                            //                 com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = g.getModifiersQuerying();
-                            //                 if (mq != null) isBattleground = mq.isBattleground(gs, loc, null);
-                            //             } catch (Exception bgEx) { /* fallback */ }
-                            //             if (!isBattleground) continue;
-                            //             boolean weOccupy = false;
-                            //             for (PhysicalCard atLoc : gs.getCardsAtLocation(loc)) {
-                            //                 if (atLoc != null && pid.equals(atLoc.getOwner())) { weOccupy = true; break; }
-                            //             }
-                            //             if (weOccupy) {
-                            //                 if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SYSTEM) hasBGSystem = true;
-                            //                 else if (locBp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE) hasBGSite = true;
-                            //             }
-                            //         }
-                            //     }
-                            // } catch (Exception e) { logger.debug("V51 BATTLE ORDER: Error checking occupation: {}", e.getMessage()); }
-                            // if (!hasBGSite || !hasBGSystem) { action.addReasoning("V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!", -9999.0f); ... }
+                        if (shieldStrategy.shieldsRemaining() <= 1) {
+                            logger.warn("V105/V107 4TH SLOT: '{}' preferred={} pursue={}",
+                                    title, fourthSlot.preferred(), fourthSlot.pursue());
+                        }
+                        if (ShieldPolicy.isBattleOrderOrPlan(title)) {
+                            logger.warn("V51 BATTLE ORDER (shield): occupiesBoth={} base={}",
+                                    occupiesBoth, shieldScore);
                         }
                     } else {
                         // Fallback if no shield strategy

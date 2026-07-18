@@ -7,11 +7,13 @@ import com.gempukku.swccgo.game.state.GameState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Locale;
+
 // ═══════════════════════════════════════════════════════════
 // ═══ T2 MOVE #3 (2026-07-06): SHARED SHIELD/OCCUPATION FACTS ═══
 // The ONE home for the engine-based occupation predicates the SHIELDS family
 // consults (audit shields-response-2). Before this class, ShieldStrategy.
-// prefers4thSlot trigger A ran its OWN getTotalPowerAtLocation power>0 scan
+// The fourth-slot trigger A ran its OWN getTotalPowerAtLocation power>0 scan
 // while CardSelectionEvaluator's V51/V112 gates used the engine
 // occupies-predicate (occupiesBothTheaters, added in commit ee0a1b435) — the
 // two disagreed on boards where occupation carries zero power (an unpiloted
@@ -21,17 +23,125 @@ import org.apache.logging.log4j.Logger;
 // spec placement decision (CharacterDeploySiteEvaluator / MovePredicates /
 // MaintenanceFacts precedent) so BOTH bots (rando + chosenone) share one copy.
 //
-// occupiesBothTheaters is the VERBATIM body of rando CardSelectionEvaluator's
-// private occupiesBothTheaters (:8746-8762 at ee0a1b435); the CSE private copy
-// still exists and delegates/retires in a LATER wave (CSE untouched this wave
-// per orchestrator instruction). shieldsOnTable is the verbatim V117 on-table
-// count scan (CSE :7888-7898) lifted here for the same later-wave adoption.
+// occupiesBothTheaters is the verbatim body of the former evaluator-private
+// predicate. V205 routes both evaluators through this shared owner and also
+// homes the V117/V124 on-table count and fourth-slot board reads here.
 // ═══════════════════════════════════════════════════════════
 public final class ShieldFacts {
 
     private static final Logger LOG = LogManager.getLogger(ShieldFacts.class);
 
     private ShieldFacts() { /* static-only */ }
+
+    public record FourthSlotFacts(boolean occupiesBothTheaters,
+                                  boolean occupiesAnyBattleground,
+                                  int opponentBattlegroundCount,
+                                  boolean opponentHasDrainBonus,
+                                  int ownBattlegroundCount,
+                                  boolean opponentCanDrainThreePlus,
+                                  boolean opponentDrainsNonBattleground) {
+    }
+
+    /** Collects the board facts used by the closed-by-default fourth shield slot. */
+    public static FourthSlotFacts fourthSlotFacts(GameState gs,
+                                                  SwccgGame game,
+                                                  String playerId) {
+        if (gs == null || game == null || playerId == null) {
+            return new FourthSlotFacts(false, false, 0, false,
+                    0, false, false);
+        }
+
+        boolean bothTheaters = occupiesBothTheaters(game, playerId);
+        boolean anyBattleground = occupiesAnyBattleground(game, playerId);
+        int opponentBattlegrounds = 0;
+        boolean opponentHasDrainBonus = false;
+        int ownBattlegrounds = 0;
+        boolean opponentCanDrainThreePlus = false;
+        boolean opponentDrainsNonBattleground = false;
+        String opponent = game.getOpponent(playerId);
+
+        try {
+            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying modifiers =
+                    game.getModifiersQuerying();
+            if (opponent != null) {
+                for (PhysicalCard location : gs.getTopLocations()) {
+                    if (location == null || location.getBlueprint() == null) continue;
+                    float opponentPower = 0f;
+                    try {
+                        opponentPower = modifiers.getTotalPowerAtLocation(
+                                gs, location, opponent, false, false);
+                    } catch (Exception ignored) {
+                    }
+                    if (opponentPower > 0f
+                            && com.gempukku.swccgo.filters.Filters.battleground
+                                .accepts(gs, modifiers, location)) {
+                        opponentBattlegrounds++;
+                    }
+                }
+                for (PhysicalCard card : gs.getAllPermanentCards()) {
+                    if (card == null || card.getBlueprint() == null) continue;
+                    if (!opponent.equals(card.getOwner())) continue;
+                    com.gempukku.swccgo.common.Zone zone = card.getZone();
+                    if (zone == null || !zone.isInPlay()) continue;
+                    if (com.gempukku.swccgo.filters.Filters.lightsaber
+                            .accepts(gs, modifiers, card)) {
+                        opponentHasDrainBonus = true;
+                        break;
+                    }
+                    String gameText = card.getBlueprint().getGameText();
+                    if (gameText == null) continue;
+                    String lower = gameText.toLowerCase(Locale.ROOT);
+                    if (lower.contains("force drain")
+                            && (lower.contains("+1") || lower.contains("+2")
+                                || lower.contains("+3"))) {
+                        opponentHasDrainBonus = true;
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("V106 scan error: {}", e.getMessage());
+        }
+
+        try {
+            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying modifiers =
+                    game.getModifiersQuerying();
+            for (PhysicalCard location : gs.getTopLocations()) {
+                if (location == null || location.getBlueprint() == null) continue;
+                float ownPower = 0f;
+                try {
+                    ownPower = modifiers.getTotalPowerAtLocation(
+                            gs, location, playerId, false, false);
+                } catch (Exception ignored) {
+                }
+                if (ownPower > 0f
+                        && com.gempukku.swccgo.filters.Filters.battleground
+                            .accepts(gs, modifiers, location)) {
+                    ownBattlegrounds++;
+                }
+                if (opponent != null) {
+                    try {
+                        float drain = modifiers.getForceDrainAmount(gs, location, opponent);
+                        if (drain >= 3f) {
+                            opponentCanDrainThreePlus = true;
+                        }
+                        if (drain > 0f
+                                && !com.gempukku.swccgo.filters.Filters.battleground
+                                    .accepts(gs, modifiers, location)) {
+                            opponentDrainsNonBattleground = true;
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("V107 scan error: {}", e.getMessage());
+        }
+
+        return new FourthSlotFacts(bothTheaters, anyBattleground,
+                opponentBattlegrounds, opponentHasDrainBonus, ownBattlegrounds,
+                opponentCanDrainThreePlus, opponentDrainsNonBattleground);
+    }
 
     /**
      * V51/V112/V105 shared predicate (2026-07-06, T2 MOVE #3): does playerId

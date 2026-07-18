@@ -1,24 +1,17 @@
-package com.gempukku.swccgo.ai.models.chosenone.strategy;
+package com.gempukku.swccgo.ai.models.common.strategy;
 
-import com.gempukku.swccgo.ai.models.chosenone.RandoLogger;
 import com.gempukku.swccgo.common.Side;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 // ═══════════════════════════════════════════════════════════
-// ═══ SECTION: SHIELDS (reorg 2026-07-06) ═══
-// Owns: shield pick tables + pacing: V29 shield-mix tables, V53 priority order (Battle Order/Battle Plan
-// downgraded to SITUATIONAL_HIGH), V29.1 pacing -40, V102 K&D per-turn activation cap, and the 4th-slot
-// conditional gate (Triggers A/B/C = V105/V106/V107; V112/V117 twins live CardSelectionEvaluator-side).
-// Hub: none. KIND mix (SHIELDS overall): 9 ORDERING / 3 VETO / 1 BANDED.
-// CENSUS: the single most-consulted gate in the codebase (2,553 checks / 4 games).
-// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
-// Cross-refs: RESPONSE (shield window routes here), SHIELDS rows in CardSelectionEvaluator
-// (V105/V107/V112/V117/V51-battle-order-gate) + ActionTextEvaluator (V124/V129/V102/V29.1). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
-// T2 MOVE #3 (2026-07-06): occupation predicates unified into common/strategy/ShieldFacts
-// (trigger A + weOccupyAnyBg here consume it; CSE/ATE adopt in a later wave).
+// ═══ SECTION: SHIELDS (V205) ═══
+// Owns the shared shield tables, state, pacing, activation count, and base score.
+// ShieldPolicy owns typed parent/candidate adjustments. ShieldFacts owns board reads.
+// Rando and ChosenOne keep thin adapters to this single shared owner.
 // ═══════════════════════════════════════════════════════════
 /**
  * Defensive Shield Strategy for SWCCG AI.
@@ -32,7 +25,7 @@ import java.util.*;
  * Ported from Python shield_strategy.py
  */
 public class ShieldStrategy {
-    private static final Logger LOG = RandoLogger.getStrategyLogger();
+    private static final Logger LOG = LogManager.getLogger(ShieldStrategy.class);
 
     // =========================================================================
     // Shield Category Enum
@@ -464,195 +457,39 @@ public class ShieldStrategy {
     // / "Come Here You Big Coward" / "Simple Tricks And Nonsense" / "Resistance"
     // / "Ultimatum") or null if no trigger fires (4th slot stays closed).
 
-    public String prefers4thSlot(com.gempukku.swccgo.game.state.GameState gs,
-                                 com.gempukku.swccgo.game.SwccgGame game,
-                                 String playerId) {
-        if (gs == null || game == null || playerId == null) return null;
-        boolean isDark = (mySide == Side.DARK);
-
-        // ---------- Trigger A: V105 — Battle Order / Battle Plan ----------
-        // V105 UPDATED 2026-07-06 (T2 MOVE #3, audit shields-response-2 residue):
-        // trigger A now uses the SAME engine occupies-predicate as the V51/V112
-        // gates in CardSelectionEvaluator (ShieldFacts.occupiesBothTheaters,
-        // canSpot(occupies + battleground_site/system)) instead of the old
-        // power>0 scan below. The two disagreed on zero-power occupation
-        // (unpiloted ship occupies a system but has power 0, Power.java:49-51),
-        // so Battle Order's own condition could be LIVE while this gate said no
-        // and the 4th slot stayed dead (V117 -9999 / V105 -5000 / V124 -3000).
-        boolean occupyBothTheaters =
-            com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts
-                .occupiesBothTheaters(game, playerId);
-        boolean triggerA = occupyBothTheaters;
-
-        // ---------- Trigger B: V106 — CHYBC / Simple Tricks ----------
-        // We occupy any battleground, opponent occupies < 2 battlegrounds,
-        // opponent has drain-bonus sources (lightsaber on table OR game text
-        // matches "force drain" + "+1|+2|+3").
-        // V106 UPDATED 2026-07-06 (T2 MOVE #3): weOccupyAnyBg is now the engine
-        // occupies-predicate (presence-based) instead of derived from the old
-        // power-based theater scan — matches the shields' own play conditions
-        // (feedback_fourth_shield_conditional). Boundary row 15.
-        boolean weOccupyAnyBg =
-            com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts
-                .occupiesAnyBattleground(game, playerId);
-        // DIVERGENCE NOTE 2026-07-06 (T2 MOVE #3, T4 candidate): oppBgCount below
-        // and myBgCount in trigger C stay POWER-based (getTotalPowerAtLocation > 0)
-        // — deliberately NOT swapped to the occupies predicate this wave; only the
-        // trigger-A gate and the weOccupyAnyBg input were unified per the spec.
-        int oppBgCount = 0;
-        boolean oppHasDrainBonus = false;
-        String oppId = game.getOpponent(playerId);
-        try {
-            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mods =
-                game.getModifiersQuerying();
-            if (oppId != null) {
-                for (com.gempukku.swccgo.game.PhysicalCard loc : gs.getTopLocations()) {
-                    if (loc == null || loc.getBlueprint() == null) continue;
-                    float oppPower = 0f;
-                    try {
-                        oppPower = mods.getTotalPowerAtLocation(gs, loc, oppId, false, false);
-                    } catch (Exception ignore) { /* */ }
-                    if (oppPower <= 0f) continue;
-                    if (com.gempukku.swccgo.filters.Filters.battleground.accepts(gs, mods, loc)) {
-                        oppBgCount++;
-                    }
-                }
-                for (com.gempukku.swccgo.game.PhysicalCard pc : gs.getAllPermanentCards()) {
-                    if (pc == null || pc.getBlueprint() == null) continue;
-                    if (!oppId.equals(pc.getOwner())) continue;
-                    com.gempukku.swccgo.common.Zone z = pc.getZone();
-                    if (z == null || !z.isInPlay()) continue;
-                    // Lightsaber on table is a drain-bonus source
-                    if (com.gempukku.swccgo.filters.Filters.lightsaber.accepts(gs, mods, pc)) {
-                        oppHasDrainBonus = true;
-                        break;
-                    }
-                    String gt = pc.getBlueprint().getGameText();
-                    if (gt == null) continue;
-                    String gtLower = gt.toLowerCase(Locale.ROOT);
-                    if (gtLower.contains("force drain")
-                            && (gtLower.contains("+1") || gtLower.contains("+2")
-                                || gtLower.contains("+3"))) {
-                        oppHasDrainBonus = true;
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOG.debug("V106 scan error: {}", e.getMessage());
-        }
-        boolean triggerB = weOccupyAnyBg && oppBgCount < 2 && oppHasDrainBonus;
-
-        // ---------- Trigger C: V107 — Resistance / Ultimatum ----------
-        // Opponent can drain 3+ at any site (use getForceDrainAmount), AND we
-        // occupy >= 3 battlegrounds OR opponent occupies 0 battlegrounds.
-        int myBgCount = 0;
-        boolean oppCanDrain3Plus = false;
-        boolean oppDrainsNonBg = false;  // V106: opp force-draining a NON-battleground (what Simple Tricks cancels)
-        try {
-            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mods =
-                game.getModifiersQuerying();
-            for (com.gempukku.swccgo.game.PhysicalCard loc : gs.getTopLocations()) {
-                if (loc == null || loc.getBlueprint() == null) continue;
-                float myPower = 0f;
-                try {
-                    myPower = mods.getTotalPowerAtLocation(gs, loc, playerId, false, false);
-                } catch (Exception ignore) { /* */ }
-                if (myPower > 0
-                        && com.gempukku.swccgo.filters.Filters.battleground.accepts(gs, mods, loc)) {
-                    myBgCount++;
-                }
-                if (oppId != null) {
-                    try {
-                        float drainAmt = mods.getForceDrainAmount(gs, loc, oppId);
-                        if (drainAmt >= 3f) {
-                            oppCanDrain3Plus = true;
-                        }
-                        if (drainAmt > 0f
-                                && !com.gempukku.swccgo.filters.Filters.battleground.accepts(gs, mods, loc)) {
-                            oppDrainsNonBg = true;  // V106: a non-BG drain Simple Tricks could cancel
-                        }
-                    } catch (Exception ignore) { /* */ }
-                }
-            }
-        } catch (Exception e) {
-            LOG.debug("V107 scan error: {}", e.getMessage());
-        }
-        boolean triggerC = oppCanDrain3Plus && (myBgCount >= 3 || oppBgCount == 0);
-
-        // ---------- Priority: A > C > B ----------
-        // 4th slot stays CLOSED until V105 (A: Battle Order/Plan), V107 (C: Resistance/
-        // Ultimatum), OR V106 (B: Simple Tricks / Come Here You Big Coward). V106 was
-        // DROPPED 2026-05-20 for firing spuriously; RE-ENABLED 2026-06-17 (Steve), now
-        // gated on the actual threat it answers — an opponent drain at a NON-battleground,
-        // which Simple Tricks And Nonsense / Come Here You Big Coward cancel. Replay
-        // sb2xzfjfpk5jxt8v: Rando held Simple Tricks all game while Dooku drained 2/turn
-        // at Coruscant: The Works (a non-BG) — ~10 Force handed over for free.
-        if (triggerA) {
-            String pick = isDark ? "Battle Order" : "Battle Plan";
-            LOG.warn("V105 4TH SLOT (A): {} — we occupy system+site battlegrounds", pick);
-            return pick;
-        }
-        if (triggerC) {
-            String pick = isDark ? "Resistance" : "Ultimatum";
-            LOG.warn("V107 4TH SLOT (C): {} — opp can drain 3+, my bg={}, opp bg={}",
-                pick, myBgCount, oppBgCount);
-            return pick;
-        }
-        if (triggerB && oppDrainsNonBg) {
-            String pick = isDark ? "Come Here You Big Coward" : "Simple Tricks And Nonsense";
-            LOG.warn("V106 4TH SLOT (B): {} — opp draining a non-BG; we occupy BG, opp bg<2 + drain-bonus", pick);
-            return pick;
-        }
-        // V105 UPDATED 2026-07-06 (T2 MOVE #3): sysBg/siteBg placeholders replaced by
-        // the unified ShieldFacts predicates (occupiesBothTheaters / occupiesAnyBattleground);
-        // the old power-based theater scan was removed in cleanup batch 1.6, 2026-07-13.
-        LOG.info("V105/V107: no 4th-slot trigger — HOLD indefinitely (myBg={} oppBg={} bothTheaters={} anyBg={}"
-            + " drain3+={})",
-            myBgCount, oppBgCount, occupyBothTheaters, weOccupyAnyBg, oppCanDrain3Plus);
-        return null;
-    }
-
-    // ====================================================================
-    // T2 MOVE #3 (2026-07-06): 4TH-SLOT PICK + MENU CONSOLIDATION
-    // ====================================================================
-    // V105/V117/V124 each hand-roll the same two-step dance: (1) ask
-    // prefers4thSlot for the preferred title, (2) check whether that title is
-    // actually offered on THIS decision's menu before pursuing (the Verge-game
-    // deadlock fix from ee0a1b435). fourthSlotPick consolidates that pick+menu
-    // logic in ONE place. Callers keep their own triggers and weights
-    // (-9999/+2000 V117, -5000/+2000 V105, -3000 V124 — weights stay per-caller,
-    // score-neutral by construction). A null predicate reproduces V124's current
-    // preferred!=null semantics. NOTE: the V117/V105/V124 call sites in
-    // CardSelectionEvaluator / ActionTextEvaluator adopt this in a LATER wave
-    // (both files untouched this wave per orchestrator instruction).
-
-    /** Result of a 4th-slot consultation: the preferred title (or null) and
-     *  whether the caller should PURSUE it on this decision's menu. */
-    public static class FourthSlotPick {
-        public final String preferred;
-        public final boolean pursue;
-
-        public FourthSlotPick(String preferred, boolean pursue) {
-            this.preferred = preferred;
-            this.pursue = pursue;
-        }
-    }
-
     /**
-     * Consolidated 4th-slot pick (T2 MOVE #3, 2026-07-06). preferredOnMenu is
+     * Consolidated fourth-slot pick. preferredOnMenu is
      * the caller's "is this title actually offered on this decision's menu?"
      * test (e.g. CardSelectionEvaluator.preferredShieldInCandidates); pass null
-     * to skip the menu check (V124's current preferred!=null semantics).
+     * to preserve V124's current preferred-title-only semantics.
      */
-    public FourthSlotPick fourthSlotPick(com.gempukku.swccgo.game.state.GameState gs,
-                                         com.gempukku.swccgo.game.SwccgGame game,
-                                         String playerId,
-                                         java.util.function.Predicate<String> preferredOnMenu) {
-        String preferred = prefers4thSlot(gs, game, playerId);
-        boolean pursue = preferred != null
-            && (preferredOnMenu == null || preferredOnMenu.test(preferred));
-        return new FourthSlotPick(preferred, pursue);
+    public com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy.FourthSlotPick fourthSlotPick(
+            com.gempukku.swccgo.game.state.GameState gs,
+            com.gempukku.swccgo.game.SwccgGame game,
+            String playerId,
+            java.util.function.Predicate<String> preferredOnMenu) {
+        ShieldFacts.FourthSlotFacts facts = ShieldFacts.fourthSlotFacts(gs, game, playerId);
+        com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy.FourthSlotPick pick =
+                com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy.fourthSlotPick(
+                        mySide, facts, preferredOnMenu);
+        switch (pick.trigger()) {
+            case BATTLE_ORDER_PLAN -> LOG.warn(
+                    "V105 4TH SLOT (A): {} - we occupy system+site battlegrounds",
+                    pick.preferred());
+            case DRAIN_CAP -> LOG.warn(
+                    "V107 4TH SLOT (C): {} - opp can drain 3+, my bg={}, opp bg={}",
+                    pick.preferred(), facts.ownBattlegroundCount(),
+                    facts.opponentBattlegroundCount());
+            case NON_BATTLEGROUND_DRAIN -> LOG.warn(
+                    "V106 4TH SLOT (B): {} - opp draining a non-BG; we occupy BG, opp bg<2 + drain-bonus",
+                    pick.preferred());
+            case CLOSED -> LOG.info(
+                    "V105/V107: no 4th-slot trigger - HOLD indefinitely (myBg={} oppBg={} bothTheaters={} anyBg={} drain3+={})",
+                    facts.ownBattlegroundCount(), facts.opponentBattlegroundCount(),
+                    facts.occupiesBothTheaters(), facts.occupiesAnyBattleground(),
+                    facts.opponentCanDrainThreePlus());
+        }
+        return pick;
     }
 
     /**

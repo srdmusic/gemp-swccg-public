@@ -5,7 +5,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.OpponentDeckTracker;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
-import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
+import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;

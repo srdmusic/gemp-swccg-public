@@ -6,7 +6,10 @@ import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ControlActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
+import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
+import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -2602,82 +2605,45 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // side equivalent of K&D, same stacked-pile mechanic). Symmetric with
                 // chosenone — both bots now apply V102 (activation cap) and V124 (4th-slot
                 // hard-block) regardless of which stacked-pile source they are running.
-                boolean isStackedPileShieldPlay = false;
+                String stackedPileSourceTitle = null;
                 if (cardId != null && gameState != null) {
                     try {
                         PhysicalCard sourceCard = gameState.findCardById(Integer.parseInt(cardId));
-                        if (sourceCard != null) {
-                            String sourceTitle = sourceCard.getTitle();
-                            if (sourceTitle != null
-                                    && (sourceTitle.toLowerCase().contains("knowledge and defense")
-                                        || sourceTitle.toLowerCase().contains("anger, fear, aggression"))) {
-                                isStackedPileShieldPlay = true;
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Ignore — fall through to generic evaluation
+                        stackedPileSourceTitle = sourceCard != null ? sourceCard.getTitle() : null;
+                    } catch (Exception ignored) {
                     }
                 }
-                if (isStackedPileShieldPlay) {
-                    com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy shieldStrat = context.getShieldStrategy();
-                    int turnNum = context.getTurnNumber();
-                    // === V124 (Steve, 2026-05-22): HARD-BLOCK K&D PARENT ACTION AT 4TH SLOT ===
-                    // Real incident: replay liuorncol0ku2qva (2026-05-22). All 4 shields
-                    // deployed by turn 2 via K&D, even though V105/V107 in the sub-decision
-                    // path correctly hard-blocked all 4th-slot candidates at -5000. Problem:
-                    // the parent "Play a card" action scored +50 ("slots available"), so the
-                    // AI committed to playing K&D, then the sub-decision was FORCED to pick
-                    // the least-bad shield from the stack (Resistance at -5050).
-                    // V124 blocks at the PARENT action: count friendly shields on table; if
-                    // 3+ AND ShieldStrategy.prefers4thSlot() returns null (no V105/V107
-                    // trigger), hard-block "Play a card" with -3000 so the AI never starts
-                    // the sub-decision.
-                    int v124ShieldsOnTable = 0;
-                    boolean v124HasV105V107Trigger = false;
-                    try {
-                        GameState v124Gs = gameState;
-                        String v124Pid = context.getPlayerId();
-                        if (v124Gs != null && v124Pid != null) {
-                            for (PhysicalCard sc : v124Gs.getAllPermanentCards()) {
-                                if (sc == null || sc.getBlueprint() == null) continue;
-                                if (!v124Pid.equals(sc.getOwner())) continue;
-                                if (sc.getBlueprint().getCardCategory() != CardCategory.DEFENSIVE_SHIELD) continue;
-                                com.gempukku.swccgo.common.Zone sz = sc.getZone();
-                                if (sz == null || !sz.isInPlay()) continue;
-                                v124ShieldsOnTable++;
-                            }
-                            if (v124ShieldsOnTable >= 3 && shieldStrat != null) {
-                                String v124Preferred = shieldStrat.prefers4thSlot(
-                                    v124Gs, context.getGame(), v124Pid);
-                                v124HasV105V107Trigger = (v124Preferred != null);
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.debug("V124 shield-count check error: {}", e.getMessage());
+                if (ShieldPolicy.isStackedPileShieldSource(stackedPileSourceTitle)) {
+                    ShieldStrategy shieldStrategy = context.getShieldStrategy();
+                    int turnNumber = context.getTurnNumber();
+                    int shieldsOnTable = ShieldFacts.shieldsOnTable(
+                            gameState, context.getPlayerId());
+                    ShieldPolicy.FourthSlotPick fourthSlot =
+                            new ShieldPolicy.FourthSlotPick(null, false,
+                                    ShieldPolicy.FourthSlotTrigger.CLOSED);
+                    if (shieldsOnTable >= 3 && shieldStrategy != null) {
+                        fourthSlot = shieldStrategy.fourthSlotPick(gameState, context.getGame(),
+                                context.getPlayerId(), null);
                     }
-                    if (v124ShieldsOnTable >= 3 && !v124HasV105V107Trigger) {
-                        action.addReasoning(
-                            "V124 K&D 4TH-SLOT BLOCK: " + v124ShieldsOnTable
-                                + " shields already on table, no V105/V107 trigger — don't activate K&D for 4th shield",
-                            -3000.0f);
-                        logger.warn("V124 K&D 4TH-SLOT BLOCK: {} shields on table, no trigger active — parent action blocked",
-                            v124ShieldsOnTable);
+                    boolean activationCap = shieldStrategy != null
+                            && shieldStrategy.atKnDActivationCap(turnNumber);
+                    int activationCount = activationCap
+                            ? shieldStrategy.knDActivationsThisTurn(turnNumber) : 0;
+                    boolean pacingCap = shieldStrategy != null && !activationCap
+                            && shieldStrategy.atPacingCap(turnNumber);
+
+                    controlLedger.register(ShieldPolicy.stackedPileParent(
+                            actionId, shieldsOnTable, fourthSlot, activationCap,
+                            activationCount, pacingCap, turnNumber));
+                    PolicyOperationAdapter.apply(action, controlLedger);
+
+                    if (shieldsOnTable >= 3 && !fourthSlot.pursue()) {
+                        logger.warn("V124 K&D 4TH-SLOT BLOCK: {} shields on table, no trigger active - parent action blocked",
+                                shieldsOnTable);
                     }
-                    // V102 (Steve, 2026-05-20): K&D ACTIVATION CAP — hard block beyond per-turn cap.
-                    // Replaces the previous -40 soft-pace penalty (which Rando still overrode).
-                    // shieldsAllowedThisTurn returns 2 turn 1, 3 turn 2, 4 turn 3+ — beyond this
-                    // we MUST stop K&D activations or we burn the stack on weak shields.
-                    if (shieldStrat != null && shieldStrat.atKnDActivationCap(turnNum)) {
-                        action.addReasoning(
-                            "V102 K&D ACTIVATION CAP: " + shieldStrat.knDActivationsThisTurn(turnNum)
-                                + " activations already this turn (turn " + turnNum + ") — hold remaining",
-                            -2000.0f);
-                        logger.warn("V102 K&D ACTIVATION CAP: turn {} count {} — hard block",
-                            turnNum, shieldStrat.knDActivationsThisTurn(turnNum));
-                    } else if (shieldStrat != null && shieldStrat.atPacingCap(turnNum)) {
-                        action.addReasoning("V29.1 K&D SHIELD PACING: Holding shield slot — scout opponent first (turn " + turnNum + ")", -40.0f);
-                    } else {
-                        action.addReasoning("K&D: Play defensive shield (slots available)", VERY_GOOD_DELTA);
+                    if (activationCap) {
+                        logger.warn("V102 K&D ACTIVATION CAP: turn {} count {} - hard block",
+                                turnNumber, activationCount);
                     }
                 } else {
                     evaluatePlayCard(action, context);
@@ -4153,19 +4119,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // what the opponent is running before committing the remaining slots.
             // This lets us pick targeted counters instead of generic shields.
             else if (actionText.contains("Play a Defensive Shield")) {
-                if (!context.isMyTurn()) {
-                    action.addReasoning("Defensive shield during opponent's turn - prefer pass", -10.0f);
-                } else {
-                    // Check shield pacing via ShieldStrategy
-                    com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy shieldStrat = context.getShieldStrategy();
-                    int turnNum = context.getTurnNumber();
-                    if (shieldStrat != null && shieldStrat.atPacingCap(turnNum)) {
-                        // We've played enough shields for this turn — hold remaining slots
-                        action.addReasoning("V29.1 SHIELD PACING: Holding shield slot — wait to scout opponent (turn " + turnNum + ")", -40.0f);
-                    } else {
-                        action.addReasoning("Defensive shield", VERY_GOOD_DELTA);
-                    }
-                }
+                ShieldStrategy shieldStrategy = context.getShieldStrategy();
+                int turnNumber = context.getTurnNumber();
+                boolean pacingCap = context.isMyTurn() && shieldStrategy != null
+                        && shieldStrategy.atPacingCap(turnNumber);
+                controlLedger.register(ShieldPolicy.defensiveShieldWindow(
+                        actionId, context.isMyTurn(), pacingCap, turnNumber));
+                PolicyOperationAdapter.apply(action, controlLedger);
             }
 
             // ========== Deploy on table/location ==========

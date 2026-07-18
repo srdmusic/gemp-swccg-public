@@ -1,3 +1,18 @@
+  ==== V205 AI-ONLY SHIELDS PHASE POLICY OWNER (2026-07-18, both bots) ====
+One shared ShieldStrategy now owns the unchanged shield tables, state, pacing, activation counts, and base score.
+ShieldFacts owns the existing board reads, while ShieldPolicy owns the typed V124/V102/V29.1 parent stream,
+defensive response window, V112/V117 mixed-menu gates, V105/V107 fourth-slot selection, and V51 Battle
+Order/Plan adjustments. Both bots keep thin stock-decision adapters and apply the same ordered operations through
+PolicyContributionLedger. Score deltas, order, routing, early returns, title matching, menu checks, A then C then B
+fourth-slot priority, additive VETO labels, Pass behavior, and existing reasons are unchanged. The live turn-0 pacing
+result, unconsulted minTurnToPlay/playIfWeHave fields, indiscriminate activation tracking, reserve scoreShield
+cross-talk, V124 menu ignorance, V105/V117 menu dependency, and unknown Simple Tricks +50 fallback are pinned
+bug-for-bug, not corrected. Resistance, Ultimatum, Knowledge And Defense, and Anger, Fear, Aggression aliases were
+verified against actual Java card sources. Production edits are AI-only. Gate: 29 focused tests; full affected
+reactor 996 tests, 0 failures, 0 errors, 26 skipped; package, mirror, source-boundary, forbidden-symbol, and diff
+checks pass. Revert the single V205 commit.
+See AI_CHANGELOG 2026-07-18.
+
   ==== V204 AI-ONLY CONTROL PHASE POLICY OWNER (2026-07-18, both bots) ====
 The shared CONTROL drain assessment now emits the ordered typed policy stream directly, and a small shared
 ControlActionPolicy owns the existing V29.14 No Escape retrieval, V24.2 optional +1 drain, and V52 self-cancel

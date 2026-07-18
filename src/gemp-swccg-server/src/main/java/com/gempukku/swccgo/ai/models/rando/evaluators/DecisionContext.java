@@ -5,7 +5,7 @@ import com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
-import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
+import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
