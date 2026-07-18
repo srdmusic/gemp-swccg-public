@@ -1691,6 +1691,21 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that have a printed deploy cost <= X.
+     *
+     * @param cost the value of X
+     * @return Filter
+     */
+    public static Filter printedDeployCostLessThanOrEqualTo(final float cost) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return physicalCard.getBlueprint().getDeployCost() <= cost;
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that have a printed deploy cost >= X.
      *
      * @param cost the value of X
@@ -17868,6 +17883,7 @@ public class Filters {
     public static final Filter Back_Door = Filters.title(Title.Back_Door);
     public static final Filter Bacta_Tank = Filters.title(Title.Bacta_Tank);
     public static final Filter Bad_Feeling_Have_I = Filters.title(Title.Bad_Feeling_Have_I);
+    public static final Filter Bail = Filters.persona(Persona.BAIL);
     public static final Filter bantha = Filters.keyword(Keyword.BANTHA);
     public static final Filter Barada = Filters.title(Title.Barada);
     public static final Filter barge = Filters.keyword(Keyword.BARGE);
