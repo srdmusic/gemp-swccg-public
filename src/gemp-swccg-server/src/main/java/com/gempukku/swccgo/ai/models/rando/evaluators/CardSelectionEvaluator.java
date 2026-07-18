@@ -2,8 +2,12 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitFacts;
+import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
+import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
@@ -4171,6 +4175,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             logger.info("V22.4 OPTIONAL FORFEIT (game state): isOptional={}, damageRemaining={}, attritionRemaining={}",
                 isOptional, optionalDamageRemaining, optionalAttritionRemaining);
         }
+        BattleForfeitFacts.DecisionFacts optionalForfeitDecision =
+            new BattleForfeitFacts.DecisionFacts(
+                optionalAttritionRemaining, optionalDamageRemaining,
+                BattleForfeitFacts.CandidateSetFacts.empty());
+        String optionalForfeitDecisionId = context.getDecisionId();
+        PolicyContributionLedger optionalForfeitLedger = new PolicyContributionLedger(
+            optionalForfeitDecisionId == null || optionalForfeitDecisionId.isBlank()
+                ? "optional-battle-forfeit-decision"
+                : optionalForfeitDecisionId + "-optional-battle-forfeit");
 
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
@@ -4194,7 +4207,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 // BAD_ACTION_THRESHOLD (-100). The pass check is "< -100", so -100 didn't trigger
                 // pass, and Rando forfeited characters immune to remaining attrition!
                 // Fix: Use -500 to guarantee score falls well below threshold.
-                action.addReasoning("V29.13 IMMUNE/NO DAMAGE - never forfeit voluntarily!", -500.0f);
+                BattleForfeitFacts.CandidateFacts candidate =
+                    BattleForfeitFacts.readCandidate(
+                        cardId, null, context.getGame(), context.getPlayerId(),
+                        false, optionalAttritionRemaining, optionalDamageRemaining, false);
+                BattleForfeitPolicy.Evaluation evaluation = BattleForfeitPolicy.evaluateOptional(
+                    optionalForfeitDecision, candidate,
+                    BattleForfeitFacts.ObjectiveFlags.none());
+                optionalForfeitLedger.register(evaluation.beforeRoute());
+                PolicyOperationAdapter.apply(action, optionalForfeitLedger);
                 logger.warn("V29.13 SKIP FORFEIT: Optional with no damage — PASS! (dmg={}, attr={})",
                     optionalDamageRemaining, optionalAttritionRemaining);
                 actions.add(action);
@@ -4206,37 +4227,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     try {
                         PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
                         if (card != null) {
-                            SwccgCardBlueprint bp = card.getBlueprint();
-                            Float forfeitVal = (bp != null && bp.hasForfeitAttribute()) ? bp.getForfeit() : null;
-                            float fv = (forfeitVal != null) ? forfeitVal : 0;
-
-                            // V159 unified forfeit picker (dominates old V143/V67bh/V67t/V139-small)
-                            float v159 = v159ForfeitScore(card, optionalAttritionRemaining,
-                                    optionalDamageRemaining, context.getGame(), context.getPlayerId());
-                            if (v159 != 0f) {
-                                action.addReasoning(String.format(
-                                    "V159 FORFEIT (attr=%d dmg=%d fv=%.0f hit=%s)",
-                                    optionalAttritionRemaining, optionalDamageRemaining, fv, card.isHit()), v159);
-                                logger.warn("V159 FORFEIT (evaluateForfeit): {} attr={} dmg={} fv={} hit={} score={}",
-                                    card.getTitle(), optionalAttritionRemaining, optionalDamageRemaining,
-                                    fv, card.isHit(), v159);
-                            }
-
-
-                            // V67t/V67bh dead branch deleted 2026-07-12 batch 1.5; the always-taken else body kept:
-                            // Zero forfeit value — not worth it
-                            action.addReasoning("Optional forfeit but zero forfeit value", -80.0f);
-
-                            // V22.4: Check objective-critical protection even for optional forfeits
                             String fTitle = card.getTitle();
-                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer optObjAnalyzer =
-                                context.getObjectiveAnalyzer();
-                            if (optObjAnalyzer != null && optObjAnalyzer.isAnalyzed() && fTitle != null) {
-                                if (optObjAnalyzer.isRequiredCardForFlip(fTitle)) {
-                                    action.addReasoning("OBJECTIVE CRITICAL - don't voluntarily forfeit", -9999.0f);
-                                } else if (optObjAnalyzer.isPullableCard(fTitle)) {
-                                    action.addReasoning("OBJECTIVE PULLABLE - don't voluntarily forfeit", -9999.0f);
-                                }
+                            boolean requiredForFlip = context.getObjectiveAnalyzer() != null
+                                && context.getObjectiveAnalyzer().isAnalyzed()
+                                && fTitle != null
+                                && context.getObjectiveAnalyzer().isRequiredCardForFlip(fTitle);
+                            boolean pullable = context.getObjectiveAnalyzer() != null
+                                && context.getObjectiveAnalyzer().isAnalyzed()
+                                && fTitle != null
+                                && !requiredForFlip
+                                && context.getObjectiveAnalyzer().isPullableCard(fTitle);
+                            BattleForfeitFacts.CandidateFacts candidate =
+                                BattleForfeitFacts.readCandidate(
+                                    cardId, card, context.getGame(), context.getPlayerId(),
+                                    false, optionalAttritionRemaining, optionalDamageRemaining, false);
+                            BattleForfeitPolicy.Evaluation evaluation =
+                                BattleForfeitPolicy.evaluateOptional(
+                                    optionalForfeitDecision, candidate,
+                                    new BattleForfeitFacts.ObjectiveFlags(
+                                        requiredForFlip, pullable));
+                            optionalForfeitLedger.register(evaluation.beforeRoute());
+                            PolicyOperationAdapter.apply(action, optionalForfeitLedger);
+                            if (!evaluation.beforeRoute().operations().isEmpty()) {
+                                logger.warn("V208 BATTLE-3 OPTIONAL FORFEIT: {} attr={} dmg={} operations={}",
+                                    card.getTitle(), optionalAttritionRemaining,
+                                    optionalDamageRemaining,
+                                    evaluation.beforeRoute().operations().size());
                             }
                         }
                     } catch (NumberFormatException e) {
@@ -4431,11 +4447,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 forceLossDecisionId == null || forceLossDecisionId.isBlank()
                         ? "combined-force-loss-decision"
                         : forceLossDecisionId + "-combined-force-loss");
+        PolicyContributionLedger battleForfeitBeforeLedger = new PolicyContributionLedger(
+                forceLossDecisionId == null || forceLossDecisionId.isBlank()
+                        ? "combined-battle-forfeit-before-decision"
+                        : forceLossDecisionId + "-combined-battle-forfeit-before");
+        PolicyContributionLedger battleForfeitAfterLedger = new PolicyContributionLedger(
+                forceLossDecisionId == null || forceLossDecisionId.isBlank()
+                        ? "combined-battle-forfeit-after-decision"
+                        : forceLossDecisionId + "-combined-battle-forfeit-after");
 
         // Track if we have any hit cards or dead cards available for forfeit
         boolean hasHitCards = false;
         boolean hasDeadCards = false;
-        PhysicalCard bestHitCard = null;
+        String bestHitActionId = null;
         float bestHitForfeit = Float.MAX_VALUE;
         // Note: game and playerId already declared above for battle state queries
 
@@ -4452,7 +4476,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             float forfeit = bp != null && bp.hasForfeitAttribute() && bp.getForfeit() != null ? bp.getForfeit() : 0;
                             if (forfeit < bestHitForfeit) {
                                 bestHitForfeit = forfeit;
-                                bestHitCard = card;
+                                bestHitActionId = cardId;
                             }
                         }
                         // Check for dead cards (persona already deployed)
@@ -4467,6 +4491,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             }
         }
 
+        BattleForfeitFacts.CandidateSetFacts battleCandidateSet =
+            new BattleForfeitFacts.CandidateSetFacts(
+                hasHitCards, hasDeadCards,
+                java.util.Optional.ofNullable(bestHitActionId), bestHitForfeit);
+        BattleForfeitFacts.DecisionFacts battleForfeitDecision =
+            new BattleForfeitFacts.DecisionFacts(
+                attritionRemaining, damageRemaining, battleCandidateSet);
+
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
@@ -4474,79 +4506,44 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 50.0f,
                 "Choose " + cardId
             );
-
-            // === V154 (Steve, 2026-05-28): WEAPON-LOSS EDGE CASE ===
-            // Some effects (e.g. in the Shadow Collective deck) let Rando lose a deployed
-            // WEAPON to satisfy battle damage/attrition. If a weapon shows up as an option
-            // in THIS decision, that effect is active — strip the weapon FIRST, ahead of
-            // everything including hit characters. A weapon on a HIT host is the best case:
-            // that character is forfeited anyway and its weapon would otherwise be lost for
-            // free WITH it, so lose the weapon first for the extra coverage, then forfeit the
-            // hit character separately next. Global detection via CardCategory.WEAPON — no
-            // hardcoded card names. Scores above V146 hit-forfeit (+1500) so it always wins.
+            PhysicalCard battleCandidate = null;
             if (gameState != null) {
                 try {
-                    PhysicalCard v154Card = gameState.findCardById(Integer.parseInt(cardId));
-                    if (v154Card != null && v154Card.getBlueprint() != null
-                            && v154Card.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
-                        PhysicalCard v154Host = v154Card.getAttachedTo();
-                        boolean v154HostHit = (v154Host != null && v154Host.isHit());
-                        float v154Boost = v154HostHit ? 2200.0f : 2000.0f;
-                        action.setDisplayText("Lose weapon " + (v154Card.getTitle() != null ? v154Card.getTitle() : cardId));
-                        action.addReasoning("V154 WEAPON-LOSS: strip weapon first for extra coverage"
-                            + (v154HostHit ? " (host is HIT — lost anyway)" : "") + " — before hit chars", v154Boost);
-                        logger.warn("V154 WEAPON-LOSS: {} hostHit={} → +{}", v154Card.getTitle(), v154HostHit, v154Boost);
-                        actions.add(action);
-                        continue;
-                    }
+                    battleCandidate = gameState.findCardById(Integer.parseInt(cardId));
                 } catch (NumberFormatException e) { /* ignore */ }
             }
+            boolean isForceLosSOption = ForceLossFacts.isForceLossZone(battleCandidate);
+            BattleForfeitFacts.CandidateFacts battleForfeitCandidate =
+                BattleForfeitFacts.readCandidate(
+                    cardId, battleCandidate, game, playerId,
+                    isForceLosSOption, attritionRemaining, damageRemaining, true);
+            BattleForfeitPolicy.Evaluation battleForfeitEvaluation =
+                BattleForfeitPolicy.evaluateCombined(
+                    battleForfeitDecision, battleForfeitCandidate);
+            battleForfeitBeforeLedger.register(battleForfeitEvaluation.beforeRoute());
+            PolicyOperationAdapter.apply(action, battleForfeitBeforeLedger);
 
-            // V22.4: Determine if this is a Force loss option or a Forfeit option
-            // OLD BUG: Used cardId.startsWith("fp_") which NEVER matches GEMP's numeric IDs!
-            // All cards were treated as forfeit options, and force loss penalty never applied.
-            // NEW: Check the card's actual zone — hand/reserve/force pile = force loss, table = forfeit
-            boolean isForceLosSOption = false;
-            if (gameState != null) {
-                try {
-                    PhysicalCard zoneCheckCard = gameState.findCardById(Integer.parseInt(cardId));
-                    isForceLosSOption = ForceLossFacts.isForceLossZone(zoneCheckCard);
-                } catch (NumberFormatException e) {
-                    // Fallback — assume forfeit option
-                }
+            if (battleForfeitEvaluation.adapterStep()
+                    == BattleForfeitPolicy.AdapterStep.CONTINUE_CANDIDATE) {
+                action.setDisplayText("Lose weapon "
+                    + (battleCandidate != null && battleCandidate.getTitle() != null
+                        ? battleCandidate.getTitle() : cardId));
+                logger.warn("V154 WEAPON-LOSS: {} hostHit={} → +{}",
+                    battleCandidate != null ? battleCandidate.getTitle() : cardId,
+                    battleForfeitCandidate.attachedHostHit(),
+                    battleForfeitCandidate.attachedHostHit() ? 2200.0f : 2000.0f);
+                actions.add(action);
+                continue;
             }
 
-            // V118 (Steve, 2026-05-22): SAVE CHARACTERS FROM SMALL BATTLE DAMAGE.
-            // Per Steve: "Don't forfeit guys from site if battle damage is 2 or less.
-            // Unless they are hit of course. Characters are typically worth more than
-            // 2 force to save from dying."
-            // Apply this BEFORE branching into force-loss vs forfeit handlers so both
-            // sides see the same nudge: when battle damage (NOT attrition) is 1-2:
-            //   - force-loss options get +200 (prefer reserve/hand loss)
-            //   - non-hit character forfeit options get -500 (save the character)
-            // Attrition damage MUST be satisfied by forfeit, so this only fires for
-            // pure-damage situations.
-            boolean v118SmallDamage = damageRemaining > 0 && damageRemaining <= 2 && attritionRemaining <= 0;
-            if (v118SmallDamage && isForceLosSOption) {
-                action.addReasoning(
-                    "V118 SMALL DAMAGE: only " + damageRemaining
-                        + " battle damage — lose from reserves instead of forfeiting a character",
-                    200.0f);
+            if (battleForfeitDecision.smallPureDamage() && isForceLosSOption) {
                 logger.info("V118 SMALL DAMAGE force-loss boost (+200) — damageRemaining={}", damageRemaining);
-            } else if (v118SmallDamage && gameState != null) {
-                try {
-                    PhysicalCard v118Card = gameState.findCardById(Integer.parseInt(cardId));
-                    if (v118Card != null && v118Card.getBlueprint() != null
-                            && v118Card.getBlueprint().getCardCategory() == CardCategory.CHARACTER
-                            && !v118Card.isHit()) {
-                        action.addReasoning(
-                            "V118 SAVE CHARACTER: only " + damageRemaining
-                                + " battle damage — characters worth more than that, lose from reserves!",
-                            -500.0f);
-                        logger.info("V118 SAVE CHARACTER (-500) — {} not-hit, damage={}",
-                            v118Card.getTitle(), damageRemaining);
-                    }
-                } catch (NumberFormatException e) { /* ignore */ }
+            } else if (battleForfeitDecision.smallPureDamage()
+                    && battleForfeitCandidate.character()
+                    && !battleForfeitCandidate.hit()) {
+                logger.info("V118 SAVE CHARACTER (-500) — {} not-hit, damage={}",
+                    battleCandidate != null ? battleCandidate.getTitle() : cardId,
+                    damageRemaining);
             }
 
             if (isForceLosSOption) {
@@ -4597,104 +4594,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     }
                 }
 
-                if (attritionRemaining > 0) {
-                    // V150 (Steve, 2026-05-28): when attrition is owed, a forfeit is
-                    // MANDATORY (pile loss can't satisfy attrition). That mandatory
-                    // forfeit's value ALSO covers battle damage. So paying battle
-                    // damage from the pile while attrition is still owed wastes pile
-                    // cards — the forfeit you're forced to make would have covered them.
-                    //
-                    // Replay gzv8mrd0rbtvcm9r: Rando paid 11 battle damage card-by-card
-                    // from piles, THEN forfeited for 5 attrition — bleeding ~10 cards.
-                    // My V139/V143/V145 protection work (this session) over-shrank the
-                    // forfeit score so pile loss edged it out even at huge damage.
-                    //
-                    // Fix: strong pile-loss penalty while attrition > 0 (was VERY_BAD_DELTA
-                    // -150, now -500) so forfeits win until attrition is satisfied. V139
-                    // still picks the CHEAPEST character among forfeit options; once
-                    // attrition hits 0 (next decision cycle), normal V143/V139 pile
-                    // preference resumes for any small remaining battle damage.
-                    action.addReasoning("V150 CANNOT satisfy attrition with Force loss — forfeit covers attrition+damage together, don't waste pile!", -500.0f);
-                } else if (damageRemaining > 0) {
-                    // V22.3: ALWAYS prefer forfeiting characters over losing from hand/reserve!
-                    // Forfeiting a character with forfeit=5 satisfies 5 damage with 1 card.
-                    // Losing from hand/reserve satisfies only 1 damage per card.
-                    // Example: 15 damage, forfeit 2 chars (forfeit 5 each) = 10 satisfied + 5 from hand = 7 cards total
-                    // vs losing 15 from hand = 15 cards total. Forfeiting saves 8 cards!
-                    if (hasHitCards) {
-                        action.addReasoning("V22.3: Have hit cards to forfeit first - much more efficient!", -80.0f);
-                    } else if (hasDeadCards) {
-                        action.addReasoning("V22.3: Have dead cards to forfeit - they satisfy multiple damage!", -80.0f);
-                    } else {
-                        // V22.3: PENALIZE force loss — characters satisfy more damage per card
-                        // The higher the remaining damage, the worse force loss is
-                        float forceLossPenalty = -40.0f;
-                        if (damageRemaining > 5) forceLossPenalty = -80.0f;
-                        if (damageRemaining > 10) forceLossPenalty = -120.0f;
-                        action.addReasoning("V22.3: FORFEIT CHARACTERS FIRST - they cover " +
-                            "multiple damage points per card! (" + damageRemaining + " damage left)", forceLossPenalty);
-                    }
-                }
+                battleForfeitAfterLedger.register(battleForfeitEvaluation.afterRoute());
+                PolicyOperationAdapter.apply(action, battleForfeitAfterLedger);
             } else {
                 // Forfeit card option
-                if (gameState != null) {
-                    try {
-                        PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
-                        if (card != null) {
-                            String title = card.getTitle();
-                            action.setDisplayText("Forfeit " + (title != null ? title : cardId));
-
-
-
-
-                            // FORFEIT EFFICIENCY: A character that covers attrition AND/OR battle damage
-                            // in a single forfeit is far more efficient than losing one reserve card
-                            // per point of damage. Always forfeit before burning reserve.
-                            SwccgCardBlueprint bp = card.getBlueprint();
-                            Float forfeitVal = bp != null && bp.hasForfeitAttribute() ? bp.getForfeit() : null;
-                            float fv = forfeitVal != null ? forfeitVal : 0;
-                            int totalRemaining = attritionRemaining + damageRemaining;
-
-                            // V159 unified forfeit picker (dominates old V143/V67bh/V67t/V139-small;
-                            // see helper at end of class). Replay l3wvdgfkfyd2gdl9 turn 5/6: pile loss
-                            // beat forfeit when attrition==0 because V67bd/V150 only fire on attrition;
-                            // V159 step-3 ("damage >= 3 -> forfeit considered") makes the efficient
-                            // forfeit win for pure damage too.
-                            float v159 = v159ForfeitScore(card, attritionRemaining, damageRemaining,
-                                    game, playerId);
-                            if (v159 != 0f) {
-                                action.addReasoning(String.format(
-                                    "V159 FORFEIT (attr=%d dmg=%d fv=%.0f hit=%s)",
-                                    attritionRemaining, damageRemaining, fv, card.isHit()), v159);
-                                logger.warn("V159 FORFEIT (FLoF): {} attr={} dmg={} fv={} hit={} score={}",
-                                    card.getTitle(), attritionRemaining, damageRemaining, fv, card.isHit(), v159);
-                            }
-
-                            // V145 (Steve, 2026-05-26): immune-to-attrition check for V67bd.
-                            // Characters immune to attrition CANNOT satisfy attrition by
-                            // forfeit. Sidious (immune to attrition) was scored +960 by
-                            // V67bd for "covers all 7" but he could only cover the 2
-                            // damage portion, not the 5 attrition. Detect immunity via
-                            // blueprint game text scan.
-                            boolean v145ImmuneToAttrition = false;
-                            try {
-                                if (bp != null && bp.getGameText() != null) {
-                                    String gtLower = bp.getGameText().toLowerCase(java.util.Locale.ROOT);
-                                    if (gtLower.contains("immune to attrition")) {
-                                        v145ImmuneToAttrition = true;
-                                    }
-                                }
-                            } catch (Exception ignore) { /* false */ }
-
-                            // V67bd/V145/V67t all-false forfeit chain (V159 SUPERSEDED) DELETED 2026-07-12 batch 1.5 — see git history.
-
-                            // Apply standard forfeit scoring
-                            SwccgCardBlueprint blueprint = card.getBlueprint();
-                            // V139 forfeit block + duplicate V21 copy DELETED 2026-07-12 batch 1.5 (V159 owns forfeit; live V21 copies remain) — see git history.
-                        }
-                    } catch (NumberFormatException e) {
-                        // Ignore
-                    }
+                if (battleCandidate != null) {
+                    String title = battleCandidate.getTitle();
+                    action.setDisplayText("Forfeit " + (title != null ? title : cardId));
+                }
+                battleForfeitAfterLedger.register(battleForfeitEvaluation.afterRoute());
+                PolicyOperationAdapter.apply(action, battleForfeitAfterLedger);
+                if (!battleForfeitEvaluation.afterRoute().operations().isEmpty()) {
+                    logger.warn("V208 BATTLE-3 FORFEIT: {} attr={} dmg={} operations={}",
+                        battleCandidate != null ? battleCandidate.getTitle() : cardId,
+                        attritionRemaining, damageRemaining,
+                        battleForfeitEvaluation.afterRoute().operations().size());
                 }
             }
 
@@ -6488,6 +6402,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         GameState gameState = context.getGameState();
         String playerId = context.getPlayerId();
         String decisionText = context.getDecisionText();
+        String targetDecisionId = context.getDecisionId();
+        PolicyContributionLedger battleHitTargetLedger = new PolicyContributionLedger(
+            targetDecisionId == null || targetDecisionId.isBlank()
+                ? "battle-hit-target-decision" : targetDecisionId + "-battle-hit-target");
+        PolicyContributionLedger battleDestinyTargetLedger = new PolicyContributionLedger(
+            targetDecisionId == null || targetDecisionId.isBlank()
+                ? "battle-destiny-target-decision" : targetDecisionId + "-battle-destiny-target");
+        PolicyContributionLedger battleSelfTargetLedger = new PolicyContributionLedger(
+            targetDecisionId == null || targetDecisionId.isBlank()
+                ? "battle-self-target-decision" : targetDecisionId + "-battle-self-target");
 
         // Check if we're playing a beneficial card that targets our own cards
         boolean targetOwnCards = isBeneficialTargetingCard(decisionText);
@@ -6536,7 +6460,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                                 // V51: Don't waste weapons on already-hit characters
                                 if (card.isHit()) {
-                                    action.addReasoning("V51 ALREADY HIT: Target already hit — don't waste weapon!", -500.0f);
+                                    battleHitTargetLedger.register(BattleWeaponsPolicy.scoreTarget(
+                                        new BattleWeaponsFacts.TargetFacts(
+                                            cardId, card.getTitle(), true,
+                                            BattleWeaponsFacts.DestinyAssessment.unavailable(),
+                                            false, false, false, false)));
+                                    PolicyOperationAdapter.apply(action, battleHitTargetLedger);
                                     logger.warn("V51 ALREADY HIT: Weapon targeting {} but already hit — -500", card.getTitle());
                                 }
 
@@ -6572,41 +6501,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             String targetTitle = card.getTitle() != null ? card.getTitle() : "?";
                                             String targetLower = targetTitle.toLowerCase(java.util.Locale.ROOT);
 
-                                            if (hitMargin >= 3.0f) {
-                                                // Easy hit — very likely to succeed
-                                                action.addReasoning(String.format(
-                                                    "V36 EASY HIT: %s defense %.0f, expected destiny %.1f — HIGH hit chance!",
-                                                    targetTitle, defenseValue, expectedTotal), 200.0f);
-                                            } else if (hitMargin >= 0.0f) {
-                                                // Marginal hit — coin flip
-                                                action.addReasoning(String.format(
-                                                    "V36 MARGINAL HIT: %s defense %.0f, expected destiny %.1f — might hit",
-                                                    targetTitle, defenseValue, expectedTotal), 50.0f);
-                                            } else {
-                                                // Likely miss — defense too high
-                                                action.addReasoning(String.format(
-                                                    "V36 LIKELY MISS: %s defense %.0f, expected destiny %.1f — probably won't hit!",
-                                                    targetTitle, defenseValue, expectedTotal), -150.0f);
+                                            battleDestinyTargetLedger.register(BattleWeaponsPolicy.scoreTarget(
+                                                new BattleWeaponsFacts.TargetFacts(
+                                                    cardId,
+                                                    targetTitle,
+                                                    false,
+                                                    BattleWeaponsFacts.DestinyAssessment.available(
+                                                        defenseValue, expectedTotal),
+                                                    targetLower.contains("padme") || targetLower.contains("naberrie"),
+                                                    targetLower.contains("lando") || targetLower.contains("boba fett")
+                                                        || targetLower.contains("wedge") || targetLower.contains("chewie"),
+                                                    isJediOrPadawan(targetLower),
+                                                    false)));
+                                            PolicyOperationAdapter.apply(action, battleDestinyTargetLedger);
+
+                                            if (hitMargin < 0.0f) {
                                                 logger.warn("V36 WEAPON TARGET: {} defense {} vs expected {} — LIKELY MISS",
                                                     targetTitle, (int)defenseValue, String.format("%.1f", expectedTotal));
-                                            }
-
-                                            // === V36: PRIORITY TARGETS ===
-                                            // 1. Game-text cancelers (Padme cancels Vader!) — MUST REMOVE
-                                            if (targetLower.contains("padme") || targetLower.contains("naberrie")) {
-                                                action.addReasoning("V36 PRIORITY: Padme cancels Vader's game text — REMOVE HER!", 300.0f);
-                                            }
-
-                                            // 2. Characters that add battle destiny (Lando Scoundrel, etc.)
-                                            // These draw extra destiny = extra attrition damage
-                                            if (targetLower.contains("lando") || targetLower.contains("boba fett")
-                                                || targetLower.contains("wedge") || targetLower.contains("chewie")) {
-                                                action.addReasoning("V36 PRIORITY: Battle destiny adder — dangerous!", 100.0f);
-                                            }
-
-                                            // 3. Jedi/Padawan — Hunt Down bonus for killing them
-                                            if (isJediOrPadawan(targetLower)) {
-                                                action.addReasoning("V36 HUNT: Jedi/Padawan target — Hunt Down bonus!", 80.0f);
                                             }
 
                                         } catch (Exception e) {
@@ -6630,7 +6541,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 // V38.3: HARD BLOCK targeting own cards with harmful effects!
                                 // Force Lightning on own Vader, weapon fire at own characters, etc.
                                 // -200 wasn't enough — other bonuses could override it.
-                                action.addReasoning("V38.3 SELF-TARGET: NEVER target own card with harmful effect!", -9999.0f);
+                                battleSelfTargetLedger.register(BattleWeaponsPolicy.scoreTarget(
+                                    new BattleWeaponsFacts.TargetFacts(
+                                        cardId, card.getTitle(), false,
+                                        BattleWeaponsFacts.DestinyAssessment.unavailable(),
+                                        false, false, false, true)));
+                                PolicyOperationAdapter.apply(action, battleSelfTargetLedger);
                                 logger.warn("V38.3 SELF-TARGET BLOCKED: Harmful effect targeting own card!");
                             }
                         }
@@ -8639,250 +8555,5 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // ═══ SECTION: BATTLE-3 — Damage & Forfeit (reorg 2026-07-06) ═══
-    // Owns: v159ForfeitScore 4-step picker (below) + V161/V178-forfeit/V154/V118/V150.
-    // Callable from RESPONSE (Rando defends inside opponent battles). NO-PASS context:
-    // the damage segment legally forbids passing with obligations pending.
-    // Hub: V159 LIVE (this helper; called from BOTH forfeit handlers so the same
-    // situation gets the same score). KIND mix + key magnitudes: ORDERING via
-    // deliberately-strong additive bands — V154 lose-attached-weapon +2000/+2200,
-    // hit-forfeit +1500 tier, V161 immune-forfeit 1500+savings*80-waste*30,
-    // V118 +200/-500 small-damage, V178 -10 armed tiebreaker.
-    // Absorbed (V67t, V67bd, V67bh, V143, V145, V146, V139-heavy): the eleven
-    // `if (false /* V159 SUPERSEDED */)` taped-off branches were DELETED in
-    // batch 1.5 (2026-07-12) — revert path = git history.
-    // Cross-refs: FORCE-LOSS (V153 owns the lose-Force side of the combined prompt),
-    // BATTLE-1/BATTLE-2 (upstream), RESPONSE router.
-    // See resources/RANDO_REORG_PLAN_2026-07-02.md §3 +
-    // Rando_Section_Manifest_2026-07-06.xlsx.
-    // ═══════════════════════════════════════════════════════════
-    // ====================================================================
-    // === V159 (Steve, 2026-05-31): UNIFIED FORFEIT PICKER (FORFEIT_SPEC v3) ===
-    // Replaces / dominates V143 / V67bh / V67t / V139-small / V146 (+150 drift)
-    // via additive magnitude. Called by BOTH evaluateForfeit AND
-    // evaluateForceLossOrForfeit so the same situation gets the same score
-    // (kills the +150-vs-+1500 hit-first drift the helper review flagged).
-    // Per /tmp/FORFEIT_SPEC.md v3 (Steve's "damage >= 3 -> forfeit considered"):
-    //   Step 1: hit/dead -> forfeit first (defers to Step 2 when attrition owed)
-    //   Step 2: attrition owed -> forfeit mandatory; release valve for game-winner +
-    //           small attrition (lose Force instead so a Vader isn't sacrificed to 1 attrition)
-    //   Step 3: pure damage (attrition=0):
-    //             damage >= 3 -> forfeit on the table, V139 protection MUST yield
-    //             damage <  3 -> protect, lose Force instead
-    //   Step 4: immune-to-attrition (un-hit immune) -> damage coverage only
-    // Magnitudes deliberately STRONG so this rule dominates without disabling old code.
-    // Replay xifjb2j8dsn74kh1 (turn 5: 7 attr + 8 dmg; Rando burned 8 cards paying damage
-    // BEFORE forfeiting for attrition) and l3wvdgfkfyd2gdl9 (pure-damage decisions where
-    // pile +330 beat forfeit -135 because V139 over-protected Blizzard 1 fv=7) -- V159
-    // makes the efficient forfeit win in both classes of bug.
-    // ====================================================================
-    private static float v159ForfeitScore(PhysicalCard card, int attrition, int damage,
-            com.gempukku.swccgo.game.SwccgGame game, String playerId) {
-        if (card == null || card.getBlueprint() == null) return 0f;
-        SwccgCardBlueprint bp = card.getBlueprint();
-
-        boolean isHit = card.isHit();
-        boolean isDead = false;
-        try {
-            if (game != null && playerId != null) {
-                isDead = com.gempukku.swccgo.ai.common.AiCardHelper.isDeadCard(card, game, playerId);
-            }
-        } catch (Exception ignore) { /* assume not dead */ }
-
-        Float fvF = (bp.hasForfeitAttribute()) ? bp.getForfeit() : null;
-        float fv = (fvF != null) ? fvF : 0f;
-
-        // V178 (Steve, 2026-06): ARMED characters are slightly forfeit-protected.
-        // Lightsabers kept dying with their carriers (Tyranus/Sidious forfeits), and
-        // each lost saber costs the drain bonus + hit potential until re-pulled.
-        // Steve: "maybe just a +10 weight though. Weapons are worth something but not
-        // everything." -10 on the forfeit score = prefer forfeiting the unarmed body
-        // when otherwise tied; never overrides real factors (fv/hit/immunity ~60-1500).
-        float v178Armed = 0f;
-        try {
-            if (game != null && game.getGameState() != null) {
-                for (PhysicalCard v178W : game.getGameState().getAllPermanentCards()) {
-                    if (v178W != null && v178W.getAttachedTo() == card
-                            && v178W.getBlueprint() != null
-                            && v178W.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
-                        v178Armed = -10f;
-                        break;
-                    }
-                }
-            }
-        } catch (Exception ignore) { }
-
-        // 2026-06-02 ENGINE-BACKED IMMUNITY (Steve): replaced the regex/substring
-        // detection on game text with the engine's live modifier-state query —
-        // the SAME call GuiUtils.isImmuneToRemainingAttrition uses to change the
-        // attrition icon in the UI. Advantages over the regex:
-        //   • Catches dynamic immunity granted by other cards on the table
-        //     (e.g., "while Vader present, all Sith immune to attrition" on a
-        //     companion card). Regex only saw self-text and missed table-driven
-        //     immunity.
-        //   • Catches conditional immunity that already evaluated to true via
-        //     engine condition resolution (e.g., "while X" or "if Y").
-        //   • No phrase parsing needed — the engine has already normalized
-        //     "Immune to attrition < N" / "Immune to attrition of exactly N" /
-        //     "Immunity to attrition capped at N" into numeric modifier values.
-        //   • No false positives from text mentioning ANOTHER character's
-        //     immunity (e.g., Bib Fortuna's "Jabba is immune to attrition" used
-        //     to make Bib wrongly immune; now it correctly attributes the
-        //     immunity to Jabba and Bib reads as not-immune).
-        // Logic mirrors GuiUtils.isImmuneToRemainingAttrition (logic/timing/
-        // GuiUtils.java lines 158-171): exact-immunity takes precedence — if
-        // the card is immune to EXACTLY N attrition, it's immune only when
-        // current attrition == N. Otherwise fall back to the less-than
-        // immunity threshold — immune when threshold > attrition.
-        // Game-null fallback: assume not immune (no engine state = no proof of
-        // immunity = forfeit branch is correct default).
-        boolean isImmune = false;
-        if (game != null) {
-            try {
-                com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying mq = game.getModifiersQuerying();
-                com.gempukku.swccgo.game.state.GameState gs = game.getGameState();
-                if (mq != null && gs != null) {
-                    float exactImmunity = mq.getImmunityToAttritionOfExactly(gs, card);
-                    if (exactImmunity > 0f) {
-                        isImmune = (exactImmunity == attrition);
-                    } else {
-                        float lessThanImmunity = mq.getImmunityToAttritionLessThan(gs, card);
-                        isImmune = lessThanImmunity > attrition;
-                    }
-                }
-            } catch (Exception ignore) { /* assume not immune on error */ }
-        }
-
-        // STEP 1: hit/dead -> forfeit first (lost anyway). Slight defer when attrition is
-        // owed so a Step-2 attrition-cheapest can win for a specific covering forfeit.
-        if (isHit)  return attrition > 0 ? 1500f : 3000f;
-        if (isDead) return attrition > 0 ? 1200f : 2500f;
-
-        // STEP 4 short-circuit: immune un-hit + attrition owed (immune can only cover damage)
-        if (isImmune && attrition > 0) {
-            if (damage > 0 && fv > 0) {
-                int savings = (int) Math.min(fv, damage);
-                int waste = (int) Math.max(0, fv - damage);
-                // V161 (Steve, 2026-05-29): damage >= 4 -> forfeit the immune char/ship to
-                // cover. Steve's rule: "He should choose to lose character or ship from
-                // battle to cover damage if damage is 4 or more EVEN IF immune to attrition."
-                // Last game: Rando lost a lot of damage when he could have lost a ship to
-                // cover most of it. Old -500 penalty made fv=7 vs damage=10 score net -80,
-                // losing to pile +150. STEP 3-style score (1500 + savings*80 - waste*30)
-                // now wins. Gated on savings >= 3 (mirrors STEP 3's coverage floor) so a
-                // fv=1 immune card isn't forfeited for trivial coverage.
-                if (damage >= 4 && savings >= 3) {
-                    return 1500f + savings * 80f - waste * 30f;
-                }
-                // V161 UPDATE (Steve, 2026-06-17): the old cautious return scored a high-fv
-                // SOLO immune character NEGATIVE on small damage (Yoda fv7 / dmg2 -> -580),
-                // so Rando bled Force one point at a time across a losing battle instead of
-                // forfeiting once. Immunity covers ATTRITION, but BATTLE DAMAGE is still
-                // Force lost every turn the solo immune body sits in a fight it loses. So
-                // forfeit a SOLO immune character scaled by how OUT-POWERED he is at the
-                // site (gap = opp power - our power): solo-vs-army forfeits hard, solo-vs-
-                // solo barely leans, not-out-powered keeps him. Grouped immune chars and
-                // query failures fall through to the old cautious return unchanged. Replay
-                // sb2xzfjfpk5jxt8v: solo immune Yoda bled ~4 Force to Dooku one point at a
-                // time instead of one fv-7 forfeit ending it.
-                try {
-                    PhysicalCard v161Loc = card.getAtLocation();
-                    if (v161Loc != null && game != null) {
-                        com.gempukku.swccgo.game.state.GameState v161Gs = game.getGameState();
-                        com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying v161Mq =
-                            game.getModifiersQuerying();
-                        String v161Opp = game.getOpponent(playerId);
-                        if (v161Gs != null && v161Mq != null && v161Opp != null) {
-                            int v161Friendly = 0;
-                            for (PhysicalCard v161C : v161Gs.getCardsAtLocation(v161Loc)) {
-                                if (v161C != null && playerId.equals(v161C.getOwner())
-                                        && v161C.getBlueprint() != null
-                                        && v161C.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                    v161Friendly++;
-                                }
-                            }
-                            if (v161Friendly <= 1) {  // SOLO
-                                float v161Gap = v161Mq.getTotalPowerAtLocation(v161Gs, v161Loc, v161Opp, false, false)
-                                              - v161Mq.getTotalPowerAtLocation(v161Gs, v161Loc, playerId, false, false);
-                                if (v161Gap > 0f) {
-                                    // gap 1-2 stays at/below the +350 pile loss (keep, tiny lean);
-                                    // gap 3+ beats it (forfeit); capped below the +1500 mandatory tier.
-                                    return Math.min(1200f, 100f + v161Gap * 120f) + v178Armed;
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception ignore) { /* fall through to cautious */ }
-                // Grouped, not-out-powered, or query failed: stay cautious (immune can still
-                // cover but the forfeit's not worth the board piece here).
-                return savings * 60f - waste * 40f - 500f;
-            }
-            return -2500f;
-        }
-
-        // STEP 2: attrition owed (un-hit, non-immune) -> forfeit MANDATORY
-        if (attrition > 0) {
-            // Release valves: protect deck-defining investments. Replay 360z5sh5jruys8p7
-            // (Gall battle): Rando forfeited First Light (Capital starship, deck centerpiece)
-            // for 5 attrition because the old release valve only fired for game-winner
-            // CHARACTERS (power>=6 + ability>=4). Capital ships have no ability attribute,
-            // so the valve never engaged. Extended to:
-            //   - Capital starship (CardSubtype.CAPITAL) -> strong protect (-1000) so any
-            //     cheaper character forfeit wins; only forfeited when truly the sole option.
-            //   - AiPriorityCards registered card -> strong protect (-1000).
-            //   - Game-winner character + attrition <= 2 -> -1500 (existing).
-            // The -1000 magnitude lets cheap characters (V159 step-2 ~+1700 with cheap bonus)
-            // dominate, so the deck centerpiece is forfeited only when forced.
-            Float power = bp.hasPowerAttribute() ? bp.getPower() : null;
-            Float ability = bp.hasAbilityAttribute() ? bp.getAbility() : null;
-            boolean gameWinner = (power != null && power >= 6f
-                    && ability != null && ability >= 4f);
-            boolean isCapitalShip = false;
-            try {
-                isCapitalShip = (bp.getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.CAPITAL);
-            } catch (Exception ignore) { /* false */ }
-            boolean isPriority = false;
-            try {
-                isPriority = card.getTitle() != null
-                        && com.gempukku.swccgo.ai.common.AiPriorityCards.isPriorityCardByTitle(card.getTitle());
-            } catch (Exception ignore) { /* false */ }
-
-            if ((isCapitalShip || isPriority) && fv < attrition) {
-                // 2026-06-02 RELEASE-VALVE NARROWING (Steve, Bossk replay):
-                // the old check fired the -1000 release valve unconditionally
-                // for any CAPITAL ship / priority card with attrition owed.
-                // Result: Bossk (fv=6, attr=6) got -1000, pile loss +150 won,
-                // Rando bled 9 force from reserve and STILL had to forfeit the
-                // ship for the residual attrition next time. When fv >= attrition
-                // the ship's forfeit fully covers attrition AND absorbs damage
-                // in one move — that's the efficient play even for a deck
-                // centerpiece. Only protect when the forfeit doesn't even cover
-                // attrition (fv < attrition), which means the ship would die for
-                // a partial payment and Rando STILL owes more attrition.
-                return -1000f;  // partial-payment loss — protect, save the ship
-            }
-            if (gameWinner && attrition <= 2) {
-                return -1500f;  // small attrition + game-winner char -> lose Force instead
-            }
-            int total = attrition + damage;
-            int coverage = (int) Math.min(fv, total);
-            float score = 1500f + coverage * 100f;
-            if (fv >= total) score += 300f;         // covers all -> bonus
-            if (fv >= 1 && fv <= 3) score += 200f;  // cheap forfeit preferred for attrition
-            return score + v178Armed;
-        }
-
-        // STEP 3: pure damage (attrition == 0)
-        if (damage <= 0) return 0f;
-        if (damage < 3) return -3000f;  // damage too small to justify forfeit (V143-style hard protect)
-
-        // damage >= 3: forfeit is ON THE TABLE; V139 protections MUST yield (per spec)
-        int savings = (int) Math.min(fv, damage);
-        int waste = (int) Math.max(0, fv - damage);
-        if (savings < 3) return -800f;  // forfeit doesn't soak enough; prefer Force loss
-
-        float score = 1500f + savings * 80f - waste * 30f;
-        if (savings >= damage / 2) score += 200f;  // significant chunk of the damage
-        return score + v178Armed;
-    }
+    // V208: shared BattleForfeitFacts + BattleForfeitPolicy own BATTLE-3 scoring.
 }

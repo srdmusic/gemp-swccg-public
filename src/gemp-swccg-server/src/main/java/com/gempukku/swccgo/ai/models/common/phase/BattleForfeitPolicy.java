@@ -1,0 +1,320 @@
+package com.gempukku.swccgo.ai.models.common.phase;
+
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/** Pure ordered BATTLE-3 damage and forfeit policy shared by both bots. */
+public final class BattleForfeitPolicy {
+
+    private static final String PRODUCER_ID = "BATTLE_FORFEIT_POLICY";
+
+    public enum Route {
+        OPTIONAL_FORFEIT(true),
+        COMBINED_MANDATORY(false);
+
+        private final boolean passLegal;
+
+        Route(boolean passLegal) {
+            this.passLegal = passLegal;
+        }
+
+        public boolean passLegal() {
+            return passLegal;
+        }
+    }
+
+    /** The exact control-flow seam the unchanged evaluator adapter must perform next. */
+    public enum AdapterStep {
+        CONTINUE_CANDIDATE,
+        APPLY_FORCE_LOSS_THEN_AFTER_ROUTE,
+        APPLY_FORFEIT_AFTER_ROUTE
+    }
+
+    /**
+     * BATTLE operations before and after the route seam. Shared FORCE-LOSS operations belong
+     * between these results when {@link AdapterStep#APPLY_FORCE_LOSS_THEN_AFTER_ROUTE} is set.
+     */
+    public record Evaluation(Route route,
+                             AdapterStep adapterStep,
+                             PolicyResult beforeRoute,
+                             PolicyResult afterRoute) {
+        public Evaluation {
+            Objects.requireNonNull(route, "route");
+            Objects.requireNonNull(adapterStep, "adapterStep");
+            Objects.requireNonNull(beforeRoute, "beforeRoute");
+            Objects.requireNonNull(afterRoute, "afterRoute");
+        }
+
+        public boolean passLegal() {
+            return route.passLegal();
+        }
+    }
+
+    private record V159Score(String ruleArmId,
+                             TraceOutputKind outputKind,
+                             float delta) {
+    }
+
+    private BattleForfeitPolicy() {
+    }
+
+    public static Evaluation evaluateOptional(
+            BattleForfeitFacts.DecisionFacts decision,
+            BattleForfeitFacts.CandidateFacts candidate,
+            BattleForfeitFacts.ObjectiveFlags objective) {
+        Objects.requireNonNull(decision, "decision");
+        Objects.requireNonNull(candidate, "candidate");
+        Objects.requireNonNull(objective, "objective");
+
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (decision.damageRemaining() <= 0) {
+            add(operations, candidate.actionId(), "V29.13-forfeit",
+                    TraceOutputKind.VETO, -500.0f,
+                    "V29.13 IMMUNE/NO DAMAGE - never forfeit voluntarily!");
+            return evaluation(Route.OPTIONAL_FORFEIT,
+                    AdapterStep.CONTINUE_CANDIDATE, operations, List.of());
+        }
+
+        addV159(operations, candidate.actionId(), decision, candidate);
+        add(operations, candidate.actionId(), "V22.4-zero-forfeit",
+                TraceOutputKind.BANDED, -80.0f,
+                "Optional forfeit but zero forfeit value");
+        if (objective.requiredForFlip()) {
+            add(operations, candidate.actionId(), "V21-optional-required",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "OBJECTIVE CRITICAL - don't voluntarily forfeit");
+        } else if (objective.pullable()) {
+            add(operations, candidate.actionId(), "V21-optional-pullable",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "OBJECTIVE PULLABLE - don't voluntarily forfeit");
+        }
+        return evaluation(Route.OPTIONAL_FORFEIT,
+                AdapterStep.CONTINUE_CANDIDATE, operations, List.of());
+    }
+
+    public static Evaluation evaluateCombined(
+            BattleForfeitFacts.DecisionFacts decision,
+            BattleForfeitFacts.CandidateFacts candidate) {
+        Objects.requireNonNull(decision, "decision");
+        Objects.requireNonNull(candidate, "candidate");
+
+        List<PolicyOperation> beforeRoute = new ArrayList<>();
+        if (candidate.blueprintPresent() && candidate.weapon()) {
+            float boost = candidate.attachedHostHit() ? 2200.0f : 2000.0f;
+            String reason = "V154 WEAPON-LOSS: strip weapon first for extra coverage"
+                    + (candidate.attachedHostHit()
+                        ? " (host is HIT \u2014 lost anyway)" : "")
+                    + " \u2014 before hit chars";
+            add(beforeRoute, candidate.actionId(),
+                    candidate.attachedHostHit() ? "V154-hit-host" : "V154-weapon",
+                    TraceOutputKind.ORDERING, boost, reason);
+            return evaluation(Route.COMBINED_MANDATORY,
+                    AdapterStep.CONTINUE_CANDIDATE, beforeRoute, List.of());
+        }
+
+        if (decision.smallPureDamage()) {
+            if (candidate.forceLossOption()) {
+                add(beforeRoute, candidate.actionId(), "V118-force-loss",
+                        TraceOutputKind.BANDED, 200.0f,
+                        "V118 SMALL DAMAGE: only " + decision.damageRemaining()
+                                + " battle damage \u2014 lose from reserves instead of forfeiting a character");
+            } else if (candidate.character() && !candidate.hit()) {
+                add(beforeRoute, candidate.actionId(), "V118-save-character",
+                        TraceOutputKind.BANDED, -500.0f,
+                        "V118 SAVE CHARACTER: only " + decision.damageRemaining()
+                                + " battle damage \u2014 characters worth more than that, lose from reserves!");
+            }
+        }
+
+        List<PolicyOperation> afterRoute = new ArrayList<>();
+        if (candidate.forceLossOption()) {
+            addForceLossTail(afterRoute, decision, candidate.actionId());
+            return evaluation(Route.COMBINED_MANDATORY,
+                    AdapterStep.APPLY_FORCE_LOSS_THEN_AFTER_ROUTE,
+                    beforeRoute, afterRoute);
+        }
+
+        addV159(afterRoute, candidate.actionId(), decision, candidate);
+        return evaluation(Route.COMBINED_MANDATORY,
+                AdapterStep.APPLY_FORFEIT_AFTER_ROUTE, beforeRoute, afterRoute);
+    }
+
+    private static void addForceLossTail(List<PolicyOperation> operations,
+                                         BattleForfeitFacts.DecisionFacts decision,
+                                         String actionId) {
+        if (decision.attritionRemaining() > 0) {
+            add(operations, actionId, "V150", TraceOutputKind.ORDERING, -500.0f,
+                    "V150 CANNOT satisfy attrition with Force loss \u2014 forfeit covers attrition+damage together, don't waste pile!");
+        } else if (decision.damageRemaining() > 0) {
+            BattleForfeitFacts.CandidateSetFacts candidateSet = decision.candidateSet();
+            if (candidateSet.hasHitCandidates()) {
+                add(operations, actionId, "V22.3-hit", TraceOutputKind.ORDERING,
+                        -80.0f,
+                        "V22.3: Have hit cards to forfeit first - much more efficient!");
+            } else if (candidateSet.hasDeadCandidates()) {
+                add(operations, actionId, "V22.3-dead", TraceOutputKind.ORDERING,
+                        -80.0f,
+                        "V22.3: Have dead cards to forfeit - they satisfy multiple damage!");
+            } else {
+                float penalty = -40.0f;
+                String ruleArmId = "V22.3-damage-1-5";
+                if (decision.damageRemaining() > 5) {
+                    penalty = -80.0f;
+                    ruleArmId = "V22.3-damage-6-10";
+                }
+                if (decision.damageRemaining() > 10) {
+                    penalty = -120.0f;
+                    ruleArmId = "V22.3-damage-11-plus";
+                }
+                add(operations, actionId, ruleArmId, TraceOutputKind.ORDERING,
+                        penalty,
+                        "V22.3: FORFEIT CHARACTERS FIRST - they cover "
+                                + "multiple damage points per card! ("
+                                + decision.damageRemaining() + " damage left)");
+            }
+        }
+    }
+
+    private static void addV159(List<PolicyOperation> operations,
+                                String actionId,
+                                BattleForfeitFacts.DecisionFacts decision,
+                                BattleForfeitFacts.CandidateFacts candidate) {
+        V159Score score = v159Score(decision, candidate);
+        if (score == null || score.delta() == 0.0f) {
+            return;
+        }
+        add(operations, actionId, score.ruleArmId(), score.outputKind(), score.delta(),
+                String.format("V159 FORFEIT (attr=%d dmg=%d fv=%.0f hit=%s)",
+                        decision.attritionRemaining(), decision.damageRemaining(),
+                        candidate.forfeitValue(), candidate.hit()));
+    }
+
+    private static V159Score v159Score(
+            BattleForfeitFacts.DecisionFacts decision,
+            BattleForfeitFacts.CandidateFacts candidate) {
+        if (!candidate.blueprintPresent()) {
+            return null;
+        }
+
+        int attrition = decision.attritionRemaining();
+        int damage = decision.damageRemaining();
+        float forfeit = candidate.forfeitValue();
+        float armedDelta = candidate.armed() ? -10.0f : 0.0f;
+
+        if (candidate.hit()) {
+            return score("V159-hit", TraceOutputKind.ORDERING,
+                    attrition > 0 ? 1500.0f : 3000.0f);
+        }
+        if (candidate.dead()) {
+            return score("V159-dead", TraceOutputKind.ORDERING,
+                    attrition > 0 ? 1200.0f : 2500.0f);
+        }
+
+        if (candidate.immunity().immuneTo(attrition) && attrition > 0) {
+            if (damage > 0 && forfeit > 0.0f) {
+                int savings = (int) Math.min(forfeit, damage);
+                int waste = (int) Math.max(0.0f, forfeit - damage);
+                if (damage >= 4 && savings >= 3) {
+                    return score("V161-damage-cover", TraceOutputKind.BANDED,
+                            1500.0f + savings * 80.0f - waste * 30.0f);
+                }
+                BattleForfeitFacts.SoloPowerFacts soloPower = candidate.soloPower();
+                if (soloPower.isSolo() && soloPower.opponentPowerGap() > 0.0f) {
+                    String ruleArmId = candidate.armed()
+                            ? "V161-solo-gap+V178" : "V161-solo-gap";
+                    return score(ruleArmId, TraceOutputKind.BANDED,
+                            Math.min(1200.0f,
+                                    100.0f + soloPower.opponentPowerGap() * 120.0f)
+                                    + armedDelta);
+                }
+                return score("V159-immune-cautious", TraceOutputKind.ORDERING,
+                        savings * 60.0f - waste * 40.0f - 500.0f);
+            }
+            return score("V159-immune-no-coverage", TraceOutputKind.ORDERING,
+                    -2500.0f);
+        }
+
+        if (attrition > 0) {
+            if ((candidate.capitalShip() || candidate.priorityCard())
+                    && forfeit < attrition) {
+                return score("V159-centerpiece-release", TraceOutputKind.ORDERING,
+                        -1000.0f);
+            }
+            if (candidate.gameWinner() && attrition <= 2) {
+                return score("V159-game-winner-release", TraceOutputKind.ORDERING,
+                        -1500.0f);
+            }
+            int total = attrition + damage;
+            int coverage = (int) Math.min(forfeit, total);
+            float result = 1500.0f + coverage * 100.0f;
+            if (forfeit >= total) {
+                result += 300.0f;
+            }
+            if (forfeit >= 1.0f && forfeit <= 3.0f) {
+                result += 200.0f;
+            }
+            String ruleArmId = candidate.armed()
+                    ? "V159-attrition+V178" : "V159-attrition";
+            return score(ruleArmId, TraceOutputKind.ORDERING,
+                    result + armedDelta);
+        }
+
+        if (damage <= 0) {
+            return null;
+        }
+        if (damage < 3) {
+            return score("V159-pure-small", TraceOutputKind.ORDERING,
+                    -3000.0f);
+        }
+
+        int savings = (int) Math.min(forfeit, damage);
+        int waste = (int) Math.max(0.0f, forfeit - damage);
+        if (savings < 3) {
+            return score("V159-pure-low-coverage", TraceOutputKind.ORDERING,
+                    -800.0f);
+        }
+
+        float result = 1500.0f + savings * 80.0f - waste * 30.0f;
+        if (savings >= damage / 2) {
+            result += 200.0f;
+        }
+        String ruleArmId = candidate.armed()
+                ? "V159-pure-damage+V178" : "V159-pure-damage";
+        return score(ruleArmId, TraceOutputKind.ORDERING, result + armedDelta);
+    }
+
+    private static V159Score score(String ruleArmId,
+                                   TraceOutputKind outputKind,
+                                   float delta) {
+        return new V159Score(ruleArmId, outputKind, delta);
+    }
+
+    private static Evaluation evaluation(Route route,
+                                         AdapterStep adapterStep,
+                                         List<PolicyOperation> beforeRoute,
+                                         List<PolicyOperation> afterRoute) {
+        return new Evaluation(route, adapterStep,
+                result(beforeRoute), result(afterRoute));
+    }
+
+    private static PolicyResult result(List<PolicyOperation> operations) {
+        return new PolicyResult(PRODUCER_ID, operations);
+    }
+
+    private static void add(List<PolicyOperation> operations,
+                            String actionId,
+                            String ruleArmId,
+                            TraceOutputKind outputKind,
+                            float delta,
+                            String reason) {
+        operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleArmId),
+                TraceDomainId.BATTLE_FORFEIT, outputKind, delta, reason));
+    }
+}

@@ -3,6 +3,8 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
+import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
+import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
@@ -105,6 +107,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
         PolicyContributionLedger controlLedger = new PolicyContributionLedger(
                 decisionId == null || decisionId.isBlank()
                         ? "control-action-decision" : decisionId);
+        PolicyContributionLedger battleForcePushLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "battle-force-push-decision" : decisionId + "-battle-force-push");
+        PolicyContributionLedger battleFireLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "battle-fire-decision" : decisionId + "-battle-fire");
+        PolicyContributionLedger battleThrowLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "battle-throw-decision" : decisionId + "-battle-throw");
+        PolicyContributionLedger battleRedrawLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "battle-redraw-decision" : decisionId + "-battle-redraw");
 
         for (int i = 0; i < actionIds.size(); i++) {
             String actionId = actionIds.get(i);
@@ -2007,24 +2021,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 && (textLower.contains("force pile") || textLower.contains("hand"));
             boolean v67uIsBattleAction = textLower.contains("exclude") && textLower.contains("battle");
 
+            BattleWeaponsFacts.ForcePushMode forcePushMode = BattleWeaponsFacts.ForcePushMode.NONE;
             if (textLower.contains("force push") || v67uIsForcePushSource) {
                 if (v67uIsBattleAction && !v67uIsExchangeAction) {
-                    action.addReasoning("V29 FORCE PUSH: Battle exclusion — remove threat! Good use.", 80.0f);
+                    forcePushMode = BattleWeaponsFacts.ForcePushMode.BATTLE_EXCLUSION;
                     logger.info("V29 FORCE PUSH: Battle use — exclude characters from battle (+80)");
                 } else if (v67uIsExchangeAction) {
-                    action.addReasoning("V67u FORCE PUSH BLOCK: Exchange w/ Force Pile is WASTE — those cards come to hand on draw anyway. NEVER play during draw phase!",
-                        -500.0f);
+                    forcePushMode = BattleWeaponsFacts.ForcePushMode.FORCE_PILE_EXCHANGE;
                     logger.warn("V67u FORCE PUSH BLOCKED: '{}' source='{}' — exchange is waste, especially in draw phase (-500)",
                         actionText, v67uSourceTitle);
                 }
             }
-            // V67u: catch source-detected Force Push exchange even when neither outer
-            // condition matched (defense in depth)
-            else if (v67uIsForcePushSource && v67uIsExchangeAction) {
-                action.addReasoning("V67u FORCE PUSH BLOCK (source-detect): exchange action from Force Push — waste!",
-                    -500.0f);
-                logger.warn("V67u FORCE PUSH BLOCKED (source): '{}' from {} — wasted force (-500)",
-                    actionText, v67uSourceTitle);
+            if (forcePushMode != BattleWeaponsFacts.ForcePushMode.NONE) {
+                battleForcePushLedger.register(BattleWeaponsPolicy.scoreActionText(
+                    new BattleWeaponsFacts.ActionTextFacts(
+                        actionId, forcePushMode,
+                        BattleWeaponsFacts.FireMode.NONE,
+                        BattleWeaponsFacts.ThrowMode.NONE,
+                        BattleWeaponsFacts.RedrawFacts.none())));
+                PolicyOperationAdapter.apply(action, battleForcePushLedger);
             }
 
             // ═══════════════════════════════════════════════════════════
@@ -2670,18 +2685,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // Check if there are valid (non-HIT) targets before firing
                 // Ported from Python action_text_evaluator.py - don't fire at already-hit targets
                 boolean hasValidTargets = checkForValidWeaponTargets(context);
+                BattleWeaponsFacts.FireMode fireMode;
                 if (hasValidTargets) {
                     if (context.getPhase() == Phase.BATTLE) {
-                        // V29.12: In battle, fire weapons BEFORE throw — score must beat throw's 200
-                        action.addReasoning("V29.12 FIRE WEAPON: Fire FIRST in battle — hit target before throwing!", 300.0f);
+                        fireMode = BattleWeaponsFacts.FireMode.VALID_TARGET_IN_BATTLE;
                         logger.warn("V29.12 FIRE WEAPON: Battle phase fire — must happen before throw (+300)");
                     } else {
-                        action.addReasoning("Firing weapons at valid targets", VERY_GOOD_DELTA);
+                        fireMode = BattleWeaponsFacts.FireMode.VALID_TARGET_OUTSIDE_BATTLE;
                     }
                 } else {
-                    action.addReasoning("All targets already HIT - save weapon", BAD_DELTA);
+                    fireMode = BattleWeaponsFacts.FireMode.NO_VALID_TARGET;
                     logger.debug("Skipping weapon fire - no valid (unhit) targets");
                 }
+                battleFireLedger.register(BattleWeaponsPolicy.scoreActionText(
+                    new BattleWeaponsFacts.ActionTextFacts(
+                        actionId, BattleWeaponsFacts.ForcePushMode.NONE, fireMode,
+                        BattleWeaponsFacts.ThrowMode.NONE,
+                        BattleWeaponsFacts.RedrawFacts.none())));
+                PolicyOperationAdapter.apply(action, battleFireLedger);
             }
 
             // ========== Add Battle Destiny ==========
@@ -2703,12 +2724,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
             //   2. THROW lightsaber (sacrifice it for attrition destiny) — score 200
             // This gives "double trouble" — hit + extra attrition in the same battle.
             if (textLower.contains("throw") && textLower.contains("add destiny to attrition")) {
+                BattleWeaponsFacts.ThrowMode throwMode;
                 if (context.getPhase() == Phase.BATTLE) {
-                    action.addReasoning("V29.12 LIGHTSABER THROW: Add destiny to attrition — do AFTER firing!", 200.0f);
+                    throwMode = BattleWeaponsFacts.ThrowMode.IN_BATTLE;
                     logger.warn("V29.12 LIGHTSABER THROW: Battle phase throw (+200, below fire's +300)");
                 } else {
-                    action.addReasoning("V29.10 LIGHTSABER THROW: Throw lightsaber to add destiny to attrition!", 150.0f);
+                    throwMode = BattleWeaponsFacts.ThrowMode.OUTSIDE_BATTLE;
                 }
+                battleThrowLedger.register(BattleWeaponsPolicy.scoreActionText(
+                    new BattleWeaponsFacts.ActionTextFacts(
+                        actionId, BattleWeaponsFacts.ForcePushMode.NONE,
+                        BattleWeaponsFacts.FireMode.NONE, throwMode,
+                        BattleWeaponsFacts.RedrawFacts.none())));
+                PolicyOperationAdapter.apply(action, battleThrowLedger);
             }
 
             // ========== V29.10: HATRED CARD — CANCEL OPPONENT GAME TEXT ==========
@@ -3289,6 +3317,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // Try to extract the current destiny value from the action text
                 // Format often includes the drawn card name — check for high destiny numbers
                 float currentDestinyDrawn = -1;
+                BattleWeaponsFacts.RedrawFacts redrawFacts;
                 try {
                     // The action text often says "cancel X's battle destiny draw of <CardName>"
                     // We can check DeckOracle for average destiny to decide
@@ -3306,29 +3335,23 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
                     if (currentDestinyDrawn >= 0) {
                         if (currentDestinyDrawn >= 3) {
-                            // Good destiny draw — do NOT cancel! Average would likely be worse.
-                            action.addReasoning(String.format(
-                                "V37 DON'T REDRAW: Current destiny %.0f is GOOD (avg %.1f) — keep it!",
-                                currentDestinyDrawn, avgDest), -300.0f);
                             logger.warn("V37 REDRAW BLOCKED: Destiny {} is >= 3 (avg {}) — don't cancel!",
                                 (int)currentDestinyDrawn, String.format("%.1f", avgDest));
-                        } else {
-                            // Low destiny — redraw is likely to improve
-                            action.addReasoning(String.format(
-                                "V37 REDRAW: Current destiny %.0f is LOW (avg %.1f) — try for better!",
-                                currentDestinyDrawn, avgDest), 100.0f);
                         }
+                        redrawFacts = BattleWeaponsFacts.RedrawFacts.known(
+                            currentDestinyDrawn, avgDest);
                     } else {
-                        // Couldn't determine current value — use average as guide
-                        if (avgDest >= 3.5) {
-                            action.addReasoning("Redraw destiny — good average in reserve", GOOD_DELTA);
-                        } else {
-                            action.addReasoning("Redraw destiny — risky, low average in reserve", -50.0f);
-                        }
+                        redrawFacts = BattleWeaponsFacts.RedrawFacts.unknown(avgDest);
                     }
                 } catch (Exception e) {
-                    action.addReasoning("Redraw destiny", GOOD_DELTA);
+                    redrawFacts = BattleWeaponsFacts.RedrawFacts.readFailed();
                 }
+                battleRedrawLedger.register(BattleWeaponsPolicy.scoreActionText(
+                    new BattleWeaponsFacts.ActionTextFacts(
+                        actionId, BattleWeaponsFacts.ForcePushMode.NONE,
+                        BattleWeaponsFacts.FireMode.NONE,
+                        BattleWeaponsFacts.ThrowMode.NONE, redrawFacts)));
+                PolicyOperationAdapter.apply(action, battleRedrawLedger);
             }
 
             // ========== Cancel Weapon Targeting ==========

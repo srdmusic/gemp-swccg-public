@@ -1,3 +1,17 @@
+  ==== V208 AI-ONLY BATTLE PHASE POLICY OWNERS (2026-07-18, both bots) ====
+Shared BattleDecisionPolicy now owns the former 928-line BattleEvaluator score stream; both bots retain thin stock
+context/predictor adapters, and V198 still runs exactly once per candidate. The independent V25 ActionText initiation
+ladder remains in place and still adds to the BATTLE-1 result. Shared BattleWeaponsPolicy owns the existing Force Push,
+fire-before-throw, redraw, generic fire/cancel/draw, V51 already-hit, V36 targeting, and final V38.3 self-target arms;
+other card-specific battle interrupts remain in their mirrored adapters. Shared BattleForfeitFacts and
+BattleForfeitPolicy own optional V22.4/V29.13 plus V154, V118, V150, V22.3, and the full V159/V161/V178 ladder.
+The combined prompt keeps V154/V118 before routing, V206 FORCE-LOSS at the middle seam, and V150/V22.3 or V159
+afterward. The two obsolete v159ForfeitScore copies are deleted. Standalone mandatory-forfeit nudges and V45 remain
+with their existing owners. Scores, predicates, reasons, candidate order, Pass legality, and early control flow are
+unchanged. Production edits are AI-only. Gate: 47 focused tests; full affected reactor 1,052 tests, 0 failures,
+0 errors, 26 skipped; compile, package, mirror, source-boundary, forbidden-symbol, score-owner, and diff checks pass.
+Revert the single V208 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V207 AI-ONLY SHARED OBJECTIVE/PLAYBOOK ANALYZER (2026-07-18, both bots) ====
 The two 1,936-line bot-local ObjectiveAnalyzer copies now have one exact shared implementation under
 ai/models/common/strategy and two 12-line no-argument compatibility facades. Each facade supplies its existing

@@ -1,68 +1,18 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
-import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
-import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponProfile;
+import com.gempukku.swccgo.ai.models.common.phase.BattleDecisionPolicy;
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.common.Phase;
-import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.game.state.GameState;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-// ═══════════════════════════════════════════════════════════
-// ═══ SECTION: BATTLE-1 (Initiation) (reorg 2026-07-06) ═══
-// Owns: whether/where to initiate battle: V22.4 power math (-800 danger tiers), V76 predictor veto,
-// V61/V61b low-reserve destiny guards (-800/-400/-200), V164a +40 favorable, V34 must-fight raises
-// (+100 base / +150-200), V27/V27.1 interrupt-fee Force reservations, V29.9 Hunt Down aggro + Barrier risk.
-// Hub: none. KIND mix: 14 BANDED / 3 VETO.
-// TRAP: initiation is ALSO scored by ActionTextEvaluator's V25 power-tier block (SUICIDE/CRUSH/FAVORABLE/
-// MARGINAL tiers) — the SUM of the two is the behavior; preserve it when changing either side.
-// Creature ATTACKS are OUT of scope (different rulebook construct — obligations lane, SVC-SAFETY);
-// battle-keyed rules must never fire on attacks.
-// Absorbs (dead, commented below/nearby — revert path, do not delete): none.
-// Cross-refs: BATTLE-2 (ATE weapons-segment suite), BATTLE-3 (forfeit/damage in CardSelectionEvaluator),
-// ACTIVATE (V61c battle-intent predicate). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
-// ═══════════════════════════════════════════════════════════
-/**
- * Evaluates battle initiation decisions.
- *
- * Decision factors (from Python battle_evaluator.py):
- * - Power differential (my power - their power)
- * - Reserve deck (need cards for destiny draws)
- * - Strategic situation (ahead/behind on board/life force)
- *
- * Threat levels:
- * - CRUSH: Power advantage 8+ -> definitely battle
- * - FAVORABLE: Power advantage 5-7 -> battle recommended
- * - MARGINAL: Power advantage 2-4 -> battle worth considering
- * - RISKY: Power diff 0 to +1 -> cautious
- * - DANGEROUS: Power disadvantage -> avoid/retreat
- *
- * Ported from Python battle_evaluator.py
- */
+/** Rando adapter for the shared BATTLE-1 decision policy. */
 public class BattleEvaluator extends ActionEvaluator {
-
-    // Battle thresholds (power advantage needed)
-    private static final int CRUSH_THRESHOLD = 8;      // Overwhelming advantage
-    private static final int FAVORABLE_THRESHOLD = 5;  // Strong advantage
-    private static final int MARGINAL_THRESHOLD = 2;   // Worth initiating
-    private static final int RISKY_THRESHOLD = 0;      // Even or slight advantage
-
-    // V164a (Steve, 2026-06): "If the bots have equal or greater ability they should
-    // battle." Ability >= opponent means a fair-or-better attrition trade, which is how
-    // we break the drain stalemate (self-play was 8 battles / 417 drains). But in SWCCG
-    // lower POWER loses the battle and forfeits your own cards, so we still refuse a real
-    // power deficit. This is the max power deficit we'll battle at when ability >= theirs.
-    // 0 = require power parity; larger = more aggressive; set huge for "pure ability>=".
-    private static final float ABILITY_BATTLE_MAX_POWER_DEFICIT = 2.0f;
-
-    // Minimum reserve deck for destiny draws
-    private static final int MIN_RESERVE_FOR_BATTLE = 3;
 
     public BattleEvaluator() {
         super("Battle");
@@ -70,859 +20,133 @@ public class BattleEvaluator extends ActionEvaluator {
 
     @Override
     public boolean canEvaluate(DecisionContext context) {
-        // Handle CARD_ACTION_CHOICE with battle-related actions
-        if (!"CARD_ACTION_CHOICE".equals(context.getDecisionType())) {
-            return false;
-        }
-
-        // Check for battle phase or battle-related decision
-        Phase phase = context.getPhase();
-        String decisionText = context.getDecisionText();
-        String decisionLower = decisionText != null ? decisionText.toLowerCase(Locale.ROOT) : "";
-
-        // During battle phase
-        if (phase == Phase.BATTLE) {
-            return true;
-        }
-
-        // Or if decision text mentions battle/initiate
-        if (decisionLower.contains("battle") || decisionLower.contains("initiate")) {
-            return true;
-        }
-
-        // Check if any action mentions battle
-        List<String> actionTexts = context.getActionTexts();
-        if (actionTexts != null) {
-            for (String actionText : actionTexts) {
-                if (actionText != null) {
-                    String actionLower = actionText.toLowerCase(Locale.ROOT);
-                    if (actionLower.contains("initiate battle") || actionLower.contains("battle")) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return BattleDecisionPolicy.canEvaluate(adapt(context));
     }
 
     @Override
     public List<EvaluatedAction> evaluate(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
-        GameState gameState = context.getGameState();
-
-        logger.info("[BattleEvaluator] Evaluating battle decision");
-
-        List<String> actionIds = context.getActionIds();
-        List<String> actionTexts = context.getActionTexts();
-        List<String> cardIds = context.getCardIds();
-
-        if (actionIds == null || actionTexts == null) {
-            logger.warn("[BattleEvaluator] No action IDs or texts available");
-            return actions;
-        }
-
-        logger.debug("[BattleEvaluator] Phase={}, actions={}", context.getPhase(), actionIds.size());
-
-        // Get game state info
-        int reserveDeck = context.getReserveDeckSize();
-        int lifeForce = context.getLifeForce();
-        int forcePile = context.getForcePileSize();
-
-        // Calculate board position
-        boolean isBehindOnLifeForce = false;
-        boolean isAheadOnLifeForce = false;
-        if (gameState != null) {
-            String playerId = context.getPlayerId();
-            String opponentId = gameState.getOpponent(playerId);
-            if (opponentId != null) {
-                int opponentLifeForce = gameState.getPlayerLifeForce(opponentId);
-                isBehindOnLifeForce = lifeForce < opponentLifeForce - 5;
-                isAheadOnLifeForce = lifeForce > opponentLifeForce + 5;
-            }
-        }
-
-        for (int i = 0; i < actionIds.size(); i++) {
-            String actionId = actionIds.get(i);
-            String actionText = i < actionTexts.size() ? actionTexts.get(i) : "";
-            String actionCardId = cardIds != null && i < cardIds.size() ? cardIds.get(i) : null;
-            String actionLower = actionText.toLowerCase(Locale.ROOT);
-
-            // Only handle battle-related actions
-            if (!actionLower.contains("battle") && !actionLower.contains("fire")) {
-                continue;
-            }
-
+        for (BattleDecisionPolicy.ScoredAction result : BattleDecisionPolicy.evaluate(adapt(context))) {
             EvaluatedAction action = new EvaluatedAction(
-                actionId,
-                ActionType.BATTLE,
-                100.0f,  // V34: Raised base score from 50 — Rando needs to actually fight
-                actionText
-            );
-
-            // === INITIATE BATTLE SCORING ===
-            if (actionLower.contains("initiate battle")) {
-                // V22.4: LOCATION-SPECIFIC battle evaluation
-                // OLD BUG: Checked ALL locations — if ANY was favorable, approved initiation.
-                // But the action is for a SPECIFIC location! Rando initiated battle at Dining Room
-                // (3 vs 26 power) because another location was favorable.
-                // NEW: Resolve the stock aligned card id first; retain named-text fallback for legacy callers.
-
-                SwccgGame game = context.getGame();
-                boolean foundFavorableBattle = false;
-                boolean foundAnyContestedLocation = false;
-                boolean checkedSpecificLocation = false;
-                Float selectedBattlePowerMargin = null;
-
-                if (game != null && gameState != null) {
-                    String playerId = context.getPlayerId();
-                    String opponentId = gameState.getOpponent(playerId);
-
-                    if (opponentId != null) {
-                        try {
-                            // Stock CardActionSelectionDecision aligns cardId with each action ordinal.
-                            PhysicalCard targetLocation = BattleTargetResolver.resolve(
-                                    gameState.getTopLocations(), actionCardId, actionText);
-
-                            if (targetLocation != null) {
-                                // V22.4: Evaluate THIS SPECIFIC location only
-                                checkedSpecificLocation = true;
-                                float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                    gameState, targetLocation, playerId, false, false);
-                                float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                    gameState, targetLocation, opponentId, false, false);
-                                float ourAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
-                                    gameState, playerId, targetLocation);
-                                float theirAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
-                                    gameState, opponentId, targetLocation);
-                                float powerDiff = ourPower - theirPower;
-                                selectedBattlePowerMargin = powerDiff;
-                                float abilityDiff = ourAbility - theirAbility;
-                                float effectiveDiff = powerDiff + (abilityDiff * 2.5f);
-
-                                logger.info("V22.4 [BattleEvaluator] SPECIFIC location {}: power={}/{}, ability={}/{}, effectiveDiff={}",
-                                    targetLocation.getTitle(), ourPower, theirPower, ourAbility, theirAbility, effectiveDiff);
-
-                                // === V29.7: WEAPON COMBAT AWARENESS ===
-                                // Raw power comparison misses the massive advantage weapons provide.
-                                // Vader (power 6) + lightsaber = hit + throw destiny = effectively +4-6 power.
-                                // IHYN in hand adds 2-3 more battle destiny draws.
-                                // Check our characters for weapons and adjust effective power.
-                                float weaponBonus = 0;
-                                // V29.7/V76 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c): count the
-                                // OPPONENT's weapons too — the predictor got our sabers (+wb) but raw
-                                // enemy power, systematically underestimating armed defenders.
-                                float oppWeaponBonus = 0;
-                                boolean ourVaderHere = false;
-                                boolean ourVaderArmed = false;
-                                boolean lukeHere = false;
-                                boolean hasIHYN = false;
-                                java.util.List<PhysicalCard> cardsHere = null;
-                                try {
-                                    cardsHere = gameState.getCardsAtLocation(targetLocation);
-                                    for (PhysicalCard locCard : cardsHere) {
-                                        if (locCard == null || locCard.getBlueprint() == null) continue;
-                                        if (locCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-
-                                        String cardOwner = locCard.getOwner();
-                                        String locCardTitle = locCard.getTitle() != null ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
-
-                                        if (playerId.equals(cardOwner)) {
-                                            BattleWeaponProfile profile = BattleWeaponProfile.assess(game, gameState, locCard);
-                                            weaponBonus += profile.bonus();
-                                            if (Filters.Vader.accepts(game, locCard)) {
-                                                ourVaderHere = true;
-                                                ourVaderArmed |= profile.armed();
-                                            }
-                                        } else if (opponentId != null && opponentId.equals(cardOwner)) {
-                                            // Opponent character — check for key targets
-                                            if (locCardTitle.contains("luke")) lukeHere = true;
-                                            oppWeaponBonus += BattleWeaponProfile.assess(game, gameState, locCard).bonus();
-                                        }
-                                    }
-
-                                    // Check for IHYN in hand (devastating with Vader)
-                                    if (ourVaderHere) {
-                                        java.util.List<PhysicalCard> hand = gameState.getHand(playerId);
-                                        if (hand != null) {
-                                            for (PhysicalCard hCard : hand) {
-                                                if (hCard != null && hCard.getTitle() != null
-                                                    && hCard.getTitle().toLowerCase(Locale.ROOT).contains("i have you now")) {
-                                                    hasIHYN = true;
-                                                    weaponBonus += 3.0f; // Extra destiny draws
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    logger.debug("V29.7: Error checking weapons for battle: {}", e.getMessage());
-                                }
-
-                                // Adjust effective diff with weapon bonus
-                                // V29.7 ADJUSTED 2026-07-10b (Codex m00137 hole 1): subtract the OPPONENT's
-                                // weapon bonus too — it previously reached only the V76 predictor input,
-                                // so favorable-battle SCORING still ignored enemy weapons.
-                                float weaponEffectiveDiff = effectiveDiff + weaponBonus - oppWeaponBonus;
-                                if (weaponBonus > 0 || oppWeaponBonus > 0) {
-                                    logger.info("V29.7 WEAPON AWARENESS at {}: base effectiveDiff={}, weaponBonus=+{}, adjusted={}{}{}",
-                                        targetLocation.getTitle(), effectiveDiff, weaponBonus, weaponEffectiveDiff,
-                                        ourVaderHere ? " [VADER]" : "", hasIHYN ? " [IHYN]" : "");
-                                }
-
-                                // === V29.9: REBEL BARRIER RISK ASSESSMENT ===
-                                // If opponent might have Rebel Barrier, they can EXCLUDE our strongest
-                                // character from battle. If we initiate with Vader + Tarkin vs opponents,
-                                // and they Barrier Vader, suddenly Tarkin fights ALONE vs everyone.
-                                // When our strength is concentrated in one key character (Vader),
-                                // initiating battle is very risky because Barrier negates that character.
-                                float barrierRiskPenalty = 0;
-                                if (ourVaderHere && ourPower > 0 && theirPower > 0 && cardsHere != null) {
-                                    // Calculate power WITHOUT Vader to see what happens if he's Barriered
-                                    float powerWithoutVader = 0;
-                                    int charCountWithoutVader = 0;
-                                    for (PhysicalCard locCard : cardsHere) {
-                                        if (locCard == null || locCard.getBlueprint() == null) continue;
-                                        if (locCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                        if (!playerId.equals(locCard.getOwner())) continue;
-                                        String lcTitle = locCard.getTitle() != null ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
-                                        if (lcTitle.contains("vader")) continue; // Skip Vader
-                                        Float pw = locCard.getBlueprint().getPower();
-                                        powerWithoutVader += (pw != null ? pw : 0);
-                                        charCountWithoutVader++;
-                                    }
-
-                                    // If without Vader we'd be crushed, battle is risky
-                                    float powerDeficitWithoutVader = theirPower - powerWithoutVader;
-                                    if (powerDeficitWithoutVader > 5) {
-                                        // Opponent can Barrier Vader and our remaining force gets destroyed
-                                        barrierRiskPenalty = -150.0f;
-                                        if (charCountWithoutVader <= 1) barrierRiskPenalty = -250.0f; // Solo char left = suicide
-                                        if (powerDeficitWithoutVader > 10) barrierRiskPenalty -= 100.0f; // Even worse
-
-                                        // V35: VADER EXPENDABILITY — In Hunt Down V, Vader is expendable.
-                                        // Multiple copies in deck, lightsaber retrievable from Lost Pile.
-                                        // Reduce barrier risk to encourage aggressive Vader battles.
-                                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer expendAnalyzer =
-                                            context.getObjectiveAnalyzer();
-                                        if (expendAnalyzer != null && expendAnalyzer.isAnalyzed() && expendAnalyzer.isHuntDownV()) {
-                                            barrierRiskPenalty = barrierRiskPenalty * RandoConfig.VADER_EXPENDABILITY_FACTOR;
-                                            logger.warn("V35 VADER EXPENDABLE: Barrier risk reduced to {} (Hunt Down — Vader is replaceable)",
-                                                (int)barrierRiskPenalty);
-                                        }
-
-                                        action.addReasoning(String.format(
-                                            "V29.9 BARRIER RISK: If opponent Barriers Vader, remaining power %.0f vs %.0f — %s!",
-                                            powerWithoutVader, theirPower,
-                                            charCountWithoutVader == 0 ? "NO ONE LEFT" : "crushed"),
-                                            barrierRiskPenalty);
-                                        logger.warn("V29.9 BARRIER RISK at {}: Without Vader: {} vs {} (deficit {}), penalty {}",
-                                            targetLocation.getTitle(), (int)powerWithoutVader, (int)theirPower,
-                                            (int)powerDeficitWithoutVader, (int)barrierRiskPenalty);
-                                    }
-                                }
-
-                                // === V29.9: HUNT DOWN VADER BATTLE AGGRESSIVENESS ===
-                                // When playing Hunt Down with armed Vader, he SHOULD be fighting.
-                                // Boost battle initiation significantly when Vader is armed and present.
-                                if (ourVaderHere && ourVaderArmed) {
-                                    com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer battleObjAnalyzer =
-                                        context.getObjectiveAnalyzer();
-                                    if (battleObjAnalyzer != null && battleObjAnalyzer.isAnalyzed() && battleObjAnalyzer.isHuntDownV()) {
-                                        float huntBonus = 80.0f;
-                                        if (lukeHere) huntBonus = 200.0f;
-                                        action.addReasoning(String.format(
-                                            "V29.9 HUNT DOWN: Armed Vader should FIGHT! %s (+%.0f)",
-                                            lukeHere ? "LUKE IS HERE — THIS IS THE OBJECTIVE!" : "Vader hunts and destroys!",
-                                            huntBonus), huntBonus);
-                                        logger.warn("V29.9 HUNT DOWN: Armed Vader aggressiveness boost +{} (Luke: {})",
-                                            (int)huntBonus, lukeHere);
-                                    }
-                                }
-
-                                // === V35: INQUISITOR BATTLE DESTINY BONUS ===
-                                // Hunt Down V objective gives +1 total battle destiny where you have
-                                // an Inquisitor (+2 if hatred card present). This is like 1-2 extra
-                                // destiny draws — massive advantage. Also check for Jedi opponents.
-                                {
-                                    com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v35ObjAnalyzer =
-                                        context.getObjectiveAnalyzer();
-                                    if (v35ObjAnalyzer != null && v35ObjAnalyzer.isAnalyzed() && v35ObjAnalyzer.isHuntDownV()
-                                        && cardsHere != null) {
-                                        boolean inquisitorInBattle = false;
-                                        boolean hatredAtLocation = false;
-                                        boolean jediAtLocation = false;
-
-                                        for (PhysicalCard bCard : cardsHere) {
-                                            if (bCard == null || bCard.getBlueprint() == null) continue;
-                                            String bTitle = bCard.getTitle() != null ? bCard.getTitle().toLowerCase(Locale.ROOT) : "";
-
-                                            if (playerId.equals(bCard.getOwner())) {
-                                                if (Filters.inquisitor.accepts(game, bCard)) {
-                                                    inquisitorInBattle = true;
-                                                    if (Filters.hasStacked(Filters.hatredCard).accepts(game, bCard)) {
-                                                        hatredAtLocation = true;
-                                                    }
-                                                }
-                                            } else {
-                                                // Opponent characters — check for Jedi/Padawan.
-                                                if (isJediOrPadawan(bTitle)) {
-                                                    jediAtLocation = true;
-                                                }
-                                            }
-                                        }
-
-                                        if (inquisitorInBattle) {
-                                            float destinyBonus = 120.0f; // +1 battle destiny from objective
-                                            if (hatredAtLocation) destinyBonus = 250.0f; // +2 battle destiny
-                                            if (jediAtLocation) destinyBonus += 100.0f; // FMFTD and Fifth Brother bonuses
-                                            action.addReasoning(String.format(
-                                                "V35 HUNT DESTINY: Inquisitor in battle%s%s — +%d total battle destiny!",
-                                                hatredAtLocation ? " + HATRED" : "",
-                                                jediAtLocation ? " vs JEDI" : "",
-                                                hatredAtLocation ? 2 : 1), destinyBonus);
-                                            logger.warn("V35 HUNT DESTINY at {}: Inquisitor={}, hatred={}, jedi={} — bonus +{}",
-                                                targetLocation.getTitle(), inquisitorInBattle, hatredAtLocation,
-                                                jediAtLocation, (int)destinyBonus);
-                                        }
-                                    }
-                                }
-
-                                if (ourPower > 0 && theirPower > 0) {
-                                    foundAnyContestedLocation = true;
-
-                                    // FORMATION SAFETY (2026-07-11c): L2 — never voluntarily battle with
-                                    // zero normal battle-destiny draws (engine truth: total ability >= 4;
-                                    // Codex audit: First Light ability 3 initiated vs Falcon+Han, drew
-                                    // nothing, auto-lost; V164a's parity model was wrong).
-                                    String fsL2 = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
-                                        .vetoInitiateBattle(game, gameState, playerId, targetLocation);
-                                    if (fsL2 != null) {
-                                        action.hardVeto(fsL2);
-                                        logger.warn("FORMATION SAFETY (battle): {}", fsL2);
-                                    }
-
-                                    // === V76 (Steve, 2026-05-15): BATTLE PREDICTION GATE ===
-                                    // Use the Monte Carlo BattlePredictor BEFORE the power-tier
-                                    // scoring. If the simulation projects bad outcomes:
-                                    //   - winRate < 35% → hard block (probable defeat)
-                                    //   - avgDamageTaken >= 10 → hard block (even if winning, too costly)
-                                    // Otherwise, fall through to the V22.4/V29.7 power scoring.
-                                    //
-                                    // Replay May 15: Rando initiated battle at Lars Farm and took
-                                    // 13 attrition + 23 battle damage. Raw power comparison passed
-                                    // CRUSH/FAVORABLE; destiny variance crushed him. BattlePredictor
-                                    // exists with 311 lines of simulation logic but was never
-                                    // wired into BattleEvaluator. This wiring closes the gap.
-                                    try {
-                                        // Estimate destiny draws per side: count chars with ability >= 1
-                                        // at the location, capped between 1 and 4 (typical SWCCG range).
-                                        int myDraws = 1, oppDraws = 1;
-                                        try {
-                                            int myCh = 0, oppCh = 0;
-                                            for (PhysicalCard c : cardsHere) {
-                                                if (c == null || c.getBlueprint() == null) continue;
-                                                if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                                if (playerId.equals(c.getOwner())) myCh++;
-                                                else if (opponentId.equals(c.getOwner())) oppCh++;
-                                            }
-                                            myDraws = Math.max(1, Math.min(4, myCh));
-                                            oppDraws = Math.max(1, Math.min(4, oppCh));
-                                        } catch (Exception e) { /* use defaults */ }
-
-                                        com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v76DeckOracle =
-                                            context.getDeckOracle();
-                                        com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker v76OppTracker =
-                                            context.getOpponentDeckTracker();
-                                        // V76 ADJUSTED 2026-07-10: opponent side weapon-adjusted (was raw).
-                                        BattlePredictor.BattleOutcome v76Outcome = BattlePredictor.predictBattle(
-                                            (int) (ourPower + weaponBonus), myDraws,
-                                            (int) (theirPower + oppWeaponBonus), oppDraws,
-                                            v76DeckOracle, v76OppTracker);
-
-                                        logger.warn("V76 BATTLE PREDICT at {}: winRate={} avgDamageTaken={} avgDamageDealt={} (myPow={}+wb{} draws={} vs oppPow={} draws={})",
-                                            targetLocation.getTitle(),
-                                            String.format("%.2f", v76Outcome.winProbability),
-                                            String.format("%.1f", v76Outcome.expectedDamageTaken),
-                                            String.format("%.1f", v76Outcome.expectedDamageDealt),
-                                            (int) ourPower, (int) weaponBonus, myDraws,
-                                            (int) theirPower, oppDraws);
-
-                                        if (v76Outcome.winProbability < 0.35f) {
-                                            action.addReasoning(String.format(
-                                                "V76 BATTLE PREDICT: winRate %.0f%% at %s — probable defeat, don't initiate!",
-                                                v76Outcome.winProbability * 100, targetLocation.getTitle()), -800.0f);
-                                            logger.warn("V76 BATTLE BLOCK: predicted defeat at {} (winRate {})",
-                                                targetLocation.getTitle(), String.format("%.2f", v76Outcome.winProbability));
-                                        } else if (v76Outcome.expectedDamageTaken >= 10f) {
-                                            action.addReasoning(String.format(
-                                                "V76 BATTLE PREDICT: avg damage taken %.1f at %s — pyrrhic, don't initiate!",
-                                                v76Outcome.expectedDamageTaken, targetLocation.getTitle()), -500.0f);
-                                            logger.warn("V76 BATTLE COSTLY: predicted damage {} at {} — too high",
-                                                String.format("%.1f", v76Outcome.expectedDamageTaken), targetLocation.getTitle());
-                                        }
-                                    } catch (Exception v76Ex) {
-                                        logger.debug("V76 prediction error: {}", v76Ex.getMessage());
-                                    }
-
-                                    // V29.7: Use weapon-adjusted effective diff for battle decisions.
-                                    // A weapon-equipped character with base power equal or slightly
-                                    // less than opponent is actually FAVORED in battle.
-                                    // Only block if we're outgunned EVEN WITH weapons.
-                                    if (theirPower > ourPower && weaponBonus == 0) {
-                                        // No weapons and opponent has more power — NEVER initiate!
-                                        float penalty = -300.0f;
-                                        if (theirPower > ourPower * 2) penalty = -600.0f;
-                                        action.addReasoning(String.format("V29 DON'T INITIATE: %.0f vs %.0f power — we're outgunned!",
-                                            ourPower, theirPower), penalty);
-                                        logger.warn("V29 BATTLE BLOCK at {}: our {} vs their {} — BLOCKED (penalty {})",
-                                            targetLocation.getTitle(), (int)ourPower, (int)theirPower, (int)penalty);
-                                    } else if (theirPower > ourPower && weaponBonus > 0 && weaponEffectiveDiff < MARGINAL_THRESHOLD) {
-                                        // We have weapons but still outpowered even with weapon bonus
-                                        action.addReasoning(String.format("V29.7 WEAPONS NOT ENOUGH: power %.0f+weapons vs %.0f — still risky",
-                                            ourPower, theirPower), -150.0f);
-                                    } else if (weaponEffectiveDiff >= FAVORABLE_THRESHOLD) {
-                                        // V34: Strong advantage (with weapons) — FIGHT!
-                                        foundFavorableBattle = true;
-                                        float battleBonus = 150.0f; // V34: Raised from 40 — Rando was too passive
-                                        String battleReason;
-                                        if (weaponBonus > 0) {
-                                            battleBonus += weaponBonus * 10.0f; // V34: Raised from 5x — weapons are devastating
-                                            if (ourVaderHere && lukeHere) {
-                                                battleBonus += 100.0f; // HUGE bonus: Vader vs Luke (Hunt Down!)
-                                                battleReason = String.format("V29.7 VADER vs LUKE at %s! Power %.0f + weapons vs %.0f — CHALLENGE!",
-                                                    targetLocation.getTitle(), ourPower, theirPower);
-                                            } else {
-                                                battleReason = String.format("V29.7 ARMED BATTLE at %s (power %.0f + weapons vs %.0f, effective diff=%.0f)",
-                                                    targetLocation.getTitle(), ourPower, theirPower, weaponEffectiveDiff);
-                                            }
-                                            if (hasIHYN) battleReason += " + IHYN!";
-                                        } else {
-                                            battleReason = String.format("Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
-                                                targetLocation.getTitle(), ourPower, theirPower, ourAbility, theirAbility);
-                                        }
-                                        action.addReasoning(battleReason, battleBonus);
-                                    } else if (weaponEffectiveDiff >= MARGINAL_THRESHOLD) {
-                                        if (weaponBonus > 0) {
-                                            // V34: Marginal with weapons — weapons tip the balance, GO FIGHT
-                                            action.addReasoning(String.format("V34 ARMED MARGINAL at %s (power %.0f + weapons vs %.0f) — weapons help!",
-                                                targetLocation.getTitle(), ourPower, theirPower), 80.0f);
-                                        } else {
-                                            // Slight advantage but risky without weapons
-                                            action.addReasoning(String.format("V29 MARGINAL at %s (power %.0f vs %.0f) — risky with weapons",
-                                                targetLocation.getTitle(), ourPower, theirPower), -50.0f);
-                                        }
-                                    } else {
-                                        // Even or worse — don't initiate
-                                        float penalty = -100.0f;
-                                        if (weaponEffectiveDiff < -8) penalty = -200.0f;
-                                        if (weaponEffectiveDiff < -15) penalty = -400.0f;
-                                        action.addReasoning(String.format("V29: UNFAVORABLE at %s (power %.0f vs %.0f) - don't initiate!",
-                                            targetLocation.getTitle(), ourPower, theirPower), penalty);
-                                    }
-                                } else if (ourPower > 0 && theirPower == 0) {
-                                    // We're alone here - no battle possible
-                                    action.addReasoning("No opponent here", -20.0f);
-                                }
-                            }
-
-                            // V22.4: Fallback — if we couldn't identify the specific location,
-                            // check all locations but be MORE conservative
-                            if (!checkedSpecificLocation) {
-                                for (PhysicalCard location : gameState.getTopLocations()) {
-                                    float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                        gameState, location, playerId, false, false);
-                                    float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                        gameState, location, opponentId, false, false);
-
-                                    if (ourPower > 0 && theirPower > 0) {
-                                        foundAnyContestedLocation = true;
-                                        float powerDiff = ourPower - theirPower;
-                                        float ourAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
-                                            gameState, playerId, location);
-                                        float theirAbility = game.getModifiersQuerying().getTotalAbilityAtLocation(
-                                            gameState, opponentId, location);
-                                        float abilityDiff = ourAbility - theirAbility;
-                                        float effectiveDiff = powerDiff + (abilityDiff * 2.5f);
-
-                                        // V76 (V22.4 fallback) ADJUSTED 2026-07-10 (Rey replay
-                                        // rbujmoc90br3uu4c, T5: "Initiate battle for free" had no
-                                        // location data, skipped the specific branch — the ONLY place
-                                        // V76 ran — and got "+40 Favorable 19v13" while 2-3 armed
-                                        // opponents hit Ben Solo + Yoda + 3 sabers: won the power, lost
-                                        // 6 cards to 2). The fallback now (a) counts opponent WEAPONS
-                                        // into the power math (V29.7 heuristic) and (b) prices the HIT
-                                        // economics: each armed opponent character ≈ one of our
-                                        // characters forfeited at 0 (avg forfeit). Ruinous economics →
-                                        // -500 pyrrhic (same bar as V76's specific branch) and never
-                                        // "favorable".
-                                        float v76fOppWeap = 0f; int v76fOppArmed = 0;
-                                        int v76fOurChars = 0; float v76fOurForfeit = 0f;
-                                        try {
-                                            for (PhysicalCard fc : gameState.getCardsAtLocation(location)) {
-                                                if (fc == null || fc.getBlueprint() == null) continue;
-                                                if (fc.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                                if (playerId.equals(fc.getOwner())) {
-                                                    v76fOurChars++;
-                                                    Float ff = fc.getBlueprint().hasForfeitAttribute() ? fc.getBlueprint().getForfeit() : null;
-                                                    v76fOurForfeit += (ff != null) ? ff : 2f;
-                                                } else if (opponentId != null && opponentId.equals(fc.getOwner())) {
-                                                    BattleWeaponProfile fProfile = BattleWeaponProfile.assess(game, gameState, fc);
-                                                    v76fOppWeap += fProfile.bonus();
-                                                    if (fProfile.armed()) v76fOppArmed++;
-                                                }
-                                            }
-                                        } catch (Exception e) { /* fail-open */ }
-                                        float v76fHitLoss = 0f;
-                                        if (v76fOppArmed > 0 && v76fOurChars > 0) {
-                                            float v76fAvgF = v76fOurForfeit / v76fOurChars;
-                                            v76fHitLoss = Math.min(v76fOppArmed, v76fOurChars) * v76fAvgF;
-                                        }
-                                        effectiveDiff -= v76fOppWeap;
-                                        // ADJUSTED 2026-07-10b (replay f27ws5lgy0g58k5p, T4: hitLoss 6
-                                        // didn't trip the flat >=10 bar while Rando's WHOLE force was worth
-                                        // 6): pyrrhic is also RELATIVE — losing more than half your committed
-                                        // forfeit to hits is ruinous regardless of absolute size.
-                                        boolean v76fPyrrhic = v76fHitLoss >= 10f
-                                            || (v76fOurForfeit > 0f && v76fHitLoss > 0.5f * v76fOurForfeit);
-                                        if (v76fPyrrhic) {
-                                            action.addReasoning(String.format(
-                                                "V76 (fallback) HIT ECONOMICS at %s: %d armed opponents, expected card loss %.1f — pyrrhic, don't initiate!",
-                                                location.getTitle(), v76fOppArmed, v76fHitLoss), -500.0f);
-                                            logger.warn("V76 FALLBACK PYRRHIC at {}: armed={} hitLoss={} oppWeap=+{}",
-                                                location.getTitle(), v76fOppArmed, v76fHitLoss, v76fOppWeap);
-                                        }
-
-                                        logger.info("[BattleEvaluator] Checking {}: power={}/{} (diff={}), ability={}/{} (diff={}), oppWeap=+{}",
-                                            location.getTitle(), ourPower, theirPower, powerDiff,
-                                            ourAbility, theirAbility, abilityDiff, v76fOppWeap);
-
-                                        // V22.4: Check for any suicidal locations — if ANY location
-                                        // has our power < 50% of theirs, add strong warning
-                                        if (theirPower > ourPower * 2 && theirPower > 6) {
-                                            action.addReasoning(String.format("V22.4 DANGER at %s (%.0f vs %.0f) - might battle here!",
-                                                location.getTitle(), ourPower, theirPower), -80.0f);
-                                        }
-
-                                        if (effectiveDiff >= MARGINAL_THRESHOLD && !v76fPyrrhic) {
-                                            foundFavorableBattle = true;
-                                            action.addReasoning(String.format("Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
-                                                location.getTitle(), ourPower, theirPower, ourAbility, theirAbility), 40.0f);
-                                            break;
-                                        } else if (!v76fPyrrhic && abilityDiff >= 0
-                                                   && powerDiff >= -ABILITY_BATTLE_MAX_POWER_DEFICIT
-                                                   && !(theirPower > ourPower * 2 && theirPower > 6)) {
-                                            // V164a (Steve): equal-or-greater ability -> initiate even without a
-                                            // power ADVANTAGE. The old gate (effectiveDiff >= 2) skipped even/
-                                            // slightly-behind-power sites, leaving the drain stalemate. We still
-                                            // refuse a real power deficit (> ABILITY_BATTLE_MAX_POWER_DEFICIT) and
-                                            // the catastrophic-power guard, since lower power loses the battle.
-                                            // Same +40 as a normal favorable battle so the V61 reserve guards
-                                            // (-200/-400/-800) and V22.4 danger (-80) still dominate when unsafe.
-                                            foundFavorableBattle = true;
-                                            action.addReasoning(String.format("V164a ABILITY BATTLE at %s: ability %.0f >= %.0f (power %.0f vs %.0f) — fair trade, initiate to break drains",
-                                                location.getTitle(), ourAbility, theirAbility, ourPower, theirPower), 40.0f);
-                                            break;
-                                        } else if (abilityDiff < -1) {
-                                            action.addReasoning(String.format("Ability disadvantage at %s (%.0f vs %.0f) - enemy draws more destiny",
-                                                location.getTitle(), ourAbility, theirAbility), -25.0f);
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            logger.warn("[BattleEvaluator] Could not check locations: {}", e.getMessage());
-                        }
-                    }
-                }
-
-                // FORMATION SAFETY (2026-07-11c): L2 on the LOCATIONLESS fallback route — if no
-                // contested location gives us a normal battle-destiny draw, initiating is a
-                // guaranteed destiny deficit; veto (the specific branch handles named locations).
-                if (!checkedSpecificLocation && foundAnyContestedLocation && game != null && gameState != null) {
-                    boolean fsAnyEligible = false;
-                    try {
-                        String fsPid = context.getPlayerId();
-                        String fsOpp = gameState.getOpponent(fsPid);
-                        for (PhysicalCard fsLoc : gameState.getTopLocations()) {
-                            if (fsLoc == null) continue;
-                            float fsOur = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, fsLoc, fsPid, false, false);
-                            float fsTheir = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, fsLoc, fsOpp, false, false);
-                            if (fsOur <= 0 || fsTheir <= 0) continue;
-                            if (com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
-                                    .battleDestinyEligible(game, gameState, fsPid, fsLoc)) { fsAnyEligible = true; break; }
-                        }
-                    } catch (Exception fsE) { fsAnyEligible = true; /* fail-open */ }
-                    if (!fsAnyEligible) {
-                        action.hardVeto("L2 NO-DESTINY BATTLE (fallback): no contested location reaches ability 4 — zero normal destiny draws everywhere");
-                        logger.warn("FORMATION SAFETY (battle-fallback): vetoed — no destiny-eligible contested location");
-                    }
-                }
-
-                if (!foundFavorableBattle && foundAnyContestedLocation) {
-                    action.addReasoning("No favorable battles available - don't initiate", -60.0f);
-                } else if (!foundAnyContestedLocation) {
-                    action.addReasoning("No contested locations", -20.0f);
-                }
-
-                // V22: STRATEGIC MUST-FIGHT OVERRIDE
-                // If opponent is draining us from multiple uncontested locations and we're behind
-                // on life force, inaction guarantees defeat. Force engagement.
-                if (!foundFavorableBattle && game != null && gameState != null) {
-                    try {
-                        String playerId = context.getPlayerId();
-                        String opponentId = gameState.getOpponent(playerId);
-                        int theirDrain = 0;
-                        boolean hasEngageableOpponent = false;
-                        for (PhysicalCard location : gameState.getTopLocations()) {
-                            float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, location, playerId, false, false);
-                            float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, location, opponentId, false, false);
-                            if (theirPower > 0 && ourPower == 0) {
-                                theirDrain += 1;
-                            }
-                            if (ourPower > 0 && theirPower > 0) {
-                                hasEngageableOpponent = true;
-                            }
-                        }
-                        // V29: Only apply MUST-FIGHT if we have at least one location where
-                        // we're NOT outpowered. Don't force a battle with solo Lando vs Rey.
-                        boolean hasWinnableBattle = false;
-                        for (PhysicalCard location : gameState.getTopLocations()) {
-                            float ourP = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, location, playerId, false, false);
-                            float theirP = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, location, opponentId, false, false);
-                            if (ourP > 0 && theirP > 0 && ourP >= theirP) {
-                                hasWinnableBattle = true;
-                                break;
-                            }
-                        }
-                        if (theirDrain >= 2 && hasWinnableBattle && isBehindOnLifeForce) {
-                            action.addReasoning(
-                                String.format("V34 MUST-FIGHT: Opponent draining from %d uncontested locations, we're behind - must engage!", theirDrain),
-                                200.0f); // V34: Raised from 80 — inaction = guaranteed loss
-                            logger.warn("[BattleEvaluator] V22 MUST-FIGHT override: drain threat={}, behind=true", theirDrain);
-                        } else if (theirDrain >= 2 && !hasWinnableBattle && isBehindOnLifeForce) {
-                            logger.warn("V29 MUST-FIGHT BLOCKED: Behind on life but outpowered everywhere — don't suicide!");
-                        }
-                    } catch (Exception e) {
-                        logger.debug("[BattleEvaluator] V22 must-fight check failed: {}", e.getMessage());
-                    }
-                }
-
-                // V61 RESERVE DECK GUARD — battle destiny needs Reserve Deck cards!
-                // FIXES is9j46shx6t0swby replay: Rando initiated battle with Reserve=0
-                // (log: "No cards in Reserve Deck. Rando can't draw battle destiny")
-                // auto-losing every destiny draw. This is a hard auto-lose trap.
-                // Scale penalty to severity — 0 cards = hard block, 1-2 = heavy penalty.
-                // V61b (Steve, 2026-06-28): UNLESS we OVERPOWER a contested site by a lot — then we
-                // win on raw power and battle destiny is irrelevant, so the empty-reserve guard must
-                // NOT veto a free win (replay: Hoth 26 vs 4, diff 22, V61 -800 blocked it and Rando
-                // passed). Re-scan contested sites for the best overpower margin; if it clears a
-                // strong opponent destiny swing, skip the reserve penalty entirely and take the battle.
-                float v61BestOverpower = 0f;
-                try {
-                    if (selectedBattlePowerMargin != null) {
-                        v61BestOverpower = selectedBattlePowerMargin;
+                result.actionId(), ActionType.BATTLE, result.baseScore(), result.actionText());
+            for (BattleDecisionPolicy.Contribution contribution : result.contributions()) {
+                if (contribution.hardVeto()) {
+                    if (contribution.ruleArmId() == null) {
+                        action.hardVeto(contribution.reason());
                     } else {
-                        String v61pid = context.getPlayerId();
-                        String v61oid = gameState.getOpponent(v61pid);
-                        for (PhysicalCard v61loc : gameState.getTopLocations()) {
-                            float op = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, v61loc, v61pid, false, false);
-                            float tp = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, v61loc, v61oid, false, false);
-                            if (op > 0 && tp > 0 && (op - tp) > v61BestOverpower) v61BestOverpower = op - tp;
-                        }
+                        action.hardVeto(contribution.reason(), contribution.ruleArmId(),
+                            contribution.domainId(), contribution.outputKind());
                     }
-                } catch (Exception ignore) { /* 0 */ }
-                boolean v61Overpowering = v61BestOverpower >= 8f;  // beats a strong single destiny; win w/o ours
-                if (v61Overpowering) {
-                    logger.warn("V61b OVERPOWER: target margin {} >= 8 — reserve guard skipped, take the battle", (int) v61BestOverpower);
-                } else if (reserveDeck == 0) {
-                    action.addReasoning(
-                        "V61 RESERVE EMPTY: 0 cards in Reserve — CANNOT draw battle destiny, auto-lose!",
-                        -800.0f);
-                    logger.warn("V61 RESERVE EMPTY: Blocking battle initiation — Reserve=0!");
-                } else if (reserveDeck == 1) {
-                    action.addReasoning(
-                        "V61 RESERVE CRITICAL: 1 card in Reserve — can draw 1 destiny max, very risky!",
-                        -400.0f);
-                    logger.warn("V61 RESERVE CRITICAL: 1 card in reserve — heavy penalty -400");
-                } else if (reserveDeck == 2) {
-                    action.addReasoning(
-                        "V61 RESERVE LOW: 2 cards in Reserve — weapon destiny + 1 battle destiny only",
-                        -200.0f);
-                } else if (reserveDeck < MIN_RESERVE_FOR_BATTLE) {
-                    action.addReasoning(
-                        String.format("Low reserve deck (%d) - risky destiny draws", reserveDeck),
-                        -80.0f);
-                }
-
-                // === V27: BATTLE INTERRUPT FORCE RESERVATION ===
-                // If opponent has "Draw Their Fire" on table, playing ANY interrupt
-                // during battles THEY initiate costs 1 extra Force. This means Ghhhk
-                // (Used Interrupt, normally free to play) needs 1 Force just from the tax.
-                // Without Force in pile, ALL battle interrupts are unusable and we take
-                // full attrition from heavy losses.
-                // Also applies when WE initiate: defender (us) still loses 1 Force when
-                // battle is initiated, and if opponent initiates, we need extra Force per interrupt.
-                if (gameState != null) {
-                    int battleForcePile = context.getForcePileSize();
-                    int handSize = context.getHandSize();
-
-                    // V27.1: Detect "Draw Their Fire" on opponent's table
-                    boolean opponentHasDrawTheirFire = false;
-                    try {
-                        String opponentIdDtf = gameState.getOpponent(context.getPlayerId());
-                        for (PhysicalCard dtfCard : gameState.getAllPermanentCards()) {
-                            if (dtfCard == null) continue;
-                            if (opponentIdDtf != null && opponentIdDtf.equals(dtfCard.getOwner())
-                                && dtfCard.getBlueprint() != null
-                                && dtfCard.getBlueprint().getTitle() != null) {
-                                String dtfTitle = dtfCard.getBlueprint().getTitle().toLowerCase(Locale.ROOT);
-                                if (dtfTitle.contains("draw their fire")) {
-                                    com.gempukku.swccgo.common.Zone dtfZone = dtfCard.getZone();
-                                    if (dtfZone != null && dtfZone.isInPlay()) {
-                                        opponentHasDrawTheirFire = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.debug("V27.1: Error checking for Draw Their Fire: {}", e.getMessage());
-                    }
-
-                    if (opponentHasDrawTheirFire) {
-                        // Draw Their Fire is active! Each interrupt costs 1 extra Force.
-                        // We need at least 2 Force per interrupt (1 tax + interrupt cost).
-                        // For Ghhhk (Used Interrupt = free), still need 1 Force for tax.
-                        // Also: when battle is initiated, defender loses 1 Force automatically.
-                        int forceNeededForInterrupts = 3; // 1 for DTF defender loss + 1 for interrupt tax + 1 buffer
-                        if (battleForcePile < forceNeededForInterrupts) {
-                            float dtfPenalty = -60.0f;
-                            if (battleForcePile == 0) dtfPenalty = -100.0f;
-                            action.addReasoning(String.format(
-                                "V27.1 DRAW THEIR FIRE: Opponent has DTF on table! Need %d Force for interrupts (tax+loss), " +
-                                "only %d in pile — Ghhhk UNUSABLE!", forceNeededForInterrupts, battleForcePile), dtfPenalty);
-                            logger.warn("V27.1 DTF ACTIVE: Only {} Force, need {} for interrupt tax — battle interrupts blocked!",
-                                battleForcePile, forceNeededForInterrupts);
-                        } else {
-                            action.addReasoning(String.format(
-                                "V27.1 DRAW THEIR FIRE: DTF on table, %d Force available — interrupts usable but costly", battleForcePile), 0.0f);
-                        }
+                } else {
+                    if (contribution.ruleArmId() == null) {
+                        action.addReasoning(contribution.reason(), contribution.delta());
                     } else {
-                        // No DTF — standard Force check for battle readiness
-                        if (battleForcePile < 2) {
-                            action.addReasoning(String.format(
-                                "V27 BATTLE FORCE WARNING: Only %d Force in pile — limited interrupt capacity! " +
-                                "Battle losses come from hand (%d cards)!", battleForcePile, handSize), -40.0f);
-                            logger.warn("V27 BATTLE FORCE: Only {} Force available — battle interrupts may be unusable!", battleForcePile);
-                        } else if (battleForcePile < 4) {
-                            action.addReasoning(String.format(
-                                "V27 BATTLE FORCE: Low Force (%d) — limited interrupt capacity in battle", battleForcePile), -15.0f);
-                        }
-                    }
-                }
-
-                // Strategic position adjustments (reduced impact - power diff is more important)
-                if (isBehindOnLifeForce) {
-                    // When behind, slight encouragement but power still matters most
-                    action.addReasoning("Behind on life force - slightly more aggressive", 15.0f);
-                } else if (isAheadOnLifeForce) {
-                    // When ahead, be more conservative
-                    action.addReasoning("Ahead on life force - can afford to wait", -20.0f);
-                }
-
-                // Life force critical - more aggressive but still check power
-                if (lifeForce <= RandoConfig.CRITICAL_LIFE_FORCE) {
-                    action.addReasoning("Low life force - need to act", 30.0f);
-                }
-            }
-
-            // === WEAPON FIRING ===
-            if (actionLower.contains("fire")) {
-                action.addReasoning("Fire weapon", 40.0f);
-
-                // Target selection bonuses
-                if (actionLower.contains("character")) {
-                    action.addReasoning("Target character", 10.0f);
-                }
-                if (actionLower.contains("unique") || actionLower.contains("•")) {
-                    action.addReasoning("Target unique card", 20.0f);
-                }
-            }
-
-            // === CANCEL BATTLE (It's A Trap, etc.) ===
-            if (actionLower.contains("cancel battle") || actionLower.contains("cancel the battle")) {
-                SwccgGame game = context.getGame();
-                if (game != null && gameState != null) {
-                    BattleState battleState = gameState.getBattleState();
-                    String playerId = context.getPlayerId();
-
-                    if (battleState != null) {
-                        String initiator = battleState.getPlayerInitiatedBattle();
-                        boolean weInitiated = playerId != null && playerId.equals(initiator);
-
-                        if (weInitiated) {
-                            // NEVER cancel a battle we started - that's wasteful
-                            action.addReasoning("DO NOT cancel our own battle! Waste of interrupt.", -150.0f);
-                            logger.info("[BattleEvaluator] Penalizing cancel - WE initiated this battle");
-                        } else {
-                            // Opponent initiated - check if we should cancel
-                            String opponentId = gameState.getOpponent(playerId);
-                            PhysicalCard battleLocation = battleState.getBattleLocation();
-
-                            if (battleLocation != null && opponentId != null) {
-                                try {
-                                    float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                        gameState, battleLocation, playerId, false, false);
-                                    float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                        gameState, battleLocation, opponentId, false, false);
-                                    float powerDiff = ourPower - theirPower;
-
-                                    if (powerDiff < -FAVORABLE_THRESHOLD) {
-                                        // We're badly losing - cancel is valuable
-                                        action.addReasoning(String.format("Cancel losing battle (%.0f vs %.0f)", ourPower, theirPower), 60.0f);
-                                    } else if (powerDiff < 0) {
-                                        // Slight disadvantage - cancel might be worth it
-                                        action.addReasoning(String.format("Cancel unfavorable battle (%.0f vs %.0f)", ourPower, theirPower), 20.0f);
-                                    } else {
-                                        // We're winning or even - don't waste the interrupt
-                                        action.addReasoning(String.format("Don't cancel - we're not losing (%.0f vs %.0f)", ourPower, theirPower), -60.0f);
-                                    }
-                                } catch (Exception e) {
-                                    logger.warn("[BattleEvaluator] Could not get power for cancel decision: {}", e.getMessage());
-                                }
-                            }
-                        }
+                        action.addReasoning(contribution.reason(), contribution.delta(),
+                            contribution.ruleArmId(), contribution.domainId(), contribution.outputKind());
                     }
                 }
             }
-
-            // === BATTLE TACTICS (during battle) ===
-            if (context.getPhase() == Phase.BATTLE) {
-                // Fire before forfeit
-                if (actionLower.contains("fire")) {
-                    action.addReasoning("Fire weapons during battle", 50.0f);
-                }
-
-                // Draw battle destiny
-                if (actionLower.contains("draw") && actionLower.contains("destiny")) {
-                    action.addReasoning("Draw battle destiny", 30.0f);
-                }
-            }
-
-            logger.debug("[BattleEvaluator] Scored '{}' -> {}",
-                actionText.length() > 40 ? actionText.substring(0, 40) + "..." : actionText,
-                String.format("%.1f", action.getScore()));
-
             actions.add(action);
         }
-
-        logger.info("[BattleEvaluator] Evaluated {} battle actions", actions.size());
         return actions;
     }
 
+    private BattleDecisionPolicy.Context adapt(DecisionContext context) {
+        return new BattleDecisionPolicy.Context() {
+            @Override
+            public String getDecisionType() {
+                return context.getDecisionType();
+            }
+
+            @Override
+            public Phase getPhase() {
+                return context.getPhase();
+            }
+
+            @Override
+            public String getDecisionText() {
+                return context.getDecisionText();
+            }
+
+            @Override
+            public List<String> getActionIds() {
+                return context.getActionIds();
+            }
+
+            @Override
+            public List<String> getActionTexts() {
+                return context.getActionTexts();
+            }
+
+            @Override
+            public List<String> getCardIds() {
+                return context.getCardIds();
+            }
+
+            @Override
+            public GameState getGameState() {
+                return context.getGameState();
+            }
+
+            @Override
+            public SwccgGame getGame() {
+                return context.getGame();
+            }
+
+            @Override
+            public String getPlayerId() {
+                return context.getPlayerId();
+            }
+
+            @Override
+            public int getReserveDeckSize() {
+                return context.getReserveDeckSize();
+            }
+
+            @Override
+            public int getLifeForce() {
+                return context.getLifeForce();
+            }
+
+            @Override
+            public int getForcePileSize() {
+                return context.getForcePileSize();
+            }
+
+            @Override
+            public int getHandSize() {
+                return context.getHandSize();
+            }
+
+            @Override
+            public ObjectiveAnalyzer getObjectiveAnalyzer() {
+                return context.getObjectiveAnalyzer();
+            }
+
+            @Override
+            public float getVaderExpendabilityFactor() {
+                return RandoConfig.VADER_EXPENDABILITY_FACTOR;
+            }
+
+            @Override
+            public int getCriticalLifeForce() {
+                return RandoConfig.CRITICAL_LIFE_FORCE;
+            }
+
+            @Override
+            public BattleDecisionPolicy.Prediction predictBattle(
+                    int myPower, int myDestinyDraws, int opponentPower, int opponentDestinyDraws) {
+                BattlePredictor.BattleOutcome outcome = BattlePredictor.predictBattle(
+                    myPower, myDestinyDraws, opponentPower, opponentDestinyDraws,
+                    context.getDeckOracle(), context.getOpponentDeckTracker());
+                return new BattleDecisionPolicy.Prediction(
+                    outcome.winProbability, outcome.expectedDamageDealt, outcome.expectedDamageTaken);
+            }
+
+            @Override
+            public Logger getLogger() {
+                return logger;
+            }
+        };
+    }
 }

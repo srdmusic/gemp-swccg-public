@@ -239,6 +239,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 ### battle-initiation — 12 rules
 *Whether/where to initiate battle.* Target owner: BATTLE pipeline / BATTLE-1 (TRAP: ATE V25 tier block + BE both score initiation — preserve the SUM).
 
+**V208 owner note:** `BattleDecisionPolicy` is the canonical owner of the former `BattleEvaluator` stream for both bots. The V25 `ActionTextEvaluator` ladder intentionally remains a separate contribution, so the two streams still sum. Row anchors below describe the historical source locations; the shared policy is the live score owner for the BE arms.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V22.4-initiation-guard | V22.4 | BATTLE-1 | BE:16 | BANDED | -800 danger / location-tier scoring | Location-specific battle evaluation + suicidal-location catastrophic-power guard (BattleEvaluator 146-551). Referenced by V164a boundary | LIVE |
@@ -256,6 +258,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 ### battle-weapons — 21 rules
 *Weapons-segment window: fire, interrupts, targeting, destiny mods.* Target owner: BATTLE pipeline / BATTLE-2.
+
+**V208 owner note:** `BattleWeaponsPolicy` now owns Force Push exchange/exclusion, fire-before-throw, redraw, generic fire/cancel/draw, V51 already-hit, V36 targeting, and final V38.3 self-target scoring. The mirrored evaluators retain stock fact recognition and the other card-specific battle-interrupt arms. Row anchors below are historical for the migrated slice.
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
@@ -282,7 +286,9 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V175 |  | BATTLE-2 | ATE:2677 CSE:4342 | BANDED | kill shot +400+power*40 cap 900; substitute delta*60; our-char -100 | ATE 3060-3150 = kill-shot + substitute-destiny arms (BATTLE-2). CSE 4039-4066 (3 hits) = protect-battle-interrupts-from-force-loss-picker arm — force-loss territory;… | LIVE |
 
 ### battle-forfeit — 13 rules
-*Damage segment: forfeit picker + loss-vs-forfeit.* Target owner: BATTLE pipeline / BATTLE-3 (hub = v159ForfeitScore, CSE).
+*Damage segment: forfeit picker + loss-vs-forfeit.* Target owner: BATTLE pipeline / BATTLE-3.
+
+**V208 owner note:** `BattleForfeitFacts` and `BattleForfeitPolicy` now own optional V22.4/V29.13, V154, V118, V150, V22.3, and the V159/V161/V178 ladder. The obsolete bot-local `v159ForfeitScore` helpers are deleted. V206 FORCE-LOSS remains between the policy's before-route and after-route streams. Standalone mandatory-forfeit nudges, V67be's explanatory no-op, and V45 remain with their existing owners; row anchors below are historical for the migrated slice.
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
