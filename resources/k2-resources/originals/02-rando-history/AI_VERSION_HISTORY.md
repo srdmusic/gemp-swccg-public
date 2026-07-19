@@ -1,3 +1,21 @@
+  ==== V230 AI-ONLY MOVE VERGE STEERING POLICY OWNER (2026-07-19, both bots) ====
+Shared MoveVergePolicy now owns the duplicated V79/V79b pure branch order, last-successful parsec
+parse, exact reasons, raw contributions, and post-flip hard-veto fact. Both adapters retain the
+Death Star title gate, owned in-play objective scan, blueprint and zone reads, getSystemOrbited
+fact, conditional objective-analyzer read, catches, direct score and ladder mutation, logs, and
+original position before V25. Behavior is unchanged: orbiting Scarif remains +1500; parsec 7 is
++1200; parsecs 6 or 8 are +1000; every other parsec above 4 is +700; parsecs 0 through 4 are -300;
+and text without a parsec is +500. Orbit text still wins before parsing, the last successful parse
+still wins, and a later overflow preserves the earlier destination. Already orbiting Scarif remains
+unscored pre-flip and hard-vetoed post-flip. RandoCalAi V79b and both ActionText V79/V103 parsec
+choice owners are untouched. Production edits are AI-only. Verification passed 240 focused MOVE
+tests and the full 1,417-test reactor with 0 failures, 0 errors, and 26 skipped. Package, order,
+cross-route guards, source-boundary, forbidden-symbol, artifact, mirror, diff, and independent
+source-review gates passed; server jar SHA-256 is
+022f8b95bd50368353b52070f7b7ec6c55f8a194a7aeb9254f3857a03b32b50d and packaged web.jar SHA-256 is
+afaff8264e6ab8304731c5298864be4fc19dabc0489533aa31d068557456dfb3. Runtime load and live-game
+proof remain separate gates. Revert the single V230 commit. See AI_CHANGELOG 2026-07-19.
+
   ==== V229 AI-ONLY MOVE BLOCKED-RESPONSE POLICY OWNER (2026-07-19, both bots) ====
 Shared MoveBlockedResponsePolicy now owns the duplicated exact blocked-action match and the
 NOT_BLOCKED, ENDANGERED_FALLTHROUGH, and HARD_BLOCK classification. Both adapters retain the

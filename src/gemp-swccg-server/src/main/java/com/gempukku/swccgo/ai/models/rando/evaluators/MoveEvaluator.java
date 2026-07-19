@@ -12,6 +12,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
@@ -520,93 +521,8 @@ public class MoveEvaluator extends ActionEvaluator {
                     if (v79Orbited != null && v79Orbited.toLowerCase(Locale.ROOT).contains("scarif")) {
                         v79AtScarif = true;
                     }
-                    if (v79Verge && !v79AtScarif) {
-                        // V79 (Steve, 2026-05-15 update): Scarif is at parsec 7.
-                        // Death Star starts at parsec 4 with hyperspeed 2:
-                        //   Turn 1: parsec 4 → 6 (closer to Scarif)
-                        //   Turn 2: parsec 6 → 7 (the engine then offers "orbit Scarif")
-                        // Penalize moves AWAY from parsec 7. Reward moves toward.
-                        String v79ActionLower = action.getDisplayText() != null
-                            ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
-                        if (v79ActionLower.contains("orbit") && v79ActionLower.contains("scarif")) {
-                            // Orbit Scarif — finalize the move
-                            action.addReasoning(
-                                "V79 DEATH STAR ORBIT SCARIF: arrive at Scarif — must take this!",
-                                1500.0f);
-                            logger.warn("V79 DEATH STAR ORBIT SCARIF: '{}' → +1500", v79ActionLower);
-                        } else {
-                            // Parse destination parsec from action text (e.g., "parsec 6")
-                            java.util.regex.Matcher v79m = java.util.regex.Pattern.compile(
-                                "parsec\\s+(\\d+)").matcher(v79ActionLower);
-                            Integer destParsec = null;
-                            // 2026-06-28 (Steve) FIX: action text reads "...at parsec OLD to ...at
-                            // parsec NEW", so .find() (first match) grabbed the SOURCE parsec (always
-                            // the Death Star's current 4) and scored EVERY move -300 "wrong direction" —
-                            // it never steered toward Scarif (replay: it wandered 4->2->0->1). Take the
-                            // LAST match = the DESTINATION parsec. (dest-only text still works: last==only.)
-                            // NOTE 2026-07-01: this branch is effectively INERT for Verge of Greatness —
-                            // the live "Move using hyperspeed" action text carries NO parsec at all, so
-                            // destParsec stays null here. The real steering is V79b in RandoCalAi (~692),
-                            // which handles the separate MULTIPLE_CHOICE "Choose parsec to move to"
-                            // decision. Keep this parse as a harmless fallback for texts that DO embed
-                            // a parsec; do not spend time "fixing" it — fix V79b instead.
-                            while (v79m.find()) {
-                                try { destParsec = Integer.parseInt(v79m.group(1)); }
-                                catch (Exception e) { /* ignore */ }
-                            }
-                            if (destParsec != null) {
-                                int distFromScarif = Math.abs(destParsec - 7);
-                                if (distFromScarif == 0) {
-                                    // Parsec 7 — at Scarif; engine should offer orbit option
-                                    action.addReasoning(
-                                        "V79 DEATH STAR → parsec 7 (Scarif's parsec) — take orbit option next!",
-                                        1200.0f);
-                                    logger.warn("V79 DEATH STAR → parsec 7 → +1200");
-                                } else if (distFromScarif == 1) {
-                                    // Parsec 6 or 8 — one hop from Scarif
-                                    action.addReasoning(
-                                        "V79 DEATH STAR → parsec " + destParsec + " (1 hop from Scarif at 7)",
-                                        1000.0f);
-                                    logger.warn("V79 DEATH STAR → parsec {} → +1000", destParsec);
-                                } else if (destParsec > 4) {
-                                    // 5+, but not 6-8 — still moving toward higher parsecs
-                                    action.addReasoning(
-                                        "V79 DEATH STAR → parsec " + destParsec + " (toward Scarif)",
-                                        700.0f);
-                                    logger.warn("V79 DEATH STAR → parsec {} → +700", destParsec);
-                                } else {
-                                    // Parsec 0-4 — backward direction
-                                    action.addReasoning(
-                                        "V79 DEATH STAR → parsec " + destParsec
-                                            + " — WRONG DIRECTION (Scarif is at 7)",
-                                        -300.0f);
-                                    logger.warn("V79 DEATH STAR WRONG WAY: parsec {} → -300", destParsec);
-                                }
-                            } else {
-                                // No parsec parseable — default Death Star move bonus
-                                action.addReasoning(
-                                    "V79 DEATH STAR MOVE: Verge active, default move",
-                                    500.0f);
-                                logger.warn("V79 DEATH STAR MOVE (no parsec parsed): '{}' → +500", v79ActionLower);
-                            }
-                        }
-                    }
-                    // === V79b FLIP-BACK GUARD (Steve, 2026-07-07): VERGE POST-FLIP — STAY IN ORBIT ===
-                    // Once On The Verge Of Greatness has flipped (Taking Control Of The Weapon),
-                    // moving the Death Star OUT of Scarif orbit is pure self-harm: it un-satisfies
-                    // the parsed flip condition ('Death Star orbiting Scarif') and drops the flipped
-                    // side's 'At Death Star, system it orbits, and sites related to either, your
-                    // total battle destiny is +1 (+2...)' umbrella over the Scarif sites
-                    // (Card216_011_BACK — NOTE this objective's own printed flip-back is leader-based,
-                    // 'Flip if you do not have a leader at a Scarif battleground site', not
-                    // orbit-based; the guard is V22.2 protection-class regardless: the toggle wasted
-                    // moves + 1-Force reservations all game in Game9f3c46b00681, and any orbit-based
-                    // flip-back objective would lose outright). Hard veto (T4.1 ladder veto class) —
-                    // the hyperspeed move is never initiated post-flip while orbiting. Pre-flip
-                    // steering (4->6->7->orbit) is untouched by this branch, and a post-flip DS
-                    // knocked into deep space still enters the steering branch above to re-orbit.
+                    boolean v79Flipped = false;
                     if (v79Verge && v79AtScarif) {
-                        boolean v79Flipped = false;
                         try {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v79Analyzer =
                                 context.getObjectiveAnalyzer();
@@ -614,18 +530,37 @@ public class MoveEvaluator extends ActionEvaluator {
                         } catch (Exception ex) {
                             logger.debug("V79b flip-state check error: {}", ex.getMessage());
                         }
-                        if (v79Flipped) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason = "V79b FLIP-BACK GUARD: objective flipped + Death Star orbiting Scarif"
-                                + " — leaving orbit un-satisfies 'Death Star orbiting Scarif'; stay parked";
-                            logger.warn("V79b FLIP-BACK GUARD: post-flip Death Star orbiting Scarif — hyperspeed move VETOED ('{}')", actionText);
-                        } else {
-                            // Pre-flip + already orbiting (waiting on Krennic/Tarkin at a Scarif
-                            // battleground site): no steering bonus (v79AtScarif now detects orbit
-                            // correctly), no veto — base fines (~-110) lose to Pass (~+28) on their
-                            // own. Boundary math in the 2026-07-07 changelog entry.
-                            logger.info("V79 DEATH STAR: orbiting Scarif pre-flip — no move bonus, holding for flip");
-                        }
+                    }
+
+                    String v79DisplayText = v79Verge && !v79AtScarif
+                        ? action.getDisplayText() : null;
+                    MoveVergePolicy.Evaluation v79Evaluation =
+                        MoveVergePolicy.evaluate(
+                            v79Verge, v79AtScarif, v79Flipped, v79DisplayText);
+                    if (v79Evaluation.contribution().applies()) {
+                        action.addReasoning(
+                            v79Evaluation.contribution().reason(),
+                            v79Evaluation.contribution().delta());
+                    }
+
+                    if (v79Evaluation.branch() == MoveVergePolicy.Branch.ORBIT_SCARIF) {
+                        logger.warn("V79 DEATH STAR ORBIT SCARIF: '{}' → +1500", v79Evaluation.actionLower());
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.PARSEC_SEVEN) {
+                        logger.warn("V79 DEATH STAR → parsec 7 → +1200");
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.ONE_HOP_FROM_SCARIF) {
+                        logger.warn("V79 DEATH STAR → parsec {} → +1000", v79Evaluation.destinationParsec());
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.TOWARD_SCARIF) {
+                        logger.warn("V79 DEATH STAR → parsec {} → +700", v79Evaluation.destinationParsec());
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.WRONG_DIRECTION) {
+                        logger.warn("V79 DEATH STAR WRONG WAY: parsec {} → -300", v79Evaluation.destinationParsec());
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.DEFAULT_MOVE) {
+                        logger.warn("V79 DEATH STAR MOVE (no parsec parsed): '{}' → +500", v79Evaluation.actionLower());
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.POST_FLIP_HOLD) {
+                        ladderVetoHard = v79Evaluation.hardVeto();
+                        ladderVetoHardReason = v79Evaluation.hardVetoReason();
+                        logger.warn("V79b FLIP-BACK GUARD: post-flip Death Star orbiting Scarif — hyperspeed move VETOED ('{}')", actionText);
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.PRE_FLIP_HOLD) {
+                        logger.info("V79 DEATH STAR: orbiting Scarif pre-flip — no move bonus, holding for flip");
                     }
                 } catch (Exception e) {
                     logger.debug("V79 Death Star move check error: {}", e.getMessage());

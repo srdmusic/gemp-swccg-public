@@ -1,0 +1,195 @@
+package com.gempukku.swccgo.ai.models.common.phase;
+
+import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class MoveVergeSourceParityTest {
+    @Test
+    public void moveEvaluatorsStayNormalizedMirrors() throws IOException {
+        assertEquals(normalize(evaluatorSource("rando", "MoveEvaluator.java")),
+                normalize(evaluatorSource(
+                        "chosenone", "MoveEvaluator.java")));
+    }
+
+    @Test
+    public void vergeHasOneSharedClassifier() throws IOException {
+        String move = evaluatorSource("rando", "MoveEvaluator.java");
+        String policy = policySource();
+
+        assertEquals(1, countOccurrences(
+                move, "MoveVergePolicy.evaluate("));
+        assertFalse(move.contains("java.util.regex.Matcher v79m"));
+        assertFalse(move.contains("int distFromScarif"));
+        assertTrue(policy.contains("Pattern.compile(\"parsec\\\\s+(\\\\d+)\")"));
+        assertTrue(policy.contains("destinationParsec = Integer.parseInt"));
+        assertTrue(policy.contains("Math.abs(destinationParsec - 7)"));
+    }
+
+    @Test
+    public void adapterRetainsAllLiveFactReadsAndMutation()
+            throws IOException {
+        String move = evaluatorSource("rando", "MoveEvaluator.java");
+
+        assertTrue(move.contains("gameState.getAllPermanentCards()"));
+        assertTrue(move.contains("playerId.equals(pc.getOwner())"));
+        assertTrue(move.contains("pc.getBlueprint() == null"));
+        assertTrue(move.contains("z == null || !z.isInPlay()"));
+        assertTrue(move.contains("cardToMove.getSystemOrbited()"));
+        assertTrue(move.contains("context.getObjectiveAnalyzer()"));
+        assertTrue(move.contains("V79b flip-state check error"));
+        assertTrue(move.contains("V79 Death Star move check error"));
+        assertTrue(move.contains("action.addReasoning("));
+        assertTrue(move.contains(
+                "ladderVetoHard = v79Evaluation.hardVeto()"));
+        assertTrue(move.contains(
+                "ladderVetoHardReason = v79Evaluation.hardVetoReason()"));
+    }
+
+    @Test
+    public void adapterPreservesVergeOrderBeforePilotLock()
+            throws IOException {
+        String move = evaluatorSource("rando", "MoveEvaluator.java");
+        int cardResolve = move.indexOf("cardToMove = gameState.findCardById");
+        int deathStarGate = move.indexOf(
+                "contains(\"death star\")", cardResolve);
+        int tableScan = move.indexOf(
+                "gameState.getAllPermanentCards()", deathStarGate);
+        int orbitRead = move.indexOf(
+                "cardToMove.getSystemOrbited()", tableScan);
+        int analyzerRead = move.indexOf(
+                "context.getObjectiveAnalyzer()", orbitRead);
+        int classify = move.indexOf(
+                "MoveVergePolicy.evaluate(", analyzerRead);
+        int add = move.indexOf(
+                "action.addReasoning(", classify);
+        int hardVeto = move.indexOf(
+                "ladderVetoHard = v79Evaluation.hardVeto()", add);
+        int pilotLock = move.indexOf(
+                "MoveTransitPolicy.pilotLock(", hardVeto);
+
+        assertTrue(cardResolve >= 0);
+        assertTrue(deathStarGate > cardResolve);
+        assertTrue(tableScan > deathStarGate);
+        assertTrue(orbitRead > tableScan);
+        assertTrue(analyzerRead > orbitRead);
+        assertTrue(classify > analyzerRead);
+        assertTrue(add > classify);
+        assertTrue(hardVeto > add);
+        assertTrue(pilotLock > hardVeto);
+    }
+
+    @Test
+    public void adapterKeepsExactBranchesLogsAndHardVeto() throws IOException {
+        String move = evaluatorSource("rando", "MoveEvaluator.java");
+
+        for (String branch : new String[]{
+                "ORBIT_SCARIF", "PARSEC_SEVEN", "ONE_HOP_FROM_SCARIF",
+                "TOWARD_SCARIF", "WRONG_DIRECTION", "DEFAULT_MOVE",
+                "POST_FLIP_HOLD", "PRE_FLIP_HOLD"}) {
+            assertTrue(branch, move.contains(
+                    "MoveVergePolicy.Branch." + branch));
+        }
+        assertTrue(move.contains(
+                "post-flip Death Star orbiting Scarif — hyperspeed move VETOED"));
+        assertTrue(move.contains(
+                "orbiting Scarif pre-flip — no move bonus, holding for flip"));
+    }
+
+    @Test
+    public void directParsecChoiceOwnersRemainUntouched() throws IOException {
+        String calAi = Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models/rando")
+                .resolve("RandoCalAi.java"));
+        assertTrue(calAi.contains(
+                "V79b DEATH STAR PARSEC: choices={} -> index {} (parsec {}, closest to Scarif 7)"));
+        assertTrue(calAi.contains(
+                "direct interceptor V79b: evaluator lane never runs on this route"));
+
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String actionText = evaluatorSource(
+                    bot, "ActionTextEvaluator.java");
+            assertTrue(actionText.contains(
+                    "V103 PARSEC FALLBACK: Verge implied by Death Star ownership + parsec prompt"));
+            assertTrue(actionText.contains(
+                    "V79 PARSEC CHOICE: parsec 7 (Scarif) → +1500"));
+            assertTrue(actionText.contains(
+                    "V103 PARSEC FALLBACK: parsec %d (dist %d to Scarif) → +%.0f"));
+        }
+    }
+
+    @Test
+    public void policyContainsNoContextEngineOrDecisionTransport()
+            throws IOException {
+        String policy = policySource();
+        for (String forbidden : new String[]{
+                "DecisionContext", "GameState", "SwccgGame",
+                "PhysicalCard", "EvaluatedAction", "addReasoning",
+                "logger", "ladderVeto", "PolicyOperation", "PolicyResult",
+                "DecisionOrigin", "DecisionActionSemantic", "DecisionWire",
+                "PullDeployRef", "PullPhysicalCardRef",
+                "DeployDestinationRef", "DeployPhysicalCardRef",
+                "DeployActionMetadata"}) {
+            assertFalse(forbidden, policy.contains(forbidden));
+        }
+    }
+
+    private static String evaluatorSource(
+            String bot, String evaluator) throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models")
+                .resolve(bot).resolve("evaluators").resolve(evaluator));
+    }
+
+    private static String policySource() throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models/common/phase")
+                .resolve("MoveVergePolicy.java"));
+    }
+
+    private static Path mainJavaRoot() {
+        Path cursor = Paths.get("").toAbsolutePath().normalize();
+        while (cursor != null) {
+            Path repoLayout = cursor.resolve(
+                    "src/gemp-swccg-server/src/main/java");
+            if (Files.isDirectory(repoLayout)) {
+                return repoLayout;
+            }
+            Path moduleLayout = cursor.resolve("src/main/java");
+            if (Files.isDirectory(moduleLayout.resolve(
+                    "com/gempukku/swccgo/ai/models"))) {
+                return moduleLayout;
+            }
+            cursor = cursor.getParent();
+        }
+        throw new AssertionError(
+                "Could not locate gemp-swccg-server main/java");
+    }
+
+    private static String normalize(String source) {
+        return source.replace("models.rando", "models.BOT")
+                .replace("models.chosenone", "models.BOT")
+                .lines()
+                .map(line -> line.stripLeading().startsWith("//")
+                        ? line.stripLeading() : line)
+                .collect(Collectors.joining("\n"));
+    }
+
+    private static int countOccurrences(String source, String needle) {
+        int count = 0;
+        int from = 0;
+        while ((from = source.indexOf(needle, from)) >= 0) {
+            count++;
+            from += needle.length();
+        }
+        return count;
+    }
+}
