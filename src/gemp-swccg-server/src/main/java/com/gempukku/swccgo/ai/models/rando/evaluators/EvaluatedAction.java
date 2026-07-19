@@ -42,16 +42,29 @@ public class EvaluatedAction {
     private String deferReason = null;
 
     public EvaluatedAction(String actionId, ActionType actionType, float score, String displayText) {
+        this(actionId, actionType, score, displayText,
+                TraceRuleId.LEGACY_UNTAGGED, null, null, null);
+    }
+
+    public EvaluatedAction(String actionId, ActionType actionType, float score,
+                           String displayText, TraceRuleId initialRuleId,
+                           TraceDomainId initialDomainId,
+                           TraceOutputKind initialOutputKind,
+                           String initialReason) {
         this.actionId = actionId;
         this.actionType = actionType;
         this.score = score;
         this.displayText = displayText;
         this.reasoning = new ArrayList<>();
+        if (initialReason != null && !initialReason.isBlank()) {
+            this.reasoning.add(initialReason);
+        }
         // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): INITIAL score op,
         // LEGACY_UNTAGGED until arms migrate to the tagged overloads. No-op (cheap
         // thread-local guard) unless a trace session is open.
-        TraceSession.recordInitial(this, actionId, score,
-            TraceRuleId.LEGACY_UNTAGGED, null, null, displayText);
+        TraceSession.recordInitial(this, actionId, score, initialRuleId,
+            initialDomainId, initialOutputKind,
+            initialReason != null ? initialReason : displayText);
     }
 
     /**

@@ -1,7 +1,10 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.phase.PassPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.common.Phase;
-import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
 
 import java.util.ArrayList;
@@ -11,7 +14,7 @@ import java.util.List;
 // ═══ SECTION: SVC-SAFETY (adjacent — pass-side Force reservations) (reorg 2026-07-06) ═══
 // Owns: Pass baseline scoring + pass-side Force reservations: V27 battle-interrupt reserve,
 // V27.1 Draw Their Fire tax reservation, V37.4 deploy-phase pass penalty / penalty-reduction.
-// Hub: none. KIND mix: BANDED only, small magnitudes — the Pass baseline (~5-8) is a boundary
+// Hub: common/phase/PassPolicy. KIND mix: BANDED only, small magnitudes — the Pass baseline (~5-8) is a boundary
 // other sections deliberately score against (e.g. V61c lands BELOW Pass by design).
 // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
 // Cross-refs: SVC-SAFETY (V148 all-bad pass in DecisionSafety; NO-PASS damage-segment context),
@@ -97,8 +100,10 @@ public class PassEvaluator extends ActionEvaluator {
             }
         }
 
-        EvaluatedAction action = new EvaluatedAction(passActionId, ActionType.PASS, 5.0f, passDisplay);
-        action.addReasoning("Default pass option");
+        EvaluatedAction action = new EvaluatedAction(
+                passActionId, ActionType.PASS, PassPolicy.BASE_SCORE, passDisplay,
+                PassPolicy.BASE_RULE_ID, PassPolicy.BASE_DOMAIN_ID,
+                PassPolicy.BASE_OUTPUT_KIND, PassPolicy.BASE_REASON);
 
         // Get game state for resource checks
         GameState gameState = context.getGameState();
@@ -106,15 +111,6 @@ public class PassEvaluator extends ActionEvaluator {
         Phase phase = context.getPhase();
         int turnNumber = context.getTurnNumber();
 
-        // === EARLY GAME AGGRESSION ===
-        // Turns 1-3, reduce pass preference to encourage action
-        float earlyGameMultiplier = turnNumber <= 3 ? 0.5f : 1.0f;
-        if (turnNumber <= 3) {
-            action.addReasoning("Early game - reduced pass preference", -3.0f);
-        }
-
-        // === DECISION-SPECIFIC ADJUSTMENTS ===
-        // Don't apply "save force" logic during certain decisions
         boolean isActivateDecision = decisionTextLower.contains("activate");
         boolean isDrawDecision = decisionTextLower.contains("draw") && decisionTextLower.contains("action");
         boolean isControlDecision = phase == Phase.CONTROL && decisionTextLower.contains("control action");
@@ -122,130 +118,48 @@ public class PassEvaluator extends ActionEvaluator {
         boolean isBattlePhaseAction = phase == Phase.BATTLE && decisionTextLower.contains("battle action");
         boolean isFollowthroughDecision = decisionTextLower.contains("choose where to move") ||
                                            decisionTextLower.contains("choose where to deploy");
+        boolean terminalDecision = isInitiateBattleDecision || isBattlePhaseAction
+                || isFollowthroughDecision;
 
-        // For battle initiation decisions, pass should have VERY low score
-        if (isInitiateBattleDecision || isBattlePhaseAction) {
-            action.addReasoning("Battle phase - should fight, not pass", -10.0f);
-            actions.add(action);
-            return actions;
-        }
-
-        // For follow-through decisions, pass should also have low score
-        if (isFollowthroughDecision) {
-            action.addReasoning("Already committed to action - follow through", -15.0f);
-            actions.add(action);
-            return actions;
-        }
-
-        // === RESOURCE-BASED ADJUSTMENTS ===
-        if (gameState != null) {
-            String playerId = context.getPlayerId();
-            int forcePile = context.getForcePileSize();
-            int reserveDeck = context.getReserveDeckSize();
-            int handSize = context.getHandSize();
-
-            // Low force - prefer to pass (unless activating or drawing)
-            if (forcePile < 3 && !isActivateDecision && !isDrawDecision && !isControlDecision) {
-                float bonus = 2.0f * earlyGameMultiplier;
-                action.addReasoning("Low on Force - prefer to pass", bonus);
-            }
-
-            // Low reserve - conserve cards (unless during control phase)
-            if (reserveDeck < 10 && !isControlDecision) {
-                float bonus = 3.0f * earlyGameMultiplier;
-                action.addReasoning("Reserve deck low - conserve cards", bonus);
-            }
-
-            // Hand management (unless activating or drawing)
-            if (!isActivateDecision && !isDrawDecision) {
-                if (handSize < 5) {
-                    float bonus = 8.0f * earlyGameMultiplier;
-                    action.addReasoning("Small hand (" + handSize + ") - save force for drawing", bonus);
-                } else if (handSize < 7) {
-                    float bonus = 4.0f * earlyGameMultiplier;
-                    action.addReasoning("Hand below target (" + handSize + "/7) - conserve force", bonus);
-                } else if (handSize >= 10) {
-                    // V37.4: HAND BLOAT — 10+ cards in hand = hoarding. DEPLOY SOMETHING!
-                    // 15+ cards with 19 Force in pile = total paralysis. Must fix.
-                    if (phase == Phase.DEPLOY) {
-                        float bloatPenalty = -50.0f - (handSize - 10) * 20.0f;
-                        // Extra penalty if Force pile is also large (total paralysis)
-                        if (forcePile >= 8) bloatPenalty -= 100.0f;
-                        action.addReasoning(String.format(
-                            "V37.4 HAND BLOAT: %d cards in hand, %d Force — DEPLOY SOMETHING!",
-                            handSize, forcePile), bloatPenalty);
-                        logger.warn("V37.4 HAND BLOAT: hand={}, force={} — pass penalty {}",
-                            handSize, forcePile, (int)bloatPenalty);
-                    }
-                }
-            }
-
-            // During Move phase, be more conservative to save force for drawing
-            if (phase == Phase.MOVE && forcePile <= 4 && handSize < 7) {
-                float bonus = 10.0f * earlyGameMultiplier;
-                action.addReasoning("Move phase + low force + small hand - pass to draw", bonus);
-            }
-
-            // === V27.1: DRAW THEIR FIRE — FORCE RESERVATION FOR BATTLE INTERRUPTS ===
-            // If opponent has "Draw Their Fire" on table, each interrupt we play during
-            // battles they initiate costs 1 extra Force. We MUST keep Force in reserve
-            // so Ghhhk and other battle interrupts remain playable. Without this,
-            // we take full attrition and lose cards from hand/reserve in every battle.
+        int forcePile = 0;
+        int reserveDeck = 0;
+        int handSize = 0;
+        boolean dtfActive = false;
+        int maintenanceObligation = 0;
+        if (gameState != null && !terminalDecision) {
+            forcePile = context.getForcePileSize();
+            reserveDeck = context.getReserveDeckSize();
+            handSize = context.getHandSize();
             if (!isActivateDecision && !isInitiateBattleDecision) {
                 try {
-                    // T2 MOVE #1 COMMIT-2 (2026-07-06): dtfActive from the shared
-                    // per-decision ForceReserveService cache — same detection
-                    // (opponent-owned "draw their fire", in-play gate). Old inline
-                    // scan removed in cleanup batch 1.7 (see git history);
-                    // V27.1 weights (20/40/60) untouched.
-                    boolean dtfActive = context.getForceReserveFacts().dtfActive;
-                    if (dtfActive) {
-                        // Need 3 Force minimum: 1 for DTF defender loss, 1 for interrupt tax, 1 for the interrupt
-                        int dtfReserveNeeded = 3;
-                        if (forcePile <= dtfReserveNeeded) {
-                            float dtfBonus = 20.0f;
-                            if (forcePile <= 1) dtfBonus = 40.0f;
-                            if (forcePile == 0) dtfBonus = 60.0f;
-                            action.addReasoning(String.format(
-                                "V27.1 DTF RESERVE: Draw Their Fire on table! Need %d Force for battle interrupts, only %d left — CONSERVE!",
-                                dtfReserveNeeded, forcePile), dtfBonus);
-                        }
-                    }
+                    dtfActive = context.getForceReserveFacts().dtfActive;
                 } catch (Exception e) {
-                    // Ignore
+                    // Preserve the legacy best-effort reserve check.
                 }
             }
-
-            // === V27: MAINTENANCE FORCE RESERVATION ===
-            // If we have cards with MAINTENANCE icon in play (like Blizzard),
-            // we MUST keep enough Force to pay their upkeep at end of turn.
-            // T2 COMMIT-1 (2026-07-06, audit force-economy-1): maintenance cost is the
-            // ENGINE's card-specific maintain cost (MaintenanceFacts, parsed from game
-            // text; e.g. Lando Scoundrel maintains for 1, deploys for 5) — the old
-            // "maintenance cost = card's deploy cost" claim was refuted; it OVER-
-            // reserved 2-5x. If we can't pay, card is sacrificed.
-            // This check applies across ALL phases — not just Deploy phase.
             if (!isActivateDecision) {
                 try {
-                    // T2 MOVE #1 COMMIT-2 (2026-07-06): maintenance obligation from the
-                    // shared per-decision ForceReserveService cache (typed MaintenanceFacts
-                    // basis, in-play gate; old inline scan removed in cleanup
-                    // batch 1.7, see git history). V27 weights
-                    // (25/50) untouched.
-                    int maintenanceCostTotal = context.getForceReserveFacts().maintenanceObligation;
-                    if (maintenanceCostTotal > 0 && forcePile <= maintenanceCostTotal + 1) {
-                        // Force pile is at or below maintenance requirement — STRONGLY prefer pass
-                        float maintBonus = 25.0f;
-                        if (forcePile < maintenanceCostTotal) {
-                            maintBonus = 50.0f; // Already can't pay — CRITICAL, don't spend more!
-                        }
-                        action.addReasoning(String.format(
-                            "V27 MAINTENANCE RESERVE: Need %d Force for maintenance, only %d in pile — CONSERVE!",
-                            maintenanceCostTotal, forcePile), maintBonus);
-                    }
+                    maintenanceObligation = context.getForceReserveFacts().maintenanceObligation;
                 } catch (Exception e) {
-                    // Ignore errors in maintenance check
+                    // Preserve the legacy best-effort maintenance check.
                 }
+            }
+        }
+
+        PolicyResult passResult = PassPolicy.evaluate(new PassPolicy.Facts(
+                passActionId, turnNumber, phase, isActivateDecision, isDrawDecision,
+                isControlDecision, isInitiateBattleDecision, isBattlePhaseAction,
+                isFollowthroughDecision, gameState != null, forcePile, reserveDeck,
+                handSize, dtfActive, maintenanceObligation));
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "pass-" + passActionId);
+        ledger.register(passResult);
+        PolicyOperationAdapter.apply(action, ledger);
+
+        for (PolicyOperation operation : passResult.operations()) {
+            if (operation.ruleArmId().id().equals("V37.4-pass")) {
+                logger.warn("V37.4 HAND BLOAT: hand={}, force={} — pass penalty {}",
+                        handSize, forcePile, (int) operation.delta());
             }
         }
 

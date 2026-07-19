@@ -7625,3 +7625,24 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     5ba857f29c4a434d49538392981d0ffc4d1244823e5df58bb9b57fa0b5271d26 contain both shared owners
     and mirrored adapters. Runtime reload and live-game proof remain pending. AI source only; no
     GEMP engine or player-decision changes.
+
+  ==== V269 (2026-07-19): consolidate Pass scoring and typed baseline ====
+    Shared AI-only PassPolicy now owns the baseline constants, early-game reduction, battle and
+    follow-through terminal outcomes, low-Force/Reserve and hand-size conservation, V37.4 hand
+    bloat, Move-phase draw conservation, V27.1 DTF reserve, and V27 maintenance reserve. Both bot
+    adapters retain decision-text classification, GameState and ForceReserveService reads, logs,
+    catches, action construction, and list control. Both AI-only EvaluatedAction mirrors expose a
+    typed-initial constructor so the unchanged 5.0 Default pass option baseline records
+    PASS-baseline/PASS_CANCEL/BANDED as its INITIAL operation; the old constructor still delegates
+    with identical score, reasoning, and legacy trace behavior for every other action.
+    Scores, multipliers, thresholds, reasons, order, terminal returns, read gates, and catches are
+    unchanged. Focused Pass/evaluator 15/0/0/0, full reactor 1802/0/0/26, exact mirror parity,
+    direct baseline/full-stack/terminal-read/fail-open fixtures, canonical identity checks, typed
+    INITIAL capture, false-side boundaries, AI-only scope, diff check, compiled-byte equality,
+    and clean package passed. K2's reference-spec gate passed the V269-proper content and excluded
+    the quarantined branch's stale V268 policy. Server jar SHA-256
+    b5694ced51258ec4a04b03bd831f6ede04920152a8bdb8c7183bb32629b87fe5 and web jar SHA-256
+    0240271557b3dc04b170ab5c63c5061c067252c729f2132d88904e389d419927 contain the shared owner
+    and mirrored adapters. Runtime reload and live-game proof remain pending. Quarantined commits
+    2219f4760 and descendant 0b4045805 are superseded references and must never land. AI source
+    only; no GEMP engine or player-decision changes.
