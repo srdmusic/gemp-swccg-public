@@ -674,6 +674,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         String plannedTargetId = null;
         String plannedTargetName = null;
         String deployingBlueprintId = extractBlueprintFromDecisionText(context.getDecisionText());
+        PhysicalCard objectiveProgressDeployingCard = findUniqueDeployingCard(
+            gameState, playerId, deployingBlueprintId);
         DeploymentPlan deploymentPlanSnapshot = null;
         DeploymentInstruction plannedDeployInstruction = null;
 
@@ -881,6 +883,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         String title = location.getTitle();
                         String titleLower = title != null ? title.toLowerCase() : "";
                         action.setDisplayText("Deploy to " + (title != null ? title : "location"));
+
+                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer
+                            objectiveProgressAnalyzer = context.getObjectiveAnalyzer();
+                        if (objectiveProgressAnalyzer != null) {
+                            com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment
+                                objectiveProgress = objectiveProgressAnalyzer.assessDeployChild(
+                                    gameState, playerId,
+                                    objectiveProgressDeployingCard, location);
+                            logger.debug("V214 DEPLOY CHILD OBJECTIVE FACTS: outcome={} evidence={}",
+                                objectiveProgress.outcome(), objectiveProgress.evidence());
+                        }
 
                         // === V166 (Steve, 2026-06): CONTEST THE OPPONENT'S DRAIN by deploying to it ===
                         // When the opponent out-drains us by net >= 2 (bonus-aware; verified to fire ~half
@@ -7749,6 +7762,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         return null;
+    }
+
+    private PhysicalCard findUniqueDeployingCard(
+            GameState gameState, String playerId, String blueprintId) {
+        if (gameState == null || playerId == null || blueprintId == null) return null;
+
+        java.util.Set<PhysicalCard> seen = java.util.Collections.newSetFromMap(
+            new java.util.IdentityHashMap<>());
+        java.util.List<PhysicalCard> candidates = new java.util.ArrayList<>();
+        java.util.List<PhysicalCard> handCards = gameState.getHand(playerId);
+        java.util.List<PhysicalCard> reserveCards = gameState.getCardPile(
+            playerId, com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+        java.util.List<PhysicalCard> stackedCards = gameState.getAllStackedCards();
+        if (handCards != null) candidates.addAll(handCards);
+        if (reserveCards != null) candidates.addAll(reserveCards);
+        if (stackedCards != null) candidates.addAll(stackedCards);
+
+        PhysicalCard match = null;
+        for (PhysicalCard candidate : candidates) {
+            if (candidate == null || !seen.add(candidate)) continue;
+            if (!blueprintId.equals(candidate.getBlueprintId(true))) continue;
+            if (match != null) return null;
+            match = candidate;
+        }
+        return match;
     }
 
     // ====================================================================

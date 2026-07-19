@@ -1,3 +1,20 @@
+  ==== V214 AI-ONLY DEPLOY OBJECTIVE-PROGRESS FACTS (2026-07-18, both bots) ====
+
+Shared ObjectiveAnalyzer now assesses one exact physical deploy child against the active physical objective and
+returns the typed ObjectiveProgressAssessment facts record. Both bots call the shared method only from the real
+destination-selection route. Parent DeployEvaluator and ActionTextEvaluator remain unwired because text cannot
+prove the future child. Endor Operations is the first source-verified pilot: a
+missing named flip card advances the requirement set, and the final missing named card completes the modeled flip
+requirements.
+
+This phase is shadow-only. It adds no score, changes no action order, and does not connect the test-only pending
+intent store. Duplicate physical copies, ambiguous destinations, stale analyzer state, post-flip protection, and
+unmodeled objective families fail closed as UNPROVEN. Existing V22/V88/V99/V136/V193 score owners remain unchanged.
+All production edits stay under the AI package; no engine metadata or game-engine source changed. Verification passed
+58 focused tests and the full 1,181-test affected reactor with 0 failures, 0 errors, and 26 skipped. Package and source
+boundary gates passed; server jar SHA-256 is 6bf9f58cb15d9331315cdde86748f352fbf9ce50c1601e231967c3fa789423f8.
+Runtime load and live-game proof remain separate gates. Revert the single V214 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V213 AI-ONLY DEPLOY-3 WEAPON, PILOT, AND SHIP POLICY OWNERS (2026-07-18, both bots) ====
 Shared DeployWeaponPolicy now owns the existing V158 direct/reserve attachment gates, V33 named-weapon priority,
 and V120 reserve-pull criteria gate. Shared DeployPilotShipPolicy owns V30 matching pairs and generic crew rules,

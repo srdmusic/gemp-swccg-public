@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveSideBlueprints;
+import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
@@ -357,6 +358,7 @@ public class ObjectiveAnalyzer {
     public boolean isAnalyzed() { return analyzed; }
     public boolean isFlipped() { return isFlipped; }
     public String getObjectiveTitle() { return objectiveTitle; }
+    public String getObjectiveBlueprintId() { return objectiveBlueprintId; }
     public String getFlipConditionText() { return flipConditionText; }
     // V193 (Steve, 2026-07-07): the site Rando must CONTROL to enable an objective flip
     // (e.g. Endor: Bunker for Establish Secret Base (V)). null when the objective has none.
@@ -376,6 +378,140 @@ public class ObjectiveAnalyzer {
     public Set<String> getPullableCards() { return Collections.unmodifiableSet(pullableCards); }
     public boolean requiresOccupy() { return requiresOccupy; }
     public boolean requiresControl() { return requiresControl; }
+
+    /**
+     * V214: Describe the objective effect of one physical deploy child without scoring it.
+     *
+     * This is deliberately narrower than the deploy policies. It records only facts that can
+     * be proven from the active objective, the exact physical card, and the exact destination.
+     * Unknown identity or unmodeled objective clauses fail closed as UNPROVEN.
+     */
+    public ObjectiveProgressAssessment assessDeployChild(
+            GameState gameState,
+            String playerId,
+            PhysicalCard deployingCard,
+            PhysicalCard destination) {
+        if (gameState == null || playerId == null) {
+            return ObjectiveProgressAssessment.unproven(
+                    objectiveBlueprintId, isFlipped,
+                    "Deploy objective assessment requires game state and player identity");
+        }
+
+        PhysicalCard objectiveCard = findOurObjective(gameState, playerId);
+        if (objectiveCard == null) {
+            return ObjectiveProgressAssessment.noObjective();
+        }
+
+        String activeBlueprintId = objectiveCard.getBlueprintId(true);
+        boolean activeFlipped = objectiveCard.isFlipped();
+        if (!analyzed || activeBlueprintId == null
+                || !activeBlueprintId.equals(objectiveBlueprintId)) {
+            return ObjectiveProgressAssessment.unproven(
+                    activeBlueprintId, activeFlipped,
+                    "Objective analyzer state does not match the active physical objective");
+        }
+        if (deployingCard == null || destination == null) {
+            return ObjectiveProgressAssessment.unproven(
+                    activeBlueprintId, activeFlipped,
+                    "Deploy child lacks a unique physical card or destination");
+        }
+        if (!playerId.equals(deployingCard.getOwner())) {
+            return ObjectiveProgressAssessment.unproven(
+                    activeBlueprintId, activeFlipped,
+                    "Deploying physical card is not owned by the objective player");
+        }
+        boolean knownDeployingCard = containsPhysicalCard(
+                gameState.getHand(playerId), deployingCard)
+                || containsPhysicalCard(
+                    gameState.getCardPile(playerId, Zone.RESERVE_DECK), deployingCard)
+                || containsPhysicalCard(gameState.getAllStackedCards(), deployingCard);
+        if (!knownDeployingCard) {
+            return ObjectiveProgressAssessment.unproven(
+                    activeBlueprintId, activeFlipped,
+                    "Deploying physical card is not an exact live child candidate");
+        }
+        if (!containsPhysicalCard(gameState.getTopLocations(), destination)) {
+            return ObjectiveProgressAssessment.unproven(
+                    activeBlueprintId, activeFlipped,
+                    "Deploy destination is not an exact live top location");
+        }
+
+        // Endor Operations is the first fully source-verified deploy-progress pilot. Its
+        // front-side flip condition is exactly two named cards on table. Other objective
+        // families include counts, control, timing, or dynamic-location clauses that cannot
+        // be proven by this child alone, so they remain UNPROVEN until modeled explicitly.
+        if (!isEndor || activeFlipped) {
+            return ObjectiveProgressAssessment.unproven(
+                    activeBlueprintId, activeFlipped,
+                    activeFlipped
+                            ? "Post-flip deploy protection is not yet modeled"
+                            : "Active objective deploy progress is not yet modeled");
+        }
+
+        Set<String> requirements = new LinkedHashSet<>(requiredCardsOnTable);
+        if (requirements.isEmpty()) {
+            return ObjectiveProgressAssessment.unproven(
+                    activeBlueprintId, false,
+                    "Endor Operations has no parsed required-card facts");
+        }
+
+        Set<String> satisfied = new LinkedHashSet<>();
+        for (PhysicalCard card : gameState.getAllPermanentCards()) {
+            if (card == null || !playerId.equals(card.getOwner())) continue;
+            Zone zone = card.getZone();
+            if (zone == null || !zone.isInPlay()) continue;
+            String title = card.getTitle();
+            if (title == null) continue;
+            String titleLower = title.toLowerCase(Locale.ROOT);
+            for (String requirement : requirements) {
+                if (titleLower.equals(requirement) || titleLower.startsWith(requirement)) {
+                    satisfied.add(requirement);
+                }
+            }
+        }
+
+        Set<String> missing = new LinkedHashSet<>(requirements);
+        missing.removeAll(satisfied);
+        if (missing.isEmpty()) {
+            return new ObjectiveProgressAssessment(
+                    activeBlueprintId, false,
+                    ObjectiveProgressAssessment.Outcome.NEUTRAL,
+                    satisfied, missing, Set.of(),
+                    "All modeled Endor Operations flip requirements are already on table");
+        }
+
+        String deployingTitle = deployingCard.getTitle();
+        if (deployingTitle == null) {
+            return ObjectiveProgressAssessment.unproven(
+                    activeBlueprintId, false,
+                    "Deploying physical card has no title");
+        }
+        String deployingTitleLower = deployingTitle.toLowerCase(Locale.ROOT);
+        Set<String> advanced = new LinkedHashSet<>();
+        for (String requirement : missing) {
+            if (deployingTitleLower.equals(requirement)
+                    || deployingTitleLower.startsWith(requirement)) {
+                advanced.add(requirement);
+            }
+        }
+
+        if (advanced.isEmpty()) {
+            return new ObjectiveProgressAssessment(
+                    activeBlueprintId, false,
+                    ObjectiveProgressAssessment.Outcome.NEUTRAL,
+                    satisfied, missing, advanced,
+                    "Physical deploy child does not change a modeled Endor Operations requirement");
+        }
+
+        ObjectiveProgressAssessment.Outcome outcome = advanced.containsAll(missing)
+                ? ObjectiveProgressAssessment.Outcome.COMPLETES_FLIP_NOW
+                : ObjectiveProgressAssessment.Outcome.ADVANCES_MISSING_REQUIREMENT;
+        return new ObjectiveProgressAssessment(
+                activeBlueprintId, false, outcome,
+                satisfied, missing, advanced,
+                "Physical deploy child advances Endor Operations at "
+                        + (destination.getTitle() != null ? destination.getTitle() : "an identified destination"));
+    }
 
     /**
      * V29.7: Refresh just the flip status without re-analyzing the whole objective.
@@ -1249,6 +1385,15 @@ public class ObjectiveAnalyzer {
             }
         }
         return null;
+    }
+
+    private static boolean containsPhysicalCard(
+            Iterable<PhysicalCard> cards, PhysicalCard target) {
+        if (cards == null || target == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card == target) return true;
+        }
+        return false;
     }
 
     private void updateFlipStatus(PhysicalCard objectiveCard) {

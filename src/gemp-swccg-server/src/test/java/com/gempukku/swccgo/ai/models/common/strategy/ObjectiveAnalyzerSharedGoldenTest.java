@@ -38,6 +38,13 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         assertEquals(ObjectiveAnalyzer.class, chosenOne.getClass().getSuperclass());
         assertEquals(ObjectiveAnalyzer.ObjectivePlaybook.class,
                 rando.getClass().getMethod("getActivePlaybook").getReturnType());
+        assertEquals(String.class,
+                rando.getClass().getMethod("getObjectiveBlueprintId").getReturnType());
+        assertEquals(
+                com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment.class,
+                rando.getClass().getMethod("assessDeployChild",
+                        GameState.class, String.class,
+                        PhysicalCard.class, PhysicalCard.class).getReturnType());
         Method deployAdjustments = rando.getClass().getMethod("getDeployObjectiveAdjustments",
                 SwccgGame.class, GameState.class, String.class, PhysicalCard.class,
                 SwccgCardBlueprint.class, String.class);

@@ -51,6 +51,18 @@ public class DeploySitingSourceCharacterizationTest {
     }
 
     @Test
+    public void objectiveProgressFactsStayShadowOnlyAtPhysicalDeployRoutes() throws IOException {
+        String deploy = evaluatorSource("rando", "DeployEvaluator.java");
+        String destination = evaluatorSource("rando", "CardSelectionEvaluator.java");
+        String actionText = evaluatorSource("rando", "ActionTextEvaluator.java");
+
+        assertEquals(0, countOccurrences(deploy, ".assessDeployChild("));
+        assertEquals(1, countOccurrences(destination, ".assessDeployChild("));
+        assertEquals(0, countOccurrences(actionText, ".assessDeployChild("));
+        assertTrue(destination.contains("V214 DEPLOY CHILD OBJECTIVE FACTS"));
+    }
+
+    @Test
     public void sitingPoliciesContainNoEngineDecisionMetadata() throws IOException {
         String combined = commonPhaseSource("DeploySitingPolicy.java")
                 + commonPhaseSource("DeployObjectiveSitingPolicy.java")
@@ -97,5 +109,15 @@ public class DeploySitingSourceCharacterizationTest {
     private static String normalize(String source) {
         return source.replace("models.rando", "models.BOT")
                 .replace("models.chosenone", "models.BOT");
+    }
+
+    private static int countOccurrences(String source, String needle) {
+        int count = 0;
+        int from = 0;
+        while ((from = source.indexOf(needle, from)) >= 0) {
+            count++;
+            from += needle.length();
+        }
+        return count;
     }
 }
