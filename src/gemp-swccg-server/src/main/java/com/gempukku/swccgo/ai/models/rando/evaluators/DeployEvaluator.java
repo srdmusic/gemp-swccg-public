@@ -13,6 +13,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.common.CardCategory;
@@ -1054,6 +1055,16 @@ public class DeployEvaluator extends ActionEvaluator {
                     }
 
 
+                    boolean v212EvazanWithoutArmedFriend = false;
+                    String v212SitingSiteTitle = "";
+                    float v212V136Score = 0.0f;
+                    boolean v212V193Eligible = false;
+                    float v212V193Weight = 400.0f;
+                    String v212V193GateCard = "";
+                    boolean v212V96Applicable = false;
+                    float v212V96FriendlyPower = 0.0f;
+                    float v212V96OpponentPower = 0.0f;
+
                     // === V89 (Steve, 2026-05-18): DR. EVAZAN — NEEDS ARMED PARTNER ===
                     // Per Steve: "Dr. Evazan should be deployed with another
                     // character with a weapon. Should never deploy alone. This
@@ -1101,11 +1112,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
                                 if (!armedFriendAtTarget) {
-                                    action.addReasoning(
-                                        "V89 DR. EVAZAN: '" + cardTitleForEvazan
-                                            + "' deploying to '" + evazanTargetLoc.getTitle()
-                                            + "' with no armed friend — block (will get sniped)",
-                                        -1500.0f);
+                                    v212EvazanWithoutArmedFriend = true;
+                                    v212SitingSiteTitle = evazanTargetLoc.getTitle();
                                     LOG.warn("V89 DR. EVAZAN: blocking {} → {} (no armed friend present)",
                                         cardTitleForEvazan, evazanTargetLoc.getTitle());
                                 }
@@ -1151,11 +1159,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     v136Turn,
                                     0 /* deckShipCount — TODO wire */,
                                     false /* perSiteEffectActive — TODO wire */);
+                            v212SitingSiteTitle = v136Candidate.getTitle();
+                            v212V136Score = v136Score;
                             if (v136Score != 0f) {
-                                action.addReasoning(
-                                    "V136 unified deploy-site score → " + v136Candidate.getTitle()
-                                        + ": " + v136Score,
-                                    v136Score);
                                 LOG.info("V136 [{}]: {} → {} score={}", playerId,
                                     card.getTitle(), v136Candidate.getTitle(), v136Score);
                             }
@@ -1230,11 +1236,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                             v193Playbook = v136Obj.getActivePlaybook();
                                         float v193Bonus = (v193Playbook != null)
                                             ? v193Playbook.weights.deployFlipGateSite : 400.0f;
-                                        action.addReasoning(
-                                            "V193 FLIP-GATE CONTROL: steer one body to '"
-                                                + v136Candidate.getTitle()
-                                                + "' to enable '" + v193GateCard + "' (objective flip gate)",
-                                            v193Bonus);
+                                        v212V193Eligible = true;
+                                        v212V193Weight = v193Bonus;
+                                        v212V193GateCard = v193GateCard;
                                         LOG.warn("V193 FLIP-GATE CONTROL [{}]: {} → {} +{} (seize flip-gate, card={})",
                                             playerId, card.getTitle(), v136Candidate.getTitle(), v193Bonus, v193GateCard);
                                     }
@@ -1286,25 +1290,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                     ? game.getModifiersQuerying().getTotalPowerAtLocation(
                                         gameState, v96TargetLoc, v96Opp, false, false)
                                     : 0f;
-                                if (opponentPower > 0) {
-                                    float diff = friendlyPower - opponentPower;
-                                    if (diff >= -10f && diff <= 10f) {
-                                        // Close battle. Adding more = overflow advantage.
-                                        action.addReasoning(String.format(
-                                            "V96 CONCENTRATE: %s contested (us %.0f vs them %.0f) — pile on for overflow battle damage!",
-                                            v96TargetLoc.getTitle(), friendlyPower, opponentPower), 500.0f);
-                                        LOG.warn("V96 CONCENTRATE: {} → {} (us={} them={}) +500",
-                                            card.getTitle(), v96TargetLoc.getTitle(),
-                                            (int)friendlyPower, (int)opponentPower);
-                                    } else if (diff > 10f) {
-                                        // Already crushing. Small bonus, still better than spreading away.
-                                        action.addReasoning(String.format(
-                                            "V96 CONCENTRATE: %s contested, already winning by %.0f — finish them",
-                                            v96TargetLoc.getTitle(), diff), 100.0f);
-                                    }
-                                    // diff < -10 (we're badly behind) → no V96 bonus.
-                                    // Other rules handle retreat decisions.
-                                }
+                                v212SitingSiteTitle = v96TargetLoc.getTitle();
+                                v212V96Applicable = true;
+                                v212V96FriendlyPower = friendlyPower;
+                                v212V96OpponentPower = opponentPower;
                                 // opponentPower == 0 → uncontested, no V96 bonus. (Comment corrected
                                 // 2026-07-06: V67al is DEAD; V136 §B's uncontested over-stack penalty
                                 // owns this case.)
@@ -1313,6 +1302,18 @@ public class DeployEvaluator extends ActionEvaluator {
                             LOG.debug("V96 CONCENTRATE: error: {}", e.getMessage());
                         }
                     }
+
+                    DeploySitingPolicy.Facts v212SitingFacts = new DeploySitingPolicy.Facts(
+                        actionId, card.getTitle(), v212SitingSiteTitle,
+                        v212EvazanWithoutArmedFriend, DeploySitingPolicy.FormationState.ALLOW, "",
+                        v212V136Score, v212V193Eligible, v212V193Weight,
+                        v212V193GateCard, v212V96Applicable,
+                        v212V96FriendlyPower, v212V96OpponentPower);
+                    PolicyContributionLedger v212SitingLedger = new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "deploy-siting" : decisionId + "-deploy-siting") + "-" + actionId);
+                    v212SitingLedger.register(DeploySitingPolicy.evaluateDirect(v212SitingFacts));
+                    PolicyOperationAdapter.apply(action, v212SitingLedger);
 
                     // DEPLOY-1 plan application. The planner remains the fact producer;
                     // this shared policy is the sole score and terminal-flow owner.

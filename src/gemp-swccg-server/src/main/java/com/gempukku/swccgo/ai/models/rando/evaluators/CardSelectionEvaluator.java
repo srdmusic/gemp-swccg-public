@@ -8,6 +8,10 @@ import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
@@ -926,10 +930,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         int v166OppCards = 0;
                                         for (PhysicalCard c : gameState.getCardsAtLocation(location))
                                             if (c != null && v166Opp.equals(c.getOwner())) v166OppCards++;
-                                        float v166 = 250.0f + Math.max(0f, 150f - (v166OppCards - 1) * 50f);
-                                        action.addReasoning(String.format(
-                                            "V166 CONTEST DRAIN: opponent out-draining (net>=2) — deploy to contest %s (their drain %d, %d opp cards)",
-                                            title, v166OppDrain, v166OppCards), v166);
+                                        DeployTacticalPolicy.ContestDrainFacts v166Facts =
+                                            new DeployTacticalPolicy.ContestDrainFacts(
+                                                action.getActionId(), title, v166TheirPower,
+                                                v166OppDrain, 2, v166OurPow, v166ThisPow,
+                                                v166Wave, v166OppWeapons, v166OppCards);
+                                        PolicyContributionLedger v166Ledger = new PolicyContributionLedger(
+                                            "deploy-tactical-v166-" + action.getActionId());
+                                        v166Ledger.register(
+                                            DeployTacticalPolicy.scoreV166ContestDrain(v166Facts));
+                                        PolicyOperationAdapter.apply(action, v166Ledger);
+                                        float v166 = v166Ledger.orderedOperations().get(0).delta();
                                         logger.warn("V166 CONTEST DRAIN (deploy): target={} oppDrain={} oppCards={} oppPower={} -> +{}",
                                             title, v166OppDrain, v166OppCards, (int) v166TheirPower, (int) v166);
                                     } else {
@@ -981,10 +992,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     float[] v172WaveR = v173WaveProjection(gameState, playerId, deployingBlueprintId);
                                     float v172Wave = v172WaveR[0];
                                     if (v172This + v172Wave >= v169Excess - 4f) {
-                                        float v169 = 800f + Math.min(300f, v169Excess * 30f);
-                                        action.addReasoning(String.format(
-                                            "V169 PROTECT: our characters at %s are outpowered by %.0f — deploy buddies to protect them (affordable reinforcement: +%.0f, reserves held: %.0f)",
-                                            title, v169Excess, v172This + v172Wave, v172WaveR[2]), v169);
+                                        DeployTacticalPolicy.ProtectEndangeredFacts v169Facts =
+                                            new DeployTacticalPolicy.ProtectEndangeredFacts(
+                                                action.getActionId(), title, v169Excess,
+                                                v172This, v172Wave, v172WaveR[2]);
+                                        PolicyContributionLedger v169Ledger = new PolicyContributionLedger(
+                                            "deploy-tactical-v169-" + action.getActionId());
+                                        v169Ledger.register(
+                                            DeployTacticalPolicy.scoreV169ProtectEndangered(v169Facts));
+                                        PolicyOperationAdapter.apply(action, v169Ledger);
+                                        float v169 = v169Ledger.orderedOperations().get(0).delta();
                                         logger.warn("V169 PROTECT (deploy): {} outpowered by {} -> +{} (wave={} reserved={})",
                                             title, (int) v169Excess, (int) v169, (int) v172Wave, (int) v172WaveR[2]);
                                     } else {
@@ -1018,10 +1035,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     int v170Drain = (int) game.getModifiersQuerying()
                                         .getForceDrainAmount(gameState, location, v170Opp);
                                     if (v170OppHere && v170Drain >= 1) {
-                                        float v170 = 600f + Math.min(300f, v170Drain * 75f);
-                                        action.addReasoning(String.format(
-                                            "V170 SPY BLOCK: deploy spy to %s — blocks opponent drain of %d (cheap denial)",
-                                            title, v170Drain), v170);
+                                        DeployTacticalPolicy.SpyDrainFacts v170Facts =
+                                            new DeployTacticalPolicy.SpyDrainFacts(
+                                                action.getActionId(), title, true,
+                                                v170OppHere, v170Drain);
+                                        PolicyContributionLedger v170Ledger = new PolicyContributionLedger(
+                                            "deploy-tactical-v170-" + action.getActionId());
+                                        v170Ledger.register(
+                                            DeployTacticalPolicy.scoreV170SpyDrainBlock(v170Facts));
+                                        PolicyOperationAdapter.apply(action, v170Ledger);
+                                        float v170 = v170Ledger.orderedOperations().get(0).delta();
                                         logger.warn("V170 SPY BLOCK: {} drain={} -> +{}", title, v170Drain, (int) v170);
                                     }
                                 }
@@ -1100,8 +1123,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         gameState, location, v171Opp, false, false);
                                     float[] v171WaveR = v173WaveProjection(gameState, playerId, deployingBlueprintId);
                                     float v171Wave = v171WaveR[0];
-                                    boolean v171WaveAffordable = v171WaveR[1] >= 1f;
-                                    float v171Projected = v171OurPower + v171ThisPower + v171Wave;
                                     // V171 ADJUSTED 2026-07-10b (replay f27ws5lgy0g58k5p, T4 Savage+Nute →
                                     // Carbonite Chamber suicide): the projection was whole-hand optimistic vs
                                     // RAW enemy power — same hole wave 1 closed in V166. (a) weapon-adjust
@@ -1131,8 +1152,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     } catch (Exception e) { /* 0 armed */ }
                                     float v171TheirEff = v171TheirPower + v171OppWeap;
-                                    float v171Biggest = Math.max(v171ThisPower, v171MaxHandPower);
-                                    float v171HitDiscount = Math.min(v171ArmedOpps, (int) v171WaveR[1] + 1) * v171Biggest;
                                     // V172 SOLO DOMINANCE (Steve ruling 2026-07-11, replay f27ws5lgy0g58k5p T2:
                                     // Tyranus power 8 refused to contest a LONE Leia power 3 for lack of hand
                                     // buddies): "Rando should be taking every opportunity to overpower my
@@ -1140,25 +1159,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     // When THIS deploy alone (+ our power already there) reaches 2× their
                                     // weapon-adjusted power, the buddy/wave requirement is waived. Objective
                                     // hold rules are untouched (they score their own sites; additive).
-                                    boolean v172SoloDominant = v171ThisPower > 0 && v171TheirEff > 0
-                                            && (v171OurPower + v171ThisPower) >= 2f * v171TheirEff;
-                                    if (v172SoloDominant) {
-                                        action.addReasoning(String.format(
-                                            "V172 SOLO DOMINANCE: %s — this body alone overpowers them (%.0f vs %.0f eff, 2x) — deploy and battle",
-                                            title, v171OurPower + v171ThisPower, v171TheirEff), 600.0f);
+                                    DeployTacticalPolicy.ContactFacts v171Facts =
+                                        new DeployTacticalPolicy.ContactFacts(
+                                            action.getActionId(), title, v171OppHere, true,
+                                            v171HandChars, v171OurPower, v171ThisPower,
+                                            v171Wave, v171WaveR[1], v171WaveR[2],
+                                            v171TheirEff, v171MaxHandPower, v171ArmedOpps);
+                                    PolicyContributionLedger v171Ledger = new PolicyContributionLedger(
+                                        "deploy-tactical-v171-v172-" + action.getActionId());
+                                    v171Ledger.register(
+                                        DeployTacticalPolicy.scoreV171V172Contact(v171Facts));
+                                    PolicyOperationAdapter.apply(action, v171Ledger);
+                                    if (!v171Ledger.orderedOperations().isEmpty()
+                                            && "V172".equals(v171Ledger.orderedOperations().get(0)
+                                                .ruleArmId().id())) {
                                         logger.warn("V172 SOLO DOMINANCE: {} ({}+{} vs eff {}) -> +600 (buddy gate waived, Steve 2026-07-11)",
                                             title, (int) v171OurPower, (int) v171ThisPower, (int) v171TheirEff);
-                                    } else if (v171HandChars >= 2 && v171WaveAffordable
-                                            && (v171Projected - v171HitDiscount) >= v171TheirEff - 2f) {
-                                        action.addReasoning(String.format(
-                                            "V171 DEPLOY TO CONTACT: %s opponent-occupied, affordable wave projects %.0f (hit-adj %.0f) vs %.0f eff (reserves held: %.0f) — deploy directly, battle THIS turn",
-                                            title, v171Projected, v171Projected - v171HitDiscount, v171TheirEff, v171WaveR[2]), 600.0f);
-                                        logger.warn("V171 DEPLOY TO CONTACT: {} (handChars={} projected={} hitDisc={} [wave={} buddies={} reserved={}] theirsEff={}) -> +600",
-                                            title, v171HandChars, (int) v171Projected, (int) v171HitDiscount,
-                                            (int) v171Wave, (int) v171WaveR[1], (int) v171WaveR[2], (int) v171TheirEff);
+                                    } else if (!v171Ledger.orderedOperations().isEmpty()) {
+                                        logger.warn("V171 DEPLOY TO CONTACT: {} (handChars={} wave={} buddies={} reserved={} theirsEff={}) -> +600",
+                                            title, v171HandChars, (int) v171Wave,
+                                            (int) v171WaveR[1], (int) v171WaveR[2], (int) v171TheirEff);
                                     } else if (v171HandChars >= 2) {
-                                        logger.warn("V172 CONTACT GATED: {} projected {} hitDisc={} [wave={} buddies={} reserved={}] vs eff {} — can't match their stack (or wave unaffordable after reserves), assemble adjacent instead",
-                                            title, (int) v171Projected, (int) v171HitDiscount, (int) v171Wave,
+                                        logger.warn("V172 CONTACT GATED: {} wave={} buddies={} reserved={} vs eff {} — can't match their stack (or wave unaffordable after reserves), assemble adjacent instead",
+                                            title, (int) v171Wave,
                                             (int) v171WaveR[1], (int) v171WaveR[2], (int) v171TheirEff);
                                     }
                                 }
@@ -1568,12 +1591,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     action.addReasoning("Starship to space system", GOOD_DELTA * 2);
                                 }
                             }
-                            // V190 (2026-07-04): dead branch commented out — isGroundSite now
-                            // routes into the -1500 site block above (feedback_comment_out_old_rules).
-                            // } else if (isGroundSite) {
-                            //     // Ground location - starship can't deploy here normally
-                            //     action.addReasoning("STARSHIP TO GROUND - unusual!", BAD_DELTA);
-                            // }
+                            // V190's -1500 veto owns starship-to-site; the retired branch is in git history.
                         }
 
                         // =====================================================
@@ -1744,7 +1762,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (!earlySpyDetected && locObjAnalyzer != null && locObjAnalyzer.isAnalyzed() && title != null) {
                             if (locObjAnalyzer.isObjectiveRelevantLocation(title)) {
                                 float objLocBonus = locObjAnalyzer.getLocationObjectiveBonus(title);
-                                action.addReasoning("OBJECTIVE LOCATION - deploy here helps flip!", objLocBonus);
+                                DeployObjectiveSitingPolicy.Facts v22SitingFacts =
+                                    new DeployObjectiveSitingPolicy.Facts(
+                                        action.getActionId(), earlySpyDetected, true, true,
+                                        objLocBonus, false, false, false, false,
+                                        false, false, false, "", 0.0f, 0.0f);
+                                PolicyContributionLedger v22SitingLedger = new PolicyContributionLedger(
+                                    "deploy-objective-v22-" + action.getActionId());
+                                v22SitingLedger.register(
+                                    DeployObjectiveSitingPolicy.evaluate(v22SitingFacts));
+                                PolicyOperationAdapter.apply(action, v22SitingLedger);
                                 logger.warn("V22 OBJECTIVE DEPLOY: {} is objective-relevant (+{})", title, objLocBonus);
                             }
                         }
@@ -1783,15 +1810,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                     if (isSenator) {
                                         String v88TitleLower = title.toLowerCase(java.util.Locale.ROOT);
-                                        if (v88TitleLower.contains("galactic senate")) {
-                                            action.addReasoning(
-                                                "V88 MY LORD: senator → Galactic Senate (flip target + weapon destiny -6 protection)",
-                                                1500.0f);
+                                        boolean v88SenateDestination =
+                                            v88TitleLower.contains("galactic senate");
+                                        DeployObjectiveSitingPolicy.Facts v88SitingFacts =
+                                            new DeployObjectiveSitingPolicy.Facts(
+                                                action.getActionId(), false, true, false, 0.0f,
+                                                true, true, true, v88SenateDestination,
+                                                false, false, false, "", 0.0f, 0.0f);
+                                        PolicyContributionLedger v88SitingLedger =
+                                            new PolicyContributionLedger(
+                                                "deploy-objective-v88-" + action.getActionId());
+                                        v88SitingLedger.register(
+                                            DeployObjectiveSitingPolicy.evaluate(v88SitingFacts));
+                                        PolicyOperationAdapter.apply(action, v88SitingLedger);
+                                        if (v88SenateDestination) {
                                             logger.warn("V88 MY LORD: senator location bonus +1500 for {}", title);
                                         } else {
-                                            action.addReasoning(
-                                                "V88 MY LORD: senator not at Galactic Senate — wrong site!",
-                                                -2000.0f);
                                             logger.warn("V88 MY LORD: senator BLOCK -2000 for non-Senate target {}", title);
                                         }
                                     }
@@ -1845,10 +1879,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             || v88GenChar.contains("cannot deploy at " + v88GenBareSite)
                                             || v88GenChar.contains("not at " + v88GenFullSite);
                                         if (v88GenNegative) {
-                                            action.addReasoning(
-                                                "V88 TEXT-NAMED SITE: character text says NOT at '"
-                                                    + v88GenBareSite + "' — wrong site",
-                                                -500.0f);
+                                            DeployObjectiveSitingPolicy.Facts v88TextFacts =
+                                                new DeployObjectiveSitingPolicy.Facts(
+                                                    action.getActionId(), false, false, false, 0.0f,
+                                                    false, false, false, false,
+                                                    true, true, false, v88GenBareSite,
+                                                    0.0f, 0.0f);
+                                            PolicyContributionLedger v88TextLedger =
+                                                new PolicyContributionLedger(
+                                                    "deploy-objective-v88-text-" + action.getActionId());
+                                            v88TextLedger.register(
+                                                DeployObjectiveSitingPolicy.evaluate(v88TextFacts));
+                                            PolicyOperationAdapter.apply(action, v88TextLedger);
                                             logger.warn("V88 TEXT-NAMED NEG: '{}' text avoids '{}' → -500",
                                                 v88GenBp.getTitle(), v88GenBareSite);
                                         } else {
@@ -1882,11 +1924,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     }
                                                 } catch (Exception ignore) { /* allow fall-through */ }
                                             }
+                                            DeployObjectiveSitingPolicy.Facts v88TextFacts =
+                                                new DeployObjectiveSitingPolicy.Facts(
+                                                    action.getActionId(), false, false, false, 0.0f,
+                                                    false, false, false, false,
+                                                    true, false, v88GenDoomed, v88GenBareSite,
+                                                    0.0f, 0.0f);
+                                            PolicyContributionLedger v88TextLedger =
+                                                new PolicyContributionLedger(
+                                                    "deploy-objective-v88-text-" + action.getActionId());
+                                            v88TextLedger.register(
+                                                DeployObjectiveSitingPolicy.evaluate(v88TextFacts));
+                                            PolicyOperationAdapter.apply(action, v88TextLedger);
                                             if (!v88GenDoomed) {
-                                                action.addReasoning(
-                                                    "V88 TEXT-NAMED SITE: character text mentions '"
-                                                        + v88GenBareSite + "' — home-site bonus",
-                                                    500.0f);
                                                 logger.warn("V88 TEXT-NAMED SITE: '{}' text mentions '{}' → +500",
                                                     v88GenBp.getTitle(), v88GenBareSite);
                                             }
@@ -1980,12 +2030,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                         v99Opp, false, false);
                                             }
                                         }
+                                        DeployObjectiveSitingPolicy.Facts v99SitingFacts =
+                                            new DeployObjectiveSitingPolicy.Facts(
+                                                action.getActionId(), false, false, false, 0.0f,
+                                                false, false, true, true,
+                                                false, false, false, "galactic senate",
+                                                v99OpponentPower, v99FriendlySenatorPower);
+                                        PolicyContributionLedger v99SitingLedger =
+                                            new PolicyContributionLedger(
+                                                "deploy-objective-v99-" + action.getActionId());
+                                        v99SitingLedger.register(
+                                            DeployObjectiveSitingPolicy.evaluate(v99SitingFacts));
+                                        PolicyOperationAdapter.apply(action, v99SitingLedger);
                                         if (v99OpponentPower <= v99FriendlySenatorPower) {
-                                            action.addReasoning(String.format(
-                                                "V99 SENATE GUARD: non-senator → Galactic Senate "
-                                                    + "(opp %.0f <= my senator %.0f) — wasted, deploy elsewhere",
-                                                v99OpponentPower, v99FriendlySenatorPower),
-                                                -1500.0f);
                                             logger.warn("V99 SENATE GUARD: BLOCK non-senator → Senate "
                                                 + "(opp={} my-senators={}) -1500",
                                                 (int)v99OpponentPower, (int)v99FriendlySenatorPower);
@@ -2000,6 +2057,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
                         }
+
+                        boolean v212EvazanCsWithoutArmedFriend = false;
+                        String v212EvazanCsSiteTitle = title != null ? title : "";
 
                         // === V89-CS (Steve, 2026-05-20): DR. EVAZAN — NEEDS ARMED PARTNER (CardSelection) ===
                         // The original V89 in DeployEvaluator only fires when actionText already
@@ -2041,11 +2101,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                     if (!armedFriendAtTarget) {
-                                        action.addReasoning(
-                                            "V89-CS DR. EVAZAN: '" + deployingCardName
-                                                + "' → '" + v89TargetLoc.getTitle()
-                                                + "' with no armed friend — block (will get sniped)",
-                                            -1500.0f);
+                                        v212EvazanCsWithoutArmedFriend = true;
+                                        v212EvazanCsSiteTitle = v89TargetLoc.getTitle();
                                         logger.warn("V89-CS DR. EVAZAN: blocking {} → {} (no armed friend)",
                                             deployingCardName, v89TargetLoc.getTitle());
                                     }
@@ -2054,6 +2111,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 logger.debug("V89-CS DR. EVAZAN CardSelection error: {}", e.getMessage());
                             }
                         }
+
+                        DeploySitingPolicy.Facts v212EvazanCsFacts = new DeploySitingPolicy.Facts(
+                            action.getActionId(), deployingCardName, v212EvazanCsSiteTitle,
+                            v212EvazanCsWithoutArmedFriend, DeploySitingPolicy.FormationState.ALLOW, "",
+                            0.0f, false, 400.0f, "", false, 0.0f, 0.0f);
+                        PolicyContributionLedger v212EvazanCsLedger = new PolicyContributionLedger(
+                            "deploy-siting-v89-cs-" + action.getActionId());
+                        v212EvazanCsLedger.register(
+                            DeploySitingPolicy.evaluateDestination(v212EvazanCsFacts));
+                        PolicyOperationAdapter.apply(action, v212EvazanCsLedger);
 
                         // === V121 (Steve, 2026-05-22): V86 NEIMOIDIAN-PILOT MIRROR (CardSelection) ===
                         // V86 in DeployEvaluator only fires when actionText contains "aboard",
@@ -2155,6 +2222,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                     if (v136DeployingCard != null) {
+                                        DeploySitingPolicy.FormationState v212FormationState =
+                                            DeploySitingPolicy.FormationState.ALLOW;
+                                        String v212FormationReason = "";
+                                        float v212V136CsScore = 0.0f;
+                                        boolean v212V193CsEligible = false;
+                                        float v212V193CsWeight = 400.0f;
+                                        String v212V193CsGateCard = "";
+
                                         // FORMATION SAFETY (2026-07-11c): L3/L4 deploy vetoes — un-outvotable.
                                         // (Codex audit incident 1: Greedo ability 1 deployed solo at 1420 while
                                         // two affordable buddies sat in hand; every guard was additive.)
@@ -2196,13 +2271,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                         v136DeployingCard.isUndercover(),
                                                         location, fsForce, fsThisCost, fsBuddyCost, fsFlipGate);
                                                 if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.HARD_BLOCK) {
-                                                    action.hardVeto(fsVerdict.reason());
+                                                    v212FormationState = DeploySitingPolicy.FormationState.HARD_BLOCK;
+                                                    v212FormationReason = fsVerdict.reason();
                                                     logger.warn("FORMATION SAFETY (deploy-site): {}", fsVerdict.reason());
                                                 } else if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.DEFER_UNSUPPORTED_SOLO) {
-                                                    action.defer(fsVerdict.reason(), -800.0f);
+                                                    v212FormationState = DeploySitingPolicy.FormationState.DEFER_UNSUPPORTED_SOLO;
+                                                    v212FormationReason = fsVerdict.reason();
                                                     logger.warn("V201 DEPLOY DEFER: {}", fsVerdict.reason());
                                                 } else if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.UNKNOWN) {
-                                                    action.addReasoning("V201 formation assessment unknown: " + fsVerdict.reason());
+                                                    v212FormationState = DeploySitingPolicy.FormationState.UNKNOWN;
+                                                    v212FormationReason = fsVerdict.reason();
                                                 }
                                             }
                                         } catch (Exception fsE) { /* fail-open */ }
@@ -2226,10 +2304,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 v136Turn,
                                                 0 /* deckShipCount — TODO wire */,
                                                 false /* perSiteEffectActive — TODO wire */);
+                                        v212V136CsScore = v136Score;
                                         if (v136Score != 0f) {
-                                            action.addReasoning(
-                                                "V136 unified deploy-site score (CS) → " + title + ": " + v136Score,
-                                                v136Score);
                                             logger.info("V136 CS [{}]: {} → {} score={}",
                                                 context.getPlayerId(), v136DeployingCard.getTitle(), title, v136Score);
                                         }
@@ -2312,17 +2388,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                         // +730 lost Ozzel->Bunker by 10 (1240 vs 1250) in replay
                                                         // vugpape5lw1bc7rq t2; +1600 (total ~2000) wins by ~550.
                                                         float v193csBonus = v193csWeight + 1600.0f;
-                                                        action.addReasoning(
-                                                            "V193 (CS) FLIP-GATE CONTROL: steer one ability body to '"
-                                                                + title + "' to enable '" + v193csGateCard
-                                                                + "' (objective flip gate)",
-                                                            v193csBonus);
+                                                        v212V193CsEligible = true;
+                                                        v212V193CsWeight = v193csWeight;
+                                                        v212V193CsGateCard = v193csGateCard;
                                                         logger.warn("V193 (CS) FLIP-GATE CONTROL [{}]: {} → {} +{} (seize flip-gate, card={})",
                                                             context.getPlayerId(), v136DeployingCard.getTitle(), title, v193csBonus, v193csGateCard);
                                                     }
                                                 }
                                             }
                                         }
+
+                                        DeploySitingPolicy.Facts v212SitingCsFacts =
+                                            new DeploySitingPolicy.Facts(
+                                                action.getActionId(), v136DeployingCard.getTitle(), title,
+                                                false, v212FormationState, v212FormationReason,
+                                                v212V136CsScore, v212V193CsEligible,
+                                                v212V193CsWeight, v212V193CsGateCard,
+                                                false, 0.0f, 0.0f);
+                                        PolicyContributionLedger v212SitingCsLedger =
+                                            new PolicyContributionLedger(
+                                                "deploy-siting-cs-" + action.getActionId());
+                                        v212SitingCsLedger.register(
+                                            DeploySitingPolicy.evaluateDestination(v212SitingCsFacts));
+                                        PolicyOperationAdapter.apply(action, v212SitingCsLedger);
                                     }
                                 }
                             } catch (Exception e) {
@@ -2330,61 +2418,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // === V122 SUPERSEDED 2026-05-26: see V136 CharacterDeploySiteEvaluator §A ===
-                        // Original: V90 mirror for hand-deploy CardSelection route.
-                        // Block kept inert below for easy revert.
-                        if (false /* V122 SUPERSEDED V136 */ && title != null && deployingBlueprintId != null
-                                && gameState != null && context.getGame() != null) {
-                            try {
-                                SwccgCardBlueprint v122DepBp = getBlueprintFromId(context, deployingBlueprintId);
-                                boolean v122IsCharacter = v122DepBp != null
-                                    && v122DepBp.getCardCategory() == com.gempukku.swccgo.common.CardCategory.CHARACTER;
-                                if (v122IsCharacter && location != null) {
-                                    boolean v122EnemyArmed = false;
-                                    boolean v122FriendlyArmed = false;
-                                    String v122OppId = context.getGame().getOpponent(context.getPlayerId());
-                                    for (PhysicalCard pc : gameState.getAllPermanentCards()) {
-                                        if (pc == null) continue;
-                                        PhysicalCard pcLoc = null;
-                                        try {
-                                            pcLoc = context.getGame().getModifiersQuerying()
-                                                .getLocationThatCardIsAt(gameState, pc);
-                                        } catch (Exception ignore) { /* skip */ }
-                                        if (pcLoc != location) continue;
-                                        boolean armed = false;
-                                        try {
-                                            armed = com.gempukku.swccgo.filters.Filters.character_with_a_weapon.accepts(
-                                                gameState, context.getGame().getModifiersQuerying(), pc);
-                                        } catch (Exception ignore) { /* false */ }
-                                        if (!armed) continue;
-                                        if (v122OppId != null && v122OppId.equals(pc.getOwner())) {
-                                            v122EnemyArmed = true;
-                                        } else if (context.getPlayerId().equals(pc.getOwner())) {
-                                            v122FriendlyArmed = true;
-                                        }
-                                    }
-                                    if (v122EnemyArmed && !v122FriendlyArmed) {
-                                        action.addReasoning(
-                                            "V122 NO SUICIDE (CS): '" + title
-                                                + "' has enemy armed char + no friendly weapon — will be sniped",
-                                            -1500.0f);
-                                        logger.warn("V122 NO SUICIDE CS: blocking deploy → {} (enemy armed, no friendly weapon) -1500",
-                                            title);
-                                    }
-                                }
-                            } catch (Exception e) {
-                                logger.debug("V122 NO SUICIDE CS error: {}", e.getMessage());
-                            }
-                        }
-
-                        // === V133 DROPPED (Steve, 2026-05-26) ===
-                        // Removed in favor of upcoming consolidated V136 master deploy
-                        // rule (battle-math team viability + buddy detection in one
-                        // evaluator). The narrow regex-on-game-text approach only caught
-                        // the ~5% of cards with explicit "deploys to same site as X" text.
-                        // The broader buddy concept Steve asked for (universal solo-low-
-                        // ability gate) lives in V136 instead. V122 also slated for
-                        // removal under V136 consolidation.
+                        // V122 retired into V136 §A; V133 was dropped before V136.
+                        // Their legacy bodies and rationale remain in git history.
 
                         // === V24.10: EXECUTOR MUST DEPLOY TO BESPIN ===
                         // When deploying Executor/Flagship, Bespin system is the ONLY correct target
@@ -3086,13 +3121,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             logger.debug("V67bu escape-check error: {}", eEsc.getMessage());
                                         }
                                     }
+                                    DeployFormationSitingPolicy.CharacterFormationFacts v212ReinforcementFacts =
+                                        new DeployFormationSitingPolicy.CharacterFormationFacts(
+                                            true, title, false, false, ourCharsHere, 0, false,
+                                            deployingCardName, 0.0f, ourPower, theirPower,
+                                            v67buCanEscape);
+                                    PolicyContributionLedger v212ReinforcementLedger =
+                                        new PolicyContributionLedger(
+                                            "deploy-formation-v67bn-" + action.getActionId());
+                                    v212ReinforcementLedger.register(
+                                        DeployFormationSitingPolicy.evaluateCommittedReinforcement(
+                                            action.getActionId(), v212ReinforcementFacts));
+                                    PolicyOperationAdapter.apply(action, v212ReinforcementLedger);
+
                                     if (ourCharsHere >= 1 && v67bnOutgunned && !v67buCanEscape) {
-                                        // V67bn (extended via V67bu) — committed-and-trapped friendlies
-                                        // → BRAVEHEART: reinforce to minimize overflow damage.
-                                        action.addReasoning(String.format(
-                                            "V67bn REINFORCE OUTGUNNED (Braveheart): %d friendly char(s) at %s (our %d vs opp %d, deficit %d) — NO ESCAPE, DEPLOY HERE to minimize overflow!",
-                                            ourCharsHere, title, (int)ourPower, (int)theirPower, (int)(theirPower-ourPower)),
-                                            800.0f);
                                         logger.warn("V67bn REINFORCE OUTGUNNED: dest={} chars={} our={} opp={} deficit={} no-escape → +800",
                                             title, ourCharsHere, (int)ourPower, (int)theirPower, (int)(theirPower-ourPower));
                                     } else if (ourCharsHere >= 1 && v67bnOutgunned && v67buCanEscape) {
@@ -3171,57 +3213,30 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                         boolean emptyTable = (totalFriendlyCharsOnTable == 0);
 
-                                        if (isOurLocation) {
-                                            // Deploying to our own location — small bonus
-                                            action.addReasoning("V29.5 BUDDY: Own location — home field advantage", 40.0f);
-                                        } else if (isOpponentLocation) {
-                                            if (emptyTable) {
-                                                // V29.6: Nobody on the table yet — someone HAS to go first!
-                                                // Mild preference against opponent locations, but don't block.
-                                                // Own locations still get +40, so they're preferred if available.
-                                                action.addReasoning("V29.6 BUDDY: Opponent's location but empty table — must deploy somewhere!", -20.0f);
-                                                logger.info("V29.6 BUDDY: {} — empty table, mild penalty -20 for opponent location (would be -150 normally)", title);
-                                            } else if (friendlyCharsHereBuddy == 0 && opponentCharsHereBuddy == 0) {
-                                                // Deploying ALONE to an EMPTY opponent location — risky!
-                                                // Opponent will likely reinforce and we'll be outnumbered.
-                                                action.addReasoning("V29.5 BUDDY: Opponent's location, deploying ALONE — risky!", -150.0f);
-                                                logger.warn("V29.5 BUDDY: {} — deploying alone to empty OPPONENT location — penalty -150", title);
-                                            } else if (friendlyCharsHereBuddy == 0 && opponentCharsHereBuddy > 0) {
-                                                // Deploying ALONE to opponent location WITH enemies — very dangerous!
-                                                // (Contest penalty already applies, but this stacks for extra deterrence)
-                                                action.addReasoning("V29.5 BUDDY: Opponent's location with enemies, NO friendlies — dangerous!", -100.0f);
-                                                logger.warn("V29.5 BUDDY: {} — deploying alone to ENEMY-OCCUPIED opponent location — penalty -100", title);
-                                            } else if (friendlyCharsHereBuddy > 0) {
-                                                // We have friendlies here — slightly less risky
-                                                action.addReasoning("V29.5 BUDDY: Opponent's location but friendlies present", 10.0f);
-                                            }
-                                        }
-
-                                        // === V113: SOLO HIGH-ABILITY CHARACTER VULNERABILITY ===
-                                        // V29.5 only penalizes solo deploys to OPPONENT locations.
-                                        // V113 extends this to ANY location: if an ability-3+
-                                        // character would be alone at the target site, the opponent
-                                        // can deploy 2+ next turn and overwhelm them. Directly
-                                        // addresses "Dengar alone at Xizor's Palace → Anakin +
-                                        // Chewie demolish him" pattern.
+                                        float depAbility113 = 0.0f;
                                         if (friendlyCharsHereBuddy == 0 && !emptyTable) {
-                                            float depAbility113 = 0;
                                             try {
                                                 if (deployingBlueprintId != null) {
                                                     SwccgCardBlueprint depBp113 = getBlueprintFromId(context, deployingBlueprintId);
                                                     if (depBp113 != null) depAbility113 = depBp113.getAbility();
                                                 }
                                             } catch (Exception e113) { /* ignore */ }
-                                            if (depAbility113 >= 3.0f) {
-                                                float v113Penalty = -300.0f;
-                                                action.addReasoning(String.format(
-                                                    "V113 SOLO VULNERABILITY: %s (ability %.0f) alone at %s — opponent can overwhelm next turn!",
-                                                    deployingCardName, depAbility113, location.getTitle()), v113Penalty);
-                                                logger.warn("V113 SOLO: {} ability {} alone at {} — penalty {}",
-                                                    deployingCardName, (int)depAbility113,
-                                                    location.getTitle(), (int)v113Penalty);
-                                            }
                                         }
+
+                                        DeployFormationSitingPolicy.CharacterFormationFacts v212BuddyFacts =
+                                            new DeployFormationSitingPolicy.CharacterFormationFacts(
+                                                true, location.getTitle(), isOurLocation,
+                                                isOpponentLocation, friendlyCharsHereBuddy,
+                                                opponentCharsHereBuddy, emptyTable,
+                                                deployingCardName, depAbility113,
+                                                0.0f, 0.0f, false);
+                                        PolicyContributionLedger v212BuddyLedger =
+                                            new PolicyContributionLedger(
+                                                "deploy-formation-buddy-" + action.getActionId());
+                                        v212BuddyLedger.register(
+                                            DeployFormationSitingPolicy.evaluateBuddyTopology(
+                                                action.getActionId(), v212BuddyFacts));
+                                        PolicyOperationAdapter.apply(action, v212BuddyLedger);
                                     } catch (Exception e) {
                                         logger.debug("V29.5 BUDDY: Error checking location ownership: {}", e.getMessage());
                                     }
@@ -3690,336 +3705,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // === V67as (Steve, 2026-05-08): SPREAD-AWARE DEPLOY DESTINATION ===
-                        //
-                        // Mirrors V67aj+V67al (which live in DeployEvaluator) for the
-                        // CardSelectionEvaluator path — needed because hand-deploy actions
-                        // say "Deploy <character>" with NO location in the action text;
-                        // the destination is picked here in evaluateDeployLocation via a
-                        // sub-decision. V67aj/V67al never fired for hand-deploys because
-                        // their actionText.contains(loc.getTitle()) check always failed.
-                        //
-                        // Steve's report: 59 of 59 character deploys went to one site
-                        // (Hoth: Defensive Perimeter, 3rd Marker). Now scoring per
-                        // candidate destination here:
-                        //
-                        //   stack count: friendly characters at this destination
-                        //   power total: sum of friendly character power at destination
-                        //
-                        // Tiered spread bonus / anti-stack penalty:
-                        //   Empty obj-req BG:                 +500
-                        //   Empty BG (not obj-req):           +300
-                        //   1-2 friendlies + BG:              +100
-                        //   3+ friendlies + BG (not obj-req): -300  ← anti-stack
-                        //   20-24 friendly power, non-obj:    -200  ← V67al-style
-                        //   25-34 friendly power, non-obj:    -400
-                        //   35+ friendly power, non-obj:      -700
-                        //
-                        // === V67as SUPERSEDED 2026-05-26: see V136 CharacterDeploySiteEvaluator §B ===
-                        // Block kept inert below for easy revert.
-                        if (false /* V67as SUPERSEDED V136 */ && game != null && playerId != null) {
-                            try {
-                                boolean v67asIsBg = game.getModifiersQuerying()
-                                    .isBattleground(gameState, location, null);
-                                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer asObj =
-                                    context.getObjectiveAnalyzer();
-                                boolean v67asIsObjReq = asObj != null && asObj.isAnalyzed()
-                                    && !asObj.isFlipped()
-                                    && asObj.isObjectiveRelevantLocation(title);
-
-                                int v67asStack = 0;
-                                float v67asPower = 0f;
-                                java.util.List<PhysicalCard> v67asCards =
-                                    gameState.getCardsAtLocation(location);
-                                if (v67asCards != null) {
-                                    for (PhysicalCard pc : v67asCards) {
-                                        if (pc == null || pc.getBlueprint() == null) continue;
-                                        if (!playerId.equals(pc.getOwner())) continue;
-                                        if (pc.getBlueprint().getCardCategory()
-                                                != CardCategory.CHARACTER) continue;
-                                        v67asStack++;
-                                        if (pc.getBlueprint().hasPowerAttribute()) {
-                                            Float p = pc.getBlueprint().getPower();
-                                            if (p != null) v67asPower += p;
-                                        }
-                                    }
-                                }
-
-                                String v67asLabel = null;
-                                float v67asBonus = 0f;
-                                if (v67asIsBg && v67asIsObjReq && v67asStack == 0) {
-                                    v67asLabel = "OBJ-REQ BG, EMPTY";
-                                    v67asBonus = 500f;
-                                } else if (v67asIsBg && v67asIsObjReq && v67asStack <= 2) {
-                                    v67asLabel = "OBJ-REQ BG, REINFORCE";
-                                    v67asBonus = 250f;
-                                } else if (v67asIsBg && v67asStack == 0) {
-                                    v67asLabel = "BG, OPEN-FRONT";
-                                    v67asBonus = 300f;
-                                } else if (v67asIsBg && v67asStack <= 2) {
-                                    v67asLabel = "BG, REINFORCE";
-                                    v67asBonus = 100f;
-                                } else if (v67asIsBg) {
-                                    v67asLabel = "BG, OVER-STACK";
-                                    v67asBonus = -300f;
-                                }
-                                if (v67asLabel != null) {
-                                    action.addReasoning(String.format(
-                                        "V67as DEPLOY DEST [%s, stack=%d]: %s",
-                                        v67asLabel, v67asStack, title), v67asBonus);
-                                    logger.warn("V67as [{}]: dest={} stack={} → {}{}",
-                                        v67asLabel, title, v67asStack,
-                                        v67asBonus > 0 ? "+" : "", (int) v67asBonus);
-                                }
-
-                                // V67as POWER-STACK PENALTY (mirrors V67al, non-objective only)
-                                if (!v67asIsObjReq) {
-                                    float v67asPwrPenalty = 0f;
-                                    String v67asPwrLabel = null;
-                                    if (v67asPower >= 35f) {
-                                        v67asPwrPenalty = -700f;
-                                        v67asPwrLabel = "POWER-STACK CATASTROPHIC";
-                                    } else if (v67asPower >= 25f) {
-                                        v67asPwrPenalty = -400f;
-                                        v67asPwrLabel = "POWER-STACK HEAVY";
-                                    } else if (v67asPower >= 20f) {
-                                        v67asPwrPenalty = -200f;
-                                        v67asPwrLabel = "POWER-STACK MILD";
-                                    }
-                                    if (v67asPwrLabel != null) {
-                                        action.addReasoning(String.format(
-                                            "V67as %s: %s already has %.0f friendly power — spread to threaten elsewhere!",
-                                            v67asPwrLabel, title, v67asPower), v67asPwrPenalty);
-                                        logger.warn("V67as {}: dest={} friendlyPower={} → {}",
-                                            v67asPwrLabel, title, (int) v67asPower, (int) v67asPwrPenalty);
-                                    }
-                                }
-
-                                // === V67br (Steve, 2026-05-11): TURN-BASED SPREAD DISCIPLINE ===
-                                //
-                                // Steve's rule: "We should likely not spread turn 1. Turn 2
-                                // can cautiously spread, turn three is fully ok to spread."
-                                //
-                                // GROUND vs ABOARD-SHIP distinction (Steve, 2026-05-11):
-                                //   "If on Executor he's safe. If by himself on a site he is not."
-                                //   Chars aboard ships at a SYSTEM are protected by the ship —
-                                //   they don't need ground reinforcement. So:
-                                //     - Concentration site count: only friendlies at SITES (ground).
-                                //       Friendlies at SYSTEMS (aboard ships) don't anchor V67br.
-                                //     - Destination penalty: only applies when destination is a SITE.
-                                //       SYSTEM destinations (deploying aboard a ship) are always safe.
-                                //
-                                // Turn 1: -800 to non-concentration SITE destinations.
-                                // Turn 2: -300 (cautious).
-                                // Turn 3+: no penalty.
-                                // First deploy of turn 1 with no ground friendlies: unrestricted.
-                                try {
-                                    int v67brTurn = gameState.getPlayersLatestTurnNumber(playerId);
-                                    boolean v67brDestIsSite = location != null
-                                        && location.getBlueprint() != null
-                                        && location.getBlueprint().getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE;
-                                    if (v67brTurn <= 2 && v67brDestIsSite) {
-                                        // Find concentration SITE (most friendly chars at any SITE).
-                                        // Friendlies at SYSTEMS (on ships) don't count — they're safe.
-                                        PhysicalCard v67brConcSite = null;
-                                        int v67brMaxCount = 0;
-                                        for (PhysicalCard loc : gameState.getLocationsInOrder()) {
-                                            if (loc == null || loc.getBlueprint() == null) continue;
-                                            if (loc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SITE) continue;
-                                            int v67brCount = 0;
-                                            java.util.List<PhysicalCard> cardsAtLoc = gameState.getCardsAtLocation(loc);
-                                            if (cardsAtLoc != null) {
-                                                for (PhysicalCard pc : cardsAtLoc) {
-                                                    if (pc == null || pc.getBlueprint() == null) continue;
-                                                    if (!playerId.equals(pc.getOwner())) continue;
-                                                    if (pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                                    v67brCount++;
-                                                }
-                                            }
-                                            if (v67brCount > v67brMaxCount) {
-                                                v67brMaxCount = v67brCount;
-                                                v67brConcSite = loc;
-                                            }
-                                        }
-                                        if (v67brConcSite != null && !v67brConcSite.equals(location)) {
-                                            // V75 (Steve, 2026-05-15): KILL-BOX CHECK before applying V67br penalty.
-                                            // If the concentration site is overwhelmed (opp power > our power + 4),
-                                            // it's a sacrifice site — let Rando spread to fresh sites instead.
-                                            // Replay May 15: Lars Farm became a kill box vs Vader + Mara + Death
-                                            // Trooper, but V67br kept pushing Rando to deploy more chars there.
-                                            float v75OurPower = 0f;
-                                            float v75OppPower = 0f;
-                                            try {
-                                                java.util.List<PhysicalCard> ccAt = gameState.getCardsAtLocation(v67brConcSite);
-                                                if (ccAt != null) {
-                                                    for (PhysicalCard cc : ccAt) {
-                                                        if (cc == null || cc.getBlueprint() == null) continue;
-                                                        if (cc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                                        Float pw = cc.getBlueprint().getPower();
-                                                        if (pw == null) continue;
-                                                        if (playerId.equals(cc.getOwner())) v75OurPower += pw;
-                                                        else v75OppPower += pw;
-                                                    }
-                                                }
-                                            } catch (Exception ex) { /* ignore */ }
-
-                                            boolean v75KillBox = v75OppPower > (v75OurPower + 4f) && v75OppPower > 0;
-                                            if (v75KillBox) {
-                                                // Concentration site is a kill box. Don't penalize spreading.
-                                                // Actually REWARD spreading to a fresh site (we need new ground).
-                                                action.addReasoning(String.format(
-                                                    "V75 KILL-BOX OVERRIDE: concentration site %s overwhelmed (opp %d > our %d + 4) — spread to fresh site!",
-                                                    v67brConcSite.getTitle(), (int) v75OppPower, (int) v75OurPower), 200.0f);
-                                                logger.warn("V75 KILL-BOX OVERRIDE: concSite={} opp={} our={} → spread bonus +200",
-                                                    v67brConcSite.getTitle(), (int) v75OppPower, (int) v75OurPower);
-                                            } else {
-                                                float v67brPenalty = (v67brTurn == 1) ? -800.0f : -300.0f;
-                                                String v67brLabel = (v67brTurn == 1) ? "TURN 1 NO-SPREAD" : "TURN 2 CAUTIOUS-SPREAD";
-                                                action.addReasoning(String.format(
-                                                    "V67br %s: concentration site is %s (%d friendly chars there). Deploy with them, not here!",
-                                                    v67brLabel, v67brConcSite.getTitle(), v67brMaxCount), v67brPenalty);
-                                                logger.warn("V67br {}: dest={} concSite={} ({} chars) → {}",
-                                                    v67brLabel, title, v67brConcSite.getTitle(), v67brMaxCount, (int)v67brPenalty);
-                                            }
-                                        }
-                                    }
-                                } catch (Exception v67brEx) {
-                                    logger.debug("V67br turn-spread check error: {}", v67brEx.getMessage());
-                                }
-
-                                // === V67bj (Steve, 2026-05-11): THREAT-AWARE DESTINATION ===
-                                //
-                                // Don't pick a destination where opponent's power on the site
-                                // exceeds Rando's TOTAL available power (already-here + the
-                                // char being deployed + chars in hand still deployable AND
-                                // leaving 2 force for battle interrupts) by 4 or more.
-                                //
-                                // Replay 6fqi4jm1kkp7e9i8: Stormtrooper Patrol (power 2) solo
-                                // at Guest Quarters across from Rey + Jedi (15 power). Hand
-                                // had no chars to swing the matchup. Should have refused.
-                                //
-                                // -400 magnitude: bigger than typical destination bonuses
-                                // (drain +30, V67as +500 obj-req, etc.) so this dominates
-                                // when site is genuinely bad, but proportional to the post-
-                                // V67bk score landscape (no V52 SPEND FORCE +300 anymore).
-                                try {
-                                    String opponentForBj = gameState.getOpponent(playerId);
-                                    float oppPowerAtSite = game.getModifiersQuerying()
-                                        .getTotalPowerAtLocation(gameState, location, opponentForBj, false, false);
-
-                                    // Already-deployed friendly power at this site (excludes char being deployed since it's in hand)
-                                    float myPowerAtSite = game.getModifiersQuerying()
-                                        .getTotalPowerAtLocation(gameState, location, playerId, false, false);
-
-                                    // Power of the char being deployed (from deployingBlueprintId / detected blueprint)
-                                    float deployingPower = 0f;
-                                    int deployingCost = 0;
-                                    if (deployingBlueprintId != null) {
-                                        for (PhysicalCard hc : gameState.getHand(playerId)) {
-                                            if (hc != null && hc.getBlueprint() != null
-                                                    && deployingBlueprintId.equals(hc.getBlueprintId(true))) {
-                                                SwccgCardBlueprint dbp = hc.getBlueprint();
-                                                if (dbp.hasPowerAttribute() && dbp.getPower() != null) {
-                                                    deployingPower = dbp.getPower();
-                                                }
-                                                Float dCost = dbp.getDeployCost();
-                                                if (dCost != null) deployingCost = dCost.intValue();
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    // Hand-deployable additional power: chars in hand affordable AFTER paying
-                                    // for the one being deployed and reserving 2 force for battle interrupts.
-                                    final int BATTLE_RESERVE = 2;
-                                    int forcePileNow = 0;
-                                    try { forcePileNow = gameState.getForcePileSize(playerId); } catch (Exception ignored) { }
-                                    int forceLeftForOtherDeploys = Math.max(0, forcePileNow - deployingCost - BATTLE_RESERVE);
-
-                                    float handDeployablePower = 0f;
-                                    java.util.List<PhysicalCard> bjHand = gameState.getHand(playerId);
-                                    if (bjHand != null) {
-                                        // V67bj v3 (2026-05-11): FILTER FIRST, THEN SORT.
-                                        // The original code sorted the WHOLE hand by getDeployCost(),
-                                        // which throws UnsupportedOperationException for non-deployable
-                                        // cards (Effects, Interrupts). That exception aborted V67bj
-                                        // for every destination — the rule never actually fired in
-                                        // production. Now we filter to CHARACTERs (which all have
-                                        // a deploy cost) before any sort call.
-                                        java.util.List<PhysicalCard> bjCharHand = new java.util.ArrayList<>();
-                                        for (PhysicalCard hc : bjHand) {
-                                            if (hc == null || hc.getBlueprint() == null) continue;
-                                            if (deployingBlueprintId != null
-                                                    && deployingBlueprintId.equals(hc.getBlueprintId(true))) continue;
-                                            if (hc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                            bjCharHand.add(hc);
-                                        }
-                                        bjCharHand.sort((a, b) -> {
-                                            float ca, cb;
-                                            try { Float v = a.getBlueprint().getDeployCost(); ca = v != null ? v : 99f; }
-                                            catch (Exception ex) { ca = 99f; }
-                                            try { Float v = b.getBlueprint().getDeployCost(); cb = v != null ? v : 99f; }
-                                            catch (Exception ex) { cb = 99f; }
-                                            return Float.compare(ca, cb);
-                                        });
-                                        for (PhysicalCard hc : bjCharHand) {
-                                            SwccgCardBlueprint hBp = hc.getBlueprint();
-                                            int c;
-                                            try {
-                                                Float hCost = hBp.getDeployCost();
-                                                c = (hCost != null) ? hCost.intValue() : 0;
-                                            } catch (Exception ex) { continue; }
-                                            if (c <= forceLeftForOtherDeploys) {
-                                                if (hBp.hasPowerAttribute() && hBp.getPower() != null) {
-                                                    handDeployablePower += hBp.getPower();
-                                                }
-                                                forceLeftForOtherDeploys -= c;
-                                            }
-                                        }
-                                    }
-
-                                    float totalMyAvailable = myPowerAtSite + deployingPower + handDeployablePower;
-                                    float deficit = oppPowerAtSite - totalMyAvailable;
-
-                                    // V67bu (Steve, 2026-05-11): V67bj only fires for UNCOMMITTED
-                                    // destinations (zero friendlies). Once Rando has friendlies at a
-                                    // site, V67bn handles the reinforce-or-retreat decision —
-                                    // V67bj's "don't bait" advice is moot since the commitment is
-                                    // already made.
-                                    int v67buFriendliesHere = 0;
-                                    try {
-                                        java.util.List<PhysicalCard> bjCardsHere = gameState.getCardsAtLocation(location);
-                                        if (bjCardsHere != null) {
-                                            for (PhysicalCard pc : bjCardsHere) {
-                                                if (pc == null || pc.getBlueprint() == null) continue;
-                                                if (!playerId.equals(pc.getOwner())) continue;
-                                                if (pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                                v67buFriendliesHere++;
-                                            }
-                                        }
-                                    } catch (Exception ignored) { }
-
-                                    if (deficit >= 4f && v67buFriendliesHere == 0) {
-                                        action.addReasoning(String.format(
-                                            "V67bj DON'T BAIT (uncommitted): %s deficit %.0f (opp %.0f vs my available %.0f = site %.0f + deploying %.0f + hand-deployable %.0f, battle-reserve %d). Pick safer site!",
-                                            title, deficit, oppPowerAtSite, totalMyAvailable,
-                                            myPowerAtSite, deployingPower, handDeployablePower, BATTLE_RESERVE),
-                                            -400.0f);
-                                        logger.warn("V67bj THREAT BLOCK (uncommitted): dest={} opp={} myAvail={} (site={}, deploy={}, hand={}) deficit={} → -400",
-                                            title, (int) oppPowerAtSite, (int) totalMyAvailable,
-                                            (int) myPowerAtSite, (int) deployingPower,
-                                            (int) handDeployablePower, (int) deficit);
-                                    } else if (deficit >= 4f && v67buFriendliesHere > 0) {
-                                        logger.info("V67bj SKIPPED (committed): {} friendlies at {} already — V67bn handles reinforce-or-retreat (deficit={})",
-                                            v67buFriendliesHere, title, (int)deficit);
-                                    }
-                                } catch (Exception bjEx) {
-                                    logger.debug("V67bj threat check error: {}", bjEx.getMessage());
-                                }
-                            } catch (Exception e) {
-                                logger.debug("V67as: error scoring deploy destination: {}", e.getMessage());
-                            }
-                        }
+                        // V67as, including nested V67br/V75/V67bj, became unreachable at the V136 cutover.
+                        // The retired body remains in git history.
                     }
                 } catch (NumberFormatException e) {
                     logger.debug("Could not parse cardId: {}", cardId);

@@ -1,3 +1,17 @@
+  ==== V212 AI-ONLY DEPLOY-2 SITING POLICY OWNERS (2026-07-18, both bots) ====
+Shared DeploySitingPolicy, DeployTacticalPolicy, DeployObjectiveSitingPolicy, and DeployFormationSitingPolicy now
+own the existing destination-safety, tactical-character, objective-location, and formation-topology contribution
+streams formerly duplicated across both DeployEvaluator and CardSelectionEvaluator mirrors. CharacterDeploySiteEvaluator
+remains the thin V136 board adapter. Both bots retain stock identity, target resolution, objective analysis, board reads,
+and logging. V89/V136/V193/V96, V166/V169/V170/V171/V172, V22/V88/V99, and live V67bn/V29.5/V113 preserve their
+prior values, contribution order, route asymmetry, and failure boundaries. V89 remains additive, and formation UNKNOWN
+remains score-neutral. Retired V122 and V67as source blocks were removed; nested V67br/V75/V67bj remain retired.
+Production edits are AI-only. Reserve-child objective-progress and future-force planning changes remain outside this
+score-neutral extraction. Gate: 54 focused tests; full affected reactor 1,155 tests, 0 failures, 0 errors, 26 skipped;
+package, mirror source tests, AI-boundary, forbidden-symbol, compiled-artifact, and diff checks pass. Packaged web.jar
+SHA-256: 6955844df38fa6008bbc754ed40ec6a9f4d61c42038e711b9f3e522750c652a1. Runtime JVM loading and live-game proof remain
+separate deployment gates. Revert the single V212 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V211 AI-ONLY DEPLOY-1 SEQUENCING AND FORCE-BUDGET POLICY OWNERS (2026-07-18, both bots) ====
 Shared DeploySequencingPolicy, DeployBudgetPolicy, and DeployPlanPolicy now own the existing ordered DEPLOY-1
 streams for phase urgency, current-plan application, Force reservations, location-first ordering, and opening scripts.

@@ -22,8 +22,8 @@ import java.util.Locale;
 // chosenone); any code motion here needs Steve. KIND mix + key magnitudes: BANDED
 // ±2000 (§A team viability) / ±700 (§B strategic position), overlay bands +250..+1100,
 // vetoes to -2000 (V110) / -900 (V188).
-// Absorbs (dead, commented below/nearby — revert path, do not delete): V90, V122,
-// V67aj, V67al, V67as (+ V133 dropped pre-ship). Dead ledger travels with this hub.
+// Retires V90, V122, V67aj, V67al, V67as, and the dropped V133 proposal.
+// Their historical implementations remain in git history.
 // Cross-refs: DEPLOY-1 (V67bc feeds this hub), DEPLOY-3 (weapon gate), MOVE (V137
 // winnability parity pair), RESPONSE. See resources/RANDO_REORG_PLAN_2026-07-02.md §3
 // + Rando_Section_Manifest_2026-07-06.xlsx.
@@ -44,8 +44,7 @@ import java.util.Locale;
  * chosenone.* packages.
  *
  * Returns a single score for the (deployingCard, candidateSite) pair.
- * Higher is better. Callers sum this with their own scoring (V51, V96,
- * V67br, V67bj, V67bn, V67bu, V75, V121).
+ * Higher is better. Callers sum this with remaining route-specific scoring.
  *
  * See /tmp/V136_SPEC_V3.md (or the V136_HANDOFF.md fallback) for the
  * dominance table and §-by-§ rationale.
@@ -375,31 +374,7 @@ public class CharacterDeploySiteEvaluator {
             // ability >= 4 — guaranteed by the enclosing abilityPass gate — and the
             // one-sided 1.25x forfeit cap, forfeits summed identically). All
             // deploy-side bonus math (+min(300, drain*100)) is kept exactly as was.
-            // OLD (inline chain, kept for revert):
-            // float v181Gap = oppPower - projectedPower;
-            // if (v181Gap > 0f && v181Gap <= 3f) {
-            //     float v181Drain = 0f;
-            //     try { v181Drain = mq.getForceDrainAmount(gs, candidateSite, opponentId); }
-            //     catch (Exception ignore) { /* treat as 0 → won't fire */ }
-            //     if (v181Drain >= 2f) {
-            //         float ourForfeit = safeForfeit(deployingCard);
-            //         float theirForfeit = 0f;
-            //         for (PhysicalCard pc : friendliesAtSite) {
-            //             if (pc == null || pc.getBlueprint() == null) continue;
-            //             if (pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-            //             if (playerId.equals(pc.getOwner())) ourForfeit += safeForfeit(pc);
-            //             else if (opponentId.equals(pc.getOwner())) theirForfeit += safeForfeit(pc);
-            //         }
-            //         boolean v181Parity = theirForfeit <= 0f
-            //             || ourForfeit <= theirForfeit * 1.25f;
-            //         if (v181Parity) {
-            //             float v181Bonus = Math.min(300f, v181Drain * 100f);
-            //             LOG.warn("V181 FAIR-FIGHT COMMIT: ... → +{}", ...);
-            //             return v181Bonus;
-            //         }
-            //         LOG.warn("V181 NO-PARITY: ... — forfeit mismatch, hold", ...);
-            //     }
-            // }
+            // The pre-shared V181 predicate remains available in git history.
             // Forfeit trade over the bodies that will actually battle — our team at
             // the site + the deploying card vs their team here (their side is summed
             // inside the shared predicate from the same site list).
@@ -500,17 +475,13 @@ public class CharacterDeploySiteEvaluator {
         }
 
         // === V156 UPDATED 2026-06-25 (Steve): smart solo-deploy hold (ability/weapon/BG aware) ===
-        // Prior V156: turn<=2, solo, uncontested, no-buddy -> -300 at ANY site (OLD, commented below).
+        // Prior V156 was a flat -300 guard; its implementation remains in git history.
         // Now scoped to a ground BATTLEGROUND site + CHARACTER + NON-objective, and ability/weapon aware:
         //   solo allowed only if ability >= 6, OR ability >= 5 with an affordable matching weapon in hand;
         //   weak solos (<=4, or 5 unarmed) hold for a buddy (-600); an allowed strong solo still prefers a
         //   buddy when force is available (+250). Objective flip-sites are SKIPPED (deploy-to-flip, then buddy
         //   up after: Endor / Imperial Enforcements / TDIGWATT — generic via isObjectiveRelevantSite).
         //   Ships/systems excluded (CHARACTER + isBattleground site gate). Vetted by council + helper agent.
-        // OLD:
-        // if (currentTurn <= 2 && teamBodyCount == 1 && oppPower == 0f && !v156AnyBuddyAvailable) {
-        //     LOG.warn("V156 SOLO-NO-BUDDY BLOCK: ... (-300)"); return -300f;
-        // }
         boolean v156IsBG = false;
         try { v156IsBG = mq.isBattleground(gs, candidateSite, null); } catch (Exception ignore) { /* false */ }
         boolean v156IsChar = deployingCard.getBlueprint() != null
@@ -524,24 +495,7 @@ public class CharacterDeploySiteEvaluator {
         // V156 UPDATED 2026-07-07: the flip-not-ready scan moved VERBATIM into the shared
         // static helper isV156FlipNotReady(...) below, so the NEW move-side V156 JOIN-GROUP
         // arm (MoveEvaluator + CardSelectionEvaluator, both bots) reuses the SAME predicate
-        // instead of forking it. Behavior identical. OLD inline scan (kept for revert):
-        // boolean v156FlipNotReady = false;
-        // try {
-        //     boolean vergeUp = false, dsOnTable = false, dsAtScarif = false;
-        //     for (PhysicalCard pc : gs.getAllPermanentCards()) {
-        //         if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
-        //         if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
-        //         String t = pc.getTitle() != null ? pc.getTitle().toLowerCase(Locale.ROOT) : "";
-        //         if (t.contains("on the verge of greatness") || t.contains("taking control of the weapon")) vergeUp = true;
-        //         if (t.contains("death star") && pc.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
-        //             dsOnTable = true;
-        //             PhysicalCard dsLoc = pc.getAtLocation();
-        //             if (dsLoc != null && dsLoc.getTitle() != null
-        //                     && dsLoc.getTitle().toLowerCase(Locale.ROOT).contains("scarif")) dsAtScarif = true;
-        //         }
-        //     }
-        //     if (vergeUp && dsOnTable && !dsAtScarif) v156FlipNotReady = true;
-        // } catch (Exception ignore) { /* fall through */ }
+        // instead of forking it. Behavior is unchanged; the former inline scan is in git history.
         boolean v156FlipNotReady = isV156FlipNotReady(gs, playerId);
         // V156 UPDATED 2026-07-07 (Steve, Fel-at-Beach loss, audit rows deploy-siting-1/-2):
         // the turn<=2 cliff let the SAME deploy the hold correctly blocked on turn 2 sail
@@ -557,9 +511,7 @@ public class CharacterDeploySiteEvaluator {
         // total 1065 -> -35, loses to Citadel Tower's 615 (join Vader's stack) — exactly the
         // turn-2 behavior (Tagge 905 -> Tower). -600 still beats §A's +500 uncontested reward
         // by construction; objective-forced deploys stay exempt via the carve-back.
-        // OLD (turn-gate only, kept for revert):
-        // if (currentTurn <= 2 && teamBodyCount == 1 && oppPower == 0f
-        //         && v156IsBG && v156IsChar && (!isObjectiveRelevantSite || v156FlipNotReady)) {
+        // The former turn-only gate remains in git history.
         boolean v156WeakBandAllTurns = v156DeployAbility < 4f && v156AnyBuddyAvailable;
         if ((currentTurn <= 2 || v156WeakBandAllTurns) && teamBodyCount == 1 && oppPower == 0f
                 && v156IsBG && v156IsChar && (!isObjectiveRelevantSite || v156FlipNotReady)) {
