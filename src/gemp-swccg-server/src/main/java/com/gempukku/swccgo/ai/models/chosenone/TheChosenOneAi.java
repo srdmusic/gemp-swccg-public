@@ -5,7 +5,6 @@ import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.ContestStatus;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.LocationAnalysis;
 import com.gempukku.swccgo.ai.common.AiChatManager;
-import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.chosenone.evaluators.CombinedEvaluator;
 import com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext;
 import com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction;
@@ -16,6 +15,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
+import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
@@ -631,11 +631,12 @@ public class TheChosenOneAi extends HeuristicAiBase {
             Map<String, String[]> params = decision.getDecisionParameters();
             String[] actionIds = params != null ? params.get("actionId") : null;
             String[] cardIds = params != null ? params.get("cardId") : null;
+            ResponsePolicy.Route responseRoute = ResponsePolicy.classify(
+                    decisionType, decisionText);
 
             // V45: NEVER forfeit when all cards are immune to attrition
             {
-                String dtLower = decisionText.toLowerCase(java.util.Locale.ROOT);
-                if (dtLower.contains("forfeit") && dtLower.contains("if desired")) {
+                if (responseRoute == ResponsePolicy.Route.OPTIONAL_FORFEIT) {
                     LOG.warn("V45 IMMUNE FORFEIT: All cards immune — PASSING on optional forfeit! Text: '{}'", decisionText);
                     // TRACE ORACLE V2: route + final-response observation ONLY; the direct
                     // return below is untouched (it skips the common finalizer — recorded).
@@ -657,25 +658,12 @@ public class TheChosenOneAi extends HeuristicAiBase {
             // V67j: Don't assume index 0 = Yes. Inspect the `results` param and
             // find the actual "Yes/Allow/Accept" choice's index. Fallback to 0
             // if the array isn't available or no clear positive option found.
-            if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
-                    && decisionText.toLowerCase(java.util.Locale.ROOT).contains("revert")) {
-                int yesIndex = 0;
-                String yesText = "(default index 0)";
+            if (responseRoute == ResponsePolicy.Route.REVERT_APPROVAL) {
                 String[] revertResults = params != null ? params.get("results") : null;
-                if (revertResults != null && revertResults.length > 0) {
-                    for (int ri = 0; ri < revertResults.length; ri++) {
-                        String r = revertResults[ri] != null
-                            ? revertResults[ri].toLowerCase(java.util.Locale.ROOT) : "";
-                        if (r.equals("yes") || r.contains("allow") || r.contains("accept")
-                            || r.contains("ok") || r.equals("revert")) {
-                            yesIndex = ri;
-                            yesText = revertResults[ri];
-                            break;
-                        }
-                    }
-                }
+                ResponsePolicy.IndexedChoice revert =
+                        ResponsePolicy.revertApproval(revertResults);
                 LOG.warn("V44/V67j REVERT: Accepting revert request (index={} = '{}') text: '{}'",
-                    yesIndex, yesText, decisionText);
+                    revert.index(), revert.label(), decisionText);
                 // TRACE ORACLE V2: route + final-response observation ONLY.
                 if (traceOpened) {
                     TraceSession.recordRoute(TraceRoute.V44_V67J_REVERT_APPROVAL,
@@ -683,9 +671,10 @@ public class TheChosenOneAi extends HeuristicAiBase {
                     // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                     TraceSession.recordEvaluatorLaneNotApplicable(
                         "direct interceptor V44/V67j: evaluator lane never runs on this route");
-                    TraceSession.recordFinalResponse(String.valueOf(yesIndex), true);
+                    TraceSession.recordFinalResponse(
+                            String.valueOf(revert.index()), true);
                 }
-                return String.valueOf(yesIndex);
+                return String.valueOf(revert.index());
             }
 
             // === V170 (Steve, 2026-06): UNDERCOVER SPY — the cheap drain blocker ===
@@ -699,8 +688,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
             // (bonus-aware, getForceDrainAmount over sites they occupy); NO when there is
             // nothing to block yet — keep the spy as a normal body with power/presence.
             // V67j discipline: scan the results array for the actual Yes/No indexes.
-            if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
-                    && decisionText.toLowerCase(java.util.Locale.ROOT).contains("undercover spy")) {
+            if (responseRoute == ResponsePolicy.Route.UNDERCOVER_SPY) {
                 int v170OppDrain = 0;
                 try {
                     com.gempukku.swccgo.game.state.GameState v170Gs =
@@ -722,18 +710,12 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 } catch (Exception v170E) {
                     LOG.debug("V170 drain check failed: {}", v170E.getMessage());
                 }
-                boolean v170GoUndercover = v170OppDrain >= 1;
-                int v170YesIdx = 0, v170NoIdx = 1;
+                boolean v170GoUndercover =
+                        ResponsePolicy.shouldDeployUndercover(v170OppDrain);
                 String[] v170Results = params != null ? params.get("results") : null;
-                if (v170Results != null) {
-                    for (int ri = 0; ri < v170Results.length; ri++) {
-                        String r = v170Results[ri] != null
-                            ? v170Results[ri].toLowerCase(java.util.Locale.ROOT) : "";
-                        if (r.equals("yes")) v170YesIdx = ri;
-                        else if (r.equals("no")) v170NoIdx = ri;
-                    }
-                }
-                int v170Pick = v170GoUndercover ? v170YesIdx : v170NoIdx;
+                ResponsePolicy.YesNoIndexes v170Indexes =
+                        ResponsePolicy.yesNoIndexes(v170Results);
+                int v170Pick = v170Indexes.choose(v170GoUndercover);
                 LOG.warn("V170 UNDERCOVER SPY: opponent total drain={} -> {} (index={}) text: '{}'",
                     v170OppDrain, v170GoUndercover ? "YES, go undercover (block their drain)"
                         : "NO, deploy normally (nothing to block)", v170Pick, decisionText);
@@ -1531,7 +1513,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
         // =====================================================================
         // Priority Card Handling
         // =====================================================================
-        score += scorePriorityCards(actionLower, decisionText);
+        score += ResponsePolicy.scorePriorityCards(actionLower, decisionText);
 
         // =====================================================================
         // Situational Adjustments
@@ -1751,38 +1733,6 @@ public class TheChosenOneAi extends HeuristicAiBase {
         // Weapon firing
         if (actionText.contains("fire") && actionText.contains("weapon")) {
             score += 50;
-        }
-
-        return score;
-    }
-
-    private int scorePriorityCards(String actionText, String decisionText) {
-        int score = 0;
-
-        // Damage cancel cards (Houjix/Ghhhk) - very high priority when appropriate
-        if (actionText.contains("houjix") || actionText.contains("ghhhk")) {
-            if (decisionText.contains("battle damage") || decisionText.contains("cancel")) {
-                score += RandoConfig.SCORE_DAMAGE_CANCEL;
-            }
-        }
-
-        // Barrier usage
-        if (actionText.contains("barrier")) {
-            if (decisionText.contains("deploy") || decisionText.contains("character")) {
-                score += RandoConfig.SCORE_BARRIER_USE;
-            }
-        }
-
-        // Sense usage
-        if (actionText.contains("sense") && actionText.contains("cancel")) {
-            // Check if target is worth sensing
-            AiPriorityCards.SenseTargetResult senseResult =
-                AiPriorityCards.getSenseTargetValue(decisionText);
-            if (senseResult.isHighValue) {
-                score += senseResult.score;
-            } else {
-                score += RandoConfig.SCORE_SENSE_USE / 2;
-            }
         }
 
         return score;

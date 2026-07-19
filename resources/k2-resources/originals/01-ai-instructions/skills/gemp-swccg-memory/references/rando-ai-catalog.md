@@ -1178,9 +1178,11 @@ public static class DeckCard {
 - `SCORE_FORCE_DRAIN = 120` - Bonus for force drain
 - `SCORE_INITIATE_BATTLE = 80` - Bonus for favorable battle
 - `SCORE_MATCHING_PILOT = 40` - Bonus for pilot/ship match
-- `SCORE_DAMAGE_CANCEL = 100` - Bonus for cancel interrupts
-- `SCORE_BARRIER_USE = 80` - Bonus for barrier effects
-- `SCORE_SENSE_USE = 70` - Bonus for Sense on high value
+
+**Shared RESPONSE fallback weights (`common/phase/ResponsePolicy`):**
+- `DAMAGE_CANCEL_SCORE = 100` - Bonus for Houjix/Ghhhk when the prompt concerns canceling battle damage
+- `BARRIER_SCORE = 80` - Bonus for barrier responses to a character deployment
+- `SENSE_SCORE = 70` - Legacy base; unmatched Sense responses receive half (+35), while known targets use `AiPriorityCards`
 
 **Chat Settings:**
 - `CHAT_ENABLED = true` - Send chat messages?

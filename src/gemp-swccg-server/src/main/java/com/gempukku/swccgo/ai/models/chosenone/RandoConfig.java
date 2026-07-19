@@ -152,15 +152,6 @@ public final class RandoConfig {
     // Priority Card Interaction
     // =========================================================================
 
-    /** Score bonus for using damage cancel (Houjix/Ghhhk) when critical */
-    public static final int SCORE_DAMAGE_CANCEL = 100;
-
-    /** Score bonus for using barrier on high-power deployed card */
-    public static final int SCORE_BARRIER_USE = 80;
-
-    /** Score bonus for using Sense on high-value target */
-    public static final int SCORE_SENSE_USE = 70;
-
     // =========================================================================
     // Chat Behavior
     // =========================================================================

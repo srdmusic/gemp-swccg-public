@@ -7120,3 +7120,13 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     This is a structural deletion only: no evaluator, score, ordering, interceptor, tracker,
     response wire, engine, card, or client behavior changed. Clean full reactor passed 1528/0/0/26;
     production reference scan and diff checks passed. Runtime reload remains pending.
+
+  ════ V242 (2026-07-18): shared AI-only RESPONSE router (both bots) ════
+    Added pure common ResponsePolicy and routed both direct AI adapters through it for V45
+    optional-forfeit classification, V44/V67j revert option lookup, V170 Undercover-spy Yes/No
+    lookup and drain boundary, and duplicated fallback priority-card scoring. Adapters retain
+    game reads, logs, traces, terminal returns, and wire responses. V61 SETUP, Rando-only V79b,
+    HeuristicAiBase, deep phase policies, and unknown legacy response shapes are unchanged.
+    Exact legacy order, fallbacks, and +100/+80/Sense-or-35 scores are preserved. Focused
+    10/0/0/0 and clean full reactor 1538/0/0/26 passed; clean async package, source parity,
+    forbidden-symbol, and artifact-content gates passed. Runtime reload remains pending.
