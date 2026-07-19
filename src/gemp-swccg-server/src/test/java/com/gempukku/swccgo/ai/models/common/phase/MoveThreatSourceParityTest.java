@@ -132,7 +132,7 @@ public class MoveThreatSourceParityTest {
         assertTrue(move.contains(
                 "oppWeaponBonusAt(gameState, currentLoc, v47Opp)"));
         assertTrue(move.contains(
-                "v169EndangeredMover = v169Their > v169Our"));
+                "v169PowerFactsAvailable = true"));
         assertTrue(move.contains("// === V53b: HIDDEN PATH"));
         assertTrue(move.contains("// V60 FIX:"));
         assertTrue(move.contains("ladderFinalize(action)"));

@@ -142,7 +142,7 @@ public class MoveTransitSourceParityTest {
             throws IOException {
         String move = evaluatorSource("rando");
         int blockedGate = move.indexOf(
-                "if (v160MoveBlocked != null");
+                "MoveBlockedResponsePolicy.matches(");
         int capacity = move.indexOf(
                 "MoveTransitPolicy.capacitySlot(", blockedGate);
         int passenger = move.indexOf(

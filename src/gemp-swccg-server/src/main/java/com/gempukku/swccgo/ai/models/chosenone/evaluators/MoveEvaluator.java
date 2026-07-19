@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
@@ -373,8 +374,9 @@ public class MoveEvaluator extends ActionEvaluator {
 
             // Blocked-response gate: if the cancel-loop detector added this
             // actionId/actionText to the block set, hard-block here too.
-            if (v160MoveBlocked != null && !v160MoveBlocked.isEmpty()
-                    && (v160MoveBlocked.contains(actionId) || v160MoveBlocked.contains(actionText))) {
+            boolean v160Blocked = MoveBlockedResponsePolicy.matches(
+                v160MoveBlocked, actionId, actionText);
+            if (v160Blocked) {
                 // V169 (Steve, 2026-06): if the MOVER is ENDANGERED (outpowered at its current
                 // site), keep the move attemptable — retreat is how it survives. Asajj's
                 // landspeed move was cancel-blocked here (V41 had blocked her safe
@@ -388,7 +390,9 @@ public class MoveEvaluator extends ActionEvaluator {
                 // this rule exists for was mathematically impossible. Now: endangered movers
                 // fall through to normal scoring (retreat bonuses accrue); everyone else
                 // keeps the hard block.
-                boolean v169EndangeredMover = false;
+                boolean v169PowerFactsAvailable = false;
+                float v169Our = 0.0f;
+                float v169Their = 0.0f;
                 try {
                     if (cardIdStr != null && context.getGameState() != null && context.getGame() != null
                             && context.getPlayerId() != null) {
@@ -399,15 +403,20 @@ public class MoveEvaluator extends ActionEvaluator {
                         if (v169At != null) {
                             String v169Pid = context.getPlayerId();
                             String v169Opp = context.getGameState().getOpponent(v169Pid);
-                            float v169Our = context.getGame().getModifiersQuerying()
+                            v169Our = context.getGame().getModifiersQuerying()
                                 .getTotalPowerAtLocation(context.getGameState(), v169At, v169Pid, false, false);
-                            float v169Their = context.getGame().getModifiersQuerying()
+                            v169Their = context.getGame().getModifiersQuerying()
                                 .getTotalPowerAtLocation(context.getGameState(), v169At, v169Opp, false, false);
-                            v169EndangeredMover = v169Their > v169Our;
+                            v169PowerFactsAvailable = true;
                         }
                     }
                 } catch (Exception ignore) { }
-                if (v169EndangeredMover) {
+                MoveBlockedResponsePolicy.Evaluation blockedMovePolicy =
+                    MoveBlockedResponsePolicy.classify(
+                        v160Blocked, v169PowerFactsAvailable,
+                        v169Our, v169Their);
+                if (blockedMovePolicy.outcome()
+                        == MoveBlockedResponsePolicy.Outcome.ENDANGERED_FALLTHROUGH) {
                     // V169 UPDATED 2026-07-06 (audit cross-brain-1): no penalty here, no 'continue'.
                     logger.warn("V169 MoveEvaluator: endangered mover '{}' blocked-but-excused; soft penalty owned by ActionTextEvaluator (-250), falling through to retreat scoring", actionText);
                 } else {
@@ -416,7 +425,9 @@ public class MoveEvaluator extends ActionEvaluator {
                     // V160 UPDATED 2026-07-06 T4.1: cancel-loop veto raised from -9999 to
                     // ladder class -100000, above all score bands including R4 transit.
                     EvaluatedAction blockedMove = new EvaluatedAction(actionId, ActionType.MOVE, 0.0f, actionText);
-                    blockedMove.addReasoning("CANCEL-LOOP BLOCK: this move led to repeated Done-cancels — try something else (LADDER VETO)", -100000.0f);
+                    blockedMove.addReasoning(
+                        blockedMovePolicy.reason(),
+                        blockedMovePolicy.delta());
                     logger.warn("MoveEvaluator: actionId='{}' is in blockedResponses → -100000 (V160 cancel-loop LADDER VETO)", actionId);
                     actions.add(blockedMove);
                     continue;

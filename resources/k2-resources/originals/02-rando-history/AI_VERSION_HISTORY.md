@@ -1,3 +1,23 @@
+  ==== V229 AI-ONLY MOVE BLOCKED-RESPONSE POLICY OWNER (2026-07-19, both bots) ====
+Shared MoveBlockedResponsePolicy now owns the duplicated exact blocked-action match and the
+NOT_BLOCKED, ENDANGERED_FALLTHROUGH, and HARD_BLOCK classification. Both adapters retain the
+isMoveAction gate, all game/context/card/power reads, broad swallowed exception, zero-base MOVE
+action construction, exact logs, action-list append, continue, and original position before
+capacity-slot routing. Behavior is unchanged: matching remains an exact case-sensitive set lookup
+against either nonempty action ID or action text. A match falls through only after both power reads
+complete and opponent power is strictly greater. Missing facts, read failures, equal or lower power,
+and NaN still create the zero-base action with an additive -100000 contribution, append, log, and
+continue. The separate ActionTextEvaluator V169 owner remains untouched at three retries of -250,
+then -100000, under its narrower move/using/transport/relocate predicate. General MOVE routing,
+ladder setup/finalization, physical-card resolution, and capacity-slot routing are untouched.
+Production edits are AI-only. Verification passed 222 focused MOVE tests and the full 1,399-test
+reactor with 0 failures, 0 errors, and 26 skipped. Package, exact-order, source-boundary,
+forbidden-symbol, artifact, mirror, ActionText V169 guard, diff, and independent source-review gates
+passed; server jar SHA-256 is 6ab685023201906f67593ca06e1ca6554e931799a44d007ff8048f31c48ea399
+and packaged web.jar SHA-256 is 334854bfe444163dd56a807da6ac6a61c246b321cadb50069b0042d47d6b5e41.
+Runtime load and live-game proof remain separate gates. Revert the single V229 commit. See
+AI_CHANGELOG 2026-07-19.
+
   ==== V228 AI-ONLY MOVE CAPACITY-SLOT ROUTE OWNER (2026-07-19, both bots) ====
 Existing shared MoveTransitPolicy now also owns the duplicated passenger-first capacity-slot
 classification plus the pilot branch's exact base score and contribution. Both adapters retain
