@@ -20,6 +20,13 @@ public class MoveDestinationSourceParityTest {
     }
 
     @Test
+    public void moveDestinationAdaptersStayNormalizedMirrors()
+            throws IOException {
+        assertEquals(normalize(cardSelectionSource("rando")),
+                normalize(cardSelectionSource("chosenone")));
+    }
+
+    @Test
     public void destinationRulesHaveOneSharedOwner() throws IOException {
         String move = evaluatorSource("rando");
         String policy = policySource();
@@ -122,6 +129,34 @@ public class MoveDestinationSourceParityTest {
     }
 
     @Test
+    public void v169RetreatScoreAndWrongDirectionExemptionHaveSharedOwner()
+            throws IOException {
+        String cardSelection = moveDestinationBlock(
+                cardSelectionSource("rando"));
+        String policy = policySource();
+
+        assertEquals(2, countOccurrences(
+                cardSelection, "MoveDestinationPolicy.retreatMode("));
+        assertEquals(1, countOccurrences(
+                cardSelection,
+                "MoveDestinationPolicy.safeRetreatDestination("));
+        assertEquals(1, countOccurrences(
+                cardSelection,
+                "MoveDestinationPolicy.retreatExemptsWrongDirection("));
+        assertFalse(cardSelection.contains("v169RetreatMode"));
+        assertFalse(cardSelection.contains("v169FromTitle"));
+        assertFalse(cardSelection.contains(
+                "get the endangered character out of"));
+        assertTrue(policy.contains(
+                "public static RetreatMode retreatMode("));
+        assertTrue(policy.contains(
+                "public static Contribution safeRetreatDestination("));
+        assertTrue(policy.contains(
+                "public static boolean retreatExemptsWrongDirection("));
+        assertTrue(policy.contains("600.0f"));
+    }
+
+    @Test
     public void v37AdapterRetainsActionAndBattlegroundReadOrder()
             throws IOException {
         String block = v37Block(evaluatorSource("rando"));
@@ -220,6 +255,23 @@ public class MoveDestinationSourceParityTest {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
                 .resolve(bot).resolve("evaluators/MoveEvaluator.java"));
+    }
+
+    private static String cardSelectionSource(String bot)
+            throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models")
+                .resolve(bot).resolve("evaluators")
+                .resolve("CardSelectionEvaluator.java"));
+    }
+
+    private static String moveDestinationBlock(String source) {
+        int start = source.indexOf(
+                "private List<EvaluatedAction> evaluateMoveDestination(");
+        int end = source.indexOf(
+                "private List<EvaluatedAction> evaluateStartingLocation(",
+                start);
+        return source.substring(start, end);
     }
 
     private static String v37Block(String move) {

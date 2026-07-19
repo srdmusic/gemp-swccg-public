@@ -406,6 +406,42 @@ public class MoveDestinationPolicyTest {
     }
 
     @Test
+    public void retreatModeRequiresPositiveOpponentPowerExcess() {
+        assertFalse(MoveDestinationPolicy.retreatMode(
+                "Source", 0.0f).active());
+        assertFalse(MoveDestinationPolicy.retreatMode(
+                "Source", -1.0f).active());
+
+        MoveDestinationPolicy.RetreatMode retreat =
+                MoveDestinationPolicy.retreatMode("Source", 0.0001f);
+        assertTrue(retreat.active());
+        assertEquals("Source", retreat.originTitle());
+        assertTrue(MoveDestinationPolicy.retreatExemptsWrongDirection(
+                retreat));
+    }
+
+    @Test
+    public void safeRetreatDestinationPreservesExactBonusAndReason() {
+        MoveDestinationPolicy.RetreatMode retreat =
+                MoveDestinationPolicy.retreatMode("Guest Quarters", 20.0f);
+
+        MoveDestinationPolicy.Contribution safe =
+                MoveDestinationPolicy.safeRetreatDestination(
+                        retreat, "East Platform", 0.0f);
+        assertTrue(safe.applies());
+        assertFloat(600.0f, safe.delta());
+        assertEquals(
+                "V169 RETREAT: East Platform is safe (no opponent power) — get the endangered character out of Guest Quarters!",
+                safe.reason());
+
+        assertFalse(MoveDestinationPolicy.safeRetreatDestination(
+                retreat, "Occupied", Math.nextUp(0.0f)).applies());
+        assertFalse(MoveDestinationPolicy.safeRetreatDestination(
+                MoveDestinationPolicy.retreatMode("Source", 0.0f),
+                "Empty", 0.0f).applies());
+    }
+
+    @Test
     public void selfMoveToFriendClassificationPreservesBothPhrases() {
         assertFalse(MoveDestinationPolicy.isSelfMoveToFriend(null));
         assertFalse(MoveDestinationPolicy.isSelfMoveToFriend(

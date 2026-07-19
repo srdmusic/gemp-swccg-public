@@ -13,6 +13,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
@@ -4881,8 +4882,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         // is endangered (opponent out-powers us there), this whole decision is a RETREAT:
         // safe destinations get a big bonus and V41 is gated off (a retreat IS a move to an
         // empty site — V41's assumption is wrong for endangered movers).
-        boolean v169RetreatMode = false;
-        String v169FromTitle = null;
+        MoveDestinationPolicy.RetreatMode v169Retreat =
+            MoveDestinationPolicy.retreatMode(null, 0.0f);
         if (game != null && gameState != null && playerId != null) {
             try {
                 String v169MoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
@@ -4892,11 +4893,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 if (v169Mover != null) {
                     PhysicalCard v169Pc = v169Mover.card();
                     PhysicalCard v169Loc = v169Mover.origin();
-                    if (v169OppPowerExcessAt(game, gameState, playerId, v169Loc) > 0) {
-                        v169RetreatMode = true;
-                        v169FromTitle = v169Loc.getTitle();
+                    float v169PowerExcess =
+                        v169OppPowerExcessAt(game, gameState, playerId, v169Loc);
+                    v169Retreat = MoveDestinationPolicy.retreatMode(
+                        v169Loc.getTitle(), v169PowerExcess);
+                    if (v169Retreat.active()) {
                         logger.warn("V169 RETREAT MODE: mover '{}' is endangered at {} — safe destinations boosted, V41 gated",
-                            v169Pc.getTitle(), v169FromTitle);
+                            v169Pc.getTitle(), v169Retreat.originTitle());
                     }
                 }
             } catch (Exception e) { logger.debug("V169 retreat-mode error: {}", e.getMessage()); }
@@ -5146,11 +5149,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             // +600 dominates the zero-drain penalty (V67g -200) and normal drain
                             // tiebreakers (~+15-48), so the destination step picks a safe site
                             // instead of cancelling out (the cancel-out is what got Asajj killed).
-                            if (v169RetreatMode && theirPower == 0) {
-                                action.addReasoning(String.format(
-                                    "V169 RETREAT: %s is safe (no opponent power) — get the endangered character out of %s!",
-                                    title, v169FromTitle), 600.0f);
-                                logger.warn("V169 RETREAT (move dest): {} -> +600 (fleeing {})", title, v169FromTitle);
+                            MoveDestinationPolicy.Contribution v169Destination =
+                                MoveDestinationPolicy.safeRetreatDestination(
+                                    v169Retreat, title, theirPower);
+                            if (v169Destination.applies()) {
+                                action.addReasoning(
+                                    v169Destination.reason(),
+                                    v169Destination.delta());
+                                logger.warn("V169 RETREAT (move dest): {} -> +600 (fleeing {})", title, v169Retreat.originTitle());
                             }
 
                             // === V156 JOIN-GROUP DEST (2026-07-07, STACK-MATH refit): weak solo → defensible stack ===
@@ -5901,14 +5907,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         if (v67zNonMapuzoBG || v67zTransitHub) {
                                             logger.info("V67z HIDDEN PATH {} EXEMPT: {} on Hidden Path — V41 WRONG DIRECTION skipped",
                                                 v67zTransitHub ? "TRANSIT-HUB" : "SPLIT", title);
-                                        } else if (v169RetreatMode) {
+                                        } else if (MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat)) {
                                             // V169 (Steve, 2026-06): a RETREAT is, by definition, a move to an
                                             // empty site while opponents are elsewhere — V41's block is exactly
                                             // wrong for an endangered mover. This -9999 is what trapped Asajj at
                                             // Guest Quarters (every safe destination blocked -> cancel-loop ->
                                             // move hard-vetoed -> beaten 6v27). Skip it in retreat mode.
                                             logger.warn("V169 RETREAT EXEMPT: {} — V41 wrong-direction skipped (mover fleeing {})",
-                                                title, v169FromTitle);
+                                                title, v169Retreat.originTitle());
                                         } else if (v156JoinMode && v156DestFriendlyChars > 0) {
                                             // V156 JOIN-GROUP EXEMPT (2026-07-07): a weak solo consolidating
                                             // onto OUR OWN stack is not "wrong direction" — V41's 'empty' only

@@ -93,6 +93,44 @@ public class MoveBlockedResponsePolicyTest {
                 true, true, 6.0f, Float.NaN));
     }
 
+    @Test
+    public void endangeredRetryBudgetPreservesThreeSoftThenHardBoundary() {
+        MoveBlockedResponsePolicy.RetryBudget budget =
+                new MoveBlockedResponsePolicy.RetryBudget();
+
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            MoveBlockedResponsePolicy.RetryEvaluation result =
+                    budget.evaluate(7, "Move using landspeed");
+            assertFalse(result.hardBlock());
+            assertRawFloat(-250.0f, result.delta());
+            assertEquals(attempt, result.attempt());
+            assertEquals(3, result.retryBudget());
+            assertEquals(
+                    "BLOCKED (loop prevention) — soft (V169: endangered mover, retreat must stay possible)",
+                    result.reason());
+        }
+
+        MoveBlockedResponsePolicy.RetryEvaluation exhausted =
+                budget.evaluate(7, "Move using landspeed");
+        assertTrue(exhausted.hardBlock());
+        assertRawFloat(-100000.0f, exhausted.delta());
+        assertEquals(4, exhausted.attempt());
+        assertEquals(
+                "BLOCKED (loop prevention) — hard veto (V169 retry budget exhausted: no safe destination materialized)",
+                exhausted.reason());
+    }
+
+    @Test
+    public void endangeredRetryBudgetResetsByTurnAndKeepsKeysIndependent() {
+        MoveBlockedResponsePolicy.RetryBudget budget =
+                new MoveBlockedResponsePolicy.RetryBudget();
+
+        assertEquals(1, budget.evaluate(3, "first").attempt());
+        assertEquals(2, budget.evaluate(3, "first").attempt());
+        assertEquals(1, budget.evaluate(3, "second").attempt());
+        assertEquals(1, budget.evaluate(4, "first").attempt());
+    }
+
     private static void assertHardBlock(
             MoveBlockedResponsePolicy.Evaluation result) {
         assertEquals(MoveBlockedResponsePolicy.Outcome.HARD_BLOCK,

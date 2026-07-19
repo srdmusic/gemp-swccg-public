@@ -23,6 +23,9 @@ public final class MoveDestinationPolicy {
         }
     }
 
+    public record RetreatMode(boolean active, String originTitle) {
+    }
+
     public record LandedShipEscape(
             Contribution contribution, boolean takeOff,
             boolean disembark, boolean moveAboard,
@@ -89,6 +92,33 @@ public final class MoveDestinationPolicy {
                         sourceTitle,
                         destinationTitle),
                 -800.0f);
+    }
+
+    public static RetreatMode retreatMode(
+            String originTitle, float opponentPowerExcess) {
+        return new RetreatMode(opponentPowerExcess > 0.0f, originTitle);
+    }
+
+    public static Contribution safeRetreatDestination(
+            RetreatMode retreatMode,
+            String destinationTitle,
+            float opponentPowerAtDestination) {
+        if (retreatMode == null || !retreatMode.active()
+                || opponentPowerAtDestination != 0.0f) {
+            return Contribution.none();
+        }
+        return new Contribution(
+                true,
+                String.format(
+                        "V169 RETREAT: %s is safe (no opponent power) — get the endangered character out of %s!",
+                        destinationTitle,
+                        retreatMode.originTitle()),
+                600.0f);
+    }
+
+    public static boolean retreatExemptsWrongDirection(
+            RetreatMode retreatMode) {
+        return retreatMode != null && retreatMode.active();
     }
 
     public static boolean isSelfMoveToFriend(String gameText) {

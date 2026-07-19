@@ -115,23 +115,37 @@ public class MoveBlockedResponseSourceParityTest {
     }
 
     @Test
-    public void actionTextRetainsSoleSoftRetryOwner() throws IOException {
+    public void sharedPolicyOwnsSoftRetryBoundary() throws IOException {
+        String policy = policySource();
         for (String bot : new String[]{"rando", "chosenone"}) {
             String actionText = evaluatorSource(
                     bot, "ActionTextEvaluator.java");
             assertTrue(actionText.contains(
-                    "private static final int V169_SOFT_RETRY_BUDGET = 3"));
+                    "MoveBlockedResponsePolicy.RetryBudget v169RetryBudget"));
             assertTrue(actionText.contains(
                     "v167tl.contains(\"move using\") || v167tl.contains(\"transport\") || v167tl.contains(\"relocate\")"));
-            assertTrue(actionText.contains(
-                    "v169SoftRetryCounts.merge(v169Key, 1, Integer::sum)"));
-            assertTrue(actionText.contains(
-                    "v169Tries <= V169_SOFT_RETRY_BUDGET"));
-            assertTrue(actionText.contains(
-                    "V169: endangered mover, retreat must stay possible)\", -250.0f"));
-            assertTrue(actionText.contains(
-                    "V169 retry budget exhausted: no safe destination materialized)\", -100000.0f"));
+            assertEquals(1, countOccurrences(
+                    actionText, "v169RetryBudget.evaluate("));
+            assertEquals(1, countOccurrences(
+                    actionText, "MoveBlockedResponsePolicy.isEndangered("));
+            assertFalse(actionText.contains("v169SoftRetryCounts"));
+            assertFalse(actionText.contains("V169_SOFT_RETRY_BUDGET"));
+            assertFalse(actionText.contains(
+                    "retreat must stay possible)\", -250.0f"));
+            assertFalse(actionText.contains(
+                    "no safe destination materialized)\", -100000.0f"));
         }
+        assertTrue(policy.contains(
+                "public static final int ENDANGERED_SOFT_RETRY_BUDGET = 3"));
+        assertTrue(policy.contains("public static final class RetryBudget"));
+        assertTrue(policy.contains(
+                "attempt <= ENDANGERED_SOFT_RETRY_BUDGET"));
+        assertTrue(policy.contains(
+                "retreat must stay possible)\""));
+        assertTrue(policy.contains("-250.0f"));
+        assertTrue(policy.contains(
+                "no safe destination materialized)\""));
+        assertTrue(policy.contains("-100000.0f"));
         String move = evaluatorSource("rando", "MoveEvaluator.java");
         assertFalse(move.contains(
                 "retreat must stay possible)\", -250.0f"));

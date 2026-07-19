@@ -7142,3 +7142,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     1538/0/0/26, clean async package, source allowlist, forbidden-symbol, and packaged-class absence
     gates passed. The source audit reports 169 retained legacy-owner candidates and 2 section
     fallbacks. Workbook emission and runtime reload remain pending on their external runtimes.
+
+  ════ V244 (2026-07-19): consolidate MOVE V169 retreat retries and destination safety ════
+    MoveBlockedResponsePolicy now owns V169's per-turn/per-action retry ledger and exact first-three
+    -250 soft blocks versus fourth-and-later -100000 hard veto. MoveDestinationPolicy now owns
+    retreat-mode classification, the +600 safe-destination contribution, and the V41 retreat
+    exemption. Both ActionTextEvaluator and CardSelectionEvaluator mirrors retain all blocked-set,
+    mover, game-state, power, action, logging, and control-flow responsibilities while duplicate
+    score and retry mechanics leave the adapters. Exact attempt boundaries, turn reset, action key,
+    endangered fallthrough, opponent-power == 0 safety test, candidate order, and all adjacent
+    V163/V167/V156/V67z/ladder behavior are preserved. Focused V169 47/0/0/0, complete MOVE-named
+    suite 360/0/0/0, full reactor 1544/0/0/26, normalized mirror parity, AI-only boundary, forbidden-
+    symbol scan, and clean package passed. Independent review found no correctness issues. Packaged
+    server jar SHA-256 194d6640b71b57e92a1242e5f322f29b76f973011415f5e9b5e43dea9a1cb21a and
+    web jar SHA-256 90fb6b7b115e0e2eba04c144a6386f9dffc85bda1a54339a050b0ccb243b4bc3; all
+    nine changed policy/adapter classes are present in web.jar; exact live mirror byte parity passed.
+    Runtime reload remains pending on the external runtime. AI source only; no GEMP engine or
+    player-decision changes.

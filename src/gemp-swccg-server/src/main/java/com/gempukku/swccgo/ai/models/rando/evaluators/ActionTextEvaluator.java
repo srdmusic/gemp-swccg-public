@@ -11,6 +11,7 @@ import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
+import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
@@ -57,10 +58,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
     // blocked endangered mover's retreat. Now that the soft block is small enough to beat
     // Pass (see the V169 branch in evaluate()), a retreat whose destination step keeps
     // cancelling must eventually fall back to the V163 hard veto, or the Keder-style
-    // re-pick loop returns. Budget resets each turn (blockedResponses is turn-scoped too).
-    private static final int V169_SOFT_RETRY_BUDGET = 3;
-    private final Map<String, Integer> v169SoftRetryCounts = new HashMap<>();
-    private int v169SoftRetryTurn = -1;
+    // re-pick loop returns. MoveBlockedResponsePolicy owns the exact retry boundary and
+    // deltas; this adapter retains one policy-state instance and all game-state reads.
+    private final MoveBlockedResponsePolicy.RetryBudget v169RetryBudget =
+        new MoveBlockedResponsePolicy.RetryBudget();
 
     public ActionTextEvaluator() {
         super("ActionText");
@@ -147,10 +148,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ═══════════════════════════════════════════════════════════
             // ═══ REGION: SVC-SAFETY — loop-prevention veto trio (reorg 2026-07-06) ═══
-            // Owns: blocked-response handling: V163 hard veto -100000; V167 phase-fundamental soft -200
-            // (Activate Force is NEVER hard-vetoed); V169 endangered-mover soft -250 with V169_SOFT_RETRY_BUDGET=3
+            // Routes: V163 hard veto -100000 and V167 phase-fundamental soft -200 remain here;
+            // MoveBlockedResponsePolicy owns V169 endangered-mover -250 / -100000 retry scoring
             // per turn, then falls back to the V163 hard veto. Magnitudes FROZEN (plan: do not retune before T4).
-            // Absorbs (dead, commented below/nearby — revert path, do not delete): V169 old single-shot -400.
+            // Retired: V169 old single-shot -400 is preserved in git history, not executable comments.
             // Cross-refs: SVC-SAFETY peers DecisionSafety (V148 all-bad pass), MOVE (V169-retreat +600 pairing). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
             // ═══════════════════════════════════════════════════════════
             // Check if this response is blocked (loop prevention)
@@ -185,10 +186,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // the retreat retry: MoveEvaluator applied a second copy at double strength
                 // (ctor -400 PLUS addReasoning -400 = -800, both add per EvaluatedAction) on
                 // the same actionId, so the merged score was ~-1050 vs Pass +5. This branch is
-                // now the SINGLE owner of the soft block (MoveEvaluator's copy commented out),
+                // now has one shared policy owner (MoveEvaluator carries no penalty copy),
                 // resized -400 -> -250 so a badly-outmatched retreat can actually win:
                 // -250 (here) + V35.4 enemy-presence +150 + MoveEvaluator RETREAT tier +150
-                // = +50 > Pass (~5-8). Guarded by V169_SOFT_RETRY_BUDGET per turn: if the
+                // = +50 > Pass (~5-8). Guarded by the shared 3-attempt budget per turn: if the
                 // destination step keeps cancelling (no safe destination), the V163 hard veto
                 // resumes instead of re-looping.
                 boolean v169EndangeredMover = false;
@@ -206,7 +207,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 .getTotalPowerAtLocation(v169Gs, v169At, v169Pid, false, false);
                             float v169Their = context.getGame().getModifiersQuerying()
                                 .getTotalPowerAtLocation(v169Gs, v169At, v169Opp, false, false);
-                            v169EndangeredMover = v169Their > v169Our;
+                            v169EndangeredMover = MoveBlockedResponsePolicy.isEndangered(
+                                true, v169Our, v169Their);
                         }
                     } catch (Exception ignore) { }
                 }
@@ -214,21 +216,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     action.addReasoning("BLOCKED (loop prevention) — soft (V167: Activate Force never hard-vetoed)", -200.0f);
                     logger.warn("V167: soft-block (not hard veto) on essential action: {}", actionText);
                 } else if (v169EndangeredMover) {
-                    // V169 UPDATED 2026-07-06 (audit cross-brain-1): single owner, -250, retry budget.
-                    // action.addReasoning("BLOCKED (loop prevention) — soft (V169: endangered mover, retreat must stay possible)", -400.0f);
-                    // logger.warn("V169: soft-block (not hard veto) on endangered mover's action: {}", actionText);
-                    if (v169SoftRetryTurn != context.getTurnNumber()) {
-                        v169SoftRetryCounts.clear();
-                        v169SoftRetryTurn = context.getTurnNumber();
-                    }
+                    // V169: shared policy owns the -250 / -100000 retry boundary.
                     String v169Key = (actionText != null && !actionText.isEmpty()) ? actionText : actionId;
-                    int v169Tries = v169SoftRetryCounts.merge(v169Key, 1, Integer::sum);
-                    if (v169Tries <= V169_SOFT_RETRY_BUDGET) {
-                        action.addReasoning("BLOCKED (loop prevention) — soft (V169: endangered mover, retreat must stay possible)", -250.0f);
+                    MoveBlockedResponsePolicy.RetryEvaluation v169Retry =
+                        v169RetryBudget.evaluate(context.getTurnNumber(), v169Key);
+                    action.addReasoning(v169Retry.reason(), v169Retry.delta());
+                    if (!v169Retry.hardBlock()) {
                         logger.warn("V169: soft-block (not hard veto) on endangered mover's action: {} (excusal {}/{} this turn)",
-                            actionText, v169Tries, V169_SOFT_RETRY_BUDGET);
+                            actionText, v169Retry.attempt(), v169Retry.retryBudget());
                     } else {
-                        action.addReasoning("BLOCKED (loop prevention) — hard veto (V169 retry budget exhausted: no safe destination materialized)", -100000.0f);
                         logger.warn("V169: retry budget exhausted for '{}' this turn, reverting to V163 hard veto", actionText);
                         actions.add(action);
                         continue;
