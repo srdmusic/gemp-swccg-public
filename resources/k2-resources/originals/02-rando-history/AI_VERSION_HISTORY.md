@@ -7394,3 +7394,24 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     SHA-256 081a7ef295a8e9e044be678a5e3252db9506f4db8c961c1dd86601166578ba02 contain the shared policy,
     facts, and both adapters. Runtime reload and live-game proof remain pending on the external
     runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V257 (2026-07-19): consolidate DEPLOY parent routing and generic card value ════
+    New DeployActionEnvelopeFacts/Policy own initial deploy-action scoring, cancel-loop and
+    persona terminal routes, the turn-one title gate, and unknown-card fallback. New
+    DeployCardValueFacts/Policy own ratio, destiny, elite-character, high-ability, board-behind,
+    and critical-life scoring at their original interleaved positions. Both DeployEvaluator
+    mirrors retain all GEMP, card, blueprint, plan, board, life-force, objective, and DeckOracle
+    reads; V209/V211/V212/V213 calls; specialized location/Bespin, character, destination, pull,
+    weapon, pilot, and ship logic; exception and terminal boundaries. Exact live totals remain
+    cancel-loop -19998, persona -1000, title block base 50-9999, normal base +50, ratio
+    +40/+20/0/0, destiny +15, elite +100, ability +25, urgency +20/+30, and neutral unknown
+    routes with the existing +200 unknown-location exception. All extracted operations remain
+    ADD in their original order. Focused 61/0/0/0, DEPLOY-named 145/0/0/0, full reactor
+    1687/0/0/26, normalized mirror parity, source ownership/order/read-boundary, AI-only boundary, forbidden-
+    symbol scan, raw-float and direct two-bot terminal fixtures, compiled-artifact gate, diff
+    check, and clean package passed. Independent re-review confirmed exception/read boundaries,
+    exact reason text, mirror parity, and AI-only scope. Server jar SHA-256
+    ec15ac783a4c8dbc80554430ddee5b138b08b00fcf55e6f65ab975d05c393b19 and web jar SHA-256
+    308f1efb49bfef5f444496405f111ccfaa9ca14aa9403ae0b5681569b6e1f4c9 contain both pure
+    owners and mirrored adapters. Runtime reload and live-game proof remain pending on the
+    external runtime. AI source only; no GEMP engine or player-decision changes.

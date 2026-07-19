@@ -9,6 +9,10 @@ import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.CardKnowledge;
 import com.gempukku.swccgo.ai.models.common.phase.DeployBudgetPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopeFacts;
+import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
+import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFactsReader;
@@ -582,33 +586,36 @@ public class DeployEvaluator extends ActionEvaluator {
                 continue;
             }
 
-            // Blocked-response gate: if the cancel-loop detector added this
-            // actionId/actionText to the block set, hard-block here too.
-            if (v159DeployBlocked != null && !v159DeployBlocked.isEmpty()
-                    && (v159DeployBlocked.contains(actionId) || v159DeployBlocked.contains(actionText))) {
-                EvaluatedAction blockedAct = new EvaluatedAction(actionId, ActionType.DEPLOY, -9999.0f, actionText);
-                blockedAct.addReasoning("CANCEL-LOOP BLOCK: this action led to repeated Done-cancels — try something else", -9999.0f);
-                LOG.warn("DeployEvaluator: actionId='{}' is in blockedResponses → -9999 (cancel-loop block)", actionId);
-                actions.add(blockedAct);
-                continue;
-            }
-
-            // V38.4: PERSONA REPLACE — usually BAD. Replacing Vader with a different
-            // version puts the current one in Lost Pile (losing any attached weapons).
-            if (actionLower.contains("persona replace")) {
-                EvaluatedAction prAction = new EvaluatedAction(actionId, ActionType.DEPLOY, -500.0f, actionText);
-                prAction.addReasoning("V38.4 PERSONA REPLACE: Loses armed character — blocked!", -500.0f);
-                LOG.warn("V38.4 PERSONA REPLACE BLOCKED: '{}'", actionText);
-                actions.add(prAction);
-                continue;
-            }
-
+            boolean blockedResponse = v159DeployBlocked != null
+                    && !v159DeployBlocked.isEmpty()
+                    && (v159DeployBlocked.contains(actionId)
+                    || v159DeployBlocked.contains(actionText));
+            boolean personaReplace = actionLower.contains("persona replace");
+            DeployActionEnvelopePolicy.Evaluation parentEnvelope =
+                    DeployActionEnvelopePolicy.evaluateParent(
+                            new DeployActionEnvelopeFacts.ParentAction(
+                                    actionId, blockedResponse, personaReplace));
             EvaluatedAction action = new EvaluatedAction(
-                actionId,
-                ActionType.DEPLOY,
-                50.0f,  // Base score
-                actionText
-            );
+                    actionId, ActionType.DEPLOY,
+                    parentEnvelope.initialScore(), actionText);
+            PolicyContributionLedger parentEnvelopeLedger =
+                    new PolicyContributionLedger(
+                            (decisionId == null || decisionId.isBlank()
+                                    ? "deploy-parent-envelope"
+                                    : decisionId + "-deploy-parent-envelope")
+                                    + "-" + actionId);
+            parentEnvelopeLedger.register(parentEnvelope.result());
+            PolicyOperationAdapter.apply(action, parentEnvelopeLedger);
+            if (blockedResponse) {
+                LOG.warn("DeployEvaluator: actionId='{}' is in blockedResponses → -9999 (cancel-loop block)", actionId);
+            } else if (personaReplace) {
+                LOG.warn("V38.4 PERSONA REPLACE BLOCKED: '{}'", actionText);
+            }
+            if (parentEnvelope.adapterStep()
+                    == DeployActionEnvelopePolicy.AdapterStep.CONTINUE_ACTION) {
+                actions.add(action);
+                continue;
+            }
 
             // V209 PULL deploy-side guards. The shared policy keeps this evaluator's
             // historical additive veto layer separate from ActionText's parent scorer.
@@ -742,9 +749,26 @@ public class DeployEvaluator extends ActionEvaluator {
                 // Fallback: try to extract title from action text (strip HTML, bullets, etc.)
                 titleForRestrictionCheck = actionText.replaceAll("<[^>]*>", "").replace("•", "").trim();
             }
-            if (CardKnowledge.shouldBlockDeployment(titleForRestrictionCheck, currentTurn)) {
-                LOG.warn("🚫 BLOCKING turn-1 deploy of Effect '{}' (turn {})", titleForRestrictionCheck, currentTurn);
-                action.addReasoning("BLOCKED: Do not deploy this Effect on turn 1", -9999.0f);
+            boolean blockTurnOneEffect = CardKnowledge.shouldBlockDeployment(
+                    titleForRestrictionCheck, currentTurn);
+            DeployActionEnvelopePolicy.Evaluation titleGate =
+                    DeployActionEnvelopePolicy.evaluateTitleGate(
+                            new DeployActionEnvelopeFacts.TitleGate(
+                                    actionId, blockTurnOneEffect));
+            PolicyContributionLedger titleGateLedger =
+                    new PolicyContributionLedger(
+                            (decisionId == null || decisionId.isBlank()
+                                    ? "deploy-title-gate"
+                                    : decisionId + "-deploy-title-gate")
+                                    + "-" + actionId);
+            titleGateLedger.register(titleGate.result());
+            PolicyOperationAdapter.apply(action, titleGateLedger);
+            if (blockTurnOneEffect) {
+                LOG.warn("🚫 BLOCKING turn-1 deploy of Effect '{}' (turn {})",
+                        titleForRestrictionCheck, currentTurn);
+            }
+            if (titleGate.adapterStep()
+                    == DeployActionEnvelopePolicy.AdapterStep.CONTINUE_ACTION) {
                 actions.add(action);
                 continue;
             }
@@ -2277,42 +2301,44 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === CARD VALUE SCORING ===
-                    // Score based on power + ability vs cost
-                    int cardValue = powerVal + abilityVal;
-                    float valueRatio = cost > 0 ? (float) cardValue / cost : cardValue;
+                    PolicyContributionLedger cardValueLedger =
+                            new PolicyContributionLedger(
+                                    (decisionId == null || decisionId.isBlank()
+                                            ? "deploy-card-value"
+                                            : decisionId + "-deploy-card-value")
+                                            + "-" + actionId);
+                    cardValueLedger.register(DeployCardValuePolicy.scoreBase(
+                            new DeployCardValueFacts.BaseValue(
+                                    actionId, powerVal, abilityVal, cost,
+                                    destinyVal)));
+                    PolicyOperationAdapter.apply(action, cardValueLedger);
 
-                    if (valueRatio >= 2.0f) {
-                        action.addReasoning(String.format("Excellent value (%.1f)", valueRatio), 40.0f);
-                    } else if (valueRatio >= 1.5f) {
-                        action.addReasoning(String.format("Good value (%.1f)", valueRatio), 20.0f);
-                    } else if (valueRatio >= 1.0f) {
-                        action.addReasoning(String.format("Average value (%.1f)", valueRatio), 0.0f);
-                    } else {
-                        action.addReasoning(String.format("V40: Below average value (%.1f) — deploy anyway", valueRatio), 0.0f);
-                    }
-
-                    // === HIGH DESTINY BONUS ===
-                    if (destinyVal >= 5.0f) {
-                        action.addReasoning(String.format("High destiny (%.0f)", destinyVal), 15.0f);
-                    }
-
-                    // === CARD TYPE BONUSES ===
                     CardCategory category = blueprint.getCardCategory();
-
+                    String cardTitleLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
+                    boolean eliteCharacter = category == CardCategory.CHARACTER
+                            && gameState != null && game != null
+                            && (cardTitleLower.contains("vader")
+                            || cardTitleLower.contains("emperor")
+                            || cardTitleLower.contains("palpatine"));
                     // === V40: POSITIVE DEPLOY BONUSES ===
                     // Reward good deploys instead of penalizing questionable ones.
-                    String cardTitleLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
                     if (category == CardCategory.CHARACTER && gameState != null && game != null) {
                         try {
                             String v40Pid = context.getPlayerId();
                             String v40Oid = gameState.getOpponent(v40Pid);
                             String v40ActionLower = actionText.toLowerCase(Locale.ROOT);
 
-                            // --- Deploy Vader/Emperor solo OK: +100 ---
-                            if (cardTitleLower.contains("vader") || cardTitleLower.contains("emperor")
-                                || cardTitleLower.contains("palpatine")) {
-                                action.addReasoning("V40 ELITE: Vader/Emperor deploy bonus!", 100.0f);
+                            PolicyContributionLedger eliteValueLedger =
+                                    new PolicyContributionLedger(
+                                            (decisionId == null || decisionId.isBlank()
+                                                    ? "deploy-elite-value"
+                                                    : decisionId + "-deploy-elite-value")
+                                                    + "-" + actionId);
+                            eliteValueLedger.register(DeployCardValuePolicy.scoreElite(
+                                    new DeployCardValueFacts.EliteValue(
+                                            actionId, eliteCharacter)));
+                            PolicyOperationAdapter.apply(action, eliteValueLedger);
+                            if (eliteCharacter) {
                                 LOG.warn("V40 ELITE: {} gets +100 deploy bonus", card.getTitle());
                             }
 
@@ -3123,10 +3149,17 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // Characters with high ability are valuable
-                    if (category == CardCategory.CHARACTER && abilityVal >= 4) {
-                        action.addReasoning("High-ability character", 25.0f);
-                    }
+                    PolicyContributionLedger typeValueLedger =
+                            new PolicyContributionLedger(
+                                    (decisionId == null || decisionId.isBlank()
+                                            ? "deploy-type-value"
+                                            : decisionId + "-deploy-type-value")
+                                            + "-" + actionId);
+                    typeValueLedger.register(DeployCardValuePolicy.scoreType(
+                            new DeployCardValueFacts.TypeValue(
+                                    actionId, category == CardCategory.CHARACTER
+                                    && abilityVal >= 4)));
+                    PolicyOperationAdapter.apply(action, typeValueLedger);
 
                     // === V24.1C: GHERANT DEPLOY BONUS ===
                     // Commander Gherant pulls an Executor site when deployed.
@@ -4359,44 +4392,60 @@ public class DeployEvaluator extends ActionEvaluator {
                             v213DeployingAboardShip, v213MatchingAction)));
                     PolicyOperationAdapter.apply(action, v213AssetTailLedger);
 
-                    // === STRATEGIC BONUSES ===
-                    if (needsReinforcement) {
-                        action.addReasoning("Need to reinforce board", 20.0f);
-                    }
-
-                    // Low life force - be more aggressive
-                    if (lifeForce <= RandoConfig.CRITICAL_LIFE_FORCE) {
-                        action.addReasoning("Critical life force - must deploy!", 30.0f);
-                    }
+                    PolicyContributionLedger strategicValueLedger =
+                            new PolicyContributionLedger(
+                                    (decisionId == null || decisionId.isBlank()
+                                            ? "deploy-strategic-value"
+                                            : decisionId + "-deploy-strategic-value")
+                                            + "-" + actionId);
+                    strategicValueLedger.register(
+                            DeployCardValuePolicy.scoreStrategic(
+                                    new DeployCardValueFacts.Strategic(
+                                            actionId, needsReinforcement,
+                                            lifeForce <= RandoConfig.CRITICAL_LIFE_FORCE)));
+                    PolicyOperationAdapter.apply(action, strategicValueLedger);
                 }
             } else {
-                // Unknown card - check if we should block it
-                // V29: NEVER block if earlyCard resolved to a LOCATION — locations always deploy
-                boolean earlyCardIsLocation = (earlyCard != null && earlyCard.getBlueprint() != null
-                    && earlyCard.getBlueprint().getCardCategory() == CardCategory.LOCATION);
+                boolean earlyCardIsLocation = earlyCard != null
+                        && earlyCard.getBlueprint() != null
+                        && earlyCard.getBlueprint().getCardCategory()
+                        == CardCategory.LOCATION;
+                boolean deployLocationsPlanActive = false;
+                int unknownTurn = 0;
+                if (!earlyCardIsLocation && plan != null
+                        && plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS
+                        && !plan.isForceAllowExtras()) {
+                    deployLocationsPlanActive = true;
+                    unknownTurn = context.getTurnNumber();
+                }
                 if (earlyCardIsLocation) {
                     LOG.info("V29: Unknown to main lookup but earlyCard is LOCATION '{}' — allowing!",
-                        earlyCard.getTitle());
-                    action.addReasoning("V29: Location deploy — always allowed!", 200.0f);
-                } else if (plan != null && plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS && !plan.isForceAllowExtras()) {
-                    // During DEPLOY_LOCATIONS, block unknown non-location actions on turn 1 only.
-                    // V29.7: After turn 1, allow with penalty — blocking everything causes zero deploys!
-                    if (context.getTurnNumber() <= 1) {
-                        LOG.warn("🚫 BLOCKING unknown card deploy during DEPLOY_LOCATIONS plan (turn 1)");
-                        action.addReasoning("V40: Unknown card during DEPLOY_LOCATIONS (neutral)", 0.0f);
-                        actions.add(action);
-                        continue;
-                    } else {
-                        LOG.info("V29.7: Unknown card during DEPLOY_LOCATIONS but turn {} — allowing with penalty", context.getTurnNumber());
-                        action.addReasoning("V40: DEPLOY_LOCATIONS incomplete turn " + context.getTurnNumber() + " — deploy freely", 0.0f);
-                    }
+                            earlyCard.getTitle());
+                } else if (deployLocationsPlanActive && unknownTurn <= 1) {
+                    LOG.warn("🚫 BLOCKING unknown card deploy during DEPLOY_LOCATIONS plan (turn 1)");
+                } else if (deployLocationsPlanActive) {
+                    LOG.info("V29.7: Unknown card during DEPLOY_LOCATIONS but turn {} — allowing with penalty",
+                            unknownTurn);
                 }
-                // V26: Unknown card from reserve deck — can't evaluate stats, buddy system,
-                // maintenance, or plan alignment. Penalize enough to not auto-beat pass.
-                // The base score is +50, so -60 brings it to -10 total, below pass (~2).
-                // Specific reserve deploy actions (Vader Castle, I'm Sorry, etc.) get their
-                // own scoring in ActionTextEvaluator to override this when appropriate.
-                action.addReasoning("V40: Unknown card (deploy from reserve?) — deploy freely", 0.0f);
+                DeployActionEnvelopePolicy.Evaluation unknownEnvelope =
+                        DeployActionEnvelopePolicy.evaluateUnknown(
+                                new DeployActionEnvelopeFacts.UnknownAction(
+                                        actionId, earlyCardIsLocation,
+                                        deployLocationsPlanActive,
+                                        unknownTurn));
+                PolicyContributionLedger unknownEnvelopeLedger =
+                        new PolicyContributionLedger(
+                                (decisionId == null || decisionId.isBlank()
+                                        ? "deploy-unknown-envelope"
+                                        : decisionId + "-deploy-unknown-envelope")
+                                        + "-" + actionId);
+                unknownEnvelopeLedger.register(unknownEnvelope.result());
+                PolicyOperationAdapter.apply(action, unknownEnvelopeLedger);
+                if (unknownEnvelope.adapterStep()
+                        == DeployActionEnvelopePolicy.AdapterStep.CONTINUE_ACTION) {
+                    actions.add(action);
+                    continue;
+                }
             }
 
             // === V67bk (Steve, 2026-05-11): V52 SPEND FORCE +300 REMOVED ===
