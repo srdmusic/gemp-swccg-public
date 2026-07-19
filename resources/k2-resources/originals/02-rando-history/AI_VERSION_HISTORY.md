@@ -1,3 +1,18 @@
+  ==== V210 AI-ONLY ACTIVATE ACTION POLICY OWNER (2026-07-18, both bots) ====
+Shared ActivateActionPolicy now owns the remaining mirrored ACTIVATE action arms: V168 +5000 versus V61c -6000,
+the V38.3/V61c zero-activation confirmation pair at +/-9999, and the independent exact-activate V38.3 +500.
+Stock action/label recognition, local logging, Pass behavior, and the existing conservative battle-plausibility
+fact remain in the bot adapters. That same fact still feeds all three required sites: action choice, the existing
+V195 ActivateAmountPolicy path, and zero-confirmation. Unknown game facts therefore remain battle-plausible and keep
+the three-card buffer. Normal exact activation remains +5000 +500; buffer-protected activation remains -6000 +500.
+V197's amount latch, exact opponent-allowance prompt, generic INTEGER rejection, V57/V67at/V43 arithmetic, bounds,
+and engine Yes/No labels are unchanged. The obsolete commented pre-2026 V61c fallback and duplicate helper were
+removed. Separate top-level and confirmation ledgers pin malformed combined shapes against operation replay.
+Production edits are AI-only. Gate: 31 focused tests; full affected reactor 1,083 tests, 0 failures, 0 errors,
+26 skipped; package, mirror, source-boundary, forbidden-symbol, artifact, and diff checks pass. Packaged jar SHA-256:
+af4e117667176c90f7dce39fe295d97aeec445f9072fe4acd7abbaf518129709.
+Revert the single V210 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V209 AI-ONLY PULL PHASE POLICY OWNERS (2026-07-18, both bots) ====
 Shared PullActionPolicy now owns the existing parent action-text stream, PullDeployPolicy owns the V60/V66/V67h/
 V185/V190 deploy-search stream, PullTakeCandidatePolicy owns take-card candidates, and PullDeployCandidatePolicy

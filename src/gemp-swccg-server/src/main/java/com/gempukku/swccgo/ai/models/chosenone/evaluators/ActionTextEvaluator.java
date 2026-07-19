@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.phase.ActivateActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
@@ -123,6 +124,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
         PolicyContributionLedger pullLedger = new PolicyContributionLedger(
                 decisionId == null || decisionId.isBlank()
                         ? "pull-action-decision" : decisionId + "-pull-action");
+        PolicyContributionLedger activateTopLevelLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "activate-top-level" : decisionId + "-activate-top-level");
+        PolicyContributionLedger activateConfirmationLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "activate-confirmation" : decisionId + "-activate-confirmation");
+        PolicyContributionLedger activateBaseLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "activate-base" : decisionId + "-activate-base");
 
         for (int i = 0; i < actionIds.size(); i++) {
             String actionId = actionIds.get(i);
@@ -228,56 +238,26 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // ═══ REGION: ACTIVATE — activation guards (reorg 2026-07-06) ═══
-            // Owns: whether to activate: V168 always-activate +5000 vs V61c destiny-buffer -6000 (reserve<=3 AND
-            // battle plausible); with V38.3's +500 confirm (evaluateActivateForce below) this triangle is ONE boundary.
-            // Shared predicate DecisionContext.isBattlePlausibleThisTurn() — THREE sites must agree: this block,
-            // the ForceActivationEvaluator keep-3 cap, and the V38.3 reserve<=3 carve-out.
-            // Absorbs (dead, commented below/nearby — revert path, do not delete): V61c pre-2026-07-06
-            // always-on buffer branch.
-            // Cross-refs: ACTIVATE (ForceActivationEvaluator owns how MUCH), PULL-ENGINE (V97 pulls fire BEFORE
-            // activation and must outrank V168's +5000). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
-            // ═══════════════════════════════════════════════════════════
-            // === V168 (Steve, 2026-06): ALWAYS ACTIVATE FORCE — never pass activation ===
-            // Steve: "Rando should always activate force and not pass activating." Activating
-            // Force is the bot's entire economy (it pays for deploys, drains, battles); passing
-            // it stalls the bot. Guaranteed dominating bonus so "Activate Force" always beats
-            // Pass (and the V167 soft loop-block) whenever it is offered. Once the player's max
-            // Force is already activated, "Activate Force" is no longer offered, so the bot still
-            // passes legitimately at the end of the Activate phase.
+            // ACTIVATE action choice: shared policy owns the V168/V61c boundary. The same
+            // battle-plausible fact also feeds the amount chooser and zero-activation confirmation.
             if (textLower.contains("activate force")) {
-                // V61c DESTINY BUFFER exception (Steve, 2026-06-29): if the Reserve Deck is
-                // already <= 3, PASS activation instead of the usual V168 always-activate.
-                // Activating moves Reserve -> Force Pile, so activating the last <=3 drains the
-                // destiny buffer that battle/weapon destiny draws need this turn (the engine
-                // forces >=1 per activation, so capping the amount alone erodes 3->2->1->0 over
-                // turns). Steve: "If Rando intends to battle that turn, he needs to save 3." Score
-                // below Pass (~5-8) so the action-choice lands on Pass. Pairs with the V38.3
-                // reserve<=3 carve-out below (else the "you have not activated Force" confirm
-                // would bounce Rando straight back into activating).
-                // V61c UPDATED 2026-07-06: battle-intent bypass — the buffer protection now applies
-                // ONLY on turns a battle is plausible (any contested location, per the shared
-                // predicate DecisionContext.isBattlePlausibleThisTurn(), same scan V61b uses).
-                // Zero contested locations => deploy-and-end turn => normal V168 always-activate.
-                // SAME predicate gates the ForceActivationEvaluator keep-3 cap + the V38.3
-                // carve-out below so all three sites agree.
                 int v61cReserve = context.getReserveDeckSize();
-                // V61c pre-2026-07-06 (always-on buffer):
-                // if (v61cReserve <= 3) {
                 boolean v61cBattlePlausible = context.isBattlePlausibleThisTurn();
-                if (v61cReserve <= 3 && !v61cBattlePlausible) {
-                    logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
-                }
-                if (v61cReserve <= 3 && v61cBattlePlausible) {
-                    action.addReasoning(
-                        "V61c DESTINY BUFFER: reserve <= 3 — pass activation, keep 3 for destiny", -6000.0f);
-                    logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — passing activation (no V168 +5000) on '{}'",
-                        v61cReserve, actionText);
-                } else {
-                    action.addReasoning(
-                        "V168 ALWAYS ACTIVATE: never pass Force activation while Force can be activated", 5000.0f);
-                    logger.warn("V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
+                ActivateActionPolicy.Evaluation activation = ActivateActionPolicy.topLevel(
+                        actionId, v61cReserve, v61cBattlePlausible);
+                activateTopLevelLedger.register(activation.result());
+                PolicyOperationAdapter.apply(action, activateTopLevelLedger);
+                switch (activation.mode()) {
+                    case TOP_LEVEL_ACTIVATE_WITHOUT_BATTLE -> {
+                        logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
+                        logger.warn("V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
+                    }
+                    case TOP_LEVEL_KEEP_BUFFER -> logger.warn(
+                            "V61c DESTINY BUFFER: reserve={} <= 3 — passing activation (no V168 +5000) on '{}'",
+                            v61cReserve, actionText);
+                    case TOP_LEVEL_ACTIVATE -> logger.warn(
+                            "V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
+                    default -> { }
                 }
             }
 
@@ -1380,44 +1360,30 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
-            // ========== V38.3: "Not activated Force" — ALWAYS go back and activate ==========
-            // The game asks "You have not activated Force. Do you want to Pass?"
-            // Options: "Yes" (pass without activating) and "No" (go back and activate)
-            // ALWAYS choose "No" — Force is essential for deploying characters.
+            // ACTIVATE zero-confirmation choice: shared policy owns the V38.3/V61c pair.
             {
                 String decisionTextCheck = context.getDecisionText() != null
                     ? context.getDecisionText().toLowerCase() : "";
                 if (decisionTextCheck.contains("not activated force") || decisionTextCheck.contains("have not activated")) {
-                    // V61c DESTINY BUFFER carve-out (Steve, 2026-06-29): when the Reserve Deck is
-                    // already <= 3, Rando deliberately passed activation (V168 exception above) to
-                    // keep 3 cards for battle/weapon destiny. Here the engine confirms "you have not
-                    // activated Force — pass?"; honor the pass ("Yes") instead of the usual V38.3
-                    // bounce-back, or the buffer protection is undone.
-                    // V61c UPDATED 2026-07-06: battle-intent bypass — honor the pass ONLY when a
-                    // battle is plausible (shared predicate DecisionContext.isBattlePlausibleThisTurn(),
-                    // same gate as the V168 carve-out above + the ForceActivationEvaluator keep-3
-                    // cap). Zero contested locations => normal V38.3 bounce-back ("No", go activate).
                     int v38cReserve = context.getReserveDeckSize();
-                    // V61c pre-2026-07-06 (always-on buffer):
-                    // if (v38cReserve <= 3) {
                     boolean v38cBattlePlausible = context.isBattlePlausibleThisTurn();
-                    if (v38cReserve <= 3 && !v38cBattlePlausible && textLower.equals("no")) {
-                        // Logged once (on the "No" option, which the bypass flips to +9999).
-                        logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
-                    }
-                    if (v38cReserve <= 3 && v38cBattlePlausible) {
-                        if (textLower.equals("yes")) {
-                            action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — confirm pass, keep 3 for destiny", 9999.0f);
-                            logger.warn("V61c DESTINY BUFFER: reserve={} <= 3 — confirming pass (skip activation)", v38cReserve);
-                        } else if (textLower.equals("no")) {
-                            action.addReasoning("V61c DESTINY BUFFER: reserve <= 3 — do not go back and activate", -9999.0f);
+                    ActivateActionPolicy.Evaluation activation = ActivateActionPolicy.zeroConfirmation(
+                            actionId, textLower, v38cReserve, v38cBattlePlausible);
+                    activateConfirmationLedger.register(activation.result());
+                    PolicyOperationAdapter.apply(action, activateConfirmationLedger);
+                    switch (activation.mode()) {
+                        case CONFIRM_KEEP_BUFFER -> logger.warn(
+                                "V61c DESTINY BUFFER: reserve={} <= 3 — confirming pass (skip activation)",
+                                v38cReserve);
+                        case CONFIRM_REACTIVATION_WITHOUT_BATTLE -> {
+                            logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
+                            logger.warn("V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
                         }
-                    } else if (textLower.equals("no")) {
-                        action.addReasoning("V38.3 MUST ACTIVATE: Go back and activate Force!", 9999.0f);
-                        logger.warn("V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
-                    } else if (textLower.equals("yes")) {
-                        action.addReasoning("V38.3 NEVER SKIP ACTIVATION: Do not pass without activating!", -9999.0f);
-                        logger.warn("V38.3 BLOCKED: Refusing to skip Force activation");
+                        case CONFIRM_REACTIVATION -> logger.warn(
+                                "V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
+                        case REJECT_SKIP -> logger.warn(
+                                "V38.3 BLOCKED: Refusing to skip Force activation");
+                        default -> { }
                     }
                 }
             }
@@ -2410,7 +2376,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             if (actionText.equals("Activate Force")) {
                 action.setActionType(ActionType.ACTIVATE_FORCE);
                 try {
-                    evaluateActivateForce(action, context);
+                    ActivateActionPolicy.Evaluation activation =
+                            ActivateActionPolicy.alwaysActivate(actionId);
+                    activateBaseLedger.register(activation.result());
+                    PolicyOperationAdapter.apply(action, activateBaseLedger);
+                    logger.info("V38.3 ACTIVATE FORCE: Scored +500 — always activate");
                 } catch (Exception e) {
                     // V29.13: NEVER skip activation due to exceptions.
                     // Default to high score so Rando always activates Force.
@@ -4364,18 +4334,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
     }
 
     // ========== Helper Methods ==========
-
-    private void evaluateActivateForce(EvaluatedAction action, DecisionContext context) {
-        // V38.3: ALWAYS activate Force. ALWAYS. No exceptions.
-        // Force is the currency for deploying characters. Without Force, Rando
-        // can't deploy, can't fight, and slowly loses by attrition.
-        // The old code had a Force pile cap of 20 and reserve-low checks that
-        // caused Rando to skip activation entirely, leading to death spirals.
-        // The ForceActivationEvaluator (INTEGER handler) now manages how MUCH
-        // to activate. This function just needs to score the ACTION highly.
-        action.addReasoning("V38.3 ALWAYS ACTIVATE: Force is currency — activate it!", 500.0f);
-        logger.info("V38.3 ACTIVATE FORCE: Scored +500 — always activate");
-    }
 
     // ═══════════════════════════════════════════════════════════
     // ═══ REGION: CONTROL — force drain scoring (reorg 2026-07-06) ═══
