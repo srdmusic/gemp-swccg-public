@@ -1,0 +1,331 @@
+package com.gempukku.swccgo.ai.models.common.phase;
+
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/** Pure DEPLOY-3 pilot, ship, and vehicle scoring over adapter-produced facts. */
+public final class DeployPilotShipPolicy {
+    private DeployPilotShipPolicy() {
+    }
+
+    public static PolicyResult evaluateMatchingPilot(MatchingPilotFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(2);
+        if (facts.matchingShipInHand()) {
+            addAttach(operations, facts.actionId(), "V30-pilot-combo",
+                    TraceOutputKind.BANDED, 1000.0f,
+                    String.format("V30 MATCHING COMBO: %s + %s both in hand - deploy together NOW!",
+                            facts.pilotTitle(), facts.matchingShipTitle()));
+            if (!facts.objectiveLocation().isBlank()) {
+                addSiting(operations, facts.actionId(), "V30-pilot-objective",
+                        TraceOutputKind.BANDED, 1000.0f,
+                        String.format("V30 OBJECTIVE SYSTEM: Deploy to %s - matches objective location!",
+                                facts.objectiveLocation()));
+            }
+        } else if (facts.matchingShipInPlay()) {
+            addAttach(operations, facts.actionId(), "V30-pilot-in-play",
+                    TraceOutputKind.BANDED, 300.0f,
+                    String.format("V30 MATCHING SHIP IN PLAY: %s is deployed - get %s aboard!",
+                            facts.matchingShipTitle(), facts.pilotTitle()));
+        } else if (facts.matchingShipInReserve() && facts.amsdInPlay()) {
+            addAttach(operations, facts.actionId(), "V30-pilot-amsd",
+                    TraceOutputKind.BANDED, -500.0f,
+                    String.format("V30 AMSD AVAILABLE: %s in reserve + AMSD on table - prefer AMSD pull, manual OK as fallback",
+                            facts.matchingShipTitle()));
+        }
+        return new PolicyResult("DEPLOY_MATCHING_PILOT_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateMatchingShip(MatchingShipFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(2);
+        if (facts.matchingPilotInHand()) {
+            addAttach(operations, facts.actionId(), "V30-ship-combo",
+                    TraceOutputKind.BANDED, 1000.0f,
+                    String.format("V30 MATCHING COMBO: %s + pilot %s both in hand - deploy together NOW!",
+                            facts.shipTitle(), facts.matchingPilotTitle()));
+            if (!facts.objectiveLocation().isBlank()) {
+                addSiting(operations, facts.actionId(), "V30-ship-objective",
+                        TraceOutputKind.BANDED, 1000.0f,
+                        String.format("V30 OBJECTIVE SYSTEM: Deploy to %s - matches objective!",
+                                facts.objectiveLocation()));
+            }
+        }
+        return new PolicyResult("DEPLOY_MATCHING_SHIP_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateCrew(CrewFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.deployingAsset()
+                && !facts.affordablePilotInHand()
+                && !facts.freePilotOnTable()) {
+            String reason = facts.pilotInHand()
+                    ? String.format("pilot in hand but unaffordable (vehicle=%d, force=%d) - wait for force",
+                            facts.assetCost(), facts.availableForce())
+                    : "no Icon.PILOT or Trooper character available";
+            addAttach(operations, facts.actionId(), "V30-crew-required",
+                    TraceOutputKind.VETO, -1500.0f,
+                    "VEHICLE/SHIP NEEDS PILOT: " + reason + " - useless solo");
+        } else if (facts.deployingPilotCandidate()
+                && !facts.unmannedAssetTitle().isBlank()) {
+            addAttach(operations, facts.actionId(), "V30-crew-unmanned",
+                    TraceOutputKind.BANDED, 400.0f,
+                    "PILOT FOR UNMANNED VEHICLE/SHIP: '" + facts.unmannedAssetTitle()
+                            + "' on table without a pilot - get this pilot aboard!");
+        }
+        return new PolicyResult("DEPLOY_CREW_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateShipAbility(ShipAbilityFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(2);
+        if (facts.matchingPilotAffordable() && !facts.matchingPilotTitle().isBlank()) {
+            addAttach(operations, facts.actionId(), "V35.6-named-pilot",
+                    TraceOutputKind.BANDED, 300.0f,
+                    String.format("V35.6 NAMED PILOT: %s has matching pilot %s in hand (ability %.0f+%.0f=%.0f) - deploy together!",
+                            facts.shipTitle(), facts.matchingPilotTitle(),
+                            facts.shipAbility(), facts.matchingPilotAbility(),
+                            facts.totalAbilityWithPilot()));
+        }
+
+        if (facts.shipAbility() < 4.0f) {
+            if (!facts.anyPilotHelps()) {
+                addAttach(operations, facts.actionId(), "V35.6-ability",
+                        TraceOutputKind.BANDED, -50.0f,
+                        String.format("V40 SHIP ABILITY: %s ability %.0f - no pilot can reach 4 (mild warning)",
+                                facts.shipTitle(), facts.shipAbility()));
+            } else if (!facts.matchingPilotAffordable()) {
+                addAttach(operations, facts.actionId(), "V35.6-ability",
+                        TraceOutputKind.BANDED, -50.0f,
+                        String.format("V40 SHIP ABILITY: %s needs pilot but can't afford both (mild warning)",
+                                facts.shipTitle()));
+            } else {
+                addAttach(operations, facts.actionId(), "V35.6-ability",
+                        TraceOutputKind.BANDED, -50.0f,
+                        String.format("V40 SHIP: %s needs %s aboard for ability 4 - deploy together!",
+                                facts.shipTitle(), facts.matchingPilotTitle().isBlank()
+                                        ? "a pilot" : facts.matchingPilotTitle()));
+            }
+        }
+        return new PolicyResult("DEPLOY_SHIP_ABILITY_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateShipThreat(ShipThreatFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.opponentPower() > 0.0f
+                && facts.opponentPower() > facts.shipPower() * 1.5f) {
+            addSiting(operations, facts.actionId(), "V35.5",
+                    TraceOutputKind.BANDED, -100.0f,
+                    String.format("V40 SHIP CAUTION: %s (power %.0f) vs opponent ships (power %.0f) at %s (mild caution)",
+                            facts.shipTitle(), facts.shipPower(), facts.opponentPower(),
+                            facts.systemTitle()));
+        }
+        return new PolicyResult("DEPLOY_SHIP_THREAT_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateObjectivePilotDestination(
+            ObjectivePilotDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.invasionNeimoidianPilot() && !facts.capitalShipTitle().isBlank()) {
+            if (facts.correctCapitalDestination()) {
+                addAttach(operations, facts.actionId(), "V121",
+                        TraceOutputKind.BANDED, 300.0f,
+                        "V121 INVASION (CS): aboard capital ship - correct placement");
+            } else {
+                addAttach(operations, facts.actionId(), "V121",
+                        TraceOutputKind.VETO, -1500.0f,
+                        "V121 INVASION (CS): Neimoidian pilot must deploy aboard '"
+                                + facts.capitalShipTitle() + "', not '"
+                                + facts.destinationTitle() + "'");
+            }
+        }
+        return new PolicyResult("DEPLOY_OBJECTIVE_PILOT_DESTINATION_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateAssetTail(AssetTailFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(5);
+        if (facts.starshipOrVehicle()) {
+            addSiting(operations, facts.actionId(), "asset-base",
+                    TraceOutputKind.BANDED, 15.0f,
+                    "Starship/Vehicle deployment");
+
+            if (facts.executorOrFlagship() && facts.objectiveNeedsBespin()) {
+                if (!facts.bespinOnTable()) {
+                    addSiting(operations, facts.actionId(), "V24.10",
+                            TraceOutputKind.VETO, -9999.0f,
+                            "V24.10 EXECUTOR BLOCKED: Bespin system NOT on table - deploy Bespin FIRST!");
+                } else {
+                    String rule = facts.turnNumber() <= 2 ? "V24.9" : "V24.6";
+                    String reason = facts.turnNumber() <= 2
+                            ? "V24.9 EXECUTOR CRITICAL: Bespin on table - MUST deploy NOW!"
+                            : "V24.6 EXECUTOR: Key ship for TDIGWATT - deploy to Bespin!";
+                    addSiting(operations, facts.actionId(), rule,
+                            TraceOutputKind.BANDED, 800.0f, reason);
+                }
+            }
+
+            if (facts.objectiveNeedsBespin() && !facts.bespinPresence()) {
+                if (facts.opponentAtBespin()) {
+                    addSiting(operations, facts.actionId(), "V23",
+                            TraceOutputKind.BANDED, 300.0f,
+                            "V23 BESPIN CONTEST: Opponent controls Bespin - deploy ship to contest IMMEDIATELY!");
+                } else {
+                    addSiting(operations, facts.actionId(), "V23",
+                            TraceOutputKind.BANDED, 250.0f,
+                            "V23 BESPIN CRITICAL: Deploy ship to enable Dark Deal + CC Occupation!");
+                }
+            }
+        }
+
+        if (facts.pilot()) {
+            addAttach(operations, facts.actionId(), "pilot-base",
+                    TraceOutputKind.BANDED, 10.0f, "Pilot character");
+        }
+
+        if (facts.executorPilot()) {
+            if (facts.deployingAboardShip()) {
+                addAttach(operations, facts.actionId(), "V40.1",
+                        TraceOutputKind.BANDED, 300.0f,
+                        "V40.1 PILOT ABOARD: Deploy aboard ship!");
+            } else {
+                addAttach(operations, facts.actionId(), "V47",
+                        TraceOutputKind.VETO, -9999.0f,
+                        "V47 EXECUTOR PILOT GROUND BLOCK: " + facts.cardTitle()
+                                + " must deploy aboard a ship, not to ground!");
+            }
+        }
+
+        if (facts.matchingAction()) {
+            addAttach(operations, facts.actionId(), "matching-pilot-base",
+                    TraceOutputKind.BANDED, 30.0f,
+                    "Matching pilot/ship synergy");
+        }
+        return new PolicyResult("DEPLOY_ASSET_TAIL_POLICY", operations);
+    }
+
+    public record MatchingPilotFacts(String actionId, String pilotTitle,
+                                     String matchingShipTitle,
+                                     boolean matchingShipInHand,
+                                     boolean matchingShipInPlay,
+                                     boolean matchingShipInReserve,
+                                     boolean amsdInPlay,
+                                     String objectiveLocation) {
+        public MatchingPilotFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            pilotTitle = pilotTitle == null ? "" : pilotTitle;
+            matchingShipTitle = matchingShipTitle == null ? "" : matchingShipTitle;
+            objectiveLocation = objectiveLocation == null ? "" : objectiveLocation;
+        }
+    }
+
+    public record MatchingShipFacts(String actionId, String shipTitle,
+                                    String matchingPilotTitle,
+                                    boolean matchingPilotInHand,
+                                    String objectiveLocation) {
+        public MatchingShipFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            shipTitle = shipTitle == null ? "" : shipTitle;
+            matchingPilotTitle = matchingPilotTitle == null ? "" : matchingPilotTitle;
+            objectiveLocation = objectiveLocation == null ? "" : objectiveLocation;
+        }
+    }
+
+    public record CrewFacts(String actionId, boolean deployingAsset,
+                            boolean pilotInHand,
+                            boolean affordablePilotInHand,
+                            boolean freePilotOnTable, int assetCost,
+                            int availableForce,
+                            boolean deployingPilotCandidate,
+                            String unmannedAssetTitle) {
+        public CrewFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            unmannedAssetTitle = unmannedAssetTitle == null ? "" : unmannedAssetTitle;
+        }
+    }
+
+    public record ShipAbilityFacts(String actionId, String shipTitle,
+                                   float shipAbility,
+                                   boolean matchingPilotAffordable,
+                                   String matchingPilotTitle,
+                                   float matchingPilotAbility,
+                                   float totalAbilityWithPilot,
+                                   boolean anyPilotHelps) {
+        public ShipAbilityFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            shipTitle = shipTitle == null ? "" : shipTitle;
+            matchingPilotTitle = matchingPilotTitle == null ? "" : matchingPilotTitle;
+        }
+    }
+
+    public record ShipThreatFacts(String actionId, String shipTitle,
+                                  String systemTitle, float shipPower,
+                                  float opponentPower) {
+        public ShipThreatFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            shipTitle = shipTitle == null ? "" : shipTitle;
+            systemTitle = systemTitle == null ? "" : systemTitle;
+        }
+    }
+
+    public record ObjectivePilotDestinationFacts(
+            String actionId, boolean invasionNeimoidianPilot,
+            String capitalShipTitle, String destinationTitle,
+            boolean correctCapitalDestination) {
+        public ObjectivePilotDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            capitalShipTitle = capitalShipTitle == null ? "" : capitalShipTitle;
+            destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
+    }
+
+    public record AssetTailFacts(String actionId, String cardTitle,
+                                 boolean starshipOrVehicle,
+                                 boolean executorOrFlagship,
+                                 boolean objectiveNeedsBespin,
+                                 boolean bespinOnTable, int turnNumber,
+                                 boolean bespinPresence,
+                                 boolean opponentAtBespin,
+                                 boolean pilot, boolean executorPilot,
+                                 boolean deployingAboardShip,
+                                 boolean matchingAction) {
+        public AssetTailFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            cardTitle = cardTitle == null ? "" : cardTitle;
+        }
+    }
+
+    private static void addAttach(List<PolicyOperation> operations,
+                                  String actionId, String ruleId,
+                                  TraceOutputKind outputKind, float delta,
+                                  String reason) {
+        add(operations, actionId, ruleId, TraceDomainId.DEPLOY_ATTACH,
+                outputKind, delta, reason);
+    }
+
+    private static void addSiting(List<PolicyOperation> operations,
+                                  String actionId, String ruleId,
+                                  TraceOutputKind outputKind, float delta,
+                                  String reason) {
+        add(operations, actionId, ruleId, TraceDomainId.DEPLOY_SITING,
+                outputKind, delta, reason);
+    }
+
+    private static void add(List<PolicyOperation> operations, String actionId,
+                            String ruleId, TraceDomainId domainId,
+                            TraceOutputKind outputKind, float delta,
+                            String reason) {
+        operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                domainId, outputKind, delta, reason));
+    }
+}

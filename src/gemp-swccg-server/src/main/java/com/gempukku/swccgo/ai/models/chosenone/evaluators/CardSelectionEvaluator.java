@@ -9,6 +9,7 @@ import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
@@ -2168,17 +2169,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             if (v121CapShip != null) {
                                                 String v121CapName = v121CapShip.getTitle() != null
                                                     ? v121CapShip.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                                                if (!v121TitleLower.contains(v121CapName)) {
-                                                    action.addReasoning(
-                                                        "V121 INVASION (CS): Neimoidian pilot must deploy aboard '"
-                                                            + v121CapShip.getTitle() + "', not '" + title + "'",
-                                                        -1500.0f);
+                                                boolean v213CorrectCapitalDestination =
+                                                    v121TitleLower.contains(v121CapName);
+                                                PolicyContributionLedger v213ObjectivePilotLedger =
+                                                    new PolicyContributionLedger(
+                                                        "deploy-pilot-v121-" + action.getActionId());
+                                                v213ObjectivePilotLedger.register(
+                                                    DeployPilotShipPolicy.evaluateObjectivePilotDestination(
+                                                        new DeployPilotShipPolicy.ObjectivePilotDestinationFacts(
+                                                            action.getActionId(), true,
+                                                            v121CapShip.getTitle(), title,
+                                                            v213CorrectCapitalDestination)));
+                                                PolicyOperationAdapter.apply(action, v213ObjectivePilotLedger);
+                                                if (!v213CorrectCapitalDestination) {
                                                     logger.warn("V121 INVASION CS: blocking Neimoidian pilot → {} (not aboard {}) -1500",
                                                         title, v121CapShip.getTitle());
-                                                } else {
-                                                    action.addReasoning(
-                                                        "V121 INVASION (CS): aboard capital ship — correct placement",
-                                                        300.0f);
                                                 }
                                             }
                                         }

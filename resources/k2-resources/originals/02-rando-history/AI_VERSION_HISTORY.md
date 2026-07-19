@@ -1,3 +1,17 @@
+  ==== V213 AI-ONLY DEPLOY-3 WEAPON, PILOT, AND SHIP POLICY OWNERS (2026-07-18, both bots) ====
+Shared DeployWeaponPolicy now owns the existing V158 direct/reserve attachment gates, V33 named-weapon priority,
+and V120 reserve-pull criteria gate. Shared DeployPilotShipPolicy owns V30 matching pairs and generic crew rules,
+V35.5/V35.6 ship safety, V121 objective-pilot destination scoring, and the existing V23/V24.6/V24.9/V24.10/
+V40.1/V47 asset-tail contributions. Both bots retain stock identity, matching filters, board/hand/objective/oracle reads,
+source routing, exception boundaries, and logging. Scores, additive order, outer predicates, catches, and early exits are
+unchanged; historical -9999/-1500 arms remain additive rather than becoming structural vetoes. V185 remains exclusively
+PULL-owned, while V212 siting and V211 Force budgeting stay with their existing owners. Reserve-child objective progress
+and future-phase planning remain follow-on work. Production edits are AI-only. Gate: 30 focused tests; full affected
+reactor 1,172 tests, 0 failures, 0 errors, 26 skipped; package, three-evaluator mirror, PULL ownership, AI boundary,
+forbidden-symbol, artifact, and diff checks pass. Packaged web.jar SHA-256:
+c616d6ec71505e02013f8c55e4bb3b84dc2a1ce6086893ea17b2d36cbaed1622. Runtime JVM loading and live-game proof remain
+separate gates. Revert the single V213 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V212 AI-ONLY DEPLOY-2 SITING POLICY OWNERS (2026-07-18, both bots) ====
 Shared DeploySitingPolicy, DeployTacticalPolicy, DeployObjectiveSitingPolicy, and DeployFormationSitingPolicy now
 own the existing destination-safety, tactical-character, objective-location, and formation-topology contribution

@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
@@ -854,10 +855,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     }
                                 }
                             }
+                            PolicyContributionLedger v213ReserveTargetLedger =
+                                new PolicyContributionLedger("deploy-weapon-reserve-target-" + actionId);
+                            v213ReserveTargetLedger.register(DeployWeaponPolicy.evaluateReserveTarget(
+                                new DeployWeaponPolicy.ReserveTargetFacts(
+                                    actionId, pc.getTitle(), v158Armed)));
+                            PolicyOperationAdapter.apply(action, v213ReserveTargetLedger);
                             if (v158Armed) {
-                                action.addReasoning(String.format(
-                                    "V158 RESERVE-DEPLOY BLOCK: %s already armed — no 2nd weapon (reserve-deploy bypass guard)",
-                                    pc.getTitle()), -9999.0f);
                                 logger.warn("V158 RESERVE-DEPLOY BLOCK: target {} already armed → -9999", pc.getTitle());
                             }
                             break;
@@ -915,10 +919,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     if (v158nwOnTable) break;
                                 }
                             }
+                            PolicyContributionLedger v213ReserveWielderLedger =
+                                new PolicyContributionLedger("deploy-weapon-reserve-wielder-" + actionId);
+                            v213ReserveWielderLedger.register(DeployWeaponPolicy.evaluateReserveWielder(
+                                new DeployWeaponPolicy.ReserveWielderFacts(
+                                    actionId, v158nwPersona, v158nwOnTable)));
+                            PolicyOperationAdapter.apply(action, v213ReserveWielderLedger);
                             if (!v158nwOnTable) {
-                                action.addReasoning(String.format(
-                                    "V158 NO-WIELDER BLOCK: %s's Lightsaber from Reserve but no '%s' on table — wasted pull, the saber will sit in hand and bleed out",
-                                    v158nwPersona, v158nwPersona), -9999.0f);
                                 logger.warn("V158 NO-WIELDER BLOCK: '{}' not on table — block weapon pull -9999", v158nwPersona);
                             }
                         }
@@ -2006,16 +2013,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     }
                                     if (v120Armed) v120MatchArmed++; else v120MatchUnarmed++;
                                 }
+                                PolicyContributionLedger v213WeaponPullLedger =
+                                    new PolicyContributionLedger("deploy-weapon-pull-" + actionId);
+                                v213WeaponPullLedger.register(DeployWeaponPolicy.evaluatePullCriteria(
+                                    new DeployWeaponPolicy.PullCriteriaFacts(
+                                        actionId, v120WeaponName, v120Criteria,
+                                        v120MatchArmed, v120MatchUnarmed)));
+                                PolicyOperationAdapter.apply(action, v213WeaponPullLedger);
                                 if (v120MatchUnarmed == 0) {
-                                    String v120Why = v120MatchArmed > 0
-                                        ? String.format("every '%s' friendly (%d) already armed",
-                                            v120Criteria, v120MatchArmed)
-                                        : String.format("no '%s' friendly on table — deploy will fail",
-                                            v120Criteria);
-                                    action.addReasoning(
-                                        "V120 WEAPON-PULL BLOCK: '" + v120WeaponName + "' — "
-                                            + v120Why + " (will reveal reserve)",
-                                        -9999.0f);
                                     logger.warn("V120 WEAPON-PULL BLOCK: '{}' (weapon '{}', criteria '{}') matchArmed={} matchUnarmed={} → HARD BLOCK (-9999)",
                                         actionText, v120WeaponName, v120Criteria, v120MatchArmed, v120MatchUnarmed);
                                 }

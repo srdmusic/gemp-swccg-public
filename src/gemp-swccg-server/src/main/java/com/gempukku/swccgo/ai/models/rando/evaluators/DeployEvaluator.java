@@ -14,6 +14,8 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.common.CardCategory;
@@ -3024,37 +3026,24 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
                             }
 
+                            PolicyContributionLedger v213WeaponLedger = new PolicyContributionLedger(
+                                "deploy-weapon-v158-" + actionId);
+                            v213WeaponLedger.register(DeployWeaponPolicy.evaluateDirectEligibility(
+                                new DeployWeaponPolicy.DirectEligibilityFacts(
+                                    actionId, v158Criteria, v158IsLightsaber,
+                                    totalArmed, totalUnarmed, matchArmed, matchUnarmed,
+                                    unarmedWarrior4)));
+                            PolicyOperationAdapter.apply(action, v213WeaponLedger);
+
                             if (v158Criteria != null && matchUnarmed == 0) {
-                                // 2026-05-29 FIX (Steve, Dooku-deck stuck loop): the original
-                                // gate required matchArmed > 0 too, which meant when criteria
-                                // parsed but the persona wasn't on the table AT ALL (matchArmed
-                                // == 0 AND matchUnarmed == 0), this branch didn't fire — Rando
-                                // fell through to "unarmed wielder available +300" because some
-                                // OTHER (non-matching) character was unarmed. The +300 made
-                                // Rando commit to "Play Dooku's Lightsaber" as the outer pick,
-                                // then the sub-decision asks "where to attach" with no legal
-                                // criteria-matching targets, Rando hits Done, engine re-asks
-                                // → infinite Done loop. Now: matchUnarmed==0 blocks regardless
-                                // of matchArmed. Two sub-cases for the log message:
-                                String v158BlockWhy = matchArmed > 0
-                                    ? String.format("every '%s' wielder (%d) already armed", v158Criteria, matchArmed)
-                                    : String.format("no '%s' friendly on table at all — deploy has no legal target", v158Criteria);
-                                action.addReasoning(
-                                    "V158 WEAPON BLOCK: " + v158BlockWhy + " — hold it", -9999.0f);
                                 LOG.warn("V158 WEAPON BLOCK ({}): {} criteria='{}' matchArmed={} matchUnarmed=0 → -9999",
                                     matchArmed > 0 ? "criteria all armed" : "criteria absent",
                                     card.getTitle(), v158Criteria, matchArmed);
                             } else if (v158IsLightsaber && unarmedWarrior4 == 0) {
-                                action.addReasoning(
-                                    "V158 WEAPON BLOCK: lightsaber but no unarmed [Warrior] ability-4 wielder — hold it", -9999.0f);
                                 LOG.warn("V158 WEAPON BLOCK (no lightsaber wielder): {} → -9999", card.getTitle());
                             } else if (totalUnarmed == 0 && totalArmed > 0) {
-                                action.addReasoning(
-                                    "V158 WEAPON BLOCK: every character already armed — no 2nd weapon", -9999.0f);
                                 LOG.warn("V158 WEAPON BLOCK (all armed): {} totalArmed={} → -9999", card.getTitle(), totalArmed);
                             } else if (totalUnarmed > 0 || matchUnarmed > 0) {
-                                action.addReasoning(
-                                    "V158 WEAPON DEPLOY: unarmed wielder available — arm them", 300.0f);
                                 LOG.info("V158 WEAPON DEPLOY: {} matchUnarmed={} totalUnarmed={} → +300",
                                     card.getTitle(), matchUnarmed, totalUnarmed);
                             } else {
@@ -3081,9 +3070,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                 || cardTitleLower.contains("sabine") || cardTitleLower.contains("inquisitor")
                                 || cardTitleLower.contains("tarkin") || cardTitleLower.contains("piett");
 
+                            String v213TargetCharacterName = null;
+                            String v213NamedWeaponInHandTitle = null;
                             if (isNamedWeapon) {
-                                // Named weapon gets priority boost
-                                action.addReasoning("V33 NAMED WEAPON: Character-specific weapon — deploy priority!", 200.0f);
                                 LOG.warn("V33 NAMED WEAPON: {} is character-specific — boosted (+200)", card.getTitle());
                             } else {
                                 // Generic weapon — check if target character has a named weapon in hand
@@ -3112,9 +3101,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                             String hcTitle = hc.getTitle() != null ? hc.getTitle().toLowerCase(Locale.ROOT) : "";
                                             // Check if hand weapon is named for the target character
                                             if (hcTitle.contains(targetCharName.split(",")[0].split(" ")[0])) {
-                                                action.addReasoning(String.format(
-                                                    "V33 NAMED WEAPON WAIT: %s has named weapon %s in hand — save the slot!",
-                                                    targetCharName, hc.getTitle()), -400.0f);
+                                                v213TargetCharacterName = targetCharName;
+                                                v213NamedWeaponInHandTitle = hc.getTitle();
                                                 LOG.warn("V33 NAMED WEAPON WAIT: Generic {} blocked on {} — named {} in hand!",
                                                     card.getTitle(), targetCharName, hc.getTitle());
                                                 break;
@@ -3123,6 +3111,13 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
                             }
+                            PolicyContributionLedger v213NamedWeaponLedger = new PolicyContributionLedger(
+                                "deploy-weapon-v33-" + actionId);
+                            v213NamedWeaponLedger.register(DeployWeaponPolicy.evaluateNamedPriority(
+                                new DeployWeaponPolicy.NamedPriorityFacts(
+                                    actionId, isNamedWeapon, v213TargetCharacterName,
+                                    v213NamedWeaponInHandTitle)));
+                            PolicyOperationAdapter.apply(action, v213NamedWeaponLedger);
                         } catch (Exception e) {
                             LOG.debug("V33 NAMED WEAPON: Error: {}", e.getMessage());
                         }
@@ -3669,11 +3664,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
 
+                                String v213PilotObjectiveLocation = "";
+                                boolean v213AmsdInPlay = false;
                                 if (matchingShipInHand) {
                                     // CASE 1: Pilot + matching ship BOTH in hand → deploy together NOW!
-                                    action.addReasoning(String.format(
-                                        "V30 MATCHING COMBO: %s + %s both in hand — deploy together NOW!",
-                                        card.getTitle(), matchingShipName), 1000.0f);
                                     LOG.warn("V30 MATCHING COMBO: {} + {} BOTH IN HAND — maximum priority (+1000)!",
                                         card.getTitle(), matchingShipName);
 
@@ -3686,9 +3680,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                             String actionLwr = actionText.toLowerCase(java.util.Locale.ROOT);
                                             for (String objLoc : objLocations) {
                                                 if (actionLwr.contains(objLoc.toLowerCase(java.util.Locale.ROOT))) {
-                                                    action.addReasoning(String.format(
-                                                        "V30 OBJECTIVE SYSTEM: Deploy to %s — matches objective location!",
-                                                        objLoc), 1000.0f);
+                                                    v213PilotObjectiveLocation = objLoc;
                                                     LOG.warn("V30 OBJECTIVE SYSTEM: {} deploying to objective location '{}' — +1000!",
                                                         card.getTitle(), objLoc);
                                                     break;
@@ -3699,25 +3691,18 @@ public class DeployEvaluator extends ActionEvaluator {
 
                                 } else if (matchingShipInPlay) {
                                     // CASE 2: Matching ship already in play → deploy pilot to it!
-                                    action.addReasoning(String.format(
-                                        "V30 MATCHING SHIP IN PLAY: %s is deployed — get %s aboard!",
-                                        matchingShipName, card.getTitle()), 300.0f);
                                     LOG.warn("V30 MATCHING SHIP: {} in play — deploy {} as pilot (+300)!",
                                         matchingShipName, card.getTitle());
 
                                 } else if (matchingShipInReserve) {
                                     // CASE 3: Matching ship in reserve — check if AMSD can pull it
                                     com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle matchOracle = context.getDeckOracle();
-                                    boolean amsdInPlay = false;
                                     if (matchOracle != null && matchOracle.isAnalyzed()) {
-                                        amsdInPlay = matchOracle.isCardInPlay("Alert My Star Destroyer")
+                                        v213AmsdInPlay = matchOracle.isCardInPlay("Alert My Star Destroyer")
                                             || matchOracle.isCardInPlay("Alert My Star Destroyer!");
                                     }
-                                    if (amsdInPlay) {
+                                    if (v213AmsdInPlay) {
                                         // Prefer AMSD pull but allow manual fallback (soft penalty, NOT hard block)
-                                        action.addReasoning(String.format(
-                                            "V30 AMSD AVAILABLE: %s in reserve + AMSD on table — prefer AMSD pull, manual OK as fallback",
-                                            matchingShipName), -500.0f);
                                         LOG.warn("V30 AMSD: {} in reserve — soft penalty (-500), prefer AMSD but not hard-blocked",
                                             matchingShipName);
                                     } else {
@@ -3726,6 +3711,15 @@ public class DeployEvaluator extends ActionEvaluator {
                                             matchingShipName, card.getTitle());
                                     }
                                 }
+                                PolicyContributionLedger v213MatchingPilotLedger = new PolicyContributionLedger(
+                                    "deploy-pilot-v30-" + actionId);
+                                v213MatchingPilotLedger.register(DeployPilotShipPolicy.evaluateMatchingPilot(
+                                    new DeployPilotShipPolicy.MatchingPilotFacts(
+                                        actionId, card.getTitle(), matchingShipName,
+                                        matchingShipInHand, matchingShipInPlay,
+                                        matchingShipInReserve, v213AmsdInPlay,
+                                        v213PilotObjectiveLocation)));
+                                PolicyOperationAdapter.apply(action, v213MatchingPilotLedger);
                             } catch (Exception e) {
                                 LOG.debug("V30 MATCHING PILOT CHECK: Error: {}", e.getMessage());
                             }
@@ -3756,11 +3750,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
                             }
 
+                            String v213ShipObjectiveLocation = "";
                             if (matchingPilotInHand) {
                                 // Ship + matching pilot both in hand → deploy together!
-                                action.addReasoning(String.format(
-                                    "V30 MATCHING COMBO: %s + pilot %s both in hand — deploy together NOW!",
-                                    card.getTitle(), matchingPilotName), 1000.0f);
                                 LOG.warn("V30 MATCHING COMBO: {} + {} BOTH IN HAND — maximum priority (+1000)!",
                                     card.getTitle(), matchingPilotName);
 
@@ -3773,9 +3765,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                         String actionLwr = actionText.toLowerCase(java.util.Locale.ROOT);
                                         for (String objLoc : objLocations) {
                                             if (actionLwr.contains(objLoc.toLowerCase(java.util.Locale.ROOT))) {
-                                                action.addReasoning(String.format(
-                                                    "V30 OBJECTIVE SYSTEM: Deploy to %s — matches objective!",
-                                                    objLoc), 1000.0f);
+                                                v213ShipObjectiveLocation = objLoc;
                                                 LOG.warn("V30 OBJECTIVE SYSTEM: {} to objective location '{}' — +1000!",
                                                     card.getTitle(), objLoc);
                                                 break;
@@ -3784,6 +3774,13 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
                             }
+                            PolicyContributionLedger v213MatchingShipLedger = new PolicyContributionLedger(
+                                "deploy-ship-v30-" + actionId);
+                            v213MatchingShipLedger.register(DeployPilotShipPolicy.evaluateMatchingShip(
+                                new DeployPilotShipPolicy.MatchingShipFacts(
+                                    actionId, card.getTitle(), matchingPilotName,
+                                    matchingPilotInHand, v213ShipObjectiveLocation)));
+                            PolicyOperationAdapter.apply(action, v213MatchingShipLedger);
                         } catch (Exception e) {
                             LOG.debug("V30 MATCHING SHIP CHECK: Error: {}", e.getMessage());
                         }
@@ -3821,6 +3818,14 @@ public class DeployEvaluator extends ActionEvaluator {
                     if (gameState != null && game != null && card != null && card.getBlueprint() != null) {
                         try {
                             String vpPlayerId = context.getPlayerId();
+                            boolean v213DeployingAsset = false;
+                            boolean v213PilotInHand = false;
+                            boolean v213AffordablePilotInHand = false;
+                            boolean v213FreePilotOnTable = false;
+                            int v213AssetCost = 0;
+                            int v213AvailableForce = context.getForcePileSize();
+                            boolean v213DeployingPilotCandidate = false;
+                            String v213UnmannedAssetTitle = null;
 
                             // ----- Path A: VEHICLE/STARSHIP deploy without pilot available -----
                             // 2026-06-01 EXTENSION (Steve, First Light replay): STARSHIP needs the
@@ -3832,6 +3837,7 @@ public class DeployEvaluator extends ActionEvaluator {
                             // they all want a pilot, the AI rule should not care about
                             // STARSHIP-vs-VEHICLE subtype distinction.
                             if (category == CardCategory.VEHICLE || category == CardCategory.STARSHIP) {
+                                v213DeployingAsset = true;
                                 // 2026-06-01 AFFORDABILITY EXTENSION (Steve, both losing games):
                                 // "Rando had Walkers and did not put pilots on them. Easy targets
                                 // and some of the walkers were powerless with no pilot." Replay
@@ -3847,7 +3853,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                 boolean hasAffordablePilotInHand = false;
                                 int vehicleCost = card.getBlueprint().getDeployCost() != null
                                     ? card.getBlueprint().getDeployCost().intValue() : 0;
-                                int availForce = context.getForcePileSize();
+                                int availForce = v213AvailableForce;
                                 java.util.List<PhysicalCard> vpHand = gameState.getHand(vpPlayerId);
                                 if (vpHand != null) {
                                     for (PhysicalCard hc : vpHand) {
@@ -3885,21 +3891,13 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
                                 if (!hasAffordablePilotInHand && !hasFreePilotOnTable) {
-                                    // Distinguish the two failure modes in logs for triage:
-                                    String reason;
-                                    if (hasPilotInHand) {
-                                        reason = String.format(
-                                            "pilot in hand but unaffordable (vehicle=%d, force=%d) — wait for force",
-                                            vehicleCost, availForce);
-                                    } else {
-                                        reason = "no Icon.PILOT or Trooper character available";
-                                    }
-                                    action.addReasoning(
-                                        "VEHICLE/SHIP NEEDS PILOT: " + reason + " — useless solo",
-                                        -1500.0f);
                                     LOG.warn("VEHICLE/SHIP NEEDS PILOT ({}): {} deploy blocked (-1500)",
                                         hasPilotInHand ? "pilot unaffordable" : "no pilot", card.getTitle());
                                 }
+                                v213PilotInHand = hasPilotInHand;
+                                v213AffordablePilotInHand = hasAffordablePilotInHand;
+                                v213FreePilotOnTable = hasFreePilotOnTable;
+                                v213AssetCost = vehicleCost;
                             }
 
                             // ----- Path B: PILOT-CAPABLE character + unmanned vehicle on table -----
@@ -3916,6 +3914,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                     && pathBPowerOK
                                     && (card.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.PILOT)
                                         || card.getBlueprint().hasKeyword(com.gempukku.swccgo.common.Keyword.TROOPER))) {
+                                v213DeployingPilotCandidate = true;
                                 String unmannedTitle = null;
                                 for (PhysicalCard tc : gameState.getAllPermanentCards()) {
                                     if (tc == null || !vpPlayerId.equals(tc.getOwner())) continue;
@@ -3931,14 +3930,20 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
                                 if (unmannedTitle != null) {
-                                    action.addReasoning(
-                                        "PILOT FOR UNMANNED VEHICLE/SHIP: '" + unmannedTitle
-                                        + "' on table without a pilot — get this pilot aboard!",
-                                        400.0f);
+                                    v213UnmannedAssetTitle = unmannedTitle;
                                     LOG.warn("PILOT FOR UNMANNED VEHICLE/SHIP: {} can pilot {} on table → +400",
                                         card.getTitle(), unmannedTitle);
                                 }
                             }
+                            PolicyContributionLedger v213CrewLedger = new PolicyContributionLedger(
+                                "deploy-crew-v30-" + actionId);
+                            v213CrewLedger.register(DeployPilotShipPolicy.evaluateCrew(
+                                new DeployPilotShipPolicy.CrewFacts(
+                                    actionId, v213DeployingAsset, v213PilotInHand,
+                                    v213AffordablePilotInHand, v213FreePilotOnTable,
+                                    v213AssetCost, v213AvailableForce,
+                                    v213DeployingPilotCandidate, v213UnmannedAssetTitle)));
+                            PolicyOperationAdapter.apply(action, v213CrewLedger);
                         } catch (Exception e) {
                             LOG.debug("VEHICLE-PILOT generic check error: {}", e.getMessage());
                         }
@@ -3997,11 +4002,6 @@ public class DeployEvaluator extends ActionEvaluator {
                             float totalAbilityWithPilot = shipAbility + (matchingPilotAffordable ? matchingPilotAbility : 0);
 
                             if (matchingPilotAffordable && matchingPilotTitle != null) {
-                                // Matching pilot in hand and affordable — DEPLOY TOGETHER
-                                action.addReasoning(String.format(
-                                    "V35.6 NAMED PILOT: %s has matching pilot %s in hand (ability %.0f+%.0f=%.0f) — deploy together!",
-                                    card.getTitle(), matchingPilotTitle, shipAbility, matchingPilotAbility, totalAbilityWithPilot),
-                                    300.0f);
                                 LOG.warn("V35.6 NAMED PILOT: {} + {} — total ability {} (+300)",
                                     card.getTitle(), matchingPilotTitle, totalAbilityWithPilot);
                             }
@@ -4009,8 +4009,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             // V35.7: ALL ships with ability < 4 need a pilot. Period.
                             // Even if a pilot CAN help, deploying a ship solo is dangerous
                             // because Rando might not follow up with the pilot deploy.
+                            boolean anyPilotHelps = false;
                             if (shipAbility < 4.0f) {
-                                boolean anyPilotHelps = false;
                                 if (v36Hand != null) {
                                     for (PhysicalCard hc : v36Hand) {
                                         if (hc == null || hc.getBlueprint() == null) continue;
@@ -4024,26 +4024,22 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
                                 if (!anyPilotHelps) {
-                                    // V40: Ship without ability 4 — mild warning
-                                    action.addReasoning(String.format(
-                                        "V40 SHIP ABILITY: %s ability %.0f — no pilot can reach 4 (mild warning)",
-                                        card.getTitle(), shipAbility), -50.0f);
                                     LOG.warn("V40 SHIP ABILITY: {} ability {} — mild warning (-50, was -800)",
                                         card.getTitle(), shipAbility);
                                 } else if (!matchingPilotAffordable) {
-                                    // V40: Pilot exists but can't afford both — mild warning
-                                    action.addReasoning(String.format(
-                                        "V40 SHIP ABILITY: %s needs pilot but can't afford both (mild warning)",
-                                        card.getTitle()), -50.0f);
                                     LOG.warn("V40 SHIP ABILITY: {} — pilot exists but unaffordable — mild warning (-50, was -400)",
                                         card.getTitle());
-                                } else {
-                                    // Pilot exists and affordable — mild warning to deploy together
-                                    action.addReasoning(String.format(
-                                        "V40 SHIP: %s needs %s aboard for ability 4 — deploy together!",
-                                        card.getTitle(), matchingPilotTitle != null ? matchingPilotTitle : "a pilot"), -50.0f);
                                 }
                             }
+                            PolicyContributionLedger v213ShipAbilityLedger = new PolicyContributionLedger(
+                                "deploy-ship-v35-6-" + actionId);
+                            v213ShipAbilityLedger.register(DeployPilotShipPolicy.evaluateShipAbility(
+                                new DeployPilotShipPolicy.ShipAbilityFacts(
+                                    actionId, card.getTitle(), shipAbility,
+                                    matchingPilotAffordable, matchingPilotTitle,
+                                    matchingPilotAbility, totalAbilityWithPilot,
+                                    anyPilotHelps)));
+                            PolicyOperationAdapter.apply(action, v213ShipAbilityLedger);
                         } catch (Exception e) {
                             LOG.debug("V35.6 SHIP ABILITY: Error: {}", e.getMessage());
                         }
@@ -4079,12 +4075,14 @@ public class DeployEvaluator extends ActionEvaluator {
                                 // Found target system — check opponent ship power there
                                 float oppShipPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     gameState, sysLoc, v35ShipOid, false, false);
+                                PolicyContributionLedger v213ShipThreatLedger = new PolicyContributionLedger(
+                                    "deploy-ship-v35-5-" + actionId);
+                                v213ShipThreatLedger.register(DeployPilotShipPolicy.evaluateShipThreat(
+                                    new DeployPilotShipPolicy.ShipThreatFacts(
+                                        actionId, card.getTitle(), sysLoc.getTitle(),
+                                        ourShipPower, oppShipPower)));
+                                PolicyOperationAdapter.apply(action, v213ShipThreatLedger);
                                 if (oppShipPower > 0 && oppShipPower > ourShipPower * 1.5f) {
-                                    // V40: Ship vs overwhelming opponent — mild caution
-                                    float shipPenalty = -100.0f;
-                                    action.addReasoning(String.format(
-                                        "V40 SHIP CAUTION: %s (power %.0f) vs opponent ships (power %.0f) at %s (mild caution)",
-                                        card.getTitle(), ourShipPower, oppShipPower, sysLoc.getTitle()), shipPenalty);
                                     LOG.warn("V40 SHIP CAUTION: {} power {} vs opponent {} at {} — mild caution (-100, was -600/-1000)",
                                         card.getTitle(), (int)ourShipPower, (int)oppShipPower, sysLoc.getTitle());
                                 }
@@ -4215,19 +4213,27 @@ public class DeployEvaluator extends ActionEvaluator {
                     }
 
                     // Starships and vehicles for board presence
-                    if (category == CardCategory.STARSHIP || category == CardCategory.VEHICLE) {
-                        action.addReasoning("Starship/Vehicle deployment", 15.0f);
+                    boolean v213StarshipOrVehicle = category == CardCategory.STARSHIP
+                        || category == CardCategory.VEHICLE;
+                    boolean v213ExecutorOrFlagship = cardTitleLower.contains("executor")
+                        || cardTitleLower.contains("flagship");
+                    boolean v213ObjectiveNeedsBespin = false;
+                    boolean v213BespinOnTable = false;
+                    boolean v213BespinPresence = false;
+                    boolean v213OpponentAtBespin = false;
+                    if (v213StarshipOrVehicle) {
 
                         // === V24.6A+V24.9: EXECUTOR DEPLOY PRIORITY ===
                         // Executor is THE key ship for TDIGWATT — it force drains at Bespin,
                         // enables Dark Deal + CC Occupation. If it's in hand, deploy it NOW.
                         // V24.9: MUST come out turn 1 or 2 at the latest. If AMSD didn't pull it
                         // from reserve, deploy it manually from hand — no excuses.
-                        if (cardTitleLower.contains("executor") || cardTitleLower.contains("flagship")) {
+                        if (v213ExecutorOrFlagship) {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer execObjAnalyzer =
                                 context.getObjectiveAnalyzer();
                             if (execObjAnalyzer != null && execObjAnalyzer.isAnalyzed()
                                 && execObjAnalyzer.needsBespinSystemPresence()) {
+                                v213ObjectiveNeedsBespin = true;
 
                                 // V24.10: BESPIN MUST BE ON TABLE BEFORE EXECUTOR
                                 // Executor needs to deploy TO Bespin system. If Bespin isn't on the
@@ -4249,20 +4255,16 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
 
                                 if (!bespinOnTable) {
-                                    // HARD BLOCK: Executor without Bespin is useless — deploy Bespin first!
-                                    action.addReasoning("V24.10 EXECUTOR BLOCKED: Bespin system NOT on table — deploy Bespin FIRST!", -9999.0f);
                                     LOG.warn("V24.10 EXECUTOR BLOCKED: {} in hand but Bespin not on table — CANNOT deploy to wrong system!", card.getTitle());
                                 } else {
                                     int execTurn = context.getTurnNumber();
                                     if (execTurn <= 2) {
-                                        // Turns 1-2: MAXIMUM priority — Executor MUST come out now
-                                        action.addReasoning("V24.9 EXECUTOR CRITICAL: Bespin on table — MUST deploy NOW!", 800.0f);
                                         LOG.warn("V24.9 EXECUTOR CRITICAL: {} on turn {} + Bespin on table — MAXIMUM priority (+800)!", card.getTitle(), execTurn);
                                     } else {
-                                        action.addReasoning("V24.6 EXECUTOR: Key ship for TDIGWATT — deploy to Bespin!", 800.0f);
                                         LOG.warn("V24.6 EXECUTOR: {} in hand + Bespin on table — deploy priority (+800)!", card.getTitle());
                                     }
                                 }
+                                v213BespinOnTable = bespinOnTable;
                             }
                         }
 
@@ -4273,6 +4275,7 @@ public class DeployEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer shipObjAnalyzer =
                             context.getObjectiveAnalyzer();
                         if (shipObjAnalyzer != null && shipObjAnalyzer.isAnalyzed() && shipObjAnalyzer.needsBespinSystemPresence()) {
+                            v213ObjectiveNeedsBespin = true;
                             boolean hasBespinPresence = false;
                             try {
                                 for (PhysicalCard loc : gameState.getLocationsInOrder()) {
@@ -4290,6 +4293,7 @@ public class DeployEvaluator extends ActionEvaluator {
                             } catch (Exception e) {
                                 LOG.debug("Could not check Bespin presence: {}", e.getMessage());
                             }
+                            v213BespinPresence = hasBespinPresence;
                             if (!hasBespinPresence) {
                                 // V23: Check if opponent has presence at Bespin — contestation is even more urgent
                                 boolean opponentAtBespin = false;
@@ -4313,46 +4317,47 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
 
                                 if (opponentAtBespin) {
-                                    // Opponent controls Bespin — URGENT contestation needed
-                                    action.addReasoning("V23 BESPIN CONTEST: Opponent controls Bespin — deploy ship to contest IMMEDIATELY!", 300.0f);
                                     LOG.warn("V23 BESPIN CONTEST: {} gets +300 — opponent has presence at Bespin!", card.getTitle());
                                 } else {
-                                    // No opponent but we still need ship presence for objective
-                                    action.addReasoning("V23 BESPIN CRITICAL: Deploy ship to enable Dark Deal + CC Occupation!", 250.0f);
                                     LOG.warn("V23 BESPIN SHIP: {} gets +250 — no ship at Bespin system yet!", card.getTitle());
                                 }
+                                v213OpponentAtBespin = opponentAtBespin;
                             }
                         }
                     }
 
                     // === PILOT BONUS ===
-                    if (AiCardHelper.isPilot(card)) {
-                        action.addReasoning("Pilot character", 10.0f);
-                    }
+                    boolean v213Pilot = AiCardHelper.isPilot(card);
 
                     // === V41.2: PIETT DEPLOY — HOLD FOR AMSD ===
                     // Piett is the matching pilot for Executor. He should NEVER deploy to ground
                     // when AMSD is on the table and Executor is still available — AMSD needs Piett
                     // IN HAND to fire. Deploying Piett to ground wastes the AMSD + Executor combo.
-                    if (cardTitleLower.contains("piett") || cardTitleLower.contains("gherant")) {
-                        boolean deployingAboardShip = actionLower.contains("aboard") || actionLower.contains("pilot")
+                    boolean v213ExecutorPilot = cardTitleLower.contains("piett")
+                        || cardTitleLower.contains("gherant");
+                    boolean v213DeployingAboardShip = false;
+                    if (v213ExecutorPilot) {
+                        v213DeployingAboardShip = actionLower.contains("aboard") || actionLower.contains("pilot")
                             || actionLower.contains("executor") || actionLower.contains("simultaneously");
-                        if (deployingAboardShip) {
-                            action.addReasoning("V40.1 PILOT ABOARD: Deploy aboard ship!", 300.0f);
-                        } else {
-                            // V47: Executor pilots should NEVER deploy to ground solo — they're too weak
-                            // alone and too valuable as Executor pilots. Block ALL ground deploys.
-                            action.addReasoning("V47 EXECUTOR PILOT GROUND BLOCK: " + card.getTitle()
-                                + " must deploy aboard a ship, not to ground!", -9999.0f);
+                        if (!v213DeployingAboardShip) {
                             LOG.warn("V47 EXECUTOR PILOT GROUND BLOCK: {} — blocking ground deploy, pilots belong on ships!",
                                 card.getTitle());
                         }
                     }
 
                     // === MATCHING PILOT CHECK ===
-                    if (actionLower.contains("matching")) {
-                        action.addReasoning("Matching pilot/ship synergy", 30.0f);
-                    }
+                    boolean v213MatchingAction = actionLower.contains("matching");
+                    PolicyContributionLedger v213AssetTailLedger = new PolicyContributionLedger(
+                        "deploy-asset-tail-" + actionId);
+                    v213AssetTailLedger.register(DeployPilotShipPolicy.evaluateAssetTail(
+                        new DeployPilotShipPolicy.AssetTailFacts(
+                            actionId, card.getTitle(), v213StarshipOrVehicle,
+                            v213ExecutorOrFlagship, v213ObjectiveNeedsBespin,
+                            v213BespinOnTable, context.getTurnNumber(),
+                            v213BespinPresence, v213OpponentAtBespin,
+                            v213Pilot, v213ExecutorPilot,
+                            v213DeployingAboardShip, v213MatchingAction)));
+                    PolicyOperationAdapter.apply(action, v213AssetTailLedger);
 
                     // === STRATEGIC BONUSES ===
                     if (needsReinforcement) {
