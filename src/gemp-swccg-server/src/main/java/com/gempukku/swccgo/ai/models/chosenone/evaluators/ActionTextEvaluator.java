@@ -3355,7 +3355,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         // Pass ~+28). Skip location movers entirely.
                         boolean v354MoverIsLocation = v354Mover != null && v354Mover.getBlueprint() != null
                             && v354Mover.getBlueprint().getCardCategory() == CardCategory.LOCATION;
-                        if (!v354MoverIsUndercover && !v354MoverIsLocation) {
+                        if (MoveDrainRoutingPolicy.allowsBlockedDrainEscapeMover(
+                                v354MoverIsUndercover, v354MoverIsLocation)) {
                             for (com.gempukku.swccgo.game.PhysicalCard loc : gameState.getLocationsInOrder()) {
                                 if (loc == null || loc.getTitle() == null) continue;
                                 // Scope to the mover's own location when we know it
@@ -3379,15 +3380,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
 
                                 // If opponent has presence (or undercover spy) at our location, drain is blocked
-                                if (weHavePresence && (oppHasPresence || oppHasUndercoverSpy)) {
-                                    float spyBonus = oppHasUndercoverSpy ? 250.0f : 150.0f;
-                                    action.addReasoning(String.format(
-                                        "V35.4: %s blocking drain at %s — move away to drain elsewhere!",
-                                        oppHasUndercoverSpy ? "UNDERCOVER SPY" : "Enemy presence",
-                                        loc.getTitle()), spyBonus);
+                                MoveDrainRoutingPolicy.BlockedDrainEscape v354Escape =
+                                    MoveDrainRoutingPolicy.blockedDrainEscape(
+                                        loc.getTitle(), weHavePresence,
+                                        oppHasPresence, oppHasUndercoverSpy);
+                                if (v354Escape.contribution().applies()) {
+                                    action.addReasoning(
+                                        v354Escape.contribution().reason(),
+                                        v354Escape.contribution().delta());
                                     logger.warn("V35.4: {} at {} blocking our drain — boosting movement (+{})",
-                                        oppHasUndercoverSpy ? "UNDERCOVER SPY" : "Enemy",
-                                        loc.getTitle(), (int)spyBonus);
+                                        v354Escape.undercoverSpyBlock()
+                                            ? "UNDERCOVER SPY" : "Enemy",
+                                        loc.getTitle(),
+                                        (int)v354Escape.contribution().delta());
                                     break;
                                 }
                             }
@@ -3402,9 +3407,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // This is TERRIBLE when Vader is at a location where he can force drain!
                 // Mustafar has 0 opponent icons = no drain value. Moving Vader there
                 // means losing a turn of draining at the current location.
-                // Only allow Castle retreat if Vader is outnumbered and about to die.
-                if ((textLower.contains("vader") && textLower.contains("castle")) ||
-                    textLower.contains("mustafar")) {
+                // This arm only prices lost drain. Separate retreat and danger rules
+                // retain their own scoring and veto boundaries.
+                if (MoveDrainRoutingPolicy.isVaderCastleRetreatAction(
+                        textLower)) {
                     try {
                         // Find Vader's current location and check drain potential
                         String pid = context.getPlayerId();
@@ -3425,7 +3431,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
                                 if (vaderLoc != null && vaderLoc.getTitle() != null) {
                                     String vLocTitle = vaderLoc.getTitle().toLowerCase(java.util.Locale.ROOT);
-                                    if (vLocTitle.contains("mustafar")) {
+                                    if (MoveDrainRoutingPolicy.isMustafarLocation(
+                                            vLocTitle)) {
                                         // Vader is already at Mustafar — this is a move OUT, which is fine
                                         break;
                                     }
@@ -3438,10 +3445,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                         } else {
                                             oppIcons = locBp.getIconCount(com.gempukku.swccgo.common.Icon.DARK_FORCE);
                                         }
-                                        if (oppIcons > 0) {
+                                        MoveDrainRoutingPolicy.Contribution v297Retreat =
+                                            MoveDrainRoutingPolicy.vaderCastleRetreat(
+                                                vaderLoc.getTitle(), oppIcons);
+                                        if (v297Retreat.applies()) {
                                             // Vader is at a location with drain value — DON'T retreat!
-                                            action.addReasoning("V29.7 VADER RETREAT: Vader is draining " + oppIcons +
-                                                " at " + vaderLoc.getTitle() + " — DON'T retreat to Mustafar!", -300.0f);
+                                            action.addReasoning(
+                                                v297Retreat.reason(),
+                                                v297Retreat.delta());
                                             logger.warn("V29.7 VADER RETREAT BLOCKED: Vader at {} with {} drain — retreating to Mustafar is terrible! (-300)",
                                                 vaderLoc.getTitle(), oppIcons);
                                         }

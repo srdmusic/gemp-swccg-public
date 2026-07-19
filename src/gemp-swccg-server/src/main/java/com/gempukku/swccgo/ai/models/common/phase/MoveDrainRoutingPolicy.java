@@ -62,6 +62,15 @@ public final class MoveDrainRoutingPolicy {
             Contribution contribution) {
     }
 
+    public record BlockedDrainEscape(
+            Contribution contribution,
+            boolean undercoverSpyBlock) {
+        private static BlockedDrainEscape none() {
+            return new BlockedDrainEscape(
+                    Contribution.none(), false);
+        }
+    }
+
     private MoveDrainRoutingPolicy() {
     }
 
@@ -189,6 +198,64 @@ public final class MoveDrainRoutingPolicy {
                                 "V67ae MOVE-TO-NON-DRAIN: '%s' destination has 0 opp icons — losing drain pressure for a 'safe' retreat!",
                                 destinationTitle),
                         -300.0f));
+    }
+
+    public static boolean allowsBlockedDrainEscapeMover(
+            boolean moverUndercover,
+            boolean moverLocation) {
+        return !moverUndercover && !moverLocation;
+    }
+
+    public static BlockedDrainEscape blockedDrainEscape(
+            String locationTitle,
+            boolean friendlyPresence,
+            boolean opponentPresence,
+            boolean opponentUndercoverSpy) {
+        if (!friendlyPresence
+                || !(opponentPresence || opponentUndercoverSpy)) {
+            return BlockedDrainEscape.none();
+        }
+        float bonus = opponentUndercoverSpy ? 250.0f : 150.0f;
+        return new BlockedDrainEscape(
+                new Contribution(
+                        true,
+                        String.format(
+                                "V35.4: %s blocking drain at %s — move away to drain elsewhere!",
+                                opponentUndercoverSpy
+                                        ? "UNDERCOVER SPY"
+                                        : "Enemy presence",
+                                locationTitle),
+                        bonus),
+                opponentUndercoverSpy);
+    }
+
+    public static boolean isVaderCastleRetreatAction(String actionLower) {
+        if (actionLower == null) {
+            return false;
+        }
+        return (actionLower.contains("vader")
+                && actionLower.contains("castle"))
+                || actionLower.contains("mustafar");
+    }
+
+    public static boolean isMustafarLocation(String locationTitle) {
+        return locationTitle != null
+                && locationTitle.toLowerCase(Locale.ROOT)
+                        .contains("mustafar");
+    }
+
+    public static Contribution vaderCastleRetreat(
+            String locationTitle,
+            int opponentIcons) {
+        if (opponentIcons <= 0) {
+            return Contribution.none();
+        }
+        return new Contribution(
+                true,
+                "V29.7 VADER RETREAT: Vader is draining "
+                        + opponentIcons + " at " + locationTitle
+                        + " — DON'T retreat to Mustafar!",
+                -300.0f);
     }
 
     public static UncontestedDeparture uncontestedDeparture(

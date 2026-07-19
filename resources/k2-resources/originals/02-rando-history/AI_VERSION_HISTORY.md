@@ -7252,3 +7252,24 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     SHA-256 9a34ace2faac102fd57841ff171691884d441e47fcef9b83e712ab209c1dc195 contain the
     shared policy and both adapters. Runtime reload and live-game proof remain pending on the
     external runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V250 (2026-07-19): consolidate MOVE blocked-drain escape and Vader Castle retreat ════
+    MoveDrainRoutingPolicy now owns the pure V35.4 blocked-drain escape mover gate, first-match
+    +250 Undercover-spy versus +150 ordinary-enemy contribution, and the adjacent V29.7
+    Vader/Castle/Mustafar classifier and -300 retreat contribution. Both ActionTextEvaluator mirrors
+    retain movement-action gating, mover resolution, global-location fallback, all game and icon
+    reads, first-match scans, score mutation, logs, exception boundaries, and V35.4-before-V29.7
+    order. Behavior remains structural-only. Undercover and LOCATION movers still skip the escape
+    scan; unresolved mover ids still use the global scan; first friendly occupancy with opponent
+    presence still wins. V29.7 remains independently additive, stops on the first owned in-play
+    Vader, contributes zero at Mustafar before icon reads, and otherwise contributes -300 only with
+    opponent icons. Legacy combined totals remain -50 for a spy and -150 for an ordinary enemy. The
+    local V35.4 arm remains distinct from the Elis Helrot V35.4-versus-abandon conflict, and V29.7
+    remains distinct from the V38.3 Castle hard veto. A stale local comment was corrected without an
+    executable change. Focused 43/0/0/0, MOVE-named 414/0/0/0, full reactor 1598/0/0/26,
+    normalized mirror parity, AI-only boundary, forbidden-symbol scan, and clean package passed.
+    Independent audit found no behavior drift or blocking test gap. Server jar SHA-256
+    aef4597a360c6b4efea34fa819d678152f54fee0f103db0e558db3f02b1c7f92 and web jar SHA-256
+    31b004bb566d772406dee9b1a9d6a96d8026c9370273e4b883036edbf0f32042 contain the shared
+    policy, BlockedDrainEscape result type, and both adapters. Runtime reload and live-game proof
+    remain pending on the external runtime. AI source only; no GEMP engine or player-decision changes.

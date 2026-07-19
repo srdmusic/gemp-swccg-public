@@ -217,6 +217,98 @@ public class MoveDrainRoutingPolicyTest {
     }
 
     @Test
+    public void blockedDrainEscapePreservesMoverEligibility() {
+        assertTrue(MoveDrainRoutingPolicy.allowsBlockedDrainEscapeMover(
+                false, false));
+        assertFalse(MoveDrainRoutingPolicy.allowsBlockedDrainEscapeMover(
+                true, false));
+        assertFalse(MoveDrainRoutingPolicy.allowsBlockedDrainEscapeMover(
+                false, true));
+        assertFalse(MoveDrainRoutingPolicy.allowsBlockedDrainEscapeMover(
+                true, true));
+    }
+
+    @Test
+    public void blockedDrainEscapePreservesSpyAndEnemyBonuses() {
+        MoveDrainRoutingPolicy.BlockedDrainEscape spy =
+                MoveDrainRoutingPolicy.blockedDrainEscape(
+                        "Cloud City: Guest Quarters",
+                        true, true, true);
+        MoveDrainRoutingPolicy.BlockedDrainEscape enemy =
+                MoveDrainRoutingPolicy.blockedDrainEscape(
+                        "Cloud City: Guest Quarters",
+                        true, true, false);
+
+        assertTrue(spy.contribution().applies());
+        assertTrue(spy.undercoverSpyBlock());
+        assertFloat(250.0f, spy.contribution().delta());
+        assertEquals(
+                "V35.4: UNDERCOVER SPY blocking drain at Cloud City: Guest Quarters — move away to drain elsewhere!",
+                spy.contribution().reason());
+        assertTrue(enemy.contribution().applies());
+        assertFalse(enemy.undercoverSpyBlock());
+        assertFloat(150.0f, enemy.contribution().delta());
+        assertEquals(
+                "V35.4: Enemy presence blocking drain at Cloud City: Guest Quarters — move away to drain elsewhere!",
+                enemy.contribution().reason());
+    }
+
+    @Test
+    public void blockedDrainEscapePreservesPresenceGates() {
+        assertFalse(MoveDrainRoutingPolicy.blockedDrainEscape(
+                "Site", false, true, true)
+                .contribution().applies());
+        assertFalse(MoveDrainRoutingPolicy.blockedDrainEscape(
+                "Site", true, false, false)
+                .contribution().applies());
+        assertTrue(MoveDrainRoutingPolicy.blockedDrainEscape(
+                "Site", true, false, true)
+                .contribution().applies());
+    }
+
+    @Test
+    public void vaderCastleRetreatPreservesMatchersAndMustafarGate() {
+        assertTrue(MoveDrainRoutingPolicy.isVaderCastleRetreatAction(
+                "transport vader to vader's castle"));
+        assertTrue(MoveDrainRoutingPolicy.isVaderCastleRetreatAction(
+                "transport to mustafar"));
+        assertFalse(MoveDrainRoutingPolicy.isVaderCastleRetreatAction(
+                "transport vader to executor"));
+        assertFalse(MoveDrainRoutingPolicy.isVaderCastleRetreatAction(null));
+        assertTrue(MoveDrainRoutingPolicy.isMustafarLocation(
+                "Mustafar: Vader's Castle"));
+        assertFalse(MoveDrainRoutingPolicy.isMustafarLocation(
+                "Cloud City: Guest Quarters"));
+        assertFalse(MoveDrainRoutingPolicy.isMustafarLocation(null));
+    }
+
+    @Test
+    public void vaderCastleRetreatPreservesDrainPenaltyAndAdditiveStacks() {
+        MoveDrainRoutingPolicy.Contribution retreat =
+                MoveDrainRoutingPolicy.vaderCastleRetreat(
+                        "Cloud City: Guest Quarters", 2);
+
+        assertTrue(retreat.applies());
+        assertFloat(-300.0f, retreat.delta());
+        assertEquals(
+                "V29.7 VADER RETREAT: Vader is draining 2 at Cloud City: Guest Quarters — DON'T retreat to Mustafar!",
+                retreat.reason());
+        assertFalse(MoveDrainRoutingPolicy.vaderCastleRetreat(
+                "Cloud City: Guest Quarters", 0).applies());
+        assertFalse(MoveDrainRoutingPolicy.vaderCastleRetreat(
+                "Cloud City: Guest Quarters", -1).applies());
+
+        float spyEscape = MoveDrainRoutingPolicy.blockedDrainEscape(
+                "Cloud City: Guest Quarters", true, true, true)
+                .contribution().delta();
+        float enemyEscape = MoveDrainRoutingPolicy.blockedDrainEscape(
+                "Cloud City: Guest Quarters", true, true, false)
+                .contribution().delta();
+        assertFloat(-50.0f, spyEscape + retreat.delta());
+        assertFloat(-150.0f, enemyEscape + retreat.delta());
+    }
+
+    @Test
     public void destinationDrainPreservesLegacyAdditiveStacks() {
         float ordinaryZeroDrain =
                 MoveDrainRoutingPolicy.destinationDrain(

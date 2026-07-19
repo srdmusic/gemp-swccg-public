@@ -88,6 +88,139 @@ public class MoveDrainRoutingSourceParityTest {
     }
 
     @Test
+    public void blockedDrainEscapeAndCastleRetreatHaveSharedOwners()
+            throws IOException {
+        String actionText = actionTextSource("rando");
+        String policy = policySource();
+
+        for (String call : new String[]{
+                "MoveDrainRoutingPolicy.allowsBlockedDrainEscapeMover(",
+                "MoveDrainRoutingPolicy.blockedDrainEscape(",
+                "MoveDrainRoutingPolicy.isVaderCastleRetreatAction(",
+                "MoveDrainRoutingPolicy.isMustafarLocation(",
+                "MoveDrainRoutingPolicy.vaderCastleRetreat("}) {
+            assertEquals(call, 1, countOccurrences(actionText, call));
+        }
+        for (String owner : new String[]{
+                "public static boolean allowsBlockedDrainEscapeMover(",
+                "public static BlockedDrainEscape blockedDrainEscape(",
+                "public static boolean isVaderCastleRetreatAction(",
+                "public static boolean isMustafarLocation(",
+                "public static Contribution vaderCastleRetreat("}) {
+            assertTrue(owner, policy.contains(owner));
+        }
+        assertFalse(actionText.contains(
+                "float spyBonus = oppHasUndercoverSpy ? 250.0f : 150.0f"));
+        assertFalse(actionText.contains(
+                "V29.7 VADER RETREAT: Vader is draining \" + oppIcons"));
+    }
+
+    @Test
+    public void actionTextAdapterRetainsDrainEscapeAndCastleObservations()
+            throws IOException {
+        String actionText = actionTextSource("rando");
+
+        for (String retained : new String[]{
+                "gameState.findCardById(Integer.parseInt(cardId))",
+                "v354Mover.getAtLocation()",
+                "v354Mover.getAttachedTo().getAtLocation()",
+                "gameState.getLocationsInOrder()",
+                "gameState.getCardsAtLocation(loc)",
+                "gameState.getAllPermanentCards()",
+                "zone == null || !zone.isInPlay()",
+                "card.getBlueprint().getCardCategory()",
+                "vaderLoc.getBlueprint()",
+                "locBp.getIconCount("}) {
+            assertTrue(retained, actionText.contains(retained));
+        }
+        assertTrue(actionText.contains(
+                "catch (NumberFormatException nfe) { /* temp id — mover unknown */ }"));
+        assertTrue(actionText.contains(
+                "V35.4: Error checking spy-blocked sites: {}"));
+        assertTrue(actionText.contains(
+                "V29.7: Error checking Vader retreat: {}"));
+        assertTrue(actionText.contains(
+                "V35.4: {} at {} blocking our drain — boosting movement (+{})"));
+        assertTrue(actionText.contains(
+                "V29.7 VADER RETREAT BLOCKED: Vader at {} with {} drain"));
+    }
+
+    @Test
+    public void actionTextDrainEscapeAndCastleCallsRetainLegacyOrder()
+            throws IOException {
+        String actionText = actionTextSource("rando");
+        int moveToHere = actionText.indexOf(
+                "MoveDrainRoutingPolicy.isMoveToHereAction(");
+        int movement = actionText.indexOf(
+                "action.addReasoning(\"Movement option (see MoveEvaluator)\"");
+        int eligibility = actionText.indexOf(
+                "MoveDrainRoutingPolicy.allowsBlockedDrainEscapeMover(",
+                movement);
+        int escape = actionText.indexOf(
+                "MoveDrainRoutingPolicy.blockedDrainEscape(", eligibility);
+        int castleAction = actionText.indexOf(
+                "MoveDrainRoutingPolicy.isVaderCastleRetreatAction(", escape);
+        int mustafar = actionText.indexOf(
+                "MoveDrainRoutingPolicy.isMustafarLocation(", castleAction);
+        int retreat = actionText.indexOf(
+                "MoveDrainRoutingPolicy.vaderCastleRetreat(", mustafar);
+        int takeOff = actionText.indexOf(
+                "else if (actionText.equals(\"Take off\")", retreat);
+
+        assertTrue(moveToHere >= 0);
+        assertTrue(movement > moveToHere);
+        assertTrue(eligibility > movement);
+        assertTrue(escape > eligibility);
+        assertTrue(castleAction > escape);
+        assertTrue(mustafar > castleAction);
+        assertTrue(retreat > mustafar);
+        assertTrue(takeOff > retreat);
+    }
+
+    @Test
+    public void actionTextRetainsFallbackAndFirstMatchTermination()
+            throws IOException {
+        String actionText = actionTextSource("rando");
+        int moverLookup = actionText.indexOf(
+                "v354Mover = gameState.findCardById(");
+        int nonnumericFallback = actionText.indexOf(
+                "catch (NumberFormatException nfe)", moverLookup);
+        int eligibility = actionText.indexOf(
+                "MoveDrainRoutingPolicy.allowsBlockedDrainEscapeMover(",
+                nonnumericFallback);
+        int locationScan = actionText.indexOf(
+                "for (com.gempukku.swccgo.game.PhysicalCard loc : gameState.getLocationsInOrder())",
+                eligibility);
+        int escape = actionText.indexOf(
+                "MoveDrainRoutingPolicy.blockedDrainEscape(", locationScan);
+        int escapeLog = actionText.indexOf(
+                "V35.4: {} at {} blocking our drain", escape);
+        int firstLocationBreak = actionText.indexOf("break;", escapeLog);
+        int vaderScan = actionText.indexOf(
+                "for (PhysicalCard card : gameState.getAllPermanentCards())",
+                firstLocationBreak);
+        int mustafar = actionText.indexOf(
+                "MoveDrainRoutingPolicy.isMustafarLocation(", vaderScan);
+        int mustafarBreak = actionText.indexOf("break;", mustafar);
+        int iconRead = actionText.indexOf("locBp.getIconCount(", mustafar);
+        int firstVaderBreak = actionText.indexOf(
+                "break; // Found Vader, done", iconRead);
+
+        assertTrue(moverLookup >= 0);
+        assertTrue(nonnumericFallback > moverLookup);
+        assertTrue(eligibility > nonnumericFallback);
+        assertTrue(locationScan > eligibility);
+        assertTrue(escape > locationScan);
+        assertTrue(escapeLog > escape);
+        assertTrue(firstLocationBreak > escapeLog);
+        assertTrue(vaderScan > firstLocationBreak);
+        assertTrue(mustafar > vaderScan);
+        assertTrue(mustafarBreak > mustafar);
+        assertTrue(iconRead > mustafarBreak);
+        assertTrue(firstVaderBreak > iconRead);
+    }
+
+    @Test
     public void adaptersRetainScoreLogLadderAndExceptionOwnership()
             throws IOException {
         String move = evaluatorSource("rando");
