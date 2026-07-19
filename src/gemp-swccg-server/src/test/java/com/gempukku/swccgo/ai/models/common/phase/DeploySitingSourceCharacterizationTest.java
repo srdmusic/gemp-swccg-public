@@ -44,14 +44,34 @@ public class DeploySitingSourceCharacterizationTest {
                 "DeployFormationSitingPolicy.evaluateHuntGrouping(",
                 "DeployFormationSitingPolicy.scoreHighDrainSite(",
                 "DeployFormationSitingPolicy.scoreGoodDrainSite(",
-                "DeployFormationSitingPolicy.evaluatePositiveFormation("}) {
+                "DeployFormationSitingPolicy.evaluatePositiveFormation(",
+                "DeployTacticalPolicy.evaluateV53V51Drain(",
+                "DeployTacticalPolicy.scoreV51VaderFlip(",
+                "DeployTacticalPolicy.evaluateV50PowerDanger(",
+                "DeployTacticalPolicy.scoreV34DirectEngage(",
+                "DeployTacticalPolicy.scoreV36EmptyDeploy(",
+                "DeployTacticalPolicy.scoreV51V43SpyPlacement("}) {
             assertTrue(call, deploy.contains(call));
         }
 
         assertFalse(deploy.contains("pairedDeployPossible"));
+        assertFalse(deploy.contains("canDeployToOpponents"));
         assertFalse(deploy.contains("V38 SOLO CAUTION: %s (power %d) solo"));
         assertFalse(deploy.contains("V35.1 HUNT GROUP+ENGAGE: Deploy %s"));
         assertFalse(deploy.contains("V51 BUDDY DESTINY: Ability %.0f"));
+        assertFalse(deploy.contains("V51 DRAIN EMERGENCY: %s drains %.0f"));
+        assertFalse(deploy.contains("V50 EARLY DANGER: Turn %d"));
+        assertFalse(deploy.contains("V34 DIRECT ENGAGE: Deploy %s"));
+        assertFalse(deploy.contains("V51 SPY CRIPPLE: Spy at %s"));
+
+        int earlyDanger = deploy.indexOf(
+                "DeployTacticalPolicy.PowerDangerOutcome.EARLY_DANGER");
+        int locationContinue = deploy.indexOf("continue;", earlyDanger);
+        int directEngage = deploy.indexOf(
+                "DeployTacticalPolicy.scoreV34DirectEngage(", earlyDanger);
+        assertTrue(earlyDanger >= 0);
+        assertTrue(locationContinue > earlyDanger);
+        assertTrue(directEngage > locationContinue);
     }
 
     @Test

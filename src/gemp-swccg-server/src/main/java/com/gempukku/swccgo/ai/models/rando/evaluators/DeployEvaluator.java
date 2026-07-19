@@ -21,6 +21,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
@@ -1955,62 +1956,56 @@ public class DeployEvaluator extends ActionEvaluator {
                                                 v53c.getTitle(), (int)spPow, v36Loc.getTitle());
                                         }
                                     }
-                                    if (v53SpyPower > 0) {
-                                        // Add spy power bonus — deploying here means we can flip the spy
-                                        action.addReasoning(String.format(
-                                            "V53 SPY ALLY: Our spy at %s has power %.0f — deploy here to flip and fight together!",
-                                            v36Loc.getTitle(), v53SpyPower), 200.0f);
-                                        LOG.warn("V53 SPY ALLY: Spy power {} at {} — +200 deploy bonus",
-                                            (int)v53SpyPower, v36Loc.getTitle());
-                                        // Count spy as our power for deploy decisions
-                                        v36OurPower += v53SpyPower;
-                                    }
-                                } catch (Exception e) { /* ignore */ }
+                                } catch (Exception e) {
+                                    v53SpyPower = 0;
+                                }
 
+                                float drainAmount = 1.0f;
                                 if (v36OppPower > 0) {
                                     // Opponent has presence — check drain amount
-                                    float drainAmount = 1.0f;
                                     try {
                                         drainAmount = game.getModifiersQuerying().getForceDrainAmount(
                                             gameState, v36Loc, v36Oid);
                                     } catch (Exception e) { /* default 1 */ }
 
-                                    if (drainAmount >= 3.0f && v36OurPower == 0) {
-                                        // V51: EMERGENCY — drain 3+ uncontested, flood with everything
-                                        action.addReasoning(String.format(
-                                            "V51 DRAIN EMERGENCY: %s drains %.0f at %s — FLOOD this location!",
-                                            v36Oid, drainAmount, v36Loc.getTitle()), 600.0f);
-                                        LOG.warn("V51 DRAIN EMERGENCY: {} to {} — opponent drains {} uncontested (+600)",
-                                            card.getTitle(), v36Loc.getTitle(), (int)drainAmount);
-                                    } else if (drainAmount >= 3.0f && v36OurPower > 0) {
-                                        // V51: Drain 3+ and we already sent someone — keep piling on
-                                        action.addReasoning(String.format(
-                                            "V51 DRAIN REINFORCE: %s drains %.0f at %s — keep piling on!",
-                                            v36Oid, drainAmount, v36Loc.getTitle()), 500.0f);
-                                        LOG.warn("V51 DRAIN REINFORCE: {} to {} — opponent drains {} we have presence (+500)",
-                                            card.getTitle(), v36Loc.getTitle(), (int)drainAmount);
-                                    } else if (drainAmount >= 2.0f && v36OurPower == 0) {
-                                        // V51: Drain 2+ uncontested — this will be THE battle site
-                                        action.addReasoning(String.format(
-                                            "V51 CONTEST BATTLEGROUND: %s drains %.0f at %s — this is THE decisive fight!",
-                                            v36Oid, drainAmount, v36Loc.getTitle()), 500.0f);
-                                        LOG.warn("V51 CONTEST BATTLEGROUND: {} to {} — opponent drains {} uncontested (+500)",
-                                            card.getTitle(), v36Loc.getTitle(), (int)drainAmount);
-                                    } else if (drainAmount >= 2.0f && v36OurPower > 0) {
-                                        // V51: Drain 2+ and we have presence — reinforce for the big fight
-                                        action.addReasoning(String.format(
-                                            "V51 REINFORCE BATTLEGROUND: %s drains %.0f at %s — reinforce for battle!",
-                                            v36Oid, drainAmount, v36Loc.getTitle()), 500.0f);
-                                        LOG.warn("V51 REINFORCE BATTLEGROUND: {} to {} — opponent drains {} we have presence (+500)",
-                                            card.getTitle(), v36Loc.getTitle(), (int)drainAmount);
-                                    } else if (v36OurPower == 0) {
-                                        // Drain 1 uncontested — still worth contesting
-                                        float contestDrainBonus = 200.0f + (drainAmount * 100.0f);
-                                        action.addReasoning(String.format(
-                                            "V36 CONTEST DRAIN: %s drains %.0f at %s UNCONTESTED — deploy to stop the bleeding!",
-                                            v36Oid, drainAmount, v36Loc.getTitle()), contestDrainBonus);
-                                        LOG.warn("V36 CONTEST DRAIN: {} to {} — opponent drains {} uncontested (+{})",
-                                            card.getTitle(), v36Loc.getTitle(), (int)drainAmount, (int)contestDrainBonus);
+                                }
+
+                                DeployTacticalPolicy.DrainContestEvaluation drainContest =
+                                    DeployTacticalPolicy.evaluateV53V51Drain(
+                                        new DeployTacticalPolicy.DrainContestFacts(
+                                            actionId, v36Oid, v36Loc.getTitle(),
+                                            v36OppPower, v36OurPower, v53SpyPower,
+                                            drainAmount));
+                                applySharedPolicy(action, decisionId, actionId,
+                                    "deploy-v53-v51-drain", drainContest.result());
+                                for (DeployTacticalPolicy.DrainContestOutcome outcome
+                                        : drainContest.outcomes()) {
+                                    switch (outcome) {
+                                        case SPY_ALLY:
+                                            LOG.warn("V53 SPY ALLY: Spy power {} at {} — +200 deploy bonus",
+                                                (int)v53SpyPower, v36Loc.getTitle());
+                                            break;
+                                        case DRAIN_EMERGENCY:
+                                            LOG.warn("V51 DRAIN EMERGENCY: {} to {} — opponent drains {} uncontested (+600)",
+                                                card.getTitle(), v36Loc.getTitle(), (int)drainAmount);
+                                            break;
+                                        case DRAIN_REINFORCE:
+                                            LOG.warn("V51 DRAIN REINFORCE: {} to {} — opponent drains {} we have presence (+500)",
+                                                card.getTitle(), v36Loc.getTitle(), (int)drainAmount);
+                                            break;
+                                        case CONTEST_BATTLEGROUND:
+                                            LOG.warn("V51 CONTEST BATTLEGROUND: {} to {} — opponent drains {} uncontested (+500)",
+                                                card.getTitle(), v36Loc.getTitle(), (int)drainAmount);
+                                            break;
+                                        case REINFORCE_BATTLEGROUND:
+                                            LOG.warn("V51 REINFORCE BATTLEGROUND: {} to {} — opponent drains {} we have presence (+500)",
+                                                card.getTitle(), v36Loc.getTitle(), (int)drainAmount);
+                                            break;
+                                        case CONTEST_DRAIN:
+                                            float contestDrainBonus = 200.0f + (drainAmount * 100.0f);
+                                            LOG.warn("V36 CONTEST DRAIN: {} to {} — opponent drains {} uncontested (+{})",
+                                                card.getTitle(), v36Loc.getTitle(), (int)drainAmount, (int)contestDrainBonus);
+                                            break;
                                     }
                                 }
                                 break; // Found target location
@@ -2052,10 +2047,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                             : vfLocBp.getIconCount(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
                                         if (oppIcons > 0 || vfOppPower > 0) isOpponentSite = true;
                                     }
-                                    if (isOpponentSite) {
-                                        action.addReasoning(String.format(
-                                            "V51 VADER FLIP: Deploy Vader to %s — FLIPS OBJECTIVE IMMEDIATELY!",
-                                            vfLoc.getTitle()), 900.0f);
+                                    PolicyResult vaderFlip = DeployTacticalPolicy.scoreV51VaderFlip(
+                                        new DeployTacticalPolicy.VaderFlipFacts(
+                                            actionId, vfLoc.getTitle(), isOpponentSite));
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-vader-flip", vaderFlip);
+                                    if (!vaderFlip.operations().isEmpty()) {
                                         LOG.warn("V51 VADER FLIP: Vader to {} — Hunt Down flips! +900", vfLoc.getTitle());
                                     }
                                 } catch (Exception e) { /* ignore */ }
@@ -2107,26 +2104,25 @@ public class DeployEvaluator extends ActionEvaluator {
                                     // After turn 3, deploy everywhere no matter what — can't afford to sit idle.
                                     // Threshold: only penalize if we'd be at LESS than even power (was oppPowerHere - 3).
                                     int v50Turn = context.getTurnNumber();
-                                    if (v50Turn <= 3 && totalOurPowerAfterDeploy < oppPowerHere) {
-                                        float disadvantagePenalty = -200.0f;
-                                        action.addReasoning(String.format(
-                                            "V50 EARLY DANGER: Turn %d — deploying %s to %s would leave us at power %.0f vs opponent %.0f — wait for backup!",
-                                            v50Turn, card.getTitle(), locCard.getTitle(), totalOurPowerAfterDeploy, oppPowerHere), disadvantagePenalty);
+                                    DeployTacticalPolicy.PowerDangerEvaluation powerDanger =
+                                        DeployTacticalPolicy.evaluateV50PowerDanger(
+                                            new DeployTacticalPolicy.PowerDangerFacts(
+                                                actionId, v50Turn, card.getTitle(),
+                                                locCard.getTitle(), totalOurPowerAfterDeploy,
+                                                oppPowerHere));
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-v50-power-danger", powerDanger.result());
+                                    if (powerDanger.outcome()
+                                            == DeployTacticalPolicy.PowerDangerOutcome.EARLY_DANGER) {
                                         LOG.warn("V50 DEPLOY DANGER T{}: {} to {} — our power {}, opponent power {} — PENALIZED (turns 1-3 only)",
                                             v50Turn, card.getTitle(), locCard.getTitle(), (int)totalOurPowerAfterDeploy, (int)oppPowerHere);
                                         continue;
-                                    } else if (v50Turn > 3 && totalOurPowerAfterDeploy < oppPowerHere) {
-                                        // After turn 3: log the disadvantage but DEPLOY ANYWAY
-                                        action.addReasoning(String.format(
-                                            "V50 LATE DEPLOY: Turn %d — deploying %s to %s despite power %.0f vs %.0f — must stay active!",
-                                            v50Turn, card.getTitle(), locCard.getTitle(), totalOurPowerAfterDeploy, oppPowerHere), 0.0f);
+                                    }
+                                    if (powerDanger.outcome()
+                                            == DeployTacticalPolicy.PowerDangerOutcome.LATE_DEPLOY) {
                                         LOG.warn("V50 LATE DEPLOY T{}: {} to {} — our power {}, opponent power {} — deploying anyway (past turn 3)",
                                             v50Turn, card.getTitle(), locCard.getTitle(), (int)totalOurPowerAfterDeploy, (int)oppPowerHere);
                                     }
-
-                                    // V34: Opponents are HERE and we can compete — deploy directly to contest!
-                                    float engageBonus = 250.0f;
-                                    if (oppPowerHere >= 6) engageBonus += 100.0f;
 
                                     // V35: Check for Jedi at this location — Vader/Inquisitor bonuses
                                     boolean v35JediHere = false;
@@ -2147,24 +2143,28 @@ public class DeployEvaluator extends ActionEvaluator {
                                     if (v35JediHere && deployCardLower.contains("vader")) {
                                         // V35.8: Raised from +350 to +600 — killing Jedi is THE objective
                                         // of Hunt Down. Opponent loses extra Force when Jedi dies.
-                                        engageBonus += 600.0f;
                                         LOG.warn("V35.8 HUNT JEDI DEPLOY: Vader to {} with JEDI! (+600)",
                                             locCard.getTitle());
                                     }
                                     if (v35JediHere && isInquisitor(deployCardLower)) {
-                                        engageBonus += 250.0f; // Inquisitor vs Jedi = power bonuses + destiny
                                         LOG.warn("V35 INQUISITOR vs JEDI: {} to {} (+250)", card.getTitle(), locCard.getTitle());
                                     }
                                     if (v35HatredHere && isInquisitor(deployCardLower)) {
-                                        engageBonus += (float) RandoConfig.SCORE_INQUISITOR_HATRED_SYNERGY; // +300
                                         LOG.warn("V35 INQUISITOR+HATRED: {} to {} with hatred (+{})",
                                             card.getTitle(), locCard.getTitle(), RandoConfig.SCORE_INQUISITOR_HATRED_SYNERGY);
                                     }
 
-                                    action.addReasoning(String.format(
-                                        "V34 DIRECT ENGAGE: Deploy %s to %s (opp power %.0f%s%s) — contest!",
-                                        card.getTitle(), locCard.getTitle(), oppPowerHere,
-                                        v35JediHere ? " JEDI" : "", v35HatredHere ? " HATRED" : ""), engageBonus);
+                                    PolicyResult directEngage =
+                                        DeployTacticalPolicy.scoreV34DirectEngage(
+                                            new DeployTacticalPolicy.DirectEngageFacts(
+                                                actionId, card.getTitle(), locCard.getTitle(),
+                                                oppPowerHere, v35JediHere, v35HatredHere,
+                                                deployCardLower.contains("vader"),
+                                                isInquisitor(deployCardLower),
+                                                (float) RandoConfig.SCORE_INQUISITOR_HATRED_SYNERGY));
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-v34-direct-engage", directEngage);
+                                    float engageBonus = directEngage.operations().get(0).delta();
                                     LOG.warn("V34 DIRECT ENGAGE: {} to {} — opponents power={} (+{})",
                                         card.getTitle(), locCard.getTitle(), (int)oppPowerHere, (int)engageBonus);
                                 } else {
@@ -2224,34 +2224,15 @@ public class DeployEvaluator extends ActionEvaluator {
                                             }
                                         } catch (Exception e) { /* ignore */ }
 
-                                        // V37.4: Check if we CAN actually deploy to any opponent location.
-                                        // If not, empty site deploy is our ONLY option — reduce penalty.
-                                        boolean canDeployToOpponents = false;
-                                        try {
-                                            for (PhysicalCard oppLoc : gameState.getTopLocations()) {
-                                                if (oppLoc == null) continue;
-                                                float oppPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                                    gameState, oppLoc, game.getOpponent(playerId), false, false);
-                                                if (oppPwr > 0) {
-                                                    // Check if this deploy action could target this location
-                                                    String oppLocName = oppLoc.getTitle() != null
-                                                        ? oppLoc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                                                    // We can't check all possible actions, but if opponent
-                                                    // is at a location on a different planet, we probably can't deploy there
-                                                    canDeployToOpponents = true; // Assume we can for now
-                                                    break;
-                                                }
-                                            }
-                                        } catch (Exception e) { /* ignore */ }
-
                                         // V40: Empty site penalties neutralized — deploy freely
                                         float emptyPenalty = 0.0f;
 
-                                        action.addReasoning(String.format(
-                                            "V36 EMPTY DEPLOY: %s to %s — no opponents here%s (penalty %.0f)",
-                                            card.getTitle(), locCard.getTitle(),
-                                            hasDrainValue ? " but has drain icons" : "", emptyPenalty),
-                                            emptyPenalty);
+                                        applySharedPolicy(action, decisionId, actionId,
+                                            "deploy-v36-empty",
+                                            DeployTacticalPolicy.scoreV36EmptyDeploy(
+                                                new DeployTacticalPolicy.EmptyDeployFacts(
+                                                    actionId, card.getTitle(), locCard.getTitle(),
+                                                    hasDrainValue)));
                                         LOG.warn("V36 EMPTY DEPLOY: {} to {} (hunt={}, charsInHand={}, drainIcons={}, penalty={})",
                                             card.getTitle(), locCard.getTitle(), isHuntDown, charsInHand, hasDrainValue, (int)emptyPenalty);
                                     }
@@ -4114,6 +4095,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             boolean deploysToHighDrainSite = false;
                             boolean deploysToOpponentLoc = false;
                             boolean deploysToFriendlyLoc = false;
+                            List<DeployTacticalPolicy.SpyDrainTarget> highDrainTargets =
+                                new ArrayList<>();
                             for (PhysicalCard loc : gameState.getTopLocations()) {
                                 if (loc == null || loc.getTitle() == null) continue;
                                 String locTitle = loc.getTitle().toLowerCase(java.util.Locale.ROOT);
@@ -4133,10 +4116,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                     } catch (Exception e) { /* default 1 */ }
                                     if (spyDrain >= 2.0f) {
                                         deploysToHighDrainSite = true;
+                                        highDrainTargets.add(
+                                            new DeployTacticalPolicy.SpyDrainTarget(
+                                                loc.getTitle(), spyDrain));
                                         // V51: SPY AT DRAIN 2+ = BEST PLAY IN THE GAME
-                                        action.addReasoning(String.format(
-                                            "V51 SPY CRIPPLE: Spy at %s cuts drain from %.0f — opponent's army is WASTED!",
-                                            loc.getTitle(), spyDrain), 1000.0f);
                                         LOG.warn("V51 SPY CRIPPLE: {} to {} (drain {}) — +1000! Best ROI in the game!",
                                             card.getTitle(), loc.getTitle(), (int)spyDrain);
                                     }
@@ -4145,18 +4128,23 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
                             }
 
+                            applySharedPolicy(action, decisionId, actionId,
+                                "deploy-spy-placement",
+                                DeployTacticalPolicy.scoreV51V43SpyPlacement(
+                                    new DeployTacticalPolicy.SpyPlacementFacts(
+                                        actionId, highDrainTargets,
+                                        deploysToOpponentLoc, deploysToFriendlyLoc,
+                                        opponentHasDrain2Plus)));
+
                             if (deploysToOpponentLoc && !deploysToHighDrainSite) {
                                 // Opponent location but drain < 2 — still useful
-                                action.addReasoning("V43 SPY TO ENEMY: Deploy spy to opponent location — blocks their drain!", 200.0f);
                                 LOG.warn("V43 SPY: {} to opponent location — +200", card.getTitle());
                             } else if (deploysToFriendlyLoc) {
-                                action.addReasoning("V43 SPY WASTED: Spy at friendly location does NOTHING — send to opponent!", -500.0f);
                                 LOG.warn("V43 SPY WASTED: {} to friendly location — -500", card.getTitle());
                             }
 
                             // V51: If opponent has NO drain 2+ sites, spy is low priority
                             if (!opponentHasDrain2Plus && !deploysToOpponentLoc) {
-                                action.addReasoning("V51 SPY NO TARGET: Opponent has no drain 2+ sites — deploy a fighter instead!", -300.0f);
                                 LOG.warn("V51 SPY NO TARGET: {} — no drain 2+ sites to cripple — -300", card.getTitle());
                             }
                         } catch (Exception e) { /* ignore */ }

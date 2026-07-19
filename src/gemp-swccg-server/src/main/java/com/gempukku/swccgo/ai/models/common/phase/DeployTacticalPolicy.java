@@ -113,6 +113,176 @@ public final class DeployTacticalPolicy {
         return new PolicyResult("DEPLOY_V171_V172_CONTACT_POLICY", operations);
     }
 
+    public static DrainContestEvaluation evaluateV53V51Drain(
+            DrainContestFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(2);
+        List<DrainContestOutcome> outcomes = new ArrayList<>(2);
+
+        float effectiveOurPower = facts.ourPower();
+        if (facts.undercoverSpyPower() > 0.0f) {
+            add(operations, facts.actionId(), "V53", 200.0f, String.format(
+                    "V53 SPY ALLY: Our spy at %s has power %.0f — deploy here to flip and fight together!",
+                    facts.locationTitle(), facts.undercoverSpyPower()));
+            outcomes.add(DrainContestOutcome.SPY_ALLY);
+            effectiveOurPower += facts.undercoverSpyPower();
+        }
+
+        if (facts.opponentPower() > 0.0f) {
+            if (facts.opponentDrain() >= 3.0f && effectiveOurPower == 0.0f) {
+                add(operations, facts.actionId(), "V51", 600.0f, String.format(
+                        "V51 DRAIN EMERGENCY: %s drains %.0f at %s — FLOOD this location!",
+                        facts.opponentId(), facts.opponentDrain(),
+                        facts.locationTitle()));
+                outcomes.add(DrainContestOutcome.DRAIN_EMERGENCY);
+            } else if (facts.opponentDrain() >= 3.0f
+                    && effectiveOurPower > 0.0f) {
+                add(operations, facts.actionId(), "V51", 500.0f, String.format(
+                        "V51 DRAIN REINFORCE: %s drains %.0f at %s — keep piling on!",
+                        facts.opponentId(), facts.opponentDrain(),
+                        facts.locationTitle()));
+                outcomes.add(DrainContestOutcome.DRAIN_REINFORCE);
+            } else if (facts.opponentDrain() >= 2.0f && effectiveOurPower == 0.0f) {
+                add(operations, facts.actionId(), "V51", 500.0f, String.format(
+                        "V51 CONTEST BATTLEGROUND: %s drains %.0f at %s — this is THE decisive fight!",
+                        facts.opponentId(), facts.opponentDrain(),
+                        facts.locationTitle()));
+                outcomes.add(DrainContestOutcome.CONTEST_BATTLEGROUND);
+            } else if (facts.opponentDrain() >= 2.0f
+                    && effectiveOurPower > 0.0f) {
+                add(operations, facts.actionId(), "V51", 500.0f, String.format(
+                        "V51 REINFORCE BATTLEGROUND: %s drains %.0f at %s — reinforce for battle!",
+                        facts.opponentId(), facts.opponentDrain(),
+                        facts.locationTitle()));
+                outcomes.add(DrainContestOutcome.REINFORCE_BATTLEGROUND);
+            } else if (effectiveOurPower == 0.0f) {
+                float score = 200.0f + facts.opponentDrain() * 100.0f;
+                add(operations, facts.actionId(), "V36", score, String.format(
+                        "V36 CONTEST DRAIN: %s drains %.0f at %s UNCONTESTED — deploy to stop the bleeding!",
+                        facts.opponentId(), facts.opponentDrain(),
+                        facts.locationTitle()));
+                outcomes.add(DrainContestOutcome.CONTEST_DRAIN);
+            }
+        }
+
+        return new DrainContestEvaluation(
+                new PolicyResult("DEPLOY_V53_V51_DRAIN_POLICY", operations),
+                List.copyOf(outcomes));
+    }
+
+    public static PolicyResult scoreV51VaderFlip(VaderFlipFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (facts.opponentSite()) {
+            add(operations, facts.actionId(), "V51", 900.0f, String.format(
+                    "V51 VADER FLIP: Deploy Vader to %s — FLIPS OBJECTIVE IMMEDIATELY!",
+                    facts.locationTitle()));
+        }
+
+        return new PolicyResult("DEPLOY_V51_VADER_FLIP_POLICY", operations);
+    }
+
+    public static PowerDangerEvaluation evaluateV50PowerDanger(
+            PowerDangerFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (facts.ourPowerAfterDeploy() >= facts.opponentPower()) {
+            return new PowerDangerEvaluation(
+                    new PolicyResult("DEPLOY_V50_POWER_DANGER_POLICY", operations),
+                    PowerDangerOutcome.NONE);
+        }
+
+        if (facts.turnNumber() <= 3) {
+            add(operations, facts.actionId(), "V50", -200.0f, String.format(
+                    "V50 EARLY DANGER: Turn %d — deploying %s to %s would leave us at power %.0f vs opponent %.0f — wait for backup!",
+                    facts.turnNumber(), facts.cardTitle(), facts.locationTitle(),
+                    facts.ourPowerAfterDeploy(), facts.opponentPower()));
+            return new PowerDangerEvaluation(
+                    new PolicyResult("DEPLOY_V50_POWER_DANGER_POLICY", operations),
+                    PowerDangerOutcome.EARLY_DANGER);
+        }
+
+        add(operations, facts.actionId(), "V50", 0.0f, String.format(
+                "V50 LATE DEPLOY: Turn %d — deploying %s to %s despite power %.0f vs %.0f — must stay active!",
+                facts.turnNumber(), facts.cardTitle(), facts.locationTitle(),
+                facts.ourPowerAfterDeploy(), facts.opponentPower()));
+        return new PowerDangerEvaluation(
+                new PolicyResult("DEPLOY_V50_POWER_DANGER_POLICY", operations),
+                PowerDangerOutcome.LATE_DEPLOY);
+    }
+
+    public static PolicyResult scoreV34DirectEngage(DirectEngageFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        float score = 250.0f;
+        if (facts.opponentPower() >= 6.0f) {
+            score += 100.0f;
+        }
+        if (facts.jediPresent() && facts.deployingVader()) {
+            score += 600.0f;
+        }
+        if (facts.jediPresent() && facts.deployingInquisitor()) {
+            score += 250.0f;
+        }
+        if (facts.hatredPresent() && facts.deployingInquisitor()) {
+            score += facts.inquisitorHatredScore();
+        }
+
+        add(operations, facts.actionId(), "V34", score, String.format(
+                "V34 DIRECT ENGAGE: Deploy %s to %s (opp power %.0f%s%s) — contest!",
+                facts.cardTitle(), facts.locationTitle(), facts.opponentPower(),
+                facts.jediPresent() ? " JEDI" : "",
+                facts.hatredPresent() ? " HATRED" : ""));
+        return new PolicyResult("DEPLOY_V34_DIRECT_ENGAGE_POLICY", operations);
+    }
+
+    public static PolicyResult scoreV36EmptyDeploy(EmptyDeployFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        add(operations, facts.actionId(), "V36", 0.0f, String.format(
+                "V36 EMPTY DEPLOY: %s to %s — no opponents here%s (penalty 0)",
+                facts.cardTitle(), facts.locationTitle(),
+                facts.hasDrainValue() ? " but has drain icons" : ""));
+        return new PolicyResult("DEPLOY_V36_EMPTY_DEPLOY_POLICY", operations);
+    }
+
+    public static PolicyResult scoreV51V43SpyPlacement(SpyPlacementFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(
+                facts.highDrainTargets().size() + 2);
+
+        for (int targetIndex = 0;
+                targetIndex < facts.highDrainTargets().size(); targetIndex++) {
+            SpyDrainTarget target = facts.highDrainTargets().get(targetIndex);
+            String ruleId = targetIndex == 0
+                    ? "V51" : "V51#" + (targetIndex + 1);
+            add(operations, facts.actionId(), ruleId, 1000.0f, String.format(
+                    "V51 SPY CRIPPLE: Spy at %s cuts drain from %.0f — opponent's army is WASTED!",
+                    target.locationTitle(), target.opponentDrain()));
+        }
+
+        if (facts.deploysToOpponentLocation()
+                && facts.highDrainTargets().isEmpty()) {
+            add(operations, facts.actionId(), "V43", 200.0f,
+                    "V43 SPY TO ENEMY: Deploy spy to opponent location — blocks their drain!");
+        } else if (facts.deploysToFriendlyLocation()) {
+            add(operations, facts.actionId(), "V43", -500.0f,
+                    "V43 SPY WASTED: Spy at friendly location does NOTHING — send to opponent!");
+        }
+
+        if (!facts.opponentHasDrainTwoPlus()
+                && !facts.deploysToOpponentLocation()) {
+            add(operations, facts.actionId(), "V51", -300.0f,
+                    "V51 SPY NO TARGET: Opponent has no drain 2+ sites — deploy a fighter instead!");
+        }
+
+        return new PolicyResult("DEPLOY_V51_V43_SPY_PLACEMENT_POLICY", operations);
+    }
+
     public record ContestDrainFacts(String actionId, String locationTitle,
                                     float opponentPower, int opponentDrain,
                                     int netDrainBalance, float ourPower,
@@ -163,6 +333,111 @@ public final class DeployTacticalPolicy {
         public ContactFacts {
             Objects.requireNonNull(actionId, "actionId");
             locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record DrainContestFacts(String actionId, String opponentId,
+                                    String locationTitle,
+                                    float opponentPower, float ourPower,
+                                    float undercoverSpyPower,
+                                    float opponentDrain) {
+        public DrainContestFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            opponentId = opponentId == null ? "" : opponentId;
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record DrainContestEvaluation(PolicyResult result,
+                                         List<DrainContestOutcome> outcomes) {
+        public DrainContestEvaluation {
+            Objects.requireNonNull(result, "result");
+            outcomes = List.copyOf(outcomes);
+        }
+    }
+
+    public enum DrainContestOutcome {
+        SPY_ALLY,
+        DRAIN_EMERGENCY,
+        DRAIN_REINFORCE,
+        CONTEST_BATTLEGROUND,
+        REINFORCE_BATTLEGROUND,
+        CONTEST_DRAIN
+    }
+
+    public record VaderFlipFacts(String actionId, String locationTitle,
+                                 boolean opponentSite) {
+        public VaderFlipFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record PowerDangerFacts(String actionId, int turnNumber,
+                                   String cardTitle, String locationTitle,
+                                   float ourPowerAfterDeploy,
+                                   float opponentPower) {
+        public PowerDangerFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            cardTitle = cardTitle == null ? "" : cardTitle;
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record PowerDangerEvaluation(PolicyResult result,
+                                        PowerDangerOutcome outcome) {
+        public PowerDangerEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum PowerDangerOutcome {
+        NONE,
+        EARLY_DANGER,
+        LATE_DEPLOY
+    }
+
+    public record DirectEngageFacts(String actionId, String cardTitle,
+                                    String locationTitle,
+                                    float opponentPower,
+                                    boolean jediPresent,
+                                    boolean hatredPresent,
+                                    boolean deployingVader,
+                                    boolean deployingInquisitor,
+                                    float inquisitorHatredScore) {
+        public DirectEngageFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            cardTitle = cardTitle == null ? "" : cardTitle;
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record EmptyDeployFacts(String actionId, String cardTitle,
+                                   String locationTitle,
+                                   boolean hasDrainValue) {
+        public EmptyDeployFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            cardTitle = cardTitle == null ? "" : cardTitle;
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record SpyDrainTarget(String locationTitle,
+                                 float opponentDrain) {
+        public SpyDrainTarget {
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record SpyPlacementFacts(String actionId,
+                                    List<SpyDrainTarget> highDrainTargets,
+                                    boolean deploysToOpponentLocation,
+                                    boolean deploysToFriendlyLocation,
+                                    boolean opponentHasDrainTwoPlus) {
+        public SpyPlacementFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            highDrainTargets = List.copyOf(highDrainTargets);
         }
     }
 

@@ -7525,3 +7525,23 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     policy. Independent re-review passed restored diagnostics, mirror parity, score/reason order,
     thresholds, lazy reads, exception boundaries, and dead-read removal. Runtime reload and live-game
     proof remain pending on the external runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V264 (2026-07-19): consolidate remaining tactical DEPLOY scoring ════
+    Shared AI-only DeployTacticalPolicy now owns V53/V51 opponent-drain contesting, V51 Vader
+    flip deployment, V50 early/late power danger, V34 direct engagement, V36 zero-score empty
+    deployment, and V51/V43 undercover-spy placement. Both bot adapters retain every power, drain,
+    objective, location, Jedi/Hatred, and spy-target read plus diagnostics, exception boundaries,
+    and location-loop control. Scores, thresholds, reasons, and operation order are unchanged. V50's
+    early-danger continue still skips only the current location; late danger keeps its zero-score
+    reason. Repeated high-drain spy targets retain +1000 each using ordered typed arms V51, V51#2,
+    V51#3, and so on. The dead V37.4 canDeployToOpponents scan was removed because it had no consumer.
+    Focused tactical/source/parity 32/0/0/0, DEPLOY-named 177/0/0/0, full reactor 1720/0/0/26,
+    normalized mirror parity, loop-order source gate, repeated-target ledger registration, AI-only
+    boundary, forbidden-symbol scan, diff check, compiled-artifact gates, and clean package passed.
+    First independent review caught that duplicate V51 rule-arm IDs would make the ledger reject the
+    second spy target and the adapter catch would erase the score; indexed rule arms and a ledger
+    regression test fixed it before final independent review returned PASS. Server jar SHA-256
+    544e5c445c5092f74f4cf285c327e4bb46d8026a196fb5f87f7de2533f0a10c4 and web jar SHA-256
+    329467f22f4807c7524ef3937bbc40f00468fb8f2e565e383cfbc0df45a94518 contain the shared policy.
+    Runtime reload and live-game proof remain pending on the external runtime. AI source only; no
+    GEMP engine or player-decision changes.

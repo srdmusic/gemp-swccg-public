@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
@@ -149,6 +150,148 @@ public class DeployTacticalPolicyTest {
     }
 
     @Test
+    public void v53SpyPowerPrecedesAndChangesTheV51DrainBand() {
+        DeployTacticalPolicy.DrainContestEvaluation result = drainContest(
+                6.0f, 0.0f, 4.0f, 3.0f);
+
+        assertEquals(2, result.result().operations().size());
+        assertOperationAt(result.result(), 0, "V53", 200.0f,
+                "V53 SPY ALLY: Our spy at Cloud City: Guest Quarters has power 4 — deploy here to flip and fight together!");
+        assertOperationAt(result.result(), 1, "V51", 500.0f,
+                "V51 DRAIN REINFORCE: opponent drains 3 at Cloud City: Guest Quarters — keep piling on!");
+        assertEquals(DeployTacticalPolicy.DrainContestOutcome.SPY_ALLY,
+                result.outcomes().get(0));
+        assertEquals(DeployTacticalPolicy.DrainContestOutcome.DRAIN_REINFORCE,
+                result.outcomes().get(1));
+    }
+
+    @Test
+    public void v51AndV36DrainContestBandsKeepExactThresholds() {
+        assertDrainOutcome(drainContest(6.0f, 0.0f, 0.0f, 3.0f),
+                "V51", 600.0f,
+                DeployTacticalPolicy.DrainContestOutcome.DRAIN_EMERGENCY);
+        assertDrainOutcome(drainContest(6.0f, 1.0f, 0.0f, 3.0f),
+                "V51", 500.0f,
+                DeployTacticalPolicy.DrainContestOutcome.DRAIN_REINFORCE);
+        assertDrainOutcome(drainContest(6.0f, 0.0f, 0.0f, 2.0f),
+                "V51", 500.0f,
+                DeployTacticalPolicy.DrainContestOutcome.CONTEST_BATTLEGROUND);
+        assertDrainOutcome(drainContest(6.0f, 1.0f, 0.0f, 2.0f),
+                "V51", 500.0f,
+                DeployTacticalPolicy.DrainContestOutcome.REINFORCE_BATTLEGROUND);
+        assertDrainOutcome(drainContest(6.0f, 0.0f, 0.0f, 1.0f),
+                "V36", 300.0f,
+                DeployTacticalPolicy.DrainContestOutcome.CONTEST_DRAIN);
+        assertEmpty(drainContest(6.0f, 1.0f, 0.0f, 1.0f).result());
+        assertEmpty(drainContest(6.0f, -1.0f, 0.0f, 3.0f).result());
+        assertEmpty(drainContest(0.0f, 0.0f, 0.0f, 3.0f).result());
+    }
+
+    @Test
+    public void v51VaderFlipRequiresAnOpponentSite() {
+        assertEmpty(DeployTacticalPolicy.scoreV51VaderFlip(
+                new DeployTacticalPolicy.VaderFlipFacts(
+                        "deploy-42", "Cloud City: Guest Quarters", false)));
+        assertOperation(DeployTacticalPolicy.scoreV51VaderFlip(
+                        new DeployTacticalPolicy.VaderFlipFacts(
+                                "deploy-42", "Cloud City: Guest Quarters", true)),
+                "V51", 900.0f,
+                "V51 VADER FLIP: Deploy Vader to Cloud City: Guest Quarters — FLIPS OBJECTIVE IMMEDIATELY!");
+    }
+
+    @Test
+    public void v50PowerDangerPreservesEarlyContinueAndLateNeutralBands() {
+        DeployTacticalPolicy.PowerDangerEvaluation even = powerDanger(3, 6.0f, 6.0f);
+        assertEmpty(even.result());
+        assertEquals(DeployTacticalPolicy.PowerDangerOutcome.NONE, even.outcome());
+
+        DeployTacticalPolicy.PowerDangerEvaluation early = powerDanger(3, 5.99f, 6.0f);
+        assertOperation(early.result(), "V50", -200.0f,
+                "V50 EARLY DANGER: Turn 3 — deploying Darth Vader to Cloud City: Guest Quarters would leave us at power 6 vs opponent 6 — wait for backup!");
+        assertEquals(DeployTacticalPolicy.PowerDangerOutcome.EARLY_DANGER,
+                early.outcome());
+
+        DeployTacticalPolicy.PowerDangerEvaluation late = powerDanger(4, 5.99f, 6.0f);
+        assertOperation(late.result(), "V50", 0.0f,
+                "V50 LATE DEPLOY: Turn 4 — deploying Darth Vader to Cloud City: Guest Quarters despite power 6 vs 6 — must stay active!");
+        assertEquals(DeployTacticalPolicy.PowerDangerOutcome.LATE_DEPLOY,
+                late.outcome());
+    }
+
+    @Test
+    public void v34DirectEngageKeepsEveryAdditiveBonus() {
+        assertDelta(directEngage(5.99f, false, false,
+                false, false, 300.0f), 250.0f);
+        assertDelta(directEngage(6.0f, false, false,
+                false, false, 300.0f), 350.0f);
+
+        PolicyResult allBonuses = directEngage(6.0f, true, true,
+                true, true, 300.0f);
+        assertOperation(allBonuses, "V34", 1500.0f,
+                "V34 DIRECT ENGAGE: Deploy Darth Vader to Cloud City: Guest Quarters (opp power 6 JEDI HATRED) — contest!");
+    }
+
+    @Test
+    public void v36EmptyDeployRemainsAZeroScoreReason() {
+        assertOperation(DeployTacticalPolicy.scoreV36EmptyDeploy(
+                        new DeployTacticalPolicy.EmptyDeployFacts(
+                                "deploy-42", "Darth Vader",
+                                "Cloud City: Guest Quarters", false)),
+                "V36", 0.0f,
+                "V36 EMPTY DEPLOY: Darth Vader to Cloud City: Guest Quarters — no opponents here (penalty 0)");
+        assertOperation(DeployTacticalPolicy.scoreV36EmptyDeploy(
+                        new DeployTacticalPolicy.EmptyDeployFacts(
+                                "deploy-42", "Darth Vader",
+                                "Cloud City: Guest Quarters", true)),
+                "V36", 0.0f,
+                "V36 EMPTY DEPLOY: Darth Vader to Cloud City: Guest Quarters — no opponents here but has drain icons (penalty 0)");
+    }
+
+    @Test
+    public void v51SpyCripplePreservesRepeatedTargetContributions() {
+        PolicyResult result = spyPlacement(
+                java.util.List.of(
+                        new DeployTacticalPolicy.SpyDrainTarget(
+                                "Cloud City: Guest Quarters", 2.0f),
+                        new DeployTacticalPolicy.SpyDrainTarget(
+                                "Cloud City: Downtown Plaza", 3.0f)),
+                true, false, true);
+
+        assertEquals(2, result.operations().size());
+        assertOperationAt(result, 0, "V51", 1000.0f,
+                "V51 SPY CRIPPLE: Spy at Cloud City: Guest Quarters cuts drain from 2 — opponent's army is WASTED!");
+        assertOperationAt(result, 1, "V51#2", 1000.0f,
+                "V51 SPY CRIPPLE: Spy at Cloud City: Downtown Plaza cuts drain from 3 — opponent's army is WASTED!");
+
+        PolicyContributionLedger ledger =
+                new PolicyContributionLedger("deploy-spy-ledger");
+        ledger.register(result);
+        assertEquals(2, ledger.operationsFor("deploy-42").size());
+    }
+
+    @Test
+    public void v43AndV51SpyFallbacksKeepTheirIndependentOrder() {
+        assertOperation(spyPlacement(java.util.List.of(), true, false, false),
+                "V43", 200.0f,
+                "V43 SPY TO ENEMY: Deploy spy to opponent location — blocks their drain!");
+
+        PolicyResult friendlyNoTarget = spyPlacement(
+                java.util.List.of(), false, true, false);
+        assertEquals(2, friendlyNoTarget.operations().size());
+        assertOperationAt(friendlyNoTarget, 0, "V43", -500.0f,
+                "V43 SPY WASTED: Spy at friendly location does NOTHING — send to opponent!");
+        assertOperationAt(friendlyNoTarget, 1, "V51", -300.0f,
+                "V51 SPY NO TARGET: Opponent has no drain 2+ sites — deploy a fighter instead!");
+
+        assertOperation(spyPlacement(java.util.List.of(), false, true, true),
+                "V43", -500.0f,
+                "V43 SPY WASTED: Spy at friendly location does NOTHING — send to opponent!");
+        assertOperation(spyPlacement(java.util.List.of(), false, false, false),
+                "V51", -300.0f,
+                "V51 SPY NO TARGET: Opponent has no drain 2+ sites — deploy a fighter instead!");
+    }
+
+    @Test
     public void legacyScoreBandsKeepTheirRelativeBoundaries() {
         float v166Softest = delta(v166Score(1));
         float v171 = delta(contact(true, true, 2,
@@ -218,6 +361,61 @@ public class DeployTacticalPolicyTest {
                         armedOpponentCount));
     }
 
+    private static DeployTacticalPolicy.DrainContestEvaluation drainContest(
+            float opponentPower, float ourPower, float spyPower,
+            float opponentDrain) {
+        return DeployTacticalPolicy.evaluateV53V51Drain(
+                new DeployTacticalPolicy.DrainContestFacts(
+                        "deploy-42", "opponent",
+                        "Cloud City: Guest Quarters", opponentPower,
+                        ourPower, spyPower, opponentDrain));
+    }
+
+    private static DeployTacticalPolicy.PowerDangerEvaluation powerDanger(
+            int turn, float ourPower, float opponentPower) {
+        return DeployTacticalPolicy.evaluateV50PowerDanger(
+                new DeployTacticalPolicy.PowerDangerFacts(
+                        "deploy-42", turn, "Darth Vader",
+                        "Cloud City: Guest Quarters", ourPower,
+                        opponentPower));
+    }
+
+    private static PolicyResult directEngage(float opponentPower,
+                                             boolean jediPresent,
+                                             boolean hatredPresent,
+                                             boolean deployingVader,
+                                             boolean deployingInquisitor,
+                                             float hatredScore) {
+        return DeployTacticalPolicy.scoreV34DirectEngage(
+                new DeployTacticalPolicy.DirectEngageFacts(
+                        "deploy-42", "Darth Vader",
+                        "Cloud City: Guest Quarters", opponentPower,
+                        jediPresent, hatredPresent, deployingVader,
+                        deployingInquisitor, hatredScore));
+    }
+
+    private static PolicyResult spyPlacement(
+            java.util.List<DeployTacticalPolicy.SpyDrainTarget> targets,
+            boolean opponentLocation, boolean friendlyLocation,
+            boolean opponentHasDrainTwoPlus) {
+        return DeployTacticalPolicy.scoreV51V43SpyPlacement(
+                new DeployTacticalPolicy.SpyPlacementFacts(
+                        "deploy-42", targets, opponentLocation,
+                        friendlyLocation, opponentHasDrainTwoPlus));
+    }
+
+    private static void assertDrainOutcome(
+            DeployTacticalPolicy.DrainContestEvaluation evaluation,
+            String ruleId, float score,
+            DeployTacticalPolicy.DrainContestOutcome outcome) {
+        assertEquals(1, evaluation.result().operations().size());
+        assertEquals(ruleId,
+                evaluation.result().operations().get(0).ruleArmId().id());
+        assertEquals(score,
+                evaluation.result().operations().get(0).delta(), 0.0f);
+        assertEquals(java.util.List.of(outcome), evaluation.outcomes());
+    }
+
     private static void assertEmpty(PolicyResult result) {
         assertEquals(0, result.operations().size());
     }
@@ -236,7 +434,13 @@ public class DeployTacticalPolicyTest {
                                         float delta,
                                         String reason) {
         assertEquals(1, result.operations().size());
-        PolicyOperation operation = result.operations().get(0);
+        assertOperationAt(result, 0, ruleId, delta, reason);
+    }
+
+    private static void assertOperationAt(PolicyResult result, int index,
+                                          String ruleId,
+                                          float delta, String reason) {
+        PolicyOperation operation = result.operations().get(index);
         assertEquals("deploy-42", operation.actionId());
         assertEquals(ruleId, operation.ruleArmId().id());
         assertEquals(TraceDomainId.DEPLOY_SITING, operation.domainId());
