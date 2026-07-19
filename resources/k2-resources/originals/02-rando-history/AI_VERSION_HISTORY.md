@@ -7663,3 +7663,19 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and both adapters. Runtime reload and live-game proof remain separate deployment gates.
     Clean V270 is based on clean V269 75ec7cfcf; quarantined reference 4397472ed and its ancestors
     remain reference-only. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V271 (2026-07-19): consolidate DEPLOY destination compatibility scoring ====
+    Shared AI-only DeploySitingPolicy now owns the contiguous destination-compatibility ladder:
+    V29 ship-reference ground -200; V190 starship site -1500 and space -80/+30/+10/+30 with
+    +20 fallback; vehicle -150/-150/+10; V24.14B permanent-weapon space/ground -300/+100;
+    V29.7 empty bay +80; and V29.6 battleground +50. Both CardSelectionEvaluator mirrors retain
+    all GEMP, card, blueprint, title, text, icon, owner, location, power, attachment, and candidate
+    reads plus logs, catches, loop breaks, and contribution positions. V190 remains additive with
+    VETO trace identity, not a hard veto, and no continue was added. Direct policy/source/parity
+    19/0/0/0, DEPLOY-named 210/0/0/0, full reactor 1821/0/0/26, exact mirror parity, boundary and
+    lazy-read gates, AI-only scope, diff check, and clean package passed. Server jar SHA-256
+    de4b6a9a4ce2348c0cba548b7f04bf9f68b88f684c8a2ba9310350837d5fca29 and web jar SHA-256
+    067d38050e0aa7e0b4e103e24f7411d10e2268e1fc803a3f50451b43bd779345 contain the shared owner
+    and both adapters. Runtime reload and live-game proof remain separate deployment gates.
+    Clean V271 is based on live V270 6912b5f99; quarantined reference d683fd3b0 and its ancestors
+    remain reference-only. AI source only; no GEMP engine or player-decision changes.

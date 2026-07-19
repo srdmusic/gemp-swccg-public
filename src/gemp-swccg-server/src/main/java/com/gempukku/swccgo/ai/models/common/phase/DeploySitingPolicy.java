@@ -23,6 +23,29 @@ public final class DeploySitingPolicy {
         UNKNOWN
     }
 
+    public enum StarshipDestinationState {
+        NONE,
+        SITE_BLOCKED,
+        SPACE_FALLBACK,
+        SPACE_UNCONTESTED,
+        SPACE_DISADVANTAGE,
+        SPACE_ADVANTAGE,
+        SPACE_CLOSE
+    }
+
+    public enum VehicleDestinationState {
+        NONE,
+        SPACE_INVALID,
+        INTERIOR_INVALID,
+        EXTERIOR_VALID
+    }
+
+    public enum PermanentWeaponDestinationState {
+        NONE,
+        SPACE,
+        GROUND
+    }
+
     public record Facts(
             String actionId,
             String cardTitle,
@@ -109,6 +132,120 @@ public final class DeploySitingPolicy {
         return new PolicyResult("DEPLOY_SITING_DESTINATION_POLICY", operations);
     }
 
+    public static PolicyResult evaluateShipReferenceGround(
+            ShipReferenceGroundFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (!facts.referencedShipName().isBlank()) {
+            operations.add(addSiting(facts.actionId(), "V29-ship-ground",
+                    TraceOutputKind.BANDED, -200.0f,
+                    "V29 SHIP CHARACTER ON GROUND: Game text mentions "
+                            + facts.referencedShipName()
+                            + " — should deploy to space!"));
+        }
+        return new PolicyResult("DEPLOY_SHIP_REFERENCE_GROUND_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateStarshipDestination(
+            StarshipDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        switch (facts.state()) {
+            case SITE_BLOCKED -> operations.add(addSiting(
+                    facts.actionId(), "V190", TraceOutputKind.VETO, -1500.0f,
+                    "⚠️ STARSHIP TO SITE = 0 POWER! (V190: ships deploy to systems)"));
+            case SPACE_FALLBACK -> operations.add(addSiting(
+                    facts.actionId(), "starship-space-fallback",
+                    TraceOutputKind.BANDED, 20.0f,
+                    "Starship to space system"));
+            case SPACE_UNCONTESTED -> operations.add(addSiting(
+                    facts.actionId(), "starship-space-uncontested",
+                    TraceOutputKind.BANDED, 30.0f,
+                    "Uncontested space system"));
+            case SPACE_DISADVANTAGE -> operations.add(addSiting(
+                    facts.actionId(), "starship-space-power",
+                    TraceOutputKind.BANDED, -80.0f,
+                    String.format("⚠️ SPACE POWER DISADVANTAGE: %.0f vs %.0f after deploy",
+                            facts.projectedPower(), facts.opponentPower())));
+            case SPACE_ADVANTAGE -> operations.add(addSiting(
+                    facts.actionId(), "starship-space-power",
+                    TraceOutputKind.BANDED, 30.0f,
+                    String.format("Good space position: %.0f vs %.0f after deploy",
+                            facts.projectedPower(), facts.opponentPower())));
+            case SPACE_CLOSE -> operations.add(addSiting(
+                    facts.actionId(), "starship-space-power",
+                    TraceOutputKind.BANDED, 10.0f,
+                    String.format("Close space fight: %.0f vs %.0f after deploy",
+                            facts.projectedPower(), facts.opponentPower())));
+            default -> {
+            }
+        }
+        return new PolicyResult("DEPLOY_STARSHIP_DESTINATION_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateVehicleDestination(
+            VehicleDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        switch (facts.state()) {
+            case SPACE_INVALID -> operations.add(addSiting(
+                    facts.actionId(), "vehicle-space",
+                    TraceOutputKind.BANDED, -150.0f,
+                    "VEHICLE TO SPACE - invalid!"));
+            case INTERIOR_INVALID -> operations.add(addSiting(
+                    facts.actionId(), "vehicle-interior",
+                    TraceOutputKind.BANDED, -150.0f,
+                    "VEHICLE TO INTERIOR-ONLY - can't deploy!"));
+            case EXTERIOR_VALID -> operations.add(addSiting(
+                    facts.actionId(), "vehicle-exterior",
+                    TraceOutputKind.BANDED, 10.0f,
+                    "Vehicle to exterior ground - good"));
+            default -> {
+            }
+        }
+        return new PolicyResult("DEPLOY_VEHICLE_DESTINATION_POLICY", operations);
+    }
+
+    public static PolicyResult evaluatePermanentWeaponDestination(
+            PermanentWeaponDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.state() == PermanentWeaponDestinationState.SPACE) {
+            operations.add(addSiting(facts.actionId(), "V24.14B-weapon-space",
+                    TraceOutputKind.BANDED, -300.0f,
+                    "V24.14B WEAPON CHAR TO SPACE: Permanent weapon can't fire at system locations — useless in space!"));
+        } else if (facts.state() == PermanentWeaponDestinationState.GROUND) {
+            operations.add(addSiting(facts.actionId(), "V24.14B-weapon-ground",
+                    TraceOutputKind.BANDED, 100.0f,
+                    "V24.14B WEAPON CHAR ON GROUND: Strong battle presence — weapon fires here!"));
+        }
+        return new PolicyResult("DEPLOY_PERMANENT_WEAPON_DESTINATION_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateEmptyDockingBay(
+            EmptyDockingBayFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.ownEmptyDockingBay()) {
+            operations.add(addSiting(facts.actionId(), "V29.7-empty-bay",
+                    TraceOutputKind.BANDED, 80.0f,
+                    "V29.7 EMPTY BAY: Deploy character to protect our docking bay from opponent!"));
+        }
+        return new PolicyResult("DEPLOY_EMPTY_DOCKING_BAY_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateBattlegroundLocation(
+            BattlegroundLocationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.battleground()) {
+            operations.add(addSiting(facts.actionId(), "V29.6-battleground",
+                    TraceOutputKind.BANDED, 50.0f,
+                    "V29.6 Battleground location — force drains!"));
+        }
+        return new PolicyResult("DEPLOY_BATTLEGROUND_LOCATION_POLICY", operations);
+    }
+
     private static void addFormation(List<PolicyOperation> operations,
                                      Facts facts) {
         switch (facts.formationState()) {
@@ -127,6 +264,53 @@ public final class DeploySitingPolicy {
                     "V201 formation assessment unknown: " + facts.formationReason()));
             default -> {
             }
+        }
+    }
+
+    public record ShipReferenceGroundFacts(String actionId,
+                                           String referencedShipName) {
+        public ShipReferenceGroundFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            referencedShipName = referencedShipName == null ? "" : referencedShipName;
+        }
+    }
+
+    public record StarshipDestinationFacts(
+            String actionId, StarshipDestinationState state,
+            float projectedPower, float opponentPower) {
+        public StarshipDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            state = state == null ? StarshipDestinationState.NONE : state;
+        }
+    }
+
+    public record VehicleDestinationFacts(String actionId,
+                                          VehicleDestinationState state) {
+        public VehicleDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            state = state == null ? VehicleDestinationState.NONE : state;
+        }
+    }
+
+    public record PermanentWeaponDestinationFacts(
+            String actionId, PermanentWeaponDestinationState state) {
+        public PermanentWeaponDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            state = state == null ? PermanentWeaponDestinationState.NONE : state;
+        }
+    }
+
+    public record EmptyDockingBayFacts(String actionId,
+                                       boolean ownEmptyDockingBay) {
+        public EmptyDockingBayFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record BattlegroundLocationFacts(String actionId,
+                                            boolean battleground) {
+        public BattlegroundLocationFacts {
+            Objects.requireNonNull(actionId, "actionId");
         }
     }
 

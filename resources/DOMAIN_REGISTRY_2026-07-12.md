@@ -143,6 +143,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 ### deploy-siting — 38 rules
 *WHERE a character/unit goes: site scoring, contest/protect/spread.* Target owner: DEPLOY pipeline / DEPLOY-2 (hub = shared CDSE.evaluateSite; V136).
 
+**V271 owner note:** `DeploySitingPolicy` now also owns the `CardSelectionEvaluator` destination-compatibility stream: V29 ship-reference ground, the CSE arm of V190, starship space tiers, vehicle compatibility, V24.14B permanent-weapon siting, V29.7 empty-bay protection, and V29.6 battleground value. Adapters retain every board and card read, branch, catch, break, and log. V190's CSE `-1500` remains additive score costume, not hard-veto control.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

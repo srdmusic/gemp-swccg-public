@@ -187,6 +187,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         PolicyOperationAdapter.apply(action, ledger);
     }
 
+    private void applyDeploySitingPolicy(EvaluatedAction action,
+                                         PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "deploy-siting-selection-" + result.producerId()
+                        + "-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
     private static PullSelectionCandidateFacts.CloudCitySite pullCloudCitySite(
             String titleLower) {
         if (titleLower.contains("upper walkway")
@@ -1665,8 +1674,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     String gt = charBp.getGameText() != null ? charBp.getGameText().toLowerCase(java.util.Locale.ROOT) : "";
                                     for (String shipName : UNIQUE_SHIP_NAMES) {
                                         if (gameTextContainsShipName(gt, shipName)) {
-                                            action.addReasoning("V29 SHIP CHARACTER ON GROUND: Game text mentions "
-                                                + shipName + " — should deploy to space!", -200.0f);
+                                            applyDeploySitingPolicy(action,
+                                                DeploySitingPolicy.evaluateShipReferenceGround(
+                                                    new DeploySitingPolicy.ShipReferenceGroundFacts(
+                                                        action.getActionId(), shipName)));
                                             logger.warn("V29 GROUND PENALTY: {} mentions '{}' but deploying to ground {} (-200)",
                                                 deployingCardName, shipName, title);
                                             break;
@@ -1708,7 +1719,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 // ~-1450, Rando picks the Done/cancel sub. The cancel-loop
                                 // detector then blocks the outer action after 3 retries, and
                                 // Rando stops invoking the docking bay's game text.
-                                action.addReasoning("⚠️ STARSHIP TO SITE = 0 POWER! (V190: ships deploy to systems)", -1500.0f);
+                                applyDeploySitingPolicy(action,
+                                    DeploySitingPolicy.evaluateStarshipDestination(
+                                        new DeploySitingPolicy.StarshipDestinationFacts(
+                                            action.getActionId(),
+                                            DeploySitingPolicy.StarshipDestinationState.SITE_BLOCKED,
+                                            0.0f, 0.0f)));
                                 logger.warn("⚠️ V190: {} would have 0 power at site {} → -1500 (widened 2026-07-04 from docking-bays-only)",
                                     deployingCardName, title);
                             } else if (isSpaceSystem) {
@@ -1735,33 +1751,57 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             float projectedPower = ourPower + shipPower;
                                             if (projectedPower < theirPower) {
                                                 // We'd still be losing after deployment!
-                                                action.addReasoning(String.format(
-                                                    "⚠️ SPACE POWER DISADVANTAGE: %.0f vs %.0f after deploy",
-                                                    projectedPower, theirPower), -80.0f);
+                                                applyDeploySitingPolicy(action,
+                                                    DeploySitingPolicy.evaluateStarshipDestination(
+                                                        new DeploySitingPolicy.StarshipDestinationFacts(
+                                                            action.getActionId(),
+                                                            DeploySitingPolicy.StarshipDestinationState.SPACE_DISADVANTAGE,
+                                                            projectedPower, theirPower)));
                                                 logger.warn("⚠️ Deploying {} to {} would leave us at power disadvantage ({} vs {})",
                                                     deployingCardName, title, (int)projectedPower, (int)theirPower);
                                             } else if (projectedPower >= theirPower + 3) {
                                                 // Good advantage
-                                                action.addReasoning(String.format(
-                                                    "Good space position: %.0f vs %.0f after deploy",
-                                                    projectedPower, theirPower), 30.0f);
+                                                applyDeploySitingPolicy(action,
+                                                    DeploySitingPolicy.evaluateStarshipDestination(
+                                                        new DeploySitingPolicy.StarshipDestinationFacts(
+                                                            action.getActionId(),
+                                                            DeploySitingPolicy.StarshipDestinationState.SPACE_ADVANTAGE,
+                                                            projectedPower, theirPower)));
                                             } else {
                                                 // Close fight
-                                                action.addReasoning(String.format(
-                                                    "Close space fight: %.0f vs %.0f after deploy",
-                                                    projectedPower, theirPower), 10.0f);
+                                                applyDeploySitingPolicy(action,
+                                                    DeploySitingPolicy.evaluateStarshipDestination(
+                                                        new DeploySitingPolicy.StarshipDestinationFacts(
+                                                            action.getActionId(),
+                                                            DeploySitingPolicy.StarshipDestinationState.SPACE_CLOSE,
+                                                            projectedPower, theirPower)));
                                             }
                                         } else {
                                             // Uncontested - good target
-                                            action.addReasoning("Uncontested space system", 30.0f);
+                                            applyDeploySitingPolicy(action,
+                                                DeploySitingPolicy.evaluateStarshipDestination(
+                                                    new DeploySitingPolicy.StarshipDestinationFacts(
+                                                        action.getActionId(),
+                                                        DeploySitingPolicy.StarshipDestinationState.SPACE_UNCONTESTED,
+                                                        0.0f, 0.0f)));
                                         }
                                     } catch (Exception e) {
                                         // Fallback to basic bonus if we can't check power
-                                        action.addReasoning("Starship to space system", GOOD_DELTA * 2);
+                                        applyDeploySitingPolicy(action,
+                                            DeploySitingPolicy.evaluateStarshipDestination(
+                                                new DeploySitingPolicy.StarshipDestinationFacts(
+                                                    action.getActionId(),
+                                                    DeploySitingPolicy.StarshipDestinationState.SPACE_FALLBACK,
+                                                    0.0f, 0.0f)));
                                         logger.debug("Could not check power at {}: {}", title, e.getMessage());
                                     }
                                 } else {
-                                    action.addReasoning("Starship to space system", GOOD_DELTA * 2);
+                                    applyDeploySitingPolicy(action,
+                                        DeploySitingPolicy.evaluateStarshipDestination(
+                                            new DeploySitingPolicy.StarshipDestinationFacts(
+                                                action.getActionId(),
+                                                DeploySitingPolicy.StarshipDestinationState.SPACE_FALLBACK,
+                                                0.0f, 0.0f)));
                                 }
                             }
                             // V190's -1500 veto owns starship-to-site; the retired branch is in git history.
@@ -1774,7 +1814,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (isVehicle) {
                             if (isSpaceSystem) {
                                 // Space location - vehicles can't deploy here
-                                action.addReasoning("VEHICLE TO SPACE - invalid!", VERY_BAD_DELTA);
+                                applyDeploySitingPolicy(action,
+                                    DeploySitingPolicy.evaluateVehicleDestination(
+                                        new DeploySitingPolicy.VehicleDestinationFacts(
+                                            action.getActionId(),
+                                            DeploySitingPolicy.VehicleDestinationState.SPACE_INVALID)));
                             } else if (isGroundSite || isDockingBay) {
                                 // Check if location has exterior icon
                                 boolean hasExterior = true;  // Default to true if unknown
@@ -1789,10 +1833,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
 
                                 if (hasInteriorOnly) {
-                                    action.addReasoning("VEHICLE TO INTERIOR-ONLY - can't deploy!", VERY_BAD_DELTA);
+                                    applyDeploySitingPolicy(action,
+                                        DeploySitingPolicy.evaluateVehicleDestination(
+                                            new DeploySitingPolicy.VehicleDestinationFacts(
+                                                action.getActionId(),
+                                                DeploySitingPolicy.VehicleDestinationState.INTERIOR_INVALID)));
                                     logger.warn("⚠️ Vehicle cannot deploy to interior site {}", title);
                                 } else if (hasExterior) {
-                                    action.addReasoning("Vehicle to exterior ground - good", GOOD_DELTA);
+                                    applyDeploySitingPolicy(action,
+                                        DeploySitingPolicy.evaluateVehicleDestination(
+                                            new DeploySitingPolicy.VehicleDestinationFacts(
+                                                action.getActionId(),
+                                                DeploySitingPolicy.VehicleDestinationState.EXTERIOR_VALID)));
                                 }
                             }
                         }
@@ -1834,7 +1886,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
                             if (hasPermanentWeapon) {
-                                action.addReasoning("V24.14B WEAPON CHAR TO SPACE: Permanent weapon can't fire at system locations — useless in space!", -300.0f);
+                                applyDeploySitingPolicy(action,
+                                    DeploySitingPolicy.evaluatePermanentWeaponDestination(
+                                        new DeploySitingPolicy.PermanentWeaponDestinationFacts(
+                                            action.getActionId(),
+                                            DeploySitingPolicy.PermanentWeaponDestinationState.SPACE)));
                                 logger.warn("V24.14B WEAPON TO SPACE: Character with permanent weapon deploying to {} — penalized (-300)", title);
                             }
                         }
@@ -1860,7 +1916,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
                             if (hasPermanentWeaponGround) {
-                                action.addReasoning("V24.14B WEAPON CHAR ON GROUND: Strong battle presence — weapon fires here!", 100.0f);
+                                applyDeploySitingPolicy(action,
+                                    DeploySitingPolicy.evaluatePermanentWeaponDestination(
+                                        new DeploySitingPolicy.PermanentWeaponDestinationFacts(
+                                            action.getActionId(),
+                                            DeploySitingPolicy.PermanentWeaponDestinationState.GROUND)));
                                 logger.info("V24.14B WEAPON GROUND: Character with permanent weapon at site {} — bonus (+100)", title);
                             }
                         }
@@ -1889,7 +1949,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                     if (!bayHasFriendly) {
-                                        action.addReasoning("V29.7 EMPTY BAY: Deploy character to protect our docking bay from opponent!", 80.0f);
+                                        applyDeploySitingPolicy(action,
+                                            DeploySitingPolicy.evaluateEmptyDockingBay(
+                                                new DeploySitingPolicy.EmptyDockingBayFacts(
+                                                    action.getActionId(), true)));
                                     }
                                 }
                             } catch (Exception e) { /* ignore */ }
@@ -1923,7 +1986,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
                             if (isBgLoc) {
-                                action.addReasoning("V29.6 Battleground location — force drains!", 50.0f);
+                                applyDeploySitingPolicy(action,
+                                    DeploySitingPolicy.evaluateBattlegroundLocation(
+                                        new DeploySitingPolicy.BattlegroundLocationFacts(
+                                            action.getActionId(), true)));
                             }
                         }
 

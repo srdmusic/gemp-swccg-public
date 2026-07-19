@@ -172,6 +172,133 @@ public class DeploySitingPolicyTest {
                 new PolicyOperationKind[]{PolicyOperationKind.HARD_VETO});
     }
 
+    @Test
+    public void shipReferenceGroundPenaltyKeepsExactScoreAndReason() {
+        PolicyOperation operation = DeploySitingPolicy.evaluateShipReferenceGround(
+                new DeploySitingPolicy.ShipReferenceGroundFacts(
+                        "action-1", "executor")).operations().get(0);
+
+        assertEquals("V29-ship-ground", operation.ruleArmId().id());
+        assertEquals(-200.0f, operation.delta(), 0.0f);
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(TraceOutputKind.BANDED, operation.outputKind());
+        assertEquals("V29 SHIP CHARACTER ON GROUND: Game text mentions executor — should deploy to space!",
+                operation.reason());
+        assertTrue(DeploySitingPolicy.evaluateShipReferenceGround(
+                new DeploySitingPolicy.ShipReferenceGroundFacts(
+                        "action-1", null)).operations().isEmpty());
+    }
+
+    @Test
+    public void starshipDestinationPreservesEveryLegacyTier() {
+        assertDestination(DeploySitingPolicy.StarshipDestinationState.SITE_BLOCKED,
+                -1500.0f, TraceOutputKind.VETO,
+                "⚠️ STARSHIP TO SITE = 0 POWER! (V190: ships deploy to systems)",
+                0.0f, 0.0f);
+        assertDestination(DeploySitingPolicy.StarshipDestinationState.SPACE_FALLBACK,
+                20.0f, TraceOutputKind.BANDED,
+                "Starship to space system", 0.0f, 0.0f);
+        assertDestination(DeploySitingPolicy.StarshipDestinationState.SPACE_UNCONTESTED,
+                30.0f, TraceOutputKind.BANDED,
+                "Uncontested space system", 0.0f, 0.0f);
+        assertDestination(DeploySitingPolicy.StarshipDestinationState.SPACE_DISADVANTAGE,
+                -80.0f, TraceOutputKind.BANDED,
+                "⚠️ SPACE POWER DISADVANTAGE: 4 vs 7 after deploy", 4.0f, 7.0f);
+        assertDestination(DeploySitingPolicy.StarshipDestinationState.SPACE_ADVANTAGE,
+                30.0f, TraceOutputKind.BANDED,
+                "Good space position: 10 vs 7 after deploy", 10.0f, 7.0f);
+        assertDestination(DeploySitingPolicy.StarshipDestinationState.SPACE_CLOSE,
+                10.0f, TraceOutputKind.BANDED,
+                "Close space fight: 8 vs 7 after deploy", 8.0f, 7.0f);
+        assertTrue(DeploySitingPolicy.evaluateStarshipDestination(
+                new DeploySitingPolicy.StarshipDestinationFacts(
+                        "action-1", DeploySitingPolicy.StarshipDestinationState.NONE,
+                        0.0f, 0.0f)).operations().isEmpty());
+    }
+
+    @Test
+    public void vehicleDestinationPreservesSpaceInteriorAndExteriorTiers() {
+        assertVehicle(DeploySitingPolicy.VehicleDestinationState.SPACE_INVALID,
+                -150.0f, "VEHICLE TO SPACE - invalid!");
+        assertVehicle(DeploySitingPolicy.VehicleDestinationState.INTERIOR_INVALID,
+                -150.0f, "VEHICLE TO INTERIOR-ONLY - can't deploy!");
+        assertVehicle(DeploySitingPolicy.VehicleDestinationState.EXTERIOR_VALID,
+                10.0f, "Vehicle to exterior ground - good");
+        assertTrue(DeploySitingPolicy.evaluateVehicleDestination(
+                new DeploySitingPolicy.VehicleDestinationFacts(
+                        "action-1", DeploySitingPolicy.VehicleDestinationState.NONE))
+                .operations().isEmpty());
+    }
+
+    @Test
+    public void permanentWeaponDestinationPreservesSpaceAndGroundTiers() {
+        PolicyOperation space = DeploySitingPolicy.evaluatePermanentWeaponDestination(
+                new DeploySitingPolicy.PermanentWeaponDestinationFacts(
+                        "action-1",
+                        DeploySitingPolicy.PermanentWeaponDestinationState.SPACE))
+                .operations().get(0);
+        assertEquals(-300.0f, space.delta(), 0.0f);
+        assertEquals("V24.14B WEAPON CHAR TO SPACE: Permanent weapon can't fire at system locations — useless in space!",
+                space.reason());
+
+        PolicyOperation ground = DeploySitingPolicy.evaluatePermanentWeaponDestination(
+                new DeploySitingPolicy.PermanentWeaponDestinationFacts(
+                        "action-1",
+                        DeploySitingPolicy.PermanentWeaponDestinationState.GROUND))
+                .operations().get(0);
+        assertEquals(100.0f, ground.delta(), 0.0f);
+        assertEquals("V24.14B WEAPON CHAR ON GROUND: Strong battle presence — weapon fires here!",
+                ground.reason());
+    }
+
+    @Test
+    public void emptyBayAndBattlegroundBonusesRemainIndependent() {
+        PolicyOperation emptyBay = DeploySitingPolicy.evaluateEmptyDockingBay(
+                new DeploySitingPolicy.EmptyDockingBayFacts(
+                        "action-1", true)).operations().get(0);
+        PolicyOperation battleground = DeploySitingPolicy.evaluateBattlegroundLocation(
+                new DeploySitingPolicy.BattlegroundLocationFacts(
+                        "action-1", true)).operations().get(0);
+
+        assertEquals(80.0f, emptyBay.delta(), 0.0f);
+        assertEquals("V29.7-empty-bay", emptyBay.ruleArmId().id());
+        assertEquals(50.0f, battleground.delta(), 0.0f);
+        assertEquals("V29.6-battleground", battleground.ruleArmId().id());
+        assertTrue(DeploySitingPolicy.evaluateEmptyDockingBay(
+                new DeploySitingPolicy.EmptyDockingBayFacts(
+                        "action-1", false)).operations().isEmpty());
+        assertTrue(DeploySitingPolicy.evaluateBattlegroundLocation(
+                new DeploySitingPolicy.BattlegroundLocationFacts(
+                        "action-1", false)).operations().isEmpty());
+    }
+
+    private static void assertDestination(
+            DeploySitingPolicy.StarshipDestinationState state,
+            float expectedDelta, TraceOutputKind expectedKind,
+            String expectedReason, float projectedPower, float opponentPower) {
+        PolicyOperation operation = DeploySitingPolicy.evaluateStarshipDestination(
+                new DeploySitingPolicy.StarshipDestinationFacts(
+                        "action-1", state, projectedPower, opponentPower))
+                .operations().get(0);
+        assertEquals(expectedDelta, operation.delta(), 0.0f);
+        assertEquals(expectedKind, operation.outputKind());
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(expectedReason, operation.reason());
+        assertEquals(TraceDomainId.DEPLOY_SITING, operation.domainId());
+    }
+
+    private static void assertVehicle(
+            DeploySitingPolicy.VehicleDestinationState state,
+            float expectedDelta, String expectedReason) {
+        PolicyOperation operation = DeploySitingPolicy.evaluateVehicleDestination(
+                new DeploySitingPolicy.VehicleDestinationFacts(
+                        "action-1", state)).operations().get(0);
+        assertEquals(expectedDelta, operation.delta(), 0.0f);
+        assertEquals(expectedReason, operation.reason());
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(TraceOutputKind.BANDED, operation.outputKind());
+    }
+
     private static DeploySitingPolicy.Facts directFacts(
             boolean evazanWithoutArmedFriend, float v136Score,
             boolean v193Eligible, float v193PlaybookWeight,
