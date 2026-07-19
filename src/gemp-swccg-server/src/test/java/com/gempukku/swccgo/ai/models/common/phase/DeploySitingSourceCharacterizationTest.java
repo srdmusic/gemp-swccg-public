@@ -57,7 +57,9 @@ public class DeploySitingSourceCharacterizationTest {
                 "DeployObjectiveSitingPolicy.evaluateCloudCityEngine(",
                 "DeployObjectiveSitingPolicy.scoreGherant(",
                 "DeployObjectiveSitingPolicy.evaluateLandoLobot(",
-                "DeployObjectiveSitingPolicy.evaluateFlipSiting("}) {
+                "DeployObjectiveSitingPolicy.evaluateFlipSiting(",
+                "DeployFormationSitingPolicy.evaluateAbilityThreshold(",
+                "DeployFormationSitingPolicy.evaluateBuddyAbility("}) {
             assertTrue(call, deploy.contains(call));
         }
 
@@ -84,6 +86,13 @@ public class DeploySitingSourceCharacterizationTest {
         assertFalse(deploy.contains("V31 PRE-FLIP: %d obj locations still unoccupied"));
         assertFalse(deploy.contains("V31 POST-FLIP: Reinforce key hold location"));
         assertFalse(deploy.contains("V40 POST-FLIP: Deploying to 3rd obj loc"));
+        assertFalse(deploy.contains("V32 ABILITY FIX: Deploy brings ability"));
+        assertFalse(deploy.contains("V40 ABILITY: Solo deploy with ability"));
+        assertFalse(deploy.contains("V40 ABILITY: Solo ability"));
+        assertFalse(deploy.contains("V40 ABILITY: Total ability"));
+        assertFalse(deploy.contains("V67ag NON-BG STACK PENALTY: %s already has %s"));
+        assertFalse(deploy.contains("V33 BUDDY FIX: Deploy brings ability"));
+        assertFalse(deploy.contains("V33 BUDDY BONUS: Reinforcing ability"));
 
         int earlyDanger = deploy.indexOf(
                 "DeployTacticalPolicy.PowerDangerOutcome.EARLY_DANGER");
@@ -104,6 +113,32 @@ public class DeploySitingSourceCharacterizationTest {
         assertTrue(blockedActionsAdd > cloudCityBlocked);
         assertTrue(blockedContinue > blockedActionsAdd);
         assertTrue(lazyDeckOracle > blockedContinue);
+
+        int abilityTotal = deploy.indexOf(
+                "float totalAfterDeploy = currentAbilityAtSite + cardAbility;");
+        int lazyHandRead = deploy.indexOf(
+                "gameState.getHand(v32PlayerId)", abilityTotal);
+        int abilityPolicy = deploy.indexOf(
+                "DeployFormationSitingPolicy.evaluateAbilityThreshold(",
+                lazyHandRead);
+        assertTrue(abilityTotal >= 0);
+        assertTrue(deploy.indexOf(
+                "if (totalAfterDeploy < 4.0f && friendlyCharCount == 0)",
+                abilityTotal) > abilityTotal);
+        assertTrue(lazyHandRead > abilityTotal);
+        assertTrue(abilityPolicy > lazyHandRead);
+
+        int nonBattleground = deploy.indexOf("if (!v67abIsBg)");
+        int nonBgPolicy = deploy.indexOf(
+                "DeployFormationSitingPolicy.evaluateBuddyAbility(",
+                nonBattleground);
+        int nonBgBreak = deploy.indexOf("break;", nonBgPolicy);
+        int battlegroundAbilityRead = deploy.indexOf(
+                "float v33CurrentAbility = 0;", nonBgBreak);
+        assertTrue(nonBattleground >= 0);
+        assertTrue(nonBgPolicy > nonBattleground);
+        assertTrue(nonBgBreak > nonBgPolicy);
+        assertTrue(battlegroundAbilityRead > nonBgBreak);
     }
 
     @Test

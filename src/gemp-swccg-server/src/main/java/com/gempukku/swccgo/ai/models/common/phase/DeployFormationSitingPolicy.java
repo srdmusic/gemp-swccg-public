@@ -260,6 +260,91 @@ public final class DeployFormationSitingPolicy {
                 new PolicyResult(PRODUCER_ID, operations), outcomes);
     }
 
+    public static AbilityThresholdEvaluation evaluateAbilityThreshold(
+            AbilityThresholdFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        AbilityThresholdOutcome outcome = AbilityThresholdOutcome.NONE;
+        float totalAfterDeploy = facts.currentFriendlyAbility()
+                + facts.deployingAbility();
+
+        if (totalAfterDeploy >= 4.0f) {
+            if (facts.friendlyCharacterCount() > 0
+                    && facts.currentFriendlyAbility() < 4.0f) {
+                outcome = AbilityThresholdOutcome.FIXES_DEFICIT;
+                addDeploySiting(operations, facts.actionId(),
+                        "V32-ability-fix", 150.0f, String.format(
+                                "V32 ABILITY FIX: Deploy brings ability from %.0f to %.0f (>= 4) at %s!",
+                                facts.currentFriendlyAbility(), totalAfterDeploy,
+                                facts.destinationTitle()));
+            }
+        } else if (facts.friendlyCharacterCount() == 0) {
+            if (facts.followUpAvailable()) {
+                outcome = AbilityThresholdOutcome.SOLO_WITH_FOLLOW_UP;
+                addDeploySiting(operations, facts.actionId(),
+                        "V40-ability-solo-follow-up", 0.0f, String.format(
+                                "V40 ABILITY: Solo ability %.0f < 4 at %s — follow-up in hand, deploy freely",
+                                facts.deployingAbility(), facts.destinationTitle()));
+            } else {
+                outcome = AbilityThresholdOutcome.SOLO_NO_FOLLOW_UP;
+                addDeploySiting(operations, facts.actionId(),
+                        "V40-ability-solo", 0.0f, String.format(
+                                "V40 ABILITY: Solo deploy with ability %.0f < 4 at %s — deploy anyway",
+                                facts.deployingAbility(), facts.destinationTitle()));
+            }
+        } else {
+            outcome = AbilityThresholdOutcome.SHARED_BELOW_THRESHOLD;
+            addDeploySiting(operations, facts.actionId(),
+                    "V40-ability-shared", 0.0f, String.format(
+                            "V40 ABILITY: Total ability %.0f still < 4 at %s after deploy (neutral)",
+                            totalAfterDeploy, facts.destinationTitle()));
+        }
+
+        return new AbilityThresholdEvaluation(
+                new PolicyResult(PRODUCER_ID, operations), outcome);
+    }
+
+    public static BuddyAbilityEvaluation evaluateBuddyAbility(
+            BuddyAbilityFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        BuddyAbilityOutcome outcome = BuddyAbilityOutcome.NONE;
+
+        if (!facts.battleground()) {
+            if (facts.friendlyPresent()) {
+                outcome = BuddyAbilityOutcome.NON_BATTLEGROUND_STACK;
+                addDeploySiting(operations, facts.actionId(),
+                        "V67ag-non-bg-stack", -300.0f, String.format(
+                                "V67ag NON-BG STACK PENALTY: %s already has %s — additional character at non-BG can't battle, deploys to a battleground instead!",
+                                facts.destinationTitle(),
+                                facts.existingFriendlyTitle()));
+            } else {
+                outcome = BuddyAbilityOutcome.NON_BATTLEGROUND_SKIP;
+            }
+        } else if (facts.currentFriendlyAbility() < facts.buddyThreshold()) {
+            float totalAfterDeploy = facts.currentFriendlyAbility()
+                    + facts.deployingAbility();
+            if (totalAfterDeploy >= facts.buddyThreshold()) {
+                outcome = BuddyAbilityOutcome.REACHES_THRESHOLD;
+                addDeploySiting(operations, facts.actionId(),
+                        "V33-buddy-fix", 150.0f, String.format(
+                                "V33 BUDDY FIX: Deploy brings ability from %.0f to %.0f (>= %d) at %s!",
+                                facts.currentFriendlyAbility(), totalAfterDeploy,
+                                facts.buddyThreshold(), facts.destinationTitle()));
+            } else if (facts.currentFriendlyAbility() > 0.0f) {
+                outcome = BuddyAbilityOutcome.REINFORCES;
+                addDeploySiting(operations, facts.actionId(),
+                        "V33-buddy-bonus", 100.0f, String.format(
+                                "V33 BUDDY BONUS: Reinforcing ability at %s (%.0f → %.0f, target %d)",
+                                facts.destinationTitle(), facts.currentFriendlyAbility(),
+                                totalAfterDeploy, facts.buddyThreshold()));
+            }
+        }
+
+        return new BuddyAbilityEvaluation(
+                new PolicyResult(PRODUCER_ID, operations), outcome);
+    }
+
     public enum LegacySoloOutcome {
         NONE,
         OBJECTIVE_WITH_ESCAPE,
@@ -298,6 +383,22 @@ public final class DeployFormationSitingPolicy {
         ARMED
     }
 
+    public enum AbilityThresholdOutcome {
+        NONE,
+        FIXES_DEFICIT,
+        SOLO_NO_FOLLOW_UP,
+        SOLO_WITH_FOLLOW_UP,
+        SHARED_BELOW_THRESHOLD
+    }
+
+    public enum BuddyAbilityOutcome {
+        NONE,
+        NON_BATTLEGROUND_STACK,
+        NON_BATTLEGROUND_SKIP,
+        REACHES_THRESHOLD,
+        REINFORCES
+    }
+
     public record LegacySoloEvaluation(PolicyResult result, LegacySoloOutcome outcome) {
     }
 
@@ -316,6 +417,14 @@ public final class DeployFormationSitingPolicy {
         public PositiveFormationEvaluation {
             outcomes = List.copyOf(outcomes);
         }
+    }
+
+    public record AbilityThresholdEvaluation(
+            PolicyResult result, AbilityThresholdOutcome outcome) {
+    }
+
+    public record BuddyAbilityEvaluation(
+            PolicyResult result, BuddyAbilityOutcome outcome) {
     }
 
     public record LegacySoloFacts(String actionId, String cardName, int cardPower,
@@ -386,6 +495,27 @@ public final class DeployFormationSitingPolicy {
         public PositiveFormationFacts {
             Objects.requireNonNull(actionId, "actionId");
             cardName = cardName == null ? "" : cardName;
+            destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
+    }
+
+    public record AbilityThresholdFacts(
+            String actionId, String destinationTitle,
+            float currentFriendlyAbility, int friendlyCharacterCount,
+            float deployingAbility, boolean followUpAvailable) {
+        public AbilityThresholdFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
+    }
+
+    public record BuddyAbilityFacts(
+            String actionId, String destinationTitle,
+            boolean battleground, boolean friendlyPresent,
+            String existingFriendlyTitle, float currentFriendlyAbility,
+            float deployingAbility, int buddyThreshold) {
+        public BuddyAbilityFacts {
+            Objects.requireNonNull(actionId, "actionId");
             destinationTitle = destinationTitle == null ? "" : destinationTitle;
         }
     }

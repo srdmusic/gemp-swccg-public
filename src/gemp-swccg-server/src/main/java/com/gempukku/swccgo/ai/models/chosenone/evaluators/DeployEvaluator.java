@@ -3424,20 +3424,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
 
                                 float totalAfterDeploy = currentAbilityAtSite + cardAbility;
-
-                                if (totalAfterDeploy >= 4.0f) {
-                                    // Good — we'll have enough ability for battle destiny
-                                    if (friendlyCharCount > 0 && currentAbilityAtSite < 4.0f) {
-                                        // Even better — this deploy FIXES an ability deficit!
-                                        action.addReasoning(String.format(
-                                            "V32 ABILITY FIX: Deploy brings ability from %.0f to %.0f (>= 4) at %s!",
-                                            currentAbilityAtSite, totalAfterDeploy, loc.getTitle()), 150.0f);
-                                        LOG.warn("V32 ABILITY FIX: {} (ability {}) fixes deficit at {} (was {}, now {})",
-                                            card.getTitle(), cardAbility, loc.getTitle(), currentAbilityAtSite, totalAfterDeploy);
-                                    }
-                                } else if (friendlyCharCount == 0) {
-                                    // Solo deploy with ability < 4 — check hand for follow-up
-                                    boolean canFollowUp = false;
+                                boolean canFollowUp = false;
+                                if (totalAfterDeploy < 4.0f && friendlyCharCount == 0) {
                                     java.util.List<PhysicalCard> handCards = gameState.getHand(v32PlayerId);
                                     if (handCards != null) {
                                         for (PhysicalCard hc : handCards) {
@@ -3456,27 +3444,25 @@ public class DeployEvaluator extends ActionEvaluator {
                                             }
                                         }
                                     }
-
-                                    if (!canFollowUp) {
-                                        // NO follow-up available — this deploy strands ability < 4
-                                        action.addReasoning(String.format(
-                                            "V40 ABILITY: Solo deploy with ability %.0f < 4 at %s — deploy anyway",
-                                            cardAbility, loc.getTitle()), 0.0f);
+                                }
+                                DeployFormationSitingPolicy.AbilityThresholdEvaluation
+                                    abilityThreshold = DeployFormationSitingPolicy.evaluateAbilityThreshold(
+                                        new DeployFormationSitingPolicy.AbilityThresholdFacts(
+                                            actionId, loc.getTitle(), currentAbilityAtSite,
+                                            friendlyCharCount, cardAbility, canFollowUp));
+                                applySharedPolicy(action, decisionId, actionId,
+                                    "deploy-ability-threshold", abilityThreshold.result());
+                                switch (abilityThreshold.outcome()) {
+                                    case FIXES_DEFICIT ->
+                                        LOG.warn("V32 ABILITY FIX: {} (ability {}) fixes deficit at {} (was {}, now {})",
+                                            card.getTitle(), cardAbility, loc.getTitle(), currentAbilityAtSite, totalAfterDeploy);
+                                    case SOLO_NO_FOLLOW_UP ->
                                         LOG.warn("V32 ABILITY RISK: {} (ability {}) solo at {} with no follow-up — penalized (-200)",
                                             card.getTitle(), cardAbility, loc.getTitle());
-                                    } else {
-                                        // Follow-up exists in hand — mild caution (deploy order matters)
-                                        action.addReasoning(String.format(
-                                            "V40 ABILITY: Solo ability %.0f < 4 at %s — follow-up in hand, deploy freely",
-                                            cardAbility, loc.getTitle()), 0.0f);
-                                    }
-                                } else {
-                                    // Deploying to a site with friendlies but total still < 4
-                                    action.addReasoning(String.format(
-                                        "V40 ABILITY: Total ability %.0f still < 4 at %s after deploy (neutral)",
-                                        totalAfterDeploy, loc.getTitle()), 0.0f);
-                                    LOG.warn("V32 ABILITY WARNING: {} to {} — total ability {} still < 4!",
-                                        card.getTitle(), loc.getTitle(), totalAfterDeploy);
+                                    case SHARED_BELOW_THRESHOLD ->
+                                        LOG.warn("V32 ABILITY WARNING: {} to {} — total ability {} still < 4!",
+                                            card.getTitle(), loc.getTitle(), totalAfterDeploy);
+                                    case NONE, SOLO_WITH_FOLLOW_UP -> { }
                                 }
                                 break; // Only check first matching location
                             }
@@ -3540,10 +3526,17 @@ public class DeployEvaluator extends ActionEvaluator {
                                             break;
                                         }
                                     } catch (Exception e) { /* ignore */ }
-                                    if (v67agHasFriendly) {
-                                        action.addReasoning(String.format(
-                                            "V67ag NON-BG STACK PENALTY: %s already has %s — additional character at non-BG can't battle, deploys to a battleground instead!",
-                                            loc.getTitle(), v67agExistingTitle), -300.0f);
+                                    DeployFormationSitingPolicy.BuddyAbilityEvaluation
+                                        nonBgBuddy = DeployFormationSitingPolicy.evaluateBuddyAbility(
+                                            new DeployFormationSitingPolicy.BuddyAbilityFacts(
+                                                actionId, loc.getTitle(), false,
+                                                v67agHasFriendly, v67agExistingTitle,
+                                                0.0f, v33CardAbility,
+                                                RandoConfig.ABILITY_BUDDY_THRESHOLD));
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-buddy-ability", nonBgBuddy.result());
+                                    if (nonBgBuddy.outcome()
+                                            == DeployFormationSitingPolicy.BuddyAbilityOutcome.NON_BATTLEGROUND_STACK) {
                                         LOG.warn("V67ag NON-BG STACK PENALTY: {} already has friendly {} at non-BG {} — penalize additional deploy (-300)",
                                             card.getTitle(), v67agExistingTitle, loc.getTitle());
                                     } else {
@@ -3566,26 +3559,25 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
 
                                 float v33TotalAfter = v33CurrentAbility + v33CardAbility;
-
-                                if (v33CurrentAbility < RandoConfig.ABILITY_BUDDY_THRESHOLD) {
-                                    if (v33TotalAfter >= RandoConfig.ABILITY_BUDDY_THRESHOLD) {
-                                        // This deploy brings us to the buddy threshold!
-                                        action.addReasoning(String.format(
-                                            "V33 BUDDY FIX: Deploy brings ability from %.0f to %.0f (>= %d) at %s!",
-                                            v33CurrentAbility, v33TotalAfter, RandoConfig.ABILITY_BUDDY_THRESHOLD,
-                                            loc.getTitle()), 150.0f);
+                                DeployFormationSitingPolicy.BuddyAbilityEvaluation
+                                    buddyAbility = DeployFormationSitingPolicy.evaluateBuddyAbility(
+                                        new DeployFormationSitingPolicy.BuddyAbilityFacts(
+                                            actionId, loc.getTitle(), true, false,
+                                            null, v33CurrentAbility,
+                                            v33CardAbility,
+                                            RandoConfig.ABILITY_BUDDY_THRESHOLD));
+                                applySharedPolicy(action, decisionId, actionId,
+                                    "deploy-buddy-ability", buddyAbility.result());
+                                switch (buddyAbility.outcome()) {
+                                    case REACHES_THRESHOLD ->
                                         LOG.warn("V33 BUDDY FIX: {} (ability {}) at {} — brings total from {} to {} (>= {})",
                                             card.getTitle(), v33CardAbility, loc.getTitle(),
                                             v33CurrentAbility, v33TotalAfter, RandoConfig.ABILITY_BUDDY_THRESHOLD);
-                                    } else if (v33CurrentAbility > 0) {
-                                        // Site has friendlies but still below 7 — bonus for reinforcing
-                                        action.addReasoning(String.format(
-                                            "V33 BUDDY BONUS: Reinforcing ability at %s (%.0f → %.0f, target %d)",
-                                            loc.getTitle(), v33CurrentAbility, v33TotalAfter,
-                                            RandoConfig.ABILITY_BUDDY_THRESHOLD), 100.0f);
+                                    case REINFORCES ->
                                         LOG.warn("V33 BUDDY BONUS: {} reinforcing {} — ability {} → {}",
                                             card.getTitle(), loc.getTitle(), v33CurrentAbility, v33TotalAfter);
-                                    }
+                                    case NONE, NON_BATTLEGROUND_STACK,
+                                            NON_BATTLEGROUND_SKIP -> { }
                                 }
                                 break; // Only check first matching location
                             }

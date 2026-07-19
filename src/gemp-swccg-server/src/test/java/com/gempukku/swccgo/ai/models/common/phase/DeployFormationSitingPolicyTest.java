@@ -242,6 +242,77 @@ public class DeployFormationSitingPolicyTest {
         assertDelta(establish.result(), "V51-establish", 400.0f);
     }
 
+    @Test
+    public void abilityFourThresholdPreservesEveryLegacyBranch() {
+        DeployFormationSitingPolicy.AbilityThresholdEvaluation fixes =
+                abilityThreshold(3.0f, 1, 1.0f, false);
+        assertEquals(DeployFormationSitingPolicy.AbilityThresholdOutcome.FIXES_DEFICIT,
+                fixes.outcome());
+        assertOperation(fixes.result().operations().get(0),
+                "V32-ability-fix", TraceDomainId.DEPLOY_SITING, 150.0f,
+                "V32 ABILITY FIX: Deploy brings ability from 3 to 4 (>= 4) at Cloud City: Guest Quarters!");
+
+        DeployFormationSitingPolicy.AbilityThresholdEvaluation solo =
+                abilityThreshold(0.0f, 0, 2.0f, false);
+        assertEquals(DeployFormationSitingPolicy.AbilityThresholdOutcome.SOLO_NO_FOLLOW_UP,
+                solo.outcome());
+        assertOperation(solo.result().operations().get(0),
+                "V40-ability-solo", TraceDomainId.DEPLOY_SITING, 0.0f,
+                "V40 ABILITY: Solo deploy with ability 2 < 4 at Cloud City: Guest Quarters — deploy anyway");
+
+        DeployFormationSitingPolicy.AbilityThresholdEvaluation followUp =
+                abilityThreshold(0.0f, 0, 2.0f, true);
+        assertEquals(DeployFormationSitingPolicy.AbilityThresholdOutcome.SOLO_WITH_FOLLOW_UP,
+                followUp.outcome());
+        assertDelta(followUp.result(), "V40-ability-solo-follow-up", 0.0f);
+
+        DeployFormationSitingPolicy.AbilityThresholdEvaluation shared =
+                abilityThreshold(1.0f, 1, 2.0f, false);
+        assertEquals(DeployFormationSitingPolicy.AbilityThresholdOutcome.SHARED_BELOW_THRESHOLD,
+                shared.outcome());
+        assertDelta(shared.result(), "V40-ability-shared", 0.0f);
+
+        DeployFormationSitingPolicy.AbilityThresholdEvaluation sufficient =
+                abilityThreshold(0.0f, 0, 4.0f, false);
+        assertEquals(DeployFormationSitingPolicy.AbilityThresholdOutcome.NONE,
+                sufficient.outcome());
+        assertTrue(sufficient.result().operations().isEmpty());
+    }
+
+    @Test
+    public void buddyAbilityPreservesNonBattlegroundAndThresholdLadder() {
+        DeployFormationSitingPolicy.BuddyAbilityEvaluation nonBgStack =
+                buddyAbility(false, true, "Sidious", 0.0f, 3.0f);
+        assertEquals(DeployFormationSitingPolicy.BuddyAbilityOutcome.NON_BATTLEGROUND_STACK,
+                nonBgStack.outcome());
+        assertOperation(nonBgStack.result().operations().get(0),
+                "V67ag-non-bg-stack", TraceDomainId.DEPLOY_SITING, -300.0f,
+                "V67ag NON-BG STACK PENALTY: Cloud City: Guest Quarters already has Sidious — additional character at non-BG can't battle, deploys to a battleground instead!");
+
+        DeployFormationSitingPolicy.BuddyAbilityEvaluation nonBgEmpty =
+                buddyAbility(false, false, null, 0.0f, 3.0f);
+        assertEquals(DeployFormationSitingPolicy.BuddyAbilityOutcome.NON_BATTLEGROUND_SKIP,
+                nonBgEmpty.outcome());
+        assertTrue(nonBgEmpty.result().operations().isEmpty());
+
+        DeployFormationSitingPolicy.BuddyAbilityEvaluation fixes =
+                buddyAbility(true, false, null, 5.0f, 2.0f);
+        assertEquals(DeployFormationSitingPolicy.BuddyAbilityOutcome.REACHES_THRESHOLD,
+                fixes.outcome());
+        assertDelta(fixes.result(), "V33-buddy-fix", 150.0f);
+
+        DeployFormationSitingPolicy.BuddyAbilityEvaluation reinforces =
+                buddyAbility(true, false, null, 3.0f, 2.0f);
+        assertEquals(DeployFormationSitingPolicy.BuddyAbilityOutcome.REINFORCES,
+                reinforces.outcome());
+        assertDelta(reinforces.result(), "V33-buddy-bonus", 100.0f);
+
+        assertTrue(buddyAbility(true, false, null, 0.0f, 2.0f)
+                .result().operations().isEmpty());
+        assertTrue(buddyAbility(true, false, null, 7.0f, 2.0f)
+                .result().operations().isEmpty());
+    }
+
     private static PolicyResult evaluate(CharacterFormationFacts facts) {
         return DeployFormationSitingPolicy.evaluate(ACTION_ID, facts);
     }
@@ -306,6 +377,26 @@ public class DeployFormationSitingPolicyTest {
         return new DeployFormationSitingPolicy.PositiveFormationFacts(
                 ACTION_ID, cardName, DESTINATION, friendlies,
                 friendlyAbility, deployingAbility, drain);
+    }
+
+    private static DeployFormationSitingPolicy.AbilityThresholdEvaluation
+            abilityThreshold(float currentAbility, int friendlyCount,
+                             float deployingAbility, boolean followUp) {
+        return DeployFormationSitingPolicy.evaluateAbilityThreshold(
+                new DeployFormationSitingPolicy.AbilityThresholdFacts(
+                        ACTION_ID, DESTINATION, currentAbility,
+                        friendlyCount, deployingAbility, followUp));
+    }
+
+    private static DeployFormationSitingPolicy.BuddyAbilityEvaluation
+            buddyAbility(boolean battleground, boolean friendlyPresent,
+                         String existingTitle, float currentAbility,
+                         float deployingAbility) {
+        return DeployFormationSitingPolicy.evaluateBuddyAbility(
+                new DeployFormationSitingPolicy.BuddyAbilityFacts(
+                        ACTION_ID, DESTINATION, battleground,
+                        friendlyPresent, existingTitle, currentAbility,
+                        deployingAbility, 7));
     }
 
     private static void assertBuddy(CharacterFormationFacts facts,

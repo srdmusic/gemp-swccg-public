@@ -7565,3 +7565,21 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     cfdde6e782fe38933131bd0cbcac46462471f1dc71ed76af076f2dd603da06bc contain the shared owner
     and both mirrored adapters. Runtime reload and live-game proof remain pending on the external
     runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V266 (2026-07-19): consolidate DEPLOY ability and buddy thresholds ════
+    Shared AI-only DeployFormationSitingPolicy now also owns V32/V40 ability-four decisions and
+    V33/V67ag battleground buddy-ability decisions. Both adapters retain ability, site,
+    battleground, friendly-card, and hand reads plus logs, catches, and first-site exits. V32
+    remains +150 only when an occupied site's ability crosses four; solo/shared totals below four
+    retain zero-score reasons, and the hand remains lazy to solo totals below four. V67ag still
+    treats a battleground-query failure as non-battleground, applies -300 only when a friendly is
+    found, and exits before ability scans. V33 remains +150 crossing the configured threshold and
+    +100 reinforcing below it. Focused formation/source/parity 24/0/0/0, DEPLOY-named 187/0/0/0,
+    full reactor 1730/0/0/26, normalized mirror parity, lazy-hand and early-break source gates,
+    branch/reason fixtures, AI-only boundary, forbidden-symbol scan, diff check, compiled-artifact
+    gates, and clean package passed. Independent review passed scores, reasons, precedence, reads,
+    breaks, exception behavior, logs, rule IDs, mirror parity, and scope. Server jar SHA-256
+    8ad42ef06d96813108ed17469efe37884c68b743d37b67e07999ce3857987f29 and web jar SHA-256
+    989e454773e52f64a702dd1972d27b74114ad83bb6b0618c87b0cec965535b97 contain the shared
+    owner and both adapters. Runtime reload and live-game proof remain pending on the external
+    runtime. AI source only; no GEMP engine or player-decision changes.
