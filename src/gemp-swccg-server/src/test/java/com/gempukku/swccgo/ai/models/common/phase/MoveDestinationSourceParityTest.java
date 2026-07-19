@@ -157,6 +157,115 @@ public class MoveDestinationSourceParityTest {
     }
 
     @Test
+    public void cardSelectionDestinationSafetyRulesHaveOneSharedOwner()
+            throws IOException {
+        String cardSelection = moveDestinationBlock(
+                cardSelectionSource("rando"));
+        String policy = policySource();
+
+        for (String call : new String[]{
+                "MoveDestinationPolicy.retreatToDrain(",
+                "MoveDestinationPolicy.powerAwareHiddenPathDestination(",
+                "MoveDestinationPolicy.hiddenPathPreFlipSuicide(",
+                "MoveDestinationPolicy.spyAwareContest(",
+                "MoveDestinationPolicy.drainThreat(",
+                "MoveDestinationPolicy.wrongDirection(",
+                "MoveDestinationPolicy.isCastleDestination(",
+                "MoveDestinationPolicy.castleRetreat("}) {
+            assertEquals(call, 1, countOccurrences(cardSelection, call));
+        }
+        for (String owner : new String[]{
+                "public static Contribution retreatToDrain(",
+                "public static PowerAwareDestination powerAwareHiddenPathDestination(",
+                "public static Contribution hiddenPathPreFlipSuicide(",
+                "public static SpyAwareContest spyAwareContest(",
+                "public static DrainThreatDisposition drainThreat(",
+                "public static WrongDirectionEvaluation wrongDirection(",
+                "public static boolean isCastleDestination(",
+                "public static Contribution castleRetreat("}) {
+            assertTrue(owner, policy.contains(owner));
+        }
+
+        for (String duplicateReason : new String[]{
+                "is over-contested (their %.0f vs our %.0f)",
+                "solo Jedi will DIE on their next turn!",
+                "pre-flip Jedi survivors are power 3, this is SUICIDE!",
+                "has only opponent spy (",
+                "is empty — opponents draining at %s! Go there instead!",
+                "NEVER retreat to Castle while opponents exist!"}) {
+            assertFalse(duplicateReason,
+                    cardSelection.contains(duplicateReason));
+            assertTrue(duplicateReason, policy.contains(duplicateReason));
+        }
+    }
+
+    @Test
+    public void hiddenPathSuicideStillStopsBeforeContestScoring()
+            throws IOException {
+        String block = moveDestinationBlock(cardSelectionSource("rando"));
+        int v169 = block.indexOf(
+                "MoveDestinationPolicy.safeRetreatDestination(");
+        int v67au = block.indexOf(
+                "MoveDestinationPolicy.retreatToDrain(", v169);
+        int v64 = block.indexOf(
+                "MoveDestinationPolicy.powerAwareHiddenPathDestination(",
+                v67au);
+        int suicide = block.indexOf(
+                "MoveDestinationPolicy.hiddenPathPreFlipSuicide(", v64);
+        int append = block.indexOf("actions.add(action);", suicide);
+        int stop = block.indexOf("continue;", append);
+        int contest = block.indexOf(
+                "MoveDestinationPolicy.spyAwareContest(", stop);
+        int laterRules = block.indexOf(
+                "// === V24.3C: DR. EVAZAN", contest);
+
+        assertTrue(v169 >= 0);
+        assertTrue(v67au > v169);
+        assertTrue(v64 > v67au);
+        assertTrue(suicide > v64);
+        assertTrue(append > suicide);
+        assertTrue(stop > append);
+        assertTrue(contest > stop);
+        assertTrue(laterRules > contest);
+    }
+
+    @Test
+    public void adapterPreservesDestinationFactAndVetoOrder()
+            throws IOException {
+        String block = moveDestinationBlock(cardSelectionSource("rando"));
+        int nonSpyScan = block.indexOf("hc.isUndercover()");
+        int suicide = block.indexOf(
+                "MoveDestinationPolicy.hiddenPathPreFlipSuicide(",
+                nonSpyScan);
+        int jediScan = block.indexOf(
+                "ActionEvaluator.isJediOrPadawan(cTitle)", suicide);
+        int contest = block.indexOf(
+                "MoveDestinationPolicy.spyAwareContest(", jediScan);
+        int threatSpyScan = block.indexOf("osc.isUndercover()", contest);
+        int threat = block.indexOf(
+                "MoveDestinationPolicy.drainThreat(", threatSpyScan);
+        int strictHighest = block.indexOf(
+                "oppPower > worstDrainPower", threat);
+        int direction = block.indexOf(
+                "MoveDestinationPolicy.wrongDirection(", strictHighest);
+        int castleGate = block.indexOf(
+                "MoveDestinationPolicy.isCastleDestination(", direction);
+        int castle = block.indexOf(
+                "MoveDestinationPolicy.castleRetreat(", castleGate);
+
+        assertTrue(nonSpyScan >= 0);
+        assertTrue(suicide > nonSpyScan);
+        assertTrue(jediScan > suicide);
+        assertTrue(contest > jediScan);
+        assertTrue(threatSpyScan > contest);
+        assertTrue(threat > threatSpyScan);
+        assertTrue(strictHighest > threat);
+        assertTrue(direction > strictHighest);
+        assertTrue(castleGate > direction);
+        assertTrue(castle > castleGate);
+    }
+
+    @Test
     public void v37AdapterRetainsActionAndBattlegroundReadOrder()
             throws IOException {
         String block = v37Block(evaluatorSource("rando"));

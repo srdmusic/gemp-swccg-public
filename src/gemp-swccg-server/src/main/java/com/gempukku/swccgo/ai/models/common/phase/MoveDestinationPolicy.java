@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 
 /**
  * Shared MOVE destination and landed-ship safety analysis.
- * Adapters retain score, ladder, veto, exception-log, and action-log ownership.
+ * Adapters retain engine reads, action mutation, ladder, exception-log, and action-log ownership.
  */
 public final class MoveDestinationPolicy {
     public record Contribution(boolean applies, String reason, float delta) {
@@ -24,6 +24,50 @@ public final class MoveDestinationPolicy {
     }
 
     public record RetreatMode(boolean active, String originTitle) {
+    }
+
+    public enum PowerAwareDisposition {
+        NONE,
+        SUICIDE,
+        SAFE_DRAIN,
+        FAVORABLE
+    }
+
+    public record PowerAwareDestination(
+            PowerAwareDisposition disposition,
+            Contribution contribution,
+            float projectedOurPower) {
+    }
+
+    public enum ContestDisposition {
+        NONE,
+        CONTEST,
+        SPY_ONLY
+    }
+
+    public record SpyAwareContest(
+            ContestDisposition disposition,
+            Contribution contribution) {
+    }
+
+    public enum DrainThreatDisposition {
+        NONE,
+        SPY_NEUTRALIZED,
+        TOO_DANGEROUS,
+        ACTIVE
+    }
+
+    public enum WrongDirectionDisposition {
+        NONE,
+        HIDDEN_PATH_EXEMPT,
+        RETREAT_EXEMPT,
+        JOIN_GROUP_EXEMPT,
+        VETO
+    }
+
+    public record WrongDirectionEvaluation(
+            WrongDirectionDisposition disposition,
+            Contribution contribution) {
     }
 
     public record LandedShipEscape(
@@ -119,6 +163,225 @@ public final class MoveDestinationPolicy {
     public static boolean retreatExemptsWrongDirection(
             RetreatMode retreatMode) {
         return retreatMode != null && retreatMode.active();
+    }
+
+    public static Contribution retreatToDrain(
+            String sourceTitle,
+            float opponentPowerAtSource,
+            float ourPowerAtSource,
+            boolean sourceBattleground,
+            String destinationTitle,
+            float opponentPowerAtDestination,
+            boolean destinationBattleground,
+            int friendlyDrainIcons) {
+        if (!sourceBattleground
+                || opponentPowerAtSource <= 0.0f
+                || opponentPowerAtSource <= ourPowerAtSource
+                || destinationBattleground
+                || opponentPowerAtDestination != 0.0f
+                || friendlyDrainIcons <= 0) {
+            return Contribution.none();
+        }
+        return new Contribution(
+                true,
+                String.format(
+                        "V67au RETREAT-TO-DRAIN: %s is over-contested (their %.0f vs our %.0f) — move to safe adjacent %s (no opp, %d friendly icons) and drain there!",
+                        sourceTitle,
+                        opponentPowerAtSource,
+                        ourPowerAtSource,
+                        destinationTitle,
+                        friendlyDrainIcons),
+                400.0f);
+    }
+
+    public static PowerAwareDestination powerAwareHiddenPathDestination(
+            boolean enabled,
+            String destinationTitle,
+            float opponentPowerAtDestination,
+            float ourPowerAtDestination) {
+        float projectedOurPower = ourPowerAtDestination + 6.0f;
+        if (!enabled || destinationTitle == null
+                || destinationTitle.toLowerCase(Locale.ROOT)
+                        .contains("mapuzo")) {
+            return new PowerAwareDestination(
+                    PowerAwareDisposition.NONE,
+                    Contribution.none(), projectedOurPower);
+        }
+
+        if (opponentPowerAtDestination >= 7.0f
+                && projectedOurPower
+                        < opponentPowerAtDestination + 2.0f) {
+            float deathPenalty = -1500.0f;
+            if (opponentPowerAtDestination >= 9.0f) {
+                deathPenalty = -1800.0f;
+            }
+            if (opponentPowerAtDestination >= 12.0f) {
+                deathPenalty = -2500.0f;
+            }
+            return new PowerAwareDestination(
+                    PowerAwareDisposition.SUICIDE,
+                    new Contribution(
+                            true,
+                            "V64 SUICIDE MOVE: " + destinationTitle
+                                    + " has enemy power "
+                                    + (int) opponentPowerAtDestination
+                                    + " — solo Jedi will DIE on their next turn!",
+                            deathPenalty),
+                    projectedOurPower);
+        }
+        if (opponentPowerAtDestination == 0.0f) {
+            return new PowerAwareDestination(
+                    PowerAwareDisposition.SAFE_DRAIN,
+                    new Contribution(
+                            true,
+                            "V64 SAFE DRAIN: " + destinationTitle
+                                    + " is empty — Jedi can drain without opposition!",
+                            150.0f),
+                    projectedOurPower);
+        }
+        if (projectedOurPower
+                >= opponentPowerAtDestination + 3.0f) {
+            return new PowerAwareDestination(
+                    PowerAwareDisposition.FAVORABLE,
+                    new Contribution(
+                            true,
+                            "V64 FAVORABLE: " + destinationTitle
+                                    + " — Jedi arrival gives us power advantage",
+                            80.0f),
+                    projectedOurPower);
+        }
+        return new PowerAwareDestination(
+                PowerAwareDisposition.NONE,
+                Contribution.none(), projectedOurPower);
+    }
+
+    public static Contribution hiddenPathPreFlipSuicide(
+            boolean hiddenPathPreFlip,
+            String destinationTitle,
+            float nonSpyOpponentPower,
+            float ourPowerAtDestination) {
+        if (!hiddenPathPreFlip || nonSpyOpponentPower < 5.0f
+                || ourPowerAtDestination != 0.0f) {
+            return Contribution.none();
+        }
+        return new Contribution(
+                true,
+                String.format(
+                        "V67aa HIDDEN PATH SUICIDE BLOCK: %s has opp power %.0f — pre-flip Jedi survivors are power 3, this is SUICIDE!",
+                        destinationTitle, nonSpyOpponentPower),
+                -9999.0f);
+    }
+
+    public static SpyAwareContest spyAwareContest(
+            String destinationTitle,
+            float nonSpyOpponentPower,
+            int opponentSpies,
+            float ourPowerAtDestination,
+            boolean jediAtDestination) {
+        if (nonSpyOpponentPower > 0.0f) {
+            float contestBonus = 300.0f;
+            if (ourPowerAtDestination == 0.0f) {
+                contestBonus += 200.0f;
+            }
+            if (jediAtDestination) {
+                contestBonus += 200.0f;
+            }
+            return new SpyAwareContest(
+                    ContestDisposition.CONTEST,
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V41 CONTEST DEST: Opponents (power %.0f) at %s%s — go fight!",
+                                    nonSpyOpponentPower,
+                                    destinationTitle,
+                                    jediAtDestination ? " [JEDI!]" : ""),
+                            contestBonus));
+        }
+        if (opponentSpies > 0) {
+            return new SpyAwareContest(
+                    ContestDisposition.SPY_ONLY,
+                    new Contribution(
+                            true,
+                            "V67f SPY-ONLY: " + destinationTitle
+                                    + " has only opponent spy ("
+                                    + opponentSpies
+                                    + ") — drain blocked, prefer draining elsewhere",
+                            -100.0f));
+        }
+        return new SpyAwareContest(
+                ContestDisposition.NONE, Contribution.none());
+    }
+
+    public static DrainThreatDisposition drainThreat(
+            float opponentPower,
+            float ourPower,
+            boolean ourUndercoverSpyPresent) {
+        if (opponentPower <= 0.0f || ourPower != 0.0f) {
+            return DrainThreatDisposition.NONE;
+        }
+        if (ourUndercoverSpyPresent) {
+            return DrainThreatDisposition.SPY_NEUTRALIZED;
+        }
+        if (opponentPower >= 7.0f) {
+            return DrainThreatDisposition.TOO_DANGEROUS;
+        }
+        return DrainThreatDisposition.ACTIVE;
+    }
+
+    public static WrongDirectionEvaluation wrongDirection(
+            boolean opponentsElsewhere,
+            String destinationTitle,
+            String opponentLocation,
+            boolean hiddenPathExempt,
+            boolean retreatExempt,
+            boolean joinGroupExempt) {
+        if (!opponentsElsewhere) {
+            return new WrongDirectionEvaluation(
+                    WrongDirectionDisposition.NONE,
+                    Contribution.none());
+        }
+        if (hiddenPathExempt) {
+            return new WrongDirectionEvaluation(
+                    WrongDirectionDisposition.HIDDEN_PATH_EXEMPT,
+                    Contribution.none());
+        }
+        if (retreatExempt) {
+            return new WrongDirectionEvaluation(
+                    WrongDirectionDisposition.RETREAT_EXEMPT,
+                    Contribution.none());
+        }
+        if (joinGroupExempt) {
+            return new WrongDirectionEvaluation(
+                    WrongDirectionDisposition.JOIN_GROUP_EXEMPT,
+                    Contribution.none());
+        }
+        return new WrongDirectionEvaluation(
+                WrongDirectionDisposition.VETO,
+                new Contribution(
+                        true,
+                        String.format(
+                                "V41 WRONG DIRECTION: %s is empty — opponents draining at %s! Go there instead!",
+                                destinationTitle, opponentLocation),
+                        -9999.0f));
+    }
+
+    public static boolean isCastleDestination(String destinationTitle) {
+        String titleLower = destinationTitle != null
+                ? destinationTitle.toLowerCase(Locale.ROOT) : "";
+        return titleLower.contains("mustafar")
+                && titleLower.contains("castle");
+    }
+
+    public static Contribution castleRetreat(
+            String destinationTitle, boolean opponentsPresent) {
+        if (!opponentsPresent
+                || !isCastleDestination(destinationTitle)) {
+            return Contribution.none();
+        }
+        return new Contribution(
+                true,
+                "V41 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!",
+                -9999.0f);
     }
 
     public static boolean isSelfMoveToFriend(String gameText) {

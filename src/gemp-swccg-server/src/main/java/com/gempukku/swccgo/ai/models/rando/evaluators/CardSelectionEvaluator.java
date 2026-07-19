@@ -5319,21 +5319,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             } catch (Exception e) { /* ignore */ }
                         }
 
-                        // === V67au (Steve, 2026-05-08): RETREAT-TO-DRAIN STRATEGY ===
-                        //
-                        // When Rando is at an over-contested battleground (enemy power
-                        // exceeds Rando's), and the candidate move destination is a
-                        // SAFE adjacent non-BG with friendly drain icons and no
-                        // opponents, this is a 'deploy-then-move-to-drain' play:
-                        // Rando deploys characters to a contested BG (because that's
-                        // where his deck wants them), then moves them out next turn to
-                        // an empty drainable adjacent site. Net effect: avoids battle
-                        // suicide AND drains uncontested AND spreads pressure.
-                        //
-                        // Strict version (Steve's choice): only fire when there's a
-                        // CONFIRMED escape route — destination has zero opponents AND
-                        // friendly drain icons. Otherwise no bonus (don't reward
-                        // arbitrary retreats).
+                        // MoveDestinationPolicy owns V67au retreat-to-drain scoring.
                         try {
                             String dtForRetreat = context.getDecisionText() != null
                                 ? context.getDecisionText() : "";
@@ -5357,9 +5343,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .getTotalPowerAtLocation(gameState, retFromLoc, playerId, false, false);
                                     boolean fromIsBg = game.getModifiersQuerying()
                                         .isBattleground(gameState, retFromLoc, null);
-                                    boolean fromOverContested = fromIsBg
-                                        && fromOppPower > 0
-                                        && fromOppPower > fromOurPower;
 
                                     boolean destIsBg = game.getModifiersQuerying()
                                         .isBattleground(gameState, location, null);
@@ -5376,12 +5359,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
 
-                                    if (fromOverContested && !destIsBg && destOppPower == 0
-                                            && destFriendlyDrainIcons > 0) {
-                                        action.addReasoning(String.format(
-                                            "V67au RETREAT-TO-DRAIN: %s is over-contested (their %0.f vs our %0.f) — move to safe adjacent %s (no opp, %d friendly icons) and drain there!",
+                                    MoveDestinationPolicy.Contribution v67auDecision =
+                                        MoveDestinationPolicy.retreatToDrain(
                                             retFromLoc.getTitle(), fromOppPower, fromOurPower,
-                                            title, destFriendlyDrainIcons), 400.0f);
+                                            fromIsBg, title, destOppPower, destIsBg,
+                                            destFriendlyDrainIcons);
+                                    if (v67auDecision.applies()) {
+                                        action.addReasoning(
+                                            v67auDecision.reason(), v67auDecision.delta());
                                         logger.warn("V67au RETREAT-TO-DRAIN: from={} (opp {}, ours {}) → to {} (non-BG, empty, {} icons) → +400",
                                             retFromLoc.getTitle(), (int) fromOppPower, (int) fromOurPower,
                                             title, destFriendlyDrainIcons);
@@ -5453,59 +5438,30 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // === V64 POWER-AWARE MOVE DESTINATION — don't send Jedi to their death ===
-                        // When transiting Jedi off Mapuzo, avoid sites where the opponent's
-                        // total power exceeds what our available Jedi can match. Rando
-                        // previously sent Kelleran (power 5) to Jabiim: Starship Hangar
-                        // where Grand Inquisitor + Emperor Palpatine sat (combined 13+
-                        // power) — instant kill. Hidden Path Jedi are ~6-7 power flipped,
-                        // so destinations with opponent power ≥ 8 without our own support
-                        // are suicide moves.
-                        // FIXES z7qk4ap0b72e4uvm replay (msg 324): Kelleran moved into
-                        // Grand Inquisitor + Emperor → Steve won battle at msg 451.
-                        // Steve's preferred strategy: drain pressure via split-sites, not
-                        // battle initiation into stronger enemies.
+                        // MoveDestinationPolicy owns V64/V65 Hidden Path power safety.
                         {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v64Obj =
                                 context.getObjectiveAnalyzer();
                             boolean v64HiddenPath = v64Obj != null && v64Obj.isAnalyzed()
                                 && v64Obj.getObjectiveTitle() != null
                                 && v64Obj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path");
-                            if (v64HiddenPath && game != null && gameState != null
-                                && title != null
-                                && !title.toLowerCase(java.util.Locale.ROOT).contains("mapuzo")) {
-                                // V65: Tightened threshold from 8 to 7 — Lord Vader at printed
-                                // power 7 with DVL slipped through. A lone Jedi vs Vader on
-                                // opponent's next-turn deploy+battle phase is a guaranteed loss.
-                                // Steve: "moving solo obiwan against vader when it's my turn
-                                // next to deploy and battle is a very bad idea."
-                                // Assume our Jedi move-in adds ~6 power (typical Jedi Survivor
-                                // when flipped).
-                                float assumedJediPower = 6.0f;
-                                float projectedOurPower = ourPower + assumedJediPower;
-                                if (theirPower >= 7 && projectedOurPower < theirPower + 2) {
-                                    // Solo Jedi move: opponent will out-deploy and battle NEXT turn.
-                                    // Require our projected power to exceed theirs by 2+ to call it safe.
-                                    float deathPenalty = -1500.0f;
-                                    if (theirPower >= 9) deathPenalty = -1800.0f;
-                                    if (theirPower >= 12) deathPenalty = -2500.0f;
-                                    action.addReasoning(
-                                        "V64 SUICIDE MOVE: " + title + " has enemy power "
-                                            + (int)theirPower + " — solo Jedi will DIE on their next turn!",
-                                        deathPenalty);
+                            MoveDestinationPolicy.PowerAwareDestination v64Decision =
+                                MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                                    v64HiddenPath && game != null && gameState != null,
+                                    title, theirPower, ourPower);
+                            if (v64Decision.contribution().applies()) {
+                                action.addReasoning(
+                                    v64Decision.contribution().reason(),
+                                    v64Decision.contribution().delta());
+                                if (v64Decision.disposition()
+                                        == MoveDestinationPolicy.PowerAwareDisposition.SUICIDE) {
                                     logger.warn("V64 SUICIDE MOVE: {} enemy={} our projected={} — HARD BLOCKED ({})",
-                                        title, (int)theirPower, (int)projectedOurPower, (int)deathPenalty);
-                                } else if (theirPower == 0) {
-                                    // Empty site — excellent drain target
-                                    action.addReasoning(
-                                        "V64 SAFE DRAIN: " + title + " is empty — Jedi can drain without opposition!",
-                                        150.0f);
+                                        title, (int)theirPower,
+                                        (int)v64Decision.projectedOurPower(),
+                                        (int)v64Decision.contribution().delta());
+                                } else if (v64Decision.disposition()
+                                        == MoveDestinationPolicy.PowerAwareDisposition.SAFE_DRAIN) {
                                     logger.info("V64 SAFE DRAIN: {} empty — ideal drain destination (+150)", title);
-                                } else if (projectedOurPower >= theirPower + 3) {
-                                    // We'll have clear power advantage
-                                    action.addReasoning(
-                                        "V64 FAVORABLE: " + title + " — Jedi arrival gives us power advantage",
-                                        80.0f);
                                 }
                             }
                         }
@@ -5715,16 +5671,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // === V41: HUNT DOWN — MOVE DESTINATION AWARENESS ===
-                        // When choosing a move destination (e.g., Vader's Castle ability),
-                        // STRONGLY prefer locations with opponents, especially Jedi.
-                        // This fixes Vader going to empty Mapuzo Safehouse instead of
-                        // Malachor Entrance where Obi-Wan was draining 4 per turn.
-                        // V67f2: Exclude UNDERCOVER SPIES from "go fight" bonus — a spy
-                        // doesn't actively threaten us; moving Jedi to an opp-spy site
-                        // wastes drain potential. FIXES uarc0hmiai1i594y replay: Ezra
-                        // and Young Skywalker piled into Tatooine: Mos Eisley because
-                        // V41 saw "+300 go fight" on Steve's U-3PO spy (power 1).
+                        // Policy owns V41/V65/V67aa/V67f2 destination scoring and exemptions.
                         if (game != null && playerId != null) {
                             try {
                                 String opponentId = gameState.getOpponent(playerId);
@@ -5752,26 +5699,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 } catch (Exception e) { /* ignore */ }
 
-                                // V67aa (Steve, 2026-05-03): HIDDEN PATH JEDI SUICIDE BLOCK.
-                                // When on Hidden Path pre-flip, Jedi survivors are power 3
-                                // (Fallen Order Effect), and the V41 CONTEST DEST 'go fight'
-                                // bonus would send them into power-8+ enemy sites where they
-                                // get killed solo. Symptom: Rando moved both Jedi to Hoth
-                                // (where Steve had power 8) instead of spreading to empty
-                                // Jabiim, then sent solo Obi-Wan to Hoth and lost the game.
-                                //
-                                // Rule: on Hidden Path pre-flip, any destination with opp power
-                                // ≥ 5 AND our power = 0 is suicide for the weak Jedi → hard-block.
+                                // Adapter retains objective reads and V67aa's terminal continue.
                                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v67aaObj =
                                     context.getObjectiveAnalyzer();
                                 boolean v67aaOnHiddenPath = v67aaObj != null && v67aaObj.isAnalyzed()
                                     && v67aaObj.getObjectiveTitle() != null
                                     && v67aaObj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path")
                                     && !v67aaObj.isFlipped();
-                                if (v67aaOnHiddenPath && v67fNonSpyOpponentPower >= 5 && ourPower == 0) {
-                                    action.addReasoning(String.format(
-                                        "V67aa HIDDEN PATH SUICIDE BLOCK: %s has opp power %.0f — pre-flip Jedi survivors are power 3, this is SUICIDE!",
-                                        title, v67fNonSpyOpponentPower), -9999.0f);
+                                MoveDestinationPolicy.Contribution v67aaDecision =
+                                    MoveDestinationPolicy.hiddenPathPreFlipSuicide(
+                                        v67aaOnHiddenPath, title,
+                                        v67fNonSpyOpponentPower, ourPower);
+                                if (v67aaDecision.applies()) {
+                                    action.addReasoning(
+                                        v67aaDecision.reason(), v67aaDecision.delta());
                                     logger.warn("V67aa SUICIDE BLOCK: {} opp={} our=0 on Hidden Path pre-flip — BLOCK transit (-9999)",
                                         title, v67fNonSpyOpponentPower);
                                     // Skip V41 CONTEST DEST bonus — we already hard-blocked
@@ -5779,19 +5720,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     continue;
                                 }
 
-                                // Check if non-spy opponents are at this destination
+                                boolean jediAtDest = false;
                                 if (v67fNonSpyOpponentPower > 0) {
-                                    // Opponents here — GREAT move destination!
-                                    float contestBonus = 300.0f;
-
-                                    // Extra bonus if uncontested (we have no presence)
-                                    if (ourPower == 0) {
-                                        contestBonus += 200.0f;
-                                        logger.warn("V41 MOVE DEST CONTEST: {} is UNCONTESTED by us — urgent! (+500)", title);
-                                    }
-
-                                    // Check for Jedi/Padawan at destination (Hunt Down priority)
-                                    boolean jediAtDest = false;
                                     for (PhysicalCard c : gameState.getCardsAtLocation(location)) {
                                         if (c == null || playerId.equals(c.getOwner())) continue;
                                         String cTitle = c.getTitle() != null ? c.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
@@ -5800,32 +5730,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             break;
                                         }
                                     }
-                                    if (jediAtDest) {
-                                        contestBonus += 200.0f;
-                                        logger.warn("V41 HUNT JEDI DEST: Jedi at {} — Vader must go here! (+{})", title, (int)contestBonus);
-                                    }
+                                }
 
-                                    action.addReasoning(String.format(
-                                        "V41 CONTEST DEST: Opponents (power %.0f) at %s%s — go fight!",
-                                        v67fNonSpyOpponentPower, title, jediAtDest ? " [JEDI!]" : ""), contestBonus);
-                                } else if (v67fSpiesHere > 0) {
-                                    // V67f2: Opponent's spy here but no real characters.
-                                    // Don't dilute drain potential by piling characters into a spy site.
+                                MoveDestinationPolicy.SpyAwareContest v41Contest =
+                                    MoveDestinationPolicy.spyAwareContest(
+                                        title, v67fNonSpyOpponentPower, v67fSpiesHere,
+                                        ourPower, jediAtDest);
+                                if (v41Contest.disposition()
+                                        == MoveDestinationPolicy.ContestDisposition.CONTEST) {
+                                    if (ourPower == 0) {
+                                        logger.warn("V41 MOVE DEST CONTEST: {} is UNCONTESTED by us — urgent! (+500)", title);
+                                    }
+                                    if (jediAtDest) {
+                                        logger.warn("V41 HUNT JEDI DEST: Jedi at {} — Vader must go here! (+{})",
+                                            title, (int)v41Contest.contribution().delta());
+                                    }
                                     action.addReasoning(
-                                        "V67f SPY-ONLY: " + title + " has only opponent spy ("
-                                            + v67fSpiesHere + ") — drain blocked, prefer draining elsewhere",
-                                        -100.0f);
+                                        v41Contest.contribution().reason(),
+                                        v41Contest.contribution().delta());
+                                } else if (v41Contest.disposition()
+                                        == MoveDestinationPolicy.ContestDisposition.SPY_ONLY) {
+                                    action.addReasoning(
+                                        v41Contest.contribution().reason(),
+                                        v41Contest.contribution().delta());
                                     logger.warn("V67f SPY-ONLY: {} has only opp spies (no real characters) — penalize move-in (-100)", title);
                                 } else {
-                                    // No opponents here — check if opponents are draining uncontested ELSEWHERE
-                                    // V65 SMART WRONG-DIRECTION: Skip the hard-block when:
-                                    //   (a) Our own undercover spy is at the "draining" site
-                                    //       (spy neutralizes their drain — it's not actually a threat)
-                                    //   (b) The "draining" site is suicide to enter
-                                    //       (opponent power too high for our Jedi)
-                                    // FIXES qi99bkot034gso86 replay: Obi-Wan forced to join Boushh
-                                    // at Jabiim: Starship Hangar vs Lord Vader + DVL — spy was
-                                    // already blocking the drain, other BGs were safer drain targets.
+                                    // Adapter retains board scans; policy owns V65 threat classification.
                                     boolean opponentsElsewhere = false;
                                     String worstDrainLoc = null;
                                     float worstDrainPower = 0;
@@ -5850,33 +5780,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     }
                                                 }
                                             } catch (Exception e) { /* ignore */ }
-                                            if (ourSpyBlocksIt) {
+                                            MoveDestinationPolicy.DrainThreatDisposition v65Threat =
+                                                MoveDestinationPolicy.drainThreat(
+                                                    oppPower, ourPowerThere, ourSpyBlocksIt);
+                                            if (v65Threat
+                                                    == MoveDestinationPolicy.DrainThreatDisposition.SPY_NEUTRALIZED) {
                                                 logger.info("V65a SPY-NEUTRALIZED: Not marking {} as wrong-direction — our spy blocks {} drain",
                                                     title, otherLoc.getTitle());
-                                                continue;  // don't count this as a drain threat
-                                            }
-                                            // V65b: Suicide destination — opponent too strong for single Jedi.
-                                            // Treat Hidden Path flipped Jedi as ~6 power baseline.
-                                            if (oppPower >= 7) {
+                                                continue;
+                                            } else if (v65Threat
+                                                    == MoveDestinationPolicy.DrainThreatDisposition.TOO_DANGEROUS) {
                                                 logger.info("V65b SUICIDE-WRONG-DIR: Not marking {} as wrong-direction — {} has enemy power {} (suicide for Jedi)",
                                                     title, otherLoc.getTitle(), (int)oppPower);
-                                                continue;  // don't count this as a drain threat
+                                                continue;
+                                            } else if (v65Threat
+                                                    == MoveDestinationPolicy.DrainThreatDisposition.ACTIVE) {
+                                                opponentsElsewhere = true;
                                             }
-                                            opponentsElsewhere = true;
-                                            if (oppPower > worstDrainPower) {
+                                            if (v65Threat
+                                                    == MoveDestinationPolicy.DrainThreatDisposition.ACTIVE
+                                                    && oppPower > worstDrainPower) {
                                                 worstDrainPower = oppPower;
                                                 worstDrainLoc = otherLoc.getTitle();
                                             }
                                         }
                                     }
                                     if (opponentsElsewhere) {
-                                        // V67z (Steve, 2026-05-03): EXEMPT Hidden Path split-sites.
-                                        // V41 was hard-blocking Jabiim destinations because opponents
-                                        // were at Coruscant. But on Hidden Path, the SMART play is to
-                                        // move ONE Jedi to a non-Mapuzo battleground (Jabiim) for the
-                                        // objective flip, even if opponents are elsewhere. Symptom:
-                                        // Rando moved both Jedi to the SAME Jabiim site instead of
-                                        // splitting because V41 -9999 swamped V62 SPLIT SITE +200.
                                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v67zObj =
                                             context.getObjectiveAnalyzer();
                                         boolean v67zOnHiddenPath = v67zObj != null && v67zObj.isAnalyzed()
@@ -5891,52 +5820,38 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     .isBattleground(gameState, location, null);
                                             } catch (Exception e) { /* ignore */ }
                                         }
-                                        // V67z UPDATE (Steve, 2026-06-18): also exempt the Underground
-                                        // Corridor transit HUB. The Hidden Path transit is two steps —
-                                        // step 1 Safehouse -> Mapuzo: Underground Corridor (a MAPUZO
-                                        // site), step 2 Corridor -> off-Mapuzo. The split-site exemption
-                                        // above only covered step 2's non-Mapuzo BGs, so on the step-1
-                                        // Corridor move V41 WRONG DIRECTION (-9999) still buried V67n
-                                        // (+1500): net -8481 -> Rando PASSED and the crippled Jedi
-                                        // survivors (power 3, forfeit 3, game text canceled per Fallen
-                                        // Order) rotted at Mapuzo and got slaughtered (replay
-                                        // aj816vuaxukwoie2). The Corridor is MANDATORY transit, not a
-                                        // "wrong direction" — skip V41 here too so V67n's +1500 wins.
                                         boolean v67zTransitHub = v67zOnHiddenPath && title != null
                                                 && title.toLowerCase(java.util.Locale.ROOT).contains("underground corridor");
-                                        if (v67zNonMapuzoBG || v67zTransitHub) {
+
+                                        MoveDestinationPolicy.WrongDirectionEvaluation v41Direction =
+                                            MoveDestinationPolicy.wrongDirection(
+                                                opponentsElsewhere, title, worstDrainLoc,
+                                                v67zNonMapuzoBG || v67zTransitHub,
+                                                MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat),
+                                                v156JoinMode && v156DestFriendlyChars > 0);
+                                        if (v41Direction.disposition()
+                                                == MoveDestinationPolicy.WrongDirectionDisposition.HIDDEN_PATH_EXEMPT) {
                                             logger.info("V67z HIDDEN PATH {} EXEMPT: {} on Hidden Path — V41 WRONG DIRECTION skipped",
                                                 v67zTransitHub ? "TRANSIT-HUB" : "SPLIT", title);
-                                        } else if (MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat)) {
-                                            // V169 (Steve, 2026-06): a RETREAT is, by definition, a move to an
-                                            // empty site while opponents are elsewhere — V41's block is exactly
-                                            // wrong for an endangered mover. This -9999 is what trapped Asajj at
-                                            // Guest Quarters (every safe destination blocked -> cancel-loop ->
-                                            // move hard-vetoed -> beaten 6v27). Skip it in retreat mode.
+                                        } else if (v41Direction.disposition()
+                                                == MoveDestinationPolicy.WrongDirectionDisposition.RETREAT_EXEMPT) {
                                             logger.warn("V169 RETREAT EXEMPT: {} — V41 wrong-direction skipped (mover fleeing {})",
                                                 title, v169Retreat.originTitle());
-                                        } else if (v156JoinMode && v156DestFriendlyChars > 0) {
-                                            // V156 JOIN-GROUP EXEMPT (2026-07-07): a weak solo consolidating
-                                            // onto OUR OWN stack is not "wrong direction" — V41's 'empty' only
-                                            // counts opponents, so it -9999'd the one join destination and
-                                            // stranded Fel at Scarif: Beach (cancel-loop -> V160 veto -> rot ->
-                                            // forfeit). Skip it for friendly-character destinations in join
-                                            // mode, same pattern as the V169/V67z exemptions above.
+                                        } else if (v41Direction.disposition()
+                                                == MoveDestinationPolicy.WrongDirectionDisposition.JOIN_GROUP_EXEMPT) {
                                             logger.warn("V156 JOIN-GROUP EXEMPT: {} has {} friendly character(s) — V41 wrong-direction skipped (weak solo joining from {})",
                                                 title, v156DestFriendlyChars, v156FromTitle);
-                                        } else {
-                                            // V41: WRONG DIRECTION — moving to empty site while opponents drain elsewhere
-                                            action.addReasoning(String.format(
-                                                "V41 WRONG DIRECTION: %s is empty — opponents draining at %s! Go there instead!",
-                                                title, worstDrainLoc), -9999.0f);
+                                        } else if (v41Direction.disposition()
+                                                == MoveDestinationPolicy.WrongDirectionDisposition.VETO) {
+                                            action.addReasoning(
+                                                v41Direction.contribution().reason(),
+                                                v41Direction.contribution().delta());
                                             logger.warn("V41 WRONG DIRECTION: {} is empty, opponents at {} — BLOCKED", title, worstDrainLoc);
                                         }
                                     }
                                 }
 
-                                // V41: CASTLE RETREAT BLOCK — never move back to Castle when opponents exist
-                                String destTitleLower = title != null ? title.toLowerCase(java.util.Locale.ROOT) : "";
-                                if (destTitleLower.contains("mustafar") && destTitleLower.contains("castle")) {
+                                if (MoveDestinationPolicy.isCastleDestination(title)) {
                                     boolean anyOpponents = false;
                                     for (PhysicalCard otherLoc : gameState.getTopLocations()) {
                                         if (otherLoc == null) continue;
@@ -5944,8 +5859,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             gameState, otherLoc, opponentId, false, false);
                                         if (op > 0) { anyOpponents = true; break; }
                                     }
-                                    if (anyOpponents) {
-                                        action.addReasoning("V41 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!", -9999.0f);
+                                    MoveDestinationPolicy.Contribution v41Castle =
+                                        MoveDestinationPolicy.castleRetreat(
+                                            title, anyOpponents);
+                                    if (v41Castle.applies()) {
+                                        action.addReasoning(
+                                            v41Castle.reason(), v41Castle.delta());
                                         logger.warn("V41 CASTLE RETREAT BLOCKED in move destination selection");
                                     }
                                 }

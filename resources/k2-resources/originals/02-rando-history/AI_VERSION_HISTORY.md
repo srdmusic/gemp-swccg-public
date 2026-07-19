@@ -7159,3 +7159,24 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     nine changed policy/adapter classes are present in web.jar; exact live mirror byte parity passed.
     Runtime reload remains pending on the external runtime. AI source only; no GEMP engine or
     player-decision changes.
+
+  ════ V245 (2026-07-19): consolidate MOVE destination scoring and veto order ════
+    MoveDestinationPolicy now owns the coupled CardSelection destination tree: V67au retreat-to-
+    drain; V64/V65 Hidden Path power safety; V67aa pre-flip suicide; V41/V67f2 spy-aware contest;
+    V65a/V65b threat exemptions; V67z/V169/V156 wrong-direction priority; and the independent V41
+    Castle veto. Both adapters retain decision-text parsing, first physical-card lookup, objective
+    state, printed and engine power reads, undercover/Jedi scans, logging, action mutation, candidate
+    order, V67aa's terminal append/continue, and every surrounding scorer. Verification exposed and
+    fixes one dormant AI bug: V67au's invalid `%0.f` format tokens threw after qualification and
+    silently discarded the documented +400; valid `%.0f` tokens now allow that score to apply. Other
+    behavior remains unchanged. Exact oddities remain:
+    V41 is not Hunt Down-gated; V64/V67aa do not verify the mover is Jedi; printed and engine power
+    facts are not normalized; V67au uses own-side icons; V67aa remains after V64; and all documented
+    additive stacks remain possible. V67f1 passenger logic remains in MoveLandingPolicy. Focused
+    destination 42/0/0/0, MOVE-named 371/0/0/0, full reactor 1555/0/0/26, normalized mirror parity,
+    AI-only boundary, forbidden-symbol scan, and clean package passed. Server jar SHA-256
+    ae57f654159f1f516b1f4d87efbd444ce8963ed7303a5282f81bd73c03da0fe4 and web jar SHA-256
+    b9b2aa8d11192d6a3aa7ca2b7d9414afdcc7c0000d6ffc7eef7439b3b943911c contain the shared
+    policy, all nested decision types, and both adapters. Independent review found no correctness
+    issues; exact live mirror byte parity passed. Runtime reload remains pending on the external
+    runtime. AI source only; no GEMP engine or player-decision changes.

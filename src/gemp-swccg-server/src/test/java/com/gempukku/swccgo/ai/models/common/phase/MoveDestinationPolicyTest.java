@@ -442,6 +442,243 @@ public class MoveDestinationPolicyTest {
     }
 
     @Test
+    public void retreatToDrainPreservesStrictRouteAndExactBonus() {
+        MoveDestinationPolicy.Contribution result =
+                MoveDestinationPolicy.retreatToDrain(
+                        "Contested Site", 8.0f, 5.0f, true,
+                        "Drain Site", 0.0f, false, 2);
+
+        assertTrue(result.applies());
+        assertFloat(400.0f, result.delta());
+        assertEquals(
+                "V67au RETREAT-TO-DRAIN: Contested Site is over-contested (their 8 vs our 5) — move to safe adjacent Drain Site (no opp, 2 friendly icons) and drain there!",
+                result.reason());
+
+        assertFalse(MoveDestinationPolicy.retreatToDrain(
+                "Source", 8.0f, 5.0f, false,
+                "Destination", 0.0f, false, 1).applies());
+        assertFalse(MoveDestinationPolicy.retreatToDrain(
+                "Source", 5.0f, 5.0f, true,
+                "Destination", 0.0f, false, 1).applies());
+        assertFalse(MoveDestinationPolicy.retreatToDrain(
+                "Source", 8.0f, 5.0f, true,
+                "Destination", Math.nextUp(0.0f), false, 1).applies());
+        assertFalse(MoveDestinationPolicy.retreatToDrain(
+                "Source", 8.0f, 5.0f, true,
+                "Destination", 0.0f, true, 1).applies());
+        assertFalse(MoveDestinationPolicy.retreatToDrain(
+                "Source", 8.0f, 5.0f, true,
+                "Destination", 0.0f, false, 0).applies());
+    }
+
+    @Test
+    public void hiddenPathPowerSafetyPreservesThresholdsAndScores() {
+        assertFalse(MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                false, "Jabiim", 12.0f, 0.0f)
+                .contribution().applies());
+        assertFalse(MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                true, "Mapuzo: Safehouse", 12.0f, 0.0f)
+                .contribution().applies());
+
+        MoveDestinationPolicy.PowerAwareDestination seven =
+                MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                        true, "Jabiim", 7.0f, 0.0f);
+        assertEquals(MoveDestinationPolicy.PowerAwareDisposition.SUICIDE,
+                seven.disposition());
+        assertFloat(6.0f, seven.projectedOurPower());
+        assertFloat(-1500.0f, seven.contribution().delta());
+        assertEquals(
+                "V64 SUICIDE MOVE: Jabiim has enemy power 7 — solo Jedi will DIE on their next turn!",
+                seven.contribution().reason());
+
+        assertFloat(-1800.0f,
+                MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                        true, "Jabiim", 9.0f, 0.0f)
+                        .contribution().delta());
+        assertFloat(-2500.0f,
+                MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                        true, "Jabiim", 12.0f, 0.0f)
+                        .contribution().delta());
+
+        MoveDestinationPolicy.PowerAwareDestination safe =
+                MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                        true, "Jabiim", 0.0f, 0.0f);
+        assertEquals(MoveDestinationPolicy.PowerAwareDisposition.SAFE_DRAIN,
+                safe.disposition());
+        assertFloat(150.0f, safe.contribution().delta());
+
+        MoveDestinationPolicy.PowerAwareDestination favorable =
+                MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                        true, "Jabiim", 3.0f, 0.0f);
+        assertEquals(MoveDestinationPolicy.PowerAwareDisposition.FAVORABLE,
+                favorable.disposition());
+        assertFloat(80.0f, favorable.contribution().delta());
+
+        assertFalse(MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                true, "Jabiim", 7.0f, 3.0f)
+                .contribution().applies());
+    }
+
+    @Test
+    public void hiddenPathPreFlipSuicidePreservesHardBoundary() {
+        assertFalse(MoveDestinationPolicy.hiddenPathPreFlipSuicide(
+                false, "Hoth", 8.0f, 0.0f).applies());
+        assertFalse(MoveDestinationPolicy.hiddenPathPreFlipSuicide(
+                true, "Hoth", Math.nextDown(5.0f), 0.0f).applies());
+        assertFalse(MoveDestinationPolicy.hiddenPathPreFlipSuicide(
+                true, "Hoth", 5.0f, Math.nextUp(0.0f)).applies());
+
+        MoveDestinationPolicy.Contribution result =
+                MoveDestinationPolicy.hiddenPathPreFlipSuicide(
+                        true, "Hoth", 5.0f, 0.0f);
+        assertTrue(result.applies());
+        assertFloat(-9999.0f, result.delta());
+        assertEquals(
+                "V67aa HIDDEN PATH SUICIDE BLOCK: Hoth has opp power 5 — pre-flip Jedi survivors are power 3, this is SUICIDE!",
+                result.reason());
+    }
+
+    @Test
+    public void spyAwareContestPreservesContestAndSpyOnlyScores() {
+        assertFloat(300.0f, MoveDestinationPolicy.spyAwareContest(
+                "Site", 4.0f, 0, 2.0f, false)
+                .contribution().delta());
+        assertFloat(500.0f, MoveDestinationPolicy.spyAwareContest(
+                "Site", 4.0f, 0, 0.0f, false)
+                .contribution().delta());
+
+        MoveDestinationPolicy.SpyAwareContest jedi =
+                MoveDestinationPolicy.spyAwareContest(
+                        "Jedi Site", 4.0f, 1, 0.0f, true);
+        assertEquals(MoveDestinationPolicy.ContestDisposition.CONTEST,
+                jedi.disposition());
+        assertFloat(700.0f, jedi.contribution().delta());
+        assertEquals(
+                "V41 CONTEST DEST: Opponents (power 4) at Jedi Site [JEDI!] — go fight!",
+                jedi.contribution().reason());
+
+        MoveDestinationPolicy.SpyAwareContest spyOnly =
+                MoveDestinationPolicy.spyAwareContest(
+                        "Mos Eisley", 0.0f, 2, 0.0f, false);
+        assertEquals(MoveDestinationPolicy.ContestDisposition.SPY_ONLY,
+                spyOnly.disposition());
+        assertFloat(-100.0f, spyOnly.contribution().delta());
+        assertEquals(
+                "V67f SPY-ONLY: Mos Eisley has only opponent spy (2) — drain blocked, prefer draining elsewhere",
+                spyOnly.contribution().reason());
+
+        assertEquals(MoveDestinationPolicy.ContestDisposition.NONE,
+                MoveDestinationPolicy.spyAwareContest(
+                        "Empty", 0.0f, 0, 0.0f, false)
+                        .disposition());
+    }
+
+    @Test
+    public void drainThreatPreservesSpyAndSuicideExemptionOrder() {
+        assertEquals(MoveDestinationPolicy.DrainThreatDisposition.NONE,
+                MoveDestinationPolicy.drainThreat(0.0f, 0.0f, false));
+        assertEquals(MoveDestinationPolicy.DrainThreatDisposition.NONE,
+                MoveDestinationPolicy.drainThreat(4.0f, 1.0f, false));
+        assertEquals(
+                MoveDestinationPolicy.DrainThreatDisposition.SPY_NEUTRALIZED,
+                MoveDestinationPolicy.drainThreat(9.0f, 0.0f, true));
+        assertEquals(
+                MoveDestinationPolicy.DrainThreatDisposition.TOO_DANGEROUS,
+                MoveDestinationPolicy.drainThreat(7.0f, 0.0f, false));
+        assertEquals(MoveDestinationPolicy.DrainThreatDisposition.ACTIVE,
+                MoveDestinationPolicy.drainThreat(
+                        Math.nextDown(7.0f), 0.0f, false));
+    }
+
+    @Test
+    public void wrongDirectionPreservesExemptionPriorityAndVeto() {
+        assertEquals(MoveDestinationPolicy.WrongDirectionDisposition.NONE,
+                MoveDestinationPolicy.wrongDirection(
+                        false, "Empty", "Opponent", false, false, false)
+                        .disposition());
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition.HIDDEN_PATH_EXEMPT,
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Empty", "Opponent", true, true, true)
+                        .disposition());
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition.RETREAT_EXEMPT,
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Empty", "Opponent", false, true, true)
+                        .disposition());
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition.JOIN_GROUP_EXEMPT,
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Empty", "Opponent", false, false, true)
+                        .disposition());
+
+        MoveDestinationPolicy.WrongDirectionEvaluation veto =
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Empty", "Opponent", false, false, false);
+        assertEquals(MoveDestinationPolicy.WrongDirectionDisposition.VETO,
+                veto.disposition());
+        assertFloat(-9999.0f, veto.contribution().delta());
+        assertEquals(
+                "V41 WRONG DIRECTION: Empty is empty — opponents draining at Opponent! Go there instead!",
+                veto.contribution().reason());
+    }
+
+    @Test
+    public void castleRetreatPreservesExactTitleGateAndVeto() {
+        assertTrue(MoveDestinationPolicy.isCastleDestination(
+                "Mustafar: Vader's Castle"));
+        assertFalse(MoveDestinationPolicy.isCastleDestination(
+                "Vader's Castle"));
+        assertFalse(MoveDestinationPolicy.castleRetreat(
+                "Mustafar: Vader's Castle", false).applies());
+        assertFalse(MoveDestinationPolicy.castleRetreat(
+                "Vader's Castle", true).applies());
+
+        MoveDestinationPolicy.Contribution result =
+                MoveDestinationPolicy.castleRetreat(
+                        "Mustafar: Vader's Castle", true);
+        assertTrue(result.applies());
+        assertFloat(-9999.0f, result.delta());
+        assertEquals(
+                "V41 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!",
+                result.reason());
+    }
+
+    @Test
+    public void destinationSafetyContributionsRemainIndependentlyAdditive() {
+        MoveDestinationPolicy.RetreatMode retreat =
+                MoveDestinationPolicy.retreatMode("Contested", 3.0f);
+        float retreatStack = MoveDestinationPolicy.safeRetreatDestination(
+                retreat, "Drain Site", 0.0f).delta()
+                + MoveDestinationPolicy.retreatToDrain(
+                        "Contested", 8.0f, 5.0f, true,
+                        "Drain Site", 0.0f, false, 1).delta();
+        assertFloat(1000.0f, retreatStack);
+
+        float hiddenPathStack =
+                MoveDestinationPolicy.powerAwareHiddenPathDestination(
+                        true, "Hoth", 7.0f, 0.0f)
+                        .contribution().delta()
+                + MoveDestinationPolicy.hiddenPathPreFlipSuicide(
+                        true, "Hoth", 7.0f, 0.0f).delta();
+        assertFloat(-11499.0f, hiddenPathStack);
+
+        float vetoStack = MoveDestinationPolicy.wrongDirection(
+                true, "Mustafar: Vader's Castle", "Opponent Site",
+                false, false, false).contribution().delta()
+                + MoveDestinationPolicy.castleRetreat(
+                        "Mustafar: Vader's Castle", true).delta();
+        assertFloat(-19998.0f, vetoStack);
+
+        MoveDestinationPolicy.SpyAwareContest mixed =
+                MoveDestinationPolicy.spyAwareContest(
+                        "Mixed Site", 3.0f, 1, 0.0f, false);
+        assertEquals(MoveDestinationPolicy.ContestDisposition.CONTEST,
+                mixed.disposition());
+        assertFloat(500.0f, mixed.contribution().delta());
+    }
+
+    @Test
     public void selfMoveToFriendClassificationPreservesBothPhrases() {
         assertFalse(MoveDestinationPolicy.isSelfMoveToFriend(null));
         assertFalse(MoveDestinationPolicy.isSelfMoveToFriend(
