@@ -25,6 +25,14 @@ public class DeployPhaseScriptCharacterizationTest {
     }
 
     @Test
+    public void bothBotsUseTheSharedDeployPhaseScriptOwner() {
+        assertEquals(DeployPhaseScript.class,
+                com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript.class.getSuperclass());
+        assertEquals(DeployPhaseScript.class,
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript.class.getSuperclass());
+    }
+
+    @Test
     public void randoKeywordFallbackPreservesV179LocationParity() throws Exception {
         Object script = new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript();
         assertEquals("LOCATIONS", classify(script, "deploy a farm from reserve deck"));
@@ -52,7 +60,7 @@ public class DeployPhaseScriptCharacterizationTest {
 
     @SuppressWarnings("unchecked")
     private static Set<Object> resolveSteps(Object script, String text) throws Exception {
-        Method method = script.getClass().getDeclaredMethod(
+        Method method = findMethod(script.getClass(),
                 "resolveSteps", String.class, String.class,
                 com.gempukku.swccgo.game.state.GameState.class,
                 com.gempukku.swccgo.game.SwccgGame.class,
@@ -63,10 +71,23 @@ public class DeployPhaseScriptCharacterizationTest {
     }
 
     private static String classify(Object script, String text) throws Exception {
-        Method method = script.getClass().getDeclaredMethod(
+        Method method = findMethod(script.getClass(),
                 "classifyByKeywords", String.class);
         method.setAccessible(true);
         Object step = method.invoke(script, text);
         return step == null ? null : step.toString();
+    }
+
+    private static Method findMethod(Class<?> type, String name, Class<?>... parameterTypes)
+            throws NoSuchMethodException {
+        Class<?> current = type;
+        while (current != null) {
+            try {
+                return current.getDeclaredMethod(name, parameterTypes);
+            } catch (NoSuchMethodException ignored) {
+                current = current.getSuperclass();
+            }
+        }
+        throw new NoSuchMethodException(name);
     }
 }

@@ -7489,3 +7489,21 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     contain the gated owner and mirrored adapters. Runtime reload and live-game proof remain pending
     on the external runtime. Independent review passed identity, classification, route, mirror, and
     engine-free ownership gates. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V262 (2026-07-19): consolidate the DEPLOY phase-script walker ════
+    One shared AI-only DeployPhaseScript now owns the exact V67bb/V67bc/V179 deploy-phase walk
+    that previously existed as two 517-line bot copies. Rando and ChosenOne keep thin compatibility
+    facades that provide their original logger and DeckOracle calls, so caller class names and the
+    inherited Step/Result types remain compatible. This packet is structural-only: bucket order,
+    action exclusions, card and hand classification, source-card parsing, keyword fallback, named-
+    location-in-hand guard, battleground qualification, no-opinion and empty-pass routing, logs,
+    and ordered results are unchanged. Focused ownership/characterization 14/0/0/0, DEPLOY-named
+    164/0/0/0, full reactor 1707/0/0/26, exact old-to-shared implementation diff, thin-facade source
+    gates, inherited caller compilation, AI-only boundary, forbidden-symbol scan, compiled-artifact
+    gates, and clean package passed. Server jar SHA-256
+    2da1021d445be7544c4cff55fcb8b1f8ace5d6858aa8ebf799cde431c266d6d2 and web jar SHA-256
+    fab34a7f123517ca0e3fcbed53c6cd964edd99909496a6fe86dc77eacaf9be20 contain the shared owner
+    plus both facades. Independent review passed behavior, caller types, logger/oracle routing,
+    reflection lookup, bot parity, AI-only scope, and metadata boundaries. Runtime reload and
+    live-game proof remain pending on the external runtime. AI source only; no GEMP engine or
+    player-decision changes.

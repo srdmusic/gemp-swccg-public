@@ -23,6 +23,23 @@ public class DeployPhaseSourceParityTest {
     }
 
     @Test
+    public void deployPhaseScriptHasOneSharedOwnerAndThinBotFacades() throws IOException {
+        String common = Files.readString(commonPhaseRoot().resolve("DeployPhaseScript.java"));
+        assertTrue(common.contains("public abstract class DeployPhaseScript"));
+        assertTrue(common.contains("enum Step"));
+        assertTrue(common.contains("Set<Step> resolveSteps("));
+
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String facade = strategySource(bot, "DeployPhaseScript.java");
+            assertTrue(facade.contains(
+                    "extends com.gempukku.swccgo.ai.models.common.phase.DeployPhaseScript"));
+            assertFalse(facade.contains("enum Step"));
+            assertFalse(facade.contains("LOCATION_HINT_KEYWORDS"));
+            assertFalse(facade.contains("Set<Step> resolveSteps("));
+        }
+    }
+
+    @Test
     public void sequencingAndBudgetScoresHaveOneSharedOwner() throws IOException {
         String deploy = evaluatorSource("rando", "DeployEvaluator.java");
         String actionText = evaluatorSource("rando", "ActionTextEvaluator.java");
@@ -48,7 +65,8 @@ public class DeployPhaseSourceParityTest {
     public void aiOnlyDeployFilesContainNoForbiddenEngineMetadata() throws IOException {
         String combined = Files.readString(commonPhaseRoot().resolve("DeploySequencingPolicy.java"))
                 + Files.readString(commonPhaseRoot().resolve("DeployBudgetPolicy.java"))
-                + Files.readString(commonPhaseRoot().resolve("DeployPlanPolicy.java"));
+                + Files.readString(commonPhaseRoot().resolve("DeployPlanPolicy.java"))
+                + Files.readString(commonPhaseRoot().resolve("DeployPhaseScript.java"));
         for (String forbidden : new String[]{
                 "DecisionOrigin", "DecisionActionSemantic", "DecisionWire",
                 "PullDeployRef", "PullPhysicalCardRef", "DeployDestinationRef",
@@ -106,6 +124,12 @@ public class DeployPhaseSourceParityTest {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
                 .resolve(bot).resolve("evaluators").resolve(fileName));
+    }
+
+    private static String strategySource(String bot, String fileName) throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models")
+                .resolve(bot).resolve("strategy").resolve(fileName));
     }
 
     private static Path commonPhaseRoot() {
