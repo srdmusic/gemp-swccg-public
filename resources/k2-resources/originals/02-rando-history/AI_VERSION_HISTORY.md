@@ -7222,3 +7222,19 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     system, weapon, and retreat-exemption reads have different failure boundaries. Runtime reload and
     live-game proof remain pending on the external runtime. AI source only; no GEMP engine or
     player-decision changes.
+
+  ════ V248 (2026-07-19): consolidate MOVE V67ae move-to-here drain guard ════
+    MoveDrainRoutingPolicy now owns V67ae's exact action-text classifier and final nonzero-drain,
+    hopeless-retreat, and zero-drain scoring branches. Both ActionTextEvaluator mirrors retain the
+    destination-site lookup, icon reads, same-system location scan, engine power reads, weapon
+    estimates, score mutation, logs, neutral append, and all failure boundaries. Behavior remains
+    structural-only: icon-read failure still defaults to zero; weapon failure keeps raw power;
+    exemption-scan failure still applies the -300 penalty; outer failure still skips it; the doomed
+    threshold remains >= 6; and the score remains independently additive. Focused 34/0/0/0,
+    MOVE-named 403/0/0/0, full reactor 1587/0/0/26, normalized mirror parity, AI-only boundary,
+    forbidden-symbol scan, and clean package passed. Independent review found no behavior drift,
+    ordering change, failure-boundary change, or blocking test gap. Server jar SHA-256
+    ce8ce4fbf35d436fd4bc2bab8c7ea3bd468825e9103265c966907f3d1a47a8dc and web jar SHA-256
+    80774089bcc52a0451938effb422361b758e76d99302a7ce5430647eefb022ff contain the shared
+    policy, nested branch/result types, and both adapters. Runtime reload and live-game proof remain
+    pending on the external runtime. AI source only; no GEMP engine or player-decision changes.

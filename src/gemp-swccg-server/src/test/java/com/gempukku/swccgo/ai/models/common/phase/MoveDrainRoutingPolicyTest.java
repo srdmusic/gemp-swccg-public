@@ -154,6 +154,69 @@ public class MoveDrainRoutingPolicyTest {
     }
 
     @Test
+    public void moveToHereClassificationPreservesLegacyPatterns() {
+        assertTrue(MoveDrainRoutingPolicy.isMoveToHereAction(
+                "move from cloud city to here"));
+        assertTrue(MoveDrainRoutingPolicy.isMoveToHereAction(
+                "move to here"));
+        assertTrue(MoveDrainRoutingPolicy.isMoveToHereAction(
+                "relocate to here"));
+        assertFalse(MoveDrainRoutingPolicy.isMoveToHereAction(
+                "move from cloud city"));
+        assertFalse(MoveDrainRoutingPolicy.isMoveToHereAction(
+                "relocate to cloud city"));
+        assertFalse(MoveDrainRoutingPolicy.isMoveToHereAction(null));
+    }
+
+    @Test
+    public void moveToHereDrainPreservesNonZeroDrainNoOp() {
+        MoveDrainRoutingPolicy.MoveToHereDrain result =
+                MoveDrainRoutingPolicy.moveToHereDrain(
+                        "Mustafar: Vader's Castle", 1,
+                        false, null);
+
+        assertEquals(MoveDrainRoutingPolicy.MoveToHereDrainBranch.NONE,
+                result.branch());
+        assertFalse(result.contribution().applies());
+        assertFloat(0.0f, result.contribution().delta());
+        assertNull(result.contribution().reason());
+    }
+
+    @Test
+    public void moveToHereDrainPreservesRetreatExemption() {
+        MoveDrainRoutingPolicy.MoveToHereDrain result =
+                MoveDrainRoutingPolicy.moveToHereDrain(
+                        "Mustafar: Vader's Castle", 0,
+                        true, "Cloud City: Lower Corridor");
+
+        assertEquals(
+                MoveDrainRoutingPolicy.MoveToHereDrainBranch.RETREAT_EXEMPT,
+                result.branch());
+        assertTrue(result.contribution().applies());
+        assertFloat(0.0f, result.contribution().delta());
+        assertEquals(
+                "V67ae RETREAT EXEMPT: 'Cloud City: Lower Corridor' hopelessly outgunned (gap >= 6, V33 standard) — retreat to non-drain allowed",
+                result.contribution().reason());
+    }
+
+    @Test
+    public void moveToHereDrainPreservesZeroDrainPenalty() {
+        MoveDrainRoutingPolicy.MoveToHereDrain result =
+                MoveDrainRoutingPolicy.moveToHereDrain(
+                        "Mustafar: Vader's Castle", 0,
+                        false, null);
+
+        assertEquals(
+                MoveDrainRoutingPolicy.MoveToHereDrainBranch.ZERO_DRAIN_PENALTY,
+                result.branch());
+        assertTrue(result.contribution().applies());
+        assertFloat(-300.0f, result.contribution().delta());
+        assertEquals(
+                "V67ae MOVE-TO-NON-DRAIN: 'Mustafar: Vader's Castle' destination has 0 opp icons — losing drain pressure for a 'safe' retreat!",
+                result.contribution().reason());
+    }
+
+    @Test
     public void destinationDrainPreservesLegacyAdditiveStacks() {
         float ordinaryZeroDrain =
                 MoveDrainRoutingPolicy.destinationDrain(

@@ -12,6 +12,7 @@ import com.gempukku.swccgo.ai.models.common.phase.ControlActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
@@ -3206,18 +3207,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // didn't fire because that's wired to landspeed/CardSelectionEvaluator,
             // not card-action moves through ActionTextEvaluator.
             //
-            // Rule: if the source card's location has zero drain potential (no opp
+            // Rule: if the destination site has zero drain potential (no opp
             // icons) AND it's a 'move <character> to here' action, penalize. The
             // 'free move' attractiveness shouldn't outweigh losing drain pressure.
-            else if ((textLower.contains("move from") && textLower.contains("to here"))
-                    || textLower.contains("move to here")
-                    || textLower.contains("relocate to here")) {
+            else if (MoveDrainRoutingPolicy.isMoveToHereAction(textLower)) {
                 action.setActionType(ActionType.MOVE);
                 if (cardId != null && gameState != null && context.getPlayerId() != null) {
                     try {
                         PhysicalCard srcLoc = gameState.findCardById(Integer.parseInt(cardId));
                         if (srcLoc != null && srcLoc.getBlueprint() != null) {
-                            // The destination IS the source card's location (it's a site itself)
+                            // The action source is the destination site itself.
                             String oppId = gameState.getOpponent(context.getPlayerId());
                             int destOppIcons = 0;
                             try {
@@ -3286,16 +3285,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                         }
                                     }
                                 } catch (Exception e) { /* fail-open: no exemption */ }
-                                if (v67aeRetreatExempt) {
-                                    action.addReasoning(String.format(
-                                        "V67ae RETREAT EXEMPT: '%s' hopelessly outgunned (gap >= 6, V33 standard) — retreat to non-drain allowed",
-                                        v67aeDoomedLoc), 0.0f);
+                                MoveDrainRoutingPolicy.MoveToHereDrain v67aeDrain =
+                                    MoveDrainRoutingPolicy.moveToHereDrain(
+                                        srcLoc.getTitle(), destOppIcons,
+                                        v67aeRetreatExempt, v67aeDoomedLoc);
+                                action.addReasoning(
+                                    v67aeDrain.contribution().reason(),
+                                    v67aeDrain.contribution().delta());
+                                if (v67aeDrain.branch()
+                                        == MoveDrainRoutingPolicy.MoveToHereDrainBranch.RETREAT_EXEMPT) {
                                     logger.warn("V67ae RETREAT EXEMPT: doomed={} dest={} — skipping -300",
                                         v67aeDoomedLoc, srcLoc.getTitle());
-                                } else {
-                                    action.addReasoning(String.format(
-                                        "V67ae MOVE-TO-NON-DRAIN: '%s' destination has 0 opp icons — losing drain pressure for a 'safe' retreat!",
-                                        srcLoc.getTitle()), -300.0f);
+                                } else if (v67aeDrain.branch()
+                                        == MoveDrainRoutingPolicy.MoveToHereDrainBranch.ZERO_DRAIN_PENALTY) {
                                     logger.warn("V67ae MOVE-TO-NON-DRAIN: action='{}' dest={} 0-drain — penalize free retreat (-300)",
                                         actionText, srcLoc.getTitle());
                                 }

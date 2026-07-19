@@ -51,6 +51,17 @@ public final class MoveDrainRoutingPolicy {
             Contribution contribution) {
     }
 
+    public enum MoveToHereDrainBranch {
+        NONE,
+        RETREAT_EXEMPT,
+        ZERO_DRAIN_PENALTY
+    }
+
+    public record MoveToHereDrain(
+            MoveToHereDrainBranch branch,
+            Contribution contribution) {
+    }
+
     private MoveDrainRoutingPolicy() {
     }
 
@@ -138,6 +149,46 @@ public final class MoveDrainRoutingPolicy {
                         destinationOpponentIcons,
                         drainDrop),
                 -250.0f * drainDrop);
+    }
+
+    public static boolean isMoveToHereAction(String actionLower) {
+        if (actionLower == null) {
+            return false;
+        }
+        return (actionLower.contains("move from")
+                && actionLower.contains("to here"))
+                || actionLower.contains("move to here")
+                || actionLower.contains("relocate to here");
+    }
+
+    public static MoveToHereDrain moveToHereDrain(
+            String destinationTitle,
+            int destinationOpponentIcons,
+            boolean retreatExempt,
+            String doomedLocationTitle) {
+        if (destinationOpponentIcons != 0) {
+            return new MoveToHereDrain(
+                    MoveToHereDrainBranch.NONE,
+                    Contribution.none());
+        }
+        if (retreatExempt) {
+            return new MoveToHereDrain(
+                    MoveToHereDrainBranch.RETREAT_EXEMPT,
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V67ae RETREAT EXEMPT: '%s' hopelessly outgunned (gap >= 6, V33 standard) — retreat to non-drain allowed",
+                                    doomedLocationTitle),
+                            0.0f));
+        }
+        return new MoveToHereDrain(
+                MoveToHereDrainBranch.ZERO_DRAIN_PENALTY,
+                new Contribution(
+                        true,
+                        String.format(
+                                "V67ae MOVE-TO-NON-DRAIN: '%s' destination has 0 opp icons — losing drain pressure for a 'safe' retreat!",
+                                destinationTitle),
+                        -300.0f));
     }
 
     public static UncontestedDeparture uncontestedDeparture(

@@ -20,6 +20,13 @@ public class MoveDrainRoutingSourceParityTest {
     }
 
     @Test
+    public void actionTextEvaluatorsStayNormalizedMirrors()
+            throws IOException {
+        assertEquals(normalize(actionTextSource("rando")),
+                normalize(actionTextSource("chosenone")));
+    }
+
+    @Test
     public void threeDrainRulesHaveOneSharedOwner() throws IOException {
         String move = evaluatorSource("rando");
         String policy = policySource();
@@ -36,6 +43,48 @@ public class MoveDrainRoutingSourceParityTest {
                 "public static ExplicitDestinationDrain explicitDestinationDrain("));
         assertTrue(policy.contains(
                 "public static CantinaShuttle cantinaShuttle("));
+    }
+
+    @Test
+    public void moveToHereDrainGuardHasOneSharedOwner() throws IOException {
+        String actionText = actionTextSource("rando");
+        String policy = policySource();
+
+        assertEquals(1, countOccurrences(actionText,
+                "MoveDrainRoutingPolicy.isMoveToHereAction("));
+        assertEquals(1, countOccurrences(actionText,
+                "MoveDrainRoutingPolicy.moveToHereDrain("));
+        assertTrue(policy.contains(
+                "public static boolean isMoveToHereAction("));
+        assertTrue(policy.contains(
+                "public static MoveToHereDrain moveToHereDrain("));
+        assertFalse(actionText.contains(
+                "V67ae MOVE-TO-NON-DRAIN: '%s' destination has 0 opp icons"));
+        assertFalse(actionText.contains(
+                "V67ae RETREAT EXEMPT: '%s' hopelessly outgunned"));
+    }
+
+    @Test
+    public void moveToHereAdapterRetainsBoardReadsLogsAndFailureBoundary()
+            throws IOException {
+        String actionText = actionTextSource("rando");
+
+        assertTrue(actionText.contains("gameState.findCardById("));
+        assertTrue(actionText.contains("getIconCount("));
+        assertTrue(actionText.contains("gameState.getTopLocations()"));
+        assertTrue(actionText.contains("getTotalPowerAtLocation("));
+        assertTrue(actionText.contains("gameState.getCardsAtLocation(rl)"));
+        assertTrue(actionText.contains("gameState.getAttachedCards(rc)"));
+        assertTrue(actionText.contains(
+                "V67ae RETREAT EXEMPT: doomed={} dest={} — skipping -300"));
+        assertTrue(actionText.contains(
+                "V67ae MOVE-TO-NON-DRAIN: action='{}' dest={} 0-drain — penalize free retreat (-300)"));
+        assertTrue(actionText.contains(
+                "catch (Exception e) { /* fail-open: no exemption */ }"));
+        assertTrue(actionText.contains(
+                "catch (Exception e) { logger.debug(\"V67ae error: {}\", e.getMessage()); }"));
+        assertTrue(actionText.contains(
+                "action.addReasoning(\"V67ae move-to-here action — see drain analysis\", 0.0f);"));
     }
 
     @Test
@@ -139,6 +188,12 @@ public class MoveDrainRoutingSourceParityTest {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
                 .resolve(bot).resolve("evaluators/MoveEvaluator.java"));
+    }
+
+    private static String actionTextSource(String bot) throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models")
+                .resolve(bot).resolve("evaluators/ActionTextEvaluator.java"));
     }
 
     private static String policySource() throws IOException {
