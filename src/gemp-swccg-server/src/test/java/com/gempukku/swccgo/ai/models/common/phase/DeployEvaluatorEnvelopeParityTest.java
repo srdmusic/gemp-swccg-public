@@ -50,6 +50,16 @@ public class DeployEvaluatorEnvelopeParityTest {
                 "LOCATION - deploy first!"));
     }
 
+    @Test
+    public void textOnlySiteFalsePositiveRemainsTerminalForStructuralPacket() {
+        Pair pair = evaluate("character", "Deploy character to a site", Set.of());
+        assertMirrored(pair);
+        assertRaw(250.0f, pair.rando.getScore());
+        assertEquals(1, pair.rando.getReasoning().size());
+        assertTrue(pair.rando.getReasoningString().contains(
+                "LOCATION - deploy first!"));
+    }
+
     private static Pair evaluate(
             String actionId, String actionText, Set<String> blocked) {
         var randoContext =

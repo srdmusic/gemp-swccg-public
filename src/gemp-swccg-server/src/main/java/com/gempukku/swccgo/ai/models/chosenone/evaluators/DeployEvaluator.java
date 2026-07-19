@@ -13,6 +13,8 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopeFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingFacts;
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFactsReader;
@@ -776,20 +778,21 @@ public class DeployEvaluator extends ActionEvaluator {
             // === LOCATION DEPLOYMENT - Highest Priority ===
             // Deploying locations opens up deployment options
             if (actionLower.contains("location") || actionLower.contains("site") || actionLower.contains("system")) {
-                action.addReasoning("LOCATION - deploy first!", 200.0f);
-
                 // === V24.10: EXTRA LOCATION PRIORITY WHEN PIETT NEEDS FINDING ===
                 // If Piett is stuck in the force pile, deploying more locations means
                 // more force generation → bigger force pile → draw through faster to find him.
                 com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle locOracle = context.getDeckOracle();
-                if (locOracle != null && locOracle.isAnalyzed()) {
-                    boolean piettAccessible = locOracle.isCardInHand("Admiral Piett") || locOracle.isCardInHand("Piett")
+                boolean locOracleAnalyzed = locOracle != null && locOracle.isAnalyzed();
+                boolean piettAccessible = false;
+                boolean piettLost = false;
+                int piettTurnNumber = 0;
+                if (locOracleAnalyzed) {
+                    piettAccessible = locOracle.isCardInHand("Admiral Piett") || locOracle.isCardInHand("Piett")
                         || locOracle.isCardInReserve("Admiral Piett") || locOracle.isCardInReserve("Piett")
                         || locOracle.isCardInPlay("Admiral Piett") || locOracle.isCardInPlay("Piett");
-                    boolean piettLost = locOracle.isCardLost("Admiral Piett") || locOracle.isCardLost("Piett");
-                    if (!piettAccessible && !piettLost && context.getTurnNumber() <= 4) {
-                        action.addReasoning("V24.10 PIETT MISSING: Deploy locations to generate force — need to draw for Piett!", 150.0f);
-                        LOG.warn("V24.10 PIETT DIG: Piett not accessible — extra location deploy priority (+150) to power force pile draws!");
+                    piettLost = locOracle.isCardLost("Admiral Piett") || locOracle.isCardLost("Piett");
+                    if (!piettAccessible && !piettLost) {
+                        piettTurnNumber = context.getTurnNumber();
                     }
                 }
 
@@ -800,16 +803,20 @@ public class DeployEvaluator extends ActionEvaluator {
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer bespinObjAnalyzer =
                     context.getObjectiveAnalyzer();
                 int turnNum = context.getTurnNumber();
-                if (bespinObjAnalyzer != null && bespinObjAnalyzer.isAnalyzed()
-                    && bespinObjAnalyzer.needsBespinSystemPresence() && turnNum <= 3) {
+                boolean bespinObjectiveAnalyzed = bespinObjAnalyzer != null
+                    && bespinObjAnalyzer.isAnalyzed();
+                boolean needsBespinSystem = bespinObjectiveAnalyzed
+                    && bespinObjAnalyzer.needsBespinSystemPresence();
+                boolean isBespinDeploy = false;
+                boolean bespinOnTable = false;
+                if (needsBespinSystem && turnNum <= 3) {
                     // Check if this action deploys Bespin system specifically
-                    boolean isBespinDeploy = actionLower.contains("bespin");
+                    isBespinDeploy = actionLower.contains("bespin");
                     if (!isBespinDeploy && cardTitleFromGemp != null) {
                         isBespinDeploy = cardTitleFromGemp.toLowerCase(Locale.ROOT).contains("bespin");
                     }
                     if (isBespinDeploy) {
                         // Check Bespin isn't already on table
-                        boolean bespinOnTable = false;
                         if (gameState != null) {
                             for (PhysicalCard loc : gameState.getLocationsInOrder()) {
                                 if (loc != null && loc.getTitle() != null &&
@@ -821,17 +828,35 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
                             }
                         }
-                        if (!bespinOnTable) {
-                            // V24.15: Mega-boost on Turn 1 — Bespin MUST be absolute first deploy!
-                            float bespinBoost = (turnNum <= 1) ? 800.0f : 400.0f;
-                            action.addReasoning("V24.15 BESPIN PRIORITY: Deploy Bespin system FIRST — objective foundation!", bespinBoost);
-                            LOG.warn("V24.15 BESPIN PRIORITY: Bespin system deploy gets +{} on turn {} — MUST deploy ASAP!", bespinBoost, turnNum);
-                        }
                     }
                 }
 
-                actions.add(action);
-                continue;
+                DeployObjectiveSequencingPolicy.EarlyLocationEvaluation earlyLocation =
+                    DeployObjectiveSequencingPolicy.evaluateEarlyLocation(
+                        new DeployObjectiveSequencingFacts.EarlyLocation(
+                            actionId, locOracleAnalyzed, piettAccessible, piettLost,
+                            piettTurnNumber, bespinObjectiveAnalyzed, needsBespinSystem,
+                            turnNum, isBespinDeploy, bespinOnTable));
+                PolicyContributionLedger earlyLocationLedger =
+                    new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "deploy-early-location"
+                            : decisionId + "-deploy-early-location")
+                            + "-" + actionId);
+                earlyLocationLedger.register(earlyLocation.result());
+                PolicyOperationAdapter.apply(action, earlyLocationLedger);
+                if (earlyLocation.piettPriorityApplied()) {
+                    LOG.warn("V24.10 PIETT DIG: Piett not accessible — extra location deploy priority (+150) to power force pile draws!");
+                }
+                if (earlyLocation.bespinBoost() > 0.0f) {
+                    LOG.warn("V24.15 BESPIN PRIORITY: Bespin system deploy gets +{} on turn {} — MUST deploy ASAP!",
+                        earlyLocation.bespinBoost(), turnNum);
+                }
+                if (earlyLocation.adapterStep()
+                        == DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION) {
+                    actions.add(action);
+                    continue;
+                }
             }
 
             // === V29: TDIGWATT BESPIN-FIRST GUARD (rewritten) ===
@@ -893,23 +918,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                 || (earlyCategory == com.gempukku.swccgo.common.CardCategory.VEHICLE);
                         }
 
-                        // Exempt: location/site/system deploys (we WANT locations)
-                        boolean isLocationDeploy = isLocationByCategory
-                            || guardCheckText.contains("location") || guardCheckText.contains("site")
-                            || guardCheckText.contains("system");
-                        // Exempt: AMSD — this is HOW we get Executor out
-                        boolean isAmsdAction = guardCheckText.contains("alert my star destroyer")
-                            || guardCheckText.contains("amsd");
-                        // Exempt: Executor deploy (the ship we need at Bespin)
-                        boolean isExecutorDeploy = guardCheckText.contains("executor");
-                        // Exempt: starship/vehicle deploys (ships go to Bespin)
-                        boolean isShipDeploy = isShipByCategory
-                            || guardCheckText.contains("starship") || guardCheckText.contains("capital")
-                            || guardCheckText.contains("star destroyer");
-                        // Exempt: Bespin system itself (we need to deploy it!)
-                        boolean isBespinDeploy = guardCheckText.contains("bespin");
-
-                        if (!isLocationDeploy && !isAmsdAction && !isExecutorDeploy && !isShipDeploy && !isBespinDeploy) {
+                        DeployObjectiveSequencingPolicy.BespinFirstRoute bespinFirstRoute =
+                            DeployObjectiveSequencingPolicy.classifyBespinFirst(
+                                new DeployObjectiveSequencingFacts.BespinFirstCandidate(
+                                    guardCheckText, isLocationByCategory, isShipByCategory));
+                        if (bespinFirstRoute
+                                == DeployObjectiveSequencingPolicy.BespinFirstRoute.CANDIDATE) {
                             // V29 UPDATED 2026-07-06 (TDIGWATT bug B): release the -500 gate when there is
                             // NO live path to ever satisfy it — otherwise every character deploy is blocked
                             // forever and Rando floods weak solos without flipping. Two universal checks
@@ -920,15 +934,14 @@ public class DeployEvaluator extends ActionEvaluator {
                             //   (b) DeckOracle sees no capital starship in hand/reserve/force/used — nothing
                             //       left that could establish Bespin space presence.
                             // Classic TDIGWATT keeps the gate: no forbid clause + Executor in deck.
-                            boolean bfGateReleased = false;
-                            String bfGateReleaseReason = null;
-                            if (bespinFirstAnalyzer.objectiveForbidsDeployingExecutor()) {
-                                bfGateReleased = true;
-                                bfGateReleaseReason = "objective game text forbids deploying Executor";
-                            } else {
+                            boolean objectiveForbidsExecutor =
+                                bespinFirstAnalyzer.objectiveForbidsDeployingExecutor();
+                            boolean bfOracleAnalyzed = false;
+                            boolean bfCapitalAccessible = false;
+                            if (!objectiveForbidsExecutor) {
                                 com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle bfOracle = context.getDeckOracle();
                                 if (bfOracle != null && bfOracle.isAnalyzed()) {
-                                    boolean bfCapitalAccessible = false;
+                                    bfOracleAnalyzed = true;
                                     com.gempukku.swccgo.common.Zone[] bfZones = {
                                         com.gempukku.swccgo.common.Zone.HAND,
                                         com.gempukku.swccgo.common.Zone.RESERVE_DECK,
@@ -944,21 +957,28 @@ public class DeployEvaluator extends ActionEvaluator {
                                         }
                                         if (bfCapitalAccessible) break;
                                     }
-                                    if (!bfCapitalAccessible) {
-                                        bfGateReleased = true;
-                                        bfGateReleaseReason = "no capital starship in hand/reserve/force/used — no live path to occupy Bespin space";
-                                    }
                                 }
                             }
 
-                            if (bfGateReleased) {
+                            DeployObjectiveSequencingPolicy.BespinFirstEvaluation bespinFirst =
+                                DeployObjectiveSequencingPolicy.evaluateBespinFirst(
+                                    new DeployObjectiveSequencingFacts.BespinFirstDecision(
+                                        actionId, objectiveForbidsExecutor,
+                                        bfOracleAnalyzed, bfCapitalAccessible));
+                            PolicyContributionLedger bespinFirstLedger =
+                                new PolicyContributionLedger(
+                                    (decisionId == null || decisionId.isBlank()
+                                        ? "deploy-bespin-first"
+                                        : decisionId + "-deploy-bespin-first")
+                                        + "-" + actionId);
+                            bespinFirstLedger.register(bespinFirst.result());
+                            PolicyOperationAdapter.apply(action, bespinFirstLedger);
+                            if (bespinFirst.outcome()
+                                    == DeployObjectiveSequencingPolicy.BespinFirstOutcome.RELEASED) {
                                 LOG.info("V29 BESPIN-FIRST RELEASED: NOT blocking deploy '{}' on turn {} — {}",
-                                    actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn, bfGateReleaseReason);
+                                    actionText.length() > 60 ? actionText.substring(0, 60) : actionText,
+                                    bfTurn, bespinFirst.releaseReason());
                             } else {
-                                // Original V29 penalty (unchanged) — still fires for classic TDIGWATT.
-                                action.addReasoning(
-                                    "V29 BESPIN-FIRST: Executor MUST deploy before characters! " +
-                                    "Get Bespin → Executor/AMSD → THEN characters.", -500.0f);
                                 LOG.warn("V29 BESPIN-FIRST: BLOCKING deploy '{}' on turn {} — Bespin not occupied, deploy Executor first!",
                                     actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn);
                             }

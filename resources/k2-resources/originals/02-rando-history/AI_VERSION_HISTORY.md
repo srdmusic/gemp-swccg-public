@@ -7415,3 +7415,21 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     308f1efb49bfef5f444496405f111ccfaa9ca14aa9403ae0b5681569b6e1f4c9 contain both pure
     owners and mirrored adapters. Runtime reload and live-game proof remain pending on the
     external runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V258 (2026-07-19): consolidate DEPLOY early-location and Bespin-first sequencing ════
+    New DeployObjectiveSequencingFacts/Policy own the legacy text-only location +200, Piett-dig
+    +150, Bespin +800/+400, broad V29 exemptions, objective/no-capital release decisions, and
+    additive -500 Bespin-first route. Both DeployEvaluator mirrors retain all action-text,
+    resolved-card, ObjectiveAnalyzer, DeckOracle, zone, board, subtype, and power reads; lazy
+    release checks; logs; and the early terminal continue. This is structural-only: the known
+    text-only false positive and later objective-score dominance of -500 remain unchanged for a
+    separate repair packet. All operations remain ADD in DEPLOY_SEQUENCING. Focused 13/0/0/0,
+    DEPLOY-named 154/0/0/0, full reactor 1696/0/0/26, normalized mirror parity, branch/reason/raw-
+    float matrices, source ownership/lazy-read order, AI-only boundary, forbidden-symbol scan,
+    compiled-artifact gates, diff check, and clean package passed. Independent review returned
+    PASS on totals, reasons, lazy reads, terminal/fallthrough routing, mirror parity, and scope.
+    Server jar SHA-256
+    d9e25981428603112732102bd6203bc22da7d5c0e02e4651a22e98938f86c963 and web jar SHA-256
+    68a911a1915bdbf7b59311c1d7e9a8af68801a44de3afd46340d95ae0ada8893 contain the pure owner
+    and both mirrored adapters. Runtime reload and live-game proof remain pending on the external
+    runtime. AI source only; no GEMP engine or player-decision changes.
