@@ -3294,23 +3294,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             // Fallback — assume no solo friendlies
                                         }
 
-                                        if (contestedSoloLocations > 0) {
-                                            // Solo friendlies under threat! DON'T spread to empty locations.
-                                            // V29b: Increased from -80 to -200 — Rando was still spreading thin.
-                                            float concPenalty = -200.0f * contestedSoloLocations;
-                                            action.addReasoning("V29 CONCENTRATE: " + contestedSoloLocations
-                                                + " solo friendly(s) CONTESTED — reinforce them, don't spread!", concPenalty);
-                                            logger.warn("V29 CONCENTRATE: Empty loc {} but {} contested solo friendlies — penalty {}", title, contestedSoloLocations, concPenalty);
-                                        } else if (soloFriendlyLocations > 0) {
-                                            // Solo friendlies need backup even if uncontested (opponent could move in)
-                                            // V29b: Increased from -40 to -100
-                                            float concPenalty = -100.0f * soloFriendlyLocations;
-                                            action.addReasoning("V29 CONCENTRATE: " + soloFriendlyLocations
-                                                + " solo friendly(s) need reinforcement — don't spread thin!", concPenalty);
-                                            logger.info("V29 CONCENTRATE: Empty loc {} but {} solo friendlies elsewhere — penalty {}", title, soloFriendlyLocations, concPenalty);
-                                        } else {
-                                            // No vulnerable solo friendlies — safe to establish
-                                            action.addReasoning("Establish at empty location (no solo friendlies elsewhere)", 20.0f);
+                                        DeployFormationSitingPolicy.EmptyDestinationTopologyEvaluation
+                                            v277EmptyTopology = DeployFormationSitingPolicy
+                                                .evaluateEmptyDestinationTopology(
+                                                    new DeployFormationSitingPolicy
+                                                        .EmptyDestinationTopologyFacts(
+                                                            action.getActionId(), title,
+                                                            soloFriendlyLocations,
+                                                            contestedSoloLocations));
+                                        PolicyContributionLedger v277EmptyTopologyLedger =
+                                            new PolicyContributionLedger(
+                                                "deploy-formation-empty-topology-"
+                                                    + action.getActionId());
+                                        v277EmptyTopologyLedger.register(v277EmptyTopology.result());
+                                        PolicyOperationAdapter.apply(action, v277EmptyTopologyLedger);
+
+                                        if (v277EmptyTopology.outcome()
+                                                == DeployFormationSitingPolicy
+                                                    .EmptyDestinationTopologyOutcome.CONTESTED_SOLO) {
+                                            logger.warn("V29 CONCENTRATE: Empty loc {} but {} contested solo friendlies — penalty {}", title, contestedSoloLocations, v277EmptyTopology.delta());
+                                        } else if (v277EmptyTopology.outcome()
+                                                == DeployFormationSitingPolicy
+                                                    .EmptyDestinationTopologyOutcome.SOLO) {
+                                            logger.info("V29 CONCENTRATE: Empty loc {} but {} solo friendlies elsewhere — penalty {}", title, soloFriendlyLocations, v277EmptyTopology.delta());
                                         }
                                     }
                                 }
@@ -3423,36 +3429,38 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             logger.debug("V67bu escape-check error: {}", eEsc.getMessage());
                                         }
                                     }
-                                    DeployFormationSitingPolicy.CharacterFormationFacts v212ReinforcementFacts =
-                                        new DeployFormationSitingPolicy.CharacterFormationFacts(
-                                            true, title, false, false, ourCharsHere, 0, false,
-                                            deployingCardName, 0.0f, ourPower, theirPower,
-                                            v67buCanEscape);
-                                    PolicyContributionLedger v212ReinforcementLedger =
+                                    DeployFormationSitingPolicy.ReinforcementTopologyEvaluation
+                                        v277Reinforcement = DeployFormationSitingPolicy
+                                            .evaluateReinforcementTopology(
+                                                new DeployFormationSitingPolicy
+                                                    .ReinforcementTopologyFacts(
+                                                        action.getActionId(), title,
+                                                        ourCharsHere, ourPower, theirPower,
+                                                        v67buCanEscape));
+                                    PolicyContributionLedger v277ReinforcementLedger =
                                         new PolicyContributionLedger(
-                                            "deploy-formation-v67bn-" + action.getActionId());
-                                    v212ReinforcementLedger.register(
-                                        DeployFormationSitingPolicy.evaluateCommittedReinforcement(
-                                            action.getActionId(), v212ReinforcementFacts));
-                                    PolicyOperationAdapter.apply(action, v212ReinforcementLedger);
+                                            "deploy-formation-reinforcement-"
+                                                + action.getActionId());
+                                    v277ReinforcementLedger.register(v277Reinforcement.result());
+                                    PolicyOperationAdapter.apply(action, v277ReinforcementLedger);
 
-                                    if (ourCharsHere >= 1 && v67bnOutgunned && !v67buCanEscape) {
+                                    if (v277Reinforcement.outcome()
+                                            == DeployFormationSitingPolicy
+                                                .ReinforcementTopologyOutcome.V67BN_NO_ESCAPE) {
                                         logger.warn("V67bn REINFORCE OUTGUNNED: dest={} chars={} our={} opp={} deficit={} no-escape → +800",
                                             title, ourCharsHere, (int)ourPower, (int)theirPower, (int)(theirPower-ourPower));
-                                    } else if (ourCharsHere >= 1 && v67bnOutgunned && v67buCanEscape) {
+                                    } else if (v277Reinforcement.outcome()
+                                            == DeployFormationSitingPolicy
+                                                .ReinforcementTopologyOutcome.V67BU_ESCAPE) {
                                         // V67bu — escape available, let Move evaluator handle it
                                         logger.info("V67bu ESCAPE AVAILABLE at {} (our {} vs opp {}) — skip reinforce, Move evaluator will retreat",
                                             title, (int)ourPower, (int)theirPower);
-                                    } else if (ourPower <= 5f && ourCharsHere == 1) {
-                                        // V29 REINFORCE (legacy) — weak char alone, opponent moderate or absent
-                                        float reinforceBonus = 150.0f;
-                                        if (theirPower > 0) reinforceBonus = 250.0f;
-                                        action.addReasoning("V29 REINFORCE SOLO CHARACTER (power " +
-                                            (int)ourPower + ") - don't leave them alone!", reinforceBonus);
+                                    } else if (v277Reinforcement.outcome()
+                                            == DeployFormationSitingPolicy
+                                                .ReinforcementTopologyOutcome.LEGACY_SOLO) {
                                         logger.info("V29 REINFORCE: Solo char at {} (power {}), opponent power {}, bonus={}",
-                                            title, (int)ourPower, (int)theirPower, reinforceBonus);
-                                    } else if (ourCharsHere == 2 && theirPower > ourPower * 1.5f) {
-                                        action.addReasoning("V29: Reinforce outnumbered pair at " + title, 100.0f);
+                                            title, (int)ourPower, (int)theirPower,
+                                            v277Reinforcement.delta());
                                     }
                                 }
 

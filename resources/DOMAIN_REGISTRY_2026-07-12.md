@@ -155,6 +155,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V276 behavior-fix note:** the existing V193 owner now consumes an ObjectiveAnalyzer-proven unfilled actor-at-site gate. For Invasion only, the pre-flip Neimoidian-to-Throne-Room candidate receives the playbook's `+1600` direct arm or `+3200` destination arm and is exempt from V201 at that exact gate. The requirement self-closes when filled. Shared AI-only `ShieldFacts` separately excludes Naboo system from Battle Order/Plan battleground accounting while front blueprint `14_113` is on table on either face. No new engine metadata or candidate control flow was introduced.
 
+**V277 owner note:** `DeployFormationSitingPolicy` now also owns generic empty-destination concentration and committed reinforcement. This includes contested-solo `-200` scaling, solo `-100` scaling, empty establishment `+20`, V67bn/V67bu's inclusive `4..5` deficit and escape precedence, weak-solo `+150/+250`, and strict-above-`1.5x` pair `+100`. The adapters retain all board scans, lazy escape reads, catches, scan continues, first-found breaks, and logs. Existing V29.5 buddy and V113 operations remain later and independently additive.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

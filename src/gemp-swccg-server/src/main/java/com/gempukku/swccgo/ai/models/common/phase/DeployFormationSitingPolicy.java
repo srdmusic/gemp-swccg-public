@@ -36,9 +36,14 @@ public final class DeployFormationSitingPolicy {
         Objects.requireNonNull(actionId, "actionId");
         Objects.requireNonNull(formation, "formation");
 
-        List<PolicyOperation> operations = new ArrayList<>(1);
-        addCommittedReinforcement(operations, actionId, formation);
-        return new PolicyResult(PRODUCER_ID, operations);
+        if (!formation.eligible()) {
+            return new PolicyResult(PRODUCER_ID, List.of());
+        }
+        return evaluateReinforcementTopology(
+                new ReinforcementTopologyFacts(actionId, formation.destinationTitle(),
+                        formation.friendlyCharactersHere(), formation.ourPower(),
+                        formation.opponentPower(), formation.committedFormationCanEscape()),
+                false).result();
     }
 
     public static PolicyResult evaluateBuddyTopology(
@@ -50,6 +55,44 @@ public final class DeployFormationSitingPolicy {
         addBuddyTopology(operations, actionId, formation);
         addSoloVulnerability(operations, actionId, formation);
         return new PolicyResult(PRODUCER_ID, operations);
+    }
+
+    public static EmptyDestinationTopologyEvaluation evaluateEmptyDestinationTopology(
+            EmptyDestinationTopologyFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        EmptyDestinationTopologyOutcome outcome;
+        float delta;
+
+        if (facts.contestedSoloLocations() > 0) {
+            outcome = EmptyDestinationTopologyOutcome.CONTESTED_SOLO;
+            delta = -200.0f * facts.contestedSoloLocations();
+            addDeploySiting(operations, facts.actionId(), "V29-concentrate-contested", delta,
+                    String.format(
+                            "V29 CONCENTRATE: %d solo friendly(s) CONTESTED — reinforce them, don't spread!",
+                            facts.contestedSoloLocations()));
+        } else if (facts.soloFriendlyLocations() > 0) {
+            outcome = EmptyDestinationTopologyOutcome.SOLO;
+            delta = -100.0f * facts.soloFriendlyLocations();
+            addDeploySiting(operations, facts.actionId(), "V29-concentrate-solo", delta,
+                    String.format(
+                            "V29 CONCENTRATE: %d solo friendly(s) need reinforcement — don't spread thin!",
+                            facts.soloFriendlyLocations()));
+        } else {
+            outcome = EmptyDestinationTopologyOutcome.ESTABLISH_EMPTY;
+            delta = 20.0f;
+            addDeploySiting(operations, facts.actionId(), "V29-establish-empty", delta,
+                    "Establish at empty location (no solo friendlies elsewhere)");
+        }
+
+        return new EmptyDestinationTopologyEvaluation(
+                new PolicyResult(PRODUCER_ID, operations), outcome, delta);
+    }
+
+    public static ReinforcementTopologyEvaluation evaluateReinforcementTopology(
+            ReinforcementTopologyFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        return evaluateReinforcementTopology(facts, true);
     }
 
     public static LegacySoloEvaluation evaluateLegacySolo(LegacySoloFacts facts) {
@@ -399,6 +442,20 @@ public final class DeployFormationSitingPolicy {
         REINFORCES
     }
 
+    public enum EmptyDestinationTopologyOutcome {
+        CONTESTED_SOLO,
+        SOLO,
+        ESTABLISH_EMPTY
+    }
+
+    public enum ReinforcementTopologyOutcome {
+        NONE,
+        V67BN_NO_ESCAPE,
+        V67BU_ESCAPE,
+        LEGACY_SOLO,
+        OUTNUMBERED_PAIR
+    }
+
     public record LegacySoloEvaluation(PolicyResult result, LegacySoloOutcome outcome) {
     }
 
@@ -425,6 +482,16 @@ public final class DeployFormationSitingPolicy {
 
     public record BuddyAbilityEvaluation(
             PolicyResult result, BuddyAbilityOutcome outcome) {
+    }
+
+    public record EmptyDestinationTopologyEvaluation(
+            PolicyResult result, EmptyDestinationTopologyOutcome outcome,
+            float delta) {
+    }
+
+    public record ReinforcementTopologyEvaluation(
+            PolicyResult result, ReinforcementTopologyOutcome outcome,
+            float delta) {
     }
 
     public record LegacySoloFacts(String actionId, String cardName, int cardPower,
@@ -520,26 +587,76 @@ public final class DeployFormationSitingPolicy {
         }
     }
 
+    public record EmptyDestinationTopologyFacts(
+            String actionId, String destinationTitle,
+            int soloFriendlyLocations, int contestedSoloLocations) {
+        public EmptyDestinationTopologyFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
+    }
+
+    public record ReinforcementTopologyFacts(
+            String actionId, String destinationTitle,
+            int friendlyCharactersHere, float ourPower,
+            float opponentPower, boolean committedFormationCanEscape) {
+        public ReinforcementTopologyFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
     private static void addCommittedReinforcement(
             List<PolicyOperation> operations, String actionId,
             CharacterFormationFacts facts) {
-        if (!facts.eligible()) {
-            return;
+        operations.addAll(evaluateCommittedReinforcement(actionId, facts).operations());
+    }
+
+    private static ReinforcementTopologyEvaluation evaluateReinforcementTopology(
+            ReinforcementTopologyFacts facts, boolean includeLegacyFallbacks) {
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        ReinforcementTopologyOutcome outcome = ReinforcementTopologyOutcome.NONE;
+        float delta = 0.0f;
+
+        if (!(facts.ourPower() > 0.0f)) {
+            return new ReinforcementTopologyEvaluation(
+                    new PolicyResult(PRODUCER_ID, operations), outcome, delta);
         }
 
         float deficit = facts.opponentPower() - facts.ourPower();
         boolean outgunned = deficit >= 4.0f && deficit <= 5.0f;
-        if (facts.ourPower() > 0.0f
-                && facts.friendlyCharactersHere() >= 1
-                && outgunned
-                && !facts.committedFormationCanEscape()) {
-            addDeploySiting(operations, actionId, "V67bn", 800.0f,
+        if (facts.friendlyCharactersHere() >= 1 && outgunned) {
+            if (facts.committedFormationCanEscape()) {
+                outcome = ReinforcementTopologyOutcome.V67BU_ESCAPE;
+            } else {
+                outcome = ReinforcementTopologyOutcome.V67BN_NO_ESCAPE;
+                delta = 800.0f;
+                addDeploySiting(operations, facts.actionId(), "V67bn", delta,
+                        String.format(
+                                "V67bn REINFORCE OUTGUNNED (Braveheart): %d friendly char(s) at %s (our %d vs opp %d, deficit %d) \u2014 NO ESCAPE, DEPLOY HERE to minimize overflow!",
+                                facts.friendlyCharactersHere(), facts.destinationTitle(),
+                                (int) facts.ourPower(), (int) facts.opponentPower(),
+                                (int) deficit));
+            }
+        } else if (includeLegacyFallbacks
+                && facts.ourPower() <= 5.0f
+                && facts.friendlyCharactersHere() == 1) {
+            outcome = ReinforcementTopologyOutcome.LEGACY_SOLO;
+            delta = facts.opponentPower() > 0.0f ? 250.0f : 150.0f;
+            addDeploySiting(operations, facts.actionId(), "V29-reinforce-solo", delta,
                     String.format(
-                            "V67bn REINFORCE OUTGUNNED (Braveheart): %d friendly char(s) at %s (our %d vs opp %d, deficit %d) \u2014 NO ESCAPE, DEPLOY HERE to minimize overflow!",
-                            facts.friendlyCharactersHere(), facts.destinationTitle(),
-                            (int) facts.ourPower(), (int) facts.opponentPower(),
-                            (int) deficit));
+                            "V29 REINFORCE SOLO CHARACTER (power %d) - don't leave them alone!",
+                            (int) facts.ourPower()));
+        } else if (includeLegacyFallbacks
+                && facts.friendlyCharactersHere() == 2
+                && facts.opponentPower() > facts.ourPower() * 1.5f) {
+            outcome = ReinforcementTopologyOutcome.OUTNUMBERED_PAIR;
+            delta = 100.0f;
+            addDeploySiting(operations, facts.actionId(), "V29-reinforce-pair", delta,
+                    "V29: Reinforce outnumbered pair at " + facts.destinationTitle());
         }
+
+        return new ReinforcementTopologyEvaluation(
+                new PolicyResult(PRODUCER_ID, operations), outcome, delta);
     }
 
     private static void addBuddyTopology(List<PolicyOperation> operations,

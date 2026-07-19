@@ -33,6 +33,97 @@ public class DeployFormationSitingPolicyTest {
     }
 
     @Test
+    public void emptyDestinationTopologyPreservesPriorityScalingAndReasons() {
+        DeployFormationSitingPolicy.EmptyDestinationTopologyEvaluation contested =
+                emptyTopology(3, 1);
+        assertEquals(
+                DeployFormationSitingPolicy.EmptyDestinationTopologyOutcome.CONTESTED_SOLO,
+                contested.outcome());
+        assertOperation(contested.result().operations().get(0),
+                "V29-concentrate-contested", TraceDomainId.DEPLOY_SITING, -200.0f,
+                "V29 CONCENTRATE: 1 solo friendly(s) CONTESTED — reinforce them, don't spread!");
+        assertEquals(-400.0f, emptyTopology(3, 2).delta(), 0.0f);
+
+        DeployFormationSitingPolicy.EmptyDestinationTopologyEvaluation solo =
+                emptyTopology(1, 0);
+        assertEquals(DeployFormationSitingPolicy.EmptyDestinationTopologyOutcome.SOLO,
+                solo.outcome());
+        assertOperation(solo.result().operations().get(0),
+                "V29-concentrate-solo", TraceDomainId.DEPLOY_SITING, -100.0f,
+                "V29 CONCENTRATE: 1 solo friendly(s) need reinforcement — don't spread thin!");
+        assertEquals(-200.0f, emptyTopology(2, 0).delta(), 0.0f);
+
+        DeployFormationSitingPolicy.EmptyDestinationTopologyEvaluation establish =
+                emptyTopology(0, 0);
+        assertEquals(
+                DeployFormationSitingPolicy.EmptyDestinationTopologyOutcome.ESTABLISH_EMPTY,
+                establish.outcome());
+        assertOperation(establish.result().operations().get(0),
+                "V29-establish-empty", TraceDomainId.DEPLOY_SITING, 20.0f,
+                "Establish at empty location (no solo friendlies elsewhere)");
+    }
+
+    @Test
+    public void reinforcementTopologyPreservesV67bnInclusiveDeficitAndEscapePriority() {
+        assertEquals(DeployFormationSitingPolicy.ReinforcementTopologyOutcome.NONE,
+                reinforcement(1, 6.0f, Math.nextDown(10.0f), false).outcome());
+
+        DeployFormationSitingPolicy.ReinforcementTopologyEvaluation deficitFour =
+                reinforcement(1, 6.0f, 10.0f, false);
+        assertEquals(
+                DeployFormationSitingPolicy.ReinforcementTopologyOutcome.V67BN_NO_ESCAPE,
+                deficitFour.outcome());
+        assertOperation(deficitFour.result().operations().get(0),
+                "V67bn", TraceDomainId.DEPLOY_SITING, 800.0f,
+                "V67bn REINFORCE OUTGUNNED (Braveheart): 1 friendly char(s) at Cloud City: Guest Quarters (our 6 vs opp 10, deficit 4) — NO ESCAPE, DEPLOY HERE to minimize overflow!");
+        assertEquals(800.0f, reinforcement(3, 6.0f, 11.0f, false).delta(), 0.0f);
+        assertEquals(DeployFormationSitingPolicy.ReinforcementTopologyOutcome.NONE,
+                reinforcement(1, 6.0f, Math.nextUp(11.0f), false).outcome());
+        assertEquals(DeployFormationSitingPolicy.ReinforcementTopologyOutcome.NONE,
+                reinforcement(0, 6.0f, 10.0f, false).outcome());
+
+        DeployFormationSitingPolicy.ReinforcementTopologyEvaluation escape =
+                reinforcement(1, 3.0f, 7.0f, true);
+        assertEquals(DeployFormationSitingPolicy.ReinforcementTopologyOutcome.V67BU_ESCAPE,
+                escape.outcome());
+        assertTrue(escape.result().operations().isEmpty());
+        assertEquals(0.0f, escape.delta(), 0.0f);
+    }
+
+    @Test
+    public void reinforcementTopologyPreservesWeakSoloAndStrictPairFallbacks() {
+        DeployFormationSitingPolicy.ReinforcementTopologyEvaluation uncontestedSolo =
+                reinforcement(1, 5.0f, 0.0f, false);
+        assertEquals(DeployFormationSitingPolicy.ReinforcementTopologyOutcome.LEGACY_SOLO,
+                uncontestedSolo.outcome());
+        assertOperation(uncontestedSolo.result().operations().get(0),
+                "V29-reinforce-solo", TraceDomainId.DEPLOY_SITING, 150.0f,
+                "V29 REINFORCE SOLO CHARACTER (power 5) - don't leave them alone!");
+
+        assertEquals(250.0f,
+                reinforcement(1, 5.0f, Float.MIN_VALUE, false).delta(), 0.0f);
+        assertEquals(DeployFormationSitingPolicy.ReinforcementTopologyOutcome.NONE,
+                reinforcement(1, Math.nextUp(5.0f), 0.0f, false).outcome());
+
+        DeployFormationSitingPolicy.ReinforcementTopologyEvaluation hopelessSolo =
+                reinforcement(1, 3.0f, 9.0f, false);
+        assertEquals(DeployFormationSitingPolicy.ReinforcementTopologyOutcome.LEGACY_SOLO,
+                hopelessSolo.outcome());
+        assertEquals(250.0f, hopelessSolo.delta(), 0.0f);
+
+        assertEquals(DeployFormationSitingPolicy.ReinforcementTopologyOutcome.NONE,
+                reinforcement(2, 4.0f, 6.0f, false).outcome());
+        DeployFormationSitingPolicy.ReinforcementTopologyEvaluation pair =
+                reinforcement(2, 4.0f, Math.nextUp(6.0f), false);
+        assertEquals(
+                DeployFormationSitingPolicy.ReinforcementTopologyOutcome.OUTNUMBERED_PAIR,
+                pair.outcome());
+        assertOperation(pair.result().operations().get(0),
+                "V29-reinforce-pair", TraceDomainId.DEPLOY_SITING, 100.0f,
+                "V29: Reinforce outnumbered pair at Cloud City: Guest Quarters");
+    }
+
+    @Test
     public void v295BuddyPreservesEveryLiveTopologyBranch() {
         assertBuddy(character(true, true, true, 0, 0, false, 0.0f), 40.0f,
                 "V29.5 BUDDY: Own location \u2014 home field advantage");
@@ -337,6 +428,23 @@ public class DeployFormationSitingPolicyTest {
                 ourLocation, opponentLocation, friendlies, opponents,
                 emptyTable, "Darth Vader", ability,
                 0.0f, 0.0f, false);
+    }
+
+    private static DeployFormationSitingPolicy.EmptyDestinationTopologyEvaluation
+            emptyTopology(int soloLocations, int contestedSoloLocations) {
+        return DeployFormationSitingPolicy.evaluateEmptyDestinationTopology(
+                new DeployFormationSitingPolicy.EmptyDestinationTopologyFacts(
+                        ACTION_ID, DESTINATION, soloLocations,
+                        contestedSoloLocations));
+    }
+
+    private static DeployFormationSitingPolicy.ReinforcementTopologyEvaluation
+            reinforcement(int friendlies, float ourPower,
+                          float opponentPower, boolean canEscape) {
+        return DeployFormationSitingPolicy.evaluateReinforcementTopology(
+                new DeployFormationSitingPolicy.ReinforcementTopologyFacts(
+                        ACTION_ID, DESTINATION, friendlies, ourPower,
+                        opponentPower, canEscape));
     }
 
     private static DeployFormationSitingPolicy.LegacySoloFacts soloFacts(

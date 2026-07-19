@@ -40,7 +40,9 @@ public class DeploySitingSourceCharacterizationTest {
         assertTrue(destination.contains("DeployTacticalPolicy.scoreV170SpyDrainBlock("));
         assertTrue(destination.contains("DeployTacticalPolicy.scoreV171V172Contact("));
         assertTrue(destination.contains(
-                "DeployFormationSitingPolicy.evaluateCommittedReinforcement("));
+                ".evaluateEmptyDestinationTopology("));
+        assertTrue(destination.contains(
+                ".evaluateReinforcementTopology("));
         assertTrue(destination.contains(
                 "DeployFormationSitingPolicy.evaluateBuddyTopology("));
         for (String call : new String[]{
@@ -197,6 +199,13 @@ public class DeploySitingSourceCharacterizationTest {
         assertFalse(destination.contains("if (false /* V67as SUPERSEDED V136 */"));
         assertFalse(destination.contains("V75 KILL-BOX OVERRIDE:"));
         assertFalse(destination.contains("V67bj DON'T BAIT (uncommitted):"));
+        assertFalse(destination.contains("action.addReasoning(\"V29 CONCENTRATE:"));
+        assertFalse(destination.contains(
+                "action.addReasoning(\"Establish at empty location"));
+        assertFalse(destination.contains(
+                "action.addReasoning(\"V29 REINFORCE SOLO CHARACTER"));
+        assertFalse(destination.contains(
+                "action.addReasoning(\"V29: Reinforce outnumbered pair"));
         assertTrue(destination.contains(
                 "V67as, including nested V67br/V75/V67bj, became unreachable"));
     }

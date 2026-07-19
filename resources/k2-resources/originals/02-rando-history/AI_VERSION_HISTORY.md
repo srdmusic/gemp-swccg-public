@@ -7767,3 +7767,23 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Clean V276 is based on live V275 814751680. Production changes are AI source plus the AI-owned
     objective playbook only; no engine, card, decision metadata, client, database, or deck-library
     source changed.
+
+  ==== V277 (2026-07-19): consolidate generic DEPLOY formation topology ====
+    Shared AI-only DeployFormationSitingPolicy now owns empty-destination concentration and the
+    full committed-reinforcement ladder. Both CardSelectionEvaluator mirrors retain every GEMP,
+    location, character, owner, blueprint, power, permanent-card, planet-prefix, and escape-route
+    read plus catches, scan continues, first-found breaks, logs, and contribution positions.
+    Contested solos remain first and scale -200 each; uncontested solos scale -100 each; no solos
+    gives +20. V67bn remains +800 for any committed formation with an inclusive 4..5 deficit and
+    no escape. V67bu escape remains silent and suppresses every fallback. Outside that band, a
+    power <=5 solo retains +150 without an opponent or +250 with any positive opponent, including
+    the legacy deficit-above-five case; a pair retains +100 only strictly above 1.5x. Existing
+    V29.5 buddy and V113 contributions remain later and independent. Focused formation/source/
+    parity 22/0/0/0, DEPLOY-named 244/0/0/0, full reactor 1862/0/0/26, exact mirror parity,
+    boundary/control/source gates, AI-only scope, forbidden-symbol scan, diff, compiled-policy,
+    and clean package gates passed. Server jar SHA-256
+    0b635131739a1dd8ee796740ef0d52432a5078392a43ce80355afc99650dfb13 and web jar SHA-256
+    95fb22de3d26ff5ef4080654bf7f7148874e9a94728e6479ca416dcf94da3a98 contain V277. Runtime
+    reload and live-game proof remain separate deployment gates. Clean V277 is based on live V276
+    8a2720d09. Reference 72976ca77 was a patch oracle only; no quarantined ancestry was landed. AI
+    source only; no GEMP engine or player-decision changes.
