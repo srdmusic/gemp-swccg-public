@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveHuntGroupPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveHuntTargetPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
@@ -1244,109 +1245,33 @@ public class MoveEvaluator extends ActionEvaluator {
                     {
                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer huntMoveAnalyzer =
                             context.getObjectiveAnalyzer();
-                        // V137b (Steve, 2026-05-28): extend hunt to ALL Dark Jedi, not just
-                        // Vader. Steve's Vader/Dooku Hunt Down deck — "both need to
-                        // aggressively attack." Dark_Jedi = dark character, ability >= 6,
-                        // which is exactly Vader + Dooku/Tyranus. Lower-ability Inquisitors
-                        // (Third Sister) stay buddies. Title fallback keeps Vader working
-                        // even if a modifier drops his ability below 6.
-                        boolean v137bIsHunter = false;
-                        if (cardToMove != null && cardToMove.getTitle() != null) {
-                            String v137bT = cardToMove.getTitle().toLowerCase(Locale.ROOT);
-                            if (v137bT.contains("vader") || v137bT.contains("tyranus")
-                                    || v137bT.contains("dooku")) {
-                                v137bIsHunter = true;
-                            } else {
-                                try {
-                                    v137bIsHunter = com.gempukku.swccgo.filters.Filters.Dark_Jedi
-                                        .accepts(gameState, game.getModifiersQuerying(), cardToMove);
-                                } catch (Exception ignore) { /* false */ }
-                            }
-                        }
-                        if (huntMoveAnalyzer != null && huntMoveAnalyzer.isAnalyzed() && huntMoveAnalyzer.isHuntDownV()
-                            && v137bIsHunter) {
-
-                            String opponentIdHunt = game.getOpponent(playerId);
-                            float theirPowerHere = 0;
-                            try {
-                                theirPowerHere = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                    gameState, currentLocation, opponentIdHunt, false, false);
-                            } catch (Exception e) { /* ignore */ }
-
-                            // Check if Vader is armed
-                            boolean vaderArmed = false;
-                            try {
-                                List<PhysicalCard> vAttach = gameState.getAttachedCards(cardToMove);
-                                if (vAttach != null) {
-                                    for (PhysicalCard att : vAttach) {
-                                        if (att != null && att.getBlueprint() != null
-                                            && att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
-                                            vaderArmed = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            } catch (Exception e) { /* ignore */ }
-
-                            // If Vader is armed and no opponents here — GO HUNT!
-                            if (vaderArmed && theirPowerHere == 0) {
-                                // V35: Find opponents, but PRIORITIZE Jedi/Padawan targets
-                                boolean opponentsElsewhere = false;
-                                String bestTargetLoc = null;
-                                float bestTargetPower = 0;
-                                String bestJediLoc = null;
-                                float bestJediPower = 0;
-                                try {
-                                    for (PhysicalCard loc : gameState.getTopLocations()) {
-                                        if (loc == null || loc == currentLocation) continue;
-                                        float opPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                            gameState, loc, opponentIdHunt, false, false);
-                                        if (opPower > 0) {
-                                            opponentsElsewhere = true;
-                                            if (opPower > bestTargetPower) {
-                                                bestTargetPower = opPower;
-                                                bestTargetLoc = loc.getTitle();
-                                            }
-                                            // V35: Check for Jedi/Padawan at this location
-                                            for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
-                                                if (c == null || !opponentIdHunt.equals(c.getOwner())) continue;
-                                                String cTitle = c.getTitle() != null ? c.getTitle().toLowerCase(Locale.ROOT) : "";
-                                                if (isJediOrPadawan(cTitle)) {
-                                                    if (opPower > bestJediPower) {
-                                                        bestJediPower = opPower;
-                                                        bestJediLoc = loc.getTitle();
-                                                    }
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) { /* ignore */ }
-
-                                if (opponentsElsewhere) {
-                                    // V35: Prefer Jedi location over generic highest-power location
-                                    String huntTarget = (bestJediLoc != null) ? bestJediLoc : bestTargetLoc;
-                                    float huntTargetPower = (bestJediLoc != null) ? bestJediPower : bestTargetPower;
-                                    float huntMoveBonus = (bestJediLoc != null)
-                                        ? (float) RandoConfig.SCORE_VADER_SEEK_JEDI  // V35: +350 for Jedi
-                                        : 200.0f; // Generic opponent
-                                    String locName = currentLocation.getTitle() != null
-                                        ? currentLocation.getTitle() : "current location";
-                                    action.addReasoning(String.format(
-                                        "V35 HUNT %s: Armed Vader at %s — GO HUNT! Target: %s (power %.0f)",
-                                        bestJediLoc != null ? "JEDI" : "DOWN",
-                                        locName, huntTarget != null ? huntTarget : "?", huntTargetPower),
-                                        huntMoveBonus);
-                                    logger.warn("V35 HUNT {}: Armed Vader at {} — target {} (power {}, bonus +{})",
-                                        bestJediLoc != null ? "JEDI" : "DOWN",
-                                        locName, huntTarget, (int)huntTargetPower, (int)huntMoveBonus);
-                                    // V35/V29.12 UPDATED 2026-07-06 T4.1: the hunt claims R2 DOCTRINE
-                                    // (battle-seeking — subject to the V137 canWinAt veto per ruling L3).
-                                    // Fine +350 (Jedi) / +200 (generic) passes the L2 strength gate.
-                                    ladderClaimR2("V35 HUNT " + (bestJediLoc != null ? "JEDI" : "DOWN"),
-                                        huntMoveBonus, 0.0f, true);
-                                }
-                            }
+                        MoveHuntTargetPolicy.Evaluation huntTarget =
+                            MoveHuntTargetPolicy.evaluate(
+                                gameState, game, currentLocation, cardToMove,
+                                playerId,
+                                () -> huntMoveAnalyzer != null
+                                    && huntMoveAnalyzer.isAnalyzed()
+                                    && huntMoveAnalyzer.isHuntDownV(),
+                                card -> com.gempukku.swccgo.filters.Filters.Dark_Jedi
+                                    .accepts(gameState, game.getModifiersQuerying(), card),
+                                MoveEvaluator::isJediOrPadawan,
+                                (float) RandoConfig.SCORE_VADER_SEEK_JEDI);
+                        if (huntTarget.contribution().applies()) {
+                            action.addReasoning(
+                                huntTarget.contribution().reason(),
+                                huntTarget.contribution().delta());
+                            String huntBranch = huntTarget.branch()
+                                == MoveHuntTargetPolicy.Branch.JEDI
+                                ? "JEDI" : "DOWN";
+                            logger.warn("V35 HUNT {}: Armed Vader at {} — target {} (power {}, bonus +{})",
+                                huntBranch, huntTarget.currentLocationName(),
+                                huntTarget.targetLocation(),
+                                (int) huntTarget.targetPower(),
+                                (int) huntTarget.contribution().delta());
+                            // V35/V29.12: battle-seeking R2 doctrine claim.
+                            ladderClaimR2("V35 HUNT " + huntBranch,
+                                huntTarget.contribution().delta(),
+                                0.0f, true);
                         }
                     }
 

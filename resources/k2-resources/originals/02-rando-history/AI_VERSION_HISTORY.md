@@ -1,3 +1,21 @@
+  ==== V223 AI-ONLY MOVE HUNT-TARGET POLICY OWNER (2026-07-19, both bots) ====
+Shared MoveHuntTargetPolicy now owns the duplicated V29.12/V35 armed Dark Jedi target search:
+Vader/Tyranus/Dooku title fallbacks, fail-open Dark Jedi classification, current opponent power,
+attached-weapon detection, strongest generic and Jedi target scans, strict ties, partial-result
+exceptions, exact reasons, and raw contributions. Both adapters retain objective gating, direct
+score application, logs, R2 ladder claims, and the original position before V137. Behavior is
+unchanged: an armed uncontested Hunt Down hunter receives +350 for any Jedi/Padawan target or
++200 for the strongest generic opponent location; Jedi preference still overrides a stronger
+generic target. Strict > ties keep the first location, and a failed target read preserves earlier
+results while stopping later scans. The rule remains destination-blind; V137 still owns the
+independent unwinnable-move veto. V60, routing, finalization, and physical-card resolution are
+untouched. Production edits are AI-only. Verification passed 154 focused MOVE tests and the full
+1,331-test reactor with 0 failures, 0 errors, and 26 skipped. Package, source-boundary,
+forbidden-symbol, artifact, mirror, exact-diff, and behavioral source-review gates passed; server
+jar SHA-256 is b8ede4b1c35e0d40bbc764c9f55df470508b9c398c0d3e72d887aefc4222d76c.
+Runtime load and live-game proof remain separate gates. Revert the single V223 commit. See
+AI_CHANGELOG 2026-07-19.
+
   ==== V222 AI-ONLY MOVE HUNT-DOWN COHESION POLICY OWNER (2026-07-18, both bots) ====
 Shared MoveHuntGroupPolicy now owns the duplicated V29.13 Hunt Down group-movement analysis:
 title and Dark Jedi classification, strongest-ally scan, first textual opponent destination,
