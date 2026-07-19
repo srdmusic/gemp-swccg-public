@@ -19,6 +19,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveUnarmedVaderPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWeaponHunterPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveWinnabilityPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
@@ -1275,7 +1276,8 @@ public class MoveEvaluator extends ActionEvaluator {
                         PhysicalCard v137Dest = null;
                         for (PhysicalCard loc : gameState.getTopLocations()) {
                             if (loc == null || loc == currentLocation || loc.getTitle() == null) continue;
-                            if (v137MoveText.contains(loc.getTitle().toLowerCase(Locale.ROOT))) {
+                            if (MoveWinnabilityPolicy.actionTargetsLocation(
+                                    v137MoveText, loc.getTitle())) {
                                 v137Dest = loc;
                                 break;
                             }
@@ -1356,21 +1358,24 @@ public class MoveEvaluator extends ActionEvaluator {
                                     // plain R1) keep today's deterrent instead of going unprotected.
                                     boolean v137CanWin = MovePredicates.canWinAt(game, gameState, playerId,
                                         v137Dest, v137OurPower, v137OurAbility, v137OurForfeit);
-                                    if (!v137CanWin) {
-                                        ladderCanWinVeto = true;
-                                        ladderCanWinVetoReason = String.format(
-                                            "V137 UNWINNABLE MOVE: %s → %s contested — even the full group (%.0f pwr/%.0f abil) loses to opp %.0f pwr (shared canWinAt false)",
-                                            cardToMove.getTitle(), v137Dest.getTitle(),
-                                            v137OurPower, v137OurAbility, v137OppPower);
-                                        float v137Pen = -800.0f;
-                                        if (v137OppPower - v137OurPower >= 6f) v137Pen = -1500.0f;
-                                        action.addReasoning(String.format(
-                                            "V137 UNWINNABLE MOVE: %s → %s contested — even the full group (%.0f pwr/%.0f abil) loses to opp %.0f pwr; don't waste move force",
-                                            cardToMove.getTitle(), v137Dest.getTitle(),
-                                            v137OurPower, v137OurAbility, v137OppPower), v137Pen);
+                                    MoveWinnabilityPolicy.Evaluation v137Decision =
+                                        MoveWinnabilityPolicy.contested(
+                                            cardToMove.getTitle(),
+                                            v137Dest.getTitle(),
+                                            v137OurPower,
+                                            v137OurAbility,
+                                            v137OppPower,
+                                            v137CanWin);
+                                    if (v137Decision.applies()) {
+                                        ladderCanWinVeto = v137Decision.canWinVeto();
+                                        ladderCanWinVetoReason = v137Decision.vetoReason();
+                                        action.addReasoning(
+                                            v137Decision.reason(),
+                                            v137Decision.delta());
                                         logger.warn("V137 UNWINNABLE MOVE: {} → {} (group pwr {} abil {} vs opp {}) → {} (+canWinAt veto flag)",
                                             cardToMove.getTitle(), v137Dest.getTitle(),
-                                            (int)v137OurPower, (int)v137OurAbility, (int)v137OppPower, (int)v137Pen);
+                                            (int)v137OurPower, (int)v137OurAbility, (int)v137OppPower,
+                                            (int)v137Decision.delta());
                                     }
                                 } else {
                                     // V137 ANTI-SOLO-BG (Steve 2026-05-29, replay ss2jc7):
@@ -1405,13 +1410,20 @@ public class MoveEvaluator extends ActionEvaluator {
                                                     != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
                                             v137MovingChars++;
                                         }
-                                        int v137ProjectedAtDest = v137DestFriendlies + v137MovingChars;
-                                        if (v137ProjectedAtDest <= 1) {
-                                            action.addReasoning(String.format(
-                                                "V137 ANTI-SOLO BG: %s → %s would be SOLO at a battleground (uncontested now, opp can reinforce/attack next turn) — don't park alone",
-                                                cardToMove.getTitle(), v137Dest.getTitle()), -500.0f);
+                                        MoveWinnabilityPolicy.Evaluation v137AntiSolo =
+                                            MoveWinnabilityPolicy.uncontestedBattleground(
+                                                cardToMove.getTitle(),
+                                                v137Dest.getTitle(),
+                                                v137DestBG,
+                                                v137DestFriendlies,
+                                                v137MovingChars);
+                                        if (v137AntiSolo.applies()) {
+                                            action.addReasoning(
+                                                v137AntiSolo.reason(),
+                                                v137AntiSolo.delta());
                                             logger.warn("V137 ANTI-SOLO BG: {} → {} solo at BG (projected={}) → -500",
-                                                cardToMove.getTitle(), v137Dest.getTitle(), v137ProjectedAtDest);
+                                                cardToMove.getTitle(), v137Dest.getTitle(),
+                                                v137AntiSolo.projectedCharactersAtDestination());
                                         }
                                     }
                                 }
