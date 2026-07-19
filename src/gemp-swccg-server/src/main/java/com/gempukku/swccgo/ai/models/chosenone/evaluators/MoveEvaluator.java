@@ -8,6 +8,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveHuntTargetPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
@@ -1694,45 +1695,32 @@ public class MoveEvaluator extends ActionEvaluator {
             if (cardToMove != null && cardToMove.isUndercover() && gameState != null && game != null) {
                 try {
                     String spyPid = context.getPlayerId();
-                    String spyOid = game.getOpponent(spyPid);
-                    PhysicalCard spySrcLoc = cardToMove.getAtLocation();
-
-                    // Check if opponent still has presence at spy's current location
-                    float oppPowerHere = 0;
-                    if (spySrcLoc != null) {
-                        oppPowerHere = game.getModifiersQuerying().getTotalPowerAtLocation(
-                            gameState, spySrcLoc, spyOid, false, false);
+                    MoveSpyFollowPolicy.Evaluation spyFollow =
+                        MoveSpyFollowPolicy.evaluate(
+                            gameState, game, cardToMove,
+                            spyPid, actionLower);
+                    if (spyFollow.contribution().applies()) {
+                        action.addReasoning(
+                            spyFollow.contribution().reason(),
+                            spyFollow.contribution().delta());
                     }
-
-                    // Check if destination has opponent presence
-                    boolean destHasOpponent = false;
-                    for (PhysicalCard destLoc : gameState.getTopLocations()) {
-                        if (destLoc == null || destLoc.getTitle() == null) continue;
-                        String destTitle = destLoc.getTitle().toLowerCase(Locale.ROOT);
-                        if (!actionLower.contains(destTitle)) continue;
-                        float oppPowerDest = game.getModifiersQuerying().getTotalPowerAtLocation(
-                            gameState, destLoc, spyOid, false, false);
-                        if (oppPowerDest > 0) destHasOpponent = true;
-                        break;
-                    }
-
-                    if (oppPowerHere == 0 && destHasOpponent) {
-                        // Opponent left this location — spy should follow them!
-                        action.addReasoning("V53 SPY FOLLOW: Opponent moved away — follow them to keep reducing drain!", 500.0f);
+                    switch (spyFollow.branch()) {
+                        case FOLLOW ->
                         logger.warn("V53 SPY FOLLOW: {} following opponent to new location — +500!", cardToMove.getTitle());
-                        // V53 UPDATED 2026-07-06 T4.1: spy-follow claims R2 DOCTRINE (non-battle:
-                        // the spy leeches drain, it does not seek battle; +500 passes L2).
-                        ladderClaimR2("V53 SPY FOLLOW", 500.0f, 0.0f, false);
-                    } else if (oppPowerHere > 0 && !destHasOpponent) {
-                        // Moving spy AWAY from opponent — bad, defeats the purpose
-                        action.addReasoning("V53 SPY STAY: Opponent is HERE — don't leave, keep reducing their drain!", -300.0f);
+                        case STAY ->
                         logger.warn("V53 SPY STAY: {} trying to leave opponent — -300!", cardToMove.getTitle());
-                    } else if (destHasOpponent && oppPowerHere == 0) {
-                        // Moving to opponent from empty location — good repositioning
-                        action.addReasoning("V53 SPY REPOSITION: Move spy to opponent location — start reducing drain!", 400.0f);
+                        case REPOSITION ->
                         logger.warn("V53 SPY REPOSITION: {} moving to opponent location — +400!", cardToMove.getTitle());
-                        // V53 UPDATED 2026-07-06 T4.1: spy-reposition claims R2 DOCTRINE (non-battle; +400 passes L2).
-                        ladderClaimR2("V53 SPY REPOSITION", 400.0f, 0.0f, false);
+                        default -> { }
+                    }
+                    if (spyFollow.contribution().claimDoctrineRank()) {
+                        String spyClaim = spyFollow.branch()
+                            == MoveSpyFollowPolicy.Branch.FOLLOW
+                            ? "V53 SPY FOLLOW" : "V53 SPY REPOSITION";
+                        ladderClaimR2(
+                            spyClaim,
+                            spyFollow.contribution().delta(),
+                            0.0f, false);
                     }
                 } catch (Exception e) {
                     logger.debug("V53 SPY FOLLOW: Error: {}", e.getMessage());

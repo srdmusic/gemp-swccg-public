@@ -1,3 +1,21 @@
+  ==== V225 AI-ONLY MOVE UNDERCOVER-SPY POLICY OWNER (2026-07-19, both bots) ====
+Shared MoveSpyFollowPolicy now owns the duplicated V53 undercover-spy opponent lookup, direct
+source-power read, first textual top-location destination scan, branch selection, exact reasons,
+raw contributions, and doctrine-claim fact. Both adapters retain the undercover/game-state gate,
+player-id callback, direct score application, warnings, R2 ladder claim, outer catch, and original
+position after V27 maintenance and before V53b. Behavior is unchanged: moving from an empty source
+to the first textual opponent destination remains FOLLOW +500, and leaving opponent power for an
+empty destination remains STAY -300. The historical REPOSITION +400 arm remains unreachable behind
+its identical earlier FOLLOW condition. Null-source handling, first-match stopping, direct-read
+failure boundaries, and add/log/ladder order remain intact. V53b, V60, V137, routing, finalization,
+and physical-card resolution are untouched. Production edits are AI-only. Verification passed 186
+focused MOVE tests and the full 1,363-test reactor with 0 failures, 0 errors, and 26 skipped.
+Package, source-boundary, forbidden-symbol, artifact, mirror, and independent source-review gates
+passed; server jar SHA-256 is de491e818f45c630baa1ea2cd2cd81e974555109b58a77c01894b36dbae9dd66
+and packaged web.jar SHA-256 is 41223078c60a769283e585b7d31013510a8c5ff72c36b9280dd1823dbced28ea.
+Runtime load and live-game proof remain separate gates. Revert the single V225 commit. See
+AI_CHANGELOG 2026-07-19.
+
   ==== V224 AI-ONLY MOVE OBJECTIVE-CONSOLIDATION POLICY OWNER (2026-07-19, both bots) ====
 Shared MoveObjectiveConsolidationPolicy now owns the duplicated V22.5 pre-flip consolidation and
 V22.2 post-flip protection scans, strict thresholds, partial-result behavior, exact reasons, raw
