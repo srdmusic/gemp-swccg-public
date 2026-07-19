@@ -29,6 +29,12 @@ public final class MoveDestinationPolicy {
             boolean landedShipFound) {
     }
 
+    public record CompanionVeto(boolean hardVeto, String reason) {
+        private static CompanionVeto none() {
+            return new CompanionVeto(false, null);
+        }
+    }
+
     public record DestinationContest(
             PhysicalCard destination,
             Contribution contestContribution,
@@ -46,6 +52,69 @@ public final class MoveDestinationPolicy {
     }
 
     private MoveDestinationPolicy() {
+    }
+
+    public static PhysicalCard resolveDestination(
+            GameState gameState,
+            PhysicalCard source,
+            String actionLower) {
+        for (PhysicalCard location : gameState.getLocationsInOrder()) {
+            if (location == null || location == source) {
+                continue;
+            }
+            String locationName = location.getTitle() != null
+                    ? location.getTitle().toLowerCase(Locale.ROOT) : "";
+            if (!locationName.isEmpty()
+                    && actionLower.contains(locationName)) {
+                return location;
+            }
+        }
+        return null;
+    }
+
+    public static Contribution battlegroundRetreat(
+            String sourceTitle,
+            String destinationTitle,
+            boolean sourceBattleground,
+            boolean destinationBattleground) {
+        if (!sourceBattleground || destinationBattleground) {
+            return Contribution.none();
+        }
+        return new Contribution(
+                true,
+                String.format(
+                        "V37 NO RETREAT: Moving from battleground %s"
+                                + " to non-battleground %s"
+                                + " — lose drain and battle ability!",
+                        sourceTitle,
+                        destinationTitle),
+                -800.0f);
+    }
+
+    public static boolean isSelfMoveToFriend(String gameText) {
+        if (gameText == null) {
+            return false;
+        }
+        String lower = gameText.toLowerCase(Locale.ROOT);
+        return lower.contains("may move to same site as")
+                || lower.contains("moves to same site as");
+    }
+
+    public static CompanionVeto companionVeto(
+            String moverTitle,
+            String destinationTitle,
+            boolean selfMoveToFriend,
+            int friendlyCharactersAtDestination) {
+        if (!selfMoveToFriend || friendlyCharactersAtDestination != 0) {
+            return CompanionVeto.none();
+        }
+        return new CompanionVeto(
+                true,
+                String.format(
+                        "V135 SELF-MOVE-TO-FRIEND ALONE: '%s' would land alone at %s"
+                                + " — no friendly characters there",
+                        moverTitle,
+                        destinationTitle));
     }
 
     public static LandedShipEscape landedShipEscape(
@@ -131,19 +200,8 @@ public final class MoveDestinationPolicy {
             String playerId, String opponentId,
             String actionLower, Predicate<String> jediDetector,
             Consumer<PhysicalCard> uncontestedDestinationObserver) {
-        PhysicalCard destination = null;
-        for (PhysicalCard location : gameState.getLocationsInOrder()) {
-            if (location == null || location == source) {
-                continue;
-            }
-            String locationName = location.getTitle() != null
-                    ? location.getTitle().toLowerCase(Locale.ROOT) : "";
-            if (!locationName.isEmpty()
-                    && actionLower.contains(locationName)) {
-                destination = location;
-                break;
-            }
-        }
+        PhysicalCard destination = resolveDestination(
+                gameState, source, actionLower);
 
         if (destination == null) {
             return noneDestination();

@@ -98,6 +98,99 @@ public class MoveDestinationSourceParityTest {
     }
 
     @Test
+    public void v37AndV135HaveSharedDestinationPolicyOwners()
+            throws IOException {
+        String move = evaluatorSource("rando");
+        String policy = policySource();
+
+        assertEquals(1, countOccurrences(
+                move, "MoveDestinationPolicy.resolveDestination("));
+        assertEquals(1, countOccurrences(
+                move, "MoveDestinationPolicy.battlegroundRetreat("));
+        assertEquals(1, countOccurrences(
+                move, "MoveDestinationPolicy.isSelfMoveToFriend("));
+        assertEquals(1, countOccurrences(
+                move, "MoveDestinationPolicy.companionVeto("));
+        assertFalse(move.contains("for (PhysicalCard loc37"));
+        assertFalse(move.contains("v135GtLower.contains("));
+        assertFalse(move.contains(
+                "if (currentIsBattleground && !destIsBattleground)"));
+        assertTrue(policy.contains("public static PhysicalCard resolveDestination("));
+        assertTrue(policy.contains("public static Contribution battlegroundRetreat("));
+        assertTrue(policy.contains("public static boolean isSelfMoveToFriend("));
+        assertTrue(policy.contains("public static CompanionVeto companionVeto("));
+    }
+
+    @Test
+    public void v37AdapterRetainsActionAndBattlegroundReadOrder()
+            throws IOException {
+        String block = v37Block(evaluatorSource("rando"));
+        int actionText = block.indexOf("action.getDisplayText()");
+        int destination = block.indexOf(
+                "MoveDestinationPolicy.resolveDestination(", actionText);
+        int destinationBlueprint = block.indexOf(
+                "destLoc37.getBlueprint()", destination);
+        int destinationBg = block.indexOf(
+                "isBattleground(gameState, destLoc37", destinationBlueprint);
+        int currentBg = block.indexOf(
+                "isBattleground(gameState, currentLocation", destinationBg);
+        int decision = block.indexOf(
+                "MoveDestinationPolicy.battlegroundRetreat(", currentBg);
+        int apply = block.indexOf("action.addReasoning(", decision);
+        int log = block.indexOf("V37 NO RETREAT: {}", apply);
+
+        assertTrue(actionText >= 0);
+        assertTrue(destination > actionText);
+        assertTrue(destinationBlueprint > destination);
+        assertTrue(destinationBg > destinationBlueprint);
+        assertTrue(currentBg > destinationBg);
+        assertTrue(decision > currentBg);
+        assertTrue(apply > decision);
+        assertTrue(log > apply);
+    }
+
+    @Test
+    public void v135AdapterRetainsLazyTextFriendScanAndVetoOrder()
+            throws IOException {
+        String block = v37Block(evaluatorSource("rando"));
+        int blueprint = block.indexOf(
+                "cardToMove.getBlueprint() != null");
+        int gameText = block.indexOf(
+                "cardToMove.getBlueprint().getGameText()", blueprint);
+        int classify = block.indexOf(
+                "MoveDestinationPolicy.isSelfMoveToFriend(", gameText);
+        int classifyGate = block.indexOf(
+                "if (v135IsSelfMoveToFriend)", classify);
+        int friendScan = block.indexOf(
+                "gameState.getCardsAtLocation(destLoc37)", classifyGate);
+        int identitySkip = block.indexOf("pc == cardToMove", friendScan);
+        int ownerSkip = block.indexOf(
+                "playerId.equals(pc.getOwner())", identitySkip);
+        int categorySkip = block.indexOf(
+                "CardCategory.CHARACTER", ownerSkip);
+        int decision = block.indexOf(
+                "MoveDestinationPolicy.companionVeto(", categorySkip);
+        int hardVeto = block.indexOf("ladderVetoHard = true", decision);
+        int reason = block.indexOf(
+                "ladderVetoHardReason = v135Decision.reason()", hardVeto);
+        int log = block.indexOf(
+                "V135 SELF-MOVE-TO-FRIEND ALONE: {}", reason);
+
+        assertTrue(blueprint >= 0);
+        assertTrue(gameText > blueprint);
+        assertTrue(classify > gameText);
+        assertTrue(classifyGate > classify);
+        assertTrue(friendScan > classifyGate);
+        assertTrue(identitySkip > friendScan);
+        assertTrue(ownerSkip > identitySkip);
+        assertTrue(categorySkip > ownerSkip);
+        assertTrue(decision > categorySkip);
+        assertTrue(hardVeto > decision);
+        assertTrue(reason > hardVeto);
+        assertTrue(log > reason);
+    }
+
+    @Test
     public void protectedMoveMachineryRemainsUntouched()
             throws IOException {
         String move = evaluatorSource("rando");
@@ -127,6 +220,12 @@ public class MoveDestinationSourceParityTest {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
                 .resolve(bot).resolve("evaluators/MoveEvaluator.java"));
+    }
+
+    private static String v37Block(String move) {
+        int start = move.indexOf("// === V37: NEVER MOVE");
+        int end = move.indexOf("// === V29.12: HUNT DOWN", start);
+        return move.substring(start, end);
     }
 
     private static String policySource() throws IOException {

@@ -368,6 +368,71 @@ public class MoveDestinationPolicyTest {
         assertTrue(result.wrongDirectionVeto());
     }
 
+    @Test
+    public void sharedResolverKeepsFirstTextualLocationAndSkipsSource() {
+        Harness harness = new Harness();
+        PhysicalCard source = location("Source", CardSubtype.SITE);
+        PhysicalCard first = location("First", CardSubtype.SITE);
+        PhysicalCard second = location("Second", CardSubtype.SITE);
+        harness.locations(source, first, second);
+
+        PhysicalCard result = MoveDestinationPolicy.resolveDestination(
+                harness.gameState,
+                source,
+                "move through first toward second");
+
+        assertSame(first, result);
+    }
+
+    @Test
+    public void battlegroundRetreatUsesExactTransitionAndPenalty() {
+        assertFalse(MoveDestinationPolicy.battlegroundRetreat(
+                "Source", "Destination", false, false).applies());
+        assertFalse(MoveDestinationPolicy.battlegroundRetreat(
+                "Source", "Destination", false, true).applies());
+        assertFalse(MoveDestinationPolicy.battlegroundRetreat(
+                "Source", "Destination", true, true).applies());
+
+        MoveDestinationPolicy.Contribution result =
+                MoveDestinationPolicy.battlegroundRetreat(
+                        "Source", "Destination", true, false);
+        assertTrue(result.applies());
+        assertFloat(-800.0f, result.delta());
+        assertEquals(
+                "V37 NO RETREAT: Moving from battleground Source"
+                        + " to non-battleground Destination"
+                        + " — lose drain and battle ability!",
+                result.reason());
+    }
+
+    @Test
+    public void selfMoveToFriendClassificationPreservesBothPhrases() {
+        assertFalse(MoveDestinationPolicy.isSelfMoveToFriend(null));
+        assertFalse(MoveDestinationPolicy.isSelfMoveToFriend(
+                "May move as a regular move."));
+        assertTrue(MoveDestinationPolicy.isSelfMoveToFriend(
+                "May move to same site as a Jedi."));
+        assertTrue(MoveDestinationPolicy.isSelfMoveToFriend(
+                "MOVES TO SAME SITE AS LUKE."));
+    }
+
+    @Test
+    public void selfMoveCompanionVetoRequiresZeroFriendlies() {
+        assertFalse(MoveDestinationPolicy.companionVeto(
+                "Yoda", "Dagobah: Bog Clearing", false, 0).hardVeto());
+        assertFalse(MoveDestinationPolicy.companionVeto(
+                "Yoda", "Dagobah: Bog Clearing", true, 1).hardVeto());
+
+        MoveDestinationPolicy.CompanionVeto result =
+                MoveDestinationPolicy.companionVeto(
+                        "Yoda", "Dagobah: Bog Clearing", true, 0);
+        assertTrue(result.hardVeto());
+        assertEquals(
+                "V135 SELF-MOVE-TO-FRIEND ALONE: 'Yoda' would land alone at"
+                        + " Dagobah: Bog Clearing — no friendly characters there",
+                result.reason());
+    }
+
     private static PhysicalCard location(
             String title, CardSubtype subtype) {
         PhysicalCard card = mock(PhysicalCard.class);

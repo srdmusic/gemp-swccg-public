@@ -1134,15 +1134,8 @@ public class MoveEvaluator extends ActionEvaluator {
                         String moveText37 = action.getDisplayText() != null
                             ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
                         // Find destination location
-                        PhysicalCard destLoc37 = null;
-                        for (PhysicalCard loc37 : gameState.getLocationsInOrder()) {
-                            if (loc37 == null || loc37 == currentLocation) continue;
-                            String locName37 = loc37.getTitle() != null ? loc37.getTitle().toLowerCase(Locale.ROOT) : "";
-                            if (!locName37.isEmpty() && moveText37.contains(locName37)) {
-                                destLoc37 = loc37;
-                                break;
-                            }
-                        }
+                        PhysicalCard destLoc37 = MoveDestinationPolicy.resolveDestination(
+                            gameState, currentLocation, moveText37);
 
                         if (destLoc37 != null && destLoc37.getBlueprint() != null) {
                             boolean destIsBattleground = false;
@@ -1155,10 +1148,16 @@ public class MoveEvaluator extends ActionEvaluator {
                                 currentIsBattleground = game.getModifiersQuerying().isBattleground(gameState, currentLocation, null);
                             } catch (Exception e) { /* ignore */ }
 
-                            if (currentIsBattleground && !destIsBattleground) {
-                                action.addReasoning(String.format(
-                                    "V37 NO RETREAT: Moving from battleground %s to non-battleground %s — lose drain and battle ability!",
-                                    currentLocation.getTitle(), destLoc37.getTitle()), -800.0f);
+                            MoveDestinationPolicy.Contribution v37Decision =
+                                MoveDestinationPolicy.battlegroundRetreat(
+                                    currentLocation.getTitle(),
+                                    destLoc37.getTitle(),
+                                    currentIsBattleground,
+                                    destIsBattleground);
+                            if (v37Decision.applies()) {
+                                action.addReasoning(
+                                    v37Decision.reason(),
+                                    v37Decision.delta());
                                 logger.warn("V37 NO RETREAT: {} from battleground {} to non-battleground {} (-800)",
                                     cardToMove != null ? cardToMove.getTitle() : "?",
                                     currentLocation.getTitle(), destLoc37.getTitle());
@@ -1181,10 +1180,8 @@ public class MoveEvaluator extends ActionEvaluator {
                             if (cardToMove != null && cardToMove.getBlueprint() != null) {
                                 String v135Gt = cardToMove.getBlueprint().getGameText();
                                 if (v135Gt != null) {
-                                    String v135GtLower = v135Gt.toLowerCase(Locale.ROOT);
                                     boolean v135IsSelfMoveToFriend =
-                                        v135GtLower.contains("may move to same site as")
-                                        || v135GtLower.contains("moves to same site as");
+                                        MoveDestinationPolicy.isSelfMoveToFriend(v135Gt);
                                     if (v135IsSelfMoveToFriend) {
                                         int v135FriendlyAtDest = 0;
                                         for (PhysicalCard pc : gameState.getCardsAtLocation(destLoc37)) {
@@ -1195,14 +1192,18 @@ public class MoveEvaluator extends ActionEvaluator {
                                                     != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
                                             v135FriendlyAtDest++;
                                         }
-                                        if (v135FriendlyAtDest == 0) {
+                                        MoveDestinationPolicy.CompanionVeto v135Decision =
+                                            MoveDestinationPolicy.companionVeto(
+                                                cardToMove.getTitle(),
+                                                destLoc37.getTitle(),
+                                                v135IsSelfMoveToFriend,
+                                                v135FriendlyAtDest);
+                                        if (v135Decision.hardVeto()) {
                                             // V135 UPDATED 2026-07-06 T4.1: -2000 (outbiddable by +2000+ stacks)
                                             // strengthened to the ladder hard-veto class — a self-move-to-friend
                                             // that lands ALONE is absolutely blocked.
                                             ladderVetoHard = true;
-                                            ladderVetoHardReason = String.format(
-                                                "V135 SELF-MOVE-TO-FRIEND ALONE: '%s' would land alone at %s — no friendly characters there",
-                                                cardToMove.getTitle(), destLoc37.getTitle());
+                                            ladderVetoHardReason = v135Decision.reason();
                                             logger.warn("V135 SELF-MOVE-TO-FRIEND ALONE: {} → {} (0 friendlies) LADDER VETO",
                                                 cardToMove.getTitle(), destLoc37.getTitle());
                                         }
