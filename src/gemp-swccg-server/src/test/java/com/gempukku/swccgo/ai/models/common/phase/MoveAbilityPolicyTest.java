@@ -131,6 +131,83 @@ public class MoveAbilityPolicyTest {
                 result.reason());
     }
 
+    @Test
+    public void abilityBuddyBreakUsesExactThresholdsAndPenalty() {
+        MoveAbilityPolicy.Evaluation result =
+                MoveAbilityPolicy.abilityBuddy(
+                        "Jabba",
+                        "Audience Chamber",
+                        2,
+                        9.0f,
+                        5.0f,
+                        7,
+                        5.9f);
+
+        assertEvaluation(
+                result,
+                MoveAbilityPolicy.Branch.ABILITY_BUDDY_BREAK,
+                -150.0f,
+                false);
+        assertEquals(
+                "V33 BUDDY BREAK: Moving Jabba drops ability from 9"
+                        + " to 5 (< 7) at Audience Chamber",
+                result.reason());
+    }
+
+    @Test
+    public void exactSixPowerGapSkipsBuddyBreakForRetreat() {
+        MoveAbilityPolicy.Evaluation result =
+                MoveAbilityPolicy.abilityBuddy(
+                        "Jabba",
+                        "Audience Chamber",
+                        2,
+                        9.0f,
+                        5.0f,
+                        7,
+                        6.0f);
+
+        assertEquals(
+                MoveAbilityPolicy.Branch.ABILITY_BUDDY_DOOMED_SKIP,
+                result.branch());
+        assertFalse(result.applies());
+        assertEquals(0.0f, result.delta(), 0.0f);
+        assertFalse(result.claimDoctrine());
+        assertEquals(null, result.reason());
+    }
+
+    @Test
+    public void doomedSkipDoesNotRequireFourRemainingAbility() {
+        assertEquals(
+                MoveAbilityPolicy.Branch.ABILITY_BUDDY_DOOMED_SKIP,
+                MoveAbilityPolicy.abilityBuddy(
+                        "Jabba", "Audience Chamber", 2,
+                        9.0f, 3.0f, 7, 6.0f).branch());
+        assertEquals(
+                MoveAbilityPolicy.Branch.NONE,
+                MoveAbilityPolicy.abilityBuddy(
+                        "Jabba", "Audience Chamber", 2,
+                        9.0f, 3.0f, 7, 5.9f).branch());
+    }
+
+    @Test
+    public void abilityBuddyRequiresExistingThresholdAndActualBreak() {
+        assertEquals(
+                MoveAbilityPolicy.Branch.NONE,
+                MoveAbilityPolicy.abilityBuddy(
+                        "Jabba", "Audience Chamber", 1,
+                        9.0f, 5.0f, 7, 0.0f).branch());
+        assertEquals(
+                MoveAbilityPolicy.Branch.NONE,
+                MoveAbilityPolicy.abilityBuddy(
+                        "Jabba", "Audience Chamber", 2,
+                        6.9f, 5.0f, 7, 0.0f).branch());
+        assertEquals(
+                MoveAbilityPolicy.Branch.NONE,
+                MoveAbilityPolicy.abilityBuddy(
+                        "Jabba", "Audience Chamber", 2,
+                        9.0f, 7.0f, 7, 0.0f).branch());
+    }
+
     private static void assertAnalysis(
             MoveAbilityPolicy.Analysis result,
             MoveAbilityPolicy.Branch branch,

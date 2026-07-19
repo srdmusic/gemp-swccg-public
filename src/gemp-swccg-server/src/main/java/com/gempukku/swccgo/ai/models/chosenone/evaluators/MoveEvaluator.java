@@ -1045,20 +1045,25 @@ public class MoveEvaluator extends ActionEvaluator {
                                     gameState, currentLocation, playerId, false, false);
                                 v33Gap = v33OppPwr - v33OurPwr;
                             } catch (Exception ignore) { /* allow fall-through; treat as 0 gap */ }
-                            boolean v33SiteDoomed = v33Gap >= 6f;
-                            if (v33FriendlyChars > 1 && v33TotalAbility >= RandoConfig.ABILITY_BUDDY_THRESHOLD
-                                && v33AbilityAfterMove < RandoConfig.ABILITY_BUDDY_THRESHOLD && v33AbilityAfterMove >= 4.0f
-                                && !v33SiteDoomed) {
-                                action.addReasoning(String.format(
-                                    "V33 BUDDY BREAK: Moving %s drops ability from %.0f to %.0f (< %d) at %s",
-                                    cardToMove.getTitle(), v33TotalAbility, v33AbilityAfterMove,
-                                    RandoConfig.ABILITY_BUDDY_THRESHOLD, currentLocation.getTitle()), -150.0f);
+                            MoveAbilityPolicy.Evaluation v33Decision =
+                                MoveAbilityPolicy.abilityBuddy(
+                                    cardToMove.getTitle(),
+                                    currentLocation.getTitle(),
+                                    v33FriendlyChars,
+                                    v33TotalAbility,
+                                    v33AbilityAfterMove,
+                                    RandoConfig.ABILITY_BUDDY_THRESHOLD,
+                                    v33Gap);
+                            if (v33Decision.branch()
+                                    == MoveAbilityPolicy.Branch.ABILITY_BUDDY_BREAK) {
+                                action.addReasoning(
+                                    v33Decision.reason(),
+                                    v33Decision.delta());
                                 logger.warn("V33 BUDDY BREAK: {} from {} would drop ability {} → {} (< {})",
                                     cardToMove.getTitle(), currentLocation.getTitle(),
                                     v33TotalAbility, v33AbilityAfterMove, RandoConfig.ABILITY_BUDDY_THRESHOLD);
-                            } else if (v33SiteDoomed && v33FriendlyChars > 1
-                                && v33TotalAbility >= RandoConfig.ABILITY_BUDDY_THRESHOLD
-                                && v33AbilityAfterMove < RandoConfig.ABILITY_BUDDY_THRESHOLD) {
+                            } else if (v33Decision.branch()
+                                    == MoveAbilityPolicy.Branch.ABILITY_BUDDY_DOOMED_SKIP) {
                                 logger.warn("V33 BUDDY BREAK SKIP: {} at {} - site hopelessly outgunned (gap {}) - allow retreat",
                                     cardToMove.getTitle(), currentLocation.getTitle(), (int) v33Gap);
                             }

@@ -9,7 +9,9 @@ public final class MoveAbilityPolicy {
         NONE,
         DESTINY_DANGER,
         SOLO_ESCAPE,
-        JOIN_GROUP
+        JOIN_GROUP,
+        ABILITY_BUDDY_BREAK,
+        ABILITY_BUDDY_DOOMED_SKIP
     }
 
     public record Analysis(Branch branch, float abilityAfterMove) {
@@ -21,6 +23,9 @@ public final class MoveAbilityPolicy {
             String reason,
             float delta,
             boolean claimDoctrine) {
+        private static Evaluation none() {
+            return new Evaluation(Branch.NONE, false, null, 0.0f, false);
+        }
     }
 
     private MoveAbilityPolicy() {
@@ -110,5 +115,45 @@ public final class MoveAbilityPolicy {
                         destinationAbilityTotal),
                 250.0f,
                 true);
+    }
+
+    public static Evaluation abilityBuddy(
+            String moverTitle,
+            String locationTitle,
+            int friendlyCharacterCount,
+            float totalAbilityHere,
+            float abilityAfterMove,
+            int abilityBuddyThreshold,
+            float opponentPowerGap) {
+        boolean siteDoomed = opponentPowerGap >= 6.0f;
+        boolean breaksBuddyThreshold = friendlyCharacterCount > 1
+                && totalAbilityHere >= abilityBuddyThreshold
+                && abilityAfterMove < abilityBuddyThreshold;
+        if (breaksBuddyThreshold
+                && abilityAfterMove >= 4.0f
+                && !siteDoomed) {
+            return new Evaluation(
+                    Branch.ABILITY_BUDDY_BREAK,
+                    true,
+                    String.format(
+                            "V33 BUDDY BREAK: Moving %s drops ability from %.0f"
+                                    + " to %.0f (< %d) at %s",
+                            moverTitle,
+                            totalAbilityHere,
+                            abilityAfterMove,
+                            abilityBuddyThreshold,
+                            locationTitle),
+                    -150.0f,
+                    false);
+        }
+        if (siteDoomed && breaksBuddyThreshold) {
+            return new Evaluation(
+                    Branch.ABILITY_BUDDY_DOOMED_SKIP,
+                    false,
+                    null,
+                    0.0f,
+                    false);
+        }
+        return Evaluation.none();
     }
 }

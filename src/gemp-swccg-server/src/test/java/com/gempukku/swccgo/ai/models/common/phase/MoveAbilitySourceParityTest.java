@@ -167,6 +167,82 @@ public class MoveAbilitySourceParityTest {
     }
 
     @Test
+    public void v33HasOneSharedGateAndScoreOwner() throws IOException {
+        String move = evaluatorSource("rando");
+        String policy = policySource();
+
+        assertEquals(1, countOccurrences(
+                move, "MoveAbilityPolicy.abilityBuddy("));
+        assertFalse(move.contains("boolean v33SiteDoomed ="));
+        assertFalse(move.contains(
+                "v33TotalAbility >= RandoConfig.ABILITY_BUDDY_THRESHOLD\n"
+                        + "                                && v33AbilityAfterMove"));
+        assertTrue(policy.contains("ABILITY_BUDDY_BREAK"));
+        assertTrue(policy.contains("ABILITY_BUDDY_DOOMED_SKIP"));
+        assertTrue(policy.contains("opponentPowerGap >= 6.0f"));
+        assertTrue(policy.contains("-150.0f"));
+    }
+
+    @Test
+    public void v33RetainsSiteAbilityAndUnconditionalGapReads()
+            throws IOException {
+        String block = abilityBuddyBlock(evaluatorSource("rando"));
+
+        assertTrue(block.contains("CardSubtype.SITE"));
+        assertTrue(block.contains(
+                "cardToMove.getBlueprint().getAbility()"));
+        assertTrue(block.contains(
+                "gameState.getCardsAtLocation(currentLocation)"));
+        assertTrue(block.contains("c.getBlueprint().getAbility()"));
+        assertTrue(block.contains("gameState.getOpponent(playerId)"));
+        assertEquals(2, countOccurrences(block,
+                "getTotalPowerAtLocation("));
+        assertTrue(block.contains("v33Gap = v33OppPwr - v33OurPwr"));
+        assertTrue(block.contains(
+                "treat as 0 gap"));
+    }
+
+    @Test
+    public void v33PreservesReadDecisionApplyAndSkipLogOrder()
+            throws IOException {
+        String block = abilityBuddyBlock(evaluatorSource("rando"));
+        int scan = block.indexOf(
+                "gameState.getCardsAtLocation(currentLocation)");
+        int after = block.indexOf(
+                "float v33AbilityAfterMove", scan);
+        int opponent = block.indexOf(
+                "gameState.getOpponent(playerId)", after);
+        int oppPower = block.indexOf(
+                "getTotalPowerAtLocation(", opponent);
+        int ourPower = block.indexOf(
+                "getTotalPowerAtLocation(", oppPower + 1);
+        int decision = block.indexOf(
+                "MoveAbilityPolicy.abilityBuddy(", ourPower);
+        int breakBranch = block.indexOf(
+                "MoveAbilityPolicy.Branch.ABILITY_BUDDY_BREAK", decision);
+        int apply = block.indexOf("action.addReasoning(", breakBranch);
+        int breakLog = block.indexOf(
+                "V33 BUDDY BREAK: {} from {}", apply);
+        int skipBranch = block.indexOf(
+                "MoveAbilityPolicy.Branch.ABILITY_BUDDY_DOOMED_SKIP",
+                breakLog);
+        int skipLog = block.indexOf(
+                "V33 BUDDY BREAK SKIP", skipBranch);
+
+        assertTrue(scan >= 0);
+        assertTrue(after > scan);
+        assertTrue(opponent > after);
+        assertTrue(oppPower > opponent);
+        assertTrue(ourPower > oppPower);
+        assertTrue(decision > ourPower);
+        assertTrue(breakBranch > decision);
+        assertTrue(apply > breakBranch);
+        assertTrue(breakLog > apply);
+        assertTrue(skipBranch > breakLog);
+        assertTrue(skipLog > skipBranch);
+    }
+
+    @Test
     public void policyContainsNoContextEngineOrDecisionTransport()
             throws IOException {
         String policy = policySource();
@@ -187,6 +263,12 @@ public class MoveAbilitySourceParityTest {
     private static String abilityBlock(String move) {
         int start = move.indexOf("// === V32: ABILITY >= 4");
         int end = move.indexOf("// === V33: ABILITY 7", start);
+        return move.substring(start, end);
+    }
+
+    private static String abilityBuddyBlock(String move) {
+        int start = move.indexOf("// === V33: ABILITY 7");
+        int end = move.indexOf("// === V31: POST-FLIP", start);
         return move.substring(start, end);
     }
 
