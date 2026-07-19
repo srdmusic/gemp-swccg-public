@@ -31,27 +31,39 @@ public class MoveOpportunitySourceParityTest {
         assertFalse(move.contains("private int getOpponentIcons"));
         assertFalse(move.contains("private int getMyIcons"));
         assertTrue(policy.contains("public static AttackAnalysis attack("));
+        assertTrue(policy.contains(
+                "public static Contribution attackContribution("));
         assertTrue(policy.contains("public static SpreadAnalysis spread("));
+        assertTrue(policy.contains(
+                "public static Contribution spreadContribution("));
     }
 
     @Test
-    public void adaptersRetainScoresLogsAndLadderOwnership() throws IOException {
+    public void adaptersRetainLogsGameReadsAndLadderOwnership() throws IOException {
         String move = evaluatorSource("rando");
 
         assertTrue(move.contains(
-                "action.addReasoning(attack.reason, attack.score);"));
+                "MoveOpportunityPolicy.attackContribution(attack)"));
         assertTrue(move.contains(
-                "action.addReasoning(\"Possible attack (no drain icons)\", 15.0f);"));
+                "attackContribution.reason(), attackContribution.delta()"));
         assertTrue(move.contains(
-                "action.addReasoning(spread.reason, spread.score);"));
+                "MoveOpportunityPolicy.spreadContribution(spread)"));
         assertTrue(move.contains(
-                "action.addReasoning(\"Can't spread: \" + spread.reason, BAD_DELTA);"));
+                "spreadContribution.reason(), spreadContribution.delta()"));
+        assertFalse(move.contains(
+                "action.addReasoning(\"Possible attack (no drain icons)\", 15.0f)"));
+        assertFalse(move.contains(
+                "action.addReasoning(\"Can't spread: \" + spread.reason, BAD_DELTA)"));
         assertTrue(move.contains(
                 "isAdjacentSites(\n                            gameState, location, attack.targetLocation)"));
         assertTrue(move.contains(
                 "ladderClaimR2(\"ATTACK\", attack.score, 0.0f, true);"));
         assertTrue(move.contains(
                 "ladderClaimR2(\"SPREAD\", spread.score, 0.0f,"));
+        assertTrue(move.contains(
+                "action.addReasoning(\"Card not at a location\", BAD_DELTA)"));
+        assertTrue(move.contains(
+                "action.addReasoning(\"Move phase\", 0.0f)"));
     }
 
     @Test
@@ -78,6 +90,10 @@ public class MoveOpportunitySourceParityTest {
         assertTrue(policy.contains(
                 "int myIcons = ownIcons(targetLocation.getBlueprint(), mySide);"));
         assertTrue(policy.contains("if (score > bestScore)"));
+        assertTrue(policy.contains("\"Possible attack (no drain icons)\""));
+        assertTrue(policy.contains("\"Can't spread: \" + spread.reason"));
+        assertTrue(policy.contains("15.0f"));
+        assertTrue(policy.contains("-10.0f"));
     }
 
     @Test

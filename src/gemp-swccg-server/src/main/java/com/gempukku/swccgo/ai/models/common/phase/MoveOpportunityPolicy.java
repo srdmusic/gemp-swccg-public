@@ -20,6 +20,12 @@ public final class MoveOpportunityPolicy {
     private static final float ICON_BONUS = 15.0f;
     private static final float GOOD_DELTA = 10.0f;
 
+    public record Contribution(boolean applies, String reason, float delta) {
+        private static Contribution none() {
+            return new Contribution(false, null, 0.0f);
+        }
+    }
+
     private MoveOpportunityPolicy() {
     }
 
@@ -100,6 +106,19 @@ public final class MoveOpportunityPolicy {
         }
 
         return bestAttack;
+    }
+
+    public static Contribution attackContribution(AttackAnalysis attack) {
+        if (attack == null || !attack.viable) {
+            return Contribution.none();
+        }
+        if (attack.hasForcedrainPotential) {
+            return new Contribution(true, attack.reason, attack.score);
+        }
+        return new Contribution(
+                true,
+                "Possible attack (no drain icons)",
+                15.0f);
     }
 
     public static SpreadAnalysis spread(
@@ -204,6 +223,19 @@ public final class MoveOpportunityPolicy {
         return bestOpportunity != null
                 ? bestOpportunity
                 : new SpreadAnalysis(false, "no good adjacent locations", 0);
+    }
+
+    public static Contribution spreadContribution(SpreadAnalysis spread) {
+        if (spread == null) {
+            return Contribution.none();
+        }
+        if (spread.viable) {
+            return new Contribution(true, spread.reason, spread.score);
+        }
+        return new Contribution(
+                true,
+                "Can't spread: " + spread.reason,
+                -10.0f);
     }
 
     private static int opponentIcons(SwccgCardBlueprint blueprint, Side mySide) {

@@ -63,6 +63,43 @@ public class MoveOpportunityPolicyTest {
     }
 
     @Test
+    public void attackContributionPreservesStrongAndWeakApplicationScores() {
+        PhysicalCard strongCurrent = location(0, 0);
+        PhysicalCard strongTarget = location(1, 0);
+        MoveOpportunityPolicy.AttackAnalysis strong =
+                MoveOpportunityPolicy.attack(
+                        gameState(
+                                List.of(strongCurrent, strongTarget),
+                                List.of(List.of(),
+                                        List.of(powerCard(OPPONENT, 4, false)))),
+                        PLAYER, Side.LIGHT, strongCurrent, 8);
+
+        PhysicalCard weakCurrent = location(0, 0);
+        PhysicalCard weakTarget = location(0, 0);
+        MoveOpportunityPolicy.AttackAnalysis weak =
+                MoveOpportunityPolicy.attack(
+                        gameState(
+                                List.of(weakCurrent, weakTarget),
+                                List.of(List.of(),
+                                        List.of(powerCard(OPPONENT, 4, false)))),
+                        PLAYER, Side.LIGHT, weakCurrent, 8);
+
+        MoveOpportunityPolicy.Contribution strongContribution =
+                MoveOpportunityPolicy.attackContribution(strong);
+        MoveOpportunityPolicy.Contribution weakContribution =
+                MoveOpportunityPolicy.attackContribution(weak);
+
+        assertTrue(strongContribution.applies());
+        assertFloat(92.0f, strongContribution.delta());
+        assertEquals(strong.reason, strongContribution.reason());
+        assertTrue(weakContribution.applies());
+        assertFloat(15.0f, weakContribution.delta());
+        assertEquals("Possible attack (no drain icons)",
+                weakContribution.reason());
+        assertFalse(MoveOpportunityPolicy.attackContribution(null).applies());
+    }
+
+    @Test
     public void attackPreservesAdvantageBoundary() {
         PhysicalCard current = location(0, 0);
         PhysicalCard target = location(1, 0);
@@ -189,6 +226,41 @@ public class MoveOpportunityPolicyTest {
 
         assertFalse(result.viable);
         assertEquals("no good adjacent locations", result.reason);
+    }
+
+    @Test
+    public void spreadContributionPreservesSuccessAndFailureScores() {
+        PhysicalCard successCurrent = location(0, 0);
+        PhysicalCard successTarget = location(1, 0);
+        MoveOpportunityPolicy.SpreadAnalysis success =
+                MoveOpportunityPolicy.spread(
+                        gameState(
+                                List.of(successCurrent, successTarget),
+                                List.of(List.of(), List.of())),
+                        PLAYER, Side.LIGHT, successCurrent, 12, 0);
+
+        PhysicalCard failureCurrent = location(0, 0);
+        PhysicalCard failureTarget = location(0, 0);
+        MoveOpportunityPolicy.SpreadAnalysis failure =
+                MoveOpportunityPolicy.spread(
+                        gameState(
+                                List.of(failureCurrent, failureTarget),
+                                List.of(List.of(), List.of())),
+                        PLAYER, Side.LIGHT, failureCurrent, 10, 0);
+
+        MoveOpportunityPolicy.Contribution successContribution =
+                MoveOpportunityPolicy.spreadContribution(success);
+        MoveOpportunityPolicy.Contribution failureContribution =
+                MoveOpportunityPolicy.spreadContribution(failure);
+
+        assertTrue(successContribution.applies());
+        assertFloat(success.score, successContribution.delta());
+        assertEquals(success.reason, successContribution.reason());
+        assertTrue(failureContribution.applies());
+        assertFloat(-10.0f, failureContribution.delta());
+        assertEquals("Can't spread: no good adjacent locations",
+                failureContribution.reason());
+        assertFalse(MoveOpportunityPolicy.spreadContribution(null).applies());
     }
 
     @Test

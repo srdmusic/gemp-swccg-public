@@ -7273,3 +7273,25 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     31b004bb566d772406dee9b1a9d6a96d8026c9370273e4b883036edbf0f32042 contain the shared
     policy, BlockedDrainEscape result type, and both adapters. Runtime reload and live-game proof
     remain pending on the external runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V251 (2026-07-19): complete MOVE ladder and opportunity ownership ════
+    New MoveLadderPolicy owns T4.1's R4/R3/R2 bands, R2 claim-strength gate, band math,
+    veto matrix, fine clamp/demotion sequence, rank bases, exact reasons, and default R1 penalty.
+    MoveOpportunityPolicy now also owns the final strong/weak attack and successful/failed spread
+    contributions, including the legacy +15 weak attack and -10 failed spread. Both MoveEvaluator
+    mirrors retain per-action state, rule-specific claim sites, engine reads, adjacency checks,
+    one-time-per-bot logging, action mutation, and original branch order. The unused
+    VERY_GOOD_DELTA and VERY_BAD_DELTA declarations were removed; the missing-location -10 and
+    neutral phase marker stay adapter-owned diagnostics. Behavior is structural-only. The ladder
+    veto remains additive -100000 rather than a true hardVeto; R2 still requires fine >= 200 or
+    drain delta >= 2; V53b transit suppresses only the deferred wrong-direction veto; V137 remains
+    limited to battle-seeking R2; +/-2800 clamp, R2/R3-only demotion, R4 exemption, and the unclaimed
+    ranked-move -50 remain exact. Band margin remains 730. Focused 36/0/0/0, MOVE-named
+    430/0/0/0, full reactor 1614/0/0/26, normalized mirror parity, AI-only boundary,
+    forbidden-symbol scan, and clean package passed. Direct adapter fixtures prove both bots keep
+    additive -100000 without setting hardVeto. Independent review found no behavior or ordering
+    drift. Server jar SHA-256 1010dafad4b17d948bf396c64fa6bbe3f24adf39fd4537304a3f86654d6c6b1c
+    and web jar SHA-256 65a43a38c6471ceff156f7d069b93341860f70b8b85b62f7294a515dd4880000
+    contain the shared ladder, opportunity result types, and both adapters. Runtime reload and
+    live-game proof remain pending on the external runtime. AI source only; no GEMP engine or
+    player-decision changes.

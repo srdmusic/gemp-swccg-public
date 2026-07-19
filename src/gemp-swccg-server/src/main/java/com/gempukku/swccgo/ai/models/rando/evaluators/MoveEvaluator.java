@@ -10,6 +10,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveHuntGroupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveHuntTargetPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandoStayPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveLadderPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePostFlipConsolidationPolicy;
@@ -97,28 +98,10 @@ public class MoveEvaluator extends ActionEvaluator {
     private static final int ATTACK_MIN_POWER = 6;
 
     // Score deltas (from Python)
-    private static final float VERY_GOOD_DELTA = 150.0f;
     private static final float GOOD_DELTA = 10.0f;
     private static final float BAD_DELTA = -10.0f;
-    private static final float VERY_BAD_DELTA = -150.0f;
 
-    // ═══ T4.1 LADDER CONSTANTS (2026-07-06) ═══
-    // Rank bands (rank-as-band-offset; CombinedEvaluator's additive merge untouched)
-    private static final float RANK_R4 = 20000.0f;   // mandatory transit (V53b transit arms; ATE V60 transit shares the band)
-    private static final float RANK_R3 = 12000.0f;   // survival (threat RETREAT, V59 DOOMED, V91 landed-ship escape)
-    private static final float RANK_R2 = 6000.0f;    // doctrine (hunt/contest/shuttle/consolidate/spy-follow/…)
-    private static final float RANK_R1 = 0.0f;       // default — behaves exactly as today
-    private static final float LADDER_VETO = -100000.0f;
-    private static final float FINE_CLAMP = 2800.0f; // non-base fines clamped to ±2800 ("LADDER CLAMP")
-    // Ruling L2: an R2 claim needs strength — claiming rule's own fine >= +200 OR drain-delta >= 2
-    private static final float R2_CLAIM_MIN_FINE = 200.0f;
-    private static final float R2_CLAIM_MIN_DRAIN_DELTA = 2.0f;
-    // Ruling L4 band-assert inputs (verified cross-evaluator bounds, T4_Boundary_Tables §Band check):
-    // worst ATE co-sum stack -550 (V29.7-Castle/V67ae -300 + V169 soft -250), best +250 (V35.4);
-    // largest R1 fine stack ≈ +1670 (V79 orbit-Scarif +1500 dominates).
-    private static final float ATE_CROSS_NEG = 550.0f;
-    private static final float ATE_CROSS_POS = 250.0f;
-    private static final float R1_FINE_CEILING = 1670.0f;
+    // T4.1 ladder thresholds, score bands, and veto order live in MoveLadderPolicy.
     private static boolean ladderBandsChecked = false;
 
     // ═══ T4.1 per-action ladder state (reset via ladderResetForAction at each action) ═══
@@ -165,14 +148,14 @@ public class MoveEvaluator extends ActionEvaluator {
 
     /** R4 claim — MANDATORY TRANSIT. Keyed claim identity (V53b arms only) also arms the V38.3 carve-out (ruling L3). */
     private void ladderClaimR4Transit(String tag) {
-        ladderRank = Math.max(ladderRank, 4);
+        ladderRank = MoveLadderPolicy.claimR4(ladderRank);
         ladderMandatoryTransit = true;
         logger.info("LADDER: R4 TRANSIT claim by {}", tag);
     }
 
     /** R3 claim — SURVIVAL (retreat/escape). Not subject to the L2 strength gate. */
     private void ladderClaimR3(String tag) {
-        ladderRank = Math.max(ladderRank, 3);
+        ladderRank = MoveLadderPolicy.claimR3(ladderRank);
         logger.info("LADDER: R3 SURVIVAL claim by {}", tag);
     }
 
@@ -184,15 +167,18 @@ public class MoveEvaluator extends ActionEvaluator {
      * @return true if the claim was accepted
      */
     private boolean ladderClaimR2(String tag, float ownFine, float drainDelta, boolean battleSeeking) {
-        if (ownFine >= R2_CLAIM_MIN_FINE || drainDelta >= R2_CLAIM_MIN_DRAIN_DELTA) {
-            ladderRank = Math.max(ladderRank, 2);
-            if (battleSeeking) ladderBattleSeekingClaim = true;
+        MoveLadderPolicy.RankTwoClaim claim = MoveLadderPolicy.claimR2(
+            ladderRank, ladderBattleSeekingClaim, ownFine, drainDelta, battleSeeking);
+        ladderRank = claim.rank();
+        ladderBattleSeekingClaim = claim.battleSeekingClaim();
+        if (claim.accepted()) {
             logger.info("LADDER: R2 DOCTRINE claim by {} (fine {}, drainDelta {}, battleSeeking={})",
                 tag, (int) ownFine, (int) drainDelta, battleSeeking);
             return true;
         }
         logger.info("LADDER: R2 claim by {} REJECTED — weak claim (fine {} < +{}, drainDelta {} < {}) (ruling L2)",
-            tag, (int) ownFine, (int) R2_CLAIM_MIN_FINE, (int) drainDelta, (int) R2_CLAIM_MIN_DRAIN_DELTA);
+            tag, (int) ownFine, (int) claim.requiredFine(), (int) drainDelta,
+            (int) claim.requiredDrainDelta());
         return false;
     }
 
@@ -203,16 +189,16 @@ public class MoveEvaluator extends ActionEvaluator {
     private void ladderAssertBandsOnce() {
         if (ladderBandsChecked) return;
         ladderBandsChecked = true;
-        float r2Floor = RANK_R2 - FINE_CLAMP - ATE_CROSS_NEG;
-        float r1Ceiling = RANK_R1 + R1_FINE_CEILING + ATE_CROSS_POS;
-        if (r2Floor <= r1Ceiling) {
+        MoveLadderPolicy.BandIntegrity bands = MoveLadderPolicy.bandIntegrity();
+        if (bands.inverted()) {
             logger.error("LADDER BAND INVERSION: R2 floor {} <= R1 ceiling {} — rank bands no longer separate "
                 + "(RANK_R2={}, FINE_CLAMP={}, ATE_CROSS_NEG={}, R1_FINE_CEILING={}, ATE_CROSS_POS={}). "
                 + "Rebalance before trusting MOVE decisions.",
-                r2Floor, r1Ceiling, RANK_R2, FINE_CLAMP, ATE_CROSS_NEG, R1_FINE_CEILING, ATE_CROSS_POS);
+                bands.r2Floor(), bands.r1Ceiling(), bands.rankR2Score(), bands.fineClamp(),
+                bands.actionTextCrossNegative(), bands.r1FineCeiling(), bands.actionTextCrossPositive());
         } else {
             logger.info("LADDER BANDS OK: R2 floor {} > R1 ceiling {} (margin {})",
-                r2Floor, r1Ceiling, r2Floor - r1Ceiling);
+                bands.r2Floor(), bands.r1Ceiling(), bands.margin());
         }
     }
 
@@ -225,72 +211,51 @@ public class MoveEvaluator extends ActionEvaluator {
     private void ladderFinalize(EvaluatedAction action) {
         ladderAssertBandsOnce();
 
-        // 1. Hard veto class — absolute (cancel-loop V160 keeps its own -100000 short-circuit upstream).
-        if (ladderVetoHard) {
-            action.addReasoning("LADDER VETO: " + ladderVetoHardReason, LADDER_VETO);
-            logger.warn("LADDER VETO -100000 (hard): {}", ladderVetoHardReason);
-            return;
-        }
+        MoveLadderPolicy.Finalization finalization = MoveLadderPolicy.finalizeAction(
+            new MoveLadderPolicy.State(
+                ladderRank,
+                ladderVetoHard,
+                ladderVetoHardReason,
+                ladderCanWinVeto,
+                ladderCanWinVetoReason,
+                ladderBattleSeekingClaim,
+                ladderMandatoryTransit,
+                ladderWrongDirVeto,
+                ladderWrongDirVetoReason,
+                ladderRankMoveRan),
+            action.getScore());
 
-        // 2. V38.3 wrong-direction deferred veto — suppressed by the SPECIFIC transit
-        //    claim identities (V53b Safehouse→Corridor / Mapuzo-exit), not by rank==R4 (ruling L3).
-        if (ladderWrongDirVeto) {
-            if (ladderMandatoryTransit) {
-                action.addReasoning("V38.3 wrong-direction suppressed (R4 mandatory transit)", 0.0f);
-                logger.warn("V38.3 WRONG DIRECTION suppressed (R4 mandatory transit): {}", ladderWrongDirVetoReason);
-            } else {
-                action.addReasoning("LADDER VETO: " + ladderWrongDirVetoReason, LADDER_VETO);
-                logger.warn("LADDER VETO -100000 (V38.3): {}", ladderWrongDirVetoReason);
-                return;
+        for (MoveLadderPolicy.Step step : finalization.steps()) {
+            if (step.contributesReasoning()) {
+                action.addReasoning(step.reasoning(), step.delta());
             }
-        }
-
-        // 3. canWinAt veto — ruling L3 matrix: ONLY battle-seeking R2 claims (hunt/contest/attack).
-        //    Never R4 transit, R3 survival, or non-battle R2. Non-vetoed unwinnable paths keep the
-        //    old V137 -800/-1500 weights (applied inline at the V137 block).
-        if (ladderCanWinVeto) {
-            if (ladderRank == 2 && ladderBattleSeekingClaim) {
-                action.addReasoning("LADDER VETO: " + ladderCanWinVetoReason, LADDER_VETO);
-                logger.warn("V137 UNWINNABLE (battle-seeking R2) — LADDER VETO -100000: {}", ladderCanWinVetoReason);
-                return;
+            switch (step.kind()) {
+                case HARD_VETO -> logger.warn(
+                    "LADDER VETO -100000 (hard): {}", step.detail());
+                case WRONG_DIRECTION_SUPPRESSED -> logger.warn(
+                    "V38.3 WRONG DIRECTION suppressed (R4 mandatory transit): {}", step.detail());
+                case WRONG_DIRECTION_VETO -> logger.warn(
+                    "LADDER VETO -100000 (V38.3): {}", step.detail());
+                case CAN_WIN_VETO -> logger.warn(
+                    "V137 UNWINNABLE (battle-seeking R2) — LADDER VETO -100000: {}", step.detail());
+                case CAN_WIN_RETAINED -> logger.info(
+                    "V137 canWinAt veto NOT applied (L3 matrix: rank=R{}, battleSeeking={}) — R1 weights already applied inline",
+                    ladderRank, ladderBattleSeekingClaim);
+                case POSITIVE_CLAMP -> logger.warn(
+                    "LADDER CLAMP: fines {} clamped to +{} on '{}'",
+                    (int) step.observedFines(), (int) Math.abs(step.observedFines() + step.delta()),
+                    action.getDisplayText());
+                case NEGATIVE_CLAMP -> logger.warn(
+                    "LADDER CLAMP: fines {} clamped to -{} on '{}'",
+                    (int) step.observedFines(), (int) Math.abs(step.observedFines() + step.delta()),
+                    action.getDisplayText());
+                case DEMOTE -> logger.warn(
+                    "LADDER DEMOTE: negative clamp hit — R{} demoted to R{} (ruling L1)",
+                    step.rankBefore(), step.rankAfter());
+                case RANK_BASE, DEFAULT_PENALTY -> {
+                    // Reasoning already applied above; no legacy log for these steps.
+                }
             }
-            logger.info("V137 canWinAt veto NOT applied (L3 matrix: rank=R{}, battleSeeking={}) — R1 weights already applied inline",
-                ladderRank, ladderBattleSeekingClaim);
-        }
-
-        // 4. Fine clamp ±2800 + ruling L1 demote on a NEGATIVE clamp hit (R2→R1, R3→R2; R4 exempt).
-        int rank = ladderRank;
-        float fines = action.getScore();  // ctor base is 0 → current score == accumulated fines
-        if (fines > FINE_CLAMP) {
-            action.addReasoning(String.format("LADDER CLAMP: fines %+.0f clamped to %+.0f", fines, FINE_CLAMP),
-                FINE_CLAMP - fines);
-            logger.warn("LADDER CLAMP: fines {} clamped to +{} on '{}'", (int) fines, (int) FINE_CLAMP,
-                action.getDisplayText());
-        } else if (fines < -FINE_CLAMP) {
-            action.addReasoning(String.format("LADDER CLAMP: fines %+.0f clamped to %+.0f", fines, -FINE_CLAMP),
-                -FINE_CLAMP - fines);
-            logger.warn("LADDER CLAMP: fines {} clamped to -{} on '{}'", (int) fines, (int) FINE_CLAMP,
-                action.getDisplayText());
-            if (rank == 2 || rank == 3) {
-                rank -= 1;
-                action.addReasoning("LADDER DEMOTE: negative clamp hit — claim demoted one band (ruling L1)", 0.0f);
-                logger.warn("LADDER DEMOTE: negative clamp hit — R{} demoted to R{} (ruling L1)", rank + 1, rank);
-            }
-        }
-
-        // 5. Rank base (band offset).
-        if (rank >= 4) {
-            action.addReasoning("LADDER: R4 MANDATORY TRANSIT base", RANK_R4);
-        } else if (rank == 3) {
-            action.addReasoning("LADDER: R3 SURVIVAL base", RANK_R3);
-        } else if (rank == 2) {
-            action.addReasoning("LADDER: R2 DOCTRINE base", RANK_R2);
-        } else if (ladderRankMoveRan && ladderRank == 1) {
-            // Default -50 moved here from the tail of rankMoveFromLocation (T4.1): applied only
-            // when no rank claim was accepted (rank==R1; a demoted claim keeps its reason and is
-            // NOT re-penalized) and only for actions that went through rankMoveFromLocation —
-            // exactly the population that could reach the old line.
-            action.addReasoning("No strategic reason to move", -50.0f);
         }
     }
 
@@ -1943,10 +1908,14 @@ public class MoveEvaluator extends ActionEvaluator {
             MoveOpportunityPolicy.AttackAnalysis attack =
                 MoveOpportunityPolicy.attack(
                     gameState, playerId, mySide, location, myPower);
+            MoveOpportunityPolicy.Contribution attackContribution =
+                MoveOpportunityPolicy.attackContribution(attack);
             // Only recommend attack if there's force drain potential (icons > 0)
             // and we have a significant power advantage
-            if (attack != null && attack.viable && attack.hasForcedrainPotential) {
-                action.addReasoning(attack.reason, attack.score);
+            if (attackContribution.applies()
+                    && attack.hasForcedrainPotential) {
+                action.addReasoning(
+                    attackContribution.reason(), attackContribution.delta());
                 logger.info("[MoveEvaluator] ⚔️ ATTACK opportunity: {}", attack.reason);
                 // T4.1 (2026-07-06): early return removed. ATTACK claims R2 DOCTRINE
                 // (battle-seeking) — NEWLY gated on isAdjacentSites reachability to the
@@ -1963,10 +1932,11 @@ public class MoveEvaluator extends ActionEvaluator {
                 } else {
                     logger.info("LADDER: ATTACK no R2 claim (target not adjacent) — fine kept as R1 weight");
                 }
-            } else if (attack != null && attack.viable) {
+            } else if (attackContribution.applies()) {
                 // Attack possible but no force drain - much smaller bonus
                 // Don't waste moves just to attack weak positions
-                action.addReasoning("Possible attack (no drain icons)", 15.0f);
+                action.addReasoning(
+                    attackContribution.reason(), attackContribution.delta());
                 logger.debug("[MoveEvaluator] Weak attack opportunity (no icons): {}", attack.reason);
                 // T4.1 (2026-07-06): early return removed — R1 fine, block falls through.
             }
@@ -2173,15 +2143,19 @@ public class MoveEvaluator extends ActionEvaluator {
                 MoveOpportunityPolicy.spread(
                     gameState, playerId, mySide,
                     location, myPower, theirPower);
-            if (spread != null && spread.viable) {
-                action.addReasoning(spread.reason, spread.score);
+            MoveOpportunityPolicy.Contribution spreadContribution =
+                MoveOpportunityPolicy.spreadContribution(spread);
+            if (spreadContribution.applies() && spread.viable) {
+                action.addReasoning(
+                    spreadContribution.reason(), spreadContribution.delta());
                 // T4.1 (2026-07-06): early return removed. SPREAD attempts an R2 DOCTRINE
                 // claim (spec Table 2); its "contest" branch is battle-seeking. Typical
                 // scores (< +200, no drain-delta) fail the L2 strength gate and stay R1.
                 ladderClaimR2("SPREAD", spread.score, 0.0f,
                     spread.reason != null && spread.reason.startsWith("Can contest"));
-            } else if (spread != null) {
-                action.addReasoning("Can't spread: " + spread.reason, BAD_DELTA);
+            } else if (spreadContribution.applies()) {
+                action.addReasoning(
+                    spreadContribution.reason(), spreadContribution.delta());
                 // T4.1 (2026-07-06): early return removed — R1 fine, block falls through.
             }
         }
