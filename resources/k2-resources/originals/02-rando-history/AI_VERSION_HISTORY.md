@@ -7375,3 +7375,22 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     SHA-256 404e8b352d50e159544b72d1f4c7cb30938105b8a854c5dccc34812662fd30ee contain the shared policy,
     facts, and both adapters. Runtime reload and live-game proof remain pending on the external
     runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V256 (2026-07-19): consolidate DEPLOY action-text scripts ════
+    New DeployActionTextFacts and DeployActionTextPolicy own the pure decisions for AMSD's Bespin,
+    failed-turn, Piett/Executor, Force, and early-turn gates; docking-bay expansion; Vader Castle;
+    Dining Room Lando buddy safety; Bespin ship priority; and simultaneous ship/pilot deployment.
+    Both ActionTextEvaluator mirrors retain all table, DeckOracle, Force, objective, Vader, docking-
+    bay, Dining Room, friendly-power, mutation, exception, logging, branch-order, and terminal-
+    continue behavior. Exact additive scores remain AMSD -9999 or +1500/+500 with later V22.5
+    +300/+100 fallthrough; docking bay -200/-50/+200/+30; Vader Castle +50/0/-500/+550; Dining
+    Room +150/-30/+30/-20; and simultaneous deploy +120. Missing Piett/Executor and non-Piett
+    specific actions remain the only AMSD paths that record a failed turn; unanalyzed Oracle paths
+    still fail open. All extracted operations remain ADD in DEPLOY_SEQUENCING. Focused 25/0/0/0,
+    DEPLOY-named 129/0/0/0, full reactor 1671/0/0/26, normalized mirror parity, AI-only boundary,
+    forbidden-symbol scan, source ownership, direct two-bot AMSD stacking/mutation fixtures,
+    compiled-artifact gate, diff check, and clean package passed. Independent review returned PASS.
+    Server jar SHA-256 eb390ecc28d1c85bb76905f1369bf688239c7ea4cd2ba811463aff978db4561e and web jar
+    SHA-256 081a7ef295a8e9e044be678a5e3252db9506f4db8c961c1dd86601166578ba02 contain the shared policy,
+    facts, and both adapters. Runtime reload and live-game proof remain pending on the external
+    runtime. AI source only; no GEMP engine or player-decision changes.

@@ -4,6 +4,8 @@ import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextFacts;
+import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
@@ -1311,9 +1313,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
-            // ========== V24: AMSD BESPIN GATE ==========
-            // Alert My Star Destroyer needs a system location to deploy the Star Destroyer to.
-            // If Bespin isn't on the table yet, AMSD has nowhere to send the ship — block it.
+            // ========== V256: DEPLOY ACTION-TEXT — AMSD ==========
+            // The adapter owns table, DeckOracle, Force, logging, and mutation reads.
+            // DeployActionTextPolicy owns the ordered scores and early-exit outcome.
             if (gameState != null && (textLower.contains("alert my star destroyer") ||
                 textLower.contains("amsd") ||
                 (textLower.contains("star destroyer") && textLower.contains("deploy both")) ||
@@ -1333,173 +1335,54 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 } catch (Exception e) {
                     logger.debug("V24 AMSD gate: Error checking Bespin: {}", e.getMessage());
                 }
-                if (!bespinSystemOnTable) {
-                    action.addReasoning("V24 AMSD BLOCKED: No Bespin system on table — Star Destroyer has nowhere to deploy!", -9999.0f);
-                    logger.warn("V24 AMSD GATE: HARD BLOCKING AMSD — Bespin system not on table yet! (-9999)");
-                    actions.add(action);
-                    continue;
-                }
-            }
-
-            // ========== V24.10: AMSD — PIETT + EXECUTOR ONLY ==========
-            // AMSD should ONLY fire when Piett is the pilot AND Executor is in reserve.
-            // No other pilot (Chiraneau, Ozzel, Motti, Evazan, etc.) should use AMSD.
-            // If Piett isn't the target or Executor isn't in reserve, block AMSD entirely.
-            // AMSD can only be used TWICE per game — never waste an attempt!
-            if (gameState != null && (textLower.contains("alert my star destroyer") ||
-                textLower.contains("amsd") ||
-                (textLower.contains("star destroyer") && textLower.contains("deploy both")) ||
-                (textLower.contains("star destroyer") && textLower.contains("pilot") && textLower.contains("deploy")) ||
-                (textLower.contains("reveal") && textLower.contains("pilot") && textLower.contains("star destroyer")))) {
-
                 com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle amsdOracle = context.getDeckOracle();
                 int currentTurn = context.getTurnNumber();
-
-                // V24.10: Check if AMSD already failed this turn — don't waste a second attempt.
-                // AMSD can only be used twice per game, so every attempt must count.
-                // If it failed, Piett/Executor aren't in the right zones yet.
-                // Wait for recirculation on the next turn.
-                if (amsdOracle != null && amsdOracle.hasAmsdFailedThisTurn(currentTurn)) {
-                    action.addReasoning("V24.10 AMSD BLOCKED: Already failed this turn — save for next turn after recirculation!", -9999.0f);
-                    logger.warn("V24.10 AMSD RETRY BLOCK: AMSD already failed on turn {} — don't waste another attempt!", currentTurn);
-                    actions.add(action);
-                    continue;
-                }
-
-                // V24.10: AMSD pilot check — two scenarios:
-                // 1. Action text names a specific pilot (e.g., "deploy Piett's matching Star Destroyer")
-                //    → Check if it's Piett. Block if not.
-                // 2. Action text is generic (e.g., "Reveal pilot or Star Destroyer from hand")
-                //    → Check DeckOracle: is Piett in hand AND Executor in reserve? If so, ALLOW.
-                //    The actual pilot selection happens in CardSelectionEvaluator's AMSD guard.
+                boolean alreadyFailedThisTurn = bespinSystemOnTable && amsdOracle != null
+                    && amsdOracle.hasAmsdFailedThisTurn(currentTurn);
                 boolean isGenericReveal = textLower.contains("reveal") && !textLower.contains("piett")
                     && !textLower.contains("vader") && !textLower.contains("chiraneau")
                     && !textLower.contains("ozzel") && !textLower.contains("motti");
+                DeployActionTextFacts.AmsdActionKind amsdActionKind = isGenericReveal
+                    ? DeployActionTextFacts.AmsdActionKind.GENERIC_REVEAL
+                    : textLower.contains("piett")
+                        ? DeployActionTextFacts.AmsdActionKind.PIETT_SPECIFIC
+                        : DeployActionTextFacts.AmsdActionKind.OTHER_SPECIFIC;
+                boolean oracleAnalyzed = bespinSystemOnTable && !alreadyFailedThisTurn
+                    && amsdActionKind != DeployActionTextFacts.AmsdActionKind.OTHER_SPECIFIC
+                    && amsdOracle != null && amsdOracle.isAnalyzed();
+                boolean piettInHand = false;
+                boolean executorInReserve = false;
+                boolean executorInHand = false;
+                if (oracleAnalyzed) {
+                    piettInHand = amsdOracle.isCardInHand("Admiral Piett")
+                        || amsdOracle.isCardInHand("Piett");
+                    executorInReserve = amsdOracle.isCardInReserve("Executor")
+                        || amsdOracle.isCardInReserve("Flagship Executor");
+                    executorInHand = amsdOracle.isCardInHand("Executor")
+                        || amsdOracle.isCardInHand("Flagship Executor");
+                    logger.warn("V29.4 AMSD DIAGNOSTIC: piettInHand={}, executorInReserve={}, executorInHand={}, executorAvailable={}",
+                        piettInHand, executorInReserve, executorInHand,
+                        executorInReserve || executorInHand);
+                }
+                int amsdForceAvailable = oracleAnalyzed && piettInHand
+                    && (executorInReserve || executorInHand)
+                        ? context.getForcePileSize() : 0;
 
-                if (isGenericReveal) {
-                    // Generic "Reveal pilot or Star Destroyer from hand" — use DeckOracle to decide
-                    if (amsdOracle != null && amsdOracle.isAnalyzed()) {
-                        boolean piettInHand = amsdOracle.isCardInHand("Admiral Piett") || amsdOracle.isCardInHand("Piett");
-                        boolean executorInReserve = amsdOracle.isCardInReserve("Executor") ||
-                            amsdOracle.isCardInReserve("Flagship Executor");
-                        // V29.4: AMSD deploys Star Destroyer from HAND or RESERVE DECK!
-                        // Previous code blocked when Executor was in hand — that was WRONG.
-                        // AMSD is actually the BEST way to deploy Executor from hand because
-                        // it deploys Piett+Executor simultaneously to the same system.
-                        boolean executorInHand = amsdOracle.isCardInHand("Executor") ||
-                            amsdOracle.isCardInHand("Flagship Executor");
-                        boolean executorAvailable = executorInReserve || executorInHand;
-
-                        // V29.4: Diagnostic logging — trace exactly what DeckOracle sees
-                        logger.warn("V29.4 AMSD DIAGNOSTIC: piettInHand={}, executorInReserve={}, executorInHand={}, executorAvailable={}",
-                            piettInHand, executorInReserve, executorInHand, executorAvailable);
-
-                        if (piettInHand && executorAvailable) {
-                            // V45: Check if we have enough force to pay for Piett + Executor
-                            int amsdForceAvail = context.getForcePileSize();
-                            int amsdMinForce = 7;
-                            if (amsdForceAvail < amsdMinForce) {
-                                action.addReasoning(String.format(
-                                    "V45 AMSD UNAFFORDABLE: Need %d force for Piett+Executor but only %d available!",
-                                    amsdMinForce, amsdForceAvail), -9999.0f);
-                                logger.warn("V45 AMSD UNAFFORDABLE: Need {} force but only {} — HARD BLOCK!", amsdMinForce, amsdForceAvail);
-                                actions.add(action);
-                                continue;
-                            }
-                            // Piett + Executor available (in hand or reserve). ALLOW AMSD, boost it!
-                            // V24.15: On turn 1-2, AMSD is CRITICAL — must fire immediately after Bespin!
-                            // Later turns: still high priority but less urgent.
-                            float amsdBoost = 500.0f;
-                            String source = executorInHand ? "hand" : "reserve";
-                            if (currentTurn <= 2) {
-                                amsdBoost = 1500.0f;  // V24.15: Mega-boost on early turns — Executor MUST deploy ASAP!
-                                action.addReasoning("V24.15 AMSD MEGA PRIORITY: Turn " + currentTurn + " — Executor (from " + source + ") MUST deploy NOW to control Bespin!", amsdBoost);
-                                logger.warn("V24.15 AMSD MEGA PRIORITY: Turn {} — Piett in hand + Executor in {} — mega-boost +{} to ensure AMSD fires!", currentTurn, source, amsdBoost);
-                            } else {
-                                action.addReasoning("V24.10 AMSD APPROVED: Piett + Executor (from " + source + ") ready — fire AMSD!", amsdBoost);
-                                logger.warn("V24.10 AMSD: Generic reveal — Piett in hand, Executor in {} — APPROVED (+{})!", source, amsdBoost);
-                            }
-                        } else if (!piettInHand) {
-                            action.addReasoning("V24.10 AMSD BLOCKED: Piett NOT in hand — can't use AMSD!", -9999.0f);
-                            logger.warn("V24.10 AMSD BLOCK: Generic reveal but Piett not in hand — block!");
-                            amsdOracle.recordAmsdFailedOnTurn(currentTurn);
-                            actions.add(action);
-                            continue;
-                        } else {
-                            // V29.4: Executor not in hand OR reserve — truly unavailable
-                            // Could be in force pile, used pile, lost pile, or not in deck
-                            action.addReasoning("V29.4 AMSD BLOCKED: Piett in hand but Executor NOT in hand or reserve (may be in force/used pile)!", -9999.0f);
-                            logger.warn("V29.4 AMSD BLOCK: Piett in hand but Executor not available (not in hand or reserve) — might be activated to force pile!");
-                            amsdOracle.recordAmsdFailedOnTurn(currentTurn);
-                            actions.add(action);
-                            continue;
-                        }
-                    }
-                    // If oracle unavailable, allow generic reveal (best guess)
-                } else if (!textLower.contains("piett")) {
-                    // Specific pilot named in action text but it's NOT Piett — hard block
-                    action.addReasoning("V24.10 AMSD BLOCKED: Only Piett may use AMSD — " +
-                        "this action targets a different pilot!", -9999.0f);
-                    logger.warn("V24.10 AMSD HARD BLOCK: Action does NOT target Piett — only Piett + Executor allowed!");
-                    if (amsdOracle != null) {
-                        amsdOracle.recordAmsdFailedOnTurn(currentTurn);
-                    }
+                DeployActionTextPolicy.Evaluation amsdEvaluation =
+                    DeployActionTextPolicy.evaluateAmsd(
+                        new DeployActionTextFacts.AmsdFacts(
+                            actionId, bespinSystemOnTable, alreadyFailedThisTurn,
+                            amsdActionKind, oracleAnalyzed, piettInHand,
+                            executorInHand, executorInReserve, currentTurn,
+                            amsdForceAvailable));
+                applyDeployActionTextPolicy(action, amsdEvaluation.result());
+                if (amsdEvaluation.recordFailedTurn() && amsdOracle != null) {
+                    amsdOracle.recordAmsdFailedOnTurn(currentTurn);
+                }
+                if (amsdEvaluation.adapterStep()
+                        == DeployActionTextPolicy.AdapterStep.CONTINUE_ACTION) {
                     actions.add(action);
                     continue;
-                } else {
-                    // Action specifically names Piett — verify Piett in hand AND Executor available
-                    if (amsdOracle != null && amsdOracle.isAnalyzed()) {
-                        boolean piettInHand = amsdOracle.isCardInHand("Admiral Piett") || amsdOracle.isCardInHand("Piett");
-                        boolean executorInReserve = amsdOracle.isCardInReserve("Executor") ||
-                            amsdOracle.isCardInReserve("Flagship Executor");
-                        // V29.4: AMSD deploys from HAND or RESERVE — check both!
-                        boolean executorInHand = amsdOracle.isCardInHand("Executor") ||
-                            amsdOracle.isCardInHand("Flagship Executor");
-                        boolean executorAvailable = executorInReserve || executorInHand;
-
-                        // V29.4: Diagnostic logging
-                        logger.warn("V29.4 AMSD DIAGNOSTIC (specific): piettInHand={}, executorInReserve={}, executorInHand={}, executorAvailable={}",
-                            piettInHand, executorInReserve, executorInHand, executorAvailable);
-
-                        if (!piettInHand) {
-                            action.addReasoning("V24.10 AMSD BLOCKED: Piett is NOT in hand — can't use AMSD!", -9999.0f);
-                            logger.warn("V24.10 AMSD GATE: Piett not in hand — HARD BLOCK");
-                            amsdOracle.recordAmsdFailedOnTurn(currentTurn);
-                            actions.add(action);
-                            continue;
-                        }
-                        if (!executorAvailable) {
-                            // V29.4: Executor not in hand OR reserve — truly unavailable
-                            action.addReasoning("V29.4 AMSD BLOCKED: Piett in hand but Executor NOT in hand or reserve!", -9999.0f);
-                            logger.warn("V29.4 AMSD GATE: Piett in hand but Executor not available — HARD BLOCK");
-                            amsdOracle.recordAmsdFailedOnTurn(currentTurn);
-                            actions.add(action);
-                            continue;
-                        }
-                        // V45: Check if we have enough force to pay for Piett + Executor
-                        int amsdForceAvailSpec = context.getForcePileSize();
-                        int amsdMinForceSpec = 7;
-                        if (amsdForceAvailSpec < amsdMinForceSpec) {
-                            action.addReasoning(String.format(
-                                "V45 AMSD UNAFFORDABLE: Need %d force for Piett+Executor but only %d available!",
-                                amsdMinForceSpec, amsdForceAvailSpec), -9999.0f);
-                            logger.warn("V45 AMSD UNAFFORDABLE: Need {} force but only {} — HARD BLOCK!", amsdMinForceSpec, amsdForceAvailSpec);
-                            actions.add(action);
-                            continue;
-                        }
-                        // Both confirmed — boost AMSD priority!
-                        // V24.15: On turn 1-2, mega-boost to ensure Executor deploys ASAP
-                        String source = executorInHand ? "hand" : "reserve";
-                        float amsdBoostSpecific = (currentTurn <= 2) ? 1500.0f : 500.0f;
-                        if (currentTurn <= 2) {
-                            action.addReasoning("V24.15 AMSD MEGA PRIORITY: Turn " + currentTurn + " — Executor (from " + source + ") MUST deploy NOW!", amsdBoostSpecific);
-                            logger.warn("V24.15 AMSD MEGA PRIORITY (specific): Turn {} — Executor in {} — +{} mega-boost!", currentTurn, source, amsdBoostSpecific);
-                        } else {
-                            action.addReasoning("V24.10 AMSD APPROVED: Piett + Executor (from " + source + ") ready!", amsdBoostSpecific);
-                            logger.warn("V24.10 AMSD APPROVED: Piett in hand + Executor in {} — +{}!", source, amsdBoostSpecific);
-                        }
-                    }
-                    // V29.4: If oracle unavailable, allow AMSD (best guess — don't block without data)
                 }
             }
 
@@ -3544,7 +3427,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Only deploy a docking bay if we don't already have empty ones on the table.
             // Empty docking bays = free locations for the opponent.
             else if (actionText.contains("Deploy docking bay") || textLower.contains("deploy a docking bay")) {
-                boolean hasEmptyDockingBay = false;
                 int emptyBayCount = 0;
                 int totalOurBays = 0;
                 GameState bayGs = context.getGameState();
@@ -3573,7 +3455,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                         }
                                     }
                                     if (!hasFriendlyChar) {
-                                        hasEmptyDockingBay = true;
                                         emptyBayCount++;
                                     }
                                 }
@@ -3582,24 +3463,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     } catch (Exception e) { /* ignore */ }
                 }
 
-                if (hasEmptyDockingBay) {
-                    // Already have empty docking bays — deploying MORE just gives opponent more free locations!
-                    action.addReasoning("V29.7 DOCKING BAY: Already have " + emptyBayCount
-                        + " empty bay(s) — deploy characters there first, don't give opponent more locations!", -200.0f);
-                    logger.warn("V29.7 DOCKING BAY BLOCKED: {} empty bay(s) on table — don't deploy more (-200)", emptyBayCount);
-                } else if (totalOurBays >= 2) {
-                    // Already have 2+ bays with characters — probably don't need more
-                    action.addReasoning("V29.7 DOCKING BAY: Already have " + totalOurBays + " bays — enough for transit", -50.0f);
-                } else if (totalOurBays == 0) {
-                    // V29.7: FIRST docking bay — VERY high priority! This creates a battleground
-                    // location where our characters can safely deploy. Must fire BEFORE character
-                    // deploys so characters have a friendly BG location to go to.
-                    action.addReasoning("V29.7 FIRST DOCKING BAY: Deploy FIRST to create battleground for characters!", 200.0f);
-                    logger.warn("V29.7 FIRST BAY: No bays on table — high priority deploy (+200)");
-                } else {
-                    // Have 1 manned bay — second bay OK for transit network
-                    action.addReasoning("V29.7 DOCKING BAY: Deploy second bay for transit network", GOOD_DELTA);
-                }
+                applyDeployActionTextPolicy(action,
+                    DeployActionTextPolicy.scoreDockingBay(
+                        new DeployActionTextFacts.DockingBayFacts(
+                            actionId, emptyBayCount, totalOurBays)));
             }
 
             // ========== V25: HUNT DOWN V — VADER CASTLE DEPLOY ACTION ==========
@@ -3609,31 +3476,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
             else if (actionText.contains("Deploy Vader from Reserve Deck") || actionText.contains("Deploy Vader here")) {
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer vaderObjAnalyzer =
                     context.getObjectiveAnalyzer();
-                if (vaderObjAnalyzer != null && vaderObjAnalyzer.isAnalyzed() && vaderObjAnalyzer.isHuntDownV()) {
-                    boolean vaderOnTable = false;
-                    int forceAvailable = 0;
-                    if (context.getGame() != null && context.getGame().getGameState() != null) {
-                        com.gempukku.swccgo.game.state.GameState vaderGs = context.getGame().getGameState();
-                        vaderOnTable = vaderObjAnalyzer.isVaderOnTable(vaderGs, context.getPlayerId());
-                        forceAvailable = vaderGs.getForcePileSize(context.getPlayerId());
-                    }
-                    if (!vaderOnTable) {
-                        // V25: Don't attempt Vader Castle deploy if not enough Force
-                        // Vader's deploy cost is typically 6. This is a once-per-game action
-                        // so we must NOT waste it when we can't afford to deploy him.
-                        if (forceAvailable < 6) {
-                            action.addReasoning("V25 HUNT DOWN: NOT ENOUGH FORCE for Vader! Need 6, have " + forceAvailable + ". SAVE Castle action!", -500.0f);
-                            logger.warn("V25 HUNT DOWN: Vader Castle deploy BLOCKED — only {} Force available (need 6)", forceAvailable);
-                        } else {
-                            action.addReasoning("V25 HUNT DOWN: DEPLOY VADER NOW! Have " + forceAvailable + " Force, deck cannot function without him!", VERY_GOOD_DELTA + 500.0f);
-                            logger.warn("V25 HUNT DOWN: Vader Castle deploy action — TOP PRIORITY (+{}) with {} Force", (int)(VERY_GOOD_DELTA + 500.0f), forceAvailable);
-                        }
-                    } else {
-                        action.addReasoning("Vader already on table — Castle deploy not urgent", 0.0f);
-                    }
-                } else {
-                    action.addReasoning("Deploy Vader from reserve", VERY_GOOD_DELTA);
+                boolean objectiveAnalyzed = vaderObjAnalyzer != null
+                    && vaderObjAnalyzer.isAnalyzed();
+                boolean huntDownVActive = objectiveAnalyzed
+                    && vaderObjAnalyzer.isHuntDownV();
+                boolean vaderOnTable = false;
+                int forceAvailable = 0;
+                if (huntDownVActive && context.getGame() != null
+                        && context.getGame().getGameState() != null) {
+                    com.gempukku.swccgo.game.state.GameState vaderGs =
+                        context.getGame().getGameState();
+                    vaderOnTable = vaderObjAnalyzer.isVaderOnTable(
+                        vaderGs, context.getPlayerId());
+                    forceAvailable = vaderGs.getForcePileSize(context.getPlayerId());
                 }
+                applyDeployActionTextPolicy(action,
+                    DeployActionTextPolicy.scoreVaderCastle(
+                        new DeployActionTextFacts.VaderCastleFacts(
+                            actionId, objectiveAnalyzed, huntDownVActive,
+                            vaderOnTable, forceAvailable)));
             }
 
             // ========== V26/V29.6: Dining Room — Deploy Lando (TDIGWATT) ==========
@@ -3651,7 +3512,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     context.getObjectiveAnalyzer();
 
                 // V29.6: Check if there are friendly characters at Dining Room
-                boolean friendliesAtDiningRoom = false;
                 int friendlyCountAtDR = 0;
                 try {
                     GameState drGameState = context.getGameState();
@@ -3680,33 +3540,21 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     }
                                 }
                             }
-                            friendliesAtDiningRoom = (friendlyCountAtDR > 0);
                         }
                     }
                 } catch (Exception e) {
                     logger.debug("V29.6 DINING ROOM: Error checking friendlies at DR: {}", e.getMessage());
                 }
 
-                if (drLandoAnalyzer != null && drLandoAnalyzer.isAnalyzed()
-                    && drLandoAnalyzer.needsBespinSystemPresence()) {
-                    if (friendliesAtDiningRoom) {
-                        // Buddies present — safe to deploy Lando!
-                        action.addReasoning("V29.6 DINING ROOM: Deploy Lando with " + friendlyCountAtDR + " friendlies — safe!", 150.0f);
-                        logger.warn("V29.6 DINING ROOM: Lando deploy with {} friendlies at DR — +150", friendlyCountAtDR);
-                    } else {
-                        // Lando would be ALONE — defer until we have a buddy there.
-                        // Small positive so it's still considered but won't beat deploying a character first.
-                        action.addReasoning("V29.6 DINING ROOM: Lando would be ALONE — deploy a buddy first!", -30.0f);
-                        logger.warn("V29.6 DINING ROOM: Lando deploy DEFERRED — no friendlies at DR, penalty -30");
-                    }
-                } else {
-                    if (friendliesAtDiningRoom) {
-                        action.addReasoning("Dining Room: Deploy Lando from reserve (friendlies present)", GOOD_DELTA);
-                    } else {
-                        action.addReasoning("V29.6 Dining Room: Lando alone — risky!", -20.0f);
-                        logger.info("V29.6 DINING ROOM: Non-TDIGWATT Lando deploy deferred — alone at DR");
-                    }
-                }
+                boolean diningObjectiveAnalyzed = drLandoAnalyzer != null
+                    && drLandoAnalyzer.isAnalyzed();
+                boolean needsBespinPresence = diningObjectiveAnalyzed
+                    && drLandoAnalyzer.needsBespinSystemPresence();
+                applyDeployActionTextPolicy(action,
+                    DeployActionTextPolicy.scoreDiningRoomLando(
+                        new DeployActionTextFacts.DiningRoomLandoFacts(
+                            actionId, diningObjectiveAnalyzed,
+                            needsBespinPresence, friendlyCountAtDR)));
             }
 
             // ========== Deploy From Reserve (Risky) ==========
@@ -3900,18 +3748,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         // Ignore
                     }
                 }
-                if (!hasBespinShip) {
-                    action.addReasoning("V22.5 CRITICAL: Deploy ship to Bespin! Enables Dark Deal + CC Occupation!", 300.0f);
-                    logger.warn("V22.5 BESPIN PRIORITY: Alert My Star Destroyer — no ship at Bespin yet! (+300)");
-                } else {
-                    action.addReasoning("V22.5: Deploy ship (Bespin already occupied)", 100.0f);
-                    logger.info("V22.5: Alert My Star Destroyer — Bespin already has ship presence");
-                }
+                applyDeployActionTextPolicy(action,
+                    DeployActionTextPolicy.scoreBespinShip(
+                        new DeployActionTextFacts.BespinShipFacts(
+                            actionId, hasBespinShip)));
             }
             // V22.5: Generic "deploy simultaneously" or ship+pilot combos
             else if (textLower.contains("deploy") && textLower.contains("simultaneously")) {
-                action.addReasoning("V22.5: Deploy pilot+ship combo - efficient!", 120.0f);
-                logger.info("V22.5: Simultaneous deploy detected");
+                applyDeployActionTextPolicy(action,
+                    DeployActionTextPolicy.scoreSimultaneousDeploy(
+                        new DeployActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== V25: INITIATE BATTLE ==========
@@ -4109,6 +3955,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
             PolicyResult result) {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
             "battle-action-text-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyDeployActionTextPolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+            "deploy-action-text-" + action.getActionId());
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
     }
