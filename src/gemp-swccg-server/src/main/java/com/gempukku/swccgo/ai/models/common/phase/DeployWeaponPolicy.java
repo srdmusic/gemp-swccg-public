@@ -43,6 +43,40 @@ public final class DeployWeaponPolicy {
         return new PolicyResult("DEPLOY_WEAPON_ELIGIBILITY_POLICY", operations);
     }
 
+    public static PolicyResult evaluateDestinationSlot(
+            DestinationSlotFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.alreadyHasWeapon()) {
+            add(operations, facts.actionId(), "V25-weapon-slot",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "⚠️ CHARACTER ALREADY HAS WEAPON: "
+                            + facts.existingWeaponName()
+                            + " — CANNOT USE TWO!");
+        } else {
+            add(operations, facts.actionId(), "V25-weapon-needed",
+                    TraceOutputKind.BANDED, 20.0f,
+                    "Character needs weapon");
+        }
+        return new PolicyResult("DEPLOY_WEAPON_DESTINATION_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateLightsaberDestination(
+            LightsaberDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.targetHasLightsaber()) {
+            add(operations, facts.actionId(), "V25-lightsaber-slot",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "V25 HUNT DOWN: Target ALREADY HAS lightsaber — NEVER deploy second!");
+        } else if (facts.huntDownV()) {
+            add(operations, facts.actionId(), "V25-hunt-down-lightsaber",
+                    TraceOutputKind.BANDED, 150.0f,
+                    "V25 HUNT DOWN: DEPLOYING LIGHTSABER — deck engine critical!");
+        }
+        return new PolicyResult("DEPLOY_LIGHTSABER_DESTINATION_POLICY", operations);
+    }
+
     public static PolicyResult evaluateNamedPriority(NamedPriorityFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
@@ -110,6 +144,24 @@ public final class DeployWeaponPolicy {
         public DirectEligibilityFacts {
             Objects.requireNonNull(actionId, "actionId");
             criteria = criteria == null ? "" : criteria;
+        }
+    }
+
+    public record DestinationSlotFacts(String actionId,
+                                       boolean alreadyHasWeapon,
+                                       String existingWeaponName) {
+        public DestinationSlotFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            existingWeaponName = existingWeaponName == null
+                    ? "null" : existingWeaponName;
+        }
+    }
+
+    public record LightsaberDestinationFacts(String actionId,
+                                             boolean targetHasLightsaber,
+                                             boolean huntDownV) {
+        public LightsaberDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
         }
     }
 

@@ -149,6 +149,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V273 owner note:** `DeployPilotShipPolicy` now owns the V29 character-boarding and ship-cargo destination scores. The two `CardSelectionEvaluator` adapters still discover the first referenced ship name, perform the generic-capital subtype match, retain all blueprint/game-text/title reads and diagnostics, and own the existing cargo `actions.add` plus candidate `continue`. The shared owner contributes only the unchanged additive `+600/+650/+50/+100/+50/-300` outcomes; it does not read GEMP state or introduce engine metadata.
 
+**V274 owner note:** `DeployWeaponPolicy` now also owns the V25 `CardSelectionEvaluator` destination-slot and Hunt Down lightsaber outcomes. Adapters retain both declaration-order attachment scans, first-match breaks, the deploying-card blueprint/title read, lazy ObjectiveAnalyzer access, catches, and diagnostics. The two separate additive `-9999` arms intentionally remain independently reachable for a second lightsaber; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

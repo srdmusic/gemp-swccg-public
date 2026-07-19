@@ -7714,3 +7714,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and both adapters. Runtime reload and live-game proof remain separate deployment gates.
     Clean V273 is based on live V272 d8c75cdcf. AI source only; no GEMP engine or player-decision
     changes.
+
+  ==== V274 (2026-07-19): consolidate DEPLOY weapon and lightsaber destination scoring ====
+    Shared AI-only DeployWeaponPolicy now owns the V25 destination weapon-slot and Hunt Down
+    lightsaber outcomes. Both CardSelectionEvaluator mirrors retain both attachment scans and
+    first-match breaks, deploying-card blueprint/title reads, target category/title checks, lazy
+    ObjectiveAnalyzer acquisition, catches, exact logs, and contribution positions. An armed
+    weapon target remains additive -9999 and an unarmed target +20. A lightsaber on an armed
+    target independently contributes another additive -9999, preserving the legacy -19998 total;
+    only an unarmed target reads ObjectiveAnalyzer, and analyzed Hunt Down V remains +150. No
+    candidate continue was added. Focused policy/source/parity 20/0/0/0, DEPLOY-named 231/0/0/0,
+    full reactor 1842/0/0/26, exact mirror parity, score/reason/double-addition fixtures, read-order,
+    lazy-analyzer, AI-only, diff, and clean package gates passed. Server jar SHA-256
+    f07ed50e707e5e76267d8eaeaf575918d2a1dc02590dae23f2cb710d58df85da and web jar SHA-256
+    da71a830d2941d83c6e56e02379e762579fa01d4a4fdabcae1bb92ee235f7431 contain the shared owner
+    and both adapters. Runtime reload and live-game proof remain separate deployment gates.
+    Clean V274 is based on live V273 124fa575b. AI source only; no GEMP engine or player-decision
+    changes.

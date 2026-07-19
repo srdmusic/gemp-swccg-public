@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
@@ -33,6 +35,59 @@ public class DeployWeaponPolicyTest {
                 "V158", 300.0f, TraceOutputKind.BANDED);
         assertTrue(DeployWeaponPolicy.evaluateDirectEligibility(
                 direct("", false, 0, 0, 0, 0, 0)).operations().isEmpty());
+    }
+
+    @Test
+    public void destinationSlotPreservesBlockAndNeedWeaponScores() {
+        List<PolicyOperation> blocked = DeployWeaponPolicy.evaluateDestinationSlot(
+                new DeployWeaponPolicy.DestinationSlotFacts(
+                        "a", true, null)).operations();
+        assertOne(blocked, "V25-weapon-slot", -9999.0f,
+                TraceOutputKind.VETO);
+        assertEquals(PolicyOperationKind.ADD, blocked.get(0).kind());
+        assertEquals("⚠️ CHARACTER ALREADY HAS WEAPON: null — CANNOT USE TWO!",
+                blocked.get(0).reason());
+
+        assertOne(DeployWeaponPolicy.evaluateDestinationSlot(
+                        new DeployWeaponPolicy.DestinationSlotFacts(
+                                "a", false, "")).operations(),
+                "V25-weapon-needed", 20.0f, TraceOutputKind.BANDED);
+    }
+
+    @Test
+    public void lightsaberDestinationPreservesSlotAndHuntDownBranches() {
+        assertOne(DeployWeaponPolicy.evaluateLightsaberDestination(
+                        new DeployWeaponPolicy.LightsaberDestinationFacts(
+                                "a", true, true)).operations(),
+                "V25-lightsaber-slot", -9999.0f,
+                TraceOutputKind.VETO);
+        assertOne(DeployWeaponPolicy.evaluateLightsaberDestination(
+                        new DeployWeaponPolicy.LightsaberDestinationFacts(
+                                "a", false, true)).operations(),
+                "V25-hunt-down-lightsaber", 150.0f,
+                TraceOutputKind.BANDED);
+        assertTrue(DeployWeaponPolicy.evaluateLightsaberDestination(
+                new DeployWeaponPolicy.LightsaberDestinationFacts(
+                        "a", false, false)).operations().isEmpty());
+    }
+
+    @Test
+    public void secondLightsaberRetainsBothAdditiveHardBlocks() {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "second-lightsaber");
+        ledger.register(DeployWeaponPolicy.evaluateDestinationSlot(
+                new DeployWeaponPolicy.DestinationSlotFacts(
+                        "a", true, "Vader's Lightsaber")));
+        ledger.register(DeployWeaponPolicy.evaluateLightsaberDestination(
+                new DeployWeaponPolicy.LightsaberDestinationFacts(
+                        "a", true, false)));
+
+        assertEquals(2, ledger.orderedOperations().size());
+        assertEquals(-19998.0f, ledger.orderedOperations().stream()
+                .map(PolicyOperation::delta).reduce(0.0f, Float::sum), 0.0f);
+        assertTrue(ledger.orderedOperations().stream()
+                .allMatch(operation -> operation.kind()
+                        == PolicyOperationKind.ADD));
     }
 
     @Test

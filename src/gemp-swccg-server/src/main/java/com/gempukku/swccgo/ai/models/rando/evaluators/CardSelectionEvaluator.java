@@ -14,6 +14,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
@@ -202,6 +203,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             PolicyResult result) {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
                 "deploy-card-value-selection-" + result.producerId()
+                        + "-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyDeployWeaponPolicy(EvaluatedAction action,
+                                         PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "deploy-weapon-selection-" + result.producerId()
                         + "-" + action.getActionId());
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
@@ -1598,15 +1608,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
 
+                            applyDeployWeaponPolicy(action,
+                                DeployWeaponPolicy.evaluateDestinationSlot(
+                                    new DeployWeaponPolicy.DestinationSlotFacts(
+                                        action.getActionId(), alreadyHasWeapon,
+                                        existingWeaponName)));
                             if (alreadyHasWeapon) {
-                                // V25: HARD BLOCK deploying second weapon — characters can only use one!
-                                // Previous -200 was too weak and got overridden by lightsaber priority.
-                                action.addReasoning("⚠️ CHARACTER ALREADY HAS WEAPON: " + existingWeaponName + " — CANNOT USE TWO!", -9999.0f);
                                 logger.warn("⚠️ V25 HARD BLOCK: {} already has weapon '{}' - NEVER deploy second weapon!",
                                     title, existingWeaponName);
-                            } else {
-                                // Good target - character has no weapon
-                                action.addReasoning("Character needs weapon", 20.0f);
                             }
                         }
 
@@ -1643,13 +1652,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
 
                                         if (targetHasLightsaber) {
-                                            action.addReasoning("V25 HUNT DOWN: Target ALREADY HAS lightsaber — NEVER deploy second!", -9999.0f);
+                                            applyDeployWeaponPolicy(action,
+                                                DeployWeaponPolicy.evaluateLightsaberDestination(
+                                                    new DeployWeaponPolicy.LightsaberDestinationFacts(
+                                                        action.getActionId(), true, false)));
                                             logger.warn("V25 HUNT DOWN: BLOCKED second lightsaber on {} — can only use one!", title);
                                         } else {
                                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer lsDeployOA =
                                                 context.getObjectiveAnalyzer();
-                                            if (lsDeployOA != null && lsDeployOA.isAnalyzed() && lsDeployOA.isHuntDownV()) {
-                                                action.addReasoning("V25 HUNT DOWN: DEPLOYING LIGHTSABER — deck engine critical!", 150.0f);
+                                            boolean huntDownV = lsDeployOA != null
+                                                && lsDeployOA.isAnalyzed() && lsDeployOA.isHuntDownV();
+                                            applyDeployWeaponPolicy(action,
+                                                DeployWeaponPolicy.evaluateLightsaberDestination(
+                                                    new DeployWeaponPolicy.LightsaberDestinationFacts(
+                                                        action.getActionId(), false, huntDownV)));
+                                            if (huntDownV) {
                                                 logger.warn("V25 HUNT DOWN: Lightsaber '{}' deploying — PRIORITY (+150)", lsDeployBp.getTitle());
                                             }
                                         }
