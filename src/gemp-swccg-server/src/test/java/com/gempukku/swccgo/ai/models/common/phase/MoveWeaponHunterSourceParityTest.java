@@ -171,6 +171,11 @@ public class MoveWeaponHunterSourceParityTest {
         assertTrue(battle.contains(
                 "V29.7 WEAPON AWARENESS at {}"));
         assertTrue(battle.contains(
+                "BattleInitiationPolicy.huntAggression("));
+        String battleInitiation = Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models/common/phase")
+                .resolve("BattleInitiationPolicy.java"));
+        assertTrue(battleInitiation.contains(
                 "V29.9 HUNT DOWN: Armed Vader should FIGHT!"));
     }
 

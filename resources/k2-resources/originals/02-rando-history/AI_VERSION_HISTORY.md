@@ -7295,3 +7295,22 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     contain the shared ladder, opportunity result types, and both adapters. Runtime reload and
     live-game proof remain pending on the external runtime. AI source only; no GEMP engine or
     player-decision changes.
+
+  ════ V252 (2026-07-19): consolidate BATTLE-1 initiation policy ownership ════
+    New BattleInitiationPolicy owns the pure predicates, thresholds, exact contributions, and
+    reasons for Barrier risk, Hunt Down armed-Vader aggression, Inquisitor destiny, V76 prediction,
+    specific and fallback battle scoring, scan outcome, must-fight, V61 reserve, V27/DTF Force, and
+    life-force posture. BattleDecisionPolicy retains every engine and card read, predictor/oracle
+    call, FormationSafety check, exception boundary, log, state flag, and additive mutation. The
+    unused CRUSH_THRESHOLD and RISKY_THRESHOLD declarations were removed; active constants moved
+    intact. Behavior is structural-only: prediction precedence, all power/weapon bands, fallback
+    order, reserve overpower margin 8, DTF Force threshold 3, and additive semantics remain exact.
+    FormationSafety remains the only true hard veto. Two MOVE cross-phase source tests now follow
+    V29.9 ownership to the new policy; no MOVE production source changed. Focused 11/0/0/0,
+    BATTLE-named 51/0/0/0, isolated full reactor 1625/0/0/26, shared-adapter runtime parity,
+    AI-only boundary, forbidden-symbol scan, and isolated package passed. Independent review found
+    no behavior or ownership drift. Server jar SHA-256
+    c0aa7262f49b82aa79f92e15d775765e69d2bb6f154124d70b92841edf362260 and web jar SHA-256
+    0fe74952e1d1e9a28b992c686dfba0a574da4632217e7e575f07f7f0497659de contain the shared policy,
+    coordinator, and both adapters. Runtime reload and live-game proof remain pending on the
+    external runtime. AI source only; no GEMP engine or player-decision changes.

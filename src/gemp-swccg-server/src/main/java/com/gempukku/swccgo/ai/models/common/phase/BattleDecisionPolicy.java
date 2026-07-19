@@ -121,6 +121,18 @@ public final class BattleDecisionPolicy {
             contributions.add(new Contribution(reason, 0.0f, true, null, null, null));
         }
 
+        private void apply(BattleInitiationPolicy.Contribution contribution) {
+            if (contribution.applies()) {
+                addReasoning(contribution.reason(), contribution.delta());
+            }
+        }
+
+        private void apply(List<BattleInitiationPolicy.Contribution> ordered) {
+            for (BattleInitiationPolicy.Contribution contribution : ordered) {
+                apply(contribution);
+            }
+        }
+
         private void apply(PolicyResult result) {
             for (PolicyOperation operation : result.operations()) {
                 switch (operation.kind()) {
@@ -147,23 +159,6 @@ public final class BattleDecisionPolicy {
             return new ScoredAction(actionId, actionText, baseScore, contributions);
         }
     }
-
-    // Battle thresholds (power advantage needed)
-    private static final int CRUSH_THRESHOLD = 8;      // Overwhelming advantage
-    private static final int FAVORABLE_THRESHOLD = 5;  // Strong advantage
-    private static final int MARGINAL_THRESHOLD = 2;   // Worth initiating
-    private static final int RISKY_THRESHOLD = 0;      // Even or slight advantage
-
-    // V164a (Steve, 2026-06): "If the bots have equal or greater ability they should
-    // battle." Ability >= opponent means a fair-or-better attrition trade, which is how
-    // we break the drain stalemate (self-play was 8 battles / 417 drains). But in SWCCG
-    // lower POWER loses the battle and forfeits your own cards, so we still refuse a real
-    // power deficit. This is the max power deficit we'll battle at when ability >= theirs.
-    // 0 = require power parity; larger = more aggressive; set huge for "pure ability>=".
-    private static final float ABILITY_BATTLE_MAX_POWER_DEFICIT = 2.0f;
-
-    // Minimum reserve deck for destiny draws
-    private static final int MIN_RESERVE_FOR_BATTLE = 3;
 
     private BattleDecisionPolicy() {
     }
@@ -390,29 +385,27 @@ public final class BattleDecisionPolicy {
                                         charCountWithoutVader++;
                                     }
 
-                                    // If without Vader we'd be crushed, battle is risky
                                     float powerDeficitWithoutVader = theirPower - powerWithoutVader;
-                                    if (powerDeficitWithoutVader > 5) {
-                                        // Opponent can Barrier Vader and our remaining force gets destroyed
-                                        barrierRiskPenalty = -150.0f;
-                                        if (charCountWithoutVader <= 1) barrierRiskPenalty = -250.0f; // Solo char left = suicide
-                                        if (powerDeficitWithoutVader > 10) barrierRiskPenalty -= 100.0f; // Even worse
-
-                                        // V35: VADER EXPENDABILITY — In Hunt Down V, Vader is expendable.
-                                        // Multiple copies in deck, lightsaber retrievable from Lost Pile.
-                                        // Reduce barrier risk to encourage aggressive Vader battles.
-                                        ObjectiveAnalyzer expendAnalyzer = context.getObjectiveAnalyzer();
-                                        if (expendAnalyzer != null && expendAnalyzer.isAnalyzed() && expendAnalyzer.isHuntDownV()) {
-                                            barrierRiskPenalty = barrierRiskPenalty * context.getVaderExpendabilityFactor();
+                                    ObjectiveAnalyzer expendAnalyzer = context.getObjectiveAnalyzer();
+                                    boolean huntDownV = expendAnalyzer != null
+                                        && expendAnalyzer.isAnalyzed()
+                                        && expendAnalyzer.isHuntDownV();
+                                    BattleInitiationPolicy.Contribution barrierRisk =
+                                        BattleInitiationPolicy.barrierRisk(
+                                            ourVaderHere,
+                                            ourPower,
+                                            theirPower,
+                                            powerWithoutVader,
+                                            charCountWithoutVader,
+                                            huntDownV,
+                                            context.getVaderExpendabilityFactor());
+                                    if (barrierRisk.applies()) {
+                                        barrierRiskPenalty = barrierRisk.delta();
+                                        if (huntDownV) {
                                             logger.warn("V35 VADER EXPENDABLE: Barrier risk reduced to {} (Hunt Down — Vader is replaceable)",
                                                 (int)barrierRiskPenalty);
                                         }
-
-                                        action.addReasoning(String.format(
-                                            "V29.9 BARRIER RISK: If opponent Barriers Vader, remaining power %.0f vs %.0f — %s!",
-                                            powerWithoutVader, theirPower,
-                                            charCountWithoutVader == 0 ? "NO ONE LEFT" : "crushed"),
-                                            barrierRiskPenalty);
+                                        action.apply(barrierRisk);
                                         logger.warn("V29.9 BARRIER RISK at {}: Without Vader: {} vs {} (deficit {}), penalty {}",
                                             targetLocation.getTitle(), (int)powerWithoutVader, (int)theirPower,
                                             (int)powerDeficitWithoutVader, (int)barrierRiskPenalty);
@@ -424,15 +417,17 @@ public final class BattleDecisionPolicy {
                                 // Boost battle initiation significantly when Vader is armed and present.
                                 if (ourVaderHere && ourVaderArmed) {
                                     ObjectiveAnalyzer battleObjAnalyzer = context.getObjectiveAnalyzer();
-                                    if (battleObjAnalyzer != null && battleObjAnalyzer.isAnalyzed() && battleObjAnalyzer.isHuntDownV()) {
-                                        float huntBonus = 80.0f;
-                                        if (lukeHere) huntBonus = 200.0f;
-                                        action.addReasoning(String.format(
-                                            "V29.9 HUNT DOWN: Armed Vader should FIGHT! %s (+%.0f)",
-                                            lukeHere ? "LUKE IS HERE — THIS IS THE OBJECTIVE!" : "Vader hunts and destroys!",
-                                            huntBonus), huntBonus);
+                                    boolean huntDownV = battleObjAnalyzer != null
+                                        && battleObjAnalyzer.isAnalyzed()
+                                        && battleObjAnalyzer.isHuntDownV();
+                                    BattleInitiationPolicy.Contribution huntAggression =
+                                        BattleInitiationPolicy.huntAggression(
+                                            ourVaderHere, ourVaderArmed,
+                                            huntDownV, lukeHere);
+                                    if (huntAggression.applies()) {
+                                        action.apply(huntAggression);
                                         logger.warn("V29.9 HUNT DOWN: Armed Vader aggressiveness boost +{} (Luke: {})",
-                                            (int)huntBonus, lukeHere);
+                                            (int)huntAggression.delta(), lukeHere);
                                     }
                                 }
 
@@ -467,18 +462,17 @@ public final class BattleDecisionPolicy {
                                             }
                                         }
 
-                                        if (inquisitorInBattle) {
-                                            float destinyBonus = 120.0f; // +1 battle destiny from objective
-                                            if (hatredAtLocation) destinyBonus = 250.0f; // +2 battle destiny
-                                            if (jediAtLocation) destinyBonus += 100.0f; // FMFTD and Fifth Brother bonuses
-                                            action.addReasoning(String.format(
-                                                "V35 HUNT DESTINY: Inquisitor in battle%s%s — +%d total battle destiny!",
-                                                hatredAtLocation ? " + HATRED" : "",
-                                                jediAtLocation ? " vs JEDI" : "",
-                                                hatredAtLocation ? 2 : 1), destinyBonus);
+                                        BattleInitiationPolicy.Contribution inquisitorDestiny =
+                                            BattleInitiationPolicy.inquisitorDestiny(
+                                                true,
+                                                inquisitorInBattle,
+                                                hatredAtLocation,
+                                                jediAtLocation);
+                                        if (inquisitorDestiny.applies()) {
+                                            action.apply(inquisitorDestiny);
                                             logger.warn("V35 HUNT DESTINY at {}: Inquisitor={}, hatred={}, jedi={} — bonus +{}",
                                                 targetLocation.getTitle(), inquisitorInBattle, hatredAtLocation,
-                                                jediAtLocation, (int)destinyBonus);
+                                                jediAtLocation, (int)inquisitorDestiny.delta());
                                         }
                                     }
                                 }
@@ -538,16 +532,18 @@ public final class BattleDecisionPolicy {
                                             (int) ourPower, (int) weaponBonus, myDraws,
                                             (int) theirPower, oppDraws);
 
-                                        if (v76Outcome.winProbability < 0.35f) {
-                                            action.addReasoning(String.format(
-                                                "V76 BATTLE PREDICT: winRate %.0f%% at %s — probable defeat, don't initiate!",
-                                                v76Outcome.winProbability * 100, targetLocation.getTitle()), -800.0f);
+                                        BattleInitiationPolicy.PredictionDecision prediction =
+                                            BattleInitiationPolicy.prediction(
+                                                targetLocation.getTitle(),
+                                                v76Outcome.winProbability,
+                                                v76Outcome.expectedDamageTaken);
+                                        action.apply(prediction.contribution());
+                                        if (prediction.branch()
+                                                == BattleInitiationPolicy.PredictionBranch.PROBABLE_DEFEAT) {
                                             logger.warn("V76 BATTLE BLOCK: predicted defeat at {} (winRate {})",
                                                 targetLocation.getTitle(), String.format("%.2f", v76Outcome.winProbability));
-                                        } else if (v76Outcome.expectedDamageTaken >= 10f) {
-                                            action.addReasoning(String.format(
-                                                "V76 BATTLE PREDICT: avg damage taken %.1f at %s — pyrrhic, don't initiate!",
-                                                v76Outcome.expectedDamageTaken, targetLocation.getTitle()), -500.0f);
+                                        } else if (prediction.branch()
+                                                == BattleInitiationPolicy.PredictionBranch.PYRRHIC) {
                                             logger.warn("V76 BATTLE COSTLY: predicted damage {} at {} — too high",
                                                 String.format("%.1f", v76Outcome.expectedDamageTaken), targetLocation.getTitle());
                                         }
@@ -555,64 +551,42 @@ public final class BattleDecisionPolicy {
                                         logger.debug("V76 prediction error: {}", v76Ex.getMessage());
                                     }
 
-                                    // V29.7: Use weapon-adjusted effective diff for battle decisions.
-                                    // A weapon-equipped character with base power equal or slightly
-                                    // less than opponent is actually FAVORED in battle.
-                                    // Only block if we're outgunned EVEN WITH weapons.
-                                    if (theirPower > ourPower && weaponBonus == 0) {
-                                        // No weapons and opponent has more power — NEVER initiate!
-                                        float penalty = -300.0f;
-                                        if (theirPower > ourPower * 2) penalty = -600.0f;
-                                        action.addReasoning(String.format("V29 DON'T INITIATE: %.0f vs %.0f power — we're outgunned!",
-                                            ourPower, theirPower), penalty);
-                                        logger.warn("V29 BATTLE BLOCK at {}: our {} vs their {} — BLOCKED (penalty {})",
-                                            targetLocation.getTitle(), (int)ourPower, (int)theirPower, (int)penalty);
-                                    } else if (theirPower > ourPower && weaponBonus > 0 && weaponEffectiveDiff < MARGINAL_THRESHOLD) {
-                                        // We have weapons but still outpowered even with weapon bonus
-                                        action.addReasoning(String.format("V29.7 WEAPONS NOT ENOUGH: power %.0f+weapons vs %.0f — still risky",
-                                            ourPower, theirPower), -150.0f);
-                                    } else if (weaponEffectiveDiff >= FAVORABLE_THRESHOLD) {
-                                        // V34: Strong advantage (with weapons) — FIGHT!
+                                    BattleInitiationPolicy.SpecificBattleDecision specificBattle =
+                                        BattleInitiationPolicy.specificBattle(
+                                            targetLocation.getTitle(),
+                                            ourPower,
+                                            theirPower,
+                                            ourAbility,
+                                            theirAbility,
+                                            weaponBonus,
+                                            weaponEffectiveDiff,
+                                            ourVaderHere,
+                                            lukeHere,
+                                            hasIHYN);
+                                    action.apply(specificBattle.contribution());
+                                    if (specificBattle.favorable()) {
                                         foundFavorableBattle = true;
-                                        float battleBonus = 150.0f; // V34: Raised from 40 — Rando was too passive
-                                        String battleReason;
-                                        if (weaponBonus > 0) {
-                                            battleBonus += weaponBonus * 10.0f; // V34: Raised from 5x — weapons are devastating
-                                            if (ourVaderHere && lukeHere) {
-                                                battleBonus += 100.0f; // HUGE bonus: Vader vs Luke (Hunt Down!)
-                                                battleReason = String.format("V29.7 VADER vs LUKE at %s! Power %.0f + weapons vs %.0f — CHALLENGE!",
-                                                    targetLocation.getTitle(), ourPower, theirPower);
-                                            } else {
-                                                battleReason = String.format("V29.7 ARMED BATTLE at %s (power %.0f + weapons vs %.0f, effective diff=%.0f)",
-                                                    targetLocation.getTitle(), ourPower, theirPower, weaponEffectiveDiff);
-                                            }
-                                            if (hasIHYN) battleReason += " + IHYN!";
-                                        } else {
-                                            battleReason = String.format("Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
-                                                targetLocation.getTitle(), ourPower, theirPower, ourAbility, theirAbility);
-                                        }
-                                        action.addReasoning(battleReason, battleBonus);
-                                    } else if (weaponEffectiveDiff >= MARGINAL_THRESHOLD) {
-                                        if (weaponBonus > 0) {
-                                            // V34: Marginal with weapons — weapons tip the balance, GO FIGHT
-                                            action.addReasoning(String.format("V34 ARMED MARGINAL at %s (power %.0f + weapons vs %.0f) — weapons help!",
-                                                targetLocation.getTitle(), ourPower, theirPower), 80.0f);
-                                        } else {
-                                            // Slight advantage but risky without weapons
-                                            action.addReasoning(String.format("V29 MARGINAL at %s (power %.0f vs %.0f) — risky with weapons",
-                                                targetLocation.getTitle(), ourPower, theirPower), -50.0f);
-                                        }
-                                    } else {
-                                        // Even or worse — don't initiate
-                                        float penalty = -100.0f;
-                                        if (weaponEffectiveDiff < -8) penalty = -200.0f;
-                                        if (weaponEffectiveDiff < -15) penalty = -400.0f;
-                                        action.addReasoning(String.format("V29: UNFAVORABLE at %s (power %.0f vs %.0f) - don't initiate!",
-                                            targetLocation.getTitle(), ourPower, theirPower), penalty);
+                                    }
+                                    if (specificBattle.branch()
+                                            == BattleInitiationPolicy.SpecificBattleBranch.OUTGUNNED) {
+                                        logger.warn("V29 BATTLE BLOCK at {}: our {} vs their {} — BLOCKED (penalty {})",
+                                            targetLocation.getTitle(), (int)ourPower, (int)theirPower,
+                                            (int)specificBattle.contribution().delta());
                                     }
                                 } else if (ourPower > 0 && theirPower == 0) {
-                                    // We're alone here - no battle possible
-                                    action.addReasoning("No opponent here", -20.0f);
+                                    BattleInitiationPolicy.SpecificBattleDecision specificBattle =
+                                        BattleInitiationPolicy.specificBattle(
+                                            targetLocation.getTitle(),
+                                            ourPower,
+                                            theirPower,
+                                            ourAbility,
+                                            theirAbility,
+                                            weaponBonus,
+                                            weaponEffectiveDiff,
+                                            ourVaderHere,
+                                            lukeHere,
+                                            hasIHYN);
+                                    action.apply(specificBattle.contribution());
                                 }
                             }
 
@@ -675,10 +649,20 @@ public final class BattleDecisionPolicy {
                                         // forfeit to hits is ruinous regardless of absolute size.
                                         boolean v76fPyrrhic = v76fHitLoss >= 10f
                                             || (v76fOurForfeit > 0f && v76fHitLoss > 0.5f * v76fOurForfeit);
+                                        BattleInitiationPolicy.FallbackDecision fallback =
+                                            BattleInitiationPolicy.fallbackLocation(
+                                                location.getTitle(),
+                                                ourPower,
+                                                theirPower,
+                                                ourAbility,
+                                                theirAbility,
+                                                effectiveDiff,
+                                                v76fOppArmed,
+                                                v76fHitLoss,
+                                                v76fPyrrhic);
+                                        int fallbackContributionIndex = 0;
                                         if (v76fPyrrhic) {
-                                            action.addReasoning(String.format(
-                                                "V76 (fallback) HIT ECONOMICS at %s: %d armed opponents, expected card loss %.1f — pyrrhic, don't initiate!",
-                                                location.getTitle(), v76fOppArmed, v76fHitLoss), -500.0f);
+                                            action.apply(fallback.contributions().get(fallbackContributionIndex++));
                                             logger.warn("V76 FALLBACK PYRRHIC at {}: armed={} hitLoss={} oppWeap=+{}",
                                                 location.getTitle(), v76fOppArmed, v76fHitLoss, v76fOppWeap);
                                         }
@@ -687,35 +671,13 @@ public final class BattleDecisionPolicy {
                                             location.getTitle(), ourPower, theirPower, powerDiff,
                                             ourAbility, theirAbility, abilityDiff, v76fOppWeap);
 
-                                        // V22.4: Check for any suicidal locations — if ANY location
-                                        // has our power < 50% of theirs, add strong warning
-                                        if (theirPower > ourPower * 2 && theirPower > 6) {
-                                            action.addReasoning(String.format("V22.4 DANGER at %s (%.0f vs %.0f) - might battle here!",
-                                                location.getTitle(), ourPower, theirPower), -80.0f);
+                                        while (fallbackContributionIndex < fallback.contributions().size()) {
+                                            action.apply(fallback.contributions().get(fallbackContributionIndex++));
                                         }
 
-                                        if (effectiveDiff >= MARGINAL_THRESHOLD && !v76fPyrrhic) {
+                                        if (fallback.favorable()) {
                                             foundFavorableBattle = true;
-                                            action.addReasoning(String.format("Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
-                                                location.getTitle(), ourPower, theirPower, ourAbility, theirAbility), 40.0f);
                                             break;
-                                        } else if (!v76fPyrrhic && abilityDiff >= 0
-                                                   && powerDiff >= -ABILITY_BATTLE_MAX_POWER_DEFICIT
-                                                   && !(theirPower > ourPower * 2 && theirPower > 6)) {
-                                            // V164a (Steve): equal-or-greater ability -> initiate even without a
-                                            // power ADVANTAGE. The old gate (effectiveDiff >= 2) skipped even/
-                                            // slightly-behind-power sites, leaving the drain stalemate. We still
-                                            // refuse a real power deficit (> ABILITY_BATTLE_MAX_POWER_DEFICIT) and
-                                            // the catastrophic-power guard, since lower power loses the battle.
-                                            // Same +40 as a normal favorable battle so the V61 reserve guards
-                                            // (-200/-400/-800) and V22.4 danger (-80) still dominate when unsafe.
-                                            foundFavorableBattle = true;
-                                            action.addReasoning(String.format("V164a ABILITY BATTLE at %s: ability %.0f >= %.0f (power %.0f vs %.0f) — fair trade, initiate to break drains",
-                                                location.getTitle(), ourAbility, theirAbility, ourPower, theirPower), 40.0f);
-                                            break;
-                                        } else if (abilityDiff < -1) {
-                                            action.addReasoning(String.format("Ability disadvantage at %s (%.0f vs %.0f) - enemy draws more destiny",
-                                                location.getTitle(), ourAbility, theirAbility), -25.0f);
                                         }
                                     }
                                 }
@@ -749,11 +711,9 @@ public final class BattleDecisionPolicy {
                     }
                 }
 
-                if (!foundFavorableBattle && foundAnyContestedLocation) {
-                    action.addReasoning("No favorable battles available - don't initiate", -60.0f);
-                } else if (!foundAnyContestedLocation) {
-                    action.addReasoning("No contested locations", -20.0f);
-                }
+                action.apply(BattleInitiationPolicy.scanOutcome(
+                    foundFavorableBattle,
+                    foundAnyContestedLocation));
 
                 // V22: STRATEGIC MUST-FIGHT OVERRIDE
                 // If opponent is draining us from multiple uncontested locations and we're behind
@@ -763,7 +723,6 @@ public final class BattleDecisionPolicy {
                         String playerId = context.getPlayerId();
                         String opponentId = gameState.getOpponent(playerId);
                         int theirDrain = 0;
-                        boolean hasEngageableOpponent = false;
                         for (PhysicalCard location : gameState.getTopLocations()) {
                             float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                 gameState, location, playerId, false, false);
@@ -771,9 +730,6 @@ public final class BattleDecisionPolicy {
                                 gameState, location, opponentId, false, false);
                             if (theirPower > 0 && ourPower == 0) {
                                 theirDrain += 1;
-                            }
-                            if (ourPower > 0 && theirPower > 0) {
-                                hasEngageableOpponent = true;
                             }
                         }
                         // V29: Only apply MUST-FIGHT if we have at least one location where
@@ -789,10 +745,13 @@ public final class BattleDecisionPolicy {
                                 break;
                             }
                         }
-                        if (theirDrain >= 2 && hasWinnableBattle && isBehindOnLifeForce) {
-                            action.addReasoning(
-                                String.format("V34 MUST-FIGHT: Opponent draining from %d uncontested locations, we're behind - must engage!", theirDrain),
-                                200.0f); // V34: Raised from 80 — inaction = guaranteed loss
+                        BattleInitiationPolicy.Contribution mustFight =
+                            BattleInitiationPolicy.mustFight(
+                                theirDrain,
+                                hasWinnableBattle,
+                                isBehindOnLifeForce);
+                        action.apply(mustFight);
+                        if (mustFight.applies()) {
                             logger.warn("[BattleEvaluator] V22 MUST-FIGHT override: drain threat={}, behind=true", theirDrain);
                         } else if (theirDrain >= 2 && !hasWinnableBattle && isBehindOnLifeForce) {
                             logger.warn("V29 MUST-FIGHT BLOCKED: Behind on life but outpowered everywhere — don't suicide!");
@@ -826,27 +785,15 @@ public final class BattleDecisionPolicy {
                         }
                     }
                 } catch (Exception ignore) { /* 0 */ }
-                boolean v61Overpowering = v61BestOverpower >= 8f;  // beats a strong single destiny; win w/o ours
-                if (v61Overpowering) {
+                BattleInitiationPolicy.ReserveDecision reserveDecision =
+                    BattleInitiationPolicy.reserve(v61BestOverpower, reserveDeck);
+                action.apply(reserveDecision.contribution());
+                if (reserveDecision.branch() == BattleInitiationPolicy.ReserveBranch.OVERPOWER) {
                     logger.warn("V61b OVERPOWER: target margin {} >= 8 — reserve guard skipped, take the battle", (int) v61BestOverpower);
-                } else if (reserveDeck == 0) {
-                    action.addReasoning(
-                        "V61 RESERVE EMPTY: 0 cards in Reserve — CANNOT draw battle destiny, auto-lose!",
-                        -800.0f);
+                } else if (reserveDecision.branch() == BattleInitiationPolicy.ReserveBranch.EMPTY) {
                     logger.warn("V61 RESERVE EMPTY: Blocking battle initiation — Reserve=0!");
-                } else if (reserveDeck == 1) {
-                    action.addReasoning(
-                        "V61 RESERVE CRITICAL: 1 card in Reserve — can draw 1 destiny max, very risky!",
-                        -400.0f);
+                } else if (reserveDecision.branch() == BattleInitiationPolicy.ReserveBranch.CRITICAL) {
                     logger.warn("V61 RESERVE CRITICAL: 1 card in reserve — heavy penalty -400");
-                } else if (reserveDeck == 2) {
-                    action.addReasoning(
-                        "V61 RESERVE LOW: 2 cards in Reserve — weapon destiny + 1 battle destiny only",
-                        -200.0f);
-                } else if (reserveDeck < MIN_RESERVE_FOR_BATTLE) {
-                    action.addReasoning(
-                        String.format("Low reserve deck (%d) - risky destiny draws", reserveDeck),
-                        -80.0f);
                 }
 
                 // === V27: BATTLE INTERRUPT FORCE RESERVATION ===
@@ -884,51 +831,26 @@ public final class BattleDecisionPolicy {
                         logger.debug("V27.1: Error checking for Draw Their Fire: {}", e.getMessage());
                     }
 
-                    if (opponentHasDrawTheirFire) {
-                        // Draw Their Fire is active! Each interrupt costs 1 extra Force.
-                        // We need at least 2 Force per interrupt (1 tax + interrupt cost).
-                        // For Ghhhk (Used Interrupt = free), still need 1 Force for tax.
-                        // Also: when battle is initiated, defender loses 1 Force automatically.
-                        int forceNeededForInterrupts = 3; // 1 for DTF defender loss + 1 for interrupt tax + 1 buffer
-                        if (battleForcePile < forceNeededForInterrupts) {
-                            float dtfPenalty = -60.0f;
-                            if (battleForcePile == 0) dtfPenalty = -100.0f;
-                            action.addReasoning(String.format(
-                                "V27.1 DRAW THEIR FIRE: Opponent has DTF on table! Need %d Force for interrupts (tax+loss), " +
-                                "only %d in pile — Ghhhk UNUSABLE!", forceNeededForInterrupts, battleForcePile), dtfPenalty);
-                            logger.warn("V27.1 DTF ACTIVE: Only {} Force, need {} for interrupt tax — battle interrupts blocked!",
-                                battleForcePile, forceNeededForInterrupts);
-                        } else {
-                            action.addReasoning(String.format(
-                                "V27.1 DRAW THEIR FIRE: DTF on table, %d Force available — interrupts usable but costly", battleForcePile), 0.0f);
-                        }
-                    } else {
-                        // No DTF — standard Force check for battle readiness
-                        if (battleForcePile < 2) {
-                            action.addReasoning(String.format(
-                                "V27 BATTLE FORCE WARNING: Only %d Force in pile — limited interrupt capacity! " +
-                                "Battle losses come from hand (%d cards)!", battleForcePile, handSize), -40.0f);
-                            logger.warn("V27 BATTLE FORCE: Only {} Force available — battle interrupts may be unusable!", battleForcePile);
-                        } else if (battleForcePile < 4) {
-                            action.addReasoning(String.format(
-                                "V27 BATTLE FORCE: Low Force (%d) — limited interrupt capacity in battle", battleForcePile), -15.0f);
-                        }
+                    BattleInitiationPolicy.InterruptDecision interruptDecision =
+                        BattleInitiationPolicy.interruptForce(
+                            opponentHasDrawTheirFire,
+                            battleForcePile,
+                            handSize);
+                    action.apply(interruptDecision.contribution());
+                    if (interruptDecision.branch() == BattleInitiationPolicy.InterruptBranch.DTF_BLOCKED) {
+                        logger.warn("V27.1 DTF ACTIVE: Only {} Force, need {} for interrupt tax — battle interrupts blocked!",
+                            battleForcePile, 3);
+                    } else if (interruptDecision.branch()
+                            == BattleInitiationPolicy.InterruptBranch.STANDARD_CRITICAL) {
+                        logger.warn("V27 BATTLE FORCE: Only {} Force available — battle interrupts may be unusable!", battleForcePile);
                     }
                 }
 
-                // Strategic position adjustments (reduced impact - power diff is more important)
-                if (isBehindOnLifeForce) {
-                    // When behind, slight encouragement but power still matters most
-                    action.addReasoning("Behind on life force - slightly more aggressive", 15.0f);
-                } else if (isAheadOnLifeForce) {
-                    // When ahead, be more conservative
-                    action.addReasoning("Ahead on life force - can afford to wait", -20.0f);
-                }
-
-                // Life force critical - more aggressive but still check power
-                if (lifeForce <= context.getCriticalLifeForce()) {
-                    action.addReasoning("Low life force - need to act", 30.0f);
-                }
+                action.apply(BattleInitiationPolicy.lifeForce(
+                    isBehindOnLifeForce,
+                    isAheadOnLifeForce,
+                    lifeForce,
+                    context.getCriticalLifeForce()));
             }
 
             BattleWeaponsFacts.CancelBattleFacts cancelBattle =

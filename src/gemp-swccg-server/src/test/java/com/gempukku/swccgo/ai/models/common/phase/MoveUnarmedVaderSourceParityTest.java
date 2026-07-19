@@ -124,8 +124,15 @@ public class MoveUnarmedVaderSourceParityTest {
                 .resolve("com/gempukku/swccgo/ai/models/common/phase")
                 .resolve("BattleDecisionPolicy.java"));
         assertTrue(battle.contains(
-                "V29.9 BARRIER RISK: If opponent Barriers Vader"));
+                "BattleInitiationPolicy.barrierRisk("));
         assertTrue(battle.contains(
+                "BattleInitiationPolicy.huntAggression("));
+        String battleInitiation = Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models/common/phase")
+                .resolve("BattleInitiationPolicy.java"));
+        assertTrue(battleInitiation.contains(
+                "V29.9 BARRIER RISK: If opponent Barriers Vader"));
+        assertTrue(battleInitiation.contains(
                 "V29.9 HUNT DOWN: Armed Vader should FIGHT!"));
     }
 
