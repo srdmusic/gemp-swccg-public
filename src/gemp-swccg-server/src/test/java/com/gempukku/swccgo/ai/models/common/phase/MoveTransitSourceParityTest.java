@@ -28,6 +28,8 @@ public class MoveTransitSourceParityTest {
                 move, "MoveTransitPolicy.pilotLock("));
         assertEquals(1, countOccurrences(
                 move, "MoveTransitPolicy.movementTypes("));
+        assertEquals(1, countOccurrences(
+                move, "MoveTransitPolicy.hiddenPathTransit("));
         assertFalse(move.contains(
                 "if (cardToMove != null && cardToMove.isPilotOf())"));
         assertFalse(move.contains(
@@ -35,6 +37,19 @@ public class MoveTransitSourceParityTest {
         assertTrue(policy.contains("public static PilotLock pilotLock("));
         assertTrue(policy.contains(
                 "public static MovementTypes movementTypes("));
+        assertTrue(policy.contains(
+                "public static HiddenPathTransit hiddenPathTransit("));
+
+        int hiddenPathStart = move.indexOf(
+                "// === V53b: HIDDEN PATH MANDATORY JEDI TRANSIT ===");
+        int hiddenPathEnd = move.indexOf(
+                "// T4.1 (2026-07-06): LADDER FINALIZER", hiddenPathStart);
+        String hiddenPathRegion = move.substring(
+                hiddenPathStart, hiddenPathEnd);
+        assertFalse(hiddenPathRegion.contains(
+                "PhysicalCard srcLoc = cardToMove.getAtLocation()"));
+        assertFalse(hiddenPathRegion.contains(
+                "srcName.contains(\"safehouse\")"));
     }
 
     @Test
@@ -54,6 +69,19 @@ public class MoveTransitSourceParityTest {
                 "V25 Defensive shuttle to {}"));
         assertTrue(move.contains(
                 "V25 Shuttle without defensive need"));
+        assertTrue(move.contains(
+                "hpMoveAnalyzer != null && hpMoveAnalyzer.isAnalyzed()"));
+        assertTrue(move.contains(
+                "hiddenPath.contribution().reason()"));
+        assertTrue(move.contains("hiddenPath.hardVeto()"));
+        assertTrue(move.contains(
+                "ladderClaimR4Transit(hiddenPath.claimIdentity())"));
+        assertTrue(move.contains(
+                "V53b HIDDEN PATH: {} MUST landspeed"));
+        assertTrue(move.contains(
+                "V60 HIDDEN PATH: {} BLOCKED landspeed"));
+        assertTrue(move.contains(
+                "V53b HIDDEN PATH: {} leaving Mapuzo"));
     }
 
     @Test
@@ -69,6 +97,19 @@ public class MoveTransitSourceParityTest {
         int takeOff = move.indexOf(
                 "movementTypes.takeOff().applies()", docking);
         int landing = move.indexOf("MoveLandingPolicy.evaluate(", takeOff);
+        int spy = move.indexOf("MoveSpyFollowPolicy.evaluate(", landing);
+        int hiddenPath = move.indexOf(
+                "MoveTransitPolicy.hiddenPathTransit(", spy);
+        int hiddenPathScore = move.indexOf(
+                "action.addReasoning(", hiddenPath);
+        int hiddenPathVeto = move.indexOf(
+                "if (hiddenPath.hardVeto())", hiddenPathScore);
+        int hiddenPathClaim = move.indexOf(
+                "ladderClaimR4Transit(hiddenPath.claimIdentity())",
+                hiddenPathVeto);
+        int hiddenPathLog = move.indexOf(
+                "V53b HIDDEN PATH: {} MUST landspeed", hiddenPathClaim);
+        int finalizer = move.indexOf("ladderFinalize(action)", hiddenPathLog);
 
         assertTrue(deathStar >= 0);
         assertTrue(pilot > deathStar);
@@ -77,6 +118,13 @@ public class MoveTransitSourceParityTest {
         assertTrue(docking > movementTypes);
         assertTrue(takeOff > docking);
         assertTrue(landing > takeOff);
+        assertTrue(spy > landing);
+        assertTrue(hiddenPath > spy);
+        assertTrue(hiddenPathScore > hiddenPath);
+        assertTrue(hiddenPathVeto > hiddenPathScore);
+        assertTrue(hiddenPathClaim > hiddenPathVeto);
+        assertTrue(hiddenPathLog > hiddenPathClaim);
+        assertTrue(finalizer > hiddenPathLog);
     }
 
     @Test
@@ -98,6 +146,56 @@ public class MoveTransitSourceParityTest {
     }
 
     @Test
+    public void policyPreservesHiddenPathBranchOrderAndExactWeights()
+            throws IOException {
+        String policy = policySource();
+        int objectiveGate = policy.indexOf(
+                ".contains(\"hidden path\")");
+        int sourceRead = policy.indexOf(
+                "PhysicalCard sourceLocation = cardToMove.getAtLocation()",
+                objectiveGate);
+        int landspeed = policy.indexOf(
+                "actionLower.contains(\"move using landspeed\")",
+                sourceRead);
+        int safehouse = policy.indexOf(
+                "sourceName.contains(\"safehouse\") && landspeed",
+                landspeed);
+        int corridor = policy.indexOf(
+                "sourceName.contains(\"underground corridor\")",
+                safehouse);
+        int mapuzo = policy.indexOf(
+                "sourceName.contains(\"mapuzo\") && landspeed",
+                corridor);
+
+        assertTrue(objectiveGate >= 0);
+        assertTrue(sourceRead > objectiveGate);
+        assertTrue(landspeed > sourceRead);
+        assertTrue(safehouse > landspeed);
+        assertTrue(corridor > safehouse);
+        assertTrue(mapuzo > corridor);
+        assertEquals(2, countOccurrences(policy, "800.0f"));
+        assertTrue(policy.contains("V53b SAFEHOUSE→CORRIDOR"));
+        assertTrue(policy.contains("V53b MAPUZO EXIT"));
+        assertTrue(policy.contains(
+                "V60 HIDDEN PATH LANDSPEED BLOCK:"));
+    }
+
+    @Test
+    public void positiveHiddenPathActionTextTransitRemainsSeparate()
+            throws IOException {
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String actionText = evaluatorSource(
+                    bot, "ActionTextEvaluator.java");
+            assertTrue(actionText.contains(
+                    "textLower.contains(\"move jedi survivor here to a site\")"));
+            assertTrue(actionText.contains(
+                    "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)\", 20000.0f"));
+            assertTrue(actionText.contains(
+                    "Move Jedi transit action — tactical mobility\", 200.0f"));
+        }
+    }
+
+    @Test
     public void policyContainsNoScoringTransportOrEngineMetadata()
             throws IOException {
         String policy = policySource();
@@ -111,9 +209,14 @@ public class MoveTransitSourceParityTest {
     }
 
     private static String evaluatorSource(String bot) throws IOException {
+        return evaluatorSource(bot, "MoveEvaluator.java");
+    }
+
+    private static String evaluatorSource(
+            String bot, String evaluator) throws IOException {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
-                .resolve(bot).resolve("evaluators/MoveEvaluator.java"));
+                .resolve(bot).resolve("evaluators").resolve(evaluator));
     }
 
     private static String policySource() throws IOException {

@@ -1738,63 +1738,31 @@ public class MoveEvaluator extends ActionEvaluator {
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer hpMoveAnalyzer =
                     context.getObjectiveAnalyzer();
                 if (hpMoveAnalyzer != null && hpMoveAnalyzer.isAnalyzed()) {
-                    String hpMoveObjTitle = hpMoveAnalyzer.getObjectiveTitle();
-                    boolean isHiddenPathObj = hpMoveObjTitle != null
-                        && hpMoveObjTitle.toLowerCase(Locale.ROOT).contains("hidden path");
-                    if (isHiddenPathObj && cardToMove != null) {
-                        PhysicalCard srcLoc = cardToMove.getAtLocation();
-                        String srcName = (srcLoc != null && srcLoc.getTitle() != null) ?
-                            srcLoc.getTitle().toLowerCase(Locale.ROOT) : "";
-                        String charName = cardToMove.getTitle() != null ? cardToMove.getTitle() : "character";
-
-                        // V60 FIX: The MoveEvaluator scores 'Move using landspeed' and 'Land'
-                        // actions — but landspeed from Corridor only goes to ADJACENT Mapuzo
-                        // sites (Safehouse/Mining Village), NOT outward. The CORRECT action
-                        // for Corridor→Jabiim/opponent-BG is the location's game text
-                        // "Move Jedi Survivor here to a site" — scored in ActionTextEvaluator,
-                        // not here. So at Corridor, we BLOCK landspeed entirely (-9999).
-                        // The transit action is positively scored in ActionTextEvaluator V60.
-                        // FIXES Issue #C from 8d9jxayxqtp293l7 replay: Turn 2 all 3 Jedi moved
-                        // Corridor → Safehouse via landspeed because V53b gave +9999 to ANY
-                        // landspeed move from Corridor regardless of destination.
-                        boolean isLandspeed = actionLower.contains("move using landspeed")
-                            || actionLower.equals("move");
-
-                        // ANY character at Safehouse → MUST move to Corridor (landspeed OK,
-                        // only 1 adjacent battleground anyway)
-                        if (srcName.contains("safehouse") && isLandspeed) {
-                            // V53b UPDATED 2026-07-06 T4.1: the setScore(9999) ordering hack is GONE —
-                            // any rule appended after it silently re-decided the pick. Replaced by an
-                            // R4 MANDATORY TRANSIT claim (+20000 band at the finalizer, order-independent)
-                            // plus a +800 fine (matches the Mapuzo-exit arm; move-3c boundary = +20800).
-                            action.addReasoning("V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!", 800.0f);
-                            ladderClaimR4Transit("V53b SAFEHOUSE→CORRIDOR");
-                            logger.warn("V53b HIDDEN PATH: {} MUST landspeed Safehouse → Corridor (R4 transit +800 fine)!", charName);
-                        }
-                        // ANY character at Corridor:
-                        //   - Landspeed = BLOCKED (only adjacent is Mapuzo = going backwards)
-                        //   - Transit action scored in ActionTextEvaluator
-                        else if (srcName.contains("underground corridor") || srcName.contains("underground")) {
-                            if (isLandspeed) {
-                                // V60 UPDATED 2026-07-06 T4.1: setScore(-9999) ordering hack replaced by
-                                // the ladder hard-veto class (-100000 at the finalizer, veto-class per
-                                // move-3d boundary). Same trigger, band-proof magnitude.
-                                ladderVetoHard = true;
-                                ladderVetoHardReason = "V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!";
-                                logger.warn("V60 HIDDEN PATH: {} BLOCKED landspeed from Corridor (LADDER VETO) — must use 'Move Jedi Survivor here to a site'!", charName);
-                            }
-                        }
-                        // Moving OFF any Mapuzo location to non-Mapuzo via landspeed
-                        // (e.g., Jabiim Path Operations Center has interior path to Mapuzo)
-                        else if (srcName.contains("mapuzo") && isLandspeed) {
-                            action.addReasoning("V53b HIDDEN PATH: Leaving Mapuzo via landspeed — objective progress!", 800.0f);
-                            // V53b UPDATED 2026-07-06 T4.1: the Mapuzo-exit claims R4 MANDATORY TRANSIT.
-                            // The claim identity also suppresses the V38.3 wrong-direction veto (ruling
-                            // L3 carve-out, move-3f: exit to an EMPTY site must fire) and outranks the
-                            // V37.1/V85 R1 weights by band (move-3a/3b boundaries: +19300 / +20000).
-                            ladderClaimR4Transit("V53b MAPUZO EXIT");
-                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo via landspeed — R4 transit +800!", charName);
-                        }
+                    // V60 FIX: Corridor landspeed stays vetoed; positive transit remains in ActionTextEvaluator.
+                    MoveTransitPolicy.HiddenPathTransit hiddenPath =
+                        MoveTransitPolicy.hiddenPathTransit(
+                            hpMoveAnalyzer.getObjectiveTitle(),
+                            cardToMove, actionLower);
+                    if (hiddenPath.contribution().applies()) {
+                        action.addReasoning(
+                            hiddenPath.contribution().reason(),
+                            hiddenPath.contribution().delta());
+                    }
+                    if (hiddenPath.hardVeto()) {
+                        ladderVetoHard = true;
+                        ladderVetoHardReason = hiddenPath.hardVetoReason();
+                    }
+                    if (hiddenPath.claimMandatoryTransit()) {
+                        ladderClaimR4Transit(hiddenPath.claimIdentity());
+                    }
+                    switch (hiddenPath.branch()) {
+                        case SAFEHOUSE_TO_CORRIDOR ->
+                            logger.warn("V53b HIDDEN PATH: {} MUST landspeed Safehouse → Corridor (R4 transit +800 fine)!", hiddenPath.characterName());
+                        case CORRIDOR_LANDSPEED_BLOCK ->
+                            logger.warn("V60 HIDDEN PATH: {} BLOCKED landspeed from Corridor (LADDER VETO) — must use 'Move Jedi Survivor here to a site'!", hiddenPath.characterName());
+                        case MAPUZO_EXIT ->
+                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo via landspeed — R4 transit +800!", hiddenPath.characterName());
+                        default -> { }
                     }
                 }
             }

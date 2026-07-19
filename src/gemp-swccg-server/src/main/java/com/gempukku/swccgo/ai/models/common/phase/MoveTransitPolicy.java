@@ -4,11 +4,20 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.state.GameState;
 
+import java.util.Locale;
+
 /**
  * Shared MOVE pilot safety and movement-type scoring.
  * Adapters retain score application and logging.
  */
 public final class MoveTransitPolicy {
+    public enum HiddenPathBranch {
+        NONE,
+        SAFEHOUSE_TO_CORRIDOR,
+        CORRIDOR_LANDSPEED_BLOCK,
+        MAPUZO_EXIT
+    }
+
     public record Contribution(boolean applies, String reason, float delta) {
         private static Contribution none() {
             return new Contribution(false, null, 0.0f);
@@ -28,6 +37,21 @@ public final class MoveTransitPolicy {
                                 DefensiveShuttle defensiveShuttle,
                                 Contribution dockingBayTransit,
                                 Contribution takeOff) {
+    }
+
+    public record HiddenPathTransit(
+            HiddenPathBranch branch,
+            Contribution contribution,
+            boolean claimMandatoryTransit,
+            String claimIdentity,
+            boolean hardVeto,
+            String hardVetoReason,
+            String characterName) {
+        private static HiddenPathTransit none(String characterName) {
+            return new HiddenPathTransit(
+                    HiddenPathBranch.NONE, Contribution.none(),
+                    false, null, false, null, characterName);
+        }
     }
 
     private MoveTransitPolicy() {
@@ -111,5 +135,57 @@ public final class MoveTransitPolicy {
 
         return new MovementTypes(
                 shuttleAction, defensiveShuttle, dockingBay, takeOff);
+    }
+
+    public static HiddenPathTransit hiddenPathTransit(
+            String objectiveTitle, PhysicalCard cardToMove,
+            String actionLower) {
+        if (objectiveTitle == null
+                || !objectiveTitle.toLowerCase(Locale.ROOT)
+                        .contains("hidden path")
+                || cardToMove == null) {
+            return HiddenPathTransit.none(null);
+        }
+
+        PhysicalCard sourceLocation = cardToMove.getAtLocation();
+        String sourceName = sourceLocation != null
+                && sourceLocation.getTitle() != null
+                ? sourceLocation.getTitle().toLowerCase(Locale.ROOT) : "";
+        String characterName = cardToMove.getTitle() != null
+                ? cardToMove.getTitle() : "character";
+        boolean landspeed = actionLower.contains("move using landspeed")
+                || actionLower.equals("move");
+
+        if (sourceName.contains("safehouse") && landspeed) {
+            return new HiddenPathTransit(
+                    HiddenPathBranch.SAFEHOUSE_TO_CORRIDOR,
+                    new Contribution(
+                            true,
+                            "V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!",
+                            800.0f),
+                    true, "V53b SAFEHOUSE→CORRIDOR",
+                    false, null, characterName);
+        } else if (sourceName.contains("underground corridor")
+                || sourceName.contains("underground")) {
+            if (landspeed) {
+                return new HiddenPathTransit(
+                        HiddenPathBranch.CORRIDOR_LANDSPEED_BLOCK,
+                        Contribution.none(),
+                        false, null, true,
+                        "V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!",
+                        characterName);
+            }
+        } else if (sourceName.contains("mapuzo") && landspeed) {
+            return new HiddenPathTransit(
+                    HiddenPathBranch.MAPUZO_EXIT,
+                    new Contribution(
+                            true,
+                            "V53b HIDDEN PATH: Leaving Mapuzo via landspeed — objective progress!",
+                            800.0f),
+                    true, "V53b MAPUZO EXIT",
+                    false, null, characterName);
+        }
+
+        return HiddenPathTransit.none(characterName);
     }
 }

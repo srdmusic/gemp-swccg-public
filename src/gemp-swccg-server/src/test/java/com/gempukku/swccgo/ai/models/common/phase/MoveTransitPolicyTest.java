@@ -164,10 +164,161 @@ public class MoveTransitPolicyTest {
         assertRawFloat(10.0f, result.takeOff().delta());
     }
 
+    @Test
+    public void hiddenPathSafehousePreservesMandatoryTransit() {
+        PhysicalCard card = mover("Cal Kestis", "Mapuzo: Safehouse");
+
+        MoveTransitPolicy.HiddenPathTransit result =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "A Hidden Path / The Way Out",
+                        card, "move using landspeed");
+
+        assertEquals(MoveTransitPolicy.HiddenPathBranch.SAFEHOUSE_TO_CORRIDOR,
+                result.branch());
+        assertTrue(result.contribution().applies());
+        assertRawFloat(800.0f, result.contribution().delta());
+        assertEquals(
+                "V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!",
+                result.contribution().reason());
+        assertTrue(result.claimMandatoryTransit());
+        assertEquals("V53b SAFEHOUSE→CORRIDOR", result.claimIdentity());
+        assertFalse(result.hardVeto());
+        assertEquals("Cal Kestis", result.characterName());
+    }
+
+    @Test
+    public void hiddenPathCorridorPreservesHardVeto() {
+        PhysicalCard card = mover(
+                "Kanan Jarrus", "Mapuzo: Underground Corridor");
+
+        MoveTransitPolicy.HiddenPathTransit result =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "a hidden path", card, "move");
+
+        assertEquals(
+                MoveTransitPolicy.HiddenPathBranch.CORRIDOR_LANDSPEED_BLOCK,
+                result.branch());
+        assertFalse(result.contribution().applies());
+        assertFalse(result.claimMandatoryTransit());
+        assertTrue(result.hardVeto());
+        assertEquals(
+                "V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!",
+                result.hardVetoReason());
+        assertEquals("Kanan Jarrus", result.characterName());
+    }
+
+    @Test
+    public void hiddenPathBroadUndergroundNameStillBlocks() {
+        PhysicalCard card = mover("Jedi Survivor", "Underground Hideout");
+
+        MoveTransitPolicy.HiddenPathTransit result =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "A HIDDEN PATH", card,
+                        "move using landspeed to safehouse");
+
+        assertEquals(
+                MoveTransitPolicy.HiddenPathBranch.CORRIDOR_LANDSPEED_BLOCK,
+                result.branch());
+        assertTrue(result.hardVeto());
+    }
+
+    @Test
+    public void hiddenPathMapuzoPreservesObjectiveProgressTransit() {
+        PhysicalCard card = mover("Cere Junda", "Mapuzo: Mining Village");
+
+        MoveTransitPolicy.HiddenPathTransit result =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "A Hidden Path", card,
+                        "move using landspeed to jabiim");
+
+        assertEquals(MoveTransitPolicy.HiddenPathBranch.MAPUZO_EXIT,
+                result.branch());
+        assertTrue(result.contribution().applies());
+        assertRawFloat(800.0f, result.contribution().delta());
+        assertEquals(
+                "V53b HIDDEN PATH: Leaving Mapuzo via landspeed — objective progress!",
+                result.contribution().reason());
+        assertTrue(result.claimMandatoryTransit());
+        assertEquals("V53b MAPUZO EXIT", result.claimIdentity());
+        assertFalse(result.hardVeto());
+    }
+
+    @Test
+    public void hiddenPathPreservesSourceBranchPrecedence() {
+        MoveTransitPolicy.HiddenPathTransit safehouse =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "A Hidden Path",
+                        mover("Survivor", "Mapuzo: Safehouse"), "move");
+        MoveTransitPolicy.HiddenPathTransit corridor =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "A Hidden Path",
+                        mover("Survivor", "Mapuzo: Underground Corridor"),
+                        "move");
+
+        assertEquals(MoveTransitPolicy.HiddenPathBranch.SAFEHOUSE_TO_CORRIDOR,
+                safehouse.branch());
+        assertEquals(
+                MoveTransitPolicy.HiddenPathBranch.CORRIDOR_LANDSPEED_BLOCK,
+                corridor.branch());
+    }
+
+    @Test
+    public void hiddenPathNonLandspeedAndNullSourceRemainNeutral() {
+        MoveTransitPolicy.HiddenPathTransit nonLandspeed =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "A Hidden Path",
+                        mover("Survivor", "Mapuzo: Safehouse"),
+                        "move jedi survivor here to a site");
+        PhysicalCard noSource = mock(PhysicalCard.class);
+        when(noSource.getAtLocation()).thenReturn(null);
+        when(noSource.getTitle()).thenReturn(null);
+        MoveTransitPolicy.HiddenPathTransit nullSource =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "A Hidden Path", noSource, "move");
+
+        assertEquals(MoveTransitPolicy.HiddenPathBranch.NONE,
+                nonLandspeed.branch());
+        assertEquals(MoveTransitPolicy.HiddenPathBranch.NONE,
+                nullSource.branch());
+        assertEquals("character", nullSource.characterName());
+    }
+
+    @Test
+    public void hiddenPathRequiresObjectiveBeforeReadingCard() {
+        PhysicalCard card = mock(PhysicalCard.class);
+
+        MoveTransitPolicy.HiddenPathTransit nullObjective =
+                MoveTransitPolicy.hiddenPathTransit(
+                        null, card, "move");
+        MoveTransitPolicy.HiddenPathTransit otherObjective =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "Hunt Down And Destroy The Jedi", card, "move");
+        MoveTransitPolicy.HiddenPathTransit nullCard =
+                MoveTransitPolicy.hiddenPathTransit(
+                        "A Hidden Path", null, "move");
+
+        assertEquals(MoveTransitPolicy.HiddenPathBranch.NONE,
+                nullObjective.branch());
+        assertEquals(MoveTransitPolicy.HiddenPathBranch.NONE,
+                otherObjective.branch());
+        assertEquals(MoveTransitPolicy.HiddenPathBranch.NONE,
+                nullCard.branch());
+        verify(card, never()).getAtLocation();
+        verify(card, never()).getTitle();
+    }
+
     private static PhysicalCard location(String title) {
         PhysicalCard location = mock(PhysicalCard.class);
         when(location.getTitle()).thenReturn(title);
         return location;
+    }
+
+    private static PhysicalCard mover(String title, String sourceTitle) {
+        PhysicalCard card = mock(PhysicalCard.class);
+        PhysicalCard source = location(sourceTitle);
+        when(card.getTitle()).thenReturn(title);
+        when(card.getAtLocation()).thenReturn(source);
+        return card;
     }
 
     private static PhysicalCard powerCard(String owner, Float power) {

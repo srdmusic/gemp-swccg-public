@@ -1,3 +1,22 @@
+  ==== V226 AI-ONLY MOVE HIDDEN-PATH TRANSIT OWNER (2026-07-19, both bots) ====
+Existing shared MoveTransitPolicy now also owns the duplicated V53b/V60 Hidden Path parent MOVE
+classification: objective-title gate, source-title branches, landspeed predicate, exact reasons,
+raw +800 contributions, R4 claim identities, and Corridor hard-veto fact. Both adapters retain
+analyzer access and isAnalyzed gating, direct score and ladder mutation, warnings, and the finalizer
+position immediately after the block. Behavior is unchanged: Safehouse landspeed remains +800 plus
+V53b SAFEHOUSE→CORRIDOR; broad Underground/Corridor landspeed remains a hard veto finalized at
+-100000; and other Mapuzo landspeed remains +800 plus V53b MAPUZO EXIT. Exact `move`, branch
+precedence, any-character behavior, null-source handling, source-only routing, and the lack of
+destination or Jedi-legality validation remain intact. The separate positive V60 ActionText action
+is untouched at +20000 for Hidden Path and +200 otherwise. V38.3 transit suppression, V67 selection,
+routing, finalization, and physical-card resolution are untouched. Production edits are AI-only.
+Verification passed 195 focused MOVE tests and the full 1,372-test reactor with 0 failures, 0 errors,
+and 26 skipped. Package, source-boundary, forbidden-symbol, artifact, mirror, positive-ActionText
+guard, and independent source-review gates passed; server jar SHA-256 is
+ccdd66ad912888bd303db57d681d38c26593c054463b8f461112cdc132c90ba2 and packaged web.jar SHA-256 is
+4d44ebffb9fb31cc6f4555038427c7df02f94991fb981475d399c65408303366. Runtime load and live-game
+proof remain separate gates. Revert the single V226 commit. See AI_CHANGELOG 2026-07-19.
+
   ==== V225 AI-ONLY MOVE UNDERCOVER-SPY POLICY OWNER (2026-07-19, both bots) ====
 Shared MoveSpyFollowPolicy now owns the duplicated V53 undercover-spy opponent lookup, direct
 source-power read, first textual top-location destination scan, branch selection, exact reasons,
