@@ -7333,3 +7333,23 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     a010576c75a53a9b2d3c0b48ad6bf64bd741d0f4afbbfcb71d4aee7089878984 contain the shared policy
     and both adapters. Runtime reload and live-game proof remain pending on the external runtime.
     AI source only; no GEMP engine or player-decision changes.
+
+  ════ V254 (2026-07-19): consolidate V25 action-text battle initiation scoring ════
+    New BattleActionTextFacts and BattleActionTextPolicy own V25's pure effective-power formula,
+    exact branch order, strict suicide predicate, score thresholds, reasons, locationless fallback,
+    and independently additive reserve penalty. Both ActionTextEvaluator mirrors retain the battle
+    text gate, action type, target resolution, game/opponent/power/ability/reserve reads, exception
+    boundary, logs, and direct policy-operation application. Behavior is structural-only. V25
+    remains no-opponent -100; suicide -500 only above both strict thresholds; effective difference
+    remains power difference plus 2.5 per ability difference; bands remain +200/+120/+60/+20 and
+    -60/-120/-250; unresolved location remains +30; reserve below 3 remains an independent -50.
+    All contributions remain additive, and the combined score remains raw-float exact as
+    BattleDecision base 100 plus BATTLE-1 plus V25. Focused 26/0/0/0, BATTLE-named 91/0/0/0,
+    full reactor 1641/0/0/26, direct two-bot CombinedEvaluator merge fixtures, stock ordinal
+    action-ID contract, normalized mirror parity, raw-float stack fixtures, AI-only boundary,
+    forbidden-symbol scan, compiled-artifact gate, diff check, and async-reactor package passed.
+    Independent review found and closed the direct combined-merge proof gap, then returned PASS.
+    Server jar SHA-256 1a8c05c62310c0c4db27017bd0ac785fc0b0ab4090d1c95cbf94d8680df9462a and web jar
+    SHA-256 3b64d95f9a9c1c6f4a5707fe27e97b596335bb680d5f176b4145bedf9a262fac contain the shared policy,
+    facts, and both adapters. Runtime reload and live-game proof remain pending on the external
+    runtime. AI source only; no GEMP engine or player-decision changes.
