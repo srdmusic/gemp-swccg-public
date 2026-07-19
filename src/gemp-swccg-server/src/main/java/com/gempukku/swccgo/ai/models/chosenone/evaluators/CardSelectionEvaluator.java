@@ -4026,51 +4026,37 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         crewCount++;
                                     }
                                 }
-                                action.addReasoning(String.format(
-                                    "V48 SHIP WITH CREW: %s has %d crew aboard — forfeit crew first, not the ship!",
-                                    title, crewCount), -9999.0f);
+                                PolicyContributionLedger v48ForfeitLedger =
+                                    new PolicyContributionLedger("standalone-battle-forfeit-v48-" + cardId);
+                                v48ForfeitLedger.register(
+                                    BattleForfeitPolicy.scoreStandaloneShipWithCrew(
+                                        cardId, title, crewCount));
+                                PolicyOperationAdapter.apply(action, v48ForfeitLedger);
                                 logger.warn("V48 SHIP FORFEIT BLOCK: {} has {} crew — NEVER forfeit ship with crew aboard!",
                                     title, crewCount);
                             }
                         }
 
-
+                        Float forfeit = null;
+                        Float power = null;
+                        boolean unique = false;
+                        Float uniqueAbility = null;
+                        Float uniquePower = null;
                         if (blueprint != null) {
                             // Forfeit value scoring - lower forfeit = better to forfeit (cheap loss).
                             // CRITICAL: hasForfeitAttribute() check first (weapons throw).
-                            Float forfeit = blueprint.hasForfeitAttribute() ? blueprint.getForfeit() : null;
-                            if (forfeit != null) {
-                                // forfeit=0 -> +100, forfeit=7 -> +30, forfeit=10 -> 0
-                                float forfeitScore = Math.max(0, 100 - (forfeit * 10));
-                                action.addReasoning(
-                                    String.format("Forfeit value %.0f", forfeit),
-                                    forfeitScore
-                                );
-                            }
+                            forfeit = blueprint.hasForfeitAttribute() ? blueprint.getForfeit() : null;
 
                             // Power scoring - bumped magnitudes (V139)
                             if (blueprint.hasPowerAttribute()) {
-                                Float power = blueprint.getPower();
-                                if (power != null) {
-                                    if (power <= 2) {
-                                        action.addReasoning("Low power - cheap loss, forfeit first", 50.0f);
-                                    } else if (power >= 5) {
-                                        action.addReasoning("V139 High power - prefer keeping for battle", -100.0f);
-                                    }
-                                }
+                                power = blueprint.getPower();
                             }
 
                             // V139: Protect unique high-value characters HARDER
-                            if (blueprint.getUniqueness() == Uniqueness.UNIQUE) {
-                                Float ability = blueprint.hasAbilityAttribute() ? blueprint.getAbility() : null;
-                                Float power = blueprint.hasPowerAttribute() ? blueprint.getPower() : null;
-                                if ((ability != null && ability >= 5) || (power != null && power >= 5)) {
-                                    // High-value unique: -300 ensures forfeit only as last resort
-                                    action.addReasoning("V139 VALUABLE UNIQUE - never forfeit unless forced", -300.0f);
-                                } else {
-                                    // Generic unique: still avoid but less aggressively
-                                    action.addReasoning("V139 Unique - avoid forfeiting", -100.0f);
-                                }
+                            unique = blueprint.getUniqueness() == Uniqueness.UNIQUE;
+                            if (unique) {
+                                uniqueAbility = blueprint.hasAbilityAttribute() ? blueprint.getAbility() : null;
+                                uniquePower = blueprint.hasPowerAttribute() ? blueprint.getPower() : null;
                             }
 
                             // Characters with extra destiny draws are valuable
@@ -4080,14 +4066,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // V21: OBJECTIVE-CRITICAL CARD PROTECTION (forfeit)
                         String fTitle = card.getTitle();
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer fObjAnalyzer = context.getObjectiveAnalyzer();
+                        boolean requiredForFlip = false;
+                        boolean pullable = false;
                         if (fObjAnalyzer != null && fObjAnalyzer.isAnalyzed() && fTitle != null) {
                             if (fObjAnalyzer.isRequiredCardForFlip(fTitle)) {
-                                action.addReasoning("OBJECTIVE CRITICAL - NEVER FORFEIT!", -9999.0f);
-                                logger.warn("V21 HARD BAN: {} is REQUIRED for flip - never forfeit!", fTitle);
+                                requiredForFlip = true;
                             } else if (fObjAnalyzer.isPullableCard(fTitle)) {
-                                action.addReasoning("OBJECTIVE PULLABLE - NEVER FORFEIT!", -9999.0f);
-                                logger.warn("V21 HARD BAN: {} is objective pullable - never forfeit!", fTitle);
+                                pullable = true;
                             }
+                        }
+                        PolicyContributionLedger standaloneForfeitLedger =
+                            new PolicyContributionLedger("standalone-battle-forfeit-" + cardId);
+                        standaloneForfeitLedger.register(BattleForfeitPolicy.scoreStandaloneResidual(
+                            new BattleForfeitPolicy.StandaloneResidualFacts(
+                                cardId, forfeit, power, unique, uniqueAbility, uniquePower,
+                                new BattleForfeitFacts.ObjectiveFlags(requiredForFlip, pullable))));
+                        PolicyOperationAdapter.apply(action, standaloneForfeitLedger);
+                        if (requiredForFlip) {
+                            logger.warn("V21 HARD BAN: {} is REQUIRED for flip - never forfeit!", fTitle);
+                        } else if (pullable) {
+                            logger.warn("V21 HARD BAN: {} is objective pullable - never forfeit!", fTitle);
                         }
                     }
                 } catch (NumberFormatException e) {

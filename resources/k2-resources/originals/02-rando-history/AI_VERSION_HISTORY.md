@@ -7314,3 +7314,22 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     0fe74952e1d1e9a28b992c686dfba0a574da4632217e7e575f07f7f0497659de contain the shared policy,
     coordinator, and both adapters. Runtime reload and live-game proof remain pending on the
     external runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V253 (2026-07-19): consolidate BATTLE-3 standalone forfeit scoring ════
+    BattleForfeitPolicy now owns V48 ship-with-crew and the ordered standalone V139/V21
+    forfeit-value, power, uniqueness, and objective-protection contributions. Both
+    CardSelectionEvaluator mirrors retain every card, blueprint, attachment, crew, and objective
+    read; exception boundaries; logs; display text; and direct additive mutation. Exact legacy
+    scoring remains V48 -9999, max(0,100-forfeit*10), low power +50, high power -100, valuable
+    unique -300, generic unique -100, and first-match objective required/pullable -9999. The
+    -9999 arms remain additive and do not set hardVeto or defer. V45 direct interception, V154
+    weapon early-continue, V67y's combined-route no-op, and combined force-loss/forfeit routing are
+    untouched. Review caught and corrected an initial scope drift that placed V21 inside the
+    blueprint gate; a direct null-blueprint fixture now proves both bots retain -9949 and no true
+    veto. Focused 16/0/0/0, BATTLE-named 56/0/0/0, full reactor 1630/0/0/26, normalized mirror
+    parity, AI-only boundary, forbidden-symbol scan, and clean package passed. Independent review
+    found no remaining behavior drift. Server jar SHA-256
+    e1670eb6774754f0ba711c9c89696d1570f3b2c645b588ab2eb03e67995042af and web jar SHA-256
+    a010576c75a53a9b2d3c0b48ad6bf64bd741d0f4afbbfcb71d4aee7089878984 contain the shared policy
+    and both adapters. Runtime reload and live-game proof remain pending on the external runtime.
+    AI source only; no GEMP engine or player-decision changes.

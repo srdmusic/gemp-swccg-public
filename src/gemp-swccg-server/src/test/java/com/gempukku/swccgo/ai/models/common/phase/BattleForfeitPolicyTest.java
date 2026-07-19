@@ -67,6 +67,62 @@ public class BattleForfeitPolicyTest {
     }
 
     @Test
+    public void standaloneResidualKeepsV48ThenV139ThenRequiredObjectiveAdditiveOrder() {
+        PolicyResult shipWithCrew = BattleForfeitPolicy.scoreStandaloneShipWithCrew(
+                ACTION_ID, "Executor", 3);
+        PolicyResult residual = BattleForfeitPolicy.scoreStandaloneResidual(
+                new BattleForfeitPolicy.StandaloneResidualFacts(
+                        ACTION_ID, 7.0f, 5.0f, true, 5.0f, 4.0f,
+                        new BattleForfeitFacts.ObjectiveFlags(true, true)));
+
+        assertOperations(shipWithCrew,
+                op("V48-ship-with-crew", -9999.0f,
+                        "V48 SHIP WITH CREW: Executor has 3 crew aboard \u2014 forfeit crew first, not the ship!",
+                        TraceOutputKind.VETO));
+        assertOperations(residual,
+                op("V139-forfeit-value", 30.0f, "Forfeit value 7"),
+                op("V139-high-power", -100.0f,
+                        "V139 High power - prefer keeping for battle"),
+                op("V139-valuable-unique", -300.0f,
+                        "V139 VALUABLE UNIQUE - never forfeit unless forced"),
+                op("V21-forfeit-required", -9999.0f,
+                        "OBJECTIVE CRITICAL - NEVER FORFEIT!", TraceOutputKind.VETO));
+        assertBits(-20318.0f, 50.0f + shipWithCrew.operations().get(0).delta()
+                + residual.operations().stream().map(PolicyOperation::delta)
+                .reduce(0.0f, Float::sum));
+    }
+
+    @Test
+    public void standaloneResidualPinsV139BoundsAndV21PullableFirstMatch() {
+        PolicyResult bounded = BattleForfeitPolicy.scoreStandaloneResidual(
+                new BattleForfeitPolicy.StandaloneResidualFacts(
+                        ACTION_ID, 13.0f, 2.0f, true, 4.0f, 4.0f,
+                        new BattleForfeitFacts.ObjectiveFlags(false, true)));
+        assertOperations(bounded,
+                op("V139-forfeit-value", 0.0f, "Forfeit value 13"),
+                op("V139-low-power", 50.0f,
+                        "Low power - cheap loss, forfeit first"),
+                op("V139-generic-unique", -100.0f,
+                        "V139 Unique - avoid forfeiting"),
+                op("V21-forfeit-pullable", -9999.0f,
+                        "OBJECTIVE PULLABLE - NEVER FORFEIT!", TraceOutputKind.VETO));
+
+        PolicyResult middlePower = BattleForfeitPolicy.scoreStandaloneResidual(
+                new BattleForfeitPolicy.StandaloneResidualFacts(
+                        ACTION_ID, null, 3.0f, false, null, null,
+                        BattleForfeitFacts.ObjectiveFlags.none()));
+        assertOperations(middlePower);
+
+        PolicyResult objectiveOnly = BattleForfeitPolicy.scoreStandaloneResidual(
+                new BattleForfeitPolicy.StandaloneResidualFacts(
+                        ACTION_ID, null, null, false, null, null,
+                        new BattleForfeitFacts.ObjectiveFlags(true, false)));
+        assertOperations(objectiveOnly,
+                op("V21-forfeit-required", -9999.0f,
+                        "OBJECTIVE CRITICAL - NEVER FORFEIT!", TraceOutputKind.VETO));
+    }
+
+    @Test
     public void attachedWeaponRunsV154AndContinuesBeforeEveryOtherArm() {
         BattleForfeitFacts.CandidateFacts hitHostWeapon = new CandidateBuilder()
                 .category(CardCategory.WEAPON).attachedHostHit().forceLoss().build();

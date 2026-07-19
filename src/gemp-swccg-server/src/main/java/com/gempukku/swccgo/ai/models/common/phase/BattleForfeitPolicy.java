@@ -62,6 +62,23 @@ public final class BattleForfeitPolicy {
                              float delta) {
     }
 
+    /**
+     * Adapter-read standalone forfeit values. Engine and card reads remain in the
+     * evaluator so their legacy ordering and failure boundaries stay unchanged.
+     */
+    public record StandaloneResidualFacts(String actionId,
+                                          Float forfeitValue,
+                                          Float power,
+                                          boolean unique,
+                                          Float uniqueAbility,
+                                          Float uniquePower,
+                                          BattleForfeitFacts.ObjectiveFlags objective) {
+        public StandaloneResidualFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            Objects.requireNonNull(objective, "objective");
+        }
+    }
+
     private BattleForfeitPolicy() {
     }
 
@@ -97,6 +114,61 @@ public final class BattleForfeitPolicy {
         }
         return evaluation(Route.OPTIONAL_FORFEIT,
                 AdapterStep.CONTINUE_CANDIDATE, operations, List.of());
+    }
+
+    /** V48 standalone additive protection after the evaluator counts attached crew. */
+    public static PolicyResult scoreStandaloneShipWithCrew(String actionId,
+                                                           String title,
+                                                           int crewCount) {
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (crewCount > 0) {
+            add(operations, actionId, "V48-ship-with-crew", TraceOutputKind.VETO, -9999.0f,
+                    String.format("V48 SHIP WITH CREW: %s has %d crew aboard \u2014 forfeit crew first, not the ship!",
+                            title, crewCount));
+        }
+        return result(operations);
+    }
+
+    /** Ordered V139 and V21 standalone-forfeit residual scoring. */
+    public static PolicyResult scoreStandaloneResidual(StandaloneResidualFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (facts.forfeitValue() != null) {
+            add(operations, facts.actionId(), "V139-forfeit-value", TraceOutputKind.ORDERING,
+                    Math.max(0, 100 - (facts.forfeitValue() * 10)),
+                    String.format("Forfeit value %.0f", facts.forfeitValue()));
+        }
+        if (facts.power() != null) {
+            if (facts.power() <= 2) {
+                add(operations, facts.actionId(), "V139-low-power", TraceOutputKind.ORDERING,
+                        50.0f, "Low power - cheap loss, forfeit first");
+            } else if (facts.power() >= 5) {
+                add(operations, facts.actionId(), "V139-high-power", TraceOutputKind.ORDERING,
+                        -100.0f, "V139 High power - prefer keeping for battle");
+            }
+        }
+        if (facts.unique()) {
+            if ((facts.uniqueAbility() != null && facts.uniqueAbility() >= 5)
+                    || (facts.uniquePower() != null && facts.uniquePower() >= 5)) {
+                add(operations, facts.actionId(), "V139-valuable-unique",
+                        TraceOutputKind.ORDERING, -300.0f,
+                        "V139 VALUABLE UNIQUE - never forfeit unless forced");
+            } else {
+                add(operations, facts.actionId(), "V139-generic-unique",
+                        TraceOutputKind.ORDERING, -100.0f,
+                        "V139 Unique - avoid forfeiting");
+            }
+        }
+        if (facts.objective().requiredForFlip()) {
+            add(operations, facts.actionId(), "V21-forfeit-required",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "OBJECTIVE CRITICAL - NEVER FORFEIT!");
+        } else if (facts.objective().pullable()) {
+            add(operations, facts.actionId(), "V21-forfeit-pullable",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "OBJECTIVE PULLABLE - NEVER FORFEIT!");
+        }
+        return result(operations);
     }
 
     public static Evaluation evaluateCombined(
