@@ -1,3 +1,21 @@
+  ==== V221 AI-ONLY MOVE DESTINATION AND LANDED-SHIP POLICY OWNER (2026-07-18, both bots) ====
+Shared MoveDestinationPolicy now owns the duplicated V91 landed-ship identity scan and the
+V34/V36/V111/V38.3 destination-contest analysis. Both adapters keep direct score application,
+logs, outer catches, R2/R3 ladder claims, deferred and hard veto mutation, and original call order.
+Behavior is unchanged: V91 remains +800 for takeoff and +600 for disembark when a friendly
+starship resolves by object identity to the current non-system site; V34 remains +250, plus +150
+for an uncontested destination, +100 for an attached weapon, and +150 for Vader moving toward a
+Jedi or Padawan; V111 remains +400 for a non-battleground to empty-battleground advance while
+opponents are uncontested elsewhere; and V38.3 preserves its strongest-location strict comparison,
+wrong-direction fact, and independent Castle hard-veto fact. First textual destination, partial
+exception, fail-open, and coexistence semantics remain intact. V60, V137, source/weapon scans,
+routing, finalization, and physical-card resolution are untouched. Production edits are AI-only.
+Verification passed 117 focused MOVE tests and the full 1,294-test reactor with 0 failures, 0
+errors, and 26 skipped. Package, execution-order, source-boundary, forbidden-symbol, artifact,
+mirror, diff, and source-review gates passed; server jar SHA-256 is
+3aade354cbb11e23eac32f39d1821bd92d6f7aba0076231eb4b8b27233c8717a. Runtime load and live-game
+proof remain separate gates. Revert the single V221 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V220 AI-ONLY MOVE DRAIN-ROUTING POLICY OWNER (2026-07-18, both bots) ====
 Shared MoveDrainRoutingPolicy now owns the duplicated V85 drain-retention analysis, V29.13 explicit
 destination drain weighting, and V73 Cantina/Mos Eisley shuttle exception. Their three distinct scans

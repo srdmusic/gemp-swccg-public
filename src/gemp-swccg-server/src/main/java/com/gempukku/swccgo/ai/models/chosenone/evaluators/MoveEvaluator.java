@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
@@ -10,7 +11,6 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.common.CardCategory;
-import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -2583,52 +2583,21 @@ public class MoveEvaluator extends ActionEvaluator {
         // ships use phrases like "Take off", "Disembark", "Move to system".
         if (location != null && location.getBlueprint() != null && game != null) {
             try {
-                boolean currentIsSystem = false;
-                try {
-                    currentIsSystem = location.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM;
-                } catch (Exception ignore) { /* */ }
-                if (!currentIsSystem) {
-                    // Are we aboard a starship at this site? If the card being
-                    // moved is itself a pilot/character aboard, or is a landed
-                    // starship at the site, this rule applies.
-                    String v91ActionLower = action.getDisplayText() != null
-                        ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
-                    boolean isTakeOff = v91ActionLower.contains("take off");
-                    boolean isDisembark = v91ActionLower.contains("disembark");
-                    boolean isMoveAboard = v91ActionLower.contains("embark")
-                        && !isDisembark;  // exclude disembark which contains "embark"
-                    if (isTakeOff || isDisembark) {
-                        // Check if any friendly character is currently aboard a
-                        // landed starship at this site.
-                        boolean weHaveLandedShipHere = false;
-                        for (PhysicalCard pCard : gameState.getAllPermanentCards()) {
-                            if (pCard == null) continue;
-                            if (!playerId.equals(pCard.getOwner())) continue;
-                            if (pCard.getBlueprint() == null) continue;
-                            if (pCard.getBlueprint().getCardCategory() != CardCategory.STARSHIP) continue;
-                            PhysicalCard pLoc = null;
-                            try {
-                                pLoc = game.getModifiersQuerying().getLocationThatCardIsAt(gameState, pCard);
-                            } catch (Exception ignore) { /* */ }
-                            if (pLoc == location) {
-                                weHaveLandedShipHere = true;
-                                break;
-                            }
-                        }
-                        if (weHaveLandedShipHere) {
-                            float bonus = isTakeOff ? 800.0f : 600.0f;
-                            action.addReasoning(String.format(
-                                "V91 ESCAPE LANDED SHIP: %s at site %s — %s to restore ship power / use character on ground",
-                                isTakeOff ? "Take off" : "Disembark",
-                                location.getTitle(),
-                                isTakeOff ? "lift to system" : "drop pilot to ground"), bonus);
-                            logger.warn("V91 ESCAPE LANDED SHIP: bonus {} for {} at landed site {}",
-                                (int)bonus, isTakeOff ? "take-off" : "disembark", location.getTitle());
-                            // V91 UPDATED 2026-07-06 T4.1: landed-ship escape claims R3 SURVIVAL
-                            // (fines +800/+600 kept; base applied at the finalizer).
-                            ladderClaimR3("V91 ESCAPE LANDED SHIP");
-                        }
-                    }
+                MoveDestinationPolicy.LandedShipEscape escape =
+                    MoveDestinationPolicy.landedShipEscape(
+                        gameState, game, location, playerId,
+                        action::getDisplayText);
+                if (escape.contribution().applies()) {
+                    action.addReasoning(
+                        escape.contribution().reason(),
+                        escape.contribution().delta());
+                    logger.warn("V91 ESCAPE LANDED SHIP: bonus {} for {} at landed site {}",
+                        (int)escape.contribution().delta(),
+                        escape.takeOff() ? "take-off" : "disembark",
+                        location.getTitle());
+                    // V91 UPDATED 2026-07-06 T4.1: landed-ship escape claims R3 SURVIVAL
+                    // (fines +800/+600 kept; base applied at the finalizer).
+                    ladderClaimR3("V91 ESCAPE LANDED SHIP");
                 }
             } catch (Exception e) {
                 logger.debug("V91 ESCAPE LANDED SHIP: error: {}", e.getMessage());
@@ -2685,170 +2654,71 @@ public class MoveEvaluator extends ActionEvaluator {
         {
             String v34ActionText = action.getDisplayText() != null
                 ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
-            PhysicalCard v34Dest = null;
+            MoveDestinationPolicy.DestinationContest destination =
+                MoveDestinationPolicy.destinationContest(
+                    gameState, game, location, cardToMove,
+                    playerId, opponentId, v34ActionText,
+                    MoveEvaluator::isJediOrPadawan,
+                    uncontestedDestination -> logger.warn(
+                        "V36 CONTEST DRAIN: {} — opponent drains UNCONTESTED at {} — extra urgency!",
+                        cardToMove != null ? cardToMove.getTitle() : "?",
+                        uncontestedDestination.getTitle()));
 
-            for (PhysicalCard locCard : gameState.getLocationsInOrder()) {
-                if (locCard == null || locCard == location) continue;
-                String locName = locCard.getTitle() != null
-                    ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
-                if (!locName.isEmpty() && v34ActionText.contains(locName)) {
-                    v34Dest = locCard;
-                    break;
-                }
-            }
-
-            if (v34Dest != null) {
-                float destOppPower = 0;
-                try {
-                    destOppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                        gameState, v34Dest, opponentId, false, false);
-                } catch (Exception e) { /* ignore */ }
-
-                if (destOppPower > 0) {
-                    // Moving TO a location with opponents — CONTEST their drain!
-                    // V36: Extra bonus if they're draining there UNCONTESTED
-                    float ourPowerAtDest = 0;
-                    try {
-                        ourPowerAtDest = game.getModifiersQuerying().getTotalPowerAtLocation(
-                            gameState, v34Dest, playerId, false, false);
-                    } catch (Exception e) { /* ignore */ }
-                    float contestBonus = 250.0f;
-                    if (ourPowerAtDest == 0) {
-                        // UNCONTESTED drain! Extra urgency
-                        contestBonus += 150.0f;
-                        logger.warn("V36 CONTEST DRAIN: {} — opponent drains UNCONTESTED at {} — extra urgency!",
-                            cardToMove != null ? cardToMove.getTitle() : "?", v34Dest.getTitle());
-                    }
-                    // Extra bonus if we're armed (can battle effectively)
-                    if (cardToMove != null) {
-                        try {
-                            List<PhysicalCard> v34Att = gameState.getAttachedCards(cardToMove);
-                            if (v34Att != null) {
-                                for (PhysicalCard att : v34Att) {
-                                    if (att != null && att.getBlueprint() != null
-                                        && att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
-                                        contestBonus += 100.0f; // Armed = even better for contesting
-                                        break;
-                                    }
-                                }
-                            }
-                        } catch (Exception e) { /* ignore */ }
-                    }
-                    // V35: Extra bonus if destination has Jedi/Padawan and we're Vader
-                    boolean v35JediAtDest = false;
-                    try {
-                        for (PhysicalCard dc : gameState.getCardsAtLocation(v34Dest)) {
-                            if (dc == null || playerId.equals(dc.getOwner())) continue;
-                            String dcTitle = dc.getTitle() != null ? dc.getTitle().toLowerCase(Locale.ROOT) : "";
-                            if (isJediOrPadawan(dcTitle)) {
-                                v35JediAtDest = true;
-                                break;
-                            }
-                        }
-                    } catch (Exception e) { /* ignore */ }
-
-                    if (v35JediAtDest && cardToMove != null && cardToMove.getTitle() != null
-                        && cardToMove.getTitle().toLowerCase(Locale.ROOT).contains("vader")) {
-                        contestBonus += 150.0f; // V35: Vader hunting Jedi
-                    }
-
-                    action.addReasoning(String.format(
-                        "V34 CONTEST: Moving to %s where opponents have power %.0f%s — block their drain and fight!",
-                        v34Dest.getTitle(), destOppPower, v35JediAtDest ? " [JEDI!]" : ""), contestBonus);
+            if (destination.destination() != null) {
+                if (destination.contestContribution().applies()) {
+                    action.addReasoning(
+                        destination.contestContribution().reason(),
+                        destination.contestContribution().delta());
                     logger.warn("V34 CONTEST: {} moving to {} (opponent power {}{}) — bonus +{}",
                         cardToMove != null ? cardToMove.getTitle() : "?",
-                        v34Dest.getTitle(), (int)destOppPower,
-                        v35JediAtDest ? " JEDI" : "", (int)contestBonus);
+                        destination.destination().getTitle(),
+                        (int)destination.opponentPowerAtDestination(),
+                        destination.jediAtDestination() ? " JEDI" : "",
+                        (int)destination.contestContribution().delta());
                     // V34/V36 UPDATED 2026-07-06 T4.1: the contest claims R2 DOCTRINE
                     // (battle-seeking — subject to the V137 canWinAt veto per ruling L3;
                     // move-4a/4b boundaries). Bonus >= +250 always passes the L2 gate.
-                    ladderClaimR2("V34 CONTEST", contestBonus, 0.0f, true);
+                    ladderClaimR2("V34 CONTEST",
+                        destination.contestContribution().delta(),
+                        0.0f, true);
                 } else {
-                    // Moving to empty location — check if opponents are draining uncontested elsewhere
-                    boolean opponentsUncontested = false;
-                    String opUncontestedLoc = null;
-                    float opUncontestedPower = 0;
-                    try {
-                        for (PhysicalCard otherLoc : gameState.getLocationsInOrder()) {
-                            if (otherLoc == null || otherLoc == location || otherLoc == v34Dest) continue;
-                            float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, otherLoc, opponentId, false, false);
-                            float ourPowerThere = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, otherLoc, playerId, false, false);
-                            if (oppPower > 0 && ourPowerThere == 0) {
-                                opponentsUncontested = true;
-                                if (oppPower > opUncontestedPower) {
-                                    opUncontestedPower = oppPower;
-                                    opUncontestedLoc = otherLoc.getTitle();
-                                }
-                            }
-                        }
-                    } catch (Exception e) { /* ignore */ }
-
-                    if (opponentsUncontested) {
-                        // === V111: NON-BATTLEGROUND → BATTLEGROUND ADVANCE ===
-                        // Exception to V38.3: moving from a non-battleground to an adjacent
-                        // battleground is STRATEGIC, not wasteful. Pattern: deploy to non-BG
-                        // (e.g. Imperial City via Reserve Deck pull), then advance to adjacent
-                        // BG (e.g. Xizor's Palace) for force drain. Don't hard-block this.
-                        boolean v111CurrentNonBG = false;
-                        boolean v111DestBG = false;
-                        try {
-                            v111CurrentNonBG = !game.getModifiersQuerying().isBattleground(gameState, location, null);
-                            v111DestBG = game.getModifiersQuerying().isBattleground(gameState, v34Dest, null);
-                        } catch (Exception e) { /* ignore */ }
-
-                        if (v111CurrentNonBG && v111DestBG) {
-                            action.addReasoning(String.format(
-                                "V111 BG ADVANCE: Moving from non-battleground %s to battleground %s — establish drain position!",
-                                location.getTitle(), v34Dest.getTitle()), 400.0f);
-                            logger.info("V111 BG ADVANCE: {} from {} (non-BG) to {} (BG) — drain position +400",
-                                cardToMove != null ? cardToMove.getTitle() : "?",
-                                location.getTitle(), v34Dest.getTitle());
-                            // V111 UPDATED 2026-07-06 T4.1: the BG advance claims R2 DOCTRINE
-                            // (non-battle: destination is EMPTY; +400 passes L2, existing V38.3 carve kept).
-                            ladderClaimR2("V111 BG ADVANCE", 400.0f, 0.0f, false);
-                        } else {
-                            // V38.3 UPDATED 2026-07-06 T4.1: the -9999 hard block is now a DEFERRED
-                            // ladder veto (-100000 at the finalizer) so the V53b mandatory-transit
-                            // claim identities can suppress it (ruling L3 carve-out; move-3f
-                            // boundary: a Mapuzo exit to an EMPTY site must fire — the old code
-                            // stalled at ~-9199). Non-transit movers still get the full veto.
-                            ladderWrongDirVeto = true;
-                            ladderWrongDirVetoReason = String.format(
-                                "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s",
-                                v34Dest.getTitle(), opUncontestedLoc);
-                            logger.warn("V38.3 WRONG DIRECTION: {} to empty {} — opponents at {} — veto flagged (transit carve-out may suppress)",
-                                cardToMove != null ? cardToMove.getTitle() : "?",
-                                v34Dest.getTitle(), opUncontestedLoc);
-                        }
+                    if (destination.battlegroundAdvanceContribution().applies()) {
+                        action.addReasoning(
+                            destination.battlegroundAdvanceContribution().reason(),
+                            destination.battlegroundAdvanceContribution().delta());
+                        logger.info("V111 BG ADVANCE: {} from {} (non-BG) to {} (BG) — drain position +400",
+                            cardToMove != null ? cardToMove.getTitle() : "?",
+                            location.getTitle(),
+                            destination.destination().getTitle());
+                        // V111 UPDATED 2026-07-06 T4.1: the BG advance claims R2 DOCTRINE
+                        // (non-battle: destination is EMPTY; +400 passes L2, existing V38.3 carve kept).
+                        ladderClaimR2("V111 BG ADVANCE",
+                            destination.battlegroundAdvanceContribution().delta(),
+                            0.0f, false);
+                    } else if (destination.wrongDirectionVeto()) {
+                        // V38.3 UPDATED 2026-07-06 T4.1: the -9999 hard block is now a DEFERRED
+                        // ladder veto (-100000 at the finalizer) so the V53b mandatory-transit
+                        // claim identities can suppress it (ruling L3 carve-out; move-3f
+                        // boundary: a Mapuzo exit to an EMPTY site must fire — the old code
+                        // stalled at ~-9199). Non-transit movers still get the full veto.
+                        ladderWrongDirVeto = true;
+                        ladderWrongDirVetoReason =
+                            destination.wrongDirectionReason();
+                        logger.warn("V38.3 WRONG DIRECTION: {} to empty {} — opponents at {} — veto flagged (transit carve-out may suppress)",
+                            cardToMove != null ? cardToMove.getTitle() : "?",
+                            destination.destination().getTitle(),
+                            destination.opponentUncontestedLocation());
                     }
 
-                    // V38.3: CASTLE RETREAT BLOCK — NEVER move to Mustafar: Vader's Castle
-                    // when there are opponents ANYWHERE on the board. Castle is a safe haven
-                    // that contributes nothing to the fight.
-                    String v34DestTitle = v34Dest.getTitle() != null
-                        ? v34Dest.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                    if (v34DestTitle.contains("mustafar") && v34DestTitle.contains("castle")) {
-                        boolean anyOpponentsOnBoard = false;
-                        try {
-                            for (PhysicalCard otherLoc2 : gameState.getLocationsInOrder()) {
-                                if (otherLoc2 == null) continue;
-                                float op2 = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                    gameState, otherLoc2, opponentId, false, false);
-                                if (op2 > 0) { anyOpponentsOnBoard = true; break; }
-                            }
-                        } catch (Exception e) { /* ignore */ }
-                        if (anyOpponentsOnBoard) {
-                            // V38.3 UPDATED 2026-07-06 T4.1: Castle-retreat arm converted to the
-                            // ladder hard-veto class (-100000 at the finalizer). NO transit
-                            // carve-out here — the carve-out is keyed to the V53b transit claim
-                            // identities and a Mapuzo exit never targets Mustafar Castle.
-                            ladderVetoHard = true;
-                            ladderVetoHardReason = "V38.3 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!";
-                            logger.warn("V38.3 CASTLE RETREAT BLOCKED (LADDER VETO): {} trying to flee to Mustafar Castle!",
-                                cardToMove != null ? cardToMove.getTitle() : "?");
-                        }
+                    if (destination.castleVeto()) {
+                        // V38.3 UPDATED 2026-07-06 T4.1: Castle-retreat arm converted to the
+                        // ladder hard-veto class (-100000 at the finalizer). NO transit
+                        // carve-out here — the carve-out is keyed to the V53b transit claim
+                        // identities and a Mapuzo exit never targets Mustafar Castle.
+                        ladderVetoHard = true;
+                        ladderVetoHardReason = destination.castleVetoReason();
+                        logger.warn("V38.3 CASTLE RETREAT BLOCKED (LADDER VETO): {} trying to flee to Mustafar Castle!",
+                            cardToMove != null ? cardToMove.getTitle() : "?");
                     }
                 }
             }

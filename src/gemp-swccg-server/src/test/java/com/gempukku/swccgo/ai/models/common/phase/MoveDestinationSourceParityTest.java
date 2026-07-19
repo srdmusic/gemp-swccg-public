@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class MoveDrainRoutingSourceParityTest {
+public class MoveDestinationSourceParityTest {
     @Test
     public void moveEvaluatorsStayNormalizedMirrors() throws IOException {
         assertEquals(normalize(evaluatorSource("rando")),
@@ -20,105 +20,93 @@ public class MoveDrainRoutingSourceParityTest {
     }
 
     @Test
-    public void threeDrainRulesHaveOneSharedOwner() throws IOException {
+    public void destinationRulesHaveOneSharedOwner() throws IOException {
         String move = evaluatorSource("rando");
         String policy = policySource();
 
         assertEquals(1, countOccurrences(
-                move, "MoveDrainRoutingPolicy.uncontestedDeparture("));
+                move, "MoveDestinationPolicy.landedShipEscape("));
         assertEquals(1, countOccurrences(
-                move, "MoveDrainRoutingPolicy.explicitDestinationDrain("));
-        assertEquals(1, countOccurrences(
-                move, "MoveDrainRoutingPolicy.cantinaShuttle("));
+                move, "MoveDestinationPolicy.destinationContest("));
         assertTrue(policy.contains(
-                "public static UncontestedDeparture uncontestedDeparture("));
+                "public static LandedShipEscape landedShipEscape("));
         assertTrue(policy.contains(
-                "public static ExplicitDestinationDrain explicitDestinationDrain("));
-        assertTrue(policy.contains(
-                "public static CantinaShuttle cantinaShuttle("));
+                "public static DestinationContest destinationContest("));
     }
 
     @Test
-    public void adaptersRetainScoreLogLadderAndExceptionOwnership()
+    public void adaptersRetainScoreLadderVetoAndLoggingOwnership()
             throws IOException {
         String move = evaluatorSource("rando");
 
         assertTrue(move.contains(
-                "action.addReasoning(\n                        v85.contribution().reason()"));
+                "escape.contribution().reason()"));
         assertTrue(move.contains(
-                "V85 UNCONTESTED CHECK: Error: {}"));
+                "ladderClaimR3(\"V91 ESCAPE LANDED SHIP\")"));
         assertTrue(move.contains(
-                "action.addReasoning(\n                        drain.contribution().reason()"));
+                "destination.contestContribution().reason()"));
         assertTrue(move.contains(
-                "ladderClaimR2(\"V29.13 GOOD DRAIN\""));
+                "ladderClaimR2(\"V34 CONTEST\""));
         assertTrue(move.contains(
-                "V29.13 DRAIN CHECK: Error: {}"));
-        assertTrue(move.contains(
-                "action.addReasoning(\n                        shuttle.contribution().reason()"));
-        assertTrue(move.contains(
-                "ladderClaimR2(\"V73 SHUTTLE\""));
-        assertTrue(move.contains(
-                "V73 SHUTTLE check error: {}"));
-    }
-
-    @Test
-    public void drainCallsRemainAtThreeLegacyPositions() throws IOException {
-        String move = evaluatorSource("rando");
-        int threat = move.indexOf("MoveThreatPolicy.evaluate(");
-        int v85 = move.indexOf(
-                "MoveDrainRoutingPolicy.uncontestedDeparture(", threat);
-        int flee = move.indexOf("// === FLEE LOGIC", v85);
-        int spread = move.indexOf("MoveOpportunityPolicy.spread(", flee);
-        int explicitDrain = move.indexOf(
-                "MoveDrainRoutingPolicy.explicitDestinationDrain(", spread);
-        int v91 = move.indexOf("// === V91", explicitDrain);
-        int shuttle = move.indexOf(
-                "MoveDrainRoutingPolicy.cantinaShuttle(", v91);
-        int v34 = move.indexOf("// === V34", shuttle);
-
-        assertTrue(threat >= 0);
-        assertTrue(v85 > threat);
-        assertTrue(flee > v85);
-        assertTrue(spread > flee);
-        assertTrue(explicitDrain > spread);
-        assertTrue(v91 > explicitDrain);
-        assertTrue(shuttle > v91);
-        assertTrue(v34 > shuttle);
-    }
-
-    @Test
-    public void policyPreservesThreeDifferentLocationScans()
-            throws IOException {
-        String policy = policySource();
-
-        assertEquals(2, countOccurrences(
-                policy, "gameState.getLocationsInOrder()"));
-        assertEquals(1, countOccurrences(
-                policy, "gameState.getTopLocations()"));
-        assertEquals(1, countOccurrences(
-                policy, "isAdjacentSites("));
-        assertTrue(policy.contains(
-                "if (adjacentDrain > bestAdjacentDrain)"));
-        assertTrue(policy.contains(
-                "actionTextLower.contains(locationName)"));
-        assertTrue(policy.contains(
-                "actionDisplayLower.contains(locationTitleLower)"));
-    }
-
-    @Test
-    public void destinationRulesYieldToSharedPolicyWhileFinalizerStaysOwned()
-            throws IOException {
-        String move = evaluatorSource("rando");
-
-        assertTrue(move.contains(
-                "MoveDestinationPolicy.destinationContest("));
-        assertTrue(move.contains("ladderClaimR2(\"V34 CONTEST\""));
-        assertTrue(move.contains("ladderClaimR2(\"V111 BG ADVANCE\""));
+                "ladderClaimR2(\"V111 BG ADVANCE\""));
         assertTrue(move.contains("ladderWrongDirVeto = true"));
         assertTrue(move.contains("ladderVetoHard = true"));
+        assertTrue(move.contains(
+                "V38.3 CASTLE RETREAT BLOCKED (LADDER VETO)"));
+    }
+
+    @Test
+    public void callsRemainAtLegacyPositions() throws IOException {
+        String move = evaluatorSource("rando");
+        int explicitDrain = move.indexOf(
+                "MoveDrainRoutingPolicy.explicitDestinationDrain(");
+        int escape = move.indexOf(
+                "MoveDestinationPolicy.landedShipEscape(", explicitDrain);
+        int shuttle = move.indexOf(
+                "MoveDrainRoutingPolicy.cantinaShuttle(", escape);
+        int contest = move.indexOf(
+                "MoveDestinationPolicy.destinationContest(", shuttle);
+        int methodEnd = move.indexOf(
+                "// Default: not a good time to move", contest);
+
+        assertTrue(explicitDrain >= 0);
+        assertTrue(escape > explicitDrain);
+        assertTrue(shuttle > escape);
+        assertTrue(contest > shuttle);
+        assertTrue(methodEnd > contest);
+    }
+
+    @Test
+    public void policyPreservesIndependentScansAndPredicates()
+            throws IOException {
+        String policy = policySource();
+
+        assertEquals(1, countOccurrences(
+                policy, "gameState.getAllPermanentCards()"));
+        assertEquals(3, countOccurrences(
+                policy, "gameState.getLocationsInOrder()"));
+        assertTrue(policy.contains(
+                "cardLocation == location"));
+        assertTrue(policy.contains(
+                "actionLower.contains(locationName)"));
+        assertTrue(policy.contains(
+                "opponentPowerAtDestination > 0"));
+        assertTrue(policy.contains(
+                "opponentPower > opponentUncontestedPower"));
+        assertTrue(policy.contains(
+                "destinationTitle.contains(\"mustafar\")"));
+    }
+
+    @Test
+    public void protectedMoveMachineryRemainsUntouched()
+            throws IOException {
+        String move = evaluatorSource("rando");
+
         assertTrue(move.contains("// V60 FIX:"));
-        assertTrue(move.contains("ladderFinalize(action)"));
         assertTrue(move.contains("MovePredicates.canWinAt("));
+        assertTrue(move.contains("oppWeaponBonusAt("));
+        assertTrue(move.contains("ladderFinalize(action)"));
+        assertFalse(move.contains("MovePhysicalCardResolver"));
     }
 
     @Test
@@ -126,7 +114,7 @@ public class MoveDrainRoutingSourceParityTest {
             throws IOException {
         String policy = policySource();
         for (String forbidden : new String[]{
-                "addReasoning", "ladderClaim", "logger.",
+                "addReasoning", "ladderClaim", "ladderVeto", "logger.",
                 "PolicyOperation", "PolicyResult", "DecisionContext",
                 "DecisionOrigin", "DecisionActionSemantic", "DecisionWire",
                 "PullDeployRef", "PullPhysicalCardRef", "DeployDestinationRef",
@@ -144,7 +132,7 @@ public class MoveDrainRoutingSourceParityTest {
     private static String policySource() throws IOException {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models/common/phase")
-                .resolve("MoveDrainRoutingPolicy.java"));
+                .resolve("MoveDestinationPolicy.java"));
     }
 
     private static Path mainJavaRoot() {
