@@ -1,3 +1,17 @@
+  ==== V217 AI-ONLY MOVE LANDING SAFETY POLICY OWNER (2026-07-18, both bots) ====
+Shared MoveLandingPolicy now owns the duplicated V49/V67f1 landing classification, actual-passenger
+scan, name fallbacks, route selection, exact score deltas, and reasons. Both bot adapters keep the
+existing contains("land") caller gate, ladder hard-veto mutation, logging order, and additive position.
+Behavior is unchanged: no-passenger starships still reach the -100000 ladder veto; only blueprint
+capital/transport cards receive the passenger scan; name-fallback ships remain vetoed without one;
+crewed ships and generic ground landings remain +10; the dormant starfighter -100 arm stays behind the
+earlier veto; and the broad caller still gives landspeed the generic landing +10. Passenger-scan
+exceptions remain fail-open as zero passengers. Production edits are AI-only. Verification passed 48
+focused MOVE tests and the full 1,225-test reactor with 0 failures, 0 errors, and 26 skipped. Package,
+source-boundary, forbidden-symbol, artifact, mirror, diff, and independent gates passed; server jar
+SHA-256 is a022b5c2c556deb247dac900bbafc7158eadef6b3a323db1e2e595945aa86ae4. Runtime load and live-game
+proof remain separate gates. Revert the single V217 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V216 AI-ONLY MOVE OPPORTUNITY ANALYSIS OWNER (2026-07-18, both bots) ====
 Shared MoveOpportunityPolicy now owns the duplicated ATTACK and SPREAD scans, printed-power math,
 icon scoring, strict first-location tie behavior, undercover handling, reasons, and result types.

@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
@@ -1903,7 +1904,31 @@ public class MoveEvaluator extends ActionEvaluator {
 
             // Land - penalize starfighters
             if (actionLower.contains("land")) {
-                handleLandAction(action, actionLower, cardToMove, game);
+                MoveLandingPolicy.Evaluation landing =
+                    MoveLandingPolicy.evaluate(actionLower, cardToMove, game);
+                if (landing.passengerScanRan()) {
+                    logger.info("[MoveEvaluator] V67f1: {} actual passengers aboard = {} (capital/transport)",
+                        landing.cardName(), landing.actualPassengers());
+                }
+                switch (landing.route()) {
+                    case HARD_VETO:
+                        ladderVetoHard = true;
+                        ladderVetoHardReason = landing.reason();
+                        logger.warn("[MoveEvaluator] V49 LADDER VETO: {} landing at site with no passengers — power 0 death trap!",
+                            landing.cardName());
+                        break;
+                    case STARFIGHTER_PENALTY:
+                        action.addReasoning(landing.reason(), landing.delta());
+                        logger.info("[MoveEvaluator] BLOCKED: Landing starfighter {}", landing.cardName());
+                        break;
+                    case PASSENGER_SHIP_ALLOWED:
+                        action.addReasoning(landing.reason(), landing.delta());
+                        logger.info("[MoveEvaluator] V49: {} landing with passengers — allowed", landing.cardName());
+                        break;
+                    case GROUND_ALLOWED:
+                        action.addReasoning(landing.reason(), landing.delta());
+                        break;
+                }
             }
 
             // Move phase - no automatic bonus, moves should be strategic
@@ -2978,99 +3003,6 @@ public class MoveEvaluator extends ActionEvaluator {
             return ThreatLevel.DANGEROUS;
         } else {
             return ThreatLevel.RETREAT;
-        }
-    }
-
-    /**
-     * Handle Land action - penalize starfighters.
-     */
-    private void handleLandAction(EvaluatedAction action, String actionLower, PhysicalCard card, SwccgGame game) {
-        boolean isStarfighter = false;
-        boolean isStarship = false;
-        boolean hasPassengers = false;
-        String cardName = "unknown";
-
-        if (card != null) {
-            cardName = card.getTitle();
-            SwccgCardBlueprint bp = card.getBlueprint();
-            CardSubtype subtype = bp != null ? bp.getCardSubtype() : null;
-            if (subtype == CardSubtype.STARFIGHTER) {
-                isStarfighter = true;
-                isStarship = true;
-            } else if (subtype == CardSubtype.CAPITAL || subtype == CardSubtype.TRANSPORT) {
-                isStarship = true;
-            }
-
-            // V67f1: ACTUAL passenger check. The previous V49 logic ASSUMED any
-            // capital/transport ship has passengers, which let Wild Karrde land
-            // alone at sites with high enemy power → instant overflow death.
-            // Fix: scan game state for any character "aboard" this ship via the
-            // Filters.aboard filter — only "has passengers" if at least one is.
-            // FIXES uarc0hmiai1i594y replay: Wild Karrde landed at Cloud City: Upper
-            // Walkway (Steve's stack) with power 0 → overflow.
-            if (isStarship && !isStarfighter) {
-                int actualOnboard = 0;
-                try {
-                    if (game != null && card != null) {
-                        java.util.Collection<PhysicalCard> aboard =
-                            com.gempukku.swccgo.filters.Filters.filter(
-                                game.getGameState().getAllPermanentCards(),
-                                game,
-                                com.gempukku.swccgo.filters.Filters.and(
-                                    com.gempukku.swccgo.filters.Filters.character,
-                                    com.gempukku.swccgo.filters.Filters.aboard(card)));
-                        if (aboard != null) actualOnboard = aboard.size();
-                    }
-                } catch (Exception e) { /* ignore — fall through to no-passengers */ }
-                hasPassengers = actualOnboard > 0;
-                logger.info("[MoveEvaluator] V67f1: {} actual passengers aboard = {} (capital/transport)",
-                    cardName, actualOnboard);
-            }
-        }
-
-        // Fallback to name-based detection for starfighters
-        if (!isStarfighter && !isStarship) {
-            isStarfighter = actionLower.contains("x-wing") ||
-                actionLower.contains("y-wing") ||
-                actionLower.contains("a-wing") ||
-                actionLower.contains("b-wing") ||
-                actionLower.contains("tie") ||
-                actionLower.contains("starfighter");
-            if (isStarfighter) isStarship = true;
-
-            // Name-based detection for capital/transport ships
-            if (!isStarship) {
-                isStarship = actionLower.contains("karrde") ||
-                    actionLower.contains("falcon") ||
-                    actionLower.contains("executor") ||
-                    actionLower.contains("dreadnaught") ||
-                    actionLower.contains("frigate") ||
-                    actionLower.contains("cruiser") ||
-                    actionLower.contains("corvette") ||
-                    actionLower.contains("destroyer");
-            }
-        }
-
-        // V49: NEVER land a starship at a site without characters to protect it.
-        // A starship at a site has power 0 — anyone can attack for catastrophic overflow damage.
-        // Only allow landing if the ship has passengers who can disembark and provide power.
-        if (isStarship && !hasPassengers) {
-            // V49 UPDATED 2026-07-06 T4.1: -9999 addReasoning converted to the ladder
-            // hard-veto class (-100000 at the finalizer). Same gates, band-proof magnitude.
-            ladderVetoHard = true;
-            ladderVetoHardReason = String.format(
-                "V49 BLOCKED: Landing %s at a site with NO passengers = power 0 = instant death from overflow! NEVER land unprotected!",
-                cardName);
-            logger.warn("[MoveEvaluator] V49 LADDER VETO: {} landing at site with no passengers — power 0 death trap!", cardName);
-        } else if (isStarfighter) {
-            action.addReasoning("AVOID: Landing starfighter (" + cardName + ") wastes combat power!", -100.0f);
-            logger.info("[MoveEvaluator] BLOCKED: Landing starfighter {}", cardName);
-        } else if (isStarship && hasPassengers) {
-            action.addReasoning(String.format(
-                "V49: Landing %s with %s passengers aboard — can disembark to protect", cardName, ""), 10.0f);
-            logger.info("[MoveEvaluator] V49: {} landing with passengers — allowed", cardName);
-        } else {
-            action.addReasoning("Land (ground deployment)", 10.0f);
         }
     }
 
