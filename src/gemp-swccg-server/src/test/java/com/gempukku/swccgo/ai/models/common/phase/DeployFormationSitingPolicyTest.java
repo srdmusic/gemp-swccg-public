@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DeployFormationSitingPolicyTest {
 
@@ -78,6 +79,169 @@ public class DeployFormationSitingPolicyTest {
         assertEquals("V113", solo.operations().get(1).ruleArmId().id());
     }
 
+    @Test
+    public void legacySoloBranchesPreserveExactScoresReasonsAndPriority() {
+        DeployFormationSitingPolicy.LegacySoloEvaluation withEscape =
+                DeployFormationSitingPolicy.evaluateLegacySolo(
+                        soloFacts(true, true, true, true, true));
+        assertEquals(DeployFormationSitingPolicy.LegacySoloOutcome.OBJECTIVE_WITH_ESCAPE,
+                withEscape.outcome());
+        assertOperation(withEscape.result().operations().get(0), "V29-obj-flip",
+                TraceDomainId.SOLO_FORMATION, 50.0f,
+                "V29 OBJ-FLIP: Weak Trooper solo at 'Cloud City: Guest Quarters' to help flip objective — escape route exists!");
+
+        DeployFormationSitingPolicy.LegacySoloEvaluation noEscape =
+                DeployFormationSitingPolicy.evaluateLegacySolo(
+                        soloFacts(true, true, true, false, true));
+        assertEquals(DeployFormationSitingPolicy.LegacySoloOutcome.OBJECTIVE_NO_ESCAPE,
+                noEscape.outcome());
+        assertDelta(noEscape.result(), "V29-obj-flip", -150.0f);
+
+        DeployFormationSitingPolicy.LegacySoloEvaluation staging =
+                DeployFormationSitingPolicy.evaluateLegacySolo(
+                        soloFacts(true, true, false, false, true));
+        assertEquals(DeployFormationSitingPolicy.LegacySoloOutcome.STAGING,
+                staging.outcome());
+        assertDelta(staging.result(), "V38-staging", -80.0f);
+
+        DeployFormationSitingPolicy.LegacySoloEvaluation caution =
+                DeployFormationSitingPolicy.evaluateLegacySolo(
+                        soloFacts(true, true, false, false, false));
+        assertEquals(DeployFormationSitingPolicy.LegacySoloOutcome.CAUTION,
+                caution.outcome());
+        assertDelta(caution.result(), "V38-solo-caution", -150.0f);
+
+        assertTrue(DeployFormationSitingPolicy.evaluateLegacySolo(
+                soloFacts(false, true, true, true, true)).result().operations().isEmpty());
+        assertTrue(DeployFormationSitingPolicy.evaluateLegacySolo(
+                soloFacts(true, false, true, true, true)).result().operations().isEmpty());
+    }
+
+    @Test
+    public void strongReinforcementPreservesVaderPriorityAndBuddyThreshold() {
+        DeployFormationSitingPolicy.StrongReinforcementEvaluation vader =
+                DeployFormationSitingPolicy.evaluateStrongReinforcement(
+                        strongFacts(true, true, true, 6.0f, 2.0f));
+        assertEquals(DeployFormationSitingPolicy.StrongReinforcementOutcome.VADER,
+                vader.outcome());
+        assertDelta(vader.result(), "V38-reinforce-vader", 400.0f);
+
+        DeployFormationSitingPolicy.StrongReinforcementEvaluation ally =
+                DeployFormationSitingPolicy.evaluateStrongReinforcement(
+                        strongFacts(true, false, true, 4.0f, 2.0f));
+        assertEquals(DeployFormationSitingPolicy.StrongReinforcementOutcome.ALLY,
+                ally.outcome());
+        assertDelta(ally.result(), "V38-reinforce-ally", 200.0f);
+
+        DeployFormationSitingPolicy.StrongReinforcementEvaluation threshold =
+                DeployFormationSitingPolicy.evaluateStrongReinforcement(
+                        strongFacts(true, false, true, 4.0f, 3.0f));
+        assertEquals(DeployFormationSitingPolicy.StrongReinforcementOutcome.ALLY_REACHES_THRESHOLD,
+                threshold.outcome());
+        assertDelta(threshold.result(), "V38-reinforce-ally", 300.0f);
+    }
+
+    @Test
+    public void buddySeekRequiresOneVulnerableAllyAtABattleground() {
+        DeployFormationSitingPolicy.BuddySeekEvaluation nonBattleground =
+                DeployFormationSitingPolicy.evaluateBuddySeek(
+                        buddySeekFacts(true, true, false));
+        assertEquals(DeployFormationSitingPolicy.BuddySeekOutcome.NON_BATTLEGROUND_SKIP,
+                nonBattleground.outcome());
+        assertTrue(nonBattleground.result().operations().isEmpty());
+
+        DeployFormationSitingPolicy.BuddySeekEvaluation protect =
+                DeployFormationSitingPolicy.evaluateBuddySeek(
+                        buddySeekFacts(true, true, true));
+        assertEquals(DeployFormationSitingPolicy.BuddySeekOutcome.PROTECT,
+                protect.outcome());
+        assertOperation(protect.result().operations().get(0), "V29-buddy-seek",
+                TraceDomainId.SOLO_FORMATION, 200.0f,
+                "V29 BUDDY-SEEK: Deploy to protect vulnerable Lando (power 3) at Cloud City: Guest Quarters!");
+
+        assertTrue(DeployFormationSitingPolicy.evaluateBuddySeek(
+                buddySeekFacts(true, false, true)).result().operations().isEmpty());
+    }
+
+    @Test
+    public void huntGroupingPreservesEngageEmptyAndScatterBranches() {
+        DeployFormationSitingPolicy.HuntGroupingEvaluation engage =
+                DeployFormationSitingPolicy.evaluateHuntGrouping(
+                        huntFacts(true, true, false, 5, 6.0f, false));
+        assertEquals(DeployFormationSitingPolicy.HuntGroupingOutcome.GROUP_AND_ENGAGE,
+                engage.outcome());
+        assertDelta(engage.result(), "V35.1-hunt-group", 400.0f);
+
+        DeployFormationSitingPolicy.HuntGroupingEvaluation empty =
+                DeployFormationSitingPolicy.evaluateHuntGrouping(
+                        huntFacts(true, true, false, 4, 0.0f, false));
+        assertEquals(DeployFormationSitingPolicy.HuntGroupingOutcome.GROUP_EMPTY,
+                empty.outcome());
+        assertDelta(empty.result(), "V35.1-hunt-group", 50.0f);
+
+        DeployFormationSitingPolicy.HuntGroupingEvaluation scatter =
+                DeployFormationSitingPolicy.evaluateHuntGrouping(
+                        huntFacts(true, false, false, 4, 0.0f, false));
+        assertEquals(DeployFormationSitingPolicy.HuntGroupingOutcome.SCATTER_NEUTRAL,
+                scatter.outcome());
+        assertDelta(scatter.result(), "V40-hunt-scatter", 0.0f);
+
+        assertTrue(DeployFormationSitingPolicy.evaluateHuntGrouping(
+                huntFacts(true, false, false, 4, 0.0f, true)).result().operations().isEmpty());
+        assertTrue(DeployFormationSitingPolicy.evaluateHuntGrouping(
+                huntFacts(true, true, true, 4, 6.0f, false)).result().operations().isEmpty());
+    }
+
+    @Test
+    public void positiveSiteAndFormationScoresRetainLegacyOrder() {
+        PolicyResult highDrain = DeployFormationSitingPolicy.scoreHighDrainSite(
+                new DeployFormationSitingPolicy.HighDrainSiteFacts(
+                        ACTION_ID, DESTINATION, 2));
+        assertDelta(highDrain, "V40-high-drain", 200.0f);
+        assertTrue(DeployFormationSitingPolicy.scoreHighDrainSite(
+                new DeployFormationSitingPolicy.HighDrainSiteFacts(
+                        ACTION_ID, DESTINATION, 1)).operations().isEmpty());
+
+        PolicyResult goodDrain = DeployFormationSitingPolicy.scoreGoodDrainSite(
+                new DeployFormationSitingPolicy.GoodDrainSiteFacts(
+                        ACTION_ID, DESTINATION, true, false));
+        assertDelta(goodDrain, "V40-good-drain", 100.0f);
+        assertTrue(DeployFormationSitingPolicy.scoreGoodDrainSite(
+                new DeployFormationSitingPolicy.GoodDrainSiteFacts(
+                        ACTION_ID, DESTINATION, false, false)).operations().isEmpty());
+
+        DeployFormationSitingPolicy.PositiveFormationEvaluation crossing =
+                DeployFormationSitingPolicy.evaluatePositiveFormation(
+                        positive("Trooper With Blaster", 1, 3.0f, 4.0f, 2.0f));
+        assertEquals(List.of(
+                        DeployFormationSitingPolicy.PositiveFormationOutcome.FORTIFY_BATTLEGROUND,
+                        DeployFormationSitingPolicy.PositiveFormationOutcome.BUDDY_DESTINY,
+                        DeployFormationSitingPolicy.PositiveFormationOutcome.ARMED),
+                crossing.outcomes());
+        assertEquals(List.of("V51-fortify", "V51-buddy-destiny", "V51-armed"),
+                crossing.result().operations().stream()
+                        .map(operation -> operation.ruleArmId().id()).toList());
+        assertEquals(List.of(500.0f, 400.0f, 150.0f),
+                crossing.result().operations().stream()
+                        .map(PolicyOperation::delta).toList());
+
+        DeployFormationSitingPolicy.PositiveFormationEvaluation full =
+                DeployFormationSitingPolicy.evaluatePositiveFormation(
+                        positive("Officer", 1, 5.0f, 2.0f, 1.0f));
+        assertEquals(List.of(
+                        DeployFormationSitingPolicy.PositiveFormationOutcome.REINFORCE,
+                        DeployFormationSitingPolicy.PositiveFormationOutcome.BUDDY_FULL),
+                full.outcomes());
+
+        DeployFormationSitingPolicy.PositiveFormationEvaluation establish =
+                DeployFormationSitingPolicy.evaluatePositiveFormation(
+                        positive("Officer", 0, 0.0f, 2.0f, 2.0f));
+        assertEquals(List.of(
+                        DeployFormationSitingPolicy.PositiveFormationOutcome.ESTABLISH_BATTLEGROUND),
+                establish.outcomes());
+        assertDelta(establish.result(), "V51-establish", 400.0f);
+    }
+
     private static PolicyResult evaluate(CharacterFormationFacts facts) {
         return DeployFormationSitingPolicy.evaluate(ACTION_ID, facts);
     }
@@ -102,6 +266,46 @@ public class DeployFormationSitingPolicyTest {
                 ourLocation, opponentLocation, friendlies, opponents,
                 emptyTable, "Darth Vader", ability,
                 0.0f, 0.0f, false);
+    }
+
+    private static DeployFormationSitingPolicy.LegacySoloFacts soloFacts(
+            boolean eligible, boolean wouldBeSolo, boolean objectiveFlip,
+            boolean escape, boolean staging) {
+        return new DeployFormationSitingPolicy.LegacySoloFacts(
+                ACTION_ID, "Weak Trooper", 3, DESTINATION,
+                eligible, wouldBeSolo, objectiveFlip, escape, staging);
+    }
+
+    private static DeployFormationSitingPolicy.StrongReinforcementFacts strongFacts(
+            boolean eligible, boolean vader, boolean strongAlly,
+            float allyAbility, float deployingAbility) {
+        return new DeployFormationSitingPolicy.StrongReinforcementFacts(
+                ACTION_ID, "Officer", eligible, vader, strongAlly,
+                allyAbility, deployingAbility, 7.0f);
+    }
+
+    private static DeployFormationSitingPolicy.BuddySeekFacts buddySeekFacts(
+            boolean eligible, boolean vulnerable, boolean battleground) {
+        return new DeployFormationSitingPolicy.BuddySeekFacts(
+                ACTION_ID, eligible, vulnerable, battleground,
+                "Lando", 3, DESTINATION);
+    }
+
+    private static DeployFormationSitingPolicy.HuntGroupingFacts huntFacts(
+            boolean eligible, boolean atVader, boolean deployingVader,
+            int cardPower, float opponentPower, boolean objectiveRelevant) {
+        return new DeployFormationSitingPolicy.HuntGroupingFacts(
+                ACTION_ID, eligible, "The Grand Inquisitor", cardPower,
+                DESTINATION, atVader, deployingVader, opponentPower,
+                objectiveRelevant);
+    }
+
+    private static DeployFormationSitingPolicy.PositiveFormationFacts positive(
+            String cardName, int friendlies, float friendlyAbility,
+            float deployingAbility, float drain) {
+        return new DeployFormationSitingPolicy.PositiveFormationFacts(
+                ACTION_ID, cardName, DESTINATION, friendlies,
+                friendlyAbility, deployingAbility, drain);
     }
 
     private static void assertBuddy(CharacterFormationFacts facts,

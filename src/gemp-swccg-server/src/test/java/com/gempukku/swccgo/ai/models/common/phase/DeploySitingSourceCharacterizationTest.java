@@ -37,6 +37,21 @@ public class DeploySitingSourceCharacterizationTest {
                 "DeployFormationSitingPolicy.evaluateCommittedReinforcement("));
         assertTrue(destination.contains(
                 "DeployFormationSitingPolicy.evaluateBuddyTopology("));
+        for (String call : new String[]{
+                "DeployFormationSitingPolicy.evaluateLegacySolo(",
+                "DeployFormationSitingPolicy.evaluateStrongReinforcement(",
+                "DeployFormationSitingPolicy.evaluateBuddySeek(",
+                "DeployFormationSitingPolicy.evaluateHuntGrouping(",
+                "DeployFormationSitingPolicy.scoreHighDrainSite(",
+                "DeployFormationSitingPolicy.scoreGoodDrainSite(",
+                "DeployFormationSitingPolicy.evaluatePositiveFormation("}) {
+            assertTrue(call, deploy.contains(call));
+        }
+
+        assertFalse(deploy.contains("pairedDeployPossible"));
+        assertFalse(deploy.contains("V38 SOLO CAUTION: %s (power %d) solo"));
+        assertFalse(deploy.contains("V35.1 HUNT GROUP+ENGAGE: Deploy %s"));
+        assertFalse(deploy.contains("V51 BUDDY DESTINY: Ability %.0f"));
     }
 
     @Test

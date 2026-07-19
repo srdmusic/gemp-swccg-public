@@ -7507,3 +7507,21 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     reflection lookup, bot parity, AI-only scope, and metadata boundaries. Runtime reload and
     live-game proof remain pending on the external runtime. AI source only; no GEMP engine or
     player-decision changes.
+
+  ════ V263 (2026-07-19): consolidate DEPLOY formation and siting scoring ════
+    Shared AI-only DeployFormationSitingPolicy now owns the duplicated legacy solo/objective-flip,
+    staging and solo-caution, Vader/strong-ally reinforcement, buddy-seek battleground gate, Hunt
+    grouping, high/good-drain, and positive fortify/establish/reinforce/buddy/armed score ladders.
+    Rando and ChosenOne retain all game-state reads, location-loop control, exception boundaries,
+    objective lookup, and diagnostics in mirrored adapters. Scores, thresholds, reasons, operation
+    order, and terminal behavior are unchanged. The unused V67bl paired-deploy calculation and its
+    private support reads were removed because they had no score or control-flow consumer. First
+    independent review caught a live V53 undercover-spy reserve diagnostic; the exact read and log
+    were restored in both adapters before the final PASS. Focused policy/source/parity 22/0/0/0,
+    DEPLOY-named 169/0/0/0, full reactor 1712/0/0/26, source parity and characterization, AI-only
+    boundary, forbidden-symbol scan, diff check, compiled-artifact gates, and clean package passed.
+    Server jar SHA-256 aceabe45911facdcb6a7a6e83941e8a594291e66b29793b5d376fec9d56e523b and web
+    jar SHA-256 c4c0033c502b7c8f5f571c4c9b9feda341bbdf1e3319744ddb6dc38dc93e89c7 contain the shared
+    policy. Independent re-review passed restored diagnostics, mirror parity, score/reason order,
+    thresholds, lazy reads, exception boundaries, and dead-read removal. Runtime reload and live-game
+    proof remain pending on the external runtime. AI source only; no GEMP engine or player-decision changes.

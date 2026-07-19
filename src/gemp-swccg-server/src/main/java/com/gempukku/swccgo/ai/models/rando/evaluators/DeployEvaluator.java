@@ -13,6 +13,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopeFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
@@ -24,6 +25,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.common.Phase;
@@ -1595,68 +1597,13 @@ public class DeployEvaluator extends ActionEvaluator {
                             }
 
                             if (wouldBeSolo) {
-                                // --- Calculate Force reserve needed (maint + interrupts) ---
-                                // T2 MOVE #1 COMMIT-2 (2026-07-06): on-table maintenance
-                                // obligation from the shared per-decision ForceReserveService
-                                // cache; THIS card's own maintain cost stays a local add
-                                // below. V67bl removed the paired solo exception, so these facts now
-                                // affect diagnostics only. Superseded inline scan removed; see git.
-                                int maintObligation = context.getForceReserveFacts().maintenanceObligation;
-                                // Add maintenance for THIS card if applicable
-                                if (blueprint.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-                                    maintObligation += com.gempukku.swccgo.ai.models.common.strategy
-                                        .MaintenanceFacts.maintainCost(blueprint);
-                                }
-                                // Only reserve for interrupts when opponent has Draw Their Fire
-                                // T2 MOVE #1 COMMIT-2 (2026-07-06): ForceReserveService preserves
-                                // exact-opponent, in-play detection and the 1 Force fact. V67bl means
-                                // pairedDeployPossible has no score consumer. Superseded scan removed;
-                                // git preserves it.
-                                int interruptReserve = context.getForceReserveFacts().dtfActive ? 1 : 0;
-                                // V53: Reserve 1 force per undercover spy for movement next turn.
-                                // If opponent moves away from our spy, we need force to follow them.
-                                // T2 MOVE #1 COMMIT-2 (2026-07-06): ForceReserveService owns the
-                                // count. Its in-play gate is behavior-neutral because GameState clears
-                                // the undercover flag off table. V67bl leaves no score consumer.
-                                // Superseded inline scan removed 2026-07-13; git preserves it.
-                                // The diagnostic V53 log remains live.
                                 int spyMoveReserve = context.getForceReserveFacts().undercoverSpyCount;
                                 if (spyMoveReserve > 0) {
                                     LOG.info("V53 SPY RESERVE: Reserving {} force for {} undercover spy movement(s)",
                                         spyMoveReserve, spyMoveReserve);
                                 }
 
-                                int forceReserveNeeded = maintObligation + interruptReserve + spyMoveReserve;
-
-                                // --- Exception 1: Paired deploy available ---
-                                // Check if another character in hand can deploy to same location
-                                // AND we can afford both + reserve
-                                boolean pairedDeployPossible = false;
-                                int forceAfterThis = availableForce - cost;
-                                if (hand != null && forceAfterThis > forceReserveNeeded) {
-                                    for (PhysicalCard handCard : hand) {
-                                        if (handCard == null || handCard == card) continue;
-                                        SwccgCardBlueprint hBp = handCard.getBlueprint();
-                                        if (hBp == null) continue;
-                                        if (hBp.getCardCategory() != CardCategory.CHARACTER) continue;
-                                        Float hCostF = hBp.getDeployCost();
-                                        int hCost = (hCostF != null) ? hCostF.intValue() : 0;
-                                        // Add maintenance for the buddy if applicable
-                                        int buddyMaint = 0;
-                                        if (hBp.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-                                            buddyMaint = hCost;
-                                        }
-                                        int totalNeeded = hCost + forceReserveNeeded + buddyMaint;
-                                        if (forceAfterThis >= totalNeeded) {
-                                            pairedDeployPossible = true;
-                                            LOG.info("V29 PAIRED: {} can follow {} (cost {}, {} Force left after both + reserve)",
-                                                hBp.getTitle(), card.getTitle(), hCost, forceAfterThis - hCost);
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                // --- Exception 2: Objective-flip deploy ---
+                                // Objective-flip and staging facts remain adapter-owned.
                                 // Deploying to a location that helps flip the objective is strategically
                                 // critical (e.g., occupying Bespin for Dark Deal/Cloud City Occupation).
                                 boolean isObjectiveFlipDeploy = false;
@@ -1697,41 +1644,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
 
-                                // --- Apply penalties / allow exceptions ---
-                                // V67bl (Steve, 2026-05-11): V29 PAIRED "solo OK" exception REMOVED.
-                                //
-                                // Old rule: if any character in hand had force-cost numbers
-                                // that allowed it to "follow" the solo char, V29 PAIRED gave
-                                // 0 penalty — full pass on solo deploy. But there's no
-                                // guarantee the hypothetical buddy goes to the SAME site, and
-                                // in replay 6fqi4jm1kkp7e9i8 Stormtrooper Patrol got a free
-                                // solo pass to Guest Quarters because "Vader in hand could
-                                // follow" — Vader went to Docking Bay instead, Stormtrooper
-                                // died to a Jedi stack.
-                                //
-                                // V38 SOLO CAUTION (-150) below now applies regardless of
-                                // hand contents. The "buddy follows" credit is properly
-                                // earned later by V38 REINFORCE STRONG ALLY (+300) when the
-                                // buddy actually deploys to where the solo char IS — paying
-                                // for actual co-location, not hypothetical plans.
-                                if (isObjectiveFlipDeploy) {
-                                    // Exception 2: Allow solo for objective flip, penalize if no escape route
-                                    if (hasEscapeRoute) {
-                                        action.addReasoning(
-                                            String.format("V29 OBJ-FLIP: %s solo at '%s' to help flip objective — escape route exists!",
-                                                card.getTitle(), targetLoc != null ? targetLoc.getTitle() : "?"), 50.0f);
-                                        LOG.info("V29 OBJ-FLIP: Allowing solo {} for objective flip — has escape route", card.getTitle());
-                                    } else {
-                                        // Strong preference penalty — still allow but it's risky
-                                        action.addReasoning(
-                                            String.format("V29 OBJ-FLIP: %s solo at '%s' for flip but NO escape route — risky!",
-                                                card.getTitle(), targetLoc != null ? targetLoc.getTitle() : "?"), -150.0f);
-                                        LOG.warn("V29 OBJ-FLIP: Solo {} for flip but no escape route — penalizing", card.getTitle());
-                                    }
-                                } else {
-                                    // V38: Check if this is a STAGING deploy — non-battleground
-                                    // adjacent to a battleground where we can buddy up next turn
-                                    boolean isStagingDeploy = false;
+                                boolean isStagingDeploy = false;
+                                if (!isObjectiveFlipDeploy) {
                                     if (targetLoc != null && targetLoc.getBlueprint() != null) {
                                         boolean isNonBattleground = !targetLoc.getBlueprint().hasIcon(
                                             com.gempukku.swccgo.common.Icon.DARK_FORCE)
@@ -1757,23 +1671,36 @@ public class DeployEvaluator extends ActionEvaluator {
                                             }
                                         }
                                     }
+                                }
 
-                                    if (isStagingDeploy) {
-                                        // V38: Staging deploy — mild penalty, can move to buddy next turn
-                                        action.addReasoning(String.format(
-                                            "V38 STAGING: %s to non-battleground — move to buddy up next turn",
-                                            card.getTitle()), -80.0f);
+                                DeployFormationSitingPolicy.LegacySoloEvaluation soloEvaluation =
+                                    DeployFormationSitingPolicy.evaluateLegacySolo(
+                                        new DeployFormationSitingPolicy.LegacySoloFacts(
+                                            actionId, card.getTitle(), powerVal,
+                                            targetLoc != null ? targetLoc.getTitle() : "?",
+                                            true, true, isObjectiveFlipDeploy,
+                                            hasEscapeRoute, isStagingDeploy));
+                                applySharedPolicy(action, decisionId, actionId,
+                                    "deploy-legacy-solo", soloEvaluation.result());
+                                switch (soloEvaluation.outcome()) {
+                                    case OBJECTIVE_WITH_ESCAPE:
+                                        LOG.info("V29 OBJ-FLIP: Allowing solo {} for objective flip — has escape route",
+                                            card.getTitle());
+                                        break;
+                                    case OBJECTIVE_NO_ESCAPE:
+                                        LOG.warn("V29 OBJ-FLIP: Solo {} for flip but no escape route — penalizing",
+                                            card.getTitle());
+                                        break;
+                                    case STAGING:
                                         LOG.info("V38 STAGING: {} deploying to staging site — can buddy next turn (-80)",
                                             card.getTitle());
-                                    } else {
-                                        // V38: Softer penalty than old -300 — allow with mild discourage
-                                        action.addReasoning(
-                                            String.format("V38 SOLO CAUTION: %s (power %d) solo — vulnerable but acceptable",
-                                                card.getTitle(), powerVal),
-                                            -150.0f); // V38: Reduced from -300
+                                        break;
+                                    case CAUTION:
                                         LOG.info("V38 SOLO CAUTION: {} (power {}) — mild penalty (-150)",
                                             card.getTitle(), powerVal);
-                                    }
+                                        break;
+                                    case NONE:
+                                        break;
                                 }
                             }
                         } catch (Exception e) {
@@ -1808,20 +1735,18 @@ public class DeployEvaluator extends ActionEvaluator {
                                     if (cAbVal >= 4) strongAllyHere = true;
                                 }
 
-                                if (vaderHere) {
-                                    action.addReasoning(String.format(
-                                        "V38 REINFORCE VADER: Deploy %s with Vader — buddy rotation!",
-                                        card.getTitle()), 400.0f);
-                                    LOG.warn("V38 REINFORCE VADER: {} deploying to Vader's site (+400)", card.getTitle());
-                                } else if (strongAllyHere) {
-                                    float reinBonus = 200.0f;
-                                    if (allyAbilityHere + abilityVal >= RandoConfig.ABILITY_BUDDY_THRESHOLD) {
-                                        reinBonus = 300.0f; // Reaches buddy threshold!
-                                    }
-                                    action.addReasoning(String.format(
-                                        "V38 REINFORCE ALLY: Deploy %s to strong ally (ability %.0f + %.0f = %.0f)",
-                                        card.getTitle(), allyAbilityHere, (float)abilityVal,
-                                        allyAbilityHere + abilityVal), reinBonus);
+                                DeployFormationSitingPolicy.StrongReinforcementEvaluation reinforcement =
+                                    DeployFormationSitingPolicy.evaluateStrongReinforcement(
+                                        new DeployFormationSitingPolicy.StrongReinforcementFacts(
+                                            actionId, card.getTitle(), true, vaderHere,
+                                            strongAllyHere, allyAbilityHere, abilityVal,
+                                            RandoConfig.ABILITY_BUDDY_THRESHOLD));
+                                applySharedPolicy(action, decisionId, actionId,
+                                    "deploy-strong-reinforcement", reinforcement.result());
+                                if (reinforcement.outcome()
+                                        == DeployFormationSitingPolicy.StrongReinforcementOutcome.VADER) {
+                                    LOG.warn("V38 REINFORCE VADER: {} deploying to Vader's site (+400)",
+                                        card.getTitle());
                                 }
                                 break;
                             }
@@ -1857,23 +1782,26 @@ public class DeployEvaluator extends ActionEvaluator {
                                             allyPower = ap != null ? ap.intValue() : 0;
                                         }
                                         if (allyPower < RandoConfig.MIN_SOLO_DEPLOY_POWER) {
-                                            // V67ab (Steve, 2026-05-03): Only protect at BATTLEGROUNDS.
-                                            // Solo allies at non-BG sites don't need protection (no
-                                            // battles). Symptom: Mira deployed to The Works to
-                                            // 'protect' Sidius — wasted Mira at non-BG.
                                             boolean v67abBgSeek = false;
                                             try {
                                                 v67abBgSeek = game.getModifiersQuerying()
                                                     .isBattleground(gameState, loc, null);
                                             } catch (Exception e) { /* ignore */ }
-                                            if (!v67abBgSeek) {
+
+                                            DeployFormationSitingPolicy.BuddySeekEvaluation buddySeek =
+                                                DeployFormationSitingPolicy.evaluateBuddySeek(
+                                                    new DeployFormationSitingPolicy.BuddySeekFacts(
+                                                        actionId, true, true,
+                                                        v67abBgSeek, soloAlly.getTitle(), allyPower,
+                                                        locTitle));
+                                            applySharedPolicy(action, decisionId, actionId,
+                                                "deploy-buddy-seek", buddySeek.result());
+                                            if (buddySeek.outcome()
+                                                    == DeployFormationSitingPolicy.BuddySeekOutcome.NON_BATTLEGROUND_SKIP) {
                                                 LOG.info("V67ab BUDDY-SEEK SKIP: {} non-BG, {} doesn't need protection here",
                                                     locTitle, soloAlly.getTitle());
-                                            } else {
-                                                action.addReasoning(
-                                                    String.format("V29 BUDDY-SEEK: Deploy to protect vulnerable %s (power %d) at %s!",
-                                                        soloAlly.getTitle(), allyPower, locTitle),
-                                                    200.0f);
+                                            } else if (buddySeek.outcome()
+                                                    == DeployFormationSitingPolicy.BuddySeekOutcome.PROTECT) {
                                                 LOG.warn("V29 BUDDY-SEEK: {} deploying to protect vulnerable {} at {}!",
                                                     card.getTitle(), soloAlly.getTitle(), locTitle);
                                             }
@@ -1929,42 +1857,16 @@ public class DeployEvaluator extends ActionEvaluator {
                                         ? card.getTitle().toLowerCase(Locale.ROOT) : "";
                                     boolean isNotVader = !deployCardTitle.contains("vader");
 
+                                    float oppAtVaderLoc = 0;
+                                    boolean isObjRelevant = false;
                                     if (deploysToVaderLoc && isNotVader) {
-                                        // V35.1: Only give grouping bonus if opponents are at Vader's location
-                                        // or nowhere else on the board. Don't group at empty locations!
-                                        float oppAtVaderLoc = 0;
                                         try {
                                             String v351Oid = game.getOpponent(playerId);
                                             oppAtVaderLoc = game.getModifiersQuerying().getTotalPowerAtLocation(
                                                 gameState, vaderLoc, v351Oid, false, false);
                                         } catch (Exception e) { /* ignore */ }
-
-                                        if (oppAtVaderLoc > 0) {
-                                            // Opponents at Vader's location — GREAT, deploy to fight!
-                                            float groupBonus = 350.0f; // V35.1: Raised from 250
-                                            if (powerVal >= 5) groupBonus += 50.0f;
-                                            action.addReasoning(String.format(
-                                                "V35.1 HUNT GROUP+ENGAGE: Deploy %s WITH Vader at %s — opponents here (power %.0f)!",
-                                                card.getTitle(), vaderLoc.getTitle(), oppAtVaderLoc), groupBonus);
-                                            LOG.warn("V35.1 HUNT GROUP+ENGAGE: {} with Vader at {} — opponents power={} (+{})",
-                                                card.getTitle(), vaderLoc.getTitle(), (int)oppAtVaderLoc, (int)groupBonus);
-                                        } else {
-                                            // Vader is at an EMPTY location — grouping here wastes deployment
-                                            // Only mild bonus (better to deploy where opponents are)
-                                            float groupBonus = 50.0f; // V35.1: Reduced from 250!
-                                            action.addReasoning(String.format(
-                                                "V35.1 HUNT GROUP (EMPTY): Deploy %s with Vader at %s — but NO opponents here!",
-                                                card.getTitle(), vaderLoc.getTitle()), groupBonus);
-                                            LOG.warn("V35.1 HUNT GROUP EMPTY: {} with Vader at {} — no opponents (only +{})",
-                                                card.getTitle(), vaderLoc.getTitle(), (int)groupBonus);
-                                        }
                                     } else if (isNotVader && !deploysToVaderLoc) {
-                                        // Deploying AWAY from Vader — penalize
-                                        // Exception: if deploying to a location where we need presence for objective
-                                        boolean isObjRelevant = false;
                                         if (huntDeployAnalyzer.isFlipped()) {
-                                            // Post-flip: protection locations are also important
-                                            // Don't penalize deploying to flip-back protection locations
                                             try {
                                                 for (PhysicalCard loc : gameState.getTopLocations()) {
                                                     if (loc == null || loc.getTitle() == null) continue;
@@ -1977,15 +1879,33 @@ public class DeployEvaluator extends ActionEvaluator {
                                                 }
                                             } catch (Exception e) { /* ignore */ }
                                         }
+                                    }
 
-                                        if (!isObjRelevant) {
-                                            // V40: Hunt scatter neutralized — deploy freely
-                                            action.addReasoning(String.format(
-                                                "V40 HUNT SCATTER: %s deploying away from Vader at %s (neutral)",
-                                                card.getTitle(), vaderLoc.getTitle()), 0.0f);
+                                    DeployFormationSitingPolicy.HuntGroupingEvaluation huntGrouping =
+                                        DeployFormationSitingPolicy.evaluateHuntGrouping(
+                                            new DeployFormationSitingPolicy.HuntGroupingFacts(
+                                                actionId, true, card.getTitle(), powerVal,
+                                                vaderLoc.getTitle(), deploysToVaderLoc,
+                                                !isNotVader, oppAtVaderLoc, isObjRelevant));
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-hunt-grouping", huntGrouping.result());
+                                    switch (huntGrouping.outcome()) {
+                                        case GROUP_AND_ENGAGE:
+                                            float groupBonus = huntGrouping.result().operations().get(0).delta();
+                                            LOG.warn("V35.1 HUNT GROUP+ENGAGE: {} with Vader at {} — opponents power={} (+{})",
+                                                card.getTitle(), vaderLoc.getTitle(), (int)oppAtVaderLoc,
+                                                (int)groupBonus);
+                                            break;
+                                        case GROUP_EMPTY:
+                                            LOG.warn("V35.1 HUNT GROUP EMPTY: {} with Vader at {} — no opponents (only +50)",
+                                                card.getTitle(), vaderLoc.getTitle());
+                                            break;
+                                        case SCATTER_NEUTRAL:
                                             LOG.warn("V40 HUNT SCATTER: {} NOT at Vader's location ({}) — neutral (was -600)",
                                                 card.getTitle(), vaderLoc.getTitle());
-                                        }
+                                            break;
+                                        case NONE:
+                                            break;
                                     }
                                 }
                             }
@@ -2399,10 +2319,13 @@ public class DeployEvaluator extends ActionEvaluator {
                                         int oppIcons = (oppSide40 == com.gempukku.swccgo.common.Side.DARK)
                                             ? v40LocBp.getIconCount(com.gempukku.swccgo.common.Icon.DARK_FORCE)
                                             : v40LocBp.getIconCount(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
-                                        if (oppIcons >= 2) {
-                                            action.addReasoning(String.format(
-                                                "V40 HIGH DRAIN: %s has %d opponent force icons — high drain potential!",
-                                                v40Loc.getTitle(), oppIcons), 200.0f);
+                                        PolicyResult highDrainSite =
+                                            DeployFormationSitingPolicy.scoreHighDrainSite(
+                                                new DeployFormationSitingPolicy.HighDrainSiteFacts(
+                                                    actionId, v40Loc.getTitle(), oppIcons));
+                                        applySharedPolicy(action, decisionId, actionId,
+                                            "deploy-high-drain-site", highDrainSite);
+                                        if (!highDrainSite.operations().isEmpty()) {
                                             LOG.warn("V40 HIGH DRAIN: {} to {} ({} opp icons) — +200", card.getTitle(), v40Loc.getTitle(), oppIcons);
                                         }
                                     }
@@ -2417,10 +2340,14 @@ public class DeployEvaluator extends ActionEvaluator {
                                             String gtLower = gameText.toLowerCase(Locale.ROOT);
                                             boolean hasDrainReduction = gtLower.contains("-1 force drain") || gtLower.contains("reduce")
                                                 || gtLower.contains("force drain -1") || gtLower.contains("drain here is -");
-                                            if (!hasDrainReduction) {
-                                                action.addReasoning(String.format(
-                                                    "V40 GOOD DRAIN SITE: %s has no drain reduction in game text!",
-                                                    v40Loc.getTitle()), 100.0f);
+                                            PolicyResult goodDrainSite =
+                                                DeployFormationSitingPolicy.scoreGoodDrainSite(
+                                                    new DeployFormationSitingPolicy.GoodDrainSiteFacts(
+                                                        actionId, v40Loc.getTitle(), true,
+                                                        hasDrainReduction));
+                                            applySharedPolicy(action, decisionId, actionId,
+                                                "deploy-good-drain-site", goodDrainSite);
+                                            if (!goodDrainSite.operations().isEmpty()) {
                                                 LOG.warn("V40 GOOD DRAIN SITE: {} to {} — no drain reduction — +100",
                                                     card.getTitle(), v40Loc.getTitle());
                                             }
@@ -2451,31 +2378,6 @@ public class DeployEvaluator extends ActionEvaluator {
                                             gameState, v40Loc, v40Pid);
                                     } catch (Exception e) { /* default 0 */ }
 
-                                    // V51: Reinforcement bonus scales with drain value
-                                    if (v40FriendlyCount > 0 && v51OurDrain >= 2.0f) {
-                                        // Drain 2+ site with friendlies — THIS is the battleground
-                                        action.addReasoning(String.format(
-                                            "V51 FORTIFY BATTLEGROUND: Joining %d friendlies at %s (our drain %.0f) — this is THE fight!",
-                                            v40FriendlyCount, v40Loc.getTitle(), v51OurDrain), 500.0f);
-                                        LOG.warn("V51 FORTIFY BATTLEGROUND: {} joins {} friendlies at {} (drain {}) — +500",
-                                            card.getTitle(), v40FriendlyCount, v40Loc.getTitle(), (int)v51OurDrain);
-                                    } else if (v40FriendlyCount == 0 && v51OurDrain >= 2.0f) {
-                                        // Drain 2+ site, establishing first presence
-                                        action.addReasoning(String.format(
-                                            "V51 ESTABLISH BATTLEGROUND: First deploy to %s (our drain %.0f) — start the army!",
-                                            v40Loc.getTitle(), v51OurDrain), 400.0f);
-                                        LOG.warn("V51 ESTABLISH BATTLEGROUND: {} first to {} (drain {}) — +400",
-                                            card.getTitle(), v40Loc.getTitle(), (int)v51OurDrain);
-                                    } else if (v40FriendlyCount > 0) {
-                                        // Non-drain-2 site but has friendlies — still good to reinforce
-                                        action.addReasoning(String.format(
-                                            "V51 REINFORCE: Joining %d friendlies at %s!",
-                                            v40FriendlyCount, v40Loc.getTitle()), 300.0f);
-                                        LOG.warn("V51 REINFORCE: {} joins {} friendlies at {} — +300",
-                                            card.getTitle(), v40FriendlyCount, v40Loc.getTitle());
-                                    }
-
-                                    // V51: Buddy system — ability thresholds with higher bonuses
                                     float v40CardAbility = 0;
                                     if (card.getBlueprint().hasAbilityAttribute()) {
                                         Float v40ab2 = card.getBlueprint().getAbility();
@@ -2483,38 +2385,47 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                     float totalAbilityAfter = v40FriendlyAbility + v40CardAbility;
 
-                                    if (v40FriendlyAbility < 4.0f && totalAbilityAfter >= 4.0f && v40FriendlyCount > 0) {
-                                        // V51: Deploy enables battle destiny at this site!
-                                        action.addReasoning(String.format(
-                                            "V51 BUDDY DESTINY: Ability %.0f → %.0f (>= 4) at %s — battle destiny ENABLED!",
-                                            v40FriendlyAbility, totalAbilityAfter, v40Loc.getTitle()), 400.0f);
-                                        LOG.warn("V51 BUDDY DESTINY: {} enables battle destiny at {} (ability {} → {}) — +400",
-                                            card.getTitle(), v40Loc.getTitle(), (int)v40FriendlyAbility, (int)totalAbilityAfter);
-                                    } else if (totalAbilityAfter >= 7.0f && v40FriendlyCount > 0) {
-                                        // V51: Full buddy system — ideal ability threshold
-                                        action.addReasoning(String.format(
-                                            "V51 BUDDY FULL: Ability total %.0f >= 7 at %s — full buddy system!",
-                                            totalAbilityAfter, v40Loc.getTitle()), 500.0f);
-                                        LOG.warn("V51 BUDDY FULL: {} — total ability {} at {} — +500",
-                                            card.getTitle(), (int)totalAbilityAfter, v40Loc.getTitle());
-                                    } else if (totalAbilityAfter >= 4.0f && v40FriendlyCount > 0) {
-                                        // V51: Ability already >= 4, reinforcing toward 7
-                                        action.addReasoning(String.format(
-                                            "V51 BUDDY REINFORCE: Ability %.0f → %.0f at %s — building toward 7!",
-                                            v40FriendlyAbility, totalAbilityAfter, v40Loc.getTitle()), 200.0f);
-                                        LOG.warn("V51 BUDDY REINFORCE: {} ability {} → {} at {} — +200",
-                                            card.getTitle(), (int)v40FriendlyAbility, (int)totalAbilityAfter, v40Loc.getTitle());
-                                    }
-
-                                    // V51: Armed character bonus at drain 2+ sites
-                                    if (v51OurDrain >= 2.0f || (v40FriendlyCount > 0)) {
-                                        String v51CardLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
-                                        if (v51CardLower.contains("lightsaber") || v51CardLower.contains("blaster")
-                                            || v51CardLower.contains("with lightsaber") || v51CardLower.contains("with blaster")) {
-                                            action.addReasoning(String.format(
-                                                "V51 ARMED: %s brings a weapon to %s — ready for battle!",
-                                                card.getTitle(), v40Loc.getTitle()), 150.0f);
-                                            LOG.warn("V51 ARMED: {} to {} — weapon bonus +150", card.getTitle(), v40Loc.getTitle());
+                                    DeployFormationSitingPolicy.PositiveFormationEvaluation positiveFormation =
+                                        DeployFormationSitingPolicy.evaluatePositiveFormation(
+                                            new DeployFormationSitingPolicy.PositiveFormationFacts(
+                                                actionId, card.getTitle(), v40Loc.getTitle(),
+                                                v40FriendlyCount, v40FriendlyAbility,
+                                                v40CardAbility, v51OurDrain));
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-positive-formation", positiveFormation.result());
+                                    for (DeployFormationSitingPolicy.PositiveFormationOutcome outcome
+                                            : positiveFormation.outcomes()) {
+                                        switch (outcome) {
+                                            case FORTIFY_BATTLEGROUND:
+                                                LOG.warn("V51 FORTIFY BATTLEGROUND: {} joins {} friendlies at {} (drain {}) — +500",
+                                                    card.getTitle(), v40FriendlyCount, v40Loc.getTitle(), (int)v51OurDrain);
+                                                break;
+                                            case ESTABLISH_BATTLEGROUND:
+                                                LOG.warn("V51 ESTABLISH BATTLEGROUND: {} first to {} (drain {}) — +400",
+                                                    card.getTitle(), v40Loc.getTitle(), (int)v51OurDrain);
+                                                break;
+                                            case REINFORCE:
+                                                LOG.warn("V51 REINFORCE: {} joins {} friendlies at {} — +300",
+                                                    card.getTitle(), v40FriendlyCount, v40Loc.getTitle());
+                                                break;
+                                            case BUDDY_DESTINY:
+                                                LOG.warn("V51 BUDDY DESTINY: {} enables battle destiny at {} (ability {} → {}) — +400",
+                                                    card.getTitle(), v40Loc.getTitle(), (int)v40FriendlyAbility,
+                                                    (int)totalAbilityAfter);
+                                                break;
+                                            case BUDDY_FULL:
+                                                LOG.warn("V51 BUDDY FULL: {} — total ability {} at {} — +500",
+                                                    card.getTitle(), (int)totalAbilityAfter, v40Loc.getTitle());
+                                                break;
+                                            case BUDDY_REINFORCE:
+                                                LOG.warn("V51 BUDDY REINFORCE: {} ability {} → {} at {} — +200",
+                                                    card.getTitle(), (int)v40FriendlyAbility, (int)totalAbilityAfter,
+                                                    v40Loc.getTitle());
+                                                break;
+                                            case ARMED:
+                                                LOG.warn("V51 ARMED: {} to {} — weapon bonus +150",
+                                                    card.getTitle(), v40Loc.getTitle());
+                                                break;
                                         }
                                     }
                                 } catch (Exception e) { /* ignore */ }
@@ -4566,6 +4477,16 @@ public class DeployEvaluator extends ActionEvaluator {
 
         LOG.info("[DeployEvaluator] Evaluated {} deploy actions", actions.size());
         return actions;
+    }
+
+    private void applySharedPolicy(EvaluatedAction action, String decisionId,
+                                   String actionId, String owner,
+                                   PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                (decisionId == null || decisionId.isBlank()
+                        ? owner : decisionId + "-" + owner) + "-" + actionId);
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
     }
 
     /**

@@ -8,6 +8,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /** Pure DEPLOY-2 formation and destination scoring over adapter-produced facts. */
@@ -49,6 +50,344 @@ public final class DeployFormationSitingPolicy {
         addBuddyTopology(operations, actionId, formation);
         addSoloVulnerability(operations, actionId, formation);
         return new PolicyResult(PRODUCER_ID, operations);
+    }
+
+    public static LegacySoloEvaluation evaluateLegacySolo(LegacySoloFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        LegacySoloOutcome outcome = LegacySoloOutcome.NONE;
+
+        if (facts.eligible() && facts.wouldBeSolo()) {
+            if (facts.objectiveFlipDeploy()) {
+                if (facts.escapeRoute()) {
+                    outcome = LegacySoloOutcome.OBJECTIVE_WITH_ESCAPE;
+                    addSoloFormation(operations, facts.actionId(), "V29-obj-flip", 50.0f,
+                            String.format(
+                                    "V29 OBJ-FLIP: %s solo at '%s' to help flip objective — escape route exists!",
+                                    facts.cardName(), facts.destinationTitle()));
+                } else {
+                    outcome = LegacySoloOutcome.OBJECTIVE_NO_ESCAPE;
+                    addSoloFormation(operations, facts.actionId(), "V29-obj-flip", -150.0f,
+                            String.format(
+                                    "V29 OBJ-FLIP: %s solo at '%s' for flip but NO escape route — risky!",
+                                    facts.cardName(), facts.destinationTitle()));
+                }
+            } else if (facts.stagingDeploy()) {
+                outcome = LegacySoloOutcome.STAGING;
+                addSoloFormation(operations, facts.actionId(), "V38-staging", -80.0f,
+                        String.format(
+                                "V38 STAGING: %s to non-battleground — move to buddy up next turn",
+                                facts.cardName()));
+            } else {
+                outcome = LegacySoloOutcome.CAUTION;
+                addSoloFormation(operations, facts.actionId(), "V38-solo-caution", -150.0f,
+                        String.format(
+                                "V38 SOLO CAUTION: %s (power %d) solo — vulnerable but acceptable",
+                                facts.cardName(), facts.cardPower()));
+            }
+        }
+
+        return new LegacySoloEvaluation(new PolicyResult(PRODUCER_ID, operations), outcome);
+    }
+
+    public static StrongReinforcementEvaluation evaluateStrongReinforcement(
+            StrongReinforcementFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        StrongReinforcementOutcome outcome = StrongReinforcementOutcome.NONE;
+
+        if (facts.eligible() && facts.vaderHere()) {
+            outcome = StrongReinforcementOutcome.VADER;
+            addDeploySiting(operations, facts.actionId(), "V38-reinforce-vader", 400.0f,
+                    String.format(
+                            "V38 REINFORCE VADER: Deploy %s with Vader — buddy rotation!",
+                            facts.cardName()));
+        } else if (facts.eligible() && facts.strongAllyHere()) {
+            boolean reachesBuddyThreshold = facts.allyAbility() + facts.deployingAbility()
+                    >= facts.buddyAbilityThreshold();
+            outcome = reachesBuddyThreshold
+                    ? StrongReinforcementOutcome.ALLY_REACHES_THRESHOLD
+                    : StrongReinforcementOutcome.ALLY;
+            addDeploySiting(operations, facts.actionId(), "V38-reinforce-ally",
+                    reachesBuddyThreshold ? 300.0f : 200.0f,
+                    String.format(
+                            "V38 REINFORCE ALLY: Deploy %s to strong ally (ability %.0f + %.0f = %.0f)",
+                            facts.cardName(), facts.allyAbility(), facts.deployingAbility(),
+                            facts.allyAbility() + facts.deployingAbility()));
+        }
+
+        return new StrongReinforcementEvaluation(
+                new PolicyResult(PRODUCER_ID, operations), outcome);
+    }
+
+    public static BuddySeekEvaluation evaluateBuddySeek(BuddySeekFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        BuddySeekOutcome outcome = BuddySeekOutcome.NONE;
+
+        if (facts.eligible() && facts.vulnerableSoloAlly()) {
+            if (!facts.battleground()) {
+                outcome = BuddySeekOutcome.NON_BATTLEGROUND_SKIP;
+            } else {
+                outcome = BuddySeekOutcome.PROTECT;
+                addSoloFormation(operations, facts.actionId(), "V29-buddy-seek", 200.0f,
+                        String.format(
+                                "V29 BUDDY-SEEK: Deploy to protect vulnerable %s (power %d) at %s!",
+                                facts.soloAllyName(), facts.soloAllyPower(),
+                                facts.destinationTitle()));
+            }
+        }
+
+        return new BuddySeekEvaluation(new PolicyResult(PRODUCER_ID, operations), outcome);
+    }
+
+    public static HuntGroupingEvaluation evaluateHuntGrouping(HuntGroupingFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        HuntGroupingOutcome outcome = HuntGroupingOutcome.NONE;
+
+        if (facts.eligible() && !facts.deployingVader()) {
+            if (facts.deploysToVaderLocation()) {
+                if (facts.opponentPowerAtVaderLocation() > 0.0f) {
+                    outcome = HuntGroupingOutcome.GROUP_AND_ENGAGE;
+                    float score = 350.0f + (facts.cardPower() >= 5 ? 50.0f : 0.0f);
+                    addDeploySiting(operations, facts.actionId(), "V35.1-hunt-group", score,
+                            String.format(
+                                    "V35.1 HUNT GROUP+ENGAGE: Deploy %s WITH Vader at %s — opponents here (power %.0f)!",
+                                    facts.cardName(), facts.vaderLocationTitle(),
+                                    facts.opponentPowerAtVaderLocation()));
+                } else {
+                    outcome = HuntGroupingOutcome.GROUP_EMPTY;
+                    addDeploySiting(operations, facts.actionId(), "V35.1-hunt-group", 50.0f,
+                            String.format(
+                                    "V35.1 HUNT GROUP (EMPTY): Deploy %s with Vader at %s — but NO opponents here!",
+                                    facts.cardName(), facts.vaderLocationTitle()));
+                }
+            } else if (!facts.objectiveRelevantElsewhere()) {
+                outcome = HuntGroupingOutcome.SCATTER_NEUTRAL;
+                addDeploySiting(operations, facts.actionId(), "V40-hunt-scatter", 0.0f,
+                        String.format(
+                                "V40 HUNT SCATTER: %s deploying away from Vader at %s (neutral)",
+                                facts.cardName(), facts.vaderLocationTitle()));
+            }
+        }
+
+        return new HuntGroupingEvaluation(new PolicyResult(PRODUCER_ID, operations), outcome);
+    }
+
+    public static PolicyResult scoreHighDrainSite(HighDrainSiteFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.opponentIcons() >= 2) {
+            addDeploySiting(operations, facts.actionId(), "V40-high-drain", 200.0f,
+                    String.format(
+                            "V40 HIGH DRAIN: %s has %d opponent force icons — high drain potential!",
+                            facts.destinationTitle(), facts.opponentIcons()));
+        }
+        return new PolicyResult(PRODUCER_ID, operations);
+    }
+
+    public static PolicyResult scoreGoodDrainSite(GoodDrainSiteFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.gameTextKnown() && !facts.drainReduction()) {
+            addDeploySiting(operations, facts.actionId(), "V40-good-drain", 100.0f,
+                    String.format(
+                            "V40 GOOD DRAIN SITE: %s has no drain reduction in game text!",
+                            facts.destinationTitle()));
+        }
+        return new PolicyResult(PRODUCER_ID, operations);
+    }
+
+    public static PositiveFormationEvaluation evaluatePositiveFormation(
+            PositiveFormationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(3);
+        List<PositiveFormationOutcome> outcomes = new ArrayList<>(3);
+
+        if (facts.friendlyCount() > 0 && facts.ourDrain() >= 2.0f) {
+            outcomes.add(PositiveFormationOutcome.FORTIFY_BATTLEGROUND);
+            addDeploySiting(operations, facts.actionId(), "V51-fortify", 500.0f,
+                    String.format(
+                            "V51 FORTIFY BATTLEGROUND: Joining %d friendlies at %s (our drain %.0f) — this is THE fight!",
+                            facts.friendlyCount(), facts.destinationTitle(), facts.ourDrain()));
+        } else if (facts.friendlyCount() == 0 && facts.ourDrain() >= 2.0f) {
+            outcomes.add(PositiveFormationOutcome.ESTABLISH_BATTLEGROUND);
+            addDeploySiting(operations, facts.actionId(), "V51-establish", 400.0f,
+                    String.format(
+                            "V51 ESTABLISH BATTLEGROUND: First deploy to %s (our drain %.0f) — start the army!",
+                            facts.destinationTitle(), facts.ourDrain()));
+        } else if (facts.friendlyCount() > 0) {
+            outcomes.add(PositiveFormationOutcome.REINFORCE);
+            addDeploySiting(operations, facts.actionId(), "V51-reinforce", 300.0f,
+                    String.format("V51 REINFORCE: Joining %d friendlies at %s!",
+                            facts.friendlyCount(), facts.destinationTitle()));
+        }
+
+        float totalAbility = facts.friendlyAbility() + facts.deployingAbility();
+        if (facts.friendlyCount() > 0 && facts.friendlyAbility() < 4.0f
+                && totalAbility >= 4.0f) {
+            outcomes.add(PositiveFormationOutcome.BUDDY_DESTINY);
+            addDeploySiting(operations, facts.actionId(), "V51-buddy-destiny", 400.0f,
+                    String.format(
+                            "V51 BUDDY DESTINY: Ability %.0f → %.0f (>= 4) at %s — battle destiny ENABLED!",
+                            facts.friendlyAbility(), totalAbility, facts.destinationTitle()));
+        } else if (facts.friendlyCount() > 0 && totalAbility >= 7.0f) {
+            outcomes.add(PositiveFormationOutcome.BUDDY_FULL);
+            addDeploySiting(operations, facts.actionId(), "V51-buddy-full", 500.0f,
+                    String.format(
+                            "V51 BUDDY FULL: Ability total %.0f >= 7 at %s — full buddy system!",
+                            totalAbility, facts.destinationTitle()));
+        } else if (facts.friendlyCount() > 0 && totalAbility >= 4.0f) {
+            outcomes.add(PositiveFormationOutcome.BUDDY_REINFORCE);
+            addDeploySiting(operations, facts.actionId(), "V51-buddy-reinforce", 200.0f,
+                    String.format(
+                            "V51 BUDDY REINFORCE: Ability %.0f → %.0f at %s — building toward 7!",
+                            facts.friendlyAbility(), totalAbility, facts.destinationTitle()));
+        }
+
+        String cardLower = facts.cardName().toLowerCase(Locale.ROOT);
+        boolean armed = cardLower.contains("lightsaber") || cardLower.contains("blaster")
+                || cardLower.contains("with lightsaber") || cardLower.contains("with blaster");
+        if ((facts.ourDrain() >= 2.0f || facts.friendlyCount() > 0) && armed) {
+            outcomes.add(PositiveFormationOutcome.ARMED);
+            addDeploySiting(operations, facts.actionId(), "V51-armed", 150.0f,
+                    String.format("V51 ARMED: %s brings a weapon to %s — ready for battle!",
+                            facts.cardName(), facts.destinationTitle()));
+        }
+
+        return new PositiveFormationEvaluation(
+                new PolicyResult(PRODUCER_ID, operations), outcomes);
+    }
+
+    public enum LegacySoloOutcome {
+        NONE,
+        OBJECTIVE_WITH_ESCAPE,
+        OBJECTIVE_NO_ESCAPE,
+        STAGING,
+        CAUTION
+    }
+
+    public enum StrongReinforcementOutcome {
+        NONE,
+        VADER,
+        ALLY,
+        ALLY_REACHES_THRESHOLD
+    }
+
+    public enum BuddySeekOutcome {
+        NONE,
+        NON_BATTLEGROUND_SKIP,
+        PROTECT
+    }
+
+    public enum HuntGroupingOutcome {
+        NONE,
+        GROUP_AND_ENGAGE,
+        GROUP_EMPTY,
+        SCATTER_NEUTRAL
+    }
+
+    public enum PositiveFormationOutcome {
+        FORTIFY_BATTLEGROUND,
+        ESTABLISH_BATTLEGROUND,
+        REINFORCE,
+        BUDDY_DESTINY,
+        BUDDY_FULL,
+        BUDDY_REINFORCE,
+        ARMED
+    }
+
+    public record LegacySoloEvaluation(PolicyResult result, LegacySoloOutcome outcome) {
+    }
+
+    public record StrongReinforcementEvaluation(
+            PolicyResult result, StrongReinforcementOutcome outcome) {
+    }
+
+    public record BuddySeekEvaluation(PolicyResult result, BuddySeekOutcome outcome) {
+    }
+
+    public record HuntGroupingEvaluation(PolicyResult result, HuntGroupingOutcome outcome) {
+    }
+
+    public record PositiveFormationEvaluation(
+            PolicyResult result, List<PositiveFormationOutcome> outcomes) {
+        public PositiveFormationEvaluation {
+            outcomes = List.copyOf(outcomes);
+        }
+    }
+
+    public record LegacySoloFacts(String actionId, String cardName, int cardPower,
+                                  String destinationTitle, boolean eligible,
+                                  boolean wouldBeSolo, boolean objectiveFlipDeploy,
+                                  boolean escapeRoute, boolean stagingDeploy) {
+        public LegacySoloFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            cardName = cardName == null ? "" : cardName;
+            destinationTitle = destinationTitle == null ? "?" : destinationTitle;
+        }
+    }
+
+    public record StrongReinforcementFacts(
+            String actionId, String cardName, boolean eligible,
+            boolean vaderHere, boolean strongAllyHere, float allyAbility,
+            float deployingAbility, float buddyAbilityThreshold) {
+        public StrongReinforcementFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            cardName = cardName == null ? "" : cardName;
+        }
+    }
+
+    public record BuddySeekFacts(
+            String actionId, boolean eligible,
+            boolean vulnerableSoloAlly, boolean battleground,
+            String soloAllyName, int soloAllyPower, String destinationTitle) {
+        public BuddySeekFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            soloAllyName = soloAllyName == null ? "" : soloAllyName;
+            destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
+    }
+
+    public record HuntGroupingFacts(
+            String actionId, boolean eligible, String cardName, int cardPower,
+            String vaderLocationTitle, boolean deploysToVaderLocation,
+            boolean deployingVader, float opponentPowerAtVaderLocation,
+            boolean objectiveRelevantElsewhere) {
+        public HuntGroupingFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            cardName = cardName == null ? "" : cardName;
+            vaderLocationTitle = vaderLocationTitle == null ? "" : vaderLocationTitle;
+        }
+    }
+
+    public record HighDrainSiteFacts(
+            String actionId, String destinationTitle, int opponentIcons) {
+        public HighDrainSiteFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
+    }
+
+    public record GoodDrainSiteFacts(
+            String actionId, String destinationTitle,
+            boolean gameTextKnown, boolean drainReduction) {
+        public GoodDrainSiteFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
+    }
+
+    public record PositiveFormationFacts(
+            String actionId, String cardName, String destinationTitle,
+            int friendlyCount, float friendlyAbility,
+            float deployingAbility, float ourDrain) {
+        public PositiveFormationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            cardName = cardName == null ? "" : cardName;
+            destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
     }
 
     private static void addCommittedReinforcement(
