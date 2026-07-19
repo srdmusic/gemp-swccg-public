@@ -2504,6 +2504,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         String v212FormationReason = "";
                                         float v212V136CsScore = 0.0f;
                                         boolean v212V193CsEligible = false;
+                                        boolean v212V193ActorGateCandidate = false;
                                         float v212V193CsWeight = 400.0f;
                                         String v212V193CsGateCard = "";
 
@@ -2539,6 +2540,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     context.getObjectiveAnalyzer();
                                                 String fsFlipGate = (fsObj != null && fsObj.isAnalyzed())
                                                     ? fsObj.getFlipCriticalControlSite() : null;
+                                                if (fsObj != null && fsObj.hasFlipGateActorRequirement()) {
+                                                    v212V193ActorGateCandidate =
+                                                        fsObj.advancesUnfilledFlipGateActorRequirement(
+                                                            context.getGame(), context.getPlayerId(),
+                                                            v136DeployingCard, location);
+                                                    if (!v212V193ActorGateCandidate) fsFlipGate = null;
+                                                }
                                                 com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployVerdict fsVerdict =
                                                     com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
                                                     .assessCharacterDeploy(context.getGame(), gameState, context.getPlayerId(),
@@ -2629,15 +2637,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         if (v136Obj != null && v136Obj.isAnalyzed() && title != null) {
                                             String v193csGateSite = v136Obj.getFlipCriticalControlSite();
                                             if (v193csGateSite != null && v193csGateSite.equalsIgnoreCase(title)) {
+                                                boolean v193csActorGateCandidate =
+                                                    v212V193ActorGateCandidate
+                                                        || v136Obj.advancesUnfilledFlipGateActorRequirement(
+                                                            context.getGame(), context.getPlayerId(),
+                                                            v136DeployingCard, location);
                                                 Float v193csAbility = v136DepBp.hasAbilityAttribute() ? v136DepBp.getAbility() : null;
                                                 Float v193csCost = v136DepBp.getDeployCost();
                                                 boolean v193csGoodBody = v193csAbility != null && v193csAbility >= 1f
                                                     && v193csCost != null && v193csCost <= 4f;
-                                                if (v193csGoodBody) {
+                                                if (v193csGoodBody || v193csActorGateCandidate) {
                                                     boolean v193csControls = com.gempukku.swccgo.cards.GameConditions.controls(
                                                         context.getGame(), context.getPlayerId(), location);
                                                     java.util.Set<String> v193csGateIds = v136Obj.getFlipCriticalControlCardIds();
                                                     String v193csGateCard = v136Obj.getFlipCriticalControlCard();
+                                                    if (v193csGateCard == null && v193csActorGateCandidate) {
+                                                        v193csGateCard = v136Obj.getFlipGateActorRequirementLabel();
+                                                    }
                                                     com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v193csOracle = context.getDeckOracle();
                                                     boolean v193csHoldsGate = false;
                                                     if (v193csOracle != null) {
@@ -2654,7 +2670,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                                 || v193csOracle.isCardInReserve(v193csGateCard);
                                                         }
                                                     }
-                                                    if (!v193csControls && v193csHoldsGate) {
+                                                    boolean v193csCanAdvanceGate =
+                                                        v193csHoldsGate || v193csActorGateCandidate;
+                                                    // V276 Invasion boundary: this exact actor/gate match exempts
+                                                    // V201 above, then 1600 profile + 1600 CS offset -1500 V121
+                                                    // leaves +1700. Even if a future adapter preserves V201's -800,
+                                                    // the same narrow gate still closes the replay deficit by +900.
+                                                    if ((!v193csControls || v193csActorGateCandidate)
+                                                            && v193csCanAdvanceGate) {
                                                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.ObjectivePlaybook
                                                             v193csPlaybook = v136Obj.getActivePlaybook();
                                                         float v193csWeight = (v193csPlaybook != null)

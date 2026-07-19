@@ -153,6 +153,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V275 owner note:** `DeploySitingPolicy` now owns the V64 Mapuzo destination outcome after the adapters gather opponent power and literal Jedi Survivor text, while `DeployPlanPolicy` owns the physical planned-target `+200/-100` choice after the adapters compare IDs. All board, blueprint, objective, plan, catch, and log behavior remains in the mirrored adapters; no engine metadata or candidate control moved.
 
+**V276 behavior-fix note:** the existing V193 owner now consumes an ObjectiveAnalyzer-proven unfilled actor-at-site gate. For Invasion only, the pre-flip Neimoidian-to-Throne-Room candidate receives the playbook's `+1600` direct arm or `+3200` destination arm and is exempt from V201 at that exact gate. The requirement self-closes when filled. Shared AI-only `ShieldFacts` separately excludes Naboo system from Battle Order/Plan battleground accounting while front blueprint `14_113` is on table on either face. No new engine metadata or candidate control flow was introduced.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

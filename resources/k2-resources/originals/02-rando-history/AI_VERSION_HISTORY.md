@@ -7747,3 +7747,23 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     edb5748ae2d759d48e5ef24f2577d30e5445d3fdd74a778843ce39e35d2697b8 contain both owners and
     adapters. Runtime reload and live-game proof remain separate deployment gates. Clean V275 is
     based on live V274 fcf4c3efc. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V276 (2026-07-19): repair Invasion flip gate and Naboo battleground accounting ====
+    Invasion's AI playbook now owns the exact pre-flip requirement: control Naboo system and Theed
+    Palace Throne Room with a Neimoidian there. Shared ObjectiveAnalyzer exposes the unfilled exact
+    actor-at-site fact; both evaluator mirrors let V193 steer only that actor to that site, bypass
+    V201 for that objective obligation, and self-close once a Neimoidian is present. Replay
+    Game93e317128d5e-f769-7e51-61c6-4c381f10 proved Nute chose a tied Swamp and V121/V201 later
+    displaced Sil Unch from the Throne Room. Direct V193 is +1600, net +100 over V121 -1500; the
+    destination arm is +3200, net +1700 after V121 and still +900 under a conservative retained
+    V201 -800 stack. Shared AI-only ShieldFacts also excludes Naboo system from Battle Order/Plan
+    battleground accounting while 14_113 is on table on either face, per Advanced Rulebook 2023
+    p.145-146; Naboo sites and other systems are unchanged. Focused 42/0/0/0, DEPLOY-named
+    238/0/0/0, full reactor 1856/0/0/26, mirror parity, exact gate boundary fixtures, the
+    Invasion/Naboo table-state matrix, JSON, AI-only, forbidden-symbol, diff, and clean package
+    gates passed. Server jar SHA-256 959cd4fb2ccd293a3b64883beb5d311f7cdfa12cd49992b703786e9ecc839d9f
+    and web jar SHA-256 da86408f28af70dc4fe2b9bfbbcc19523b6212f5c2970356985dc40eb65b8909
+    contain V276. Runtime reload and live-game proof remain separate deployment gates.
+    Clean V276 is based on live V275 814751680. Production changes are AI source plus the AI-owned
+    objective playbook only; no engine, card, decision metadata, client, database, or deck-library
+    source changed.

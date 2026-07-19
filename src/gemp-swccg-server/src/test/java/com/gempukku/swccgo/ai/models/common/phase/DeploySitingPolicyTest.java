@@ -102,6 +102,23 @@ public class DeploySitingPolicyTest {
     }
 
     @Test
+    public void invasionFlipGateWeightDominatesV121AndEvenAConservativeV201Stack() {
+        PolicyResult direct = DeploySitingPolicy.evaluateDirect(directFacts(
+                false, 0.0f, true, 1600.0f,
+                false, 0.0f, 0.0f));
+        PolicyResult destination = DeploySitingPolicy.evaluateDestination(destinationFacts(
+                false, DeploySitingPolicy.FormationState.DEFER_UNSUPPORTED_SOLO,
+                "no exact same-site buddy plan", 0.0f, true, 1600.0f));
+
+        assertEquals(1600.0f, direct.operations().get(0).delta(), 0.0f);
+        assertEquals(3200.0f, destination.operations().get(1).delta(), 0.0f);
+        assertEquals(100.0f, -1500.0f + direct.operations().get(0).delta(), 0.0f);
+        assertEquals(900.0f, -1500.0f
+                + destination.operations().get(0).delta()
+                + destination.operations().get(1).delta(), 0.0f);
+    }
+
+    @Test
     public void v136ZeroIsSilentButNegativeAndPositiveScoresAreApplied() {
         assertTrue(DeploySitingPolicy.evaluateDirect(directFacts(
                 false, 0.0f, false, 400.0f,

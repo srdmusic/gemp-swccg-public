@@ -1268,6 +1268,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                 String v193GateSite = v136Obj.getFlipCriticalControlSite();
                                 if (v193GateSite != null
                                         && v193GateSite.equalsIgnoreCase(v136Candidate.getTitle())) {
+                                    boolean v193ActorGateCandidate =
+                                        v136Obj.advancesUnfilledFlipGateActorRequirement(
+                                            game, playerId, card, v136Candidate);
                                     boolean v193AlreadyControls =
                                         com.gempukku.swccgo.cards.GameConditions.controls(
                                             game, playerId, v136Candidate);
@@ -1275,6 +1278,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     // the objective logic too — no card name hardcoded here, so this
                                     // steer generalizes to any occupation objective the analyzer flags.
                                     String v193GateCard = v136Obj.getFlipCriticalControlCard();
+                                    if (v193GateCard == null && v193ActorGateCandidate) {
+                                        v193GateCard = v136Obj.getFlipGateActorRequirementLabel();
+                                    }
                                     com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v193Oracle =
                                         context.getDeckOracle();
                                     // FIX 2026-07-07: detect by the analyzer's scoped Bunker-gated
@@ -1298,7 +1304,13 @@ public class DeployEvaluator extends ActionEvaluator {
                                                 || v193Oracle.isCardInReserve(v193GateCard);
                                         }
                                     }
-                                    if (!v193AlreadyControls && v193HoldsGateCard) {
+                                    boolean v193CanAdvanceGate =
+                                        v193HoldsGateCard || v193ActorGateCandidate;
+                                    // V276 Invasion boundary: profile weight 1600 - V121 1500 = +100
+                                    // on the direct route. The actor/site/pre-flip/unfilled guards make
+                                    // that intentional dominance self-closing once a Neimoidian arrives.
+                                    if ((!v193AlreadyControls || v193ActorGateCandidate)
+                                            && v193CanAdvanceGate) {
                                         // ObjectivePlaybook consolidation (2026-07-07): the +400 magnitude
                                         // is now analyzer-owned in ENDOR_PLAYBOOK.weights.deployFlipGateSite.
                                         // Behavior-preserving: V193 only fires when the analyzer named a

@@ -28,6 +28,12 @@ public class DeploySitingSourceCharacterizationTest {
 
         assertTrue(deploy.contains("DeploySitingPolicy.evaluateDirect("));
         assertTrue(destination.contains("DeploySitingPolicy.evaluateDestination("));
+        assertTrue(deploy.contains("advancesUnfilledFlipGateActorRequirement("));
+        assertTrue(destination.contains("advancesUnfilledFlipGateActorRequirement("));
+        assertTrue(destination.contains(
+                "if (!v212V193ActorGateCandidate) fsFlipGate = null;"));
+        assertTrue(destination.contains(
+                "v193csHoldsGate || v193csActorGateCandidate"));
         assertTrue(destination.contains("DeployObjectiveSitingPolicy.evaluate("));
         assertTrue(destination.contains("DeployTacticalPolicy.scoreV166ContestDrain("));
         assertTrue(destination.contains("DeployTacticalPolicy.scoreV169ProtectEndangered("));

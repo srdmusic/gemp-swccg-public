@@ -368,6 +368,58 @@ public class ObjectiveAnalyzer {
     public String getFlipCriticalControlCard() { return flipCriticalControlCard; }
     // FIX 2026-07-07: the exact Bunker-gated Establish Secret Base ids (empty → detect by title).
     public Set<String> getFlipCriticalControlCardIds() { return Collections.unmodifiableSet(flipCriticalControlCardIds); }
+    public boolean hasFlipGateActorRequirement() {
+        return findFlipGateActorRule() != null;
+    }
+    public String getFlipGateActorRequirementLabel() {
+        ActorLocationRule rule = findFlipGateActorRule();
+        return rule != null ? rule.actorFilterKey + " at " + flipCriticalControlSite : null;
+    }
+
+    /**
+     * V276: true only when this exact candidate can fill an active pre-flip actor-at-site gate
+     * and no qualifying actor is already present there. The data lives in the objective profile;
+     * deploy evaluators only consume this fact. Unknown filters or board reads fail closed.
+     */
+    public boolean advancesUnfilledFlipGateActorRequirement(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || candidate == null || destination == null) return false;
+
+        ActorLocationRule rule = findFlipGateActorRule();
+        if (rule == null) return false;
+
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null) return false;
+            com.gempukku.swccgo.filters.Filter actorFilter = resolveFilter(rule.actorFilterKey);
+            com.gempukku.swccgo.filters.Filter locationFilter =
+                    resolveLocationFilter(rule.locationFilterKey, playerId);
+            if (actorFilter == null || locationFilter == null
+                    || !actorFilter.accepts(gameState, game.getModifiersQuerying(), candidate)
+                    || !locationFilter.accepts(gameState, game.getModifiersQuerying(), destination)) {
+                return false;
+            }
+
+            int actorsAtGate = 0;
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null || !playerId.equals(card.getOwner())
+                        || !actorFilter.accepts(gameState, game.getModifiersQuerying(), card)) {
+                    continue;
+                }
+                PhysicalCard actorLocation = game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(gameState, card);
+                if (samePhysicalLocation(actorLocation, destination)) actorsAtGate++;
+            }
+            int required = rule.count != null && rule.count.value != null
+                    ? rule.count.value : 1;
+            return actorsAtGate < Math.max(1, required);
+        } catch (Exception e) {
+            LOG.debug("V276 flip-gate actor assessment failed: {}", e.getMessage());
+            return false;
+        }
+    }
     // NEW setup slots (2026-07-08, JSON playbook) — starting cards named by the objective.
     public Set<String> getStartingLocationIds() { return Collections.unmodifiableSet(startingLocationIds); }
     public Set<String> getStartingLocationFragments() { return Collections.unmodifiableSet(startingLocationFragments); }
@@ -875,13 +927,35 @@ public class ObjectiveAnalyzer {
         }
     }
 
-    // Curated string→Filter registry for JSON keyCharacterFilter/keySiteFilter keys. Keys are the exact
+    private ActorLocationRule findFlipGateActorRule() {
+        if (activeActorLocationRules == null) return null;
+        for (ActorLocationRule rule : activeActorLocationRules) {
+            if (rule == null || rule.actorFilterKey == null
+                    || rule.locationFilterKey == null) continue;
+            if ("preFlip".equals(rule.phase) && "flip".equals(rule.purpose)
+                    && "actorToSite".equals(rule.scoreRole)) {
+                return rule;
+            }
+        }
+        return null;
+    }
+
+    private static boolean samePhysicalLocation(PhysicalCard first, PhysicalCard second) {
+        if (first == null || second == null) return false;
+        if (first == second) return true;
+        int firstId = first.getPermanentCardId();
+        int secondId = second.getPermanentCardId();
+        return firstId > 0 && firstId == secondId;
+    }
+
+    // Curated string→Filter registry for JSON character/site keys. Keys are the exact
     // Filters.* constant names used by objective profiles (rules-truth, search-by-type). Expand as new
     // objectives are enabled. Unknown key → null + warn (playbook stores null; consumers null-guard).
     private com.gempukku.swccgo.filters.Filter resolveFilter(String key) {
         if (key == null || key.isEmpty()) return null;
         switch (key) {
             case "senator":          return com.gempukku.swccgo.filters.Filters.senator;
+            case "Neimoidian":       return com.gempukku.swccgo.filters.Filters.Neimoidian;
             case "Galactic_Senate":  return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
             case "biker_scout":      return com.gempukku.swccgo.filters.Filters.biker_scout;
             case "Bunker":           return com.gempukku.swccgo.filters.Filters.Bunker;

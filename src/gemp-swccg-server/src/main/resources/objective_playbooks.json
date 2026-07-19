@@ -3938,14 +3938,71 @@
       ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
-      "flipGateSite": null,
+      "flipGateSite": "naboo: theed palace throne room",
       "flipGateCardIds": [],
       "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
-      "weights": {},
+      "weights": {
+        "deployFlipGateSite": 1600.0
+      },
+      "flipLocationRules": [
+        {
+          "id": "invasion-front-flip-control",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Theed_Palace_Throne_Room",
+              "locationFragments": [
+                "naboo: theed palace throne room"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Neimoidian",
+              "scoreRole": "flipGate",
+              "sourceText": "control Theed Palace Throne Room with a Neimoidian there"
+            },
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Naboo_system",
+              "locationFragments": [
+                "naboo"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "control Naboo system"
+            }
+          ]
+        }
+      ],
+      "actorLocationRules": [
+        {
+          "id": "invasion-neimoidian-throne-room",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "relation": "controlsWith",
+          "actorFilterKey": "Neimoidian",
+          "locationFilterKey": "Theed_Palace_Throne_Room",
+          "count": {
+            "comparator": ">=",
+            "value": 1
+          },
+          "scoreRole": "actorToSite",
+          "sourceText": "control Theed Palace Throne Room with a Neimoidian there"
+        }
+      ],
       "frontBp": "14_113",
       "backBp": "14_113_BACK",
       "abbreviation": "INV",

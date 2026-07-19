@@ -73,8 +73,7 @@ public final class ShieldFacts {
                     } catch (Exception ignored) {
                     }
                     if (opponentPower > 0f
-                            && com.gempukku.swccgo.filters.Filters.battleground
-                                .accepts(gs, modifiers, location)) {
+                            && isBattleOrderBattleground(gs, game, location, modifiers)) {
                         opponentBattlegrounds++;
                     }
                 }
@@ -115,8 +114,7 @@ public final class ShieldFacts {
                 } catch (Exception ignored) {
                 }
                 if (ownPower > 0f
-                        && com.gempukku.swccgo.filters.Filters.battleground
-                            .accepts(gs, modifiers, location)) {
+                        && isBattleOrderBattleground(gs, game, location, modifiers)) {
                     ownBattlegrounds++;
                 }
                 if (opponent != null) {
@@ -126,8 +124,7 @@ public final class ShieldFacts {
                             opponentCanDrainThreePlus = true;
                         }
                         if (drain > 0f
-                                && !com.gempukku.swccgo.filters.Filters.battleground
-                                    .accepts(gs, modifiers, location)) {
+                                && !isBattleOrderBattleground(gs, game, location, modifiers)) {
                             opponentDrainsNonBattleground = true;
                         }
                     } catch (Exception ignored) {
@@ -160,10 +157,18 @@ public final class ShieldFacts {
                 com.gempukku.swccgo.filters.Filters.and(
                     com.gempukku.swccgo.filters.Filters.occupies(playerId),
                     com.gempukku.swccgo.filters.Filters.battleground_site));
+            com.gempukku.swccgo.filters.Filter eligibleSystem =
+                    com.gempukku.swccgo.filters.Filters.battleground_system;
+            if (isInvasionOnTable(game.getGameState())) {
+                eligibleSystem = com.gempukku.swccgo.filters.Filters.and(
+                        eligibleSystem,
+                        com.gempukku.swccgo.filters.Filters.not(
+                                com.gempukku.swccgo.filters.Filters.Naboo_system));
+            }
             boolean sys = com.gempukku.swccgo.filters.Filters.canSpot(game, null,
                 com.gempukku.swccgo.filters.Filters.and(
                     com.gempukku.swccgo.filters.Filters.occupies(playerId),
-                    com.gempukku.swccgo.filters.Filters.battleground_system));
+                    eligibleSystem));
             return site && sys;
         } catch (Exception e) {
             LOG.debug("occupiesBothTheaters error: {}", e.getMessage());
@@ -181,14 +186,64 @@ public final class ShieldFacts {
     public static boolean occupiesAnyBattleground(SwccgGame game, String playerId) {
         if (game == null || playerId == null) return false;
         try {
+            com.gempukku.swccgo.filters.Filter eligibleBattleground =
+                    com.gempukku.swccgo.filters.Filters.battleground;
+            if (isInvasionOnTable(game.getGameState())) {
+                eligibleBattleground = com.gempukku.swccgo.filters.Filters.and(
+                        eligibleBattleground,
+                        com.gempukku.swccgo.filters.Filters.not(
+                                com.gempukku.swccgo.filters.Filters.Naboo_system));
+            }
             return com.gempukku.swccgo.filters.Filters.canSpot(game, null,
                 com.gempukku.swccgo.filters.Filters.and(
                     com.gempukku.swccgo.filters.Filters.occupies(playerId),
-                    com.gempukku.swccgo.filters.Filters.battleground));
+                    eligibleBattleground));
         } catch (Exception e) {
             LOG.debug("occupiesAnyBattleground error: {}", e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * V276 AI-side rules correction. The 2023 Advanced Rulebook's Invasion entry
+     * says Naboo remains a non-battleground system while Invasion is on table,
+     * including after the objective flips. The live back-side card source does
+     * not currently expose that modifier, so AI Battle Order/Plan accounting
+     * enforces the published rule without changing card or engine code.
+     */
+    static boolean isInvasionNabooSystem(SwccgGame game, PhysicalCard location) {
+        if (game == null || location == null) return false;
+        try {
+            GameState gameState = game.getGameState();
+            return isInvasionOnTable(gameState)
+                    && com.gempukku.swccgo.filters.Filters.Naboo_system.accepts(
+                            gameState, game.getModifiersQuerying(), location);
+        } catch (Exception e) {
+            LOG.debug("V276 Invasion/Naboo classification error: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private static boolean isBattleOrderBattleground(
+            GameState gameState, SwccgGame game, PhysicalCard location,
+            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying modifiers) {
+        return !isInvasionNabooSystem(game, location)
+                && com.gempukku.swccgo.filters.Filters.battleground.accepts(
+                        gameState, modifiers, location);
+    }
+
+    private static boolean isInvasionOnTable(GameState gameState) {
+        if (gameState == null) return false;
+        try {
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null || card.getZone() == null
+                        || !card.getZone().isInPlay()) continue;
+                if ("14_113".equals(card.getBlueprintId(true))) return true;
+            }
+        } catch (Exception e) {
+            LOG.debug("V276 Invasion table scan error: {}", e.getMessage());
+        }
+        return false;
     }
 
     /**
