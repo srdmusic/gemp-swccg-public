@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
@@ -76,8 +77,6 @@ public class MoveEvaluator extends ActionEvaluator {
     private static final int POWER_DIFF_FOR_FLEE = 2;
     private static final int OVERKILL_THRESHOLD = 4;
     private static final int ESTABLISH_THRESHOLD = 6;
-    private static final int CONTEST_MARGIN = 4;
-    private static final int ATTACK_POWER_ADVANTAGE = 4;
     private static final int ATTACK_MIN_POWER = 6;
     private static final float ICON_BONUS = 15.0f;
 
@@ -2281,8 +2280,9 @@ public class MoveEvaluator extends ActionEvaluator {
         // 1. We have overwhelming force AND
         // 2. There are high-value targets (opponent icons for force drain)
         if (!theirHasCards && myPower >= ATTACK_MIN_POWER && myCardCount >= 2) {
-            AttackAnalysis attack = analyzeAttackOpportunity(gameState, game, playerId,
-                                                             mySide, location, myPower, myCardCount);
+            MoveOpportunityPolicy.AttackAnalysis attack =
+                MoveOpportunityPolicy.attack(
+                    gameState, playerId, mySide, location, myPower);
             // Only recommend attack if there's force drain potential (icons > 0)
             // and we have a significant power advantage
             if (attack != null && attack.viable && attack.hasForcedrainPotential) {
@@ -2295,7 +2295,8 @@ public class MoveEvaluator extends ActionEvaluator {
                 boolean attackTargetAdjacent = false;
                 try {
                     attackTargetAdjacent = attack.targetLocation != null
-                        && game.getModifiersQuerying().isAdjacentSites(gameState, location, attack.targetLocation);
+                        && game.getModifiersQuerying().isAdjacentSites(
+                            gameState, location, attack.targetLocation);
                 } catch (Exception ignore) { /* false */ }
                 if (attackTargetAdjacent) {
                     ladderClaimR2("ATTACK", attack.score, 0.0f, true);
@@ -2520,8 +2521,10 @@ public class MoveEvaluator extends ActionEvaluator {
         float excessPower = myPower - powerNeededToStay;
 
         if (excessPower >= 2 && myCardCount >= 2) {
-            SpreadAnalysis spread = analyzeSpreadViability(gameState, game, playerId, mySide,
-                                                           location, myPower, myCardCount, theirPower);
+            MoveOpportunityPolicy.SpreadAnalysis spread =
+                MoveOpportunityPolicy.spread(
+                    gameState, playerId, mySide,
+                    location, myPower, theirPower);
             if (spread != null && spread.viable) {
                 action.addReasoning(spread.reason, spread.score);
                 // T4.1 (2026-07-06): early return removed. SPREAD attempts an R2 DOCTRINE
@@ -2979,201 +2982,6 @@ public class MoveEvaluator extends ActionEvaluator {
     }
 
     /**
-     * Analyze attack opportunities at adjacent locations.
-     * Ported from Python move_evaluator.py _analyze_attack_opportunity
-     */
-    private AttackAnalysis analyzeAttackOpportunity(GameState gameState, SwccgGame game,
-                                                     String playerId, Side mySide,
-                                                     PhysicalCard currentLocation,
-                                                     float ourPowerHere, int ourCardCount) {
-        String opponentId = gameState.getOpponent(playerId);
-        float avgPowerPerCard = ourPowerHere / Math.max(ourCardCount, 1);
-
-        // Get all locations
-        List<PhysicalCard> allLocations = gameState.getLocationsInOrder();
-        AttackAnalysis bestAttack = null;
-        float bestScore = 0;
-
-        for (PhysicalCard adjLocation : allLocations) {
-            if (adjLocation == currentLocation) continue;
-
-            // Calculate enemy power at this location
-            float theirPower = 0;
-            int theirCount = 0;
-            float ourPowerThere = 0;
-
-            List<PhysicalCard> cardsAtAdj = gameState.getCardsAtLocation(adjLocation);
-            for (PhysicalCard card : cardsAtAdj) {
-                if (card == null) continue;
-                String owner = card.getOwner();
-                SwccgCardBlueprint bp = card.getBlueprint();
-                if (bp == null || !bp.hasPowerAttribute()) continue;
-
-                Float power = bp.getPower();
-                if (power == null) power = 0f;
-
-                if (opponentId != null && opponentId.equals(owner)) {
-                    // V67f3: Exclude opponent's undercover spies from "attack power" —
-                    // a spy doesn't actively threaten us; piling characters into a spy
-                    // site wastes drain potential. Spy stays undercover and keeps
-                    // blocking our drain regardless of our character count.
-                    if (card.isUndercover()) continue;
-                    theirPower += power;
-                    theirCount++;
-                } else if (playerId.equals(owner)) {
-                    ourPowerThere += power;
-                }
-            }
-
-            // Skip empty locations (use spread logic for those)
-            if (theirCount == 0 || theirPower == 0) continue;
-
-            // Get opponent icons at target
-            int theirIcons = getOpponentIcons(adjLocation.getBlueprint(), mySide);
-
-            // Calculate attack viability
-            float potentialPower = ourPowerThere + ourPowerHere;  // If we move everyone
-            float advantage = potentialPower - theirPower;
-
-            if (advantage >= ATTACK_POWER_ADVANTAGE) {
-                float score = 50.0f;  // Base attack score
-
-                // Bonus for crushing attacks
-                if (potentialPower >= theirPower * 2) {
-                    score += 25.0f;
-                }
-
-                // Bonus for opponent icons
-                score += theirIcons * ICON_BONUS;
-
-                // Bonus for bigger enemy forces
-                score += theirPower / 2;
-
-                String reason = String.format("ATTACK %d enemies with %d power (+%d advantage)",
-                    (int)theirPower, (int)potentialPower, (int)advantage);
-                if (theirIcons > 0) {
-                    reason += " - deny " + theirIcons + " icon drain!";
-                }
-
-                boolean hasForcedrainPotential = theirIcons > 0;
-                if (score > bestScore) {
-                    bestScore = score;
-                    // T4.1 (2026-07-06): carry the target location for the R2 adjacency gate.
-                    bestAttack = new AttackAnalysis(true, reason, score, hasForcedrainPotential, adjLocation);
-                }
-            }
-        }
-
-        return bestAttack;
-    }
-
-    /**
-     * Analyze if spreading out from this location is viable.
-     * Ported from Python move_evaluator.py _analyze_spread_viability
-     */
-    private SpreadAnalysis analyzeSpreadViability(GameState gameState, SwccgGame game,
-                                                   String playerId, Side mySide,
-                                                   PhysicalCard currentLocation,
-                                                   float ourPowerHere, int ourCardCount,
-                                                   float theirPowerHere) {
-        String opponentId = gameState.getOpponent(playerId);
-        int forceAvailable = 0;  // TODO: Get from context if available
-
-        // Calculate power we need to retain at source
-        float powerToRetain = Math.max(theirPowerHere + CONTEST_MARGIN, ESTABLISH_THRESHOLD);
-        float avgPowerPerCard = ourPowerHere / Math.max(ourCardCount, 1);
-        float powerWeCanSpare = ourPowerHere - powerToRetain;
-
-        if (powerWeCanSpare < 2) {
-            return new SpreadAnalysis(false,
-                String.format("need %d power to retain control, only have %d",
-                    (int)powerToRetain, (int)ourPowerHere), 0);
-        }
-
-        // Get all locations and find spread opportunities
-        List<PhysicalCard> allLocations = gameState.getLocationsInOrder();
-        SpreadAnalysis bestOpportunity = null;
-        float bestScore = 0;
-
-        for (PhysicalCard adjLocation : allLocations) {
-            if (adjLocation == currentLocation) continue;
-
-            // Calculate power at this location
-            float theirPower = 0;
-            float ourPowerThere = 0;
-
-            List<PhysicalCard> cardsAtAdj = gameState.getCardsAtLocation(adjLocation);
-            for (PhysicalCard card : cardsAtAdj) {
-                if (card == null) continue;
-                String owner = card.getOwner();
-                SwccgCardBlueprint bp = card.getBlueprint();
-                if (bp == null || !bp.hasPowerAttribute()) continue;
-
-                Float power = bp.getPower();
-                if (power == null) power = 0f;
-
-                if (opponentId != null && opponentId.equals(owner)) {
-                    theirPower += power;
-                } else if (playerId.equals(owner)) {
-                    ourPowerThere += power;
-                }
-            }
-
-            // Skip if we already have good presence
-            if (ourPowerThere >= ESTABLISH_THRESHOLD && theirPower == 0) {
-                continue;
-            }
-
-            // Get icons at destination
-            int theirIcons = getOpponentIcons(adjLocation.getBlueprint(), mySide);
-            int myIcons = getMyIcons(adjLocation.getBlueprint(), mySide);
-
-            float potentialPower = ourPowerThere + powerWeCanSpare;
-
-            // Empty location - can we establish?
-            if (theirPower == 0) {
-                if (potentialPower >= ESTABLISH_THRESHOLD) {
-                    float score = GOOD_DELTA * 2;
-                    score += theirIcons * ICON_BONUS;  // Bonus for opponent icons
-
-                    String reason = "Can establish at empty location";
-                    if (theirIcons > 0) {
-                        reason += " - " + theirIcons + " opponent icon(s) = force drain!";
-                    }
-
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestOpportunity = new SpreadAnalysis(true, reason, score);
-                    }
-                }
-            } else {
-                // Contested - can we beat them with margin?
-                float powerNeeded = theirPower + CONTEST_MARGIN;
-                if (potentialPower >= powerNeeded) {
-                    float score = GOOD_DELTA * 3 + theirPower / 2;
-                    score += theirIcons * ICON_BONUS;
-
-                    String reason = String.format("Can contest location with %d enemies", (int)theirPower);
-                    if (theirIcons > 0) {
-                        reason += " - " + theirIcons + " opponent icon(s) = force drain!";
-                    }
-
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestOpportunity = new SpreadAnalysis(true, reason, score);
-                    }
-                }
-            }
-        }
-
-        if (bestOpportunity != null) {
-            return bestOpportunity;
-        }
-
-        return new SpreadAnalysis(false, "no good adjacent locations", 0);
-    }
-
-    /**
      * Handle Land action - penalize starfighters.
      */
     private void handleLandAction(EvaluatedAction action, String actionLower, PhysicalCard card, SwccgGame game) {
@@ -3266,57 +3074,4 @@ public class MoveEvaluator extends ActionEvaluator {
         }
     }
 
-    /**
-     * Get opponent icons at a location.
-     */
-    private int getOpponentIcons(SwccgCardBlueprint bp, Side mySide) {
-        if (bp == null) return 0;
-        if (mySide == Side.LIGHT) {
-            return bp.getIconCount(Icon.DARK_FORCE);
-        } else {
-            return bp.getIconCount(Icon.LIGHT_FORCE);
-        }
-    }
-
-    /**
-     * Get our icons at a location.
-     */
-    private int getMyIcons(SwccgCardBlueprint bp, Side mySide) {
-        if (bp == null) return 0;
-        if (mySide == Side.LIGHT) {
-            return bp.getIconCount(Icon.LIGHT_FORCE);
-        } else {
-            return bp.getIconCount(Icon.DARK_FORCE);
-        }
-    }
-
-    // Helper classes for analysis results
-    private static class AttackAnalysis {
-        boolean viable;
-        String reason;
-        float score;
-        boolean hasForcedrainPotential;  // True if target has opponent icons
-        PhysicalCard targetLocation;     // T4.1 (2026-07-06): best target, for the R2 adjacency gate
-
-        AttackAnalysis(boolean viable, String reason, float score, boolean hasForcedrainPotential,
-                       PhysicalCard targetLocation) {
-            this.viable = viable;
-            this.reason = reason;
-            this.score = score;
-            this.hasForcedrainPotential = hasForcedrainPotential;
-            this.targetLocation = targetLocation;
-        }
-    }
-
-    private static class SpreadAnalysis {
-        boolean viable;
-        String reason;
-        float score;
-
-        SpreadAnalysis(boolean viable, String reason, float score) {
-            this.viable = viable;
-            this.reason = reason;
-            this.score = score;
-        }
-    }
 }

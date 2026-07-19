@@ -1,3 +1,16 @@
+  ==== V216 AI-ONLY MOVE OPPORTUNITY ANALYSIS OWNER (2026-07-18, both bots) ====
+Shared MoveOpportunityPolicy now owns the duplicated ATTACK and SPREAD scans, printed-power math,
+icon scoring, strict first-location tie behavior, undercover handling, reasons, and result types.
+Both adapters keep the original source gates, direct score application, logging, ATTACK adjacency check,
+R2 ladder claims, and additive positions. This is structural only: the destination-blind all-location
+scan remains; ATTACK still excludes undercover cards while SPREAD counts them; caller-owned +15 weak
+attack and -10 failed-spread scores remain unchanged. V29.7, V29.13, the MOVE ladder, routing,
+objectives, physical-card resolution, and all engine source are unchanged. Verification passed 34
+focused tests and the full 1,211-test reactor with 0 failures, 0 errors, and 26 skipped. Package and
+independent gates passed; server jar SHA-256 is
+1c26c8c591ebf2abfbd4e88573bdae1957b87d42952bf46f26c365bb71fd7f3f. Runtime load and live-game
+proof remain separate gates. Revert the single V216 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V215 AI-ONLY MOVE FORCE-ECONOMY POLICY OWNER (2026-07-18, both bots) ====
 Shared MoveForceEconomyPolicy now owns the duplicated V29 move-reserve and V27 move-maintenance score
 bodies. Both bot adapters keep the original Force-pile reads, shared DTF/grabber/maintenance facts,
