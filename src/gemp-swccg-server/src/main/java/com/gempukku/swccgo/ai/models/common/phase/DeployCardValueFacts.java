@@ -47,4 +47,13 @@ public final class DeployCardValueFacts {
             Objects.requireNonNull(actionId, "actionId");
         }
     }
+
+    public record DestinationAbility(
+            String actionId,
+            float ability) {
+
+        public DestinationAbility {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
 }

@@ -1,7 +1,10 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import java.util.List;
@@ -75,6 +78,32 @@ public class DeployCardValuePolicyTest {
                         "strategic", false, false)).operations().isEmpty());
     }
 
+    @Test
+    public void destinationAbilityPreservesEveryLegacyBoundary() {
+        assertDestinationAbility(6.0f, "V29.7-destination-ability-high", 50.0f,
+                "V29.7 HIGH ABILITY: Ability 6 — strong location control!");
+        assertDestinationAbility(Math.nextDown(6.0f),
+                "V29.7-destination-ability", 25.0f,
+                "V29.7 ABILITY: Ability 5 — good for control");
+        assertDestinationAbility(5.0f, "V29.7-destination-ability", 25.0f,
+                "V29.7 ABILITY: Ability 5 — good for control");
+        assertDestinationAbility(Math.nextDown(5.0f),
+                "V29.7-destination-ability", 5.0f,
+                "V29.7 ABILITY: Ability 4");
+        assertDestinationAbility(3.0f, "V29.7-destination-ability", 5.0f,
+                "V29.7 ABILITY: Ability 3");
+        assertTrue(DeployCardValuePolicy.scoreDestinationAbility(
+                new DeployCardValueFacts.DestinationAbility(
+                        "ability", 2.99f)).operations().isEmpty());
+        assertTrue(DeployCardValuePolicy.scoreDestinationAbility(
+                new DeployCardValueFacts.DestinationAbility(
+                        "ability", 1.0f)).operations().isEmpty());
+        assertDestinationAbility(0.99f, "V29.7-destination-ability-low", -30.0f,
+                "V29.7 LOW ABILITY: Ability 0 — weak presence");
+        assertDestinationAbility(0.0f, "V29.7-destination-ability-low", -30.0f,
+                "V29.7 LOW ABILITY: Ability 0 — weak presence");
+    }
+
     private static void assertBase(
             int power,
             int ability,
@@ -88,6 +117,19 @@ public class DeployCardValuePolicyTest {
                 .operations().get(0);
         assertEquals(ruleId, operation.ruleArmId().id());
         assertRaw(delta, operation.delta());
+    }
+
+    private static void assertDestinationAbility(
+            float ability, String ruleId, float delta, String reason) {
+        PolicyOperation operation = DeployCardValuePolicy.scoreDestinationAbility(
+                new DeployCardValueFacts.DestinationAbility(
+                        "ability", ability)).operations().get(0);
+        assertEquals(ruleId, operation.ruleArmId().id());
+        assertRaw(delta, operation.delta());
+        assertEquals(reason, operation.reason());
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(TraceDomainId.DEPLOY_SITING, operation.domainId());
+        assertEquals(TraceOutputKind.BANDED, operation.outputKind());
     }
 
     private static void assertRules(

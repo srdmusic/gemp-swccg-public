@@ -272,6 +272,31 @@ public class DeploySitingPolicyTest {
                         "action-1", false)).operations().isEmpty());
     }
 
+    @Test
+    public void opponentForceIconBonusPreservesZeroAndLinearScores() {
+        assertTrue(DeploySitingPolicy.evaluateOpponentForceIcons(
+                new DeploySitingPolicy.OpponentForceIconsFacts(
+                        "action-1", 0)).operations().isEmpty());
+
+        PolicyOperation one = DeploySitingPolicy.evaluateOpponentForceIcons(
+                new DeploySitingPolicy.OpponentForceIconsFacts(
+                        "action-1", 1)).operations().get(0);
+        assertEquals("V23-force-icons", one.ruleArmId().id());
+        assertEquals(30.0f, one.delta(), 0.0f);
+        assertEquals(PolicyOperationKind.ADD, one.kind());
+        assertEquals(TraceDomainId.DEPLOY_SITING, one.domainId());
+        assertEquals(TraceOutputKind.BANDED, one.outputKind());
+        assertEquals("V23 FORCE DRAIN: 1 opponent force icon(s) — better drain target!",
+                one.reason());
+
+        PolicyOperation three = DeploySitingPolicy.evaluateOpponentForceIcons(
+                new DeploySitingPolicy.OpponentForceIconsFacts(
+                        "action-1", 3)).operations().get(0);
+        assertEquals(90.0f, three.delta(), 0.0f);
+        assertEquals("V23 FORCE DRAIN: 3 opponent force icon(s) — better drain target!",
+                three.reason());
+    }
+
     private static void assertDestination(
             DeploySitingPolicy.StarshipDestinationState state,
             float expectedDelta, TraceOutputKind expectedKind,

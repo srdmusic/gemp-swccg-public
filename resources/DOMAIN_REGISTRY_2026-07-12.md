@@ -145,6 +145,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V271 owner note:** `DeploySitingPolicy` now also owns the `CardSelectionEvaluator` destination-compatibility stream: V29 ship-reference ground, the CSE arm of V190, starship space tiers, vehicle compatibility, V24.14B permanent-weapon siting, V29.7 empty-bay protection, and V29.6 battleground value. Adapters retain every board and card read, branch, catch, break, and log. V190's CSE `-1500` remains additive score costume, not hard-veto control.
 
+**V272 owner note:** three scalar CSE destination arms now use their existing shared AI-only owners. `DeployPilotShipPolicy` owns V24.10 Executor/Flagship destination scoring (`+500` Bespin, additive `-9999` elsewhere); `DeploySitingPolicy` owns V23 opponent Force-icon value (`icons * 30` above zero); and `DeployCardValuePolicy` owns the V29.7 destination-ability ladder (`+50/+25/+5`, silent `1..<3`, `-30` below `1`). Adapters retain all observations, guards, catches, logs, and contribution positions. No engine metadata or candidate control flow is involved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

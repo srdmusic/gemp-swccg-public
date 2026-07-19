@@ -9,6 +9,8 @@ import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
+import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
@@ -191,6 +193,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                          PolicyResult result) {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
                 "deploy-siting-selection-" + result.producerId()
+                        + "-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyDeployCardValuePolicy(EvaluatedAction action,
+                                            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "deploy-card-value-selection-" + result.producerId()
                         + "-" + action.getActionId());
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
@@ -2673,11 +2684,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             if (deployingNameLower.contains("executor") || deployingNameLower.contains("flagship")) {
                                 String locTitleLower = title != null ? title.toLowerCase(java.util.Locale.ROOT) : "";
                                 if (locTitleLower.contains("bespin")) {
-                                    action.addReasoning("V24.10 EXECUTOR TO BESPIN: This is THE correct system — entire TDIGWATT engine depends on it!", 500.0f);
+                                    applyDeployPilotPolicy(action,
+                                        DeployPilotShipPolicy.evaluateExecutorDestination(
+                                            new DeployPilotShipPolicy.ExecutorDestinationFacts(
+                                                action.getActionId(), true, title)));
                                     logger.warn("V24.10 EXECUTOR LOCATION: Bespin system selected — MASSIVE bonus (+500)!");
                                 } else {
                                     // Any non-Bespin system is WRONG for Executor
-                                    action.addReasoning("V24.10 EXECUTOR WRONG SYSTEM: Executor MUST go to Bespin, not " + title + "!", -9999.0f);
+                                    applyDeployPilotPolicy(action,
+                                        DeployPilotShipPolicy.evaluateExecutorDestination(
+                                            new DeployPilotShipPolicy.ExecutorDestinationFacts(
+                                                action.getActionId(), false, title)));
                                     logger.warn("V24.10 EXECUTOR LOCATION: {} is NOT Bespin — HARD BLOCK! Executor must deploy to Bespin!", title);
                                 }
                             }
@@ -2723,8 +2740,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                             if (opponentIcons > 0) {
                                 float iconBonus = opponentIcons * 30.0f;
-                                action.addReasoning("V23 FORCE DRAIN: " + opponentIcons +
-                                    " opponent force icon(s) — better drain target!", iconBonus);
+                                applyDeploySitingPolicy(action,
+                                    DeploySitingPolicy.evaluateOpponentForceIcons(
+                                        new DeploySitingPolicy.OpponentForceIconsFacts(
+                                            action.getActionId(), opponentIcons)));
                                 logger.info("V23 FORCE ICONS: {} has {} opponent icons (+{})", title, opponentIcons, (int)iconBonus);
                             }
                         }
@@ -2891,16 +2910,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 SwccgCardBlueprint deployBp = getBlueprintFromId(context, deployingBlueprintId);
                                 if (deployBp != null && deployBp.hasAbilityAttribute()) {
                                     float charAbility = deployBp.getAbility();
-                                    // Scale bonus with ability: 0-2 = no bonus, 3-4 = small, 5+ = good, 6+ = great
-                                    if (charAbility >= 6) {
-                                        action.addReasoning("V29.7 HIGH ABILITY: Ability " + (int)charAbility + " — strong location control!", 50.0f);
-                                    } else if (charAbility >= 5) {
-                                        action.addReasoning("V29.7 ABILITY: Ability " + (int)charAbility + " — good for control", 25.0f);
-                                    } else if (charAbility >= 3) {
-                                        action.addReasoning("V29.7 ABILITY: Ability " + (int)charAbility, 5.0f);
-                                    } else if (charAbility < 1) {
-                                        action.addReasoning("V29.7 LOW ABILITY: Ability " + (int)charAbility + " — weak presence", -30.0f);
-                                    }
+                                    applyDeployCardValuePolicy(action,
+                                        DeployCardValuePolicy.scoreDestinationAbility(
+                                            new DeployCardValueFacts.DestinationAbility(
+                                                action.getActionId(), charAbility)));
                                 }
                             } catch (Exception e) {
                                 logger.debug("V29.7 ABILITY: Error checking ability: {}", e.getMessage());

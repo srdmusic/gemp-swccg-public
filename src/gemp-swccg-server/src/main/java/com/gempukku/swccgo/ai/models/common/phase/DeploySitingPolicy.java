@@ -246,6 +246,19 @@ public final class DeploySitingPolicy {
         return new PolicyResult("DEPLOY_BATTLEGROUND_LOCATION_POLICY", operations);
     }
 
+    public static PolicyResult evaluateOpponentForceIcons(
+            OpponentForceIconsFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.opponentIcons() > 0) {
+            operations.add(addSiting(facts.actionId(), "V23-force-icons",
+                    TraceOutputKind.BANDED, facts.opponentIcons() * 30.0f,
+                    "V23 FORCE DRAIN: " + facts.opponentIcons()
+                            + " opponent force icon(s) — better drain target!"));
+        }
+        return new PolicyResult("DEPLOY_OPPONENT_FORCE_ICONS_POLICY", operations);
+    }
+
     private static void addFormation(List<PolicyOperation> operations,
                                      Facts facts) {
         switch (facts.formationState()) {
@@ -310,6 +323,13 @@ public final class DeploySitingPolicy {
     public record BattlegroundLocationFacts(String actionId,
                                             boolean battleground) {
         public BattlegroundLocationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record OpponentForceIconsFacts(String actionId,
+                                          int opponentIcons) {
+        public OpponentForceIconsFacts {
             Objects.requireNonNull(actionId, "actionId");
         }
     }

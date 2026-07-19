@@ -235,6 +235,23 @@ public final class DeployPilotShipPolicy {
         return new PolicyResult("DEPLOY_PILOT_CANDIDATE_POLICY", operations);
     }
 
+    public static PolicyResult evaluateExecutorDestination(
+            ExecutorDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.bespinSystem()) {
+            addSiting(operations, facts.actionId(), "V24.10-executor-bespin",
+                    TraceOutputKind.BANDED, 500.0f,
+                    "V24.10 EXECUTOR TO BESPIN: This is THE correct system — entire TDIGWATT engine depends on it!");
+        } else {
+            addSiting(operations, facts.actionId(), "V24.10-executor-wrong-system",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "V24.10 EXECUTOR WRONG SYSTEM: Executor MUST go to Bespin, not "
+                            + facts.destinationTitle() + "!");
+        }
+        return new PolicyResult("DEPLOY_EXECUTOR_DESTINATION_POLICY", operations);
+    }
+
     public static Evaluation evaluateSimultaneousPilotGuard(
             SimultaneousPilotGuardFacts facts) {
         Objects.requireNonNull(facts, "facts");
@@ -407,6 +424,15 @@ public final class DeployPilotShipPolicy {
                                       Float power, Float deployCost) {
         public PilotCandidateFacts {
             Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record ExecutorDestinationFacts(String actionId,
+                                           boolean bespinSystem,
+                                           String destinationTitle) {
+        public ExecutorDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            destinationTitle = destinationTitle == null ? "null" : destinationTitle;
         }
     }
 

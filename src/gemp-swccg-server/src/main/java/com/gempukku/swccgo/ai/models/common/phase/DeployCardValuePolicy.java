@@ -91,6 +91,40 @@ public final class DeployCardValuePolicy {
                 "High-ability character")));
     }
 
+    public static PolicyResult scoreDestinationAbility(
+            DeployCardValueFacts.DestinationAbility facts) {
+        Objects.requireNonNull(facts, "facts");
+        String ruleId;
+        float delta;
+        String reason;
+        if (facts.ability() >= 6.0f) {
+            ruleId = "V29.7-destination-ability-high";
+            delta = 50.0f;
+            reason = "V29.7 HIGH ABILITY: Ability " + (int) facts.ability()
+                    + " — strong location control!";
+        } else if (facts.ability() >= 5.0f) {
+            ruleId = "V29.7-destination-ability";
+            delta = 25.0f;
+            reason = "V29.7 ABILITY: Ability " + (int) facts.ability()
+                    + " — good for control";
+        } else if (facts.ability() >= 3.0f) {
+            ruleId = "V29.7-destination-ability";
+            delta = 5.0f;
+            reason = "V29.7 ABILITY: Ability " + (int) facts.ability();
+        } else if (facts.ability() < 1.0f) {
+            ruleId = "V29.7-destination-ability-low";
+            delta = -30.0f;
+            reason = "V29.7 LOW ABILITY: Ability " + (int) facts.ability()
+                    + " — weak presence";
+        } else {
+            return new PolicyResult(PRODUCER, List.of());
+        }
+        return new PolicyResult(PRODUCER, List.of(PolicyOperation.add(
+                facts.actionId(), TraceRuleId.of(ruleId),
+                TraceDomainId.DEPLOY_SITING, TraceOutputKind.BANDED,
+                delta, reason)));
+    }
+
     private static PolicyOperation operation(
             String actionId,
             String ruleId,

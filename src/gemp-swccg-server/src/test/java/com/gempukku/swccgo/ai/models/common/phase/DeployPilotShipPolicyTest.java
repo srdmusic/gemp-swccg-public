@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
@@ -173,6 +174,33 @@ public class DeployPilotShipPolicyTest {
                                 "a", null, 2.0f, 8.0f)).operations();
         assertRules(zeroCostScore,
                 new String[]{"pilot-deploy-cost"}, new float[]{0.0f});
+    }
+
+    @Test
+    public void executorDestinationPreservesBespinAndWrongSystemScores() {
+        PolicyOperation bespin = DeployPilotShipPolicy.evaluateExecutorDestination(
+                new DeployPilotShipPolicy.ExecutorDestinationFacts(
+                        "a", true, "Bespin"))
+                .operations().get(0);
+        assertEquals("V24.10-executor-bespin", bespin.ruleArmId().id());
+        assertEquals(500.0f, bespin.delta(), 0.0f);
+        assertEquals(PolicyOperationKind.ADD, bespin.kind());
+        assertEquals(TraceDomainId.DEPLOY_SITING, bespin.domainId());
+        assertEquals(TraceOutputKind.BANDED, bespin.outputKind());
+        assertEquals("V24.10 EXECUTOR TO BESPIN: This is THE correct system — entire TDIGWATT engine depends on it!",
+                bespin.reason());
+
+        PolicyOperation wrong = DeployPilotShipPolicy.evaluateExecutorDestination(
+                new DeployPilotShipPolicy.ExecutorDestinationFacts(
+                        "a", false, "Kashyyyk"))
+                .operations().get(0);
+        assertEquals("V24.10-executor-wrong-system", wrong.ruleArmId().id());
+        assertEquals(-9999.0f, wrong.delta(), 0.0f);
+        assertEquals(PolicyOperationKind.ADD, wrong.kind());
+        assertEquals(TraceDomainId.DEPLOY_SITING, wrong.domainId());
+        assertEquals(TraceOutputKind.VETO, wrong.outputKind());
+        assertEquals("V24.10 EXECUTOR WRONG SYSTEM: Executor MUST go to Bespin, not Kashyyyk!",
+                wrong.reason());
     }
 
     @Test

@@ -7679,3 +7679,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and both adapters. Runtime reload and live-game proof remain separate deployment gates.
     Clean V271 is based on live V270 6912b5f99; quarantined reference d683fd3b0 and its ancestors
     remain reference-only. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V272 (2026-07-19): consolidate scalar DEPLOY destination scores ====
+    Existing shared AI-only owners now own three residual CardSelection destination scores:
+    DeployPilotShipPolicy owns V24.10 Executor/Flagship destination (+500 Bespin, additive -9999
+    any other system); DeploySitingPolicy owns V23 opponent Force icons (icons * 30 above zero);
+    and DeployCardValuePolicy owns the exclusive V29.7 destination-ability ladder (+50/+25/+5,
+    silent from 1 through below 3, -30 below 1). Both adapters retain all card, location, side,
+    icon, blueprint, and ability reads plus guards, catches, logs, and contribution positions.
+    Exact reason strings and integer ability rendering are unchanged; no candidate continue was
+    added. Focused policy/source/parity 46/0/0/0, DEPLOY-named 217/0/0/0, full reactor
+    1828/0/0/26, exact mirror parity, boundary and read-order gates, AI-only scope, diff check,
+    and clean package passed. K2's clean-base gate passed the temp-id and additive-VETO boundaries.
+    Server jar SHA-256 2f4bb38ebe8f790d98c10baa049f60db711f4f7278ddacd74c4516681fed89cc and web jar SHA-256
+    36b9f75d4278a8b2156e5d351e6f50acc862a8c48bb7d5ce648b2cb3ed2657b7 contain the shared owners
+    and both adapters. Runtime reload and live-game proof remain separate deployment gates.
+    Clean V272 is based on live V271 8469a915f; quarantined reference b41749d20 and its ancestors
+    remain reference-only. AI source only; no GEMP engine or player-decision changes.
