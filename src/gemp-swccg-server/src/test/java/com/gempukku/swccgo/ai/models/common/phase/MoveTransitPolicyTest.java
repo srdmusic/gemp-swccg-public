@@ -71,6 +71,54 @@ public class MoveTransitPolicyTest {
     }
 
     @Test
+    public void passengerCapacitySlotPreservesSkipBranch() {
+        MoveTransitPolicy.CapacitySlot result =
+                MoveTransitPolicy.capacitySlot(
+                        "move to passenger capacity slot");
+
+        assertEquals(MoveTransitPolicy.CapacitySlotBranch.PASSENGER_SKIP,
+                result.branch());
+        assertRawFloat(0.0f, result.baseScore());
+        assertFalse(result.contribution().applies());
+    }
+
+    @Test
+    public void pilotCapacitySlotPreservesBaseAndReasoningScores() {
+        MoveTransitPolicy.CapacitySlot result =
+                MoveTransitPolicy.capacitySlot(
+                        "move to pilot capacity slot");
+
+        assertEquals(MoveTransitPolicy.CapacitySlotBranch.PILOT_PREFER,
+                result.branch());
+        assertRawFloat(100.0f, result.baseScore());
+        assertTrue(result.contribution().applies());
+        assertEquals("Move to pilot slot - adds power!",
+                result.contribution().reason());
+        assertRawFloat(50.0f, result.contribution().delta());
+    }
+
+    @Test
+    public void passengerCapacitySlotPreservesFirstBranchPrecedence() {
+        MoveTransitPolicy.CapacitySlot result =
+                MoveTransitPolicy.capacitySlot(
+                        "passenger capacity slot then pilot capacity slot");
+
+        assertEquals(MoveTransitPolicy.CapacitySlotBranch.PASSENGER_SKIP,
+                result.branch());
+    }
+
+    @Test
+    public void unrelatedMoveHasNoCapacitySlotContribution() {
+        MoveTransitPolicy.CapacitySlot result =
+                MoveTransitPolicy.capacitySlot("move using landspeed");
+
+        assertEquals(MoveTransitPolicy.CapacitySlotBranch.NONE,
+                result.branch());
+        assertRawFloat(0.0f, result.baseScore());
+        assertFalse(result.contribution().applies());
+    }
+
+    @Test
     public void defensiveShuttlePreservesExactTwoToOneBoundary() {
         PhysicalCard location = location("Cloud City: Upper Walkway");
         GameState gameState = gameState(

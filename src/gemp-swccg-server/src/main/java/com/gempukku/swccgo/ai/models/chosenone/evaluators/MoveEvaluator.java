@@ -424,16 +424,23 @@ public class MoveEvaluator extends ActionEvaluator {
             }
 
             // === SPECIAL CASES: Passenger/Pilot capacity slots ===
-            if (actionLower.contains("passenger capacity slot")) {
+            MoveTransitPolicy.CapacitySlot capacitySlot =
+                MoveTransitPolicy.capacitySlot(actionLower);
+            if (capacitySlot.branch()
+                    == MoveTransitPolicy.CapacitySlotBranch.PASSENGER_SKIP) {
                 logger.info("[MoveEvaluator] SKIP passenger slot move - NEVER good");
-                continue;  // Let ActionTextEvaluator's -100 apply
+                continue;  // Let ActionTextEvaluator's V87 -3000 apply
             }
 
-            if (actionLower.contains("pilot capacity slot")) {
+            if (capacitySlot.branch()
+                    == MoveTransitPolicy.CapacitySlotBranch.PILOT_PREFER) {
                 EvaluatedAction pilotAction = new EvaluatedAction(
-                    actionId, ActionType.MOVE, 100.0f, actionText
+                    actionId, ActionType.MOVE,
+                    capacitySlot.baseScore(), actionText
                 );
-                pilotAction.addReasoning("Move to pilot slot - adds power!", 50.0f);
+                pilotAction.addReasoning(
+                    capacitySlot.contribution().reason(),
+                    capacitySlot.contribution().delta());
                 actions.add(pilotAction);
                 logger.info("[MoveEvaluator] Strongly prefer pilot capacity slot move");
                 continue;

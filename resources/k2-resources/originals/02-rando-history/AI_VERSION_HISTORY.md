@@ -1,3 +1,21 @@
+  ==== V228 AI-ONLY MOVE CAPACITY-SLOT ROUTE OWNER (2026-07-19, both bots) ====
+Existing shared MoveTransitPolicy now also owns the duplicated passenger-first capacity-slot
+classification plus the pilot branch's exact base score and contribution. Both adapters retain
+V160/V169 ordering, passenger/pilot logs, EvaluatedAction construction, action-list mutation,
+continue control flow, and the position before general MOVE ladder setup. Behavior is unchanged:
+passenger-slot text emits no MoveEvaluator action and continues; pilot-slot text creates a MOVE
+action at base 100, adds +50 with the exact reason, appends it, logs, and continues. Passenger still
+wins when both substrings occur. The separate ActionTextEvaluator V87 -3000 no-swap rule remains
+untouched for both directions, so the existing pilot +150 versus V87 -3000 contradiction is now
+characterized rather than tuned. V160/V169, V87, general routing, ladder reset/finalization, and
+physical-card resolution are untouched. Production edits are AI-only. Verification passed 208
+focused MOVE tests and the full 1,385-test reactor with 0 failures, 0 errors, and 26 skipped.
+Package, source-boundary, forbidden-symbol, artifact, mirror, V87 cross-evaluator guard, and
+independent source-review gates passed; server jar SHA-256 is
+b9d16accbf9e1b5cd77dca0db2c8f170ad73527e9dd0cb77bb9bf3f4438adf3c and packaged web.jar SHA-256 is
+1617d962a3f2998d380659619da3c24f7fbd9a1c0acdf965867262e78f29d6f0. Runtime load and live-game
+proof remain separate gates. Revert the single V228 commit. See AI_CHANGELOG 2026-07-19.
+
   ==== V227 AI-ONLY MOVE FLEE CONTRIBUTION OWNER (2026-07-19, both bots) ====
 Existing shared MoveThreatPolicy now also owns the duplicated generic FLEE strict predicates,
 disadvantage calculation, integer-truncated reason, caller-supplied threshold/base delta, and

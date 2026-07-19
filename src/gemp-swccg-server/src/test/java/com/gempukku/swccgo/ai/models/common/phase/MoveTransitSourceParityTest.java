@@ -30,6 +30,8 @@ public class MoveTransitSourceParityTest {
                 move, "MoveTransitPolicy.movementTypes("));
         assertEquals(1, countOccurrences(
                 move, "MoveTransitPolicy.hiddenPathTransit("));
+        assertEquals(1, countOccurrences(
+                move, "MoveTransitPolicy.capacitySlot("));
         assertFalse(move.contains(
                 "if (cardToMove != null && cardToMove.isPilotOf())"));
         assertFalse(move.contains(
@@ -39,6 +41,8 @@ public class MoveTransitSourceParityTest {
                 "public static MovementTypes movementTypes("));
         assertTrue(policy.contains(
                 "public static HiddenPathTransit hiddenPathTransit("));
+        assertTrue(policy.contains(
+                "public static CapacitySlot capacitySlot("));
 
         int hiddenPathStart = move.indexOf(
                 "// === V53b: HIDDEN PATH MANDATORY JEDI TRANSIT ===");
@@ -82,6 +86,12 @@ public class MoveTransitSourceParityTest {
                 "V60 HIDDEN PATH: {} BLOCKED landspeed"));
         assertTrue(move.contains(
                 "V53b HIDDEN PATH: {} leaving Mapuzo"));
+        assertTrue(move.contains(
+                "capacitySlot.contribution().reason()"));
+        assertTrue(move.contains(
+                "[MoveEvaluator] SKIP passenger slot move"));
+        assertTrue(move.contains(
+                "[MoveEvaluator] Strongly prefer pilot capacity slot move"));
     }
 
     @Test
@@ -125,6 +135,73 @@ public class MoveTransitSourceParityTest {
         assertTrue(hiddenPathClaim > hiddenPathVeto);
         assertTrue(hiddenPathLog > hiddenPathClaim);
         assertTrue(finalizer > hiddenPathLog);
+    }
+
+    @Test
+    public void capacitySlotCallRemainsBeforeGeneralMoveConstruction()
+            throws IOException {
+        String move = evaluatorSource("rando");
+        int blockedGate = move.indexOf(
+                "if (v160MoveBlocked != null");
+        int capacity = move.indexOf(
+                "MoveTransitPolicy.capacitySlot(", blockedGate);
+        int passenger = move.indexOf(
+                "CapacitySlotBranch.PASSENGER_SKIP", capacity);
+        int pilot = move.indexOf(
+                "CapacitySlotBranch.PILOT_PREFER", passenger);
+        int pilotConstruction = move.indexOf(
+                "EvaluatedAction pilotAction = new EvaluatedAction(", pilot);
+        int generalConstruction = move.indexOf(
+                "EvaluatedAction action = new EvaluatedAction(",
+                pilotConstruction);
+
+        assertTrue(blockedGate >= 0);
+        assertTrue(capacity > blockedGate);
+        assertTrue(passenger > capacity);
+        assertTrue(pilot > passenger);
+        assertTrue(pilotConstruction > pilot);
+        assertTrue(generalConstruction > pilotConstruction);
+    }
+
+    @Test
+    public void capacitySlotOwnerPreservesPassengerFirstAndPilotScores()
+            throws IOException {
+        String policy = policySource();
+        int method = policy.indexOf(
+                "public static CapacitySlot capacitySlot(");
+        int passenger = policy.indexOf(
+                "actionLower.contains(\"passenger capacity slot\")",
+                method);
+        int pilot = policy.indexOf(
+                "actionLower.contains(\"pilot capacity slot\")",
+                passenger);
+        int baseScore = policy.indexOf("100.0f", pilot);
+        int reason = policy.indexOf(
+                "\"Move to pilot slot - adds power!\"", baseScore);
+        int delta = policy.indexOf("50.0f", reason);
+
+        assertTrue(method >= 0);
+        assertTrue(passenger > method);
+        assertTrue(pilot > passenger);
+        assertTrue(baseScore > pilot);
+        assertTrue(reason > baseScore);
+        assertTrue(delta > reason);
+    }
+
+    @Test
+    public void actionTextNoSwapPenaltyRemainsSeparateAndUntouched()
+            throws IOException {
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String actionText = evaluatorSource(
+                    bot, "ActionTextEvaluator.java");
+            assertTrue(actionText.contains(
+                    "textLower.contains(\"move to passenger capacity slot\")"));
+            assertTrue(actionText.contains(
+                    "textLower.contains(\"move to pilot capacity slot\")"));
+            assertTrue(actionText.contains(
+                    "V87 NO SWAP: pilot↔passenger capacity slot rearrangement is pointless — hard block"));
+            assertTrue(actionText.contains("-3000.0f"));
+        }
     }
 
     @Test

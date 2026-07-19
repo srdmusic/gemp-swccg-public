@@ -18,6 +18,12 @@ public final class MoveTransitPolicy {
         MAPUZO_EXIT
     }
 
+    public enum CapacitySlotBranch {
+        NONE,
+        PASSENGER_SKIP,
+        PILOT_PREFER
+    }
+
     public record Contribution(boolean applies, String reason, float delta) {
         private static Contribution none() {
             return new Contribution(false, null, 0.0f);
@@ -54,6 +60,17 @@ public final class MoveTransitPolicy {
         }
     }
 
+    public record CapacitySlot(
+            CapacitySlotBranch branch,
+            float baseScore,
+            Contribution contribution) {
+        private static CapacitySlot none() {
+            return new CapacitySlot(
+                    CapacitySlotBranch.NONE, 0.0f,
+                    Contribution.none());
+        }
+    }
+
     private MoveTransitPolicy() {
     }
 
@@ -73,6 +90,24 @@ public final class MoveTransitPolicy {
                                 + shipName + " — NEVER leave the ship!",
                         -500.0f),
                 pilotName, shipName);
+    }
+
+    public static CapacitySlot capacitySlot(String actionLower) {
+        if (actionLower.contains("passenger capacity slot")) {
+            return new CapacitySlot(
+                    CapacitySlotBranch.PASSENGER_SKIP,
+                    0.0f, Contribution.none());
+        }
+        if (actionLower.contains("pilot capacity slot")) {
+            return new CapacitySlot(
+                    CapacitySlotBranch.PILOT_PREFER,
+                    100.0f,
+                    new Contribution(
+                            true,
+                            "Move to pilot slot - adds power!",
+                            50.0f));
+        }
+        return CapacitySlot.none();
     }
 
     public static MovementTypes movementTypes(
