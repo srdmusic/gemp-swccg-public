@@ -18,12 +18,15 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidateFacts;
+import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction;
@@ -165,6 +168,159 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             EvaluatedAction action, SetupPolicy.Contribution contribution) {
         if (contribution != null) {
             applySetupContributions(action, List.of(contribution));
+        }
+    }
+
+    private void applyPullSelectionPolicy(EvaluatedAction action,
+                                          PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "pull-selection-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private static PullSelectionCandidateFacts.CloudCitySite pullCloudCitySite(
+            String titleLower) {
+        if (titleLower.contains("upper walkway")
+                || titleLower.contains("exterior walkway")) {
+            return PullSelectionCandidateFacts.CloudCitySite.UPPER_WALKWAY;
+        }
+        if (titleLower.contains("dining room")) {
+            return PullSelectionCandidateFacts.CloudCitySite.DINING_ROOM;
+        }
+        if (titleLower.contains("security tower")) {
+            return PullSelectionCandidateFacts.CloudCitySite.SECURITY_TOWER;
+        }
+        if (titleLower.contains("carbonite chamber")) {
+            return PullSelectionCandidateFacts.CloudCitySite.CARBONITE_CHAMBER;
+        }
+        return PullSelectionCandidateFacts.CloudCitySite.OTHER;
+    }
+
+    private void applyUnknownPullSelectionPolicy(
+            DecisionContext context, EvaluatedAction action,
+            String cardTitle, String blueprintId, CardCategory category,
+            boolean blueprintKnown, boolean lossDecision, String decisionLower) {
+        String titleLower = cardTitle != null
+                ? cardTitle.toLowerCase(Locale.ROOT) : "";
+        boolean huntDownLightsaber = false;
+        if (!lossDecision && titleLower.contains("lightsaber")) {
+            var objective = context.getObjectiveAnalyzer();
+            huntDownLightsaber = objective != null && objective.isAnalyzed()
+                    && objective.isHuntDownV();
+        }
+
+        PullSelectionCandidateFacts.CloudCityMode cloudCityMode =
+                PullSelectionCandidateFacts.CloudCityMode.NONE;
+        if (titleLower.contains("cloud city")
+                && (decisionLower.contains("sorry")
+                || decisionLower.contains("interior")
+                || decisionLower.contains("cloud city")
+                || decisionLower.contains("battleground"))) {
+            boolean slipSliding = decisionLower.contains("slip")
+                    || decisionLower.contains("battleground")
+                    || context.getTurnNumber() <= 0;
+            boolean imSorry = decisionLower.contains("sorry")
+                    || decisionLower.contains("interior");
+            if (imSorry && !slipSliding) {
+                cloudCityMode = PullSelectionCandidateFacts.CloudCityMode.IM_SORRY;
+            } else if (slipSliding) {
+                cloudCityMode = PullSelectionCandidateFacts.CloudCityMode.SLIP_SLIDING;
+            }
+        }
+
+        Integer priorityProtectionScore = blueprintId != null
+                && AiPriorityCards.isPriorityCard(blueprintId)
+                ? AiPriorityCards.getProtectionScore(blueprintId) : null;
+
+        PullSelectionCandidateFacts.UnknownAmsdState amsdState =
+                PullSelectionCandidateFacts.UnknownAmsdState.NONE;
+        if (context.getPhase() == Phase.DEPLOY && blueprintKnown
+                && category == CardCategory.CHARACTER) {
+            var oracle = context.getDeckOracle();
+            if (oracle != null && oracle.isAnalyzed()
+                    && (oracle.isCardInPlay("Alert My Star Destroyer")
+                    || oracle.isCardInPlay("Alert My Star Destroyer!"))) {
+                amsdState = titleLower.contains("piett")
+                        ? PullSelectionCandidateFacts.UnknownAmsdState.PIETT
+                        : PullSelectionCandidateFacts.UnknownAmsdState.NON_PIETT;
+            }
+        }
+
+        applyPullSelectionPolicy(action,
+            PullSelectionCandidatePolicy.scoreUnknownPull(
+                new PullSelectionCandidateFacts.UnknownPull(
+                    action.getActionId(), cardTitle, category, !lossDecision,
+                    huntDownLightsaber, cloudCityMode,
+                    pullCloudCitySite(titleLower), priorityProtectionScore,
+                    amsdState)));
+
+        if (huntDownLightsaber) {
+            logger.warn("V25 HUNT DOWN UNKNOWN-GAIN: {} is a lightsaber — PRIORITY (+200)", cardTitle);
+        }
+        if (cloudCityMode == PullSelectionCandidateFacts.CloudCityMode.SLIP_SLIDING
+                && titleLower.contains("dining room")) {
+            logger.warn("V24.10 SLIP SLIDING: Dining Room +300 — grab it as starting location!");
+        }
+        if (amsdState == PullSelectionCandidateFacts.UnknownAmsdState.PIETT) {
+            logger.warn("V24.10 AMSD SAFETY NET: Piett detected — APPROVED (+500)");
+        } else if (amsdState
+                == PullSelectionCandidateFacts.UnknownAmsdState.NON_PIETT) {
+            logger.warn("V24.10 AMSD SAFETY NET: {} is NOT Piett — HARD BLOCK (-9999)", cardTitle);
+        }
+    }
+
+    private void applyBlueprintPullSelectionPolicy(
+            EvaluatedAction action, String blueprintId, String cardTitle,
+            String decisionLower, DeploymentPlan plan) {
+        String titleLower = cardTitle != null
+                ? cardTitle.toLowerCase(Locale.ROOT) : "";
+        PullSelectionCandidateFacts.CloudCityMode cloudCityMode =
+                PullSelectionCandidateFacts.CloudCityMode.NONE;
+        if (titleLower.contains("cloud city")
+                && (decisionLower.contains("sorry")
+                || decisionLower.contains("interior")
+                || decisionLower.contains("cloud city")
+                || decisionLower.contains("battleground"))) {
+            boolean objectivePick = decisionLower.contains("choose")
+                    && decisionLower.contains("site")
+                    && decisionLower.contains("deploy")
+                    && !decisionLower.contains("slip");
+            boolean slipSliding = (decisionLower.contains("slip")
+                    || decisionLower.contains("sliding")) && !objectivePick;
+            boolean imSorry = decisionLower.contains("sorry")
+                    || decisionLower.contains("interior");
+            if (objectivePick) {
+                cloudCityMode = PullSelectionCandidateFacts.CloudCityMode.OBJECTIVE;
+            } else if (imSorry && !slipSliding) {
+                cloudCityMode = PullSelectionCandidateFacts.CloudCityMode.IM_SORRY;
+            } else if (slipSliding) {
+                cloudCityMode = PullSelectionCandidateFacts.CloudCityMode.SLIP_SLIDING;
+            }
+        }
+
+        PullSelectionCandidateFacts.PlanState planState =
+                PullSelectionCandidateFacts.PlanState.NONE;
+        String strategy = "";
+        if (plan != null && !plan.getInstructions().isEmpty()) {
+            if (plan.getInstructionForCard(blueprintId) != null) {
+                planState = PullSelectionCandidateFacts.PlanState.IN_PLAN;
+                strategy = String.valueOf(plan.getStrategy());
+            } else if (plan.getHoldBackCards().contains(blueprintId)) {
+                planState = PullSelectionCandidateFacts.PlanState.HOLD_BACK;
+            }
+        }
+
+        applyPullSelectionPolicy(action,
+            PullSelectionCandidatePolicy.scoreBlueprintPull(
+                new PullSelectionCandidateFacts.BlueprintPull(
+                    action.getActionId(), cloudCityMode,
+                    pullCloudCitySite(titleLower), planState, strategy)));
+
+        if (planState == PullSelectionCandidateFacts.PlanState.IN_PLAN) {
+            logger.info("[ReserveDeck] {} IN PLAN - high priority", blueprintId);
+        } else if (planState == PullSelectionCandidateFacts.PlanState.HOLD_BACK) {
+            logger.debug("[ReserveDeck] {} should be held back", blueprintId);
         }
     }
 
@@ -860,8 +1016,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 boolean v186TtSystem = v186Tt != null && v186SysFrag != null
                         && v186Tt.toLowerCase(java.util.Locale.ROOT).contains(v186SysFrag)
                         && !v186Tt.contains(":");
+                applyPullSelectionPolicy(action,
+                    PullSelectionCandidatePolicy.scoreIwtmLocation(
+                        new PullSelectionCandidateFacts.IwtmLocation(
+                            cardId, v186BpSystem || v186TtSystem)));
                 if (v186BpSystem || v186TtSystem) {
-                    action.addReasoning("V186 STARKILLER BASE SYSTEM - download engine for the 2-battleground flip", 400.0f);
                     logger.warn("V186 STARKILLER SYSTEM: cardId={} bp={} title={} (+400)", cardId, v186Bp, v186Tt);
                 }
             }
@@ -4418,42 +4577,47 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (blueprint != null) {
                             action.setDisplayText("Select pilot " + (title != null ? title : cardId));
 
-                            // === V24.10: AMSD PILOT GUARD — PIETT ONLY ===
-                            // AMSD should ONLY be used with Piett + Executor.
-                            // Block ALL other pilots regardless of matching ships.
+                            PullSelectionCandidateFacts.PilotAmsdState amsdState =
+                                    PullSelectionCandidateFacts.PilotAmsdState.NOT_AMSD;
                             if (isAmsdPilotChoice) {
-                                String pilotLower = (title != null) ? title.toLowerCase(java.util.Locale.ROOT) : "";
-
+                                String pilotLower = title != null
+                                        ? title.toLowerCase(Locale.ROOT) : "";
                                 if (!pilotLower.contains("piett")) {
-                                    // NOT Piett — hard block, no exceptions
-                                    action.setScore(-9999.0f);
-                                    action.addReasoning("V24.10 AMSD BLOCKED: Only Piett may use AMSD — " +
-                                        title + " is not allowed!", -9999.0f);
-                                    logger.warn("V24.10 AMSD HARD BLOCK: {} is NOT Piett — only Piett + Executor for AMSD!", title);
-                                    actions.add(action);
-                                    continue;
-                                }
-
-                                // It's Piett — verify Executor is in reserve
-                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle = context.getDeckOracle();
-                                if (oracle != null && oracle.isAnalyzed()) {
-                                    boolean executorInReserve = oracle.isCardInReserve("Executor") ||
-                                        oracle.isCardInReserve("Flagship Executor");
-                                    if (!executorInReserve) {
-                                        action.setScore(-9999.0f);
-                                        action.addReasoning("V24.10 AMSD: Piett selected but Executor NOT in reserve!", -9999.0f);
-                                        logger.warn("V24.10 AMSD: Piett but Executor not in reserve — HARD BLOCK");
-                                        actions.add(action);
-                                        continue;
-                                    }
-                                    // Piett + Executor in reserve — approved!
-                                    action.addReasoning("V24.10 AMSD: Piett + Executor in reserve — APPROVED!", 300.0f);
-                                    logger.warn("V24.10 AMSD: Piett + Executor in reserve — APPROVED (+300)");
+                                    amsdState = PullSelectionCandidateFacts.PilotAmsdState.NON_PIETT;
                                 } else {
-                                    // Oracle unavailable but it's Piett — allow (best guess)
-                                    action.addReasoning("V24.10 AMSD: Piett selected (oracle unavailable — allowing)", 200.0f);
-                                    logger.warn("V24.10 AMSD: Piett selected, oracle unavailable — allowing (+200)");
+                                    var oracle = context.getDeckOracle();
+                                    if (oracle == null || !oracle.isAnalyzed()) {
+                                        amsdState = PullSelectionCandidateFacts.PilotAmsdState.PIETT_ORACLE_UNAVAILABLE;
+                                    } else if (oracle.isCardInReserve("Executor")
+                                            || oracle.isCardInReserve("Flagship Executor")) {
+                                        amsdState = PullSelectionCandidateFacts.PilotAmsdState.PIETT_EXECUTOR_PRESENT;
+                                    } else {
+                                        amsdState = PullSelectionCandidateFacts.PilotAmsdState.PIETT_EXECUTOR_MISSING;
+                                    }
                                 }
+                            }
+
+                            PullSelectionCandidatePolicy.Evaluation amsdEvaluation =
+                                    PullSelectionCandidatePolicy.evaluateAmsdPilot(
+                                            new PullSelectionCandidateFacts.AmsdPilot(
+                                                    action.getActionId(), title, amsdState));
+                            if (amsdEvaluation.resetToAmsdBlockScore()) {
+                                action.setScore(PullSelectionCandidatePolicy.AMSD_BLOCK_SCORE);
+                            }
+                            applyPullSelectionPolicy(action, amsdEvaluation.result());
+                            if (amsdState == PullSelectionCandidateFacts.PilotAmsdState.NON_PIETT) {
+                                logger.warn("V24.10 AMSD HARD BLOCK: {} is NOT Piett — only Piett + Executor for AMSD!", title);
+                            } else if (amsdState == PullSelectionCandidateFacts.PilotAmsdState.PIETT_EXECUTOR_MISSING) {
+                                logger.warn("V24.10 AMSD: Piett but Executor not in reserve — HARD BLOCK");
+                            } else if (amsdState == PullSelectionCandidateFacts.PilotAmsdState.PIETT_EXECUTOR_PRESENT) {
+                                logger.warn("V24.10 AMSD: Piett + Executor in reserve — APPROVED (+300)");
+                            } else if (amsdState == PullSelectionCandidateFacts.PilotAmsdState.PIETT_ORACLE_UNAVAILABLE) {
+                                logger.warn("V24.10 AMSD: Piett selected, oracle unavailable — allowing (+200)");
+                            }
+                            if (amsdEvaluation.adapterStep()
+                                    == PullSelectionCandidatePolicy.AdapterStep.CONTINUE_CANDIDATE) {
+                                actions.add(action);
+                                continue;
                             }
 
                             // Prefer high-ability pilots
@@ -6715,15 +6879,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 } else if (category == CardCategory.LOCATION) {
                     action.addReasoning("Location - avoid losing", -20.0f);
                 }
-            } else {
-                // For gain/select decisions: prefer deployables
-                if (category == CardCategory.CHARACTER) {
-                    action.addReasoning("Character - valuable", 10.0f);
-                } else if (category == CardCategory.STARSHIP) {
-                    action.addReasoning("Starship - valuable", 8.0f);
-                } else if (category == CardCategory.LOCATION) {
-                    action.addReasoning("Location - valuable", 10.0f);
-                }
             }
 
             // === V25: HUNT DOWN V — LIGHTSABER PRIORITY (evaluateUnknown path) ===
@@ -6735,84 +6890,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 String lsTitleLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer lsObjAnalyzer =
                     context.getObjectiveAnalyzer();
-                if (lsObjAnalyzer != null && lsObjAnalyzer.isAnalyzed() && lsObjAnalyzer.isHuntDownV()
+                if (isLossDecision && lsObjAnalyzer != null
+                    && lsObjAnalyzer.isAnalyzed() && lsObjAnalyzer.isHuntDownV()
                     && lsTitleLower.contains("lightsaber")) {
-                    if (isLossDecision) {
-                        action.addReasoning("V25 HUNT DOWN: PROTECT LIGHTSABER from loss!", -300.0f);
-                        logger.warn("V25 HUNT DOWN UNKNOWN-LOSS: {} is a lightsaber — PROTECT (-300)", cardTitle);
-                    } else {
-                        action.addReasoning("V25 HUNT DOWN: LIGHTSABER — critical for deck engine!", 200.0f);
-                        logger.warn("V25 HUNT DOWN UNKNOWN-GAIN: {} is a lightsaber — PRIORITY (+200)", cardTitle);
-                    }
+                    action.addReasoning("V25 HUNT DOWN: PROTECT LIGHTSABER from loss!", -300.0f);
+                    logger.warn("V25 HUNT DOWN UNKNOWN-LOSS: {} is a lightsaber — PROTECT (-300)", cardTitle);
                 }
             }
 
-            // === V24.10: CC SITE SELECTION — CONTEXT-AWARE (evaluateUnknown path) ===
-            // Slip Sliding GRABS Dining Room — guarantees Upper Walkway + Dining Room as starting sites.
-            // I'm Sorry then pulls other interior CC sites in-game.
-            if (cardTitle != null) {
-                String ctLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
-                if (ctLower.contains("cloud city") &&
-                    (textLower.contains("sorry") || textLower.contains("interior") ||
-                     textLower.contains("cloud city") || textLower.contains("battleground"))) {
-
-                    boolean isSlipSliding = textLower.contains("slip") || textLower.contains("battleground") ||
-                        context.getTurnNumber() <= 0;
-                    boolean isImSorry = textLower.contains("sorry") || textLower.contains("interior");
-
-                    if (isImSorry && !isSlipSliding) {
-                        // I'm Sorry pulls other interior CC sites (Dining Room already on table from Slip Sliding)
-                        if (ctLower.contains("dining room")) {
-                            // Dining Room should already be on table — low priority for I'm Sorry
-                            action.addReasoning("V24.10 I'M SORRY: Dining Room likely already on table", -50.0f);
-                        } else if (ctLower.contains("security tower")) {
-                            // V24.13: Security Tower = force-gen only, deploy LAST for far-end placement
-                            action.addReasoning("V24.13 I'M SORRY: Security Tower — force-gen only, deploy LAST!", -30.0f);
-                        } else if (ctLower.contains("carbonite chamber")) {
-                            // V24.13: Carbonite Chamber = key battleground, pull FIRST!
-                            action.addReasoning("V24.13 I'M SORRY: Carbonite Chamber — priority battleground!", 150.0f);
-                        } else {
-                            action.addReasoning("V24.10 I'M SORRY: Pull interior CC site — expand drain sites!", 100.0f);
-                        }
-                    } else if (isSlipSliding) {
-                        if (ctLower.contains("dining room")) {
-                            // Slip Sliding GRABS Dining Room — guarantees best starting pair!
-                            action.addReasoning("V24.10 SLIP SLIDING: Dining Room — guarantees best starting CC site pair!", 300.0f);
-                            logger.warn("V24.10 SLIP SLIDING: Dining Room +300 — grab it as starting location!");
-                        } else {
-                            action.addReasoning("V24.10 SLIP SLIDING: Other CC site — Dining Room is better", -50.0f);
-                        }
-                    }
-                }
-            }
-
-            // Check for priority cards
-            if (blueprintId != null && AiPriorityCards.isPriorityCard(blueprintId)) {
-                int priorityScore = AiPriorityCards.getProtectionScore(blueprintId);
-                action.addReasoning("Priority card", priorityScore * 0.3f);
-            }
-
-            // === V24.10: AMSD PIETT-ONLY SAFETY NET (replaces V24.8) ===
-            // If AMSD is in play and we're choosing characters during deploy phase,
-            // enforce Piett-only regardless of decision text. This catches cases where
-            // the AMSD routing catch above didn't fire (e.g., we're already in evaluateUnknown).
-            if (context.getPhase() == Phase.DEPLOY && blueprint != null && category == CardCategory.CHARACTER) {
-                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle safetyOracle = context.getDeckOracle();
-                if (safetyOracle != null && safetyOracle.isAnalyzed()) {
-                    boolean amsdActive = safetyOracle.isCardInPlay("Alert My Star Destroyer")
-                        || safetyOracle.isCardInPlay("Alert My Star Destroyer!");
-                    if (amsdActive) {
-                        String pilotNameLower = (cardTitle != null) ? cardTitle.toLowerCase(java.util.Locale.ROOT) : "";
-                        if (pilotNameLower.contains("piett")) {
-                            action.addReasoning("V24.10 AMSD SAFETY NET: PIETT — approved for AMSD!", 500.0f);
-                            logger.warn("V24.10 AMSD SAFETY NET: Piett detected — APPROVED (+500)");
-                        } else {
-                            action.addReasoning("V24.10 AMSD SAFETY NET: " + cardTitle + " is NOT Piett — AMSD requires Piett only!", -9999.0f);
-                            logger.warn("V24.10 AMSD SAFETY NET: {} is NOT Piett — HARD BLOCK (-9999)", cardTitle);
-                        }
-                    }
-                }
-            }
+            // Shared PULL child policy owns gain value, Hunt Down lightsaber,
+            // Cloud City route-specific ordering, priority, and AMSD safety.
+            applyUnknownPullSelectionPolicy(context, action, cardTitle,
+                    blueprintId, category, blueprint != null,
+                    isLossDecision, textLower);
 
             // V28/V47 RESERVE SOLO BLOCK — RETIRED 2026-07-12 (batch 1d; Codex m00206 wrong-facts
             // audit CODEX_V47_WRONG_FACTS_AUDIT_2026-07-12.md): it applied Cloud City board facts to
@@ -6907,8 +6997,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             if (reserveTestingTexts != null && i < reserveTestingTexts.size()) {
                 cardTitle = reserveTestingTexts.get(i);
             }
-            String cardTitleLower = cardTitle != null ? cardTitle.toLowerCase(java.util.Locale.ROOT) : "";
-
             // Use index as action ID for blueprint-based selections
             EvaluatedAction action = new EvaluatedAction(
                 String.valueOf(i),
@@ -6944,85 +7032,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             applySetupContributions(action, SetupPolicy.reserveStartingEffect(
                     cardTitle, SetupPolicy.isSetupTurn(context.getTurnNumber())));
 
-            // === V24.10: CC SITE SELECTION — CONTEXT-AWARE ===
-            // Two different effects pull CC sites from reserve:
-            //   1. Slip Sliding Away (starting interrupt, turn 0): picks a CC battleground site
-            //   2. I'm Sorry (V) (during game): pulls interior CC sites
-            // Strategy: Slip Sliding GRABS Dining Room — guarantees Upper Walkway + Dining Room
-            // as the starting CC site pair. I'm Sorry then pulls other interior sites in-game.
-            if (cardTitleLower.contains("cloud city") &&
-                (textLower.contains("sorry") || textLower.contains("interior") ||
-                 textLower.contains("cloud city") || textLower.contains("battleground"))) {
-
-                // V26 FIX: The TDIGWATT objective text also contains "battleground" in
-                // "Choose Cloud City battleground site to deploy" — that's NOT Slip Sliding!
-                // Only treat it as Slip Sliding if "slip" is in the text or if the original
-                // decision text explicitly references Slip Sliding Away.
-                // The objective choice should pick EXTERIOR (Upper Walkway), and Slip Sliding
-                // picks INTERIOR (Dining Room).
-                boolean isObjectivePick = textLower.contains("choose") && textLower.contains("site")
-                    && textLower.contains("deploy") && !textLower.contains("slip");
-                boolean isSlipSlidingPick = (textLower.contains("slip") || textLower.contains("sliding"))
-                    && !isObjectivePick;
-                boolean isImSorryPick = textLower.contains("sorry") || textLower.contains("interior");
-
-                if (isObjectivePick) {
-                    // V26: TDIGWATT OBJECTIVE deploys ONE CC battleground site.
-                    // MUST be an EXTERIOR site (Upper Walkway) — I'm Sorry CAN'T pull exterior sites!
-                    // Dining Room is INTERIOR and will be pulled by Slip Sliding Away.
-                    // If we deploy Dining Room here, Slip Sliding has to pick something else,
-                    // and we risk drawing Dining Room into hand/force pile before the interrupt fires.
-                    if (cardTitleLower.contains("upper walkway") || cardTitleLower.contains("exterior walkway")) {
-                        action.addReasoning("V26 OBJECTIVE: Upper Walkway is EXTERIOR — only way to get it out! I'm Sorry can't pull this!", 500.0f);
-                        logger.warn("V26 OBJECTIVE SITE: {} is EXTERIOR — MUST deploy here (+500)!", cardTitle);
-                    } else if (cardTitleLower.contains("dining room")) {
-                        action.addReasoning("V26 OBJECTIVE: Dining Room is INTERIOR — save for Slip Sliding Away!", -400.0f);
-                        logger.warn("V26 OBJECTIVE SITE: {} is INTERIOR — Slip Sliding will grab this (-400)!", cardTitle);
-                    } else {
-                        // Other CC sites — they're interior, save for I'm Sorry
-                        action.addReasoning("V26 OBJECTIVE: Interior CC site — save for I'm Sorry, deploy Exterior first!", -200.0f);
-                        logger.warn("V26 OBJECTIVE SITE: {} — not Exterior, deprioritized (-200)", cardTitle);
-                    }
-                } else if (isImSorryPick && !isSlipSlidingPick) {
-                    // I'm Sorry pulls other interior CC sites (Dining Room already on table from Slip Sliding)
-                    if (cardTitleLower.contains("dining room")) {
-                        action.addReasoning("V24.10 I'M SORRY: Dining Room likely already on table from Slip Sliding", -50.0f);
-                        logger.info("V24.10 I'M SORRY PULL: Dining Room -50 — should already be deployed");
-                    } else if (cardTitleLower.contains("security tower")) {
-                        action.addReasoning("V24.13 I'M SORRY: Security Tower is force-gen only — deploy LAST!", -30.0f);
-                        logger.info("V24.13 I'M SORRY: Security Tower deprioritized (-30) — pull battleground sites first");
-                    } else if (cardTitleLower.contains("carbonite chamber")) {
-                        action.addReasoning("V24.13 I'M SORRY: Carbonite Chamber — key battleground, pull FIRST!", 150.0f);
-                        logger.warn("V24.13 I'M SORRY PULL: Carbonite Chamber +150 — priority battleground!");
-                    } else {
-                        action.addReasoning("V24.10 I'M SORRY: Pull interior CC site — expand drain sites!", 100.0f);
-                        logger.warn("V24.10 I'M SORRY PULL: {} +100 — new drain site!", cardTitle);
-                    }
-                } else if (isSlipSlidingPick) {
-                    // Slip Sliding Away GRABS Dining Room — best starting pair!
-                    if (cardTitleLower.contains("dining room")) {
-                        action.addReasoning("V24.10 SLIP SLIDING: Dining Room — guarantees best starting CC site pair!", 300.0f);
-                        logger.warn("V24.10 SLIP SLIDING: Dining Room +300 — grab as starting location!");
-                    } else {
-                        action.addReasoning("V24.10 SLIP SLIDING: Other CC site — Dining Room is better", -50.0f);
-                        logger.info("V24.10 SLIP SLIDING: {} — not Dining Room (-50)", cardTitle);
-                    }
-                }
-            }
-
-            // === Check deployment plan first ===
-            if (plan != null && !plan.getInstructions().isEmpty()) {
-                DeploymentInstruction instruction = plan.getInstructionForCard(blueprintId);
-                if (instruction != null) {
-                    // Card is in deployment plan - high priority
-                    action.addReasoning("IN DEPLOYMENT PLAN: " + plan.getStrategy(), 100.0f);
-                    logger.info("[ReserveDeck] {} IN PLAN - high priority", blueprintId);
-                } else if (plan.getHoldBackCards().contains(blueprintId)) {
-                    // Card should be held back
-                    action.addReasoning("HOLD BACK: save for later", -50.0f);
-                    logger.debug("[ReserveDeck] {} should be held back", blueprintId);
-                }
-            }
+            // Shared PULL child policy owns route-specific Cloud City ordering
+            // and reserve-deck deployment-plan scoring.
+            applyBlueprintPullSelectionPolicy(
+                    action, blueprintId, cardTitle, textLower, plan);
 
             // === Shield scoring ===
             if (shieldStrategy != null) {

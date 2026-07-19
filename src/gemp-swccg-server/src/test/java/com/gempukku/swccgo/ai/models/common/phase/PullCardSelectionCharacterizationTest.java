@@ -8,8 +8,10 @@ import com.gempukku.swccgo.game.state.GameState;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -93,12 +95,183 @@ public class PullCardSelectionCharacterizationTest {
         assertTrue(evaluation.result().operations().isEmpty());
     }
 
+    @Test
+    public void v186IwtmTempLocationScoresTheSystemInBothAdapters() {
+        GameState gameState = gameState(1);
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.isWantThatMap()).thenReturn(true);
+        when(randoObjective.getIwtmSystemBpIds()).thenReturn(Set.of("208_51"));
+        when(randoObjective.getIwtmSystemTitleFragment()).thenReturn("starkiller base");
+
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.isWantThatMap()).thenReturn(true);
+        when(chosenObjective.getIwtmSystemBpIds()).thenReturn(Set.of("208_51"));
+        when(chosenObjective.getIwtmSystemTitleFragment()).thenReturn("starkiller base");
+
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, PLAYER, "ARBITRARY_CARDS",
+                "Choose where to deploy an Episode VII location",
+                "v186-rando", Phase.DEPLOY);
+        randoContext.setCardIds(List.of("temp0", "temp1"));
+        randoContext.setBlueprints(List.of("208_51", "208_52"));
+        randoContext.setSelectable(List.of(true, true));
+        randoContext.setTestingTexts(List.of(
+                "Starkiller Base", "Starkiller Base: Forest"));
+        randoContext.setObjectiveAnalyzer(randoObjective);
+
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, PLAYER, "ARBITRARY_CARDS",
+                "Choose where to deploy an Episode VII location",
+                "v186-chosen", Phase.DEPLOY);
+        chosenContext.setCardIds(List.of("temp0", "temp1"));
+        chosenContext.setBlueprints(List.of("208_51", "208_52"));
+        chosenContext.setSelectable(List.of(true, true));
+        chosenContext.setTestingTexts(List.of(
+                "Starkiller Base", "Starkiller Base: Forest"));
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertEquals(List.of("temp0", "temp1"),
+                rando.stream().map(action -> action.getActionId()).toList());
+        assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
+                450.0f, 50.0f);
+        assertMirrored(rando, chosen);
+    }
+
+    @Test
+    public void unknownCloudCityPullPreservesExactAdapterScoreAndParity() {
+        GameState gameState = gameState(3);
+        PhysicalCard carbonite = card(
+                "Cloud City: Carbonite Chamber", 2.0f, CardCategory.LOCATION);
+        when(gameState.findCardById(301)).thenReturn(carbonite);
+
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, PLAYER, "CARD_SELECTION",
+                "Select a card for I'm Sorry interior Cloud City",
+                "unknown-rando", Phase.DEPLOY);
+        configureSingle(randoContext, "301", "inPlay",
+                "Cloud City: Carbonite Chamber");
+
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, PLAYER, "CARD_SELECTION",
+                "Select a card for I'm Sorry interior Cloud City",
+                "unknown-chosen", Phase.DEPLOY);
+        configureSingle(chosenContext, "301", "inPlay",
+                "Cloud City: Carbonite Chamber");
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertEquals(1, rando.size());
+        assertScores(rando.get(0).getScore(), 190.0f);
+        assertMirrored(rando, chosen);
+    }
+
+    @Test
+    public void reserveBlueprintObjectiveOrderPreservesExactAdapterScores() {
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                null, PLAYER, "ARBITRARY_CARDS",
+                "Choose Cloud City battleground site to deploy",
+                "blueprint-rando", Phase.DEPLOY);
+        configureReserve(randoContext);
+
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                null, PLAYER, "ARBITRARY_CARDS",
+                "Choose Cloud City battleground site to deploy",
+                "blueprint-chosen", Phase.DEPLOY);
+        configureReserve(chosenContext);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertEquals(List.of("0", "1"),
+                rando.stream().map(action -> action.getActionId()).toList());
+        assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
+                550.0f, -350.0f);
+        assertMirrored(rando, chosen);
+    }
+
+    @Test
+    public void amsdNonPiettRetainsLegacySetAddAndStopsLaterPilotScoring() {
+        GameState gameState = gameState(3);
+        PhysicalCard pilot = pilot("Jango Fett", 6.0f, 6.0f, 1.0f);
+        when(gameState.findCardById(401)).thenReturn(pilot);
+
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, PLAYER, "CARD_SELECTION",
+                "Choose a unique pilot character",
+                "amsd-rando", Phase.DEPLOY);
+        configureSingle(randoContext, "401", "inPlay", "Jango Fett");
+
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, PLAYER, "CARD_SELECTION",
+                "Choose a unique pilot character",
+                "amsd-chosen", Phase.DEPLOY);
+        configureSingle(chosenContext, "401", "inPlay", "Jango Fett");
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertEquals(1, rando.size());
+        assertScores(rando.get(0).getScore(), -19998.0f);
+        assertFalse(rando.get(0).getReasoning().contains("Ability 6"));
+        assertFalse(rando.get(0).getReasoning().contains("Good power bonus"));
+        assertFalse(rando.get(0).getReasoning().contains("Deploy cost"));
+        assertMirrored(rando, chosen);
+    }
+
     private static void configure(
             com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext context) {
         context.setCardIds(List.of("101", "102", "103", "104"));
         context.setBlueprints(List.of("inPlay", "inPlay", "inPlay", "inPlay"));
         context.setSelectable(List.of(true, true, false, true));
         context.setTestingTexts(List.of("Alpha", "Beta", "Skipped", "Gamma"));
+    }
+
+    private static void configureSingle(
+            com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext context,
+            String cardId, String blueprint, String title) {
+        context.setCardIds(List.of(cardId));
+        context.setBlueprints(List.of(blueprint));
+        context.setSelectable(List.of(true));
+        context.setTestingTexts(List.of(title));
+    }
+
+    private static void configureSingle(
+            com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext context,
+            String cardId, String blueprint, String title) {
+        context.setCardIds(List.of(cardId));
+        context.setBlueprints(List.of(blueprint));
+        context.setSelectable(List.of(true));
+        context.setTestingTexts(List.of(title));
+    }
+
+    private static void configureReserve(
+            com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext context) {
+        context.setBlueprints(List.of("7_273", "5_168"));
+        context.setTestingTexts(List.of(
+                "Cloud City: Upper Walkway", "Cloud City: Dining Room"));
+    }
+
+    private static void configureReserve(
+            com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext context) {
+        context.setBlueprints(List.of("7_273", "5_168"));
+        context.setTestingTexts(List.of(
+                "Cloud City: Upper Walkway", "Cloud City: Dining Room"));
     }
 
     private static void configure(
@@ -110,12 +283,59 @@ public class PullCardSelectionCharacterizationTest {
     }
 
     private static PhysicalCard card(String title, float destiny) {
+        return card(title, destiny, CardCategory.EFFECT);
+    }
+
+    private static PhysicalCard card(String title, float destiny,
+                                     CardCategory category) {
         PhysicalCard card = mock(PhysicalCard.class);
         SwccgCardBlueprint blueprint = mock(SwccgCardBlueprint.class);
         when(card.getTitle()).thenReturn(title);
         when(card.getBlueprint()).thenReturn(blueprint);
         when(blueprint.getDestiny()).thenReturn(destiny);
-        when(blueprint.getCardCategory()).thenReturn(CardCategory.EFFECT);
+        when(blueprint.getCardCategory()).thenReturn(category);
         return card;
+    }
+
+    private static PhysicalCard pilot(String title, float ability, float power,
+                                      float deployCost) {
+        PhysicalCard card = card(title, 3.0f, CardCategory.CHARACTER);
+        SwccgCardBlueprint blueprint = card.getBlueprint();
+        when(blueprint.hasAbilityAttribute()).thenReturn(true);
+        when(blueprint.getAbility()).thenReturn(ability);
+        when(blueprint.hasPowerAttribute()).thenReturn(true);
+        when(blueprint.getPower()).thenReturn(power);
+        when(blueprint.getDeployCost()).thenReturn(deployCost);
+        return card;
+    }
+
+    private static GameState gameState(int turnNumber) {
+        GameState gameState = mock(GameState.class);
+        when(gameState.getPlayersLatestTurnNumber(PLAYER)).thenReturn(turnNumber);
+        when(gameState.getCurrentPlayerId()).thenReturn(PLAYER);
+        return gameState;
+    }
+
+    private static void assertScores(float actual, float expected) {
+        assertEquals(Float.floatToRawIntBits(expected),
+                Float.floatToRawIntBits(actual));
+    }
+
+    private static void assertScores(float actualA, float actualB,
+                                     float expectedA, float expectedB) {
+        assertScores(actualA, expectedA);
+        assertScores(actualB, expectedB);
+    }
+
+    private static void assertMirrored(
+            List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction> rando,
+            List<com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction> chosen) {
+        assertEquals(rando.size(), chosen.size());
+        for (int i = 0; i < rando.size(); i++) {
+            assertEquals(rando.get(i).getActionId(), chosen.get(i).getActionId());
+            assertEquals(Float.floatToRawIntBits(rando.get(i).getScore()),
+                    Float.floatToRawIntBits(chosen.get(i).getScore()));
+            assertEquals(rando.get(i).getReasoning(), chosen.get(i).getReasoning());
+        }
     }
 }

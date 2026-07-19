@@ -256,10 +256,12 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V164a |  | BATTLE-1 | BE:17 CSE:874 | BANDED | +40 favorable-battle bonus, guard-gated (ABILITY_BATTLE_MAX_POWER_DEFICIT 2.0) | Ability-parity initiation at BattleEvaluator 545-553; deliberately +40 so V61 reserve guards and V22.4 danger still dominate. CSE hits 864/869/5887/5891 are comment… | LIVE |
 | V176 |  | BATTLE-1 | CSE:6064 DE:983 | BANDED | -800 deploy brake / +1 initiation-fee reserve | Two parts one tag: (a) CSE 5695 wave-projection +1 Force reserve for initiation fee, (b) DeployEvaluator 964-1006 umbrella brake -800 when winnable battle waiting and… | LIVE |
 
-### battle-weapons — 21 rules
+### battle-weapons — 19 rules
 *Weapons-segment window: fire, interrupts, targeting, destiny mods.* Target owner: BATTLE pipeline / BATTLE-2.
 
 **V208 owner note:** `BattleWeaponsPolicy` now owns Force Push exchange/exclusion, fire-before-throw, redraw, generic fire/cancel/draw, V51 already-hit, V36 targeting, and final V38.3 self-target scoring. The mirrored evaluators retain stock fact recognition and the other card-specific battle-interrupt arms. Row anchors below are historical for the migrated slice.
+
+**V268 owner note:** `BattleActionTextPolicy` retains only V144's battle-freeze arm. The IAYF-search arm of V144, the V147 Lost-Pile search gate, and the V155 mode-1 pull-save gate are now owned by `PullSpecificActionPolicy` under pull-search.
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
@@ -280,9 +282,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V51-targeting | V51 | TARGETING | CSE:7407 | BANDED | -500 ALREADY HIT / +500 KILL SPY (Force Lightning / Trample) | §8 arm 'targeting'. CSE 6847-6856, weapon/interrupt target choice. Not | LIVE |
 | V67bi |  | BATTLE-2 | ATE:1444 | VETO | — | Force Lightning self-target hard block when no opponent character in play (ATE 1370-1405). Card-title list grows per replay (documented exception to the no-name-lists… | LIVE |
 | V67u |  | BATTLE-2 | ATE:1962 | VETO | — | Force Push exchange-with-Force-Pile waste block, incl. source-detected defense-in-depth catch (ATE 1888-1935, shared header with | LIVE |
-| V144 |  | BATTLE-2 | ATE:1057 | VETO | — | You Are Beaten mode gating: mode-2 IAYF search hard-blocked -2000 universally; +500 battle-freeze in battle phase (ATE | LIVE |
-| V147 |  | BATTLE-2 | ATE:800 | VETO | — | IAYF Lost-Pile mode -2000 when saber not actually in Lost Pile (ATE | LIVE |
-| V155 |  | BATTLE-2 | ATE:842 | VETO | — | Welcome Home Lord Tyranus: oracle-gated -2000 on mode-1 pull (save premium battle mode). ATE 797-876. Implements parked | LIVE |
+| V144-freeze | V144 | BATTLE-2 | ATE:1057 | BANDED | +500 | You Are Beaten battle-freeze mode during the battle phase. The separate mode-2 IAYF-search veto is owned by pull-search. | CONSOLIDATED V268 |
 | V175 |  | BATTLE-2 | ATE:2677 CSE:4342 | BANDED | kill shot +400+power*40 cap 900; substitute delta*60; our-char -100 | ATE 3060-3150 = kill-shot + substitute-destiny arms (BATTLE-2). CSE 4039-4066 (3 hits) = protect-battle-interrupts-from-force-loss-picker arm — force-loss territory;… | LIVE |
 
 ### battle-forfeit — 13 rules
@@ -406,8 +406,10 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V124 |  | SHIELDS | ATE:2589 | ORDERING | — | K&D PARENT-action enforcement of the 4th-slot policy: 3+ shields on table and no V105/V107 trigger => don't activate K&D at all (ATE 2521-2560). Applies to both bots per… | LIVE |
 | V129 |  | SHIELDS | ATE:1124 | ORDERING | — | Exclusion predicate: Anger/Fear/Aggression (light-side stacked-pile mirror) excluded from K&D-style shield logic; isKnDShieldPlay renamed | LIVE |
 
-### pull-search — 33 rules
+### pull-search — 36 rules
 *Reserve-deck pulls/searches: scoring + dead-pull verdicts.* Target owner: PULL ENGINE (hub = V192 in ATE since T4.2); facts stay SVC-ORACLE (DeckOracle).
+
+**V268 owner note:** `PullSpecificActionPolicy` owns the extracted card-specific PULL actions. `PullSelectionCandidatePolicy` is the shared route-specific candidate owner, but each operation keeps its registry domain: V186 is SETUP_STARTING; generic gain/search value is PULL_SEARCH; loss protection is FORCE_LOSS_PAYMENT; Hunt Down, Cloud City, and AMSD are DECK_PLAYBOOK; and deployment-plan matching is DEPLOY_SEQUENCING. GEMP state, DeckOracle, card, zone, action, and candidate reads remain in the bot adapters.
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
@@ -440,6 +442,9 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V123 |  | PULL-ENGINE | DE:731 ATE:4671 | VETO | — | Stopword list of generic category nouns: when V66's captured keyword is a stopword, defer to criteria-aware V67ai/V82 instead of false WILL_FAIL veto (Hunt Down… | LIVE |
 | V130 |  | PULL-ENGINE | DO:22 | VETO | — | Pure query helpers, NO scoring: countMatchingInDeck + countMatchingInHandOrTable. Classified VETO only because it is the backbone of V131's Tier-1 hard block;… | LIVE |
 | V131 |  | PULL-ENGINE | ATE:4498 DO:22 | VETO | Tier1 -9999 / Tier2 -2000 / Tier3 unchanged | Three-tier deck-state gate wrapping V67ai: not-in-deck -9999, already-satisfied -2000, genuinely-needed unchanged; also fixed V67l substring misfire. Fail-open on… | LIVE |
+| V144-search | V144 | PULL-ENGINE | ATE:1057 | VETO | -2000 | You Are Beaten mode-2 IAYF search is always blocked so the card remains available for battle freeze or Cancel Uncontrollable Fury. The battle-freeze arm remains BATTLE-2. | CONSOLIDATED V268 |
+| V147 |  | PULL-ENGINE | ATE:800 | VETO | -2000 | IAYF Lost-Pile mode is blocked when Vader's Lightsaber is not actually in the Lost Pile. | CONSOLIDATED V268 |
+| V155 |  | PULL-ENGINE | ATE:842 | VETO | -2000 | Welcome Home Lord Tyranus mode-1 pull is blocked when the pull is already satisfied, preserving the card's premium battle mode. | CONSOLIDATED V268 |
 | V177 |  | PULL-ENGINE | DE:828 ATE:267 CSE:889 DO:21 | VETO | -2000 block, skips all further scoring incl. V116 | Dead-search gate: classify parsed pull targets ALIVE/JUNK/DEAD; block only when no ALIVE, >=1 DEAD, no JUNK. Supersedes fire-every-turn heuristic for parseable pulls.… | UPDATED 2026-07-07 (pull-parser 692fec3cf) |
 | V177a | V177 | PULL-ENGINE | ATE:267 | VETO | — | Same-session amendment: added the JUNK class + >=6-char loose word-rescue after false-blocks. Documented under | LIVE |
 | V183 |  | PULL-ENGINE | ATE:366 DO:615 | VETO | — | Deck Oracle retool: no verb parsing — scan source game text for catalogued deck titles (>=6 chars) and judge by real ZONE; block when every named target is out of… | LIVE |

@@ -324,6 +324,127 @@ public class PullActionTextCharacterizationTest {
         verifyNoInteractions(oracle, lateView);
     }
 
+    @Test
+    public void emptyLostPileSearchStopsBeforeLaterActionScoringAndMirrors() {
+        String actionText = "Take a character into hand from Lost Pile";
+        Fixture fixture = fixture(10, Phase.DEPLOY, null);
+        when(fixture.gameState.getLostPile(PLAYER)).thenReturn(Collections.emptyList());
+
+        var rando = evaluateRando(fixture, actionText, null, null);
+        var chosen = evaluateChosen(fixture, actionText, null, null);
+
+        assertMirrored(rando, chosen);
+        assertBits(-300.0f, rando.getScore());
+        assertEquals(List.of(
+                "V23 EMPTY PILE: Lost Pile is empty — search will fail! (-300.0)"),
+                rando.getReasoning());
+    }
+
+    @Test
+    public void oneCardLostPileFallsThroughToMatchingTakeAndMirrors() {
+        String actionText = "Take a character into hand from Lost Pile";
+        Fixture fixture = fixture(10, Phase.DEPLOY, null);
+        PhysicalCard character = mock(PhysicalCard.class);
+        SwccgCardBlueprint characterBlueprint = mock(SwccgCardBlueprint.class);
+        when(character.getBlueprint()).thenReturn(characterBlueprint);
+        when(characterBlueprint.getCardCategory()).thenReturn(CardCategory.CHARACTER);
+        when(fixture.gameState.getLostPile(PLAYER)).thenReturn(List.of(character));
+
+        var rando = evaluateRando(fixture, actionText, null, null);
+        var chosen = evaluateChosen(fixture, actionText, null, null);
+
+        assertMirrored(rando, chosen);
+        assertBits(-70.0f, rando.getScore());
+        assertEquals(2, rando.getReasoning().size());
+        assertTrue(rando.getReasoning().get(0).startsWith("V23 LOW PILE:"));
+        assertEquals("Take card into hand from Lost Pile (+30.0)",
+                rando.getReasoning().get(1));
+    }
+
+    @Test
+    public void sorryLocationReserveRiskAndV192StayAdditiveAndMirrored() {
+        String actionText = "Deploy an interior Cloud City site from Reserve Deck";
+        Fixture fixture = fixture(10, Phase.DEPLOY, null);
+
+        com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle randoOracle =
+                mock(com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.class);
+        when(randoOracle.isAnalyzed()).thenReturn(true);
+        when(randoOracle.isCardInReserve(anyString())).thenReturn(true);
+        when(randoOracle.getCardsInZone(Zone.RESERVE_DECK))
+                .thenReturn(Collections.nCopies(4,
+                        mock(com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard.class)));
+        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer randoObjective =
+                mock(com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.needsBespinSystemPresence()).thenReturn(true);
+        when(randoObjective.getStrategyCharacterTokens(isNull(), eq(PLAYER)))
+                .thenReturn(Collections.emptySet());
+
+        com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle chosenOracle =
+                mock(com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.class);
+        when(chosenOracle.isAnalyzed()).thenReturn(true);
+        when(chosenOracle.isCardInReserve(anyString())).thenReturn(true);
+        when(chosenOracle.getCardsInZone(Zone.RESERVE_DECK))
+                .thenReturn(Collections.nCopies(4,
+                        mock(com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.DeckCard.class)));
+        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer chosenObjective =
+                mock(com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.needsBespinSystemPresence()).thenReturn(true);
+        when(chosenObjective.getStrategyCharacterTokens(isNull(), eq(PLAYER)))
+                .thenReturn(Collections.emptySet());
+
+        var rando = evaluateRando(
+                fixture, actionText, randoOracle, randoObjective);
+        var chosen = evaluateChosen(
+                fixture, actionText, chosenOracle, chosenObjective);
+
+        assertMirrored(rando, chosen);
+        assertBits(1750.0f, rando.getScore());
+        assertEquals(3, rando.getReasoning().size());
+        assertTrue(rando.getReasoning().get(0).startsWith("V24.6 I'M SORRY:"));
+        assertTrue(rando.getReasoning().get(1).startsWith("V37 RESERVE CAUTION:"));
+        assertTrue(rando.getReasoning().get(2).startsWith(
+                "V192 PULL SCORER (DEPLOY-GRADE):"));
+    }
+
+    @Test
+    public void woklingSearchKeepsLegacyPullStackAndMirrors() {
+        String actionText = "Deploy an Effect with deploy cost from Reserve Deck";
+        Fixture fixture = fixture(10, Phase.DEPLOY, null);
+        when(fixture.source.getTitle()).thenReturn("Wokling (V)");
+
+        var rando = evaluateRando(fixture, actionText, null, null);
+        var chosen = evaluateChosen(fixture, actionText, null, null);
+
+        assertMirrored(rando, chosen);
+        assertBits(-9849.0f, rando.getScore());
+        assertEquals(2, rando.getReasoning().size());
+        assertEquals(
+                "V53 BLOCK WOKLING: Don't waste 3 force searching for effects! (-9999.0)",
+                rando.getReasoning().get(0));
+        assertTrue(rando.getReasoning().get(1).startsWith(
+                "V192 PULL SCORER (DEPLOY-GRADE):"));
+    }
+
+    @Test
+    public void youAreBeatenSearchThenBattleFreezeKeepsExactLegacyOrder() {
+        String actionText =
+                "I Am Your Father; target a character present who cannot move or battle";
+        Fixture fixture = fixture(10, Phase.BATTLE, null);
+        when(fixture.source.getTitle()).thenReturn("You Are Beaten");
+
+        var rando = evaluateRando(fixture, actionText, null, null);
+        var chosen = evaluateChosen(fixture, actionText, null, null);
+
+        assertMirrored(rando, chosen);
+        assertBits(-1500.0f, rando.getScore());
+        assertTrue(rando.getReasoning().get(0).startsWith(
+                "V144 YOU ARE BEATEN: Mode 2 (IAYF search)"));
+        assertTrue(rando.getReasoning().get(1).startsWith(
+                "V144 YOU ARE BEATEN: Battle freeze in battle phase"));
+    }
+
     private static com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction evaluateRando(
             Fixture fixture,
             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objective) {
@@ -334,7 +455,15 @@ public class PullActionTextCharacterizationTest {
             Fixture fixture,
             com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle,
             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objective) {
-        var context = randoContext(fixture);
+        return evaluateRando(fixture, ACTION_TEXT, oracle, objective);
+    }
+
+    private static com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction evaluateRando(
+            Fixture fixture,
+            String actionText,
+            com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle,
+            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objective) {
+        var context = randoContext(fixture, actionText);
         context.setDeckOracle(oracle);
         context.setObjectiveAnalyzer(objective);
         return new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
@@ -344,7 +473,16 @@ public class PullActionTextCharacterizationTest {
     private static com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction evaluateChosen(
             Fixture fixture,
             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer objective) {
-        var context = chosenContext(fixture);
+        return evaluateChosen(fixture, ACTION_TEXT, null, objective);
+    }
+
+    private static com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction evaluateChosen(
+            Fixture fixture,
+            String actionText,
+            com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle oracle,
+            com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer objective) {
+        var context = chosenContext(fixture, actionText);
+        context.setDeckOracle(oracle);
         context.setObjectiveAnalyzer(objective);
         return new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
                 .evaluate(context).get(0);
@@ -352,24 +490,36 @@ public class PullActionTextCharacterizationTest {
 
     private static com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext randoContext(
             Fixture fixture) {
+        return randoContext(fixture, ACTION_TEXT);
+    }
+
+    private static com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext randoContext(
+            Fixture fixture,
+            String actionText) {
         var context = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
                 fixture.gameState, PLAYER, "ACTION_CHOICE", "Choose action",
                 "pull-characterization", fixture.phase);
         context.setGame(fixture.game);
         context.setActionIds(List.of("pull"));
-        context.setActionTexts(List.of(ACTION_TEXT));
+        context.setActionTexts(List.of(actionText));
         context.setCardIds(List.of("101"));
         return context;
     }
 
     private static com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext chosenContext(
             Fixture fixture) {
+        return chosenContext(fixture, ACTION_TEXT);
+    }
+
+    private static com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext chosenContext(
+            Fixture fixture,
+            String actionText) {
         var context = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
                 fixture.gameState, PLAYER, "ACTION_CHOICE", "Choose action",
                 "pull-characterization", fixture.phase);
         context.setGame(fixture.game);
         context.setActionIds(List.of("pull"));
-        context.setActionTexts(List.of(ACTION_TEXT));
+        context.setActionTexts(List.of(actionText));
         context.setCardIds(List.of("101"));
         return context;
     }

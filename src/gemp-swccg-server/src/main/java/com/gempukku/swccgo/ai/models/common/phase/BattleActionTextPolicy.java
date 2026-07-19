@@ -52,28 +52,10 @@ public final class BattleActionTextPolicy {
         return new PolicyResult("BATTLE_ACTION_TEXT_INITIATION_POLICY", operations);
     }
 
-    public static PolicyResult scoreWelcomeHome(
-            BattleActionTextFacts.WelcomeHomeFacts facts) {
-        Objects.requireNonNull(facts, "facts");
-        List<PolicyOperation> operations = new ArrayList<>();
-        if (facts.saveForBattle()) {
-            addWeapons(operations, facts.actionId(), "V155-welcome-home-save",
-                    TraceOutputKind.VETO, -2000.0f,
-                    "V155 WELCOME HOME: " + facts.why()
-                            + " — SAVE this card for battle (Tyranus ability-number mode), don't waste the pull");
-        }
-        return weaponsResult(operations);
-    }
-
     public static PolicyResult scoreYouAreBeatenMode(
             BattleActionTextFacts.YouAreBeatenModeFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>();
-        if (facts.iayfSearch()) {
-            addWeapons(operations, facts.actionId(), "V144-you-are-beaten-search",
-                    TraceOutputKind.VETO, -2000.0f,
-                    "V144 YOU ARE BEATEN: Mode 2 (IAYF search) — never use this mode, save for battle freeze or Cancel Uncontrollable Fury");
-        }
         if (facts.battleFreeze() && facts.battlePhase()) {
             addWeapons(operations, facts.actionId(), "V144-you-are-beaten-freeze",
                     TraceOutputKind.BANDED, 500.0f,

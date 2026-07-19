@@ -63,7 +63,7 @@ public class BattleActionTextSourceParityTest {
             throws IOException {
         String policy = policySource();
         String[] policyMethods = {
-                "scoreWelcomeHome(", "scoreYouAreBeatenMode(",
+                "scoreYouAreBeatenMode(",
                 "scoreAddBattleDestiny(", "scoreHatred(",
                 "scoreIHaveYouNow(", "scoreFmftd(",
                 "scoreVaderRecall(", "scoreInquisitorRecall(",

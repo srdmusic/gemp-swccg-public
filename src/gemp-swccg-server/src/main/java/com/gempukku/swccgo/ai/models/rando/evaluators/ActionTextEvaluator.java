@@ -19,6 +19,8 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
+import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
@@ -565,10 +567,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             }
                         }
 
+                        applyPullSpecificActionPolicy(action,
+                            PullSpecificActionPolicy.scoreWmaopGate(
+                                new PullSpecificActionFacts.Gate(
+                                    actionId, v142Block,
+                                    v142Reason != null ? v142Reason : "")));
                         if (v142Block) {
-                            action.addReasoning(
-                                "V142 WMAOP BLOCK: " + v142Reason + " — hold the interrupt",
-                                -2000.0f);
                             logger.warn("V142 WMAOP BLOCK: {} ({})",
                                 v142Src.getTitle(), v142Reason);
                         }
@@ -610,10 +614,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             }
                         }
                     }
+                    applyPullSpecificActionPolicy(action,
+                        PullSpecificActionPolicy.scoreLostPileLightsaberGate(
+                            new PullSpecificActionFacts.Gate(
+                                actionId, !v147SaberInLostPile, "")));
                     if (!v147SaberInLostPile) {
-                        action.addReasoning(
-                            "V147 IAYF: Vader's Lightsaber NOT in Lost Pile — don't waste 1 Force on failed search, use free Reserve download",
-                            -2000.0f);
                         logger.warn("V147 IAYF BLOCK: saber not in Lost Pile — failed search would waste 1 Force");
                     }
                 } catch (Exception e) { logger.debug("V147 error: {}", e.getMessage()); }
@@ -694,9 +699,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             }
                             if (worksOut) { v155Block = true; v155Why = "The Works already on table/in hand (no Oracle)"; }
                         }
-                        applyBattleActionTextPolicy(action,
-                            BattleActionTextPolicy.scoreWelcomeHome(
-                                new BattleActionTextFacts.WelcomeHomeFacts(
+                        applyPullSpecificActionPolicy(action,
+                            PullSpecificActionPolicy.scoreWelcomeHome(
+                                new PullSpecificActionFacts.WelcomeHome(
                                     actionId, v155Block, v155Why != null ? v155Why : "")));
                         if (v155Block) {
                             logger.warn("V155 WELCOME HOME BLOCK: {} — save for battle, block mode-1 location pull", v155Why);
@@ -872,10 +877,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         // Mode 1 (battle freeze) — encourage when in battle phase
                         boolean v144IsBattleFreeze = textLower.contains("cannot move or battle")
                             || textLower.contains("target a character present");
+                        applyPullSpecificActionPolicy(action,
+                            PullSpecificActionPolicy.scoreYouAreBeatenSearch(
+                                new PullSpecificActionFacts.YouAreBeatenSearch(
+                                    actionId, v144IsIayfSearch)));
                         applyBattleActionTextPolicy(action,
                             BattleActionTextPolicy.scoreYouAreBeatenMode(
                                 new BattleActionTextFacts.YouAreBeatenModeFacts(
-                                    actionId, v144IsIayfSearch, v144IsBattleFreeze,
+                                    actionId, v144IsBattleFreeze,
                                     context.getPhase() == Phase.BATTLE)));
                     }
                 } catch (NumberFormatException nfe) { /* not numeric */ }
@@ -1290,13 +1299,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 if (textLower.contains("lost pile") && (textLower.contains("take") ||
                     textLower.contains("search") || textLower.contains("retrieve"))) {
                     int lostSize = gameState.getLostPile(pid).size();
-                    if (lostSize == 0) {
-                        action.addReasoning("V23 EMPTY PILE: Lost Pile is empty — search will fail!", -300.0f);
+                    PullSpecificActionPolicy.Evaluation pileSearch =
+                        PullSpecificActionPolicy.scorePileSearch(
+                            new PullSpecificActionFacts.PileSearch(
+                                actionId, PullSpecificActionFacts.PileKind.LOST,
+                                lostSize));
+                    applyPullSpecificActionPolicy(action, pileSearch.result());
+                    if (pileSearch.adapterStep()
+                            == PullSpecificActionPolicy.AdapterStep.CONTINUE_ACTION) {
                         logger.warn("V23 EMPTY PILE GUARD: Blocking '{}' — Lost Pile is empty!", actionText);
                         actions.add(action);
                         continue;
-                    } else if (lostSize <= 2) {
-                        action.addReasoning("V23 LOW PILE: Lost Pile only has " + lostSize + " cards — risky search", -100.0f);
+                    }
+                    if (lostSize <= 2) {
                         logger.warn("V23 LOW PILE: '{}' — Lost Pile only has {} cards", actionText, lostSize);
                     }
                 }
@@ -1304,8 +1319,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 if (textLower.contains("used pile") && (textLower.contains("take") ||
                     textLower.contains("search"))) {
                     int usedSize = gameState.getUsedPile(pid).size();
-                    if (usedSize == 0) {
-                        action.addReasoning("V23 EMPTY PILE: Used Pile is empty — search will fail!", -300.0f);
+                    PullSpecificActionPolicy.Evaluation pileSearch =
+                        PullSpecificActionPolicy.scorePileSearch(
+                            new PullSpecificActionFacts.PileSearch(
+                                actionId, PullSpecificActionFacts.PileKind.USED,
+                                usedSize));
+                    applyPullSpecificActionPolicy(action, pileSearch.result());
+                    if (pileSearch.adapterStep()
+                            == PullSpecificActionPolicy.AdapterStep.CONTINUE_ACTION) {
                         logger.warn("V23 EMPTY PILE GUARD: Blocking '{}' — Used Pile is empty!", actionText);
                         actions.add(action);
                         continue;
@@ -1398,14 +1419,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         tdigOracle.isCardInReserve("Dark Deal") ||
                         tdigOracle.isCardInReserve("Cloud City Occupation") ||
                         tdigOracle.isCardInReserve("Vader's Bounty");
-                    if (!anyTargetInReserve) {
-                        action.addReasoning("V24 TDIGWATT: All targets already pulled — search will fail!", -400.0f);
+                    PullSpecificActionPolicy.Evaluation tdigwatt =
+                        PullSpecificActionPolicy.scoreTdigwatt(
+                            new PullSpecificActionFacts.ExhaustedSearch(
+                                actionId, anyTargetInReserve));
+                    applyPullSpecificActionPolicy(action, tdigwatt.result());
+                    if (tdigwatt.adapterStep()
+                            == PullSpecificActionPolicy.AdapterStep.CONTINUE_ACTION) {
                         logger.warn("V24 TDIGWATT EXHAUSTED: All 4 targets (Bespin, Dark Deal, CC Occupation, Vader's Bounty) already pulled — blocking search!");
                         actions.add(action);
                         continue;
-                    } else {
-                        logger.info("V24 TDIGWATT: Targets still in reserve — search OK");
                     }
+                    logger.info("V24 TDIGWATT: Targets still in reserve — search OK");
                 }
             }
 
@@ -1437,11 +1462,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             ;
                         logger.warn("V24.6 I'M SORRY: CC interior sites still in reserve? {}", ccSitesInReserve);
                     }
+                    applyPullSpecificActionPolicy(action,
+                        PullSpecificActionPolicy.scoreSorryLocation(
+                            new PullSpecificActionFacts.SorryLocation(
+                                actionId, ccSitesInReserve)));
                     if (ccSitesInReserve) {
-                        action.addReasoning("V24.6 I'M SORRY: CC sites still in reserve — pull one NOW for more drains + occupation!", 250.0f);
                         logger.warn("V24.6 I'M SORRY: Boosting +250 — CC interior sites available in reserve!");
                     } else {
-                        action.addReasoning("V24.6 I'M SORRY: All CC interior sites already pulled — search will fail!", -300.0f);
                         logger.warn("V24.6 I'M SORRY: BLOCKING — no more CC interior sites in reserve deck! (-300)");
                     }
                 }
@@ -1669,8 +1696,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         && iaySourceCard.getTitle().toLowerCase(java.util.Locale.ROOT).contains("i am your father")) {
                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer iayObj = context.getObjectiveAnalyzer();
                         boolean vaderPresent = iayObj != null && iayObj.isVaderOnTable(gameState, context.getPlayerId());
+                        applyPullSpecificActionPolicy(action,
+                            PullSpecificActionPolicy.scoreIayfPresence(
+                                new PullSpecificActionFacts.IayfPresence(
+                                    actionId, true, vaderPresent)));
                         if (!vaderPresent) {
-                            action.addReasoning("V29.8 IAYF: Vader NOT on table — can't deploy lightsaber from ANY source!", -500.0f);
                             logger.warn("V29.8 IAYF BLOCKED: Vader not on table — lightsaber deploy from {} impossible!",
                                 textLower.contains("lost") ? "Lost Pile" : "Reserve/other");
                         }
@@ -1720,26 +1750,36 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         if (pullOracle != null && pullOracle.isAnalyzed()) {
                             boolean hasTarget = pullOracle.isCardInReserve("I Have You Now")
                                 || pullOracle.isCardInReserve("Evader");
-                            if (!hasTarget) {
-                                action.addReasoning("V29.7 CRUSH: No I Have You Now or Evader in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 CRUSH BLOCKED: No targets in reserve (source: {})", sourceTitle);
-                            }
                             // V29.9: Check if IHYN/Evader already in hand — don't pull duplicates!
                             boolean ihynInHand = pullOracle.isCardInHand("I Have You Now");
                             boolean evaderInHand = pullOracle.isCardInHand("Evader");
                             boolean ihynInReserve = pullOracle.isCardInReserve("I Have You Now");
                             boolean evaderInReserve = pullOracle.isCardInReserve("Evader");
+                            PullSpecificActionFacts.DuplicateState duplicateState =
+                                ihynInHand && evaderInHand
+                                    ? PullSpecificActionFacts.DuplicateState.BOTH_IN_HAND
+                                    : ihynInHand && !evaderInReserve
+                                        ? PullSpecificActionFacts.DuplicateState.FIRST_IN_HAND_SECOND_MISSING
+                                        : evaderInHand && !ihynInReserve
+                                            ? PullSpecificActionFacts.DuplicateState.SECOND_IN_HAND_FIRST_MISSING
+                                            : PullSpecificActionFacts.DuplicateState.NONE;
+                            applyPullSpecificActionPolicy(action,
+                                PullSpecificActionPolicy.scoreNamedReserveSource(
+                                    new PullSpecificActionFacts.NamedReserveSource(
+                                        actionId,
+                                        PullSpecificActionFacts.ReserveSourceKind.CRUSH_THE_REBELLION,
+                                        hasTarget, duplicateState)));
+                            if (!hasTarget) {
+                                logger.warn("V29.7 CRUSH BLOCKED: No targets in reserve (source: {})", sourceTitle);
+                            }
                             if (ihynInHand && evaderInHand) {
                                 // Both targets already in hand — this pull is useless
-                                action.addReasoning("V29.9 CRUSH DUPLICATE: Both IHYN and Evader already in hand — pulling another is wasteful!", -300.0f);
                                 logger.warn("V29.9 CRUSH DUPLICATE: Both targets in hand — blocking (-300)");
                             } else if (ihynInHand && !evaderInReserve) {
                                 // IHYN in hand and no Evader in reserve — would pull a second IHYN
-                                action.addReasoning("V29.9 CRUSH DUPLICATE: IHYN already in hand, no Evader in reserve — save Crush!", -250.0f);
                                 logger.warn("V29.9 CRUSH DUPLICATE: IHYN in hand, no Evader in reserve — blocking (-250)");
                             } else if (evaderInHand && !ihynInReserve) {
                                 // Evader in hand and no IHYN in reserve — would pull a second Evader
-                                action.addReasoning("V29.9 CRUSH DUPLICATE: Evader already in hand, no IHYN in reserve — save Crush!", -250.0f);
                                 logger.warn("V29.9 CRUSH DUPLICATE: Evader in hand, no IHYN in reserve — blocking (-250)");
                             }
                         }
@@ -1755,7 +1795,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         boolean vaderOnTable = objA != null && objA.isVaderOnTable(gameState, context.getPlayerId());
 
                         if (!vaderOnTable && textLower.contains("lightsaber")) {
-                            action.addReasoning("V29.7 IAYF: Vader NOT on table — can't deploy lightsaber!", -500.0f);
+                            applyPullSpecificActionPolicy(action,
+                                PullSpecificActionPolicy.scoreIayfReserve(
+                                    new PullSpecificActionFacts.IayfReserve(
+                                        actionId, false, false, false,
+                                        false, false, false)));
                             logger.warn("V29.7 IAYF BLOCKED: Vader not on table");
                         } else if (vaderOnTable && textLower.contains("lightsaber")) {
                             // V37: USE DECKORACLE to check WHERE the lightsaber actually is!
@@ -1778,10 +1822,20 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
                             // V37: Block if trying to pull from wrong zone
                             if (pullFromReserve && !saberInReserve) {
-                                action.addReasoning("V37 IAYF: Lightsaber NOT in Reserve Deck — WILL FAIL! Check Lost Pile instead.", -600.0f);
+                                applyPullSpecificActionPolicy(action,
+                                    PullSpecificActionPolicy.scoreIayfReserve(
+                                        new PullSpecificActionFacts.IayfReserve(
+                                            actionId, true, pullFromReserve,
+                                            pullFromLost, saberInReserve,
+                                            saberInLost, false)));
                                 logger.warn("V37 IAYF BLOCKED: Trying reserve but saber not there! (in lost={})", saberInLost);
                             } else if (pullFromLost && !saberInLost) {
-                                action.addReasoning("V37 IAYF: Lightsaber NOT in Lost Pile — check Reserve instead.", -400.0f);
+                                applyPullSpecificActionPolicy(action,
+                                    PullSpecificActionPolicy.scoreIayfReserve(
+                                        new PullSpecificActionFacts.IayfReserve(
+                                            actionId, true, pullFromReserve,
+                                            pullFromLost, saberInReserve,
+                                            saberInLost, false)));
                                 logger.warn("V37 IAYF BLOCKED: Trying lost pile but saber not there! (in reserve={})", saberInReserve);
                             } else {
                                 // Lightsaber IS in the target zone — check if Vader is armed
@@ -1810,14 +1864,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     }
                                 } catch (Exception e) { /* ignore */ }
 
+                                applyPullSpecificActionPolicy(action,
+                                    PullSpecificActionPolicy.scoreIayfReserve(
+                                        new PullSpecificActionFacts.IayfReserve(
+                                            actionId, true, pullFromReserve,
+                                            pullFromLost, saberInReserve,
+                                            saberInLost, vaderArmed)));
                                 if (!vaderArmed) {
-                                    action.addReasoning(String.format(
-                                        "V37 IAYF: Vader UNARMED — retrieve lightsaber from %s NOW!",
-                                        pullFromLost ? "Lost Pile" : "Reserve"), 600.0f);
                                     logger.warn("V37 IAYF: Vader unarmed, saber in {} — TOP PRIORITY (+600)",
                                         pullFromLost ? "Lost" : "Reserve");
-                                } else {
-                                    action.addReasoning("V35.8 IAYF: Vader armed — spare lightsaber retrieval", 50.0f);
                                 }
                             }
                         }
@@ -1827,8 +1882,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     else if (sourceLower.contains("you are beaten")) {
                         if (pullOracle != null && pullOracle.isAnalyzed()) {
                             boolean hasIAYF = pullOracle.isCardInReserve("I Am Your Father");
+                            applyNamedReserveSourcePolicy(action,
+                                PullSpecificActionFacts.ReserveSourceKind.YOU_ARE_BEATEN,
+                                hasIAYF);
                             if (!hasIAYF) {
-                                action.addReasoning("V29.7 YOU ARE BEATEN: No I Am Your Father in reserve — WILL FAIL!", -400.0f);
                                 logger.warn("V29.7 YOU ARE BEATEN BLOCKED: No IAYF in reserve (source: {})", sourceTitle);
                             }
                         }
@@ -1839,8 +1896,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         if (pullOracle != null && pullOracle.isAnalyzed()) {
                             boolean hasTarget = pullOracle.isCardInReserve("Ghhhk")
                                 || pullOracle.isCardInReserve("Hyperwave Scan");
+                            applyNamedReserveSourcePolicy(action,
+                                PullSpecificActionFacts.ReserveSourceKind.BLAST_POINTS,
+                                hasTarget);
                             if (!hasTarget) {
-                                action.addReasoning("V29.7 BLAST POINTS: No Ghhhk or Hyperwave Scan in reserve — WILL FAIL!", -400.0f);
                                 logger.warn("V29.7 BLAST POINTS BLOCKED: No targets in reserve (source: {})", sourceTitle);
                             }
                         }
@@ -1852,8 +1911,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> locsInReserve =
                                 pullOracle.getCardsByCategory(com.gempukku.swccgo.common.CardCategory.LOCATION,
                                     com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+                            applyNamedReserveSourcePolicy(action,
+                                PullSpecificActionFacts.ReserveSourceKind.HUNT_DOWN,
+                                !locsInReserve.isEmpty());
                             if (locsInReserve.isEmpty()) {
-                                action.addReasoning("V29.7 HUNT DOWN: No locations left in reserve — WILL FAIL!", -400.0f);
                                 logger.warn("V29.7 HUNT DOWN BLOCKED: No locations in reserve (source: {})", sourceTitle);
                             }
                         }
@@ -1863,8 +1924,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     else if (sourceLower.contains("imperial command")) {
                         if (pullOracle != null && pullOracle.isAnalyzed()) {
                             boolean hasTarget = pullOracle.hasTargetInReserve("admiral", "general");
+                            applyNamedReserveSourcePolicy(action,
+                                PullSpecificActionFacts.ReserveSourceKind.IMPERIAL_COMMAND,
+                                hasTarget);
                             if (!hasTarget) {
-                                action.addReasoning("V29.7 IMPERIAL COMMAND: No admirals/generals in reserve — WILL FAIL!", -400.0f);
                                 logger.warn("V29.7 IMPERIAL COMMAND BLOCKED: No targets in reserve (source: {})", sourceTitle);
                             }
                         }
@@ -1874,8 +1937,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     else if (sourceLower.contains("endor shield")) {
                         if (pullOracle != null && pullOracle.isAnalyzed()) {
                             boolean hasTarget = pullOracle.hasTargetInReserve("admiral");
+                            applyNamedReserveSourcePolicy(action,
+                                PullSpecificActionFacts.ReserveSourceKind.ENDOR_SHIELD,
+                                hasTarget);
                             if (!hasTarget) {
-                                action.addReasoning("V29.7 ENDOR SHIELD: No admirals in reserve — WILL FAIL!", -400.0f);
                                 logger.warn("V29.7 ENDOR SHIELD BLOCKED: No admirals in reserve (source: {})", sourceTitle);
                             }
                         }
@@ -1885,8 +1950,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     else if (sourceLower.contains("visage") && textLower.contains("lightsaber")) {
                         if (pullOracle != null && pullOracle.isAnalyzed()) {
                             boolean hasTarget = pullOracle.hasTargetInReserve("lightsaber");
+                            applyNamedReserveSourcePolicy(action,
+                                PullSpecificActionFacts.ReserveSourceKind.VISAGE,
+                                hasTarget);
                             if (!hasTarget) {
-                                action.addReasoning("V29.7 VISAGE: No lightsabers in reserve — WILL FAIL!", -400.0f);
                                 logger.warn("V29.7 VISAGE BLOCKED: No lightsabers in reserve (source: {})", sourceTitle);
                             }
                         }
@@ -1896,8 +1963,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     else if (sourceLower.contains("kir kanos")) {
                         if (pullOracle != null && pullOracle.isAnalyzed()) {
                             boolean hasTarget = pullOracle.hasTargetInReserve("royal guard", "kanos", "kyneugh");
+                            applyNamedReserveSourcePolicy(action,
+                                PullSpecificActionFacts.ReserveSourceKind.KIR_KANOS,
+                                hasTarget);
                             if (!hasTarget) {
-                                action.addReasoning("V29.7 KIR KANOS: No Royal Guards in reserve — WILL FAIL!", -400.0f);
                                 logger.warn("V29.7 KIR KANOS BLOCKED: No Royal Guards in reserve (source: {})", sourceTitle);
                             }
                         }
@@ -1911,14 +1980,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     if (pullOracle != null && pullOracle.isAnalyzed()) {
                         java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> reserveCards =
                             pullOracle.getCardsInZone(com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+                        applyPullSpecificActionPolicy(action,
+                            PullSpecificActionPolicy.scoreReserveRisk(
+                                new PullSpecificActionFacts.ReserveRisk(
+                                    actionId, reserveCards.size())));
                         if (reserveCards.size() <= 3) {
-                            action.addReasoning("V37 RESERVE INTEL RISK: Only " + reserveCards.size() +
-                                " cards in reserve — search reveals almost everything to opponent!", -200.0f);
                             logger.warn("V37 RESERVE RISK: {} cards in reserve — search gives opponent too much intel (-200)",
                                 reserveCards.size());
-                        } else if (reserveCards.size() <= 8) {
-                            action.addReasoning("V37 RESERVE CAUTION: " + reserveCards.size() +
-                                " cards in reserve — opponent will see deck composition", -50.0f);
                         }
                     }
                 }
@@ -1951,11 +2019,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         logger.debug("V24.9 MM guard: Error scanning for characters: {}", e.getMessage());
                     }
                 }
+                applyPullSpecificActionPolicy(action,
+                    PullSpecificActionPolicy.scoreMasterfulMove(
+                        new PullSpecificActionFacts.MasterfulMove(
+                            actionId, hasCharsOnTable, mmTurn)));
                 if (!hasCharsOnTable) {
-                    action.addReasoning("V24.9 MASTERFUL MOVE: No characters on table — Ghhhk has nothing to protect! Save force for deployment!", -500.0f);
                     logger.warn("V24.9 MASTERFUL MOVE: BLOCKED — no characters on table, save force for Executor! (-500)");
                 } else if (mmTurn <= 2) {
-                    action.addReasoning("V24.9 MASTERFUL MOVE: Too early (turn " + mmTurn + ") — prioritize getting Executor out!", -300.0f);
                     logger.warn("V24.9 MASTERFUL MOVE: Penalized on turn {} — save force for Executor deployment! (-300)", mmTurn);
                 }
             }
@@ -2039,11 +2109,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         }
                     } catch (Exception e) { /* ignore */ }
                 }
+                applyPullSpecificActionPolicy(action,
+                    PullSpecificActionPolicy.scoreEffectSearch(
+                        new PullSpecificActionFacts.EffectSearch(
+                            actionId, isWokling)));
                 if (isWokling) {
-                    action.addReasoning("V53 BLOCK WOKLING: Don't waste 3 force searching for effects!", -9999.0f);
                     logger.warn("V53 WOKLING BLOCKED: Wokling Effect search — 3 force wasted, HARD BLOCK!");
-                } else {
-                    action.addReasoning("Search for Effect from Reserve Deck", GOOD_DELTA);
                 }
             }
 
@@ -2651,19 +2722,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     // Can't check — assume target exists
                 }
 
-                if (!hasValidTarget) {
-                    // No valid targets in Reserve — don't waste Force on this!
-                    action.addReasoning("V29.7 NO TARGET: No admirals/generals in Reserve Deck — skip!", -300.0f);
-                } else if (bespinChainActive) {
-                    // Admiral pilot → Executor chain: this is Turn 1 critical for TDIGWATT.
-                    // Score it as high as AMSD itself so we never skip this pull.
-                    action.addReasoning(
-                        "CRITICAL: Admiral pilot enables Executor deploy to Bespin — must pull T1!", 300.0f);
+                applyPullSpecificActionPolicy(action,
+                    PullSpecificActionPolicy.scoreAdmiralGeneralPull(
+                        new PullSpecificActionFacts.AdmiralGeneralPull(
+                            actionId, hasValidTarget, bespinChainActive)));
+                if (hasValidTarget && bespinChainActive) {
                     logger.warn("EXECUTOR CHAIN: Admiral pull with no Bespin ship — boosting to 300 (enables Executor pipeline)");
-                } else {
-                    // V29.7: Pulls ALWAYS fire before locations and characters.
-                    // Getting cards into hand first means better deploy choices later.
-                    action.addReasoning("V29.7 PULL FIRST: Retrieve admiral/general into hand before deploying!", 250.0f);
                 }
             }
 
@@ -3966,6 +4030,26 @@ public class ActionTextEvaluator extends ActionEvaluator {
             "deploy-action-text-" + action.getActionId());
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyPullSpecificActionPolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+            "pull-specific-action-text-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyNamedReserveSourcePolicy(
+            EvaluatedAction action,
+            PullSpecificActionFacts.ReserveSourceKind sourceKind,
+            boolean targetAvailable) {
+        applyPullSpecificActionPolicy(action,
+            PullSpecificActionPolicy.scoreNamedReserveSource(
+                new PullSpecificActionFacts.NamedReserveSource(
+                    action.getActionId(), sourceKind, targetAvailable,
+                    PullSpecificActionFacts.DuplicateState.NONE)));
     }
 
     // ═══════════════════════════════════════════════════════════

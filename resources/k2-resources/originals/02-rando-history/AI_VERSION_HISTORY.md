@@ -7355,15 +7355,18 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     runtime. AI source only; no GEMP engine or player-decision changes.
 
   ════ V255 (2026-07-19): consolidate remaining BATTLE-2 action-text tactics ════
-    BattleActionTextFacts and BattleActionTextPolicy now own the remaining pure scoring for
+    BattleActionTextFacts and BattleActionTextPolicy originally owned the remaining pure scoring for
     Welcome Home, both You Are Beaten routes, add-destiny, Hatred, I Have You Now, FMFTD,
     Vader/Inquisitor recall, Stunning Leader, destiny modifiers/protection, V175 kill-shot and
     substitute-destiny, weapon-target cancel, attrition immunity, forfeit protection, and
     retargeting. Both ActionTextEvaluator mirrors retain all action/source/phase gates,
     DeckOracle, card, battle, power, ability, destiny, forfeit, ownership, and stack reads;
     exception boundaries; action types; exact logs; branch order; and direct policy application.
-    Adapter logs now consume policy outputs instead of repeating scoring formulas. All extracted
-    contributions remain ADD operations in BATTLE_WEAPONS, including additive -9999. Force Push,
+    Adapter logs now consume policy outputs instead of repeating scoring formulas. V268 supersedes
+    the cross-phase ownership: Welcome Home's Reserve pull and You Are Beaten's IAYF search are
+    PULL_SEARCH ADD operations, while the independently stackable +500 battle freeze remains a
+    BATTLE_WEAPONS ADD here. All other V255 contributions remain ADD operations in BATTLE_WEAPONS,
+    including additive -9999. Force Push,
     fire, throw, and redraw remain solely in BattleWeaponsPolicy; BATTLE-1, V25, and BATTLE-3 stay
     independent. Exact legacy score bands and independent stacking are unchanged; unresolved
     kill-shot retains its zero-score diagnostic ADD. Focused 27/0/0/0, BATTLE-named 103/0/0/0, full reactor
@@ -7600,3 +7603,25 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     158c37f6a91ed639f25e71f216bd8b1bef1446d95548a0024d8832f112b6019e contain both shared
     owners and mirrored adapters. Runtime reload and live-game proof remain pending on the external
     runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V268 (2026-07-19): consolidate remaining PULL action and child-selection scoring ====
+    Shared AI-only PullSpecificActionPolicy now owns the remaining card-specific ActionText PULL
+    scores, including V142, V147, V155 Reserve mode, V144 search mode, V23 pile guards, V24,
+    V24.6, IAYF, named-source checks, V37, V24.9, V53, and admiral/general pulls. Shared
+    PullSelectionCandidatePolicy owns the route-specific child decisions for V186, unknown gain
+    values, Hunt Down lightsabers, Cloud City route choices, priority cards, AMSD safety/pilot
+    routing, and Reserve-child plan weights. Its operations retain their semantic tree domains:
+    SETUP_STARTING, PULL_SEARCH or FORCE_LOSS_PAYMENT, DECK_PLAYBOOK, and DEPLOY_SEQUENCING. Both
+    ActionText and CardSelection mirrors retain every GEMP read, stock identity, phase/source gate,
+    exception, log, score reset, early continue, and action-list mutation. V155's -2000 and V144's
+    search -2000 now trace in PULL_SEARCH; V144's independent battle-freeze +500 remains in
+    BATTLE_WEAPONS, preserving search-then-freeze order and the exact -1500 combined total. V23
+    empty and low-pile routes, V24.6+V37+V192 stacking, Wokling+V192 stacking, AMSD's legacy double
+    block, and non-Reserve retrieval ownership are pinned by direct two-bot fixtures. Focused
+    85/0/0/0, full reactor 1789/0/0/26, normalized mirror parity, semantic-domain/output-kind
+    assertions, direct V186/unknown/Reserve-blueprint/AMSD adapter fixtures, source ownership,
+    AI-only scope, compiled-owner, diff, and clean package gates passed. Server jar SHA-256
+    78a22cd1f00abe7c821eb4a2ff15d9c90c468e66e2e2283d5a91e38172186a75 and web jar SHA-256
+    5ba857f29c4a434d49538392981d0ffc4d1244823e5df58bb9b57fa0b5271d26 contain both shared owners
+    and mirrored adapters. Runtime reload and live-game proof remain pending. AI source only; no
+    GEMP engine or player-decision changes.

@@ -61,15 +61,7 @@ public final class BattleActionTextFacts {
         }
     }
 
-    public record WelcomeHomeFacts(String actionId, boolean saveForBattle, String why) {
-        public WelcomeHomeFacts {
-            Objects.requireNonNull(actionId, "actionId");
-            Objects.requireNonNull(why, "why");
-        }
-    }
-
     public record YouAreBeatenModeFacts(String actionId,
-                                        boolean iayfSearch,
                                         boolean battleFreeze,
                                         boolean battlePhase) {
         public YouAreBeatenModeFacts {

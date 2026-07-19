@@ -96,25 +96,16 @@ public class BattleActionTextPolicyTest {
     }
 
     @Test
-    public void v155AndV144PreserveExactReasonsAndIndependentOrder() {
-        PolicyOperation welcomeHome = onlyWeapons(BattleActionTextPolicy.scoreWelcomeHome(
-                new BattleActionTextFacts.WelcomeHomeFacts("welcome", true, "The Works already on table/in hand (save for battle, Petranaki still pullable)")));
-        assertOperation(welcomeHome, "V155-welcome-home-save", -2000.0f,
-                "V155 WELCOME HOME: The Works already on table/in hand (save for battle, Petranaki still pullable) — SAVE this card for battle (Tyranus ability-number mode), don't waste the pull");
-        assertTrue(BattleActionTextPolicy.scoreWelcomeHome(
-                new BattleActionTextFacts.WelcomeHomeFacts("welcome", false, "unused")).operations().isEmpty());
-
+    public void v144BattleFreezeRemainsBattleOwned() {
         PolicyResult both = BattleActionTextPolicy.scoreYouAreBeatenMode(
-                new BattleActionTextFacts.YouAreBeatenModeFacts("beaten", true, true, true));
-        assertIds(both, "V144-you-are-beaten-search", "V144-you-are-beaten-freeze");
-        assertRawDeltas(both.operations(), -2000.0f, 500.0f);
-        assertEquals("V144 YOU ARE BEATEN: Mode 2 (IAYF search) — never use this mode, save for battle freeze or Cancel Uncontrollable Fury",
-                both.operations().get(0).reason());
+                new BattleActionTextFacts.YouAreBeatenModeFacts("beaten", true, true));
+        assertIds(both, "V144-you-are-beaten-freeze");
+        assertRawDeltas(both.operations(), 500.0f);
         assertEquals("V144 YOU ARE BEATEN: Battle freeze in battle phase — strong use!",
-                both.operations().get(1).reason());
+                both.operations().get(0).reason());
         assertOperationKindsAreAdditive(both);
         assertTrue(BattleActionTextPolicy.scoreYouAreBeatenMode(
-                new BattleActionTextFacts.YouAreBeatenModeFacts("beaten", false, true, false)).operations().isEmpty());
+                new BattleActionTextFacts.YouAreBeatenModeFacts("beaten", true, false)).operations().isEmpty());
     }
 
     @Test
