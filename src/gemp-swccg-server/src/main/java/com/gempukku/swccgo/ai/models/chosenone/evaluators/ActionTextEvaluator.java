@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateActionPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
@@ -1393,8 +1394,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Action text: "Take an Effect into hand from Reserve Deck"
             // MUST check EARLY before V29.7 PULL FIRST gives it +250.
             // Check source card ID — if it's Wokling (bp 200_47), hard block.
-            if (textLower.contains("effect") && textLower.contains("reserve deck")
-                && textLower.contains("take")) {
+            boolean woklingSearch = textLower.contains("effect")
+                && textLower.contains("reserve deck") && textLower.contains("take");
+            if (woklingSearch) {
                 boolean isWoklingSource = false;
                 if (cardId != null && gameState != null) {
                     try {
@@ -1410,12 +1412,21 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         }
                     } catch (Exception e) { /* ignore */ }
                 }
-                if (isWoklingSource && context.getTurnNumber() <= 3) {
-                    action.setScore(-9999.0f);
-                    action.addReasoning("V53c BLOCK WOKLING: Turns 1-3 — save force for deploys, don't search!", -9999.0f);
-                    logger.warn("V53c WOKLING BLOCKED: Turn {} — 3 force too precious, HARD BLOCK!", context.getTurnNumber());
+                DeploySequencingPolicy.Evaluation wokling =
+                    DeploySequencingPolicy.woklingEarlySearch(
+                        actionId, true, isWoklingSource, context.getTurnNumber());
+                if (wokling.scoreOverride() != null) {
+                    action.setScore(wokling.scoreOverride());
+                }
+                PolicyContributionLedger woklingLedger = new PolicyContributionLedger(
+                    (decisionId == null || decisionId.isBlank()
+                        ? "deploy-wokling" : decisionId + "-deploy-wokling") + "-" + actionId);
+                woklingLedger.register(wokling.result());
+                PolicyOperationAdapter.apply(action, woklingLedger);
+                if (wokling.adapterStep()
+                        == DeploySequencingPolicy.AdapterStep.CONTINUE_ACTION) {
                     actions.add(action);
-                    continue; // Skip all further evaluation
+                    continue;
                 }
             }
 
@@ -1480,8 +1491,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             || textLower.equals("deploy a card")
                             || textLower.startsWith("deploy ")
                             || textLower.startsWith("play a card ");
-                        if (!isLocationSearch && !isAmsdAction && !isReservePull && !isDeployEntry) {
-                            action.addReasoning("V24.4 LOCATIONS FIRST: Deploy locations in hand before activating effects!", -800.0f);
+                        boolean locationFirstExempt = isLocationSearch || isAmsdAction
+                            || isReservePull || isDeployEntry;
+                        DeploySequencingPolicy.Evaluation locationFirst =
+                            DeploySequencingPolicy.locationsFirstNonDeploy(
+                                actionId, true, locationFirstExempt);
+                        PolicyContributionLedger locationFirstLedger = new PolicyContributionLedger(
+                            (decisionId == null || decisionId.isBlank()
+                                ? "deploy-location-first-action"
+                                : decisionId + "-deploy-location-first-action") + "-" + actionId);
+                        locationFirstLedger.register(locationFirst.result());
+                        PolicyOperationAdapter.apply(action, locationFirstLedger);
+                        if (!locationFirstExempt) {
                             logger.warn("V24.4 LOCATIONS FIRST: Penalizing '{}' — location in hand needs deploying first! (-800)", actionText);
                         } else if (isAmsdAction) {
                             logger.warn("V24.15 AMSD EXEMPT: Not penalizing AMSD with LOCATIONS FIRST — AMSD deploys a Star Destroyer!");

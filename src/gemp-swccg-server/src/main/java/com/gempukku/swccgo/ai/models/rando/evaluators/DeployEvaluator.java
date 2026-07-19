@@ -8,6 +8,11 @@ import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.CardKnowledge;
+import com.gempukku.swccgo.ai.models.common.phase.DeployBudgetPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFacts;
+import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.common.CardCategory;
@@ -623,136 +628,33 @@ public class DeployEvaluator extends ActionEvaluator {
                         + "— baseline owned by V192 (ActionTextEvaluator)", actionText);
             }
 
-            // === V38.4 + V56 FIX 18: AGGRESSIVE DEPLOY — HAND SIZE + FORCE PILE URGENCY ===
-            // Cards in hand do NOTHING. Cards on table drain/battle/occupy.
-            // The more cards in hand and Force available, the more urgently we must deploy.
-            // This counteracts the many -200 to -600 penalties that stack up and cause
-            // Rando to pass with Force available and cards in hand.
-            //
-            // V56: Closed the mid/late-game urgency gap. Previously handSize < 9 gave
-            // ZERO urgency bonus, so once we emptied our hand to ~8 cards, scores
-            // crashed and Rando stopped deploying (see the "activated 8 force, deployed
-            // nothing" pattern on Turn 8). Now there is a baseline floor any time we
-            // have force to spend.
-            {
-                int handSize = hand != null ? hand.size() : 0;
-                float urgencyBonus = 0;
-
-                // Scale with hand size: bigger hand = more urgency to deploy
-                if (handSize >= 12) {
-                    urgencyBonus = 200.0f + (handSize - 12) * 50.0f; // +200 at 12, +250 at 13, +300 at 14...
-                } else if (handSize >= 9) {
-                    urgencyBonus = 100.0f + (handSize - 9) * 30.0f; // +100 at 9, +130 at 10, +160 at 11
-                } else if (handSize >= 5) {
-                    // V56: mid-hand baseline — still incentivize deploying
-                    urgencyBonus = 80.0f;
-                } else if (handSize >= 1) {
-                    // V56: small-hand baseline — always deploy if we have anything left
-                    urgencyBonus = 50.0f;
-                }
-
-                // Scale with Force available: more Force = less reason to hoard
-                if (availableForce >= 10 && handSize >= 8) {
-                    urgencyBonus += 100.0f; // Surplus Force — spend it!
-                }
-                // V56: even with small hand, if force is sitting unused, push deploys
-                if (availableForce >= 6 && handSize >= 1 && handSize < 8) {
-                    urgencyBonus += 80.0f;
-                }
-
-                if (urgencyBonus > 0) {
-                    action.addReasoning(String.format(
-                        "V38.4 DEPLOY URGENCY: hand=%d, force=%d — get cards on table! (+%.0f)",
-                        handSize, availableForce, urgencyBonus), urgencyBonus);
-                    LOG.warn("V38.4 DEPLOY URGENCY: hand={}, force={} — boost +{} (action='{}')",
-                        handSize, availableForce, (int)urgencyBonus, actionText);
-                }
+            // DEPLOY-1 phase envelope: one shared owner computes urgency and cross-phase
+            // obligations from stock board facts. MOVE/BATTLE provide facts only.
+            DeploySequencingFacts.PowerGap endangered = null;
+            DeploySequencingFacts.PowerGap winnableBattle = null;
+            try {
+                endangered = DeploySequencingFactsReader.firstEndangeredLocation(
+                        context.getGameState(), context.getGame(), context.getPlayerId());
+            } catch (Exception sequencingError) {
+                LOG.debug("V169 umbrella error: {}", sequencingError.getMessage());
             }
-
-            // === V169 (Steve, 2026-06): PROTECT URGENT — allies endangered, MUST deploy ===
-            // Replay lk6xgsokjcwrwxuu fatal move 1: on the turn Asajj stood alone at Guest
-            // Quarters with Luke AT her site, the lone 'Deploy' action scored -140 (V64
-            // maintenance penalty for Ap'lek dominated the urgency bonuses), fell below the
-            // DPS bad-action threshold (-100), and the ENTIRE deploy phase was passed — with
-            // 13 Force activated and Mara Jade in hand. Asajj was beaten 6v27 next turn.
-            // When ANY location has our characters outpowered, the 'Deploy' umbrella action
-            // gets +500 so maintenance/value worries can never sink the phase below the DPS
-            // threshold; the location chooser (V169 PROTECT in CardSelectionEvaluator) then
-            // steers the deploy to the endangered site.
             try {
-                com.gempukku.swccgo.game.state.GameState v169Gs = context.getGameState();
-                com.gempukku.swccgo.game.SwccgGame v169Game = context.getGame();
-                String v169Pid = context.getPlayerId();
-                if (v169Gs != null && v169Game != null && v169Pid != null) {
-                    String v169Opp = v169Gs.getOpponent(v169Pid);
-                    for (PhysicalCard v169Loc : v169Gs.getTopLocations()) {
-                        if (v169Loc == null) continue;
-                        boolean v169WeHere = false;
-                        for (PhysicalCard v169C : v169Gs.getCardsAtLocation(v169Loc)) {
-                            if (v169C != null && v169Pid.equals(v169C.getOwner()) && !v169C.isUndercover()) {
-                                v169WeHere = true; break;
-                            }
-                        }
-                        if (!v169WeHere) continue;
-                        float v169Our = v169Game.getModifiersQuerying().getTotalPowerAtLocation(
-                            v169Gs, v169Loc, v169Pid, false, false);
-                        float v169Their = v169Game.getModifiersQuerying().getTotalPowerAtLocation(
-                            v169Gs, v169Loc, v169Opp, false, false);
-                        if (v169Their > v169Our) {
-                            action.addReasoning(String.format(
-                                "V169 PROTECT URGENT: our characters at %s outpowered (%.0f vs %.0f) — deploy buddies NOW",
-                                v169Loc.getTitle(), v169Our, v169Their), 500.0f);
-                            LOG.warn("V169 PROTECT URGENT: {} ({} vs {}) -> +500 on 'Deploy'",
-                                v169Loc.getTitle(), (int) v169Our, (int) v169Their);
-                            break;
-                        }
-                    }
+                if (context.getForcePileSize() <= 2) {
+                    winnableBattle = DeploySequencingFactsReader.firstWinnableBattle(
+                            context.getGameState(), context.getGame(), context.getPlayerId());
                 }
-            } catch (Exception v169E) { LOG.debug("V169 umbrella error: {}", v169E.getMessage()); }
-
-            // === V176 (Steve, 2026-06): SAVE THE BATTLE-INITIATION FORCE ===
-            // Replay c8o8f5pnjp5244ao turn 5: Rando deployed Tyranus + Evazan&Ponda +
-            // Dooku's Lightsaber onto SOLO Yoda — then could not battle him: the deploys
-            // spent the last force, battle initiation costs 1, and the engine never
-            // offered "Initiate battle" (BattleEvaluator saw 0 battle actions). Steve
-            // reinforced next turn and the free kill became a 4-character brawl.
-            // When a WINNABLE battle is already on the table (we are present and
-            // out-power them at a shared location) and the force pile is nearly dry
-            // (<= 2), STOP deploying — keep the initiation fee. -800 dominates the
-            // urgency/momentum bonuses; the battle phase comes right after deploy.
-            try {
-                com.gempukku.swccgo.game.state.GameState v176Gs = context.getGameState();
-                com.gempukku.swccgo.game.SwccgGame v176Game = context.getGame();
-                String v176Pid = context.getPlayerId();
-                if (v176Gs != null && v176Game != null && v176Pid != null
-                        && v176Gs.getForcePileSize(v176Pid) <= 2) {
-                    String v176Opp = v176Gs.getOpponent(v176Pid);
-                    for (PhysicalCard v176Loc : v176Gs.getTopLocations()) {
-                        if (v176Loc == null) continue;
-                        boolean v176We = false, v176They = false;
-                        for (PhysicalCard v176C : v176Gs.getCardsAtLocation(v176Loc)) {
-                            if (v176C == null) continue;
-                            if (v176Pid.equals(v176C.getOwner()) && !v176C.isUndercover()) v176We = true;
-                            else if (v176Opp.equals(v176C.getOwner())) v176They = true;
-                        }
-                        if (!v176We || !v176They) continue;
-                        float v176Our = v176Game.getModifiersQuerying().getTotalPowerAtLocation(
-                            v176Gs, v176Loc, v176Pid, false, false);
-                        float v176Their = v176Game.getModifiersQuerying().getTotalPowerAtLocation(
-                            v176Gs, v176Loc, v176Opp, false, false);
-                        if (v176Our > v176Their) {
-                            action.addReasoning(String.format(
-                                "V176 SAVE BATTLE FORCE: winnable battle waiting at %s (%.0f vs %.0f) and only %d force left — stop deploying, keep the initiation fee",
-                                v176Loc.getTitle(), v176Our, v176Their,
-                                v176Gs.getForcePileSize(v176Pid)), -800.0f);
-                            LOG.warn("V176 SAVE BATTLE FORCE: {} ({} vs {}) pile={} -> -800 on further deploys",
-                                v176Loc.getTitle(), (int) v176Our, (int) v176Their,
-                                v176Gs.getForcePileSize(v176Pid));
-                            break;
-                        }
-                    }
-                }
-            } catch (Exception v176E) { LOG.debug("V176 error: {}", v176E.getMessage()); }
+            } catch (Exception sequencingError) {
+                LOG.debug("V176 error: {}", sequencingError.getMessage());
+            }
+            DeploySequencingPolicy.Evaluation envelope = DeploySequencingPolicy.phaseEnvelope(
+                    actionId, hand != null ? hand.size() : 0, availableForce,
+                    context.getForcePileSize(), endangered, winnableBattle);
+            PolicyContributionLedger envelopeLedger = new PolicyContributionLedger(
+                    (decisionId == null || decisionId.isBlank()
+                            ? "deploy-envelope" : decisionId + "-deploy-envelope")
+                            + "-" + actionId);
+            envelopeLedger.register(envelope.result());
+            PolicyOperationAdapter.apply(action, envelopeLedger);
 
             // === APPLY PHASE-LEVEL PLAN ===
             // V24.10: NEVER hold back on turns 1-2. The engine MUST be built ASAP:
@@ -1412,115 +1314,45 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === DEPLOYMENT PLAN SCORING ===
-                    // If we have a plan, score based on whether this card is in the plan
+                    // DEPLOY-1 plan application. The planner remains the fact producer;
+                    // this shared policy is the sole score and terminal-flow owner.
                     String blueprintId = card.getBlueprintId(true);
-
-                    if (plan != null) {
-                        if (!plan.getInstructions().isEmpty()) {
-                            // Plan has pending instructions - check if this card is in plan
-                            DeploymentInstruction instruction = plan.getInstructionForPhysicalCard(
-                                card.getPermanentCardId(), card.getCardId(), blueprintId);
-
-                            if (instruction != null) {
-                                // Card is in plan - high priority!
-                                action.addReasoning("IN DEPLOYMENT PLAN: " + plan.getStrategy().getValue(), 100.0f);
-
-                                // Extra bonus based on instruction priority
-                                int priority = instruction.getPriority();
-                                if (priority <= 1) {
-                                    action.addReasoning("Highest priority deployment", 50.0f);
-                                } else if (priority <= 3) {
-                                    action.addReasoning("High priority deployment", 25.0f);
-                                }
-                            } else if (!plan.isForceAllowExtras()) {
-                                // Card is NOT in plan and we're not allowing extras
-                                // CRITICAL: If plan is DEPLOY_LOCATIONS, block NON-LOCATION cards.
-                                // But actual LOCATION cards (like Bespin from hand) should still be allowed!
-                                if (plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS) {
-                                    // V24.10 FIX: Check if card IS a location before blocking!
-                                    // Bespin can be in hand (from objective pull) but not in the plan.
-                                    CardCategory planCheckCategory = blueprint.getCardCategory();
-                                    if (planCheckCategory == CardCategory.LOCATION) {
-                                        LOG.warn("📋 V24.10: {} is a LOCATION not in plan — ALLOWING during DEPLOY_LOCATIONS (locations always welcome!)", card.getTitle());
-                                        action.addReasoning("V24.10: Location not in plan but DEPLOY_LOCATIONS allows all locations!", 100.0f);
-                                    } else if (context.getTurnNumber() >= 2) {
-                                        // V29.7 SAFETY VALVE: After turn 1, allow freely.
-                                        LOG.info("V29.7: DEPLOY_LOCATIONS turn {} — allowing character deploy: {}", context.getTurnNumber(), card.getTitle());
-                                        action.addReasoning("V40: DEPLOY_LOCATIONS incomplete but turn " + context.getTurnNumber() + " — deploy freely!", 0.0f);
-                                    } else {
-                                        // V40: Turn 1 DEPLOY_LOCATIONS block only for TDIGWATT
-                                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer dlObjAnalyzer =
-                                            context.getObjectiveAnalyzer();
-                                        boolean isTdigwattDL = dlObjAnalyzer != null && dlObjAnalyzer.isAnalyzed()
-                                            && !dlObjAnalyzer.isHuntDownV();
-                                        if (isTdigwattDL) {
-                                            LOG.warn("V40 BLOCKING non-location deploy during DEPLOY_LOCATIONS plan (turn 1, TDIGWATT): {}", card.getTitle());
-                                            action.addReasoning("BLOCKED: Plan is DEPLOY_LOCATIONS ONLY (turn 1, TDIGWATT) - deploy locations first!", -1000.0f);
-                                            actions.add(action);
-                                            continue;  // Skip all other scoring - this action is blocked
-                                        } else {
-                                            LOG.warn("V40: DEPLOY_LOCATIONS turn 1 but NOT TDIGWATT — allowing deploy: {}", card.getTitle());
-                                            action.addReasoning("V40: Not TDIGWATT — deploy freely on turn 1!", 0.0f);
-                                        }
-                                    }
-                                } else if (plan.isWaitingForPlannedCards()) {
-                                    // V38.4: Plan cards in hand but not affordable.
-                                    // OLD: Hard blocked all deploys (-200) to save force for plan.
-                                    // NEW: Only block if Force is actually tight (< 8).
-                                    // With 13+ Force, we can afford BOTH plan AND extra deploys.
-                                    // Rando was hoarding 14 Force and deploying NOTHING.
-                                    if (availableForce < 8) {
-                                        LOG.warn("📋 Low force ({}) — saving for planned cards: {}", availableForce, card.getTitle());
-                                        action.addReasoning("V40: Saving force for planned cards (neutral)", 0.0f);
-                                        actions.add(action);
-                                        continue;
-                                    } else {
-                                        LOG.warn("V38.4 FORCE SURPLUS: {} Force — allow off-plan deploy: {}", availableForce, card.getTitle());
-                                        action.addReasoning("V40: Plenty of Force — deploy off-plan!", 0.0f);
-                                    }
-                                } else {
-                                    action.addReasoning("V40: Not in deployment plan (neutral)", 0.0f);
-                                }
-                            } else {
-                                // V29.7 FIX: Plan allows extras (stale plan). When the plan is stale,
-                                // the planned locations are no longer available — we MUST allow character
-                                // deploys! Previously this blocked characters with -1000 even when stale,
-                                // which caused Rando to deploy NOTHING for entire games.
-                                // DEPLOY_LOCATIONS means "locations FIRST" not "locations ONLY."
-                                // When plan is stale, the "first" part is done (or impossible).
-                                if (plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS) {
-                                    LOG.info("V29.7: Stale DEPLOY_LOCATIONS plan — allowing character/ship deploys now");
-                                    action.addReasoning("V29.7: Stale plan — deploy characters now!", 10.0f);
-                                } else {
-                                    action.addReasoning("Extra deploy (plan stale)", 0.0f);
-                                }
-                            }
-                        } else if (plan.isPlanComplete()) {
-                            // Plan is complete! All planned deployments are done.
-                            // CRITICAL FIX: DEPLOY_LOCATIONS means "deploy locations FIRST", not "ONLY locations"
-                            // Once locations are deployed, we should allow character/ship deploys normally.
-                            // The strategy was just to ensure locations came first to open deployment options.
-                            if (plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS) {
-                                LOG.info("✅ DEPLOY_LOCATIONS plan complete - now allowing character/ship deploys");
-                                action.addReasoning("DEPLOY_LOCATIONS complete - extra deploy allowed", 25.0f);
-                            }
-
-                            // For all strategies (DEPLOY_LOCATIONS, ESTABLISH, REINFORCE), allow extra deploys
-                            int extraBudget = plan.getExtraForceBudget(availableForce);
-                            if (extraBudget > 0) {
-                                action.addReasoning("Plan COMPLETE - extra deploy allowed", 25.0f);
-                            } else {
-                                // Saving force for battle
-                                action.addReasoning("V40: Plan complete — deploy freely!", 0.0f);
-                            }
-                        }
-
-                        // Check if this card is in hold-back list
-                        if (blueprintId != null && plan.getHoldBackCards().contains(blueprintId)) {
-                            // V40: Hold-back card penalty neutralized
-                            action.addReasoning("V40: Hold-back card (neutral)", 0.0f);
-                        }
+                    DeploymentInstruction plannedInstruction = plan != null
+                        ? plan.getInstructionForPhysicalCard(
+                            card.getPermanentCardId(), card.getCardId(), blueprintId)
+                        : null;
+                    boolean locationStrategy = plan != null
+                        && plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS;
+                    boolean tdigwattPlan = context.getObjectiveAnalyzer() != null
+                        && context.getObjectiveAnalyzer().isAnalyzed()
+                        && !context.getObjectiveAnalyzer().isHuntDownV();
+                    DeployPlanPolicy.Evaluation planEvaluation = DeployPlanPolicy.evaluate(
+                        new DeployPlanPolicy.Facts(
+                            actionId, plan != null,
+                            plan != null && !plan.getInstructions().isEmpty(),
+                            plannedInstruction != null,
+                            plannedInstruction != null
+                                ? plannedInstruction.getPriority() : Integer.MAX_VALUE,
+                            plan != null && plan.isForceAllowExtras(),
+                            plan != null && plan.isWaitingForPlannedCards(),
+                            locationStrategy,
+                            blueprint.getCardCategory() == CardCategory.LOCATION,
+                            tdigwattPlan, context.getTurnNumber(), availableForce,
+                            plan != null && plan.isPlanComplete(),
+                            plan != null && plan.isPlanComplete()
+                                ? plan.getExtraForceBudget(availableForce) : 0,
+                            plan != null && blueprintId != null
+                                && plan.getHoldBackCards().contains(blueprintId),
+                            plan != null ? plan.getStrategy().getValue() : ""));
+                    PolicyContributionLedger planLedger = new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "deploy-plan" : decisionId + "-deploy-plan") + "-" + actionId);
+                    planLedger.register(planEvaluation.result());
+                    PolicyOperationAdapter.apply(action, planLedger);
+                    if (planEvaluation.adapterStep()
+                            == DeployPlanPolicy.AdapterStep.CONTINUE_ACTION) {
+                        actions.add(action);
+                        continue;
                     }
 
                     // Get card stats (with type checks for safety)
@@ -1529,83 +1361,40 @@ public class DeployEvaluator extends ActionEvaluator {
                     try {
                         Float deployCost = blueprint.getDeployCost();
                         cost = deployCost != null ? deployCost.intValue() : 0;
-                        // V22.3: Maintenance card check - need enough Force for upkeep AFTER deploying
-                        // T2 COMMIT-1 (2026-07-06, audit force-economy-1): upkeep is the ENGINE's
-                        // card-specific maintain cost (MaintenanceFacts), NOT deploy cost — the old
-                        // basis made Lando Scoundrel (deploy 5, maintain 1) essentially undeployable
-                        // below pile ~10 (V59 HARD -2000 on a phantom 5F obligation).
                         if (blueprint.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE)) {
-                            int totalForce = context.getGameState() != null ?
-                                context.getGameState().getForcePileSize(context.getPlayerId()) : 0;
-                            int forceAfterDeploy = totalForce - cost;
+                            int totalForce = context.getGameState() != null
+                                ? context.getGameState().getForcePileSize(context.getPlayerId()) : 0;
                             int maintenanceCost = com.gempukku.swccgo.ai.models.common.strategy
                                 .MaintenanceFacts.maintainCost(blueprint);
-
-                            // V59 HOLISTIC MAINTENANCE: Account for other planned deploys AND
-                            // battle reserve. FIXES Issue #4 from peaceful-pike replay: Lando
-                            // deployed with 8F "post-deploy", but Rando then spent 4F on Jyn +
-                            // 1F on battle = only 3F left for 5F maintenance → Lando sacrificed.
-                            // Look at all pending deploys this turn from the plan and subtract
-                            // their cost. Also reserve 2F for battle interrupts/draws.
                             int pendingDeployCost = 0;
-                            int battleReserve = 2;
                             try {
-                                DeployPhasePlanner maintPlanner = context.getDeployPhasePlanner();
-                                if (maintPlanner != null) {
-                                    DeploymentPlan maintPlan = maintPlanner.getCurrentPlan();
-                                    if (maintPlan != null && blueprintId != null) {
-                                        for (DeploymentInstruction ins : maintPlan.getInstructions()) {
-                                            if (ins == null) continue;
-                                            // Skip the card we're currently evaluating (its cost already subtracted)
-                                            if (blueprintId.equals(ins.getCardBlueprintId())) continue;
-                                            pendingDeployCost += ins.getDeployCost();
+                                DeployPhasePlanner maintenancePlanner = context.getDeployPhasePlanner();
+                                DeploymentPlan maintenancePlan = maintenancePlanner != null
+                                    ? maintenancePlanner.getCurrentPlan() : null;
+                                if (maintenancePlan != null && blueprintId != null) {
+                                    for (DeploymentInstruction instruction : maintenancePlan.getInstructions()) {
+                                        if (instruction == null
+                                            || blueprintId.equals(instruction.getCardBlueprintId())) {
+                                            continue;
                                         }
+                                        pendingDeployCost += instruction.getDeployCost();
                                     }
                                 }
-                            } catch (Exception e) {
-                                LOG.debug("V59 MAINTENANCE: Error reading plan: {}", e.getMessage());
+                            } catch (Exception maintenancePlanError) {
+                                LOG.debug("V59 MAINTENANCE: Error reading plan: {}",
+                                    maintenancePlanError.getMessage());
                             }
-                            int forceAfterAllDeploys = forceAfterDeploy - pendingDeployCost - battleReserve;
-
-                            // V64 TIGHTER MAINTENANCE: drains by opponent, Visage losses, and
-                            // force losses to effects will further reduce our pile between deploy
-                            // and end-of-turn. Require a DRAIN BUFFER on top of maintenance.
-                            // Steve's feedback: "Rando deployed Lando (maintenance card) and did
-                            // not save enough force for him. Lost at the end of his turn."
-                            // Previous -500/-600 weren't enough to override +300 V52 SPEND FORCE.
-                            // Now -2000 hard block guarantees maintenance cards only deploy with
-                            // comfortable headroom.
-                            int drainBuffer = 2;  // opponent likely drains ~2/turn
-                            int safeBuffer = maintenanceCost + drainBuffer;
-
-                            if (forceAfterDeploy < maintenanceCost) {
-                                // CANNOT pay maintenance even as first deploy — HARD BLOCK
-                                action.addReasoning("V59 MAINTENANCE HARD: " + blueprint.getTitle() +
-                                    " needs " + maintenanceCost + "F upkeep but only " +
-                                    forceAfterDeploy + "F left — WILL die at end of turn!", -2000.0f);
-                                LOG.warn("V59 MAINTENANCE HARD: {} costs {}, {}F available, {}F after deploy but needs {} for upkeep — HARD BLOCKED!",
-                                    blueprint.getTitle(), cost, totalForce, forceAfterDeploy, maintenanceCost);
-                            } else if (forceAfterAllDeploys < maintenanceCost) {
-                                // Can pay if alone, but planned deploys + battle will consume too much
-                                action.addReasoning("V59 MAINTENANCE HOLISTIC: " + blueprint.getTitle() +
-                                    " needs " + maintenanceCost + "F but only " + forceAfterAllDeploys +
-                                    "F after all planned deploys + battle reserve — WILL be sacrificed!", -1500.0f);
-                                LOG.warn("V59 MAINTENANCE HOLISTIC: {} needs {}, only {}F after deploys({}) + reserve({}) = {}F — HARD BLOCKING!",
-                                    blueprint.getTitle(), maintenanceCost, forceAfterAllDeploys,
-                                    pendingDeployCost, battleReserve, forceAfterAllDeploys);
-                            } else if (forceAfterAllDeploys < safeBuffer) {
-                                // V64: Tight — opponent drain could push us below maintenance.
-                                // Raised from -80 to -400 to clearly beat +300 V52 SPEND FORCE.
-                                action.addReasoning("V64 MAINTENANCE TIGHT: " + blueprint.getTitle() +
-                                    " — " + forceAfterAllDeploys + "F post-deploys, need "
-                                    + maintenanceCost + "+" + drainBuffer + " drain buffer — likely sacrifice!",
-                                    -400.0f);
-                                LOG.warn("V64 MAINTENANCE TIGHT: {} — {}F post-deploys, need {} (maint) + {} (drain buffer)",
-                                    blueprint.getTitle(), forceAfterAllDeploys, maintenanceCost, drainBuffer);
-                            } else {
-                                LOG.info("V59 MAINTENANCE OK: {} has {}F post-all-deploys, upkeep needs {} (+{}F drain buffer)",
-                                    blueprint.getTitle(), forceAfterAllDeploys, maintenanceCost, drainBuffer);
-                            }
+                            DeployBudgetPolicy.Evaluation maintenance =
+                                DeployBudgetPolicy.newMaintenanceCard(
+                                    new DeployBudgetPolicy.NewMaintenanceFacts(
+                                        actionId, blueprint.getTitle(), true, totalForce, cost,
+                                        maintenanceCost, pendingDeployCost, 2, 2));
+                            PolicyContributionLedger maintenanceLedger = new PolicyContributionLedger(
+                                (decisionId == null || decisionId.isBlank()
+                                    ? "deploy-new-maintenance"
+                                    : decisionId + "-deploy-new-maintenance") + "-" + actionId);
+                            maintenanceLedger.register(maintenance.result());
+                            PolicyOperationAdapter.apply(action, maintenanceLedger);
                         }
                     } catch (UnsupportedOperationException e) {
                         // Card type doesn't support deployCost (e.g., Interrupt)
@@ -1616,29 +1405,17 @@ public class DeployEvaluator extends ActionEvaluator {
                     // must leave enough Force to pay their upkeep. Otherwise they get sacrificed.
                     if (cost > 0 && gameState != null) {
                         try {
-                            // T2 MOVE #1 COMMIT-2 (2026-07-06): maintenance obligation from
-                            // the shared per-decision ForceReserveService cache (same
-                            // owner, in-play, maintenance-icon, and MaintenanceFacts guards).
-                            // V24.5 weights (-50/-50) are unchanged. Superseded inline scan
-                            // removed 2026-07-13; git preserves it.
                             int existingMaintenanceCost = context.getForceReserveFacts().maintenanceObligation;
-                            if (existingMaintenanceCost > 0) {
-                                int totalForceNow = gameState.getForcePileSize(context.getPlayerId());
-                                int forceAfterThisDeploy = totalForceNow - cost;
-                                if (forceAfterThisDeploy < existingMaintenanceCost) {
-                                    action.addReasoning("V40 MAINTENANCE RESERVE: Deploying this leaves only " +
-                                        forceAfterThisDeploy + " Force but need " + existingMaintenanceCost +
-                                        " for existing maintenance cards (mild caution)", -50.0f);
-                                    LOG.warn("V24.5 MAINTENANCE RESERVE: {} costs {}, {} Force available, " +
-                                        "only {} left but existing maintenance needs {} — BLOCKING!",
-                                        blueprint.getTitle(), cost, totalForceNow, forceAfterThisDeploy, existingMaintenanceCost);
-                                } else if (forceAfterThisDeploy < existingMaintenanceCost + 2) {
-                                    action.addReasoning("V40 MAINTENANCE RESERVE: Tight on Force for existing maintenance (" +
-                                        forceAfterThisDeploy + " left, need " + existingMaintenanceCost + ") (mild caution)", -50.0f);
-                                    LOG.warn("V24.5 MAINTENANCE WARNING: {} — {} Force left after deploy, maintenance needs {}",
-                                        blueprint.getTitle(), forceAfterThisDeploy, existingMaintenanceCost);
-                                }
-                            }
+                            DeployBudgetPolicy.Evaluation existingMaintenance =
+                                DeployBudgetPolicy.existingMaintenance(
+                                    actionId, gameState.getForcePileSize(context.getPlayerId()),
+                                    cost, existingMaintenanceCost);
+                            PolicyContributionLedger existingMaintenanceLedger = new PolicyContributionLedger(
+                                (decisionId == null || decisionId.isBlank()
+                                    ? "deploy-existing-maintenance"
+                                    : decisionId + "-deploy-existing-maintenance") + "-" + actionId);
+                            existingMaintenanceLedger.register(existingMaintenance.result());
+                            PolicyOperationAdapter.apply(action, existingMaintenanceLedger);
                         } catch (Exception e) {
                             LOG.debug("V24.5: Error checking maintenance reserve: {}", e.getMessage());
                         }
@@ -1670,119 +1447,49 @@ public class DeployEvaluator extends ActionEvaluator {
                     action.setDeployCost(cost);
 
                     // === AFFORDABILITY CHECK ===
-                    if (cost > availableForce) {
-                        action.addReasoning(
-                            String.format("Can't afford! Need %d, have %d", cost, availableForce),
-                            -1000.0f
-                        );
+                    DeployBudgetPolicy.Evaluation affordability =
+                        DeployBudgetPolicy.affordability(actionId, cost, availableForce);
+                    PolicyContributionLedger affordabilityLedger = new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "deploy-affordability"
+                            : decisionId + "-deploy-affordability") + "-" + actionId);
+                    affordabilityLedger.register(affordability.result());
+                    PolicyOperationAdapter.apply(action, affordabilityLedger);
+                    if (affordability.adapterStep()
+                            == DeployBudgetPolicy.AdapterStep.CONTINUE_ACTION) {
                         actions.add(action);
                         continue;
                     }
 
-                    // === V48: VADER MOVEMENT FORCE RESERVE ===
-                    // If Vader needs to move (no opponents at his location), don't spend
-                    // all force on deploys — reserve enough for Vader's landspeed move.
-                    if (vaderMoveReserve > 0 && cost > 0) {
-                        int forceAfterDeploy = availableForce - cost;
-                        if (forceAfterDeploy < vaderMoveReserve) {
-                            action.addReasoning(String.format(
-                                "V48 VADER MOVE RESERVE: Deploy costs %d, leaves %d — need %d for Vader to move!",
-                                cost, forceAfterDeploy, vaderMoveReserve), -500.0f);
-                            LOG.warn("V48 VADER MOVE RESERVE: {} costs {} force, leaves {} — Vader needs {} to move!",
-                                card != null ? card.getTitle() : actionText, cost, forceAfterDeploy, vaderMoveReserve);
-                        }
-                    }
-
-                    // === V67z DEPLOY TRANSIT RESERVE (Steve, 2026-06) — mirror of V48/V79 ===
-                    // Hold back the move-phase transit Force on Hidden Path so the Jedi
-                    // staged at the Underground Corridor can transit off Mapuzo and flip
-                    // the objective. -1500 (not -500 like V48/V79): Hidden Path Jedi
-                    // Survivor deploys score ~950, so a -500 wouldn't stop them — the
-                    // penalty must drop the offending deploy below Pass so Rando actually
-                    // holds the Force. Only force-costing deploys that would dip below the
-                    // reserve are hit; free [download] Jabiim locations (cost 0) are not.
-                    if (v67zTransitReserve > 0 && cost > 0) {
-                        int forceAfterDeployV67z = availableForce - cost;
-                        if (forceAfterDeployV67z < v67zTransitReserve) {
-                            action.addReasoning(String.format(
-                                "V67z TRANSIT RESERVE: Deploy costs %d, leaves %d — need %d to transit Jedi off Mapuzo (flip the objective)!",
-                                cost, forceAfterDeployV67z, v67zTransitReserve), -1500.0f);
-                            LOG.warn("V67z DEPLOY TRANSIT RESERVE: {} costs {}, leaves {} — need {} for the move-phase transit!",
-                                card != null ? card.getTitle() : actionText, cost, forceAfterDeployV67z, v67zTransitReserve);
-                        }
-                    }
-
-                    // === V79 (Steve, 2026-05-15): VERGE DEATH-STAR MOVE RESERVE ===
-                    // If Verge of Greatness active + Death Star not yet at Scarif,
-                    // reserve 1 Force for the Move phase. Mirror of V48 pattern.
-                    if (v79VergeMoveReserve > 0 && cost > 0) {
-                        int forceAfterDeployV79 = availableForce - cost;
-                        if (forceAfterDeployV79 < v79VergeMoveReserve) {
-                            action.addReasoning(String.format(
-                                "V79 VERGE MOVE RESERVE: Deploy costs %d, leaves %d — need %d for Death Star to move toward Scarif!",
-                                cost, forceAfterDeployV79, v79VergeMoveReserve), -500.0f);
-                            LOG.warn("V79 VERGE MOVE RESERVE: {} costs {}, leaves {} — Death Star needs {} for move!",
-                                card != null ? card.getTitle() : actionText, cost, forceAfterDeployV79, v79VergeMoveReserve);
-                        }
-                    }
-
-                    // === V29.13: FORCE RESERVATION (deploy-aggressive) ===
-                    // Philosophy: ALWAYS deploy as much as possible. Board presence wins games.
-                    // Maintenance is a future cost — handle it by activating more Force next turn,
-                    // or accept losing a maintenance card (it might die as attrition anyway).
-                    //
-                    // Non-maintenance cards: ZERO maintenance penalty. Deploy freely.
-                    // Maintenance cards: Small tiebreaker penalty if Force is very tight.
-                    // DTF/grabber: Tiny soft penalty — nice to keep 1 Force, never a blocker.
-                    if (cost > 0 && gameState != null) {
+                    boolean obligationMaintenance = false;
+                    int obligationMaintenanceCost = 0;
+                    if (gameState != null) {
                         try {
-                            boolean thisCardHasMaint = blueprint.hasIcon(com.gempukku.swccgo.common.Icon.MAINTENANCE);
-                            int forceAfterThisDeploy = availableForce - cost;
-                            // T2 COMMIT-1 (2026-07-06, audit force-economy-1): compare against the
-                            // ENGINE's maintain cost, not deploy cost (old basis over-penalized 2-5x).
-                            int thisCardMaint = thisCardHasMaint
-                                ? com.gempukku.swccgo.ai.models.common.strategy.MaintenanceFacts.maintainCost(blueprint)
+                            obligationMaintenance = blueprint.hasIcon(
+                                com.gempukku.swccgo.common.Icon.MAINTENANCE);
+                            obligationMaintenanceCost = obligationMaintenance
+                                ? com.gempukku.swccgo.ai.models.common.strategy.MaintenanceFacts
+                                    .maintainCost(blueprint)
                                 : 0;
-
-                            // --- Only apply maintenance awareness to maintenance card deploys ---
-                            if (thisCardHasMaint && forceAfterThisDeploy < thisCardMaint) {
-                                // Deploying a maintenance card but won't have enough Force to pay
-                                // its own maintenance at end of turn. Small tiebreaker — NOT a blocker.
-                                // The card can be lost as attrition in battle, or Rando activates
-                                // more Force next turn to cover it.
-                                float maintPenalty = -50.0f; // V40: mild caution for maintenance
-                                if (forceAfterThisDeploy <= 0) {
-                                    maintPenalty = -500.0f; // V40: Zero Force left — maintenance card will immediately die
-                                }
-                                action.addReasoning(
-                                    String.format("V29.13 MAINT AWARENESS: This card costs %d maint at end of turn, " +
-                                        "only %d Force left after deploy — plan to activate more next turn",
-                                        thisCardMaint, forceAfterThisDeploy),
-                                    maintPenalty);
-                            }
-
-                            // --- DTF / Grabber interrupt reserve (soft penalty) ---
-                            // Nice to keep 1 Force for interrupts, but never block a deploy over it.
-                            // T2 MOVE #1 COMMIT-2 (2026-07-06): DTF + grabber facts from the
-                            // shared per-decision ForceReserveService cache. NOTE documented
-                            // unification: the old scan below broke on the FIRST grabber card
-                            // found regardless of state; the shared fact counts ANY unused
-                            // grabber (MoveEvaluator V29 semantic) — identical unless a deck
-                            // fields 2+ grabbers with mixed state. Superseded inline scans were
-                            // removed 2026-07-13; the -30 weight is unchanged; git preserves them.
-                            boolean dtfOnTable = context.getForceReserveFacts().dtfActive;
-                            boolean grabberUnused = context.getForceReserveFacts().grabberUnused;
-                            if ((dtfOnTable || grabberUnused) && forceAfterThisDeploy <= 0) {
-                                action.addReasoning(
-                                    String.format("V29.13 INTERRUPT RESERVE: %s%s but 0 Force left for them after deploy",
-                                        dtfOnTable ? "DTF active" : "",
-                                        grabberUnused ? (dtfOnTable ? " + grabber ready" : "Grabber ready") : ""),
-                                    -30.0f);
-                            }
-                        } catch (Exception e) {
-                            LOG.debug("V29: Error checking force reserve during deploy: {}", e.getMessage());
+                        } catch (Exception obligationError) {
+                            LOG.debug("V29: Error checking maintenance during deploy: {}",
+                                obligationError.getMessage());
                         }
                     }
+                    DeployBudgetPolicy.Evaluation futureObligations =
+                        DeployBudgetPolicy.futureObligations(
+                            new DeployBudgetPolicy.FutureObligationFacts(
+                                actionId, availableForce, cost, vaderMoveReserve,
+                                v67zTransitReserve, v79VergeMoveReserve,
+                                obligationMaintenance, obligationMaintenanceCost,
+                                gameState != null && context.getForceReserveFacts().dtfActive,
+                                gameState != null && context.getForceReserveFacts().grabberUnused));
+                    PolicyContributionLedger futureObligationLedger = new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "deploy-future-obligation"
+                            : decisionId + "-deploy-future-obligation") + "-" + actionId);
+                    futureObligationLedger.register(futureObligations.result());
+                    PolicyOperationAdapter.apply(action, futureObligationLedger);
 
                     // === V38: REWORKED SOLO DEPLOY — VADER/EMPEROR SOLO OK, OTHERS NEED BUDDY PATH ===
                     // Vader and Emperor (ability >= 6) can deploy solo anywhere.
@@ -2775,43 +2482,26 @@ public class DeployEvaluator extends ActionEvaluator {
                     boolean isActualLocationDeploy = category == CardCategory.LOCATION
                         && v24ActionLower.equals("deploy");
                     if (isActualLocationDeploy) {
-                        // === V162 (Steve, 2026-06): LOCATIONS DEPLOY FIRST, life-force gated ===
-                        // Steve's rule: "Never hold locations in hand unless life force <= 10
-                        // (reserve deck + force pile + used pile combined). Early game, deploy
-                        // locations BEFORE anything else in the deploy phase. Only when life
-                        // force is low may Rando hold a location in hand as force-loss fodder."
-                        // Fixes the Bespin-stuck-in-hand → AMSD loop: the Bespin system sat in
-                        // hand undeployed while AMSD (which requires it on table) looped forever.
-                        // A location in hand must ALWAYS be a strong positive deploy unless we
-                        // are deliberately saving it as fodder (life force <= 10).
-                        int v162LifeForce = 0;
+                        int locationLifeForce = 0;
                         try {
-                            String v162Pid = context.getPlayerId();
-                            if (gameState != null && v162Pid != null) {
-                                v162LifeForce = gameState.getReserveDeckSize(v162Pid)
-                                    + gameState.getForcePileSize(v162Pid)
-                                    + gameState.getUsedPile(v162Pid).size();
+                            String locationPlayerId = context.getPlayerId();
+                            if (gameState != null && locationPlayerId != null) {
+                                locationLifeForce = gameState.getReserveDeckSize(locationPlayerId)
+                                    + gameState.getForcePileSize(locationPlayerId)
+                                    + gameState.getUsedPile(locationPlayerId).size();
                             }
-                        } catch (Exception ignore) { /* treat as healthy */ v162LifeForce = 99; }
-
-                        if (v162LifeForce <= 10) {
-                            // Low life force: HOLD the location in hand for force-loss fodder.
-                            // Suppress the deploy boost so it isn't force-deployed.
-                            action.addReasoning("V162 HOLD LOCATION: life force " + v162LifeForce
-                                + " <= 10 — keep '" + card.getTitle() + "' in hand as force-loss fodder",
-                                -200.0f);
-                            LOG.warn("V162 HOLD LOCATION: {} — life force {} <= 10, hold for fodder", card.getTitle(), v162LifeForce);
-                        } else {
-                            // Healthy: deploy locations FIRST, before anything else this phase.
-                            // +1400 (V67ai tiering) already puts it ahead; V162 adds Steve's +500
-                            // floor and the explicit "locations first" intent so it always wins.
-                            action.addReasoning("V162 LOCATION FIRST: deploy locations before anything else (life force "
-                                + v162LifeForce + " > 10) — foundation for drains/objective +500", 500.0f);
-                            action.addReasoning("V67ai LOCATION DEPLOY ORDER [Tier 4 HAND]: deploy location from hand — force generation foundation!",
-                                1400.0f);
-                            LOG.warn("V162 LOCATION FIRST + V67ai TIER 4 HAND: {} (turn {}, life force {}) → +1900",
-                                card.getTitle(), context.getTurnNumber(), v162LifeForce);
+                        } catch (Exception ignored) {
+                            locationLifeForce = 99;
                         }
+                        DeploySequencingPolicy.Evaluation locationOrder =
+                            DeploySequencingPolicy.locationFromHand(
+                                actionId, true, locationLifeForce, card.getTitle());
+                        PolicyContributionLedger locationOrderLedger = new PolicyContributionLedger(
+                            (decisionId == null || decisionId.isBlank()
+                                ? "deploy-location-order"
+                                : decisionId + "-deploy-location-order") + "-" + actionId);
+                        locationOrderLedger.register(locationOrder.result());
+                        PolicyOperationAdapter.apply(action, locationOrderLedger);
                     } else if (category == CardCategory.LOCATION) {
                         // Source is a location but action is a game-text pull — don't give +200
                         LOG.info("V60 V24 SKIP: '{}' on {} is a game-text pull, not a location deploy — no +200 bonus",
@@ -4721,271 +4411,55 @@ public class DeployEvaluator extends ActionEvaluator {
             // V52 MOMENTUM (below) intentionally kept for now — Steve called
             // out the SPEND FORCE rule specifically. Revisit if same symptom.
 
-            // === V52 FIX 11: DEPLOY MOMENTUM — Bonus for deploying multiple cards same turn ===
-            // Check how much force has been used this deploy phase. If we've already spent
-            // force (meaning cards already deployed), give bonus to keep the momentum going.
-            // Initial force = force pile + force already spent. Current = force pile now.
-            // We approximate "force spent" by comparing current force pile to hand-implied max.
-            {
-                int currentForcePile = context.getForcePileSize();
-                int handSizeMomentum = hand != null ? hand.size() : 0;
-                // Heuristic: if force pile is much less than life force ratio, we've been spending
-                // Use a simpler approach: count cards deployed this phase from plan
-                int forceSpentApprox = 0;
-                if (plan != null && plan.getDeploymentsMade() > 0) {
-                    // Each deployment costs ~3-5 force on average
-                    forceSpentApprox = plan.getDeploymentsMade() * 4;
-                }
-                // Also check: if force pile started higher (we can infer from activations)
-                // Simpler: just check if we've already deployed cards this turn
-                if (plan != null && plan.getDeploymentsMade() >= 1) {
-                    float momentumBonus = 100.0f;
-                    if (plan.getDeploymentsMade() >= 2) momentumBonus = 150.0f;
-                    if (plan.getDeploymentsMade() >= 3) momentumBonus = 200.0f;
-                    action.addReasoning(String.format(
-                        "V52 MOMENTUM: Already deployed %d cards this turn — keep deploying! (+%.0f)",
-                        plan.getDeploymentsMade(), momentumBonus), momentumBonus);
-                    LOG.warn("V52 MOMENTUM: {} gets +{} — {} cards already deployed this turn",
-                        card != null ? card.getTitle() : actionText, (int)momentumBonus, plan.getDeploymentsMade());
+            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer sequencingObjective =
+                context.getObjectiveAnalyzer();
+            boolean tdigwattPreFlip = sequencingObjective != null
+                && sequencingObjective.isAnalyzed()
+                && sequencingObjective.needsBespinSystemPresence()
+                && !sequencingObjective.isHuntDownV();
+            String sequencingObjectiveTitle = sequencingObjective != null
+                ? sequencingObjective.getObjectiveTitle() : null;
+            boolean hiddenPath = sequencingObjectiveTitle != null
+                && sequencingObjective.isAnalyzed()
+                && sequencingObjectiveTitle.toLowerCase(Locale.ROOT).contains("hidden path");
+            String sequencingCardTitle = card != null && card.getTitle() != null
+                ? card.getTitle() : "";
+            if (sequencingCardTitle.isEmpty() && cardTitleFromGemp != null) {
+                sequencingCardTitle = cardTitleFromGemp;
+            }
+            boolean sequencingCharacter = card != null && card.getBlueprint() != null
+                && card.getBlueprint().getCardCategory() == CardCategory.CHARACTER;
+            float sequencingAbility = 0.0f;
+            if (sequencingCharacter && card.getBlueprint().hasAbilityAttribute()) {
+                try {
+                    Float ability = card.getBlueprint().getAbility();
+                    sequencingAbility = ability != null ? ability : 0.0f;
+                } catch (Exception ignored) {
+                    sequencingAbility = 0.0f;
                 }
             }
-
-            // === V52 FIX 12: TDIGWATT TURN 1 SCRIPT ===
-            // On turn 1 for TDIGWATT objective, specific cards get massive priority
-            // to ensure the bot sets up its engine immediately.
-            {
-                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer tdigObjAnalyzer =
-                    context.getObjectiveAnalyzer();
-                int tdigTurn = context.getTurnNumber();
-                if (tdigObjAnalyzer != null && tdigObjAnalyzer.isAnalyzed()
-                    && tdigObjAnalyzer.needsBespinSystemPresence()
-                    && !tdigObjAnalyzer.isHuntDownV() && tdigTurn <= 1) {
-                    String tdigTitle = card != null && card.getTitle() != null
-                        ? card.getTitle().toLowerCase(Locale.ROOT) : "";
-                    if (tdigTitle.isEmpty() && cardTitleFromGemp != null) {
-                        tdigTitle = cardTitleFromGemp.toLowerCase(Locale.ROOT);
-                    }
-                    if (!tdigTitle.isEmpty()) {
-                        if (tdigTitle.contains("bespin") && actionLower.contains("system")) {
-                            action.addReasoning("V52 TDIGWATT T1: Bespin system — FOUNDATION!", 1500.0f);
-                            LOG.warn("V52 TDIGWATT T1: Bespin system +1500");
-                        } else if (tdigTitle.contains("cloud city") || actionLower.contains("i'm sorry")
-                                   || actionLower.contains("i am sorry")) {
-                            action.addReasoning("V52 TDIGWATT T1: Cloud City site via I'm Sorry!", 1200.0f);
-                            LOG.warn("V52 TDIGWATT T1: Cloud City site +1200");
-                        } else if (tdigTitle.contains("lando") && tdigTitle.contains("broker")) {
-                            action.addReasoning("V52 TDIGWATT T1: Lando as Broker — key engine piece!", 1000.0f);
-                            LOG.warn("V52 TDIGWATT T1: Lando as Broker +1000");
-                        } else if (tdigTitle.contains("executor") || tdigTitle.contains("flagship")) {
-                            action.addReasoning("V52 TDIGWATT T1: Executor/Flagship — Bespin control!", 900.0f);
-                            LOG.warn("V52 TDIGWATT T1: Executor/Flagship +900");
-                        } else if (tdigTitle.contains("chiraneau")) {
-                            action.addReasoning("V52 TDIGWATT T1: Chiraneau — pilot for Executor!", 850.0f);
-                            LOG.warn("V52 TDIGWATT T1: Chiraneau +850");
-                        }
-                    }
+            boolean skywalkerSaga = false;
+            if (context.getTurnNumber() <= 3) {
+                try {
+                    skywalkerSaga = DeploySequencingFactsReader.hasAnakinsFuneralPyre(gameState);
+                } catch (Exception ignored) {
+                    // Preserve the original fail-open script detection boundary.
                 }
             }
-
-            // === V54 FIX 16: SKYWALKER SAGA EPIC EVENT T1-3 SCRIPT ===
-            // Mirror of V52 TDIGWATT T1 block, but for the Skywalker Saga Epic Event
-            // deck (also known by its key effect "Like My Father Before Me"). Rando
-            // has been losing badly with this deck because no script drives the
-            // turn-1 ramp. Priorities:
-            //   PRIORITY 1 = Tatooine sites (Cantina/Mos Eisley/Lars' Moisture Farm)
-            //   PRIORITY 2 = Young Skywalker (or any Luke persona)
-            //   PRIORITY 3 = Luke's Lightsaber from hand
-            //
-            // DETECTION (V54.1): Skywalker Saga is an Epic Event deck — its
-            // objective-slot card is Anger/Fear/Aggression (V), which has
-            // cardType=EFFECT not OBJECTIVE. ObjectiveAnalyzer only detects true
-            // OBJECTIVE cards, so we can't rely on getObjectiveTitle(). Detect
-            // the deck by its unique starting-location signature instead: Endor:
-            // Anakin's Funeral Pyre (217_34) on our side of the table.
-            {
-                int lsTurn = context.getTurnNumber();
-                GameState lsGs = context.getGameState();
-                boolean isLukeSaga = false;
-                if (lsGs != null && lsTurn <= 3) {
-                    try {
-                        for (PhysicalCard loc : lsGs.getLocationsInOrder()) {
-                            if (loc == null) continue;
-                            String locTitle = loc.getTitle();
-                            if (locTitle != null
-                                && locTitle.toLowerCase(Locale.ROOT).contains("anakin's funeral pyre")) {
-                                isLukeSaga = true;
-                                break;
-                            }
-                        }
-                    } catch (Exception ignored) {}
-                }
-                if (isLukeSaga) {
-                        String lsCardTitle = (card != null && card.getTitle() != null)
-                            ? card.getTitle().toLowerCase(Locale.ROOT) : "";
-                        if (lsCardTitle.isEmpty() && cardTitleFromGemp != null) {
-                            lsCardTitle = cardTitleFromGemp.toLowerCase(Locale.ROOT);
-                        }
-                        String lsActionLower = actionText.toLowerCase(Locale.ROOT);
-
-                        // Turn-scaled: priority is highest on T1, still important T2-3
-                        float turnMult = lsTurn == 1 ? 1.0f : (lsTurn == 2 ? 0.85f : 0.7f);
-
-                        // PRIORITY 1: Tatooine SITES (drain engine). Cantina is the king
-                        // (shuttle to/from Mos Eisley during Control phase).
-                        if (lsCardTitle.contains("tatooine: cantina") || lsCardTitle.equals("cantina")) {
-                            float s = 1500.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Tatooine: Cantina — drain engine!", s);
-                            LOG.warn("V54 LMFBM T{}: Tatooine: Cantina +{}", lsTurn, (int)s);
-                        } else if (lsCardTitle.contains("mos eisley")) {
-                            float s = 1500.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Tatooine: Mos Eisley — Cantina shuttle!", s);
-                            LOG.warn("V54 LMFBM T{}: Tatooine: Mos Eisley +{}", lsTurn, (int)s);
-                        } else if (lsCardTitle.contains("lars") && lsCardTitle.contains("moisture")) {
-                            float s = 1500.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Lars' Moisture Farm — Tatooine site!", s);
-                            LOG.warn("V54 LMFBM T{}: Lars' Moisture Farm +{}", lsTurn, (int)s);
-                        }
-                        // Any other Tatooine battleground site
-                        else if (lsCardTitle.startsWith("tatooine:") && !lsCardTitle.contains("jabba")) {
-                            float s = 1300.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Tatooine battleground site!", s);
-                            LOG.warn("V54 LMFBM T{}: {} (Tatooine site) +{}", lsTurn, lsCardTitle, (int)s);
-                        }
-                        // Tatooine SYSTEM — secondary, for ship presence (turn 2 target)
-                        else if (lsCardTitle.equals("tatooine") && lsActionLower.contains("system")) {
-                            float s = 900.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Tatooine system — ship presence!", s);
-                            LOG.warn("V54 LMFBM T{}: Tatooine system +{}", lsTurn, (int)s);
-                        }
-
-                        // PRIORITY 2: Young Skywalker ("I have it" branch) — Luke persona
-                        else if (lsCardTitle.contains("young skywalker")) {
-                            float s = 1200.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Young Skywalker — Luke persona (I have it)!", s);
-                            LOG.warn("V54 LMFBM T{}: Young Skywalker +{}", lsTurn, (int)s);
-                        }
-                        // Any Luke persona (covers Son Of Skywalker, Jedi Knight, etc.)
-                        else if (lsCardTitle.contains("luke") && card != null && card.getBlueprint() != null
-                                 && card.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                            float s = 1100.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Luke persona — deploy for drain power!", s);
-                            LOG.warn("V54 LMFBM T{}: {} (Luke persona) +{}", lsTurn, lsCardTitle, (int)s);
-                        }
-
-                        // PRIORITY 3: Luke's Lightsaber — arm Luke from hand
-                        else if (lsCardTitle.contains("luke's lightsaber")) {
-                            float s = 1100.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Luke's Lightsaber — arm Luke NOW!", s);
-                            LOG.warn("V54 LMFBM T{}: Luke's Lightsaber +{}", lsTurn, (int)s);
-                        }
-                        // NOTE: Lightsaber-from-Reserve pullers (e.g. Gift Of The Mentor) are
-                        // NOT given a deploy-phase bonus here — that effect is a BATTLE combo
-                        // (Obi-Wan/Yoda buddying Luke for +2 destiny) and should be scored by
-                        // the battle/action-text layer, not force-pulled during deploy.
-                        // Obi-Wan / Yoda as buddy Jedi for Luke (optional support, lower priority)
-                        else if ((lsCardTitle.contains("obi-wan") || lsCardTitle.contains("yoda"))
-                                 && card != null && card.getBlueprint() != null
-                                 && card.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                            float s = 800.0f * turnMult;
-                            action.addReasoning("V54 LMFBM T" + lsTurn + ": Jedi buddy for Luke!", s);
-                            LOG.warn("V54 SKYWALKER SAGA T{}: {} (Jedi buddy) +{}", lsTurn, lsCardTitle, (int)s);
-                        }
-                }
-            }
-
-            // === V55 FIX 17: HIGH-ABILITY CHARACTER DEPLOY URGENCY ===
-            // Generalized replacement for the earlier "Obi-Wan in hand" idea. Any
-            // character with ability >= 6 (Jedi/Sith/Lord tier — Vader, Emperor,
-            // Obi-Wan, Yoda, Luke, Mace, etc.) rotting in hand is wasted life force.
-            // Give it a steady deploy urgency bonus, scaled up in the early game.
-            // Side-agnostic, deck-agnostic.
-            {
-                if (card != null && card.getBlueprint() != null
-                    && card.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                    Float abl = null;
-                    try { abl = card.getBlueprint().getAbility(); } catch (Exception e) {}
-                    if (abl != null && abl >= 6.0f) {
-                        int v55Turn = context.getTurnNumber();
-                        float v55Bonus;
-                        if (v55Turn <= 3)      v55Bonus = 500.0f;  // early game: deploy now
-                        else if (v55Turn <= 6) v55Bonus = 350.0f;  // mid game: still urgent
-                        else                   v55Bonus = 200.0f;  // late game: baseline urgency
-                        action.addReasoning(
-                            "V55 HIGH-ABILITY: " + card.getTitle() + " (ability " + abl.intValue()
-                                + ") in hand — deploy, don't hoard!", v55Bonus);
-                        LOG.warn("V55 HIGH-ABILITY: {} (ability {}) T{} +{}",
-                            card.getTitle(), abl.intValue(), v55Turn, (int)v55Bonus);
-                    }
-                }
-            }
-
-            // === V52b FIX 13: HIDDEN PATH JEDI FLOOD (turns 1-2) ===
-            // Deploy Jedi FIRST and FAST. Check both card title AND action text,
-            // because Fallen Order deploys Jedi via "Deploy a Jedi Survivor stacked here"
-            // where the card is Fallen Order, not the Jedi itself.
-            {
-                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer hpObjAnalyzer =
-                    context.getObjectiveAnalyzer();
-                int hpTurn = context.getTurnNumber();
-                if (hpObjAnalyzer != null && hpObjAnalyzer.isAnalyzed()
-                    && hpTurn <= 2) {
-                    String hpObjTitle = hpObjAnalyzer.getObjectiveTitle();
-                    boolean isHiddenPath = hpObjTitle != null
-                        && hpObjTitle.toLowerCase(Locale.ROOT).contains("hidden path");
-                    if (isHiddenPath) {
-                        String hpCardTitle = (card != null && card.getTitle() != null)
-                            ? card.getTitle().toLowerCase(Locale.ROOT) : "";
-                        if (hpCardTitle.isEmpty() && cardTitleFromGemp != null) {
-                            hpCardTitle = cardTitleFromGemp.toLowerCase(Locale.ROOT);
-                        }
-                        // Also check the ACTION TEXT — Fallen Order says "Deploy a Jedi Survivor"
-                        String hpActionLower = actionText.toLowerCase(Locale.ROOT);
-
-                        // Detect Jedi deploy via card OR action text
-                        boolean isJediDeploy = false;
-                        boolean isJediChar = false;
-                        if (card != null && card.getBlueprint() != null
-                            && card.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                            Float hpAbility = null;
-                            try { hpAbility = card.getBlueprint().getAbility(); } catch (Exception e) {}
-                            // Only count ability >= 6 as true Jedi (excludes Padawans like Sabine ability 4)
-                            if (hpAbility != null && hpAbility >= 6) isJediChar = true;
-                            // Named Jedi always qualify
-                            if (hpCardTitle.contains("obi-wan") || hpCardTitle.contains("quinlan")
-                                || hpCardTitle.contains("kelleran") || hpCardTitle.contains("cal kestis")
-                                || hpCardTitle.contains("ezra") || hpCardTitle.contains("kanan")
-                                || hpCardTitle.contains("ahsoka tano") || hpCardTitle.contains("cere")
-                                || hpCardTitle.contains("luke") || hpCardTitle.contains("yoda")) {
-                                isJediChar = true;
-                            }
-                        }
-                        // Fallen Order "Deploy a Jedi Survivor" action
-                        if (hpActionLower.contains("jedi survivor") || hpActionLower.contains("fallen order")) {
-                            isJediDeploy = true;
-                        }
-
-                        if (isJediChar) {
-                            action.addReasoning("V52b HIDDEN PATH: Jedi character — deploy FIRST!", 800.0f);
-                            LOG.warn("V52b HIDDEN PATH: {} (Jedi char) +800 on turn {}", card.getTitle(), hpTurn);
-                        } else if (isJediDeploy) {
-                            action.addReasoning("V52b HIDDEN PATH: Fallen Order Jedi deploy — deploy FIRST!", 800.0f);
-                            LOG.warn("V52b HIDDEN PATH: Fallen Order Jedi deploy +800 on turn {}", hpTurn);
-                        } else if (hpCardTitle.contains("lightsaber") || hpCardTitle.contains("shoto")) {
-                            action.addReasoning("V52b HIDDEN PATH: Lightsaber — arm the Jedi!", 700.0f);
-                            LOG.warn("V52b HIDDEN PATH: {} (lightsaber) +700", hpCardTitle);
-                        } else if (hpCardTitle.contains("holocron") || hpActionLower.contains("holocron")) {
-                            action.addReasoning("V52b HIDDEN PATH: Jedi Holocron!", 600.0f);
-                            LOG.warn("V52b HIDDEN PATH: {} (holocron) +600", hpCardTitle);
-                        }
-                    }
-                }
-            }
-
-            // NOTE: Don't add cardIds to pendingDeployCardIds here during evaluation!
-            // We used to do: pendingDeployCardIds.add(cardIdStr);
-            // But that caused ALL evaluated cards to be marked as "already tried"
-            // which broke deployment plans. We now only track when the action is actually chosen.
-            // See line ~630 where we track the selected action's cardId.
+            DeploySequencingPolicy.Evaluation tail = DeploySequencingPolicy.tailScripts(
+                new DeploySequencingPolicy.TailFacts(
+                    actionId, context.getTurnNumber(),
+                    plan != null ? plan.getDeploymentsMade() : 0,
+                    tdigwattPreFlip,
+                    skywalkerSaga,
+                    hiddenPath, sequencingCardTitle,
+                    sequencingCardTitle.toLowerCase(Locale.ROOT), actionLower,
+                    sequencingCharacter, sequencingAbility));
+            PolicyContributionLedger tailLedger = new PolicyContributionLedger(
+                (decisionId == null || decisionId.isBlank()
+                    ? "deploy-tail" : decisionId + "-deploy-tail") + "-" + actionId);
+            tailLedger.register(tail.result());
+            PolicyOperationAdapter.apply(action, tailLedger);
 
             LOG.debug("[DeployEvaluator] Scored '{}' -> {} ({})",
                 actionText.length() > 50 ? actionText.substring(0, 50) + "..." : actionText,

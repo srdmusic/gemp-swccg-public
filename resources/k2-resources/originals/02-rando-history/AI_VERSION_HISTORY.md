@@ -1,3 +1,19 @@
+  ==== V211 AI-ONLY DEPLOY-1 SEQUENCING AND FORCE-BUDGET POLICY OWNERS (2026-07-18, both bots) ====
+Shared DeploySequencingPolicy, DeployBudgetPolicy, and DeployPlanPolicy now own the existing ordered DEPLOY-1
+streams for phase urgency, current-plan application, Force reservations, location-first ordering, and opening scripts.
+Shared immutable facts and a stock-state reader replace duplicated endangered-location, winnable-battle, and Anakin's
+Funeral Pyre scans. Both bots retain thin adapters, their planner/script state, stock identity, objective analyzer,
+and logging. V38.4/V56, V169, V176, plan membership/terminal branches, V59/V64/V24.5, affordability, independent
+V48/V67z/V79/V29.13 obligations, V162/V67ai, V52/V54/V55/V52b, V53c, and V24.4 preserve their prior values,
+additive order, and early continues. V196 identity, V201 routing, V207 objective scoring, V209 PULL, destinations,
+character tactics, pilots, ships, and weapons remain outside this phase. Production edits are AI-only; no engine
+metadata or second selector was added. Gate: 31 focused tests; full affected reactor 1,114 tests, 0 failures,
+0 errors, 26 skipped; package, mirror, AI-boundary, forbidden-symbol, and diff checks pass. Independent review also
+pins the separate V169/V176 exception boundaries, turn-3 Funeral Pyre guard/fail-open path, and empty title fallback.
+Packaged web.jar SHA-256: 3c53fe81c6bb545653b254ae05d43b0909931d4089d8da0af16159584eac7578.
+Docker was unavailable, so JVM-loaded and live-game proof remain pending. Revert the single V211 commit. See
+AI_CHANGELOG 2026-07-18.
+
   ==== V210 AI-ONLY ACTIVATE ACTION POLICY OWNER (2026-07-18, both bots) ====
 Shared ActivateActionPolicy now owns the remaining mirrored ACTIVATE action arms: V168 +5000 versus V61c -6000,
 the V38.3/V61c zero-activation confirmation pair at +/-9999, and the independent exact-activate V38.3 +500.
