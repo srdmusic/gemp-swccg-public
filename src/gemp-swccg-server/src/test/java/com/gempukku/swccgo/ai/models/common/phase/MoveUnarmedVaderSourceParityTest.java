@@ -76,7 +76,7 @@ public class MoveUnarmedVaderSourceParityTest {
         int catchBlock = move.indexOf(
                 "V29.9: Error checking Vader weapon status", unarmedLog);
         int hunter = move.indexOf(
-                "boolean hasWeapon = false", catchBlock);
+                "List<String> v297WeaponTitles", catchBlock);
 
         assertTrue(outerGate >= 0);
         assertTrue(title > outerGate);
@@ -108,10 +108,14 @@ public class MoveUnarmedVaderSourceParityTest {
     }
 
     @Test
-    public void weaponHunterAndBattleV299OwnersRemainUntouched()
+    public void weaponHunterAndBattleV299OwnersRemainPresent()
             throws IOException {
         String move = evaluatorSource("rando", "MoveEvaluator.java");
-        assertTrue(move.contains(
+        assertTrue(move.contains("MoveWeaponHunterPolicy.select("));
+        String hunterPolicy = Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models/common/phase")
+                .resolve("MoveWeaponHunterPolicy.java"));
+        assertTrue(hunterPolicy.contains(
                 "V29.7 WEAPON HUNTER: %s + %s should CHALLENGE LUKE at %s!"));
         assertTrue(move.contains(
                 "ladderClaimR2(\"V29.7 WEAPON HUNTER\""));

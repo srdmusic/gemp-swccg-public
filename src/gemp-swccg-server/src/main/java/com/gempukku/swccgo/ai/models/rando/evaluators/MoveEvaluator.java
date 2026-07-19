@@ -14,6 +14,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveUnarmedVaderPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveWeaponHunterPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
@@ -89,7 +90,6 @@ public class MoveEvaluator extends ActionEvaluator {
     private static final int OVERKILL_THRESHOLD = 4;
     private static final int ESTABLISH_THRESHOLD = 6;
     private static final int ATTACK_MIN_POWER = 6;
-    private static final float ICON_BONUS = 15.0f;
 
     // Score deltas (from Python)
     private static final float VERY_GOOD_DELTA = 150.0f;
@@ -1999,27 +1999,23 @@ public class MoveEvaluator extends ActionEvaluator {
                 logger.debug("V29.9: Error checking Vader weapon status: {}", e.getMessage());
             }
             try {
-                boolean hasWeapon = false;
-                boolean isLightsaber = false;
-                String weaponName = null;
+                List<String> v297WeaponTitles = new ArrayList<>();
                 List<PhysicalCard> attached = gameState.getAttachedCards(cardToMove);
                 if (attached != null) {
                     for (PhysicalCard att : attached) {
                         if (att == null || att.getBlueprint() == null) continue;
                         if (att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
-                            hasWeapon = true;
-                            weaponName = att.getTitle();
-                            if (weaponName != null && weaponName.toLowerCase(Locale.ROOT).contains("lightsaber")) {
-                                isLightsaber = true;
-                            }
+                            v297WeaponTitles.add(att.getTitle());
                         }
                     }
                 }
 
-                if (hasWeapon) {
+                MoveWeaponHunterPolicy.WeaponFacts v297WeaponFacts =
+                    MoveWeaponHunterPolicy.weaponFacts(v297WeaponTitles);
+                if (v297WeaponFacts.hasWeapon()) {
                     String charTitle = cardToMove.getTitle() != null ? cardToMove.getTitle() : "character";
-                    String charLower = charTitle.toLowerCase(Locale.ROOT);
-                    boolean isVader = charLower.contains("vader");
+                    boolean isVader =
+                        MoveWeaponHunterPolicy.titleMarksVader(charTitle);
 
                     // Check for IHYN (I Have You Now) in hand — makes Vader even more devastating
                     boolean hasIHYN = false;
@@ -2040,20 +2036,14 @@ public class MoveEvaluator extends ActionEvaluator {
                         } catch (Exception e) { /* ignore */ }
                     }
 
-                    // Calculate effective power with weapon bonus
-                    // Lightsaber: +4 (weapon hit power + throw destiny)
-                    // Other weapon: +2
-                    // IHYN in hand: +3 (extra destiny draws)
-                    float effectivePower = myPower;
-                    if (isLightsaber) effectivePower += 4.0f;
-                    else effectivePower += 2.0f;
-                    if (hasIHYN) effectivePower += 3.0f;
+                    MoveWeaponHunterPolicy.HunterProfile v297Profile =
+                        MoveWeaponHunterPolicy.profile(
+                            v297WeaponFacts, charTitle, myPower, hasIHYN);
 
                     // Look for opponent locations to attack (opponentId already declared above)
-                    float bestAttackScore = 0;
-                    String bestTargetLoc = null;
-                    PhysicalCard bestTargetLocCard = null; // T4.1: tracked for the R2 adjacency gate
-                    boolean foundLuke = false;
+                    List<PhysicalCard> v297TargetLocations = new ArrayList<>();
+                    List<MoveWeaponHunterPolicy.TargetFact> v297Targets =
+                        new ArrayList<>();
 
                     for (PhysicalCard adjLocation : gameState.getLocationsInOrder()) {
                         if (adjLocation == location) continue;
@@ -2083,62 +2073,53 @@ public class MoveEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        if (theirCountThere > 0 && effectivePower > theirPowerThere) {
-                            // We can beat them with our weapon advantage
-                            float attackScore = 60.0f;
-                            float powerAdvantage = effectivePower - theirPowerThere;
-
-                            // Bonus for bigger power advantage
-                            if (powerAdvantage >= 6) attackScore += 40.0f;
-                            else if (powerAdvantage >= 3) attackScore += 20.0f;
-
-                            // Bonus for opponent icons (force drain value after winning)
+                        if (v297Profile.canBeat(
+                                theirCountThere, theirPowerThere)) {
+                            int oppIcons = 0;
                             SwccgCardBlueprint locBp = adjLocation.getBlueprint();
                             if (locBp != null) {
-                                int oppIcons = (mySide == Side.DARK)
+                                oppIcons = (mySide == Side.DARK)
                                     ? locBp.getIconCount(Icon.LIGHT_FORCE)
                                     : locBp.getIconCount(Icon.DARK_FORCE);
-                                attackScore += oppIcons * ICON_BONUS;
                             }
-
-                            // HUGE bonus for Luke (Hunt Down objective target)
-                            if (lukeHere && isVader) {
-                                attackScore += 150.0f;
-                                foundLuke = true;
-                            }
-
-                            if (attackScore > bestAttackScore) {
-                                bestAttackScore = attackScore;
-                                bestTargetLoc = adjLocation.getTitle();
-                                bestTargetLocCard = adjLocation; // T4.1: for the adjacency gate
-                            }
+                            int ordinal = v297TargetLocations.size();
+                            v297TargetLocations.add(adjLocation);
+                            v297Targets.add(
+                                new MoveWeaponHunterPolicy.TargetFact(
+                                    ordinal, adjLocation.getTitle(),
+                                    theirPowerThere, oppIcons, lukeHere));
                         }
                     }
 
-                    if (bestAttackScore > 0 && bestTargetLoc != null) {
-                        String reason;
-                        if (foundLuke) {
-                            reason = String.format("V29.7 WEAPON HUNTER: %s + %s should CHALLENGE LUKE at %s! (effective power %.0f)",
-                                charTitle, weaponName, bestTargetLoc, effectivePower);
-                            if (hasIHYN) reason += " + IHYN in hand!";
-                        } else {
-                            reason = String.format("V29.7 WEAPON HUNTER: %s + %s should attack %s (effective power %.0f vs opponents)",
-                                charTitle, weaponName, bestTargetLoc, effectivePower);
-                        }
-                        action.addReasoning(reason, bestAttackScore);
-                        logger.info("[MoveEvaluator] ⚔️ {} — score {}", reason, bestAttackScore);
+                    MoveWeaponHunterPolicy.Evaluation v297Evaluation =
+                        MoveWeaponHunterPolicy.select(
+                            v297Profile, v297Targets);
+                    if (v297Evaluation.applies()) {
+                        action.addReasoning(
+                            v297Evaluation.reason(), v297Evaluation.delta());
+                        logger.info("[MoveEvaluator] ⚔️ {} — score {}",
+                            v297Evaluation.reason(), v297Evaluation.delta());
                         // V29.7 UPDATED 2026-07-06 T4.1: early return removed. Claims R2 DOCTRINE
                         // (battle-seeking) ONLY when the best target is ADJACENT (same engine call
                         // V85 uses) — the destination-blind Rey class (+130 for an unreachable
                         // target) stays an R1 fine and V85's -800 weight holds her (V85-protect
                         // boundary: -720 < Pass). The L2 strength gate also applies (fine >= +200).
+                        int v297TargetOrdinal =
+                            v297Evaluation.selectedTargetOrdinal();
+                        PhysicalCard bestTargetLocCard =
+                            v297TargetOrdinal >= 0
+                                    && v297TargetOrdinal
+                                        < v297TargetLocations.size()
+                                ? v297TargetLocations.get(v297TargetOrdinal)
+                                : null;
                         boolean v297TargetAdjacent = false;
                         try {
                             v297TargetAdjacent = bestTargetLocCard != null
                                 && game.getModifiersQuerying().isAdjacentSites(gameState, location, bestTargetLocCard);
                         } catch (Exception ignore) { /* false */ }
                         if (v297TargetAdjacent) {
-                            ladderClaimR2("V29.7 WEAPON HUNTER", bestAttackScore, 0.0f, true);
+                            ladderClaimR2("V29.7 WEAPON HUNTER",
+                                v297Evaluation.delta(), 0.0f, true);
                         } else {
                             logger.info("LADDER: V29.7 no R2 claim (target not adjacent) — fine kept as R1 weight");
                         }

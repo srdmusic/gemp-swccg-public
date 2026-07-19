@@ -1,3 +1,24 @@
+  ==== V232 AI-ONLY MOVE WEAPON-HUNTER POLICY OWNER (2026-07-19, both bots) ====
+Shared MoveWeaponHunterPolicy now owns the duplicated V29.7 attached-weapon classification,
+effective-power facts, strict target viability, ordered scoring, first-best selection, exact reasons,
+and selected-target ordinal. Both adapters retain the aggressive-solo gate, attachment/category and
+IHYN hand reads, inner and outer catches, physical location/opponent/icon scans, target list, direct
+score and logs, engine adjacency query, R2 claim, and position between V29.9 and SPREAD. Behavior is
+unchanged: the last weapon title is displayed while any lightsaber gives +4; other weapons give +2;
+Vader with IHYN gets +3; viability requires a positive power-bearing opponent count and strict power
+advantage. Scores remain base +60, +40 at advantage >=6 or +20 at >=3, +15 per opposing icon, and
++150 for Vader at a Luke-title location. Strict ties keep the first target. The global foundLuke bug,
+null-title suppression, attached-only weapon recognition, undercover counting, all-location scan,
+opponent-weapon omission, and flat IHYN heuristic remain intact. Only an adjacent selected target
+attempts the existing battle-seeking R2 claim; remote targets remain R1 fines. V29.9 readiness,
+generic attack/SPREAD, MoveHuntTargetPolicy, and battle-side weapon owners are untouched. Production
+edits are AI-only. Verification passed 272 focused MOVE tests and the full 1,449-test reactor with 0
+failures, 0 errors, and 26 skipped. Package, strict-order, cross-owner, source-boundary,
+forbidden-symbol, artifact, mirror, diff, and independent source-review gates passed; server jar
+SHA-256 is 4cf28273d1f22c888e513fce2541d09b53c2424495a2687b3a05f2ee646d79c7 and packaged web.jar SHA-256
+is faaf7aa546085d7ad346e4546d080f130546b09ddedca76dcc3cf115e1eaba28. Runtime load and live-game
+proof remain separate gates. Revert the single V232 commit. See AI_CHANGELOG 2026-07-19.
+
   ==== V231 AI-ONLY MOVE UNARMED-VADER READINESS OWNER (2026-07-19, both bots) ====
 Shared MoveUnarmedVaderPolicy now owns the duplicated V29.9 NONE, EQUIP_FIRST, and UNARMED
 classification plus exact reasons and -250/-100 contributions. Both adapters retain the aggressive-
