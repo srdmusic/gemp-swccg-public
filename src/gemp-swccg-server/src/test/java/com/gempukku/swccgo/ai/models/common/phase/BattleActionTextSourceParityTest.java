@@ -59,6 +59,72 @@ public class BattleActionTextSourceParityTest {
     }
 
     @Test
+    public void battleTwoWeightsAndReasonsHaveOnePureOwner()
+            throws IOException {
+        String policy = policySource();
+        String[] policyMethods = {
+                "scoreWelcomeHome(", "scoreYouAreBeatenMode(",
+                "scoreAddBattleDestiny(", "scoreHatred(",
+                "scoreIHaveYouNow(", "scoreFmftd(",
+                "scoreVaderRecall(", "scoreInquisitorRecall(",
+                "scoreStunningLeader(", "scoreGenericYouAreBeaten(",
+                "scoreBattleDestinyModifier(", "scoreWeaponDestinyModifier(",
+                "scoreProtectDestiny(", "scorePreventOpponentBattleDestiny(",
+                "scoreKillShot(", "scoreSubstituteDestiny(",
+                "scoreCancelWeaponTargeting(", "scoreImmuneToAttrition(",
+                "scoreProtectForfeit(", "scoreRetargetWeapon("};
+        String[] retiredMutations = {
+                "action.addReasoning(\"V37.1 HATRED:",
+                "action.addReasoning(\"V35.7 HATRED:",
+                "action.addReasoning(\"V29.9 IHYN:",
+                "action.addReasoning(\"V35 FMFTD",
+                "action.addReasoning(\"V35 VADER RECALL:",
+                "action.addReasoning(\"V35.1 INQUISITOR RECALL",
+                "action.addReasoning(\"V37.2 STUNNING LEADER:",
+                "action.addReasoning(\"V35.4 YOU ARE BEATEN:",
+                "action.addReasoning(\"+1 to battle destiny",
+                "action.addReasoning(\"Boost weapon destiny",
+                "action.addReasoning(\"Prevent opponent battle destiny",
+                "action.addReasoning(\"V175 KILL SHOT:",
+                "action.addReasoning(\"V175 SUBSTITUTE",
+                "action.addReasoning(\"Cancel weapon targeting",
+                "action.addReasoning(\"Make character immune to attrition",
+                "action.addReasoning(\"Protect forfeit value during battle",
+                "action.addReasoning(\"Re-target weapon at enemy"};
+
+        for (String method : policyMethods) {
+            assertTrue(method, policy.contains(method));
+        }
+        for (String bot : new String[] {"rando", "chosenone"}) {
+            String adapter = adapterSource(bot);
+            for (String method : policyMethods) {
+                assertTrue(bot + ": " + method,
+                        adapter.contains("BattleActionTextPolicy." + method));
+            }
+            for (String retired : retiredMutations) {
+                assertFalse(bot + ": " + retired, adapter.contains(retired));
+            }
+        }
+    }
+
+    @Test
+    public void battleTwoAdaptersRetainAllGameAndCardReads()
+            throws IOException {
+        for (String bot : new String[] {"rando", "chosenone"}) {
+            String adapter = adapterSource(bot);
+            for (String retained : new String[] {
+                    "context.getDeckOracle()", "findCardById(",
+                    "getBattleState()", "getStackedCards(",
+                    "getTopLocations()", "getTotalPowerAtLocation(",
+                    "getTopOfUnresolvedDestinyDraws(",
+                    "getBlueprint().getDestiny()", "hasAbilityAttribute()"}) {
+                assertTrue(bot + ": " + retained, adapter.contains(retained));
+            }
+            assertTrue(adapter.contains("applyBattleActionTextPolicy(action,"));
+        }
+    }
+
+    @Test
     public void pureOwnerHasNoEngineOrForbiddenMetadataDependencies()
             throws IOException {
         String sources = policySource() + factsSource();

@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
-import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextFacts;
@@ -21,6 +20,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.common.CardCategory;
@@ -692,10 +692,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             }
                             if (worksOut) { v155Block = true; v155Why = "The Works already on table/in hand (no Oracle)"; }
                         }
+                        applyBattleActionTextPolicy(action,
+                            BattleActionTextPolicy.scoreWelcomeHome(
+                                new BattleActionTextFacts.WelcomeHomeFacts(
+                                    actionId, v155Block, v155Why != null ? v155Why : "")));
                         if (v155Block) {
-                            action.addReasoning(
-                                "V155 WELCOME HOME: " + v155Why + " — SAVE this card for battle (Tyranus ability-number mode), don't waste the pull",
-                                -2000.0f);
                             logger.warn("V155 WELCOME HOME BLOCK: {} — save for battle, block mode-1 location pull", v155Why);
                         }
                     }
@@ -864,19 +865,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         boolean v144IsIayfSearch = textLower.contains("i am your father")
                             || (textLower.contains("father") && textLower.contains("into hand"));
                         if (v144IsIayfSearch) {
-                            action.addReasoning(
-                                "V144 YOU ARE BEATEN: Mode 2 (IAYF search) — never use this mode, save for battle freeze or Cancel Uncontrollable Fury",
-                                -2000.0f);
                             logger.warn("V144 YOU ARE BEATEN: blocking IAYF search mode universally");
                         }
                         // Mode 1 (battle freeze) — encourage when in battle phase
                         boolean v144IsBattleFreeze = textLower.contains("cannot move or battle")
                             || textLower.contains("target a character present");
-                        if (v144IsBattleFreeze && context.getPhase() == Phase.BATTLE) {
-                            action.addReasoning(
-                                "V144 YOU ARE BEATEN: Battle freeze in battle phase — strong use!",
-                                500.0f);
-                        }
+                        applyBattleActionTextPolicy(action,
+                            BattleActionTextPolicy.scoreYouAreBeatenMode(
+                                new BattleActionTextFacts.YouAreBeatenModeFacts(
+                                    actionId, v144IsIayfSearch, v144IsBattleFreeze,
+                                    context.getPhase() == Phase.BATTLE)));
                     }
                 } catch (NumberFormatException nfe) { /* not numeric */ }
                 catch (Exception e) { logger.debug("V144 error: {}", e.getMessage()); }
@@ -2276,7 +2274,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Add Battle Destiny ==========
             else if (textLower.contains("add") && textLower.contains("battle destiny")) {
                 action.setActionType(ActionType.BATTLE_DESTINY);
-                action.addReasoning("Adding battle destiny is great", VERY_GOOD_DELTA);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreAddBattleDestiny(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== V29.10/V29.12: LIGHTSABER THROW — ADD DESTINY TO ATTRITION ==========
@@ -2320,7 +2320,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // V37.1: Only place hatred on OUR turn — placing during opponent's turn
                 // wastes it because we can't follow up with a battle this turn.
                 if (gameState != null && !context.isMyTurn()) {
-                    action.addReasoning("V37.1 HATRED: Not our turn — save hatred for our deploy phase!", -600.0f);
+                    applyBattleActionTextPolicy(action,
+                        BattleActionTextPolicy.scoreHatred(
+                            new BattleActionTextFacts.HatredFacts(
+                                actionId, true, false, false, false, false)));
                     logger.warn("V37.1 HATRED: Opponent's turn — blocking hatred placement (-600)");
                 } else {
 
@@ -2371,22 +2374,22 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                 } catch (Exception e) { /* ignore */ }
 
+                PolicyResult hatredResult = BattleActionTextPolicy.scoreHatred(
+                    new BattleActionTextFacts.HatredFacts(
+                        actionId, false, v35InqOnTable,
+                        v35VaderOrInqWithOpponents, v35JediAtSameSite,
+                        isDeployPhase));
+                applyBattleActionTextPolicy(action, hatredResult);
                 if (!v35InqOnTable) {
                     // V35.7: No Inquisitor on table — hatred requires Inquisitor, BLOCK
-                    action.addReasoning("V35.7 HATRED: No Inquisitor on table — hatred requires Inquisitor!", -500.0f);
                     logger.warn("V35.7 HATRED: No Inquisitor — hard block (-500)");
                 } else if (v35VaderOrInqWithOpponents) {
                     // V35.7: Inquisitor AT SAME SITE as opponent — hatred is useful!
-                    float hatredScore = isDeployPhase ? (float) RandoConfig.SCORE_HATRED_WITH_INQUISITOR : 350.0f;
-                    if (v35JediAtSameSite) hatredScore += 150.0f;
-                    action.addReasoning(String.format(
-                        "V35.7 HATRED: Inquisitor WITH opponents%s — cancel game text! (+%.0f)",
-                        v35JediAtSameSite ? " + JEDI" : "", hatredScore), hatredScore);
                     logger.warn("V35.7 HATRED: Inquisitor with opponents (jedi={}) — score +{}",
-                        v35JediAtSameSite, (int)hatredScore);
+                        v35JediAtSameSite,
+                        (int) hatredResult.operations().get(0).delta());
                 } else {
                     // V35.3: Vader/Inquisitor NOT at same site as any opponent — DON'T waste hatred
-                    action.addReasoning("V35.3 HATRED: Vader/Inquisitor not at same site as opponents — save for later!", -300.0f);
                     logger.warn("V35.3 HATRED: No Vader/Inq co-located with opponents — blocked (-300)");
                 }
             } // end V37.1 isMyTurn else block
@@ -2398,9 +2401,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Must be played DURING a battle. Check if we're in battle phase and Vader is present.
             // Also catch "i have you now" in source card check for generic action texts.
             if (textLower.contains("i have you now") || textLower.contains("ihyn")) {
+                boolean vaderInBattle = false;
                 if (context.getPhase() == Phase.BATTLE) {
                     // In battle — check if Vader is participating
-                    boolean vaderInBattle = false;
                     try {
                         if (gameState != null && gameState.getBattleState() != null) {
                             PhysicalCard battleLoc = gameState.getBattleState().getBattleLocation();
@@ -2420,18 +2423,20 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
 
                     if (vaderInBattle) {
-                        action.addReasoning("V29.9 IHYN: Vader in battle — PLAY I HAVE YOU NOW for devastating extra destiny draws!", 300.0f);
                         logger.warn("V29.9 IHYN: Vader in battle — mega boost (+300) for I Have You Now!");
                     } else {
                         // Still good even without Vader — adds destiny draws
-                        action.addReasoning("V29.9 IHYN: Play I Have You Now for extra battle destiny!", 100.0f);
                         logger.info("V29.9 IHYN: Playing during battle without Vader (+100)");
                     }
                 } else {
                     // Not in battle — save IHYN for when we need it
-                    action.addReasoning("V29.9 IHYN: Save I Have You Now for battle!", -200.0f);
                     logger.info("V29.9 IHYN: Not in battle — save for later (-200)");
                 }
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreIHaveYouNow(
+                        new BattleActionTextFacts.IHaveYouNowFacts(
+                            actionId, true, context.getPhase() == Phase.BATTLE,
+                            vaderInBattle, false)));
             }
             // Also check source card for IHYN when action text is generic
             else if (context.getPhase() == Phase.BATTLE && cardId != null && gameState != null) {
@@ -2439,7 +2444,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     PhysicalCard ihynSource = gameState.findCardById(Integer.parseInt(cardId));
                     if (ihynSource != null && ihynSource.getTitle() != null
                         && ihynSource.getTitle().toLowerCase(java.util.Locale.ROOT).contains("i have you now")) {
-                        action.addReasoning("V29.9 IHYN: Play I Have You Now during battle — extra destiny draws!", 200.0f);
+                        applyBattleActionTextPolicy(action,
+                            BattleActionTextPolicy.scoreIHaveYouNow(
+                                new BattleActionTextFacts.IHaveYouNowFacts(
+                                    actionId, false, true, false, true)));
                         logger.warn("V29.9 IHYN (source): I Have You Now detected via source card — boost +200");
                     }
                 } catch (Exception e) { /* ignore */ }
@@ -2481,28 +2489,38 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     } catch (Exception e) { /* ignore */ }
 
                     int synCount = (v35FmInq ? 1 : 0) + (v35FmJedi ? 1 : 0) + (v35FmHatred ? 1 : 0);
+                    PolicyResult fmftdResult = BattleActionTextPolicy.scoreFmftd(
+                        new BattleActionTextFacts.FmftdFacts(
+                            actionId, BattleActionTextFacts.FmftdMode.LOST,
+                            true, false, v35FmInq, v35FmJedi, v35FmHatred));
+                    applyBattleActionTextPolicy(action, fmftdResult);
                     if (synCount >= 3) {
-                        action.addReasoning("V35 FMFTD LOST: Inquisitor + Jedi + Hatred — ADD 2 BATTLE DESTINY!", (float) RandoConfig.SCORE_FMFTD_FULL_SYNERGY);
-                        logger.warn("V35 FMFTD: Full synergy! +{}", RandoConfig.SCORE_FMFTD_FULL_SYNERGY);
-                    } else if (synCount >= 2) {
-                        action.addReasoning("V35 FMFTD LOST: Inquisitor with Jedi or Hatred — add 1 battle destiny!", 350.0f);
-                    } else if (v35FmInq) {
-                        action.addReasoning("V35 FMFTD LOST: Inquisitor in battle — add destiny!", 200.0f);
-                    } else {
-                        action.addReasoning("V35 FMFTD LOST: No Inquisitor in battle — limited value", 50.0f);
+                        logger.warn("V35 FMFTD: Full synergy! +{}",
+                            (int) fmftdResult.operations().get(0).delta());
                     }
                 } else if (isFmftdUsedMode) {
                     // USED mode — place hatred card
-                    if (context.getPhase() == Phase.DEPLOY || context.getPhase() == Phase.MOVE) {
-                        action.addReasoning("V35 FMFTD USED: Place hatred on opponent — cancel game text!", 350.0f);
-                    } else {
-                        action.addReasoning("V35 FMFTD USED: Place hatred — decent timing", 150.0f);
-                    }
+                    applyBattleActionTextPolicy(action,
+                        BattleActionTextPolicy.scoreFmftd(
+                            new BattleActionTextFacts.FmftdFacts(
+                                actionId, BattleActionTextFacts.FmftdMode.USED,
+                                isFmftdBattle,
+                                context.getPhase() == Phase.DEPLOY
+                                    || context.getPhase() == Phase.MOVE,
+                                false, false, false)));
                 } else if (isFmftdBattle) {
                     // Generic FMFTD during battle — likely the LOST mode
-                    action.addReasoning("V35 FMFTD: Play during battle for extra destiny!", 250.0f);
+                    applyBattleActionTextPolicy(action,
+                        BattleActionTextPolicy.scoreFmftd(
+                            new BattleActionTextFacts.FmftdFacts(
+                                actionId, BattleActionTextFacts.FmftdMode.GENERIC,
+                                true, false, false, false, false)));
                 } else {
-                    action.addReasoning("V35 FMFTD: Save for battle if possible", -100.0f);
+                    applyBattleActionTextPolicy(action,
+                        BattleActionTextPolicy.scoreFmftd(
+                            new BattleActionTextFacts.FmftdFacts(
+                                actionId, BattleActionTextFacts.FmftdMode.GENERIC,
+                                false, false, false, false, false)));
                 }
             }
 
@@ -2529,11 +2547,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     } catch (Exception e) { /* ignore */ }
 
                     if (v35JediElsewhere) {
-                        action.addReasoning("V35 VADER RECALL: Take Vader into hand — Jedi elsewhere to hunt! Redeploy!", 300.0f);
                         logger.warn("V35 VADER RECALL: Jedi detected elsewhere — recalling Vader to redeploy (+300)");
-                    } else {
-                        action.addReasoning("V35 VADER RECALL: Take Vader into hand — no clear target, keep him deployed", -100.0f);
                     }
+                    applyBattleActionTextPolicy(action,
+                        BattleActionTextPolicy.scoreVaderRecall(
+                            new BattleActionTextFacts.VaderRecallFacts(
+                                actionId, v35JediElsewhere)));
                 } else {
                     // V35.1: Inquisitor recall — DON'T recall if opponents are nearby!
                     // Eighth Brother's ability returns an Inquisitor to hand. Only do this
@@ -2554,11 +2573,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     } catch (Exception e) { /* ignore */ }
 
                     if (opponentsNearby) {
-                        action.addReasoning("V35.1 INQUISITOR RECALL BLOCK: Opponents on the board — KEEP Inquisitor to fight!", -400.0f);
                         logger.warn("V35.1 INQUISITOR RECALL BLOCKED: Opponents present — don't pull back (-400)");
-                    } else {
-                        action.addReasoning("V35 INQUISITOR RECALL: No opponents on board — safe to reposition", 100.0f);
                     }
+                    applyBattleActionTextPolicy(action,
+                        BattleActionTextPolicy.scoreInquisitorRecall(
+                            new BattleActionTextFacts.InquisitorRecallFacts(
+                                actionId, opponentsNearby)));
                 }
             }
 
@@ -2572,7 +2592,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         && !v67uIsForcePushSource
                         && textLower.contains("exclude")
                         && textLower.contains("from battle"))) {
+                BattleActionTextFacts.StunningLeaderMode stunningLeaderMode =
+                    BattleActionTextFacts.StunningLeaderMode.OUTSIDE_BATTLE;
+                float stunningLeaderOurPower = 0.0f;
+                float stunningLeaderTheirPower = 0.0f;
                 if (context.getPhase() == Phase.BATTLE && gameState != null) {
+                    stunningLeaderMode = BattleActionTextFacts.StunningLeaderMode.UNRESOLVED;
                     try {
                         com.gempukku.swccgo.game.state.BattleState bState = gameState.getBattleState();
                         if (bState != null) {
@@ -2582,36 +2607,35 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
                             if (weInitiated) {
                                 // WE started this battle — NEVER cancel our own attack!
-                                action.addReasoning("V37.2 STUNNING LEADER: WE initiated — fight to WIN!", -9999.0f);
+                                stunningLeaderMode = BattleActionTextFacts.StunningLeaderMode.OWN_INITIATED;
                                 logger.warn("V37.2 STUNNING LEADER: HARD BLOCK — we initiated this battle!");
                             } else {
                                 // Opponent initiated — check if we're outmatched
                                 PhysicalCard slBattleLoc = bState.getBattleLocation();
                                 if (slBattleLoc != null) {
                                     String slOpp = gameState.getOpponent(slPlayerId);
-                                    float slOurPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    stunningLeaderOurPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                         gameState, slBattleLoc, slPlayerId, false, false);
-                                    float slTheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    stunningLeaderTheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                         gameState, slBattleLoc, slOpp, false, false);
-                                    if (slTheirPower > slOurPower * 1.5f) {
-                                        // Badly outmatched — Stunning Leader saves our characters!
-                                        action.addReasoning(String.format(
-                                            "V37.2 STUNNING LEADER: Outmatched %.0f vs %.0f — exclude to survive!",
-                                            slOurPower, slTheirPower), 300.0f);
-                                        logger.warn("V37.2 STUNNING LEADER: Defensive use — saving characters from {} vs {}",
-                                            (int)slOurPower, (int)slTheirPower);
-                                    } else {
-                                        // Close fight — fight it out instead of excluding
-                                        action.addReasoning("V37.2 STUNNING LEADER: Close fight — battle instead!", -300.0f);
-                                    }
+                                    stunningLeaderMode = BattleActionTextFacts.StunningLeaderMode.DEFENDING;
                                 }
                             }
                         }
                     } catch (Exception e) {
                         logger.debug("V37.2 STUNNING LEADER: Error: {}", e.getMessage());
                     }
-                } else {
-                    action.addReasoning("V37.2 STUNNING LEADER: Not in battle — save!", -200.0f);
+                }
+                PolicyResult stunningLeaderResult = BattleActionTextPolicy.scoreStunningLeader(
+                    new BattleActionTextFacts.StunningLeaderFacts(
+                        actionId, stunningLeaderMode,
+                        stunningLeaderOurPower, stunningLeaderTheirPower));
+                applyBattleActionTextPolicy(action, stunningLeaderResult);
+                if (stunningLeaderMode == BattleActionTextFacts.StunningLeaderMode.DEFENDING
+                        && !stunningLeaderResult.operations().isEmpty()
+                        && stunningLeaderResult.operations().get(0).delta() > 0.0f) {
+                    logger.warn("V37.2 STUNNING LEADER: Defensive use — saving characters from {} vs {}",
+                        (int) stunningLeaderOurPower, (int) stunningLeaderTheirPower);
                 }
             }
 
@@ -2620,11 +2644,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // and aren't valid targets for combat effects. Don't waste this interrupt.
             // Also: only use during battle or when it will lead to meaningful attrition.
             else if (textLower.contains("you are beaten")) {
-                if (context.getPhase() == Phase.BATTLE) {
-                    action.addReasoning("V35.4 YOU ARE BEATEN: During battle — use for attrition!", 150.0f);
-                } else {
+                boolean v354Battle = context.getPhase() == Phase.BATTLE;
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreGenericYouAreBeaten(
+                        new BattleActionTextFacts.GenericYouAreBeatenFacts(
+                            actionId, v354Battle)));
+                if (!v354Battle) {
                     // Outside battle — this is usually a waste
-                    action.addReasoning("V35.4 YOU ARE BEATEN: Not in battle — save for combat!", -200.0f);
                     logger.info("V35.4 YOU ARE BEATEN: Not in battle — penalizing (-200)");
                 }
             }
@@ -2633,7 +2659,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             else if ((actionText.contains("+1") || actionText.contains("+ 1") || textLower.contains("add 1"))
                      && textLower.contains("battle destiny")) {
                 action.setActionType(ActionType.BATTLE_DESTINY);
-                action.addReasoning("+1 to battle destiny - always use!", VERY_GOOD_DELTA);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreBattleDestinyModifier(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== V24.2: Force Drain Modifier (+1 to force drain) ==========
@@ -2651,21 +2679,39 @@ public class ActionTextEvaluator extends ActionEvaluator {
             else if (textLower.contains("weapon destiny") &&
                      (actionText.contains("+3") || actionText.contains("+2") || textLower.contains("add"))) {
                 action.setActionType(ActionType.FIRE_WEAPON);
-                action.addReasoning("Boost weapon destiny - increases hit chance!", VERY_GOOD_DELTA);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreWeaponDestinyModifier(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== Protect Battle Destiny Draws ==========
             else if (textLower.contains("prevent") && textLower.contains("cancel") &&
                      textLower.contains("battle destiny") && textLower.contains("draw")) {
                 action.setActionType(ActionType.BATTLE_DESTINY);
-                evaluateDestinyProtection(action, context);
+                Phase destinyProtectionPhase = context.getPhase();
+                BattleActionTextFacts.DestinyProtectionPhase policyPhase =
+                    destinyProtectionPhase == Phase.BATTLE
+                        ? BattleActionTextFacts.DestinyProtectionPhase.BATTLE
+                        : destinyProtectionPhase == Phase.ACTIVATE
+                            ? BattleActionTextFacts.DestinyProtectionPhase.ACTIVATE
+                            : destinyProtectionPhase == Phase.CONTROL
+                                ? BattleActionTextFacts.DestinyProtectionPhase.CONTROL
+                                : destinyProtectionPhase == Phase.DEPLOY
+                                    ? BattleActionTextFacts.DestinyProtectionPhase.DEPLOY
+                                    : BattleActionTextFacts.DestinyProtectionPhase.OTHER;
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreProtectDestiny(
+                        new BattleActionTextFacts.ProtectDestinyFacts(
+                            actionId, context.getTurnNumber(), policyPhase)));
             }
 
             // ========== Prevent Opponent Adding Battle Destiny ==========
             else if (textLower.contains("prevent") && textLower.contains("battle destiny") &&
                      !textLower.contains("cancel")) {
                 action.setActionType(ActionType.BATTLE_DESTINY);
-                action.addReasoning("Prevent opponent battle destiny - denies their draw!", VERY_GOOD_DELTA);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scorePreventOpponentBattleDestiny(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== Take Admiral/General Into Hand ==========
@@ -2764,24 +2810,29 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             }
                         }
                     }
+                    BattleActionTextFacts.KillShotTarget v175TargetType =
+                        BattleActionTextFacts.KillShotTarget.UNRESOLVED;
+                    float v175Pow = 0f;
+                    float v175Forf = 0f;
                     if (v175Found != null && v175Pid != null
                             && !v175Pid.equals(v175Found.getOwner())) {
-                        float v175Pow = 0f, v175Forf = 0f;
+                        v175TargetType = BattleActionTextFacts.KillShotTarget.OPPONENT;
                         SwccgCardBlueprint v175Bp = v175Found.getBlueprint();
                         if (v175Bp != null) {
                             if (v175Bp.hasPowerAttribute() && v175Bp.getPower() != null) v175Pow = v175Bp.getPower();
                             if (v175Bp.hasForfeitAttribute() && v175Bp.getForfeit() != null) v175Forf = v175Bp.getForfeit();
                         }
-                        float v175Score = Math.min(900f, 400f + v175Pow * 40f + v175Forf * 20f);
-                        action.addReasoning(String.format(
-                            "V175 KILL SHOT: make %s lost (power %.0f, forfeit %.0f) — take it!",
-                            v175Target, v175Pow, v175Forf), v175Score);
+                    } else if (v175Found != null) {
+                        v175TargetType = BattleActionTextFacts.KillShotTarget.OWN;
+                    }
+                    PolicyResult v175KillShot = BattleActionTextPolicy.scoreKillShot(
+                        new BattleActionTextFacts.KillShotFacts(
+                            actionId, v175Target, v175TargetType, v175Pow, v175Forf));
+                    applyBattleActionTextPolicy(action, v175KillShot);
+                    if (v175TargetType == BattleActionTextFacts.KillShotTarget.OPPONENT) {
+                        float v175Score = v175KillShot.operations().get(0).delta();
                         logger.warn("V175 KILL SHOT: '{}' (pow={} forf={}) -> +{}",
                             v175Target, (int) v175Pow, (int) v175Forf, (int) v175Score);
-                    } else if (v175Found != null) {
-                        action.addReasoning("V175: target is OUR character — don't make our own lost", -100.0f);
-                    } else {
-                        action.addReasoning("V175: make-lost target not found on table — unknown", 0.0f);
                     }
                 } catch (Exception v175E) {
                     logger.debug("V175 kill-shot parse error: {}", v175E.getMessage());
@@ -2822,21 +2873,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         }
                     }
                 } catch (Exception ignore) { }
-                if (v175Drawn >= 0f && v175BestAb > 0f) {
-                    float v175Delta = v175BestAb - v175Drawn;
-                    if (v175Delta > 0f) {
-                        action.addReasoning(String.format(
-                            "V175 SUBSTITUTE DELTA: drawn %.0f -> ability %.0f (+%.0f gain)",
-                            v175Drawn, v175BestAb, v175Delta), v175Delta * 60f);
-                        logger.warn("V175 SUBSTITUTE: drawn={} bestAbility={} -> +{}",
-                            (int) v175Drawn, (int) v175BestAb, (int) (v175Delta * 60f));
-                    } else {
-                        action.addReasoning(String.format(
-                            "V175 SUBSTITUTE SKIP: drawn %.0f already >= ability %.0f — save the card",
-                            v175Drawn, v175BestAb), -50.0f);
-                    }
-                } else {
-                    action.addReasoning("Substituting destiny is good", GOOD_DELTA);
+                boolean v175Readable = v175Drawn >= 0f && v175BestAb > 0f;
+                PolicyResult v175Substitute = BattleActionTextPolicy.scoreSubstituteDestiny(
+                    new BattleActionTextFacts.SubstituteDestinyFacts(
+                        actionId,
+                        v175Readable
+                            ? BattleActionTextFacts.SubstituteReadStatus.READ
+                            : BattleActionTextFacts.SubstituteReadStatus.READ_FAILED,
+                        v175Drawn, v175BestAb));
+                applyBattleActionTextPolicy(action, v175Substitute);
+                if (v175Readable && v175Substitute.operations().get(0).delta() > 0.0f) {
+                    logger.warn("V175 SUBSTITUTE: drawn={} bestAbility={} -> +{}",
+                        (int) v175Drawn, (int) v175BestAb,
+                        (int) v175Substitute.operations().get(0).delta());
                 }
             }
 
@@ -2925,23 +2974,31 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Cancel Weapon Targeting ==========
             else if (textLower.contains("cancel") && textLower.contains("weapon") && textLower.contains("target")) {
                 action.setActionType(ActionType.CANCEL);
-                action.addReasoning("Cancel weapon targeting - protect our characters!", VERY_GOOD_DELTA);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreCancelWeaponTargeting(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== Immune to Attrition ==========
             else if (textLower.contains("immune to attrition")) {
-                action.addReasoning("Make character immune to attrition - valuable protection!", VERY_GOOD_DELTA);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreImmuneToAttrition(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== Protect Forfeit ==========
             else if (textLower.contains("forfeit") &&
                      (textLower.contains("protect") || textLower.contains("preserved"))) {
-                action.addReasoning("Protect forfeit value during battle", GOOD_DELTA + 10.0f);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreProtectForfeit(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== Re-target Weapon ==========
             else if (textLower.contains("re-target") || textLower.contains("retarget")) {
-                action.addReasoning("Re-target weapon at enemy - turn their weapon against them!", VERY_GOOD_DELTA);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreRetargetWeapon(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== Cancel Battle Damage (Houjix/Ghhhk) ==========
@@ -4047,6 +4104,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
     // ========== Helper Methods ==========
 
+    private void applyBattleActionTextPolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+            "battle-action-text-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
     // ═══════════════════════════════════════════════════════════
     // ═══ REGION: CONTROL — force drain scoring (reorg 2026-07-06) ═══
     // Owns: drain go/no-go and sizing: V52-drain +50 drain-anyway (+100..300 multi-site), V48 early-turn
@@ -4085,22 +4151,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
         } else {
             // V24.5: No randomness — slight positive for playing cards when force available
             action.addReasoning("Generic play card — moderate priority", 5.0f);
-        }
-    }
-
-    private void evaluateDestinyProtection(EvaluatedAction action, DecisionContext context) {
-        Phase phase = context.getPhase();
-        int turnNumber = context.getTurnNumber();
-
-        // These cards only useful if battle is coming
-        if (turnNumber <= 1) {
-            action.addReasoning("SAVE for battle turn! Turn 1 rarely battles", VERY_BAD_DELTA);
-        } else if (phase == Phase.BATTLE) {
-            action.addReasoning("Protect destiny draws - IN BATTLE NOW!", VERY_GOOD_DELTA);
-        } else if (phase == Phase.ACTIVATE || phase == Phase.CONTROL || phase == Phase.DEPLOY) {
-            action.addReasoning("Protect destiny draws - battle opportunity exists", GOOD_DELTA);
-        } else {
-            action.addReasoning("Save destiny protection for clear battle turn", BAD_DELTA);
         }
     }
 

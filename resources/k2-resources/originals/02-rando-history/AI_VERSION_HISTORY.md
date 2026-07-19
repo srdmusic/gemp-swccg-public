@@ -7353,3 +7353,25 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     SHA-256 3b64d95f9a9c1c6f4a5707fe27e97b596335bb680d5f176b4145bedf9a262fac contain the shared policy,
     facts, and both adapters. Runtime reload and live-game proof remain pending on the external
     runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V255 (2026-07-19): consolidate remaining BATTLE-2 action-text tactics ════
+    BattleActionTextFacts and BattleActionTextPolicy now own the remaining pure scoring for
+    Welcome Home, both You Are Beaten routes, add-destiny, Hatred, I Have You Now, FMFTD,
+    Vader/Inquisitor recall, Stunning Leader, destiny modifiers/protection, V175 kill-shot and
+    substitute-destiny, weapon-target cancel, attrition immunity, forfeit protection, and
+    retargeting. Both ActionTextEvaluator mirrors retain all action/source/phase gates,
+    DeckOracle, card, battle, power, ability, destiny, forfeit, ownership, and stack reads;
+    exception boundaries; action types; exact logs; branch order; and direct policy application.
+    Adapter logs now consume policy outputs instead of repeating scoring formulas. All extracted
+    contributions remain ADD operations in BATTLE_WEAPONS, including additive -9999. Force Push,
+    fire, throw, and redraw remain solely in BattleWeaponsPolicy; BATTLE-1, V25, and BATTLE-3 stay
+    independent. Exact legacy score bands and independent stacking are unchanged; unresolved
+    kill-shot retains its zero-score diagnostic ADD. Focused 27/0/0/0, BATTLE-named 103/0/0/0, full reactor
+    1653/0/0/26, normalized mirror parity, AI-only boundary, forbidden-symbol scan, source
+    ownership, raw-float fixtures, compiled-artifact gate, diff check, and clean package passed.
+    Independent review caught and closed the unresolved V175 zero-delta trace omission, then
+    returned PASS.
+    Server jar SHA-256 214dbb04b689dae71e5c3f3f3399341fad76ae72848b3d827176bf48cd822982 and web jar
+    SHA-256 404e8b352d50e159544b72d1f4c7cb30938105b8a854c5dccc34812662fd30ee contain the shared policy,
+    facts, and both adapters. Runtime reload and live-game proof remain pending on the external
+    runtime. AI source only; no GEMP engine or player-decision changes.
