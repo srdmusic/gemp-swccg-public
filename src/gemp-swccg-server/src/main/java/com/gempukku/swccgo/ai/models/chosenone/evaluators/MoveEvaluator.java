@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveBuddyProtectionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
@@ -748,7 +749,9 @@ public class MoveEvaluator extends ActionEvaluator {
                             }
                         }
                         // Only matters if exactly 2 of our characters here (moving one leaves one solo)
-                        if (ourCharsHere.size() == 2 && ourCharsHere.contains(cardToMove)) {
+                        if (MoveBuddyProtectionPolicy.hasBuddyPair(
+                                ourCharsHere.size(),
+                                ourCharsHere.contains(cardToMove))) {
                             PhysicalCard remainingAlly = null;
                             for (PhysicalCard c : ourCharsHere) {
                                 if (c != cardToMove) {
@@ -785,10 +788,10 @@ public class MoveEvaluator extends ActionEvaluator {
                                 // 3. Solo characters draw unfavorable battles
                                 // Protect if: ally power < 6 (even if ability is high like Thrawn's 4)
                                 // OR if enemy is already present
-                                boolean allyVulnerable = allyPower < RandoConfig.MIN_SOLO_DEPLOY_POWER;
-                                boolean enemyThreat = theirPowerHere > 0;
-
-                                if (allyVulnerable || enemyThreat) {
+                                if (MoveBuddyProtectionPolicy.needsPowerAnalysis(
+                                        allyPower,
+                                        RandoConfig.MIN_SOLO_DEPLOY_POWER,
+                                        theirPowerHere)) {
                                     // V59 DOOMED LOCATION: When enemy power is catastrophically higher
                                     // (>= 2x ours OR diff >= +10), the location is already lost. Holding
                                     // both characters means losing BOTH to overflow damage. Forfeit one,
@@ -800,40 +803,39 @@ public class MoveEvaluator extends ActionEvaluator {
                                             gameState, currentLocation, playerId, false, false);
                                     } catch (Exception e) { /* ignore */ }
 
-                                    boolean doomed = enemyThreat
-                                        && (theirPowerHere >= ourPowerHere * 2.0f
-                                            || (theirPowerHere - ourPowerHere) >= 10.0f);
+                                    MoveBuddyProtectionPolicy.Evaluation buddyDecision =
+                                        MoveBuddyProtectionPolicy.evaluate(
+                                            currentLocation.getTitle(),
+                                            remainingAlly.getTitle(),
+                                            allyPower,
+                                            RandoConfig.MIN_SOLO_DEPLOY_POWER,
+                                            ourPowerHere,
+                                            theirPowerHere);
 
-                                    if (doomed) {
+                                    if (buddyDecision.branch()
+                                            == MoveBuddyProtectionPolicy.Branch.DOOMED_ESCAPE) {
                                         // Location already lost — don't protect ally, ESCAPE the valuable one
-                                        action.addReasoning(String.format(
-                                            "V59 DOOMED: %s is a lost position (us %d vs enemy %d) — ESCAPE the valuable character!",
-                                            currentLocation.getTitle(), (int)ourPowerHere, (int)theirPowerHere),
-                                            200.0f);
+                                        action.addReasoning(
+                                            buddyDecision.reason(),
+                                            buddyDecision.delta());
                                         // V59 UPDATED 2026-07-06 T4.1: DOOMED escape claims R3 SURVIVAL
                                         // (fine +200 kept; base applied at the finalizer).
-                                        ladderClaimR3("V59 DOOMED ESCAPE");
+                                        if (buddyDecision.claimSurvival()) {
+                                            ladderClaimR3("V59 DOOMED ESCAPE");
+                                        }
                                         logger.warn("V59 DOOMED: {} at {} is lost ({} vs {}) — buddy protect DISABLED, flee!",
                                             cardToMove.getTitle(), currentLocation.getTitle(),
                                             (int)ourPowerHere, (int)theirPowerHere);
-                                    } else {
-                                        float buddyPenalty = -150.0f;
-                                        if (enemyThreat && allyPower < theirPowerHere) {
-                                            // Enemy OVERPOWERS the ally — critical danger
-                                            buddyPenalty = -400.0f;
-                                        } else if (enemyThreat) {
-                                            // Enemy present but ally can hold — still risky
-                                            buddyPenalty = -250.0f;
-                                        }
-                                        action.addReasoning(String.format(
-                                            "V27 BUDDY PROTECT: Moving away leaves %s (power %d) ALONE at %s!%s",
-                                            remainingAlly.getTitle(), allyPower, currentLocation.getTitle(),
-                                            enemyThreat ? " ENEMY POWER=" + (int)theirPowerHere + "!" : ""),
-                                            buddyPenalty);
+                                    } else if (buddyDecision.branch()
+                                            == MoveBuddyProtectionPolicy.Branch.BUDDY_PROTECT) {
+                                        action.addReasoning(
+                                            buddyDecision.reason(),
+                                            buddyDecision.delta());
                                         logger.warn("V27 BUDDY PROTECT: {} moving from {} would leave {} (power {}) alone!{}",
                                             cardToMove.getTitle(), currentLocation.getTitle(),
                                             remainingAlly.getTitle(), allyPower,
-                                            enemyThreat ? " ENEMY POWER=" + (int)theirPowerHere : "");
+                                            buddyDecision.enemyThreat()
+                                                ? " ENEMY POWER=" + (int)theirPowerHere : "");
                                     }
                                 }
                             }
