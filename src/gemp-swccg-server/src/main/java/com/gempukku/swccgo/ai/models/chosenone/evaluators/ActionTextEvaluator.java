@@ -353,72 +353,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 continue;
             }
 
-            // === V95 (Steve, 2026-05-20): SAVE DEAD INTERRUPTS WHEN RESERVES >= 15 ===
-            // If an interrupt's pull/upload targets are ALL ALREADY on the table,
-            // the primary effect is dead. AND if reserve force (force pile + used
-            // pile + reserve deck) >= 15, save the card in hand as future
-            // force-loss fodder. Burning it for the no-op effect is double-loss.
-            //
-            // Example: My Sister Has It uploads Chief Chirpa's Hut or Guest
-            // Quarters. With both on the table, the upload is moot. Keep it.
-            //
-            // Only fires when source card is an INTERRUPT (per Steve's rule
-            // scope — Effects, Epic Events, Interrupts, Objectives, but this
-            // V95 check focuses specifically on interrupts since those are the
-            // ones typically lost as fodder).
-            // V95 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge):
-            // moved into the PULL-ENGINE veto chain as a hardBlock (see the V192 region) so the
-            // activate-window base (+5500) can NEVER outvote it — as an additive here, the pull
-            // pile netted the dead pull to +100 and it FIRED (boundary row 5). Logic verbatim
-            // in the new location. Commented out per feedback_comment_out_old_rules:
-            // if (cardId != null && context.getGameState() != null) {
-                // try {
-                    // com.gempukku.swccgo.game.state.GameState v95Gs = context.getGameState();
-                    // PhysicalCard v95Src = v95Gs.findCardById(Integer.parseInt(cardId));
-                    // if (v95Src != null && v95Src.getBlueprint() != null
-                            // && v95Src.getBlueprint().getCardCategory()
-                                // == com.gempukku.swccgo.common.CardCategory.INTERRUPT) {
-                        // String v95Gt = v95Src.getBlueprint().getGameText();
-                        // if (v95Gt != null) {
-                            // java.util.List<String> v95Targets =
-                                // com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle
-                                    // .parseSourceCardPullTargets(v95Gt);
-                            // if (!v95Targets.isEmpty()) {
-                                // java.util.Collection<PhysicalCard> v95Table = v95Gs.getAllPermanentCards();
-                                // boolean allOnTable = true;
-                                // for (String t : v95Targets) {
-                                    // String tl = t.toLowerCase(java.util.Locale.ROOT);
-                                    // boolean found = false;
-                                    // for (PhysicalCard tc : v95Table) {
-                                        // if (tc == null || tc.getTitle() == null) continue;
-                                        // if (tc.getTitle().toLowerCase(java.util.Locale.ROOT).contains(tl)) {
-                                            // found = true; break;
-                                        // }
-                                    // }
-                                    // if (!found) { allOnTable = false; break; }
-                                // }
-                                // if (allOnTable) {
-                                    // String v95Pid = context.getPlayerId();
-                                    // int reserveForce = v95Gs.getForcePileSize(v95Pid)
-                                        // + (v95Gs.getUsedPile(v95Pid) != null ? v95Gs.getUsedPile(v95Pid).size() : 0)
-                                        // + v95Gs.getReserveDeckSize(v95Pid);
-                                    // if (reserveForce >= 15) {
-                                        // action.addReasoning(String.format(
-                                            // "V95 DEAD INTERRUPT SAVE: '%s' pull targets %s all on table, reserves=%d — save for force-loss fodder",
-                                            // v95Src.getTitle(), v95Targets, reserveForce), -2000.0f);
-                                        // logger.warn("V95 DEAD INTERRUPT: blocking {} (targets on table, reserves {})",
-                                            // v95Src.getTitle(), reserveForce);
-                                    // }
-                                // }
-                            // }
-                        // }
-                    // }
-                // } catch (NumberFormatException nfe) {
-                    // // not numeric cardId
-                // } catch (Exception e) {
-                    // logger.debug("V95 error: {}", e.getMessage());
-                // }
-            // }
+            // V95: dead-interrupt veto now lives in shared PullActionPolicy/PullActionFactsReader.
 
             // === V134 (Steve, 2026-05-25): ODIN NESLOOR 5-FORCE FLOOR (MOVE phase) ===
             //
@@ -978,170 +913,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 catch (Exception e) { logger.debug("V144 error: {}", e.getMessage()); }
             }
 
-            // === V97 (Steve, 2026-05-20): PULL FROM RESERVE BEFORE ACTIVATING FORCE ===
-            // Per Steve: "If Effect, Epic Event, Interrupt, or Objective lets us
-            // pull a card before activating, we should do so. Force activation
-            // moves cards from Reserve into Force Pile where pulls can't reach
-            // them. Pulling first preserves the maximum search pool."
-            //
-            // Scope: source card must be Effect / Epic Event / Interrupt /
-            // Objective AND the action must be a Reserve-Deck pull. Excludes
-            // Knowledge And Defense (pulls from stacked cards, not Reserve).
-            // Excludes character / starship / vehicle pulls (those have their
-            // own timing windows in Deploy Phase).
-            // V97 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge):
-            // the scope predicate (Phase==ACTIVATE, static source EFFECT/EPIC_EVENT/INTERRUPT/
-            // OBJECTIVE, K&D + Anger, Fear, Aggression excluded) moved VERBATIM into the scorer
-            // as the +5500 PULL_BASE_ACTIVATE gate. +1500 was NOT enough: V168 ALWAYS ACTIVATE
-            // (+5000) outvoted the whole pull pile (+2000) and pulls fired AFTER activation with
-            // a shrunken pool (boundary row 1a, feedback_pull_before_activate).
-            // Commented out per feedback_comment_out_old_rules:
-            // if (cardId != null && context.getGameState() != null
-                    // && context.getPhase() == Phase.ACTIVATE) {
-                // try {
-                    // com.gempukku.swccgo.game.state.GameState v97Gs = context.getGameState();
-                    // PhysicalCard v97Src = v97Gs.findCardById(Integer.parseInt(cardId));
-                    // // V129 (Steve, 2026-05-24): Also exclude Anger, Fear, Aggression —
-                    // // light-side equivalent of K&D, same stacked-pile mechanic, pulls
-                    // // from stack not Reserve. Symmetric with chosenone V97.
-                    // if (v97Src != null && v97Src.getBlueprint() != null
-                            // && v97Src.getTitle() != null
-                            // // EXCLUDE Knowledge And Defense — stacked-card pull, not Reserve.
-                            // && !v97Src.getTitle().contains("Knowledge And Defense")
-                            // // V129: EXCLUDE Anger, Fear, Aggression — light-side mirror
-                            // && !v97Src.getTitle().contains("Anger, Fear, Aggression")) {
-                        // com.gempukku.swccgo.common.CardCategory v97Cat =
-                            // v97Src.getBlueprint().getCardCategory();
-                        // boolean isStaticSource =
-                            // v97Cat == com.gempukku.swccgo.common.CardCategory.EFFECT
-                            // || v97Cat == com.gempukku.swccgo.common.CardCategory.EPIC_EVENT
-                            // || v97Cat == com.gempukku.swccgo.common.CardCategory.INTERRUPT
-                            // || v97Cat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE;
-                        // if (isStaticSource) {
-                            // // Is this action a Reserve-Deck pull? Check action text
-                            // // for canonical pull phrasing.
-                            // boolean isPull =
-                                // textLower.contains("from reserve deck")
-                                // || textLower.contains("[upload]")
-                                // || textLower.contains("[download]")
-                                // || textLower.contains("take") && textLower.contains("into hand");
-                            // if (isPull) {
-                                // action.addReasoning(String.format(
-                                    // "V97 PULL BEFORE ACTIVATE: '%s' (%s) — fire pull now to preserve max Reserve search pool",
-                                    // v97Src.getTitle(), v97Cat), 1500.0f);
-                                // logger.warn("V97 PULL BEFORE ACTIVATE: {} from {} → +1500",
-                                    // actionText, v97Src.getTitle());
-                            // }
-                        // }
-                    // }
-                // } catch (NumberFormatException nfe) {
-                    // // not numeric cardId
-                // } catch (Exception e) {
-                    // logger.debug("V97 error: {}", e.getMessage());
-                // }
-            // }
+            // V97: pull-before-activate ordering now lives in shared PullActionPolicy.
 
-            // === V100 (Steve, 2026-05-20): LOCATION PULL/DEPLOY BEFORE CHARACTER DEPLOY ===
-            // Per Steve: "If an Effect/Interrupt/Objective/EpicEvent lets us pull
-            // or deploy a LOCATION from Reserve Deck, fire it BEFORE any character
-            // or vehicle deploys in the same deploy phase."
-            //
-            // Why: locations expand our deployment footprint. Characters deployed
-            // before the new location is on table can only land on already-existing
-            // sites — leaving the new location empty and forcing a wasted move phase.
-            //
-            // Companion to V97 (which fires during ACTIVATE phase). V100 fires
-            // during DEPLOY phase and is LOCATION-specific.
-            //
-            // EXCLUDE Knowledge And Defense (stacked-card pull, not Reserve).
-            // V100 STANDALONE BLOCK ABSORBED by V192 pull scorer 2026-07-06 (T4.2 merge):
-            // its location-noun vocabulary ("planet") merged into the shared isLocationPull
-            // predicate (V67l list, V192 region), and its chars-or-vehicles-in-hand check is now
-            // the +25 CONTEXT bonus on location tiers during DEPLOY (one tier bonus, not a
-            // stacked +1500 — ds-5). Commented out per feedback_comment_out_old_rules:
-            // if (cardId != null && context.getGameState() != null
-                    // && context.getPhase() == Phase.DEPLOY) {
-                // try {
-                    // com.gempukku.swccgo.game.state.GameState v100Gs = context.getGameState();
-                    // PhysicalCard v100Src = v100Gs.findCardById(Integer.parseInt(cardId));
-                    // // V129 (Steve, 2026-05-24): Also exclude Anger, Fear, Aggression —
-                    // // light-side equivalent of K&D. Symmetric with chosenone V100.
-                    // if (v100Src != null && v100Src.getBlueprint() != null
-                            // && v100Src.getTitle() != null
-                            // && !v100Src.getTitle().contains("Knowledge And Defense")
-                            // && !v100Src.getTitle().contains("Anger, Fear, Aggression")) {
-                        // com.gempukku.swccgo.common.CardCategory v100Cat =
-                            // v100Src.getBlueprint().getCardCategory();
-                        // boolean isStaticSource =
-                            // v100Cat == com.gempukku.swccgo.common.CardCategory.EFFECT
-                            // || v100Cat == com.gempukku.swccgo.common.CardCategory.EPIC_EVENT
-                            // || v100Cat == com.gempukku.swccgo.common.CardCategory.INTERRUPT
-                            // || v100Cat == com.gempukku.swccgo.common.CardCategory.OBJECTIVE;
-                        // if (isStaticSource) {
-                            // // Match the SOURCE card's game text for a location-pull pattern.
-                            // // Detect by location nouns (docking bay/location/system/site/sector/planet)
-                            // // + a Reserve-Deck verb (deploy from reserve / take into hand from reserve).
-                            // String v100Gt = v100Src.getBlueprint().getGameText();
-                            // String v100GtLower = v100Gt != null
-                                // ? v100Gt.toLowerCase(Locale.ROOT) : "";
-                            // boolean mentionsReserve = v100GtLower.contains("from reserve deck")
-                                // || v100GtLower.contains("from your reserve deck");
-                            // boolean mentionsLocationNoun =
-                                // v100GtLower.contains("docking bay")
-                                // || v100GtLower.contains(" location")
-                                // || v100GtLower.contains("location ")
-                                // || v100GtLower.contains(" system")
-                                // || v100GtLower.contains("system ")
-                                // || v100GtLower.contains(" site")
-                                // || v100GtLower.contains("site ")
-                                // || v100GtLower.contains(" sector")
-                                // || v100GtLower.contains("sector ")
-                                // || v100GtLower.contains(" planet")
-                                // || v100GtLower.contains("planet ");
-                            // // Verify this specific action is the pull (not a different
-                            // // ability on the same card). Action text must mention deploy/take
-                            // // from Reserve.
-                            // boolean actionIsPull =
-                                // textLower.contains("from reserve deck")
-                                // || textLower.contains("[upload]")
-                                // || textLower.contains("[download]")
-                                // || (textLower.contains("deploy") && textLower.contains("reserve"))
-                                // || (textLower.contains("take") && textLower.contains("into hand")
-                                    // && textLower.contains("reserve"));
-                            // if (mentionsReserve && mentionsLocationNoun && actionIsPull) {
-                                // // Check we still have characters/vehicles in hand to deploy
-                                // boolean haveCharOrVehicleInHand = false;
-                                // java.util.List<com.gempukku.swccgo.game.PhysicalCard> v100Hand =
-                                    // context.getHand();
-                                // if (v100Hand != null) {
-                                    // for (com.gempukku.swccgo.game.PhysicalCard hc : v100Hand) {
-                                        // if (hc == null || hc.getBlueprint() == null) continue;
-                                        // com.gempukku.swccgo.common.CardCategory hCat =
-                                            // hc.getBlueprint().getCardCategory();
-                                        // if (hCat == com.gempukku.swccgo.common.CardCategory.CHARACTER
-                                                // || hCat == com.gempukku.swccgo.common.CardCategory.VEHICLE) {
-                                            // haveCharOrVehicleInHand = true;
-                                            // break;
-                                        // }
-                                    // }
-                                // }
-                                // if (haveCharOrVehicleInHand) {
-                                    // action.addReasoning(String.format(
-                                        // "V100 LOCATION PULL BEFORE CHARACTERS: '%s' (%s) — fire location pull"
-                                            // + " now so chars can deploy to the new site this phase",
-                                        // v100Src.getTitle(), v100Cat), 1500.0f);
-                                    // logger.warn("V100 LOCATION PULL FIRST: {} from {} → +1500",
-                                        // actionText, v100Src.getTitle());
-                                // }
-                            // }
-                        // }
-                    // }
-                // } catch (NumberFormatException nfe) {
-                    // // not numeric cardId
-                // } catch (Exception e) {
-                    // logger.debug("V100 error: {}", e.getMessage());
-                // }
-            // }
+            // V100: location-pull sequencing now lives in shared PullActionPolicy/PullActionFactsReader.
 
             // V79 (Steve, 2026-05-15): VERGE — DEATH STAR PARSEC / ORBIT MULTIPLE_CHOICE
             // After picking "Move using hyperspeed" the engine fires a
@@ -3420,11 +3194,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Take Card Into Hand ==========
             // V192 (2026-07-06): reserve-deck takes now FALL THROUGH to the merged pull
-            // scorer branch below (single owner — the old routing sent "Take X into hand
-            // from Reserve Deck" here, so the pull branch never saw it and the V29.7 +250
-            // fired instead of the tier table). Non-reserve takes (V29.7 BOUNCE class,
-            // lost/used/force pile) keep routing here. Old dispatch commented out:
-            // else if (actionText.contains("Take") && actionText.contains("into hand")) {
+            // scorer branch below. Non-reserve takes (V29.7 BOUNCE class,
+            // lost/used/force pile) keep routing here.
             else if (actionText.contains("Take") && actionText.contains("into hand")
                      && !textLower.contains("reserve deck") && !textLower.contains("[upload]")) {
                 evaluateTakeIntoHand(action, context, actionText, textLower);

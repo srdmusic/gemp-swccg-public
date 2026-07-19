@@ -7130,3 +7130,15 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Exact legacy order, fallbacks, and +100/+80/Sense-or-35 scores are preserved. Focused
     10/0/0/0 and clean full reactor 1538/0/0/26 passed; clean async package, source parity,
     forbidden-symbol, and artifact-content gates passed. Runtime reload remains pending.
+
+  ════ V243 (2026-07-19): ownership-audit tooling and retired-comment cleanup ════
+    Replaced only the inert V95, V97, and V100 executable comment blocks in both ActionTextEvaluator
+    mirrors with one-line breadcrumbs to their shared PULL owners, and removed one stale commented
+    dispatch line. Executable Java is unchanged after comments are stripped. Replaced the stale
+    fixed-range manifest refresher with comment-aware owner-audit/version builders and a reproducible
+    comments-only source gate. Retained legacy scorers remain visibly marked for migration instead of
+    being certified as extracted owners. START-OF-TURN and END-OF-TURN remain named empty metadata
+    slots, not engine phases or invented policy classes. Focused PULL 20/0/0/0, clean full reactor
+    1538/0/0/26, clean async package, source allowlist, forbidden-symbol, and packaged-class absence
+    gates passed. The source audit reports 169 retained legacy-owner candidates and 2 section
+    fallbacks. Workbook emission and runtime reload remain pending on their external runtimes.
