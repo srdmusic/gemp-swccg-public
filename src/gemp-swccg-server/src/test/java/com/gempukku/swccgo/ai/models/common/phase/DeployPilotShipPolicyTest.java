@@ -204,6 +204,71 @@ public class DeployPilotShipPolicyTest {
     }
 
     @Test
+    public void shipReferenceBoardingPreservesSixHundredAndDrainBonus() {
+        DeployPilotShipPolicy.Evaluation ordinary =
+                DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, "executor", true,
+                                true, false));
+        assertRules(ordinary.result().operations(),
+                new String[]{"V29-ship-reference"}, new float[]{600.0f});
+        assertEquals(DeployPilotShipPolicy.AdapterStep.FALL_THROUGH,
+                ordinary.adapterStep());
+        assertEquals(null, ordinary.resetScore());
+
+        DeployPilotShipPolicy.Evaluation drain =
+                DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, "executor", true,
+                                true, true));
+        assertRules(drain.result().operations(),
+                new String[]{"V29-ship-reference"}, new float[]{650.0f});
+        assertEquals("V29 SHIP-REF: Game text mentions executor"
+                        + " — abilities activate aboard this ship!",
+                drain.result().operations().get(0).reason());
+    }
+
+    @Test
+    public void otherCharacterBoardingBranchesRemainExclusive() {
+        assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, "home one", false,
+                                true, false)).result().operations(),
+                new String[]{"V29-other-ship-reference"},
+                new float[]{50.0f});
+        assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, null, false,
+                                true, false)).result().operations(),
+                new String[]{"V29-executor"}, new float[]{100.0f});
+        assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, "", false,
+                                false, false)).result().operations(),
+                new String[]{"V29-character-aboard"}, new float[]{50.0f});
+    }
+
+    @Test
+    public void cargoPenaltyRemainsAdditiveThenContinuesCandidate() {
+        DeployPilotShipPolicy.Evaluation cargo =
+                DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", false, "", false,
+                                false, false));
+
+        assertRules(cargo.result().operations(),
+                new String[]{"V29-cargo"}, new float[]{-300.0f});
+        PolicyOperation operation = cargo.result().operations().get(0);
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(TraceDomainId.DEPLOY_ATTACH, operation.domainId());
+        assertEquals(TraceOutputKind.VETO, operation.outputKind());
+        assertEquals("⚠️ DEPLOY TO CARGO BAY = 0 POWER!", operation.reason());
+        assertEquals(DeployPilotShipPolicy.AdapterStep.CONTINUE_CANDIDATE,
+                cargo.adapterStep());
+        assertEquals(null, cargo.resetScore());
+    }
+
+    @Test
     public void simultaneousStarDestroyerGuardPreservesSetThenAddContract() {
         DeployPilotShipPolicy.Evaluation blocked =
                 DeployPilotShipPolicy.evaluateSimultaneousPilotGuard(

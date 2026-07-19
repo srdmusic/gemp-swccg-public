@@ -7696,3 +7696,21 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and both adapters. Runtime reload and live-game proof remain separate deployment gates.
     Clean V272 is based on live V271 8469a915f; quarantined reference b41749d20 and its ancestors
     remain reference-only. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V273 (2026-07-19): consolidate DEPLOY ship boarding and cargo scoring ====
+    Shared AI-only DeployPilotShipPolicy now owns the V29 destination score ladder for characters
+    boarding ships and non-character cards targeting ship cargo. Both CardSelectionEvaluator
+    mirrors retain the destination, blueprint, title, game-text, unique-ship-name, and subtype
+    reads; declaration-order first-match break; generic capital match; catches; exact logs; and
+    cargo actions.add plus candidate continue. Exact outcomes remain +600 for the referenced ship,
+    +650 with the force-drain text, +50 for a different referenced ship, +100 for an unreferenced
+    character aboard Executor, +50 aboard another ship, and additive -300 for cargo before the
+    existing continue. Temporary destination IDs still exit through the physical-card parse path
+    before V29 boarding can run. Focused policy/source/parity 29/0/0/0, DEPLOY-named 224/0/0/0,
+    full reactor 1835/0/0/26, exact mirror parity, score and control fixtures, read-order and
+    first-break gates, AI-only scope, diff check, and clean package passed. Server jar SHA-256
+    cd902a1b76d03bcf1bc578a7f19594491e54eddf59234a702219bbe3359c9aa8 and web jar SHA-256
+    a3563017b7028722d4ad02b82cb8e96661b6b8b6b054851b6aab367ef90e7f4e contain the shared owner
+    and both adapters. Runtime reload and live-game proof remain separate deployment gates.
+    Clean V273 is based on live V272 d8c75cdcf. AI source only; no GEMP engine or player-decision
+    changes.

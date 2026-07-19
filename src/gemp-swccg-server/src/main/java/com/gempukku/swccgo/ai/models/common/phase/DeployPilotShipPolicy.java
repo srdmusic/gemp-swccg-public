@@ -252,6 +252,46 @@ public final class DeployPilotShipPolicy {
         return new PolicyResult("DEPLOY_EXECUTOR_DESTINATION_POLICY", operations);
     }
 
+    public static Evaluation evaluateShipBoarding(ShipBoardingFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (!facts.character()) {
+            addAttach(operations, facts.actionId(), "V29-cargo",
+                    TraceOutputKind.VETO, -300.0f,
+                    "⚠️ DEPLOY TO CARGO BAY = 0 POWER!");
+            return new Evaluation(
+                    new PolicyResult("DEPLOY_SHIP_BOARDING_POLICY", operations),
+                    AdapterStep.CONTINUE_CANDIDATE, null);
+        }
+
+        if (facts.referencedShipMatchesDestination()) {
+            float bonus = facts.addsForceDrain() ? 650.0f : 600.0f;
+            addAttach(operations, facts.actionId(), "V29-ship-reference",
+                    TraceOutputKind.BANDED, bonus,
+                    "V29 SHIP-REF: Game text mentions " + facts.matchedShipName()
+                            + " — abilities activate aboard this ship!");
+        } else if (!facts.matchedShipName().isBlank()) {
+            addAttach(operations, facts.actionId(), "V29-other-ship-reference",
+                    TraceOutputKind.BANDED, 50.0f,
+                    "V29 ABOARD SHIP: Game text references "
+                            + facts.matchedShipName()
+                            + " (not this ship) — mild bonus for ship boarding");
+        } else if (facts.executorDestination()) {
+            addAttach(operations, facts.actionId(), "V29-executor",
+                    TraceOutputKind.BANDED, 100.0f,
+                    "V29 CHARACTER ABOARD EXECUTOR: Adds ability/power to flagship");
+        } else {
+            addAttach(operations, facts.actionId(), "V29-character-aboard",
+                    TraceOutputKind.BANDED, 50.0f,
+                    "V29 CHARACTER ABOARD SHIP: Pilot/passenger deploy");
+        }
+
+        return new Evaluation(
+                new PolicyResult("DEPLOY_SHIP_BOARDING_POLICY", operations),
+                AdapterStep.FALL_THROUGH, null);
+    }
+
     public static Evaluation evaluateSimultaneousPilotGuard(
             SimultaneousPilotGuardFacts facts) {
         Objects.requireNonNull(facts, "facts");
@@ -433,6 +473,16 @@ public final class DeployPilotShipPolicy {
         public ExecutorDestinationFacts {
             Objects.requireNonNull(actionId, "actionId");
             destinationTitle = destinationTitle == null ? "null" : destinationTitle;
+        }
+    }
+
+    public record ShipBoardingFacts(
+            String actionId, boolean character, String matchedShipName,
+            boolean referencedShipMatchesDestination,
+            boolean executorDestination, boolean addsForceDrain) {
+        public ShipBoardingFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            matchedShipName = matchedShipName == null ? "" : matchedShipName;
         }
     }
 

@@ -1495,16 +1495,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         //      cargo bays of other ships = 0 power, which is terrible.
                         // =====================================================
                         if (blueprint != null && blueprint.getCardCategory() == CardCategory.STARSHIP) {
+                            boolean isExecutor = false;
+                            String charGameText = "";
+                            String matchedShipName = null;
+                            boolean gameTextReferencesThisShip = false;
+                            boolean addsForceDrain = false;
+
                             if (isCharacter) {
                                 // V29: CHARACTER deploying ABOARD a ship — this is pilot/passenger deploy!
                                 // If character's game text mentions a UNIQUE starship name, they should
                                 // deploy aboard that ship to activate their abilities.
                                 String shipTitle = titleLower;
-                                boolean isExecutor = shipTitle.contains("executor");
-
-                                // Check character's game text for any unique ship name
-                                String charGameText = "";
-                                String matchedShipName = null;
+                                isExecutor = shipTitle.contains("executor");
                                 if (deployingBlueprintId != null) {
                                     try {
                                         SwccgCardBlueprint charBp = getBlueprintFromId(context, deployingBlueprintId);
@@ -1521,7 +1523,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
 
                                 // Check if THIS ship matches the referenced ship name
-                                boolean gameTextReferencesThisShip = false;
                                 if (matchedShipName != null && shipTitle.contains(matchedShipName)) {
                                     gameTextReferencesThisShip = true;
                                 }
@@ -1537,38 +1538,37 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                 }
+                                addsForceDrain = charGameText.contains("adds 1 to force drain")
+                                    || charGameText.contains("add 1 to force drain");
+                            }
 
+                            DeployPilotShipPolicy.Evaluation boardingEvaluation =
+                                DeployPilotShipPolicy.evaluateShipBoarding(
+                                    new DeployPilotShipPolicy.ShipBoardingFacts(
+                                        action.getActionId(), isCharacter, matchedShipName,
+                                        gameTextReferencesThisShip, isExecutor, addsForceDrain));
+                            applyDeployPilotPolicy(action, boardingEvaluation.result());
+
+                            if (isCharacter) {
                                 if (gameTextReferencesThisShip) {
-                                    // Character's game text references THIS ship — MAXIMUM bonus!
-                                    float bonus = 600.0f;
-                                    if (charGameText.contains("adds 1 to force drain") || charGameText.contains("add 1 to force drain")) {
-                                        bonus = 650.0f; // Force drain bonus makes this even more valuable
-                                    }
-                                    action.addReasoning("V29 SHIP-REF: Game text mentions " + matchedShipName
-                                        + " — abilities activate aboard this ship!", bonus);
+                                    int bonus = addsForceDrain ? 650 : 600;
                                     logger.warn("V29 SHIP-REF: {} references '{}' — deploying aboard {} (+{})",
-                                        deployingCardName, matchedShipName, title, (int)bonus);
+                                        deployingCardName, matchedShipName, title, bonus);
                                 } else if (matchedShipName != null) {
-                                    // Game text references a DIFFERENT ship — mild bonus for any ship boarding
-                                    action.addReasoning("V29 ABOARD SHIP: Game text references " + matchedShipName
-                                        + " (not this ship) — mild bonus for ship boarding", 50.0f);
                                     logger.info("V29 ABOARD: {} references '{}' but boarding {} instead (+50)",
                                         deployingCardName, matchedShipName, title);
                                 } else if (isExecutor) {
-                                    // No ship reference in game text but Executor is always good for characters
-                                    action.addReasoning("V29 CHARACTER ABOARD EXECUTOR: Adds ability/power to flagship", 100.0f);
                                     logger.info("V29 ABOARD: {} boarding Executor (+100)", deployingCardName);
                                 } else {
-                                    // Other ship, no game text match — basic pilot/passenger bonus
-                                    action.addReasoning("V29 CHARACTER ABOARD SHIP: Pilot/passenger deploy", 50.0f);
                                     logger.info("V29 ABOARD: {} boarding {} (+50)", deployingCardName, title);
                                 }
-                                // Continue evaluating — don't skip like cargo bay does
                             } else {
-                                // Non-character (ship) deploying INTO another ship's cargo bay = 0 power
-                                action.addReasoning("⚠️ DEPLOY TO CARGO BAY = 0 POWER!", -300.0f);
                                 logger.warn("⚠️ BLOCKING deploy of {} into cargo bay of {} - ships in cargo contribute 0 power!",
                                     deployingCardName, title);
+                            }
+
+                            if (boardingEvaluation.adapterStep()
+                                    == DeployPilotShipPolicy.AdapterStep.CONTINUE_CANDIDATE) {
                                 actions.add(action);
                                 continue;
                             }
