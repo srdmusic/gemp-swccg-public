@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class MoveLandingSourceParityTest {
+public class MoveTransitSourceParityTest {
     @Test
     public void moveEvaluatorsStayNormalizedMirrors() throws IOException {
         assertEquals(normalize(evaluatorSource("rando")),
@@ -20,69 +20,81 @@ public class MoveLandingSourceParityTest {
     }
 
     @Test
-    public void landingAnalysisHasOneSharedOwner() throws IOException {
+    public void transitRulesHaveOneSharedOwner() throws IOException {
         String move = evaluatorSource("rando");
         String policy = policySource();
 
         assertEquals(1, countOccurrences(
-                move, "MoveLandingPolicy.evaluate("));
-        assertFalse(move.contains("private void handleLandAction("));
-        assertTrue(policy.contains("public static Evaluation evaluate("));
-        assertTrue(policy.contains("Filters.aboard(card)"));
+                move, "MoveTransitPolicy.pilotLock("));
+        assertEquals(1, countOccurrences(
+                move, "MoveTransitPolicy.movementTypes("));
+        assertFalse(move.contains(
+                "if (cardToMove != null && cardToMove.isPilotOf())"));
+        assertFalse(move.contains(
+                "if (actionLower.contains(\"shuttle\") || actionLower.contains(\"transport\"))"));
+        assertTrue(policy.contains("public static PilotLock pilotLock("));
+        assertTrue(policy.contains(
+                "public static MovementTypes movementTypes("));
     }
 
     @Test
-    public void adapterRetainsLadderAndLoggingOwnership() throws IOException {
+    public void adapterRetainsScoreAndLoggingOwnership() throws IOException {
         String move = evaluatorSource("rando");
 
-        assertTrue(move.contains("ladderVetoHard = true;"));
         assertTrue(move.contains(
-                "ladderVetoHardReason = landing.reason();"));
+                "action.addReasoning(pilotLock.contribution().reason(),"));
         assertTrue(move.contains(
-                "action.addReasoning(landing.reason(), landing.delta());"));
+                "action.addReasoning(defensiveShuttle.contribution().reason(),"));
         assertTrue(move.contains(
-                "[MoveEvaluator] V67f1: {} actual passengers aboard"));
+                "movementTypes.dockingBayTransit().reason()"));
+        assertTrue(move.contains("movementTypes.takeOff().reason()"));
         assertTrue(move.contains(
-                "[MoveEvaluator] V49 LADDER VETO:"));
+                "V25 PILOT LOCK: {} is piloting {}"));
+        assertTrue(move.contains(
+                "V25 Defensive shuttle to {}"));
+        assertTrue(move.contains(
+                "V25 Shuttle without defensive need"));
     }
 
     @Test
-    public void policyPreservesLegacyOrderingAndBranches() throws IOException {
-        String policy = policySource();
-        int subtype = policy.indexOf(
-                "if (subtype == CardSubtype.STARFIGHTER)");
-        int passengerScan = policy.indexOf(
-                "if (isStarship && !isStarfighter)", subtype);
-        int nameFallback = policy.indexOf(
-                "if (!isStarfighter && !isStarship)", passengerScan);
-        int hardVeto = policy.indexOf(
-                "if (isStarship && !hasPassengers)", nameFallback);
-        int starfighterPenalty = policy.indexOf(
-                "else if (isStarfighter)", hardVeto);
-
-        assertTrue(subtype >= 0);
-        assertTrue(passengerScan > subtype);
-        assertTrue(nameFallback > passengerScan);
-        assertTrue(hardVeto > nameFallback);
-        assertTrue(starfighterPenalty > hardVeto);
-    }
-
-    @Test
-    public void landingCallRemainsAtLegacyAdditivePosition()
-            throws IOException {
+    public void adapterCallsRemainInLegacyOrder() throws IOException {
         String move = evaluatorSource("rando");
+        int deathStar = move.indexOf("// === V79 (Steve");
+        int pilot = move.indexOf("MoveTransitPolicy.pilotLock(", deathStar);
+        int lando = move.indexOf("// === V47: LANDO", pilot);
         int movementTypes = move.indexOf(
-                "MoveTransitPolicy.movementTypes(");
+                "MoveTransitPolicy.movementTypes(", lando);
+        int docking = move.indexOf(
+                "movementTypes.dockingBayTransit().applies()", movementTypes);
         int takeOff = move.indexOf(
-                "movementTypes.takeOff().applies()", movementTypes);
+                "movementTypes.takeOff().applies()", docking);
         int landing = move.indexOf("MoveLandingPolicy.evaluate(", takeOff);
-        int movePhase = move.indexOf(
-                "if (context.getPhase() == Phase.MOVE)", landing);
 
-        assertTrue(movementTypes >= 0);
-        assertTrue(takeOff > movementTypes);
+        assertTrue(deathStar >= 0);
+        assertTrue(pilot > deathStar);
+        assertTrue(lando > pilot);
+        assertTrue(movementTypes > lando);
+        assertTrue(docking > movementTypes);
+        assertTrue(takeOff > docking);
         assertTrue(landing > takeOff);
-        assertTrue(movePhase > landing);
+    }
+
+    @Test
+    public void policyPreservesFirstMatchAndPrintedPowerGates()
+            throws IOException {
+        String policy = policySource();
+        int locations = policy.indexOf(
+                "for (PhysicalCard location : gameState.getLocationsInOrder())");
+        int powerAttribute = policy.indexOf(
+                "!blueprint.hasPowerAttribute()", locations);
+        int threshold = policy.indexOf(
+                "ourPower > 0 && theirPower >= ourPower * 2", powerAttribute);
+        int firstMatchBreak = policy.indexOf("break;", threshold);
+
+        assertTrue(locations >= 0);
+        assertTrue(powerAttribute > locations);
+        assertTrue(threshold > powerAttribute);
+        assertTrue(firstMatchBreak > threshold);
     }
 
     @Test
@@ -90,7 +102,7 @@ public class MoveLandingSourceParityTest {
             throws IOException {
         String policy = policySource();
         for (String forbidden : new String[]{
-                "PolicyOperation", "PolicyResult",
+                "PolicyOperation", "PolicyResult", "DecisionContext",
                 "DecisionOrigin", "DecisionActionSemantic", "DecisionWire",
                 "PullDeployRef", "PullPhysicalCardRef", "DeployDestinationRef",
                 "DeployPhysicalCardRef", "DeployActionMetadata"}) {
@@ -107,7 +119,7 @@ public class MoveLandingSourceParityTest {
     private static String policySource() throws IOException {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models/common/phase")
-                .resolve("MoveLandingPolicy.java"));
+                .resolve("MoveTransitPolicy.java"));
     }
 
     private static Path mainJavaRoot() {

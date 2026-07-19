@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
@@ -617,13 +618,13 @@ public class MoveEvaluator extends ActionEvaluator {
             // Removing the pilot unpilots the ship, losing system control and making it vulnerable.
             // This was catastrophic in testing: Piett shuttled off Executor, got killed alone at CC,
             // and Rando lost 16 Force including the entire TDIGWATT engine from hand.
-            if (cardToMove != null && cardToMove.isPilotOf()) {
-                PhysicalCard ship = cardToMove.getAttachedTo();
-                String shipName = (ship != null && ship.getTitle() != null) ? ship.getTitle() : "unknown ship";
-                String pilotName = (cardToMove.getTitle() != null) ? cardToMove.getTitle() : "pilot";
-                action.addReasoning("V25 PILOT LOCK: " + pilotName + " is piloting " + shipName
-                    + " — NEVER leave the ship!", -500.0f);
-                logger.warn("V25 PILOT LOCK: {} is piloting {} — blocking move (-500)", pilotName, shipName);
+            MoveTransitPolicy.PilotLock pilotLock =
+                MoveTransitPolicy.pilotLock(cardToMove);
+            if (pilotLock.contribution().applies()) {
+                action.addReasoning(pilotLock.contribution().reason(),
+                    pilotLock.contribution().delta());
+                logger.warn("V25 PILOT LOCK: {} is piloting {} — blocking move (-500)",
+                    pilotLock.pilotName(), pilotLock.shipName());
             }
 
             // === V47: LANDO AT CC — NEVER MOVE ===
@@ -1861,45 +1862,30 @@ public class MoveEvaluator extends ActionEvaluator {
 
             // === MOVEMENT TYPE BONUSES ===
             // V25: Shuttle bonus only when defending — opponent has 2x our power at destination
-            if (actionLower.contains("shuttle") || actionLower.contains("transport")) {
-                boolean defensiveShuttle = false;
-                if (gameState != null) {
-                    String opponentId = gameState.getOpponent(playerId);
-                    for (PhysicalCard loc : gameState.getLocationsInOrder()) {
-                        String locTitle = loc.getTitle();
-                        if (locTitle != null && actionLower.contains(locTitle.toLowerCase(Locale.ROOT))) {
-                            // Found a location mentioned in action text — check power
-                            float ourPower = 0, theirPower = 0;
-                            for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
-                                if (c == null) continue;
-                                SwccgCardBlueprint bp = c.getBlueprint();
-                                if (bp == null || !bp.hasPowerAttribute()) continue;
-                                Float pw = bp.getPower();
-                                if (pw == null) pw = 0f;
-                                if (playerId.equals(c.getOwner())) ourPower += pw;
-                                else if (opponentId != null && opponentId.equals(c.getOwner())) theirPower += pw;
-                            }
-                            if (ourPower > 0 && theirPower >= ourPower * 2) {
-                                defensiveShuttle = true;
-                                action.addReasoning("V25 Defensive shuttle — opponent has " + (int)theirPower
-                                    + " vs our " + (int)ourPower + " at " + locTitle, 20.0f);
-                                logger.info("[MoveEvaluator] V25 Defensive shuttle to {} (them={}, us={})",
-                                    locTitle, (int)theirPower, (int)ourPower);
-                            }
-                            break;
-                        }
-                    }
-                }
-                if (!defensiveShuttle) {
-                    // No bonus for non-defensive shuttles — let strategic analysis decide
-                    logger.debug("[MoveEvaluator] V25 Shuttle without defensive need — no bonus");
-                }
+            MoveTransitPolicy.MovementTypes movementTypes =
+                MoveTransitPolicy.movementTypes(
+                    actionLower, gameState, playerId);
+            MoveTransitPolicy.DefensiveShuttle defensiveShuttle =
+                movementTypes.defensiveShuttle();
+            if (defensiveShuttle.contribution().applies()) {
+                action.addReasoning(defensiveShuttle.contribution().reason(),
+                    defensiveShuttle.contribution().delta());
+                logger.info("[MoveEvaluator] V25 Defensive shuttle to {} (them={}, us={})",
+                    defensiveShuttle.locationTitle(),
+                    (int)defensiveShuttle.theirPower(),
+                    (int)defensiveShuttle.ourPower());
+            } else if (movementTypes.shuttleAction()) {
+                // No bonus for non-defensive shuttles — let strategic analysis decide
+                logger.debug("[MoveEvaluator] V25 Shuttle without defensive need — no bonus");
             }
-            if (actionLower.contains("docking bay")) {
-                action.addReasoning("Docking bay transit", 15.0f);
+            if (movementTypes.dockingBayTransit().applies()) {
+                action.addReasoning(
+                    movementTypes.dockingBayTransit().reason(),
+                    movementTypes.dockingBayTransit().delta());
             }
-            if (actionLower.contains("take off")) {
-                action.addReasoning("Take off (space deployment)", 10.0f);
+            if (movementTypes.takeOff().applies()) {
+                action.addReasoning(movementTypes.takeOff().reason(),
+                    movementTypes.takeOff().delta());
             }
 
             // Land - penalize starfighters

@@ -1,3 +1,17 @@
+  ==== V218 AI-ONLY MOVE PILOT AND TRANSIT POLICY OWNER (2026-07-18, both bots) ====
+Shared MoveTransitPolicy now owns the duplicated V25 pilot-lock score, defensive-shuttle scan, docking-bay
+transit bonus, and takeoff bonus. Both adapters keep direct score application and original logging at the
+same positions. Behavior is unchanged: pilot lock remains additive -500 rather than a ladder veto;
+defensive shuttle remains +20 only at the first location title found in action text when friendly printed
+power is above zero and opponent printed power is at least 2x; no adjacency or exact destination is proven;
+docking-bay transit remains +15; and takeoff remains +10. Null power, title fallbacks, action keywords,
+operation order, ladder state, routing, retry state, and physical-card resolution are unchanged. Production
+edits are AI-only. Verification passed 62 focused MOVE tests and the full 1,239-test reactor with 0
+failures, 0 errors, and 26 skipped. Package, source-boundary, forbidden-symbol, artifact, mirror, diff, and
+independent gates passed; server jar SHA-256 is
+4197e8ae4b64e5275433e9c590aca1fbd4a84d1e5985bb6d4b20f5778aa092d2. Runtime load and live-game proof
+remain separate gates. Revert the single V218 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V217 AI-ONLY MOVE LANDING SAFETY POLICY OWNER (2026-07-18, both bots) ====
 Shared MoveLandingPolicy now owns the duplicated V49/V67f1 landing classification, actual-passenger
 scan, name fallbacks, route selection, exact score deltas, and reasons. Both bot adapters keep the
