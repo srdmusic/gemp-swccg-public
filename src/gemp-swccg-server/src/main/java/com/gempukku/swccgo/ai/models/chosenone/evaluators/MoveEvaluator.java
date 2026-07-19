@@ -12,6 +12,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandoStayPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MovePostFlipConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
@@ -1082,51 +1083,38 @@ public class MoveEvaluator extends ActionEvaluator {
                             try {
                                 java.util.Set<String> objFrags = moveConsolidateAnalyzer.getFlipConditionLocationFragments();
                                 String curLocTitle = currentLocation.getTitle();
-                                boolean atObjLoc = false;
-                                if (curLocTitle != null) {
-                                    for (String frag : objFrags) {
-                                        if (curLocTitle.toLowerCase(Locale.ROOT).contains(frag.toLowerCase(Locale.ROOT))) {
-                                            atObjLoc = true;
-                                            break;
-                                        }
-                                    }
-                                }
+                                boolean atObjLoc =
+                                    MovePostFlipConsolidationPolicy.isObjectiveLocation(
+                                        curLocTitle,
+                                        objFrags);
 
                                 // Count occupied objective locations and find the weakest
                                 java.util.Map<String, Float> objPowerMap = new java.util.LinkedHashMap<>();
                                 for (PhysicalCard loc : gameState.getTopLocations()) {
                                     if (loc == null || loc.getTitle() == null) continue;
-                                    String lt = loc.getTitle().toLowerCase(Locale.ROOT);
-                                    boolean isObj = false;
-                                    for (String frag : objFrags) {
-                                        if (lt.contains(frag.toLowerCase(Locale.ROOT))) { isObj = true; break; }
-                                    }
-                                    if (!isObj) continue;
+                                    if (!MovePostFlipConsolidationPolicy.isObjectiveLocation(
+                                            loc.getTitle(), objFrags)) continue;
                                     float pwr = game.getModifiersQuerying().getTotalPowerAtLocation(
                                         gameState, loc, playerId, false, false);
                                     if (pwr > 0) objPowerMap.put(loc.getTitle(), pwr);
                                 }
 
-                                if (objPowerMap.size() >= 3 && atObjLoc) {
-                                    // Find the weakest objective location
-                                    String weakestObjLoc = null;
-                                    float weakestPwr = Float.MAX_VALUE;
-                                    for (java.util.Map.Entry<String, Float> entry : objPowerMap.entrySet()) {
-                                        if (entry.getValue() < weakestPwr) {
-                                            weakestPwr = entry.getValue();
-                                            weakestObjLoc = entry.getKey();
-                                        }
-                                    }
-
-                                    // If we're AT the weakest location, encourage moving to reinforce a stronger one
-                                    if (weakestObjLoc != null && curLocTitle.equals(weakestObjLoc)) {
-                                        action.addReasoning(String.format(
-                                            "V31 POST-FLIP CONSOLIDATE: At weakest obj loc %s (power %.0f) — move to reinforce stronger position!",
-                                            weakestObjLoc, weakestPwr), 200.0f);
-                                        logger.warn("V31 POST-FLIP CONSOLIDATE: {} should leave {} (weakest, power={}) to reinforce",
-                                            cardToMove.getTitle(), weakestObjLoc, (int)weakestPwr);
-                                        // V31 UPDATED 2026-07-06 T4.1: consolidation claims R2 DOCTRINE
-                                        // (non-battle; fine +200 passes the L2 strength gate).
+                                MovePostFlipConsolidationPolicy.Evaluation v31Decision =
+                                    MovePostFlipConsolidationPolicy.evaluate(
+                                        curLocTitle,
+                                        atObjLoc,
+                                        objPowerMap);
+                                if (v31Decision.applies()) {
+                                    action.addReasoning(
+                                        v31Decision.reason(),
+                                        v31Decision.delta());
+                                    logger.warn("V31 POST-FLIP CONSOLIDATE: {} should leave {} (weakest, power={}) to reinforce",
+                                        cardToMove.getTitle(),
+                                        v31Decision.weakestLocationTitle(),
+                                        (int)v31Decision.weakestPower());
+                                    // V31 UPDATED 2026-07-06 T4.1: consolidation claims R2 DOCTRINE
+                                    // (non-battle; fine +200 passes the L2 strength gate).
+                                    if (v31Decision.claimDoctrine()) {
                                         ladderClaimR2("V31 POST-FLIP CONSOLIDATE", 200.0f, 0.0f, false);
                                     }
                                 }
