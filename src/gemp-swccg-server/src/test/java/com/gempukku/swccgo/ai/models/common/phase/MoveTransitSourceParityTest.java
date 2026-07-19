@@ -276,17 +276,54 @@ public class MoveTransitSourceParityTest {
     }
 
     @Test
-    public void positiveHiddenPathActionTextTransitRemainsSeparate()
+    public void positiveHiddenPathActionTextTransitUsesSharedOwner()
             throws IOException {
+        String policy = policySource();
+        assertTrue(policy.contains(
+                "public static boolean isPositiveHiddenPathTransitAction("));
+        assertTrue(policy.contains(
+                "public static Contribution positiveHiddenPathTransit("));
+        assertTrue(policy.contains(
+                "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)"));
+        assertTrue(policy.contains(
+                "Move Jedi transit action — tactical mobility"));
+
         for (String bot : new String[]{"rando", "chosenone"}) {
             String actionText = evaluatorSource(
                     bot, "ActionTextEvaluator.java");
-            assertTrue(actionText.contains(
+            assertEquals(1, countOccurrences(actionText,
+                    "MoveTransitPolicy.isPositiveHiddenPathTransitAction("));
+            assertEquals(1, countOccurrences(actionText,
+                    "MoveTransitPolicy.positiveHiddenPathTransit("));
+            assertFalse(actionText.contains(
                     "textLower.contains(\"move jedi survivor here to a site\")"));
-            assertTrue(actionText.contains(
-                    "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)\", 20000.0f"));
-            assertTrue(actionText.contains(
+            assertFalse(actionText.contains(
                     "Move Jedi transit action — tactical mobility\", 200.0f"));
+
+            int rack = actionText.indexOf(
+                    "V29.6 BLASTER RACK: BLOCKED proactive racking");
+            int classifier = actionText.indexOf(
+                    "MoveTransitPolicy.isPositiveHiddenPathTransitAction(", rack);
+            int objectiveRead = actionText.indexOf(
+                    "context.getObjectiveAnalyzer()", classifier);
+            int contribution = actionText.indexOf(
+                    "MoveTransitPolicy.positiveHiddenPathTransit(",
+                    objectiveRead);
+            int score = actionText.indexOf(
+                    "action.addReasoning(v60Transit.reason()", contribution);
+            int log = actionText.indexOf(
+                    "V60 HIDDEN PATH TRANSIT: '{}' — +20000", score);
+            int pull = actionText.indexOf("// === REGION: PULL ===", log);
+            String branch = actionText.substring(classifier, pull);
+
+            assertTrue(rack >= 0);
+            assertTrue(classifier > rack);
+            assertTrue(objectiveRead > classifier);
+            assertTrue(contribution > objectiveRead);
+            assertTrue(score > contribution);
+            assertTrue(log > score);
+            assertTrue(pull > log);
+            assertFalse(branch.contains("action.setActionType("));
         }
     }
 

@@ -92,6 +92,30 @@ public final class MoveTransitPolicy {
                         .contains("underground corridor");
     }
 
+    public static boolean isPositiveHiddenPathTransitAction(
+            String actionLower) {
+        if (actionLower == null) {
+            return false;
+        }
+        return actionLower.contains("move jedi survivor here to a site")
+                || (actionLower.contains("move jedi")
+                        && actionLower.contains("to a site"));
+    }
+
+    public static Contribution positiveHiddenPathTransit(
+            boolean hiddenPathObjective) {
+        if (hiddenPathObjective) {
+            return new Contribution(
+                    true,
+                    "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)",
+                    20000.0f);
+        }
+        return new Contribution(
+                true,
+                "Move Jedi transit action — tactical mobility",
+                200.0f);
+    }
+
     public static PilotLock pilotLock(PhysicalCard cardToMove) {
         if (cardToMove == null || !cardToMove.isPilotOf()) {
             return new PilotLock(Contribution.none(), null, null);

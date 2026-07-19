@@ -7238,3 +7238,17 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     80774089bcc52a0451938effb422361b758e76d99302a7ce5430647eefb022ff contain the shared
     policy, nested branch/result types, and both adapters. Runtime reload and live-game proof remain
     pending on the external runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V249 (2026-07-19): consolidate MOVE V60 positive Hidden Path transit ════
+    MoveTransitPolicy now owns V60's exact positive game-text transit matcher and the Hidden Path
+    +20000 versus generic +200 contributions and reasons. Both ActionTextEvaluator mirrors retain
+    the bot-specific objective-analyzer read, branch order after rack handling and before PULL,
+    direct score mutation, Hidden Path-only log, and legacy UNKNOWN action type. The broad matcher,
+    null/unanalyzed/non-Hidden-Path +200 fallback, and no-MoveEvaluator behavior remain unchanged.
+    The R4 score remains 4650 above the documented strongest R3 stack. Focused 35/0/0/0,
+    MOVE-named 405/0/0/0, full reactor 1589/0/0/26, normalized mirror parity, AI-only boundary,
+    forbidden-symbol scan, and clean package passed. Independent review found no behavior drift.
+    Server jar SHA-256 d7fe6a4369fac3cd0a7c8db5e6ae17c7646bf0a43289b081168bc8ee4a6e170f and web jar
+    SHA-256 9a34ace2faac102fd57841ff171691884d441e47fcef9b83e712ab209c1dc195 contain the
+    shared policy and both adapters. Runtime reload and live-game proof remain pending on the
+    external runtime. AI source only; no GEMP engine or player-decision changes.

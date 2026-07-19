@@ -4012,24 +4012,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // battleground. This is THE action that flips the Hidden Path objective.
             // Previously scored 0.0 ("Unknown action type") while landspeed (which goes
             // backward to Safehouse) got +9999 from V53b. FIXES Issue #C from peaceful-pike.
-            else if (textLower.contains("move jedi survivor here to a site")
-                     || (textLower.contains("move jedi") && textLower.contains("to a site"))) {
+            else if (MoveTransitPolicy.isPositiveHiddenPathTransitAction(
+                    textLower)) {
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer hpTransit =
                     context.getObjectiveAnalyzer();
                 boolean onHiddenPath = hpTransit != null && hpTransit.isAnalyzed()
                     && hpTransit.getObjectiveTitle() != null
                     && hpTransit.getObjectiveTitle().toLowerCase(Locale.ROOT).contains("hidden path");
+                MoveTransitPolicy.Contribution v60Transit =
+                    MoveTransitPolicy.positiveHiddenPathTransit(onHiddenPath);
+                action.addReasoning(v60Transit.reason(), v60Transit.delta());
                 if (onHiddenPath) {
-                    // V60 UPDATED 2026-07-06 T4.1: +9999 raised to +20000 = the MOVE-ladder R4
-                    // MANDATORY TRANSIT band, so both transit arms (this game-text action and
-                    // MoveEvaluator's V53b landspeed arms) share one band and beat any ME R3
-                    // stack (≤ ~12000+2800+550) by construction instead of by statement order
-                    // (move-3e boundary). V60 keeps ONLY this Hidden Path transit arm (ruling P3).
-                    // OLD: action.addReasoning("V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective!", 9999.0f);
-                    action.addReasoning("V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)", 20000.0f);
                     logger.warn("V60 HIDDEN PATH TRANSIT: '{}' — +20000 (R4 band; CORRECT outward move, unlike landspeed)", actionText);
-                } else {
-                    action.addReasoning("Move Jedi transit action — tactical mobility", 200.0f);
                 }
             }
 

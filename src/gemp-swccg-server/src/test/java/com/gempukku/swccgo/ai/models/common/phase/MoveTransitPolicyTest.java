@@ -32,6 +32,38 @@ public class MoveTransitPolicyTest {
     }
 
     @Test
+    public void positiveHiddenPathTransitClassifierPreservesLegacyPatterns() {
+        assertTrue(MoveTransitPolicy.isPositiveHiddenPathTransitAction(
+                "move jedi survivor here to a site"));
+        assertTrue(MoveTransitPolicy.isPositiveHiddenPathTransitAction(
+                "move jedi knight from here to a site"));
+        assertFalse(MoveTransitPolicy.isPositiveHiddenPathTransitAction(
+                "move jedi survivor here"));
+        assertFalse(MoveTransitPolicy.isPositiveHiddenPathTransitAction(
+                "move survivor here to a site"));
+        assertFalse(MoveTransitPolicy.isPositiveHiddenPathTransitAction(null));
+    }
+
+    @Test
+    public void positiveHiddenPathTransitPreservesR4AndFallbackScores() {
+        MoveTransitPolicy.Contribution hiddenPath =
+                MoveTransitPolicy.positiveHiddenPathTransit(true);
+        MoveTransitPolicy.Contribution fallback =
+                MoveTransitPolicy.positiveHiddenPathTransit(false);
+
+        assertTrue(hiddenPath.applies());
+        assertEquals(
+                "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)",
+                hiddenPath.reason());
+        assertRawFloat(20000.0f, hiddenPath.delta());
+        assertTrue(fallback.applies());
+        assertEquals("Move Jedi transit action — tactical mobility",
+                fallback.reason());
+        assertRawFloat(200.0f, fallback.delta());
+        assertTrue(hiddenPath.delta() > 12000.0f + 2800.0f + 550.0f);
+    }
+
+    @Test
     public void capacitySlotSwapPreservesBothDirectionsAndExactPenalty() {
         for (String action : new String[]{
                 "move to passenger capacity slot",
