@@ -7111,3 +7111,12 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Verified: focused 24/0/0/0; full reactor 1555/0/0/26; independent parity audit PASS; package
     PASS; server/web jar hashes and artifact contents recorded in AI_CHANGELOG 2026-07-18.
     Runtime reload is pending Docker availability and an empty game hall.
+
+  ════ V241 (2026-07-18): retire unused response-finalizer detour scaffolding ════
+    Deleted the isolated common/finalization package, PendingAiIntent, PendingAiIntentStore,
+    ResponseFinalizerContractTest, and PendingAiIntentStoreTest after a complete production
+    reference audit proved the production classes had no caller outside their own definitions.
+    Retained the independent stock-engine contract fixtures/tests, common/decision, and common/trace.
+    This is a structural deletion only: no evaluator, score, ordering, interceptor, tracker,
+    response wire, engine, card, or client behavior changed. Clean full reactor passed 1528/0/0/26;
+    production reference scan and diff checks passed. Runtime reload remains pending.
