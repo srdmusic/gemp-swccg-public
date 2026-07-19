@@ -7,6 +7,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveHuntGroupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveHuntTargetPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveLandoStayPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
@@ -593,20 +594,15 @@ public class MoveEvaluator extends ActionEvaluator {
             // (RETREAT +150, V22.5 +160, V53 +500). Now gated on (a) an active Cloud City
             // occupation objective that still wants Lando at THIS site, and (b) survivability.
             if (cardToMove != null && cardToMove.getTitle() != null
-                && cardToMove.getTitle().toLowerCase(Locale.ROOT).contains("lando")) {
+                && MoveLandoStayPolicy.titleMarksLando(cardToMove.getTitle())) {
                 PhysicalCard currentLoc = cardToMove.getAtLocation();
                 if (currentLoc != null && currentLoc.getTitle() != null) {
-                    String locLower = currentLoc.getTitle().toLowerCase(Locale.ROOT);
                     // V47 UPDATED 2026-07-06: every Cloud City site title starts with
                     // "Cloud City: " (see Title.java), so the 'cloud city' fragment alone covers
                     // the whole CC site set incl. East Platform (Docking Bay). The generic
                     // 'platform' fragment matched non-CC sites and is commented out; the other
                     // CC-specific fragments are kept (redundant but harmless).
-                    boolean isAtCC = locLower.contains("cloud city") || locLower.contains("dining room")
-                        || locLower.contains("upper walkway") || locLower.contains("carbonite")
-                        || locLower.contains("security tower") // || locLower.contains("platform") // V47 UPDATED 2026-07-06: generic substring, false-positived on Endor/Coruscant/Kashyyyk platforms
-                        || locLower.contains("lower corridor");
-                    if (isAtCC) {
+                    if (MoveLandoStayPolicy.isCloudCitySite(currentLoc.getTitle())) {
                         // V47 UPDATED 2026-07-06 gate (a): objective. Only lock when OUR analyzed
                         // objective is a Bespin/Cloud City occupation objective (V22.5 detector)
                         // and this site still serves it: pre-flip = flip-condition site (the
@@ -648,13 +644,17 @@ public class MoveEvaluator extends ActionEvaluator {
                         } catch (Exception e) {
                             logger.debug("V47 survivability gate error: {}", e.getMessage());
                         }
-                        if (v47ObjectiveWantsLandoHere && v47Survivable) {
+                        MoveLandoStayPolicy.Evaluation v47Decision =
+                            MoveLandoStayPolicy.evaluate(
+                                currentLoc.getTitle(),
+                                v47ObjectiveWantsLandoHere,
+                                v47Survivable);
+                        if (v47Decision.hardVeto()) {
                             // V47 UPDATED 2026-07-06 T4.1: -9999 addReasoning converted to the ladder
                             // hard-veto class (-100000 at the finalizer). Today's gates (a)+(b) kept
                             // unchanged — semantics identical, magnitude now band-proof.
                             ladderVetoHard = true;
-                            ladderVetoHardReason = "V47 LANDO STAY: Lando at " + currentLoc.getTitle()
-                                + " — stay for occupation! Don't move!";
+                            ladderVetoHardReason = v47Decision.reason();
                             logger.warn("V47 LANDO STAY: Lando at {} — LADDER VETO on move!", currentLoc.getTitle());
                         } else {
                             logger.warn("V47 LANDO STAY skipped at {}: objectiveWantsHere={}, survivable={} (powerDiff={})",
