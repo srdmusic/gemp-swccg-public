@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveHuntGroupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
@@ -1530,160 +1531,47 @@ public class MoveEvaluator extends ActionEvaluator {
                             && cardToMove != null && cardToMove.getTitle() != null
                             && gameState != null && game != null) {
                             try {
-                                String movingCardTitle = cardToMove.getTitle().toLowerCase(Locale.ROOT);
-                                // V137b: a "hunter" is any Dark Jedi (Vader, Dooku/Tyranus,
-                                // ability >= 6) — they lead the strike; lower-ability buddies
-                                // group toward them.
-                                boolean movingCardIsVader = movingCardTitle.contains("vader")
-                                    || movingCardTitle.contains("tyranus")
-                                    || movingCardTitle.contains("dooku");
-                                if (!movingCardIsVader) {
-                                    try {
-                                        movingCardIsVader = com.gempukku.swccgo.filters.Filters.Dark_Jedi
-                                            .accepts(gameState, game.getModifiersQuerying(), cardToMove);
-                                    } catch (Exception ignore) { /* false */ }
+                                MoveHuntGroupPolicy.Evaluation huntGroup =
+                                    MoveHuntGroupPolicy.evaluate(
+                                        gameState, game, currentLocation,
+                                        cardToMove, playerId,
+                                        action::getDisplayText,
+                                        candidate -> com.gempukku.swccgo.filters.Filters.Dark_Jedi
+                                            .accepts(gameState, game.getModifiersQuerying(), candidate));
+                                if (huntGroup.contribution().applies()) {
+                                    action.addReasoning(
+                                        huntGroup.contribution().reason(),
+                                        huntGroup.contribution().delta());
                                 }
-                                String moveActionLower = action.getDisplayText() != null
-                                    ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
-
-                                if (movingCardIsVader) {
-                                    // === VADER is moving — check if he's moving TOWARD or AWAY from his characters ===
-                                    // Find locations with our characters (not Vader himself)
-                                    PhysicalCard bestAllyLoc = null;
-                                    float bestAllyPower = 0;
-                                    int totalAllyChars = 0;
-                                    for (PhysicalCard loc : gameState.getTopLocations()) {
-                                        if (loc == null || loc == currentLocation) continue;
-                                        float allyPowerHere = 0;
-                                        int allyCountHere = 0;
-                                        for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
-                                            if (c == null || c == cardToMove) continue;
-                                            if (!playerId.equals(c.getOwner())) continue;
-                                            if (c.getBlueprint() == null) continue;
-                                            if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                            allyCountHere++;
-                                            Float pw = c.getBlueprint().getPower();
-                                            allyPowerHere += (pw != null ? pw : 0);
-                                        }
-                                        totalAllyChars += allyCountHere;
-                                        if (allyPowerHere > bestAllyPower) {
-                                            bestAllyPower = allyPowerHere;
-                                            bestAllyLoc = loc;
-                                        }
+                                switch (huntGroup.branch()) {
+                                    case HUNTER_TOWARD_ALLIES -> {
+                                        logger.warn("V29.13 HUNT GROUP: Vader moving to allies at {} (+{})",
+                                            huntGroup.anchorLocation().getTitle(),
+                                            (int)huntGroup.contribution().delta());
+                                        // V29.13 UPDATED 2026-07-06 T4.1: toward-group claims R2 DOCTRINE
+                                        // (non-battle; +200/+250 passes the L2 gate). Scatter arms stay R1 weights.
+                                        ladderClaimR2("V29.13 HUNT GROUP MOVE (Vader→allies)",
+                                            huntGroup.contribution().delta(), 0.0f, false);
                                     }
-
-                                    if (totalAllyChars > 0 && bestAllyLoc != null) {
-                                        String bestAllyLocTitle = bestAllyLoc.getTitle() != null
-                                            ? bestAllyLoc.getTitle().toLowerCase(Locale.ROOT) : "";
-                                        boolean movingTowardAllies = !bestAllyLocTitle.isEmpty()
-                                            && moveActionLower.contains(bestAllyLocTitle);
-
-                                        if (movingTowardAllies) {
-                                            // Vader moving TOWARD his characters — GOOD!
-                                            float groupBonus = 200.0f;
-                                            if (bestAllyPower >= 8) groupBonus += 50.0f;
-                                            action.addReasoning(String.format(
-                                                "V29.13 HUNT GROUP MOVE: Vader moving TOWARD %d allies at %s (power %.0f) — group up!",
-                                                totalAllyChars, bestAllyLoc.getTitle(), bestAllyPower), groupBonus);
-                                            logger.warn("V29.13 HUNT GROUP: Vader moving to allies at {} (+{})",
-                                                bestAllyLoc.getTitle(), (int)groupBonus);
-                                            // V29.13 UPDATED 2026-07-06 T4.1: toward-group claims R2 DOCTRINE
-                                            // (non-battle; +200/+250 passes the L2 gate). Scatter arms stay R1 weights.
-                                            ladderClaimR2("V29.13 HUNT GROUP MOVE (Vader→allies)", groupBonus, 0.0f, false);
-                                        } else {
-                                            // Vader moving AWAY from his characters — BAD!
-                                            // Exception: moving toward opponents to hunt (already handled by HUNT DOWN block above)
-                                            // Check if destination has opponents (hunting is OK)
-                                            boolean huntingOpponents = false;
-                                            String opponentIdGroup = game.getOpponent(playerId);
-                                            for (PhysicalCard loc : gameState.getTopLocations()) {
-                                                if (loc == null || loc.getTitle() == null) continue;
-                                                String locLower = loc.getTitle().toLowerCase(Locale.ROOT);
-                                                if (!locLower.isEmpty() && moveActionLower.contains(locLower)) {
-                                                    float opPower = 0;
-                                                    try {
-                                                        opPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                                            gameState, loc, opponentIdGroup, false, false);
-                                                    } catch (Exception e2) { /* ignore */ }
-                                                    if (opPower > 0) {
-                                                        huntingOpponents = true;
-                                                    }
-                                                    break;
-                                                }
-                                            }
-                                            if (!huntingOpponents) {
-                                                action.addReasoning(String.format(
-                                                    "V29.13 HUNT GROUP: Vader moving AWAY from %d allies — stay together!",
-                                                    totalAllyChars), -200.0f);
-                                                logger.warn("V29.13 HUNT SCATTER: Vader moving away from allies at {} (-200)",
-                                                    bestAllyLoc.getTitle());
-                                            }
-                                        }
+                                    case HUNTER_AWAY_FROM_ALLIES ->
+                                        logger.warn("V29.13 HUNT SCATTER: Vader moving away from allies at {} (-200)",
+                                            huntGroup.anchorLocation().getTitle());
+                                    case ALLY_AWAY_FROM_HUNTER ->
+                                        logger.warn("V29.13 HUNT SCATTER: {} leaving Vader at {} (-250)",
+                                            cardToMove.getTitle(), huntGroup.anchorLocation().getTitle());
+                                    case ALLY_TOWARD_HUNTER -> {
+                                        logger.warn("V29.13 HUNT GROUP: {} moving to Vader at {} (+{})",
+                                            cardToMove.getTitle(), huntGroup.anchorLocation().getTitle(),
+                                            (int)huntGroup.contribution().delta());
+                                        // V29.13 UPDATED 2026-07-06 T4.1: toward-group claims R2 DOCTRINE
+                                        // (non-battle; +250 passes the L2 gate). Scatter arms stay R1 weights.
+                                        ladderClaimR2("V29.13 HUNT GROUP MOVE (→Vader)",
+                                            huntGroup.contribution().delta(), 0.0f, false);
                                     }
-                                } else {
-                                    // === NON-VADER character is moving — check if moving TOWARD or AWAY from Vader ===
-                                    // V137b: anchor on any Dark Jedi hunter (Vader OR Dooku),
-                                    // not just Vader, so buddies group toward whichever Sith
-                                    // leads the strike.
-                                    PhysicalCard vaderCard = null;
-                                    PhysicalCard vaderLoc = null;
-                                    for (PhysicalCard tableCard : gameState.getAllPermanentCards()) {
-                                        if (tableCard == null || !playerId.equals(tableCard.getOwner())) continue;
-                                        com.gempukku.swccgo.common.Zone vz = tableCard.getZone();
-                                        if (vz == null || !vz.isInPlay()) continue;
-                                        if (tableCard.getBlueprint() == null
-                                            || tableCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                        String vTitle = tableCard.getTitle() != null
-                                            ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
-                                        boolean isHunterAnchor = vTitle.contains("vader")
-                                            || vTitle.contains("tyranus") || vTitle.contains("dooku");
-                                        if (!isHunterAnchor) {
-                                            try {
-                                                isHunterAnchor = com.gempukku.swccgo.filters.Filters.Dark_Jedi
-                                                    .accepts(gameState, game.getModifiersQuerying(), tableCard);
-                                            } catch (Exception ignore) { /* false */ }
-                                        }
-                                        if (isHunterAnchor) {
-                                            vaderCard = tableCard;
-                                            vaderLoc = tableCard.getAtLocation();
-                                            break;
-                                        }
-                                    }
-
-                                    if (vaderLoc != null && vaderLoc.getTitle() != null) {
-                                        String vaderLocTitle = vaderLoc.getTitle().toLowerCase(Locale.ROOT);
-                                        boolean currentlyWithVader = (currentLocation == vaderLoc);
-                                        boolean movingToVader = !vaderLocTitle.isEmpty()
-                                            && moveActionLower.contains(vaderLocTitle);
-
-                                        if (currentlyWithVader && !movingToVader) {
-                                            // Moving AWAY from Vader — BAD!
-                                            action.addReasoning(String.format(
-                                                "V29.13 HUNT GROUP: %s moving AWAY from Vader at %s — stay together!",
-                                                cardToMove.getTitle(), vaderLoc.getTitle()), -250.0f);
-                                            logger.warn("V29.13 HUNT SCATTER: {} leaving Vader at {} (-250)",
-                                                cardToMove.getTitle(), vaderLoc.getTitle());
-                                        } else if (!currentlyWithVader && movingToVader) {
-                                            // Moving TOWARD Vader — GREAT!
-                                            float groupBonus = 250.0f;
-                                            action.addReasoning(String.format(
-                                                "V29.13 HUNT GROUP MOVE: %s moving TOWARD Vader at %s — group up!",
-                                                cardToMove.getTitle(), vaderLoc.getTitle()), groupBonus);
-                                            logger.warn("V29.13 HUNT GROUP: {} moving to Vader at {} (+{})",
-                                                cardToMove.getTitle(), vaderLoc.getTitle(), (int)groupBonus);
-                                            // V29.13 UPDATED 2026-07-06 T4.1: toward-group claims R2 DOCTRINE
-                                            // (non-battle; +250 passes the L2 gate). Scatter arms stay R1 weights.
-                                            ladderClaimR2("V29.13 HUNT GROUP MOVE (→Vader)", groupBonus, 0.0f, false);
-                                        } else if (!currentlyWithVader && !movingToVader) {
-                                            // Moving but NOT toward Vader — mild penalty
-                                            action.addReasoning(String.format(
-                                                "V29.13 HUNT GROUP: %s moving but NOT toward Vader at %s — group up instead!",
-                                                cardToMove.getTitle(), vaderLoc.getTitle()), -100.0f);
-                                            logger.info("V29.13 HUNT SCATTER: {} not moving toward Vader at {} (-100)",
-                                                cardToMove.getTitle(), vaderLoc.getTitle());
-                                        }
-                                        // If currentlyWithVader && movingToVader: shouldn't happen, no adjustment needed
-                                    }
+                                    case ALLY_ELSEWHERE ->
+                                        logger.info("V29.13 HUNT SCATTER: {} not moving toward Vader at {} (-100)",
+                                            cardToMove.getTitle(), huntGroup.anchorLocation().getTitle());
+                                    case NONE -> { }
                                 }
                             } catch (Exception e) {
                                 logger.debug("V29.13 HUNT GROUP MOVE: Error: {}", e.getMessage());

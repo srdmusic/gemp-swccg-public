@@ -1,3 +1,20 @@
+  ==== V222 AI-ONLY MOVE HUNT-DOWN COHESION POLICY OWNER (2026-07-18, both bots) ====
+Shared MoveHuntGroupPolicy now owns the duplicated V29.13 Hunt Down group-movement analysis:
+title and Dark Jedi classification, strongest-ally scan, first textual opponent destination,
+first in-play hunter anchor, branch selection, exact reasons, and raw contributions. Both bot
+adapters retain objective gating, direct score application, logs, outer catch, R2 ladder claims,
+and the original phase position between V137 and V22.5. Behavior is unchanged: hunter toward
+allies remains +200 or +250 at ally power >= 8; hunter away remains -200 unless the first textual
+destination has opponent power; non-hunter away/toward/elsewhere remains -250/+250/-100. Strict
+best-location ties, first-anchor stopping, title fallbacks, object identity, null-power-as-zero,
+first-match breaks, and fail-open classifier/power reads remain intact. V137, V60, routing,
+finalization, and physical-card resolution are untouched. Production edits are AI-only.
+Verification passed 138 focused MOVE tests and the full 1,315-test reactor with 0 failures, 0
+errors, and 26 skipped. Package, source-boundary, forbidden-symbol, artifact, mirror, diff, and
+source-review gates passed; server jar SHA-256 is
+471b5ef5e1ff7035d67aa0359de87cca590d0799f07432bb5cdf0bc7961a089e. Runtime load and live-game
+proof remain separate gates. Revert the single V222 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V221 AI-ONLY MOVE DESTINATION AND LANDED-SHIP POLICY OWNER (2026-07-18, both bots) ====
 Shared MoveDestinationPolicy now owns the duplicated V91 landed-ship identity scan and the
 V34/V36/V111/V38.3 destination-contest analysis. Both adapters keep direct score application,
