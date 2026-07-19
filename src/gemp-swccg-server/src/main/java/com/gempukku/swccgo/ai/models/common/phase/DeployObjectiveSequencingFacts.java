@@ -37,6 +37,8 @@ public final class DeployObjectiveSequencingFacts {
 
     public record BespinFirstCandidate(
             String guardCheckText,
+            boolean cardResolved,
+            boolean characterByCategory,
             boolean locationByCategory,
             boolean shipByCategory) {
 

@@ -7471,3 +7471,21 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     contain the shared classifier and both mirrored adapters. Runtime reload and live-game proof
     remain pending on the external runtime. Independent review caught and closed a possible V29
     state leak before commit; re-review passed. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V261 (2026-07-19): make TDIGWATT Bespin-first a real DEPLOY gate ════
+    V29 now runs only for canonical ObjectiveAnalyzer.isTdigwatt identity. Resolved card category
+    distinguishes characters from locations, ships/vehicles, and support cards; unresolved action
+    text examines the direct deployed subject, so a character deployed aboard Executor/Bespin is
+    not falsely exempted by its destination. Objective-forbidden Executor and analyzed-no-capital
+    routes still release and fall through. A live candidate retains the legacy additive -500, then
+    terminates before downstream bonuses. Ordinary base 50 therefore remains -450 instead of being
+    erased by later scores such as V169's +1100 protection bonus (which alone previously produced
+    +650 before other additions). The operation remains ADD, not a hard veto. Focused 15/0/0/0,
+    DEPLOY-named 162/0/0/0, full reactor 1705/0/0/26, resolved/unresolved classification matrices,
+    release/penalty raw-float and adapter-route fixtures, canonical identity and terminal-order
+    source gates, normalized mirror parity, AI-only boundary, diff check, and clean package passed.
+    Server jar SHA-256 46e367ee5178b65f645e052de8053e9f76080daf5ea19f9e1cc712f70fdbae18
+    and web jar SHA-256 e59bc6ad94b80283687cf84e7476b7aee127d34d7f383fa47ba1a0be877ec26d
+    contain the gated owner and mirrored adapters. Runtime reload and live-game proof remain pending
+    on the external runtime. Independent review passed identity, classification, route, mirror, and
+    engine-free ownership gates. AI source only; no GEMP engine or player-decision changes.

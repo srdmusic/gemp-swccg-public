@@ -47,11 +47,13 @@ public final class DeployObjectiveSequencingPolicy {
 
     public record BespinFirstEvaluation(
             PolicyResult result,
+            AdapterStep adapterStep,
             BespinFirstOutcome outcome,
             String releaseReason) {
 
         public BespinFirstEvaluation {
             Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(adapterStep, "adapterStep");
             Objects.requireNonNull(outcome, "outcome");
         }
     }
@@ -66,13 +68,18 @@ public final class DeployObjectiveSequencingPolicy {
             return facts.locationByCategory();
         }
 
-        String text = facts.actionText().toLowerCase(java.util.Locale.ROOT)
+        String subject = unresolvedDeploySubject(facts.actionText());
+        return subject.matches(".*\\b(location|site|system)\\b.*");
+    }
+
+    private static String unresolvedDeploySubject(String actionText) {
+        String text = actionText.toLowerCase(java.util.Locale.ROOT)
                 .replaceAll("<[^>]*>", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
         int deploy = text.indexOf("deploy ");
         if (deploy < 0) {
-            return false;
+            return "";
         }
         String subject = text.substring(deploy + "deploy ".length());
         for (String boundary : new String[] {
@@ -82,7 +89,13 @@ public final class DeployObjectiveSequencingPolicy {
                 subject = subject.substring(0, index);
             }
         }
-        return subject.matches(".*\\b(location|site|system)\\b.*");
+        for (String boundary : new String[] {
+                "to ", "at ", "aboard ", "on ", "from ", "with "}) {
+            if (subject.startsWith(boundary)) {
+                return "";
+            }
+        }
+        return subject;
     }
 
     public static EarlyLocationEvaluation evaluateEarlyLocation(
@@ -125,16 +138,23 @@ public final class DeployObjectiveSequencingPolicy {
             DeployObjectiveSequencingFacts.BespinFirstCandidate facts) {
         Objects.requireNonNull(facts, "facts");
         String text = facts.guardCheckText();
-        boolean locationDeploy = facts.locationByCategory()
-                || text.contains("location") || text.contains("site")
-                || text.contains("system");
+        if (facts.cardResolved()) {
+            if (facts.locationByCategory() || facts.shipByCategory()) {
+                return BespinFirstRoute.EXEMPT;
+            }
+            return facts.characterByCategory()
+                    ? BespinFirstRoute.CANDIDATE
+                    : BespinFirstRoute.EXEMPT;
+        }
+
+        String subject = unresolvedDeploySubject(text);
+        boolean locationDeploy = subject.matches(".*\\b(location|site|system)\\b.*");
         boolean amsdAction = text.contains("alert my star destroyer")
                 || text.contains("amsd");
-        boolean executorDeploy = text.contains("executor");
-        boolean shipDeploy = facts.shipByCategory()
-                || text.contains("starship") || text.contains("capital")
-                || text.contains("star destroyer");
-        boolean bespinDeploy = text.contains("bespin");
+        boolean executorDeploy = subject.contains("executor");
+        boolean shipDeploy = subject.contains("starship") || subject.contains("capital")
+                || subject.contains("star destroyer");
+        boolean bespinDeploy = subject.matches(".*\\bbespin\\b.*");
         return locationDeploy || amsdAction || executorDeploy
                 || shipDeploy || bespinDeploy
                 ? BespinFirstRoute.EXEMPT : BespinFirstRoute.CANDIDATE;
@@ -146,12 +166,14 @@ public final class DeployObjectiveSequencingPolicy {
         if (facts.objectiveForbidsExecutor()) {
             return new BespinFirstEvaluation(
                     new PolicyResult(BESPIN_FIRST_PRODUCER, List.of()),
+                    AdapterStep.FALL_THROUGH,
                     BespinFirstOutcome.RELEASED,
                     "objective game text forbids deploying Executor");
         }
         if (facts.oracleAnalyzed() && !facts.capitalAccessible()) {
             return new BespinFirstEvaluation(
                     new PolicyResult(BESPIN_FIRST_PRODUCER, List.of()),
+                    AdapterStep.FALL_THROUGH,
                     BespinFirstOutcome.RELEASED,
                     "no capital starship in hand/reserve/force/used \u2014 no live path to occupy Bespin space");
         }
@@ -161,6 +183,7 @@ public final class DeployObjectiveSequencingPolicy {
                         + "Get Bespin \u2192 Executor/AMSD \u2192 THEN characters.");
         return new BespinFirstEvaluation(
                 new PolicyResult(BESPIN_FIRST_PRODUCER, List.of(penalty)),
+                AdapterStep.CONTINUE_ACTION,
                 BespinFirstOutcome.PENALIZED, null);
     }
 

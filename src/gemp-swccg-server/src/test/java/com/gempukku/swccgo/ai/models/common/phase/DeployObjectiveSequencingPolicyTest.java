@@ -25,6 +25,7 @@ public class DeployObjectiveSequencingPolicyTest {
         assertTrue(earlyLocationRoute("Deploy Bespin system location", false, false));
         assertTrue(earlyLocationRoute("Deploy a battleground site from Reserve Deck", false, false));
         assertFalse(earlyLocationRoute("Deploy character to a site", false, false));
+        assertFalse(earlyLocationRoute("Deploy to a site", false, false));
         assertFalse(earlyLocationRoute("Deploy device aboard a starship at system", false, false));
     }
 
@@ -76,19 +77,37 @@ public class DeployObjectiveSequencingPolicyTest {
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.CANDIDATE,
                 route("deploy character", false, false));
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
-                route("deploy character", true, false));
-        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
+                route("deploy location", false, false));
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.CANDIDATE,
                 route("deploy to site", false, false));
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
                 route("use amsd", false, false));
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
                 route("deploy executor", false, false));
-        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.CANDIDATE,
                 route("deploy character to bespin", false, false));
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
-                route("deploy character", false, true));
+                route("deploy starship", false, false));
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
                 route("deploy capital star destroyer", false, false));
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.CANDIDATE,
+                route("deploy character aboard executor", false, false));
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.CANDIDATE,
+                route("deploy character aboard star destroyer", false, false));
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
+                route("deploy bespin", false, false));
+    }
+
+    @Test
+    public void resolvedBespinFirstClassificationUsesCardCategory() {
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.CANDIDATE,
+                resolvedRoute("deploy character to bespin system", true, false, false));
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
+                resolvedRoute("deploy to a site", false, true, false));
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
+                resolvedRoute("deploy capital star destroyer", false, false, true));
+        assertEquals(DeployObjectiveSequencingPolicy.BespinFirstRoute.EXEMPT,
+                resolvedRoute("deploy effect at bespin", false, false, false));
     }
 
     @Test
@@ -97,6 +116,8 @@ public class DeployObjectiveSequencingPolicyTest {
                 decision(true, false, false);
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstOutcome.RELEASED,
                 forbidden.outcome());
+        assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.FALL_THROUGH,
+                forbidden.adapterStep());
         assertEquals("objective game text forbids deploying Executor",
                 forbidden.releaseReason());
         assertEquals(0, forbidden.result().operations().size());
@@ -105,6 +126,8 @@ public class DeployObjectiveSequencingPolicyTest {
                 decision(false, true, false);
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstOutcome.RELEASED,
                 noCapital.outcome());
+        assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.FALL_THROUGH,
+                noCapital.adapterStep());
         assertEquals("no capital starship in hand/reserve/force/used \u2014 no live path to occupy Bespin space",
                 noCapital.releaseReason());
         assertEquals(0, noCapital.result().operations().size());
@@ -113,6 +136,8 @@ public class DeployObjectiveSequencingPolicyTest {
                 decision(false, false, false);
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstOutcome.PENALIZED,
                 unavailable.outcome());
+        assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION,
+                unavailable.adapterStep());
         assertNull(unavailable.releaseReason());
         assertOperations(unavailable.result().operations(),
                 new float[] {-500.0f});
@@ -124,6 +149,8 @@ public class DeployObjectiveSequencingPolicyTest {
                 decision(false, true, true);
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstOutcome.PENALIZED,
                 capital.outcome());
+        assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION,
+                capital.adapterStep());
         assertOperations(capital.result().operations(),
                 new float[] {-500.0f});
     }
@@ -161,7 +188,14 @@ public class DeployObjectiveSequencingPolicyTest {
             String text, boolean location, boolean ship) {
         return DeployObjectiveSequencingPolicy.classifyBespinFirst(
                 new DeployObjectiveSequencingFacts.BespinFirstCandidate(
-                        text, location, ship));
+                        text, false, false, location, ship));
+    }
+
+    private static DeployObjectiveSequencingPolicy.BespinFirstRoute resolvedRoute(
+            String text, boolean character, boolean location, boolean ship) {
+        return DeployObjectiveSequencingPolicy.classifyBespinFirst(
+                new DeployObjectiveSequencingFacts.BespinFirstCandidate(
+                        text, true, character, location, ship));
     }
 
     private static DeployObjectiveSequencingPolicy.BespinFirstEvaluation decision(

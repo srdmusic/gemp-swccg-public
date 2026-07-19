@@ -69,6 +69,10 @@ public class DeployObjectiveSequencingSourceParityTest {
             int oracleRead = source.indexOf("context.getDeckOracle();", oracleGuard);
             int evaluate = source.indexOf(
                     "DeployObjectiveSequencingPolicy.evaluateBespinFirst(", oracleRead);
+            int bespinTerminal = source.indexOf(
+                    "== DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION", evaluate);
+            int addPenalized = source.indexOf("actions.add(action);", bespinTerminal);
+            int continuePenalized = source.indexOf("continue;", addPenalized);
             assertTrue(bot + ": migrated calls must retain order",
                     locationCard >= 0 && titleNull > locationCard
                             && legacyEarlyCard > titleNull
@@ -76,22 +80,33 @@ public class DeployObjectiveSequencingSourceParityTest {
                             && earlyApply > early && earlyContinue > earlyApply
                             && classify > earlyContinue && candidate > classify
                             && objectiveForbid > candidate && oracleGuard > objectiveForbid
-                            && oracleRead > oracleGuard && evaluate > oracleRead);
+                            && oracleRead > oracleGuard && evaluate > oracleRead
+                            && bespinTerminal > evaluate && addPenalized > bespinTerminal
+                            && continuePenalized > addPenalized);
         }
     }
 
     @Test
-    public void classificationOnlyCardDoesNotLeakIntoV29Routing() throws IOException {
+    public void v29UsesResolvedCategoryButUnknownEnvelopeRetainsLegacyCard() throws IOException {
         for (String bot : new String[] {"rando", "chosenone"}) {
             String source = adapterSource(bot);
             int v29 = source.indexOf("// === V29: TDIGWATT BESPIN-FIRST GUARD");
             int mainLookup = source.indexOf("// === Look up the card using multiple methods", v29);
             assertTrue(bot + ": V29 block bounds", v29 >= 0 && mainLookup > v29);
             String v29Block = source.substring(v29, mainLookup);
-            assertFalse(bot + ": classification-only card leaked into V29",
-                    v29Block.contains("earlyLocationCard"));
-            assertTrue(bot + ": V29 must retain legacy earlyCard category read",
-                    v29Block.contains("if (earlyCard != null && earlyCard.getBlueprint() != null)"));
+            assertTrue(bot + ": V29 must use canonical objective identity",
+                    v29Block.contains("bespinFirstAnalyzer.isTdigwatt()"));
+            assertFalse(bot + ": V29 must not use broad Bespin objective inference",
+                    v29Block.contains("bespinFirstAnalyzer.needsBespinSystemPresence()"));
+            assertTrue(bot + ": V29 must use the resolved classification card",
+                    v29Block.contains("if (earlyLocationCard != null && earlyLocationCard.getBlueprint() != null)"));
+
+            int unknown = source.indexOf("boolean earlyCardIsLocation = earlyCard != null", mainLookup);
+            int unknownEnd = source.indexOf("// === V67bk", unknown);
+            assertTrue(bot + ": unknown envelope bounds", unknown > mainLookup && unknownEnd > unknown);
+            String unknownBlock = source.substring(unknown, unknownEnd);
+            assertFalse(bot + ": V29 classification card leaked into unknown envelope",
+                    unknownBlock.contains("earlyLocationCard"));
         }
     }
 

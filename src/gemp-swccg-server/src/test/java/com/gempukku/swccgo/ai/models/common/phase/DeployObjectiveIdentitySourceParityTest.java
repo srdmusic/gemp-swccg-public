@@ -25,7 +25,7 @@ public class DeployObjectiveIdentitySourceParityTest {
     public void everyTdigwattGateUsesCanonicalIdentity() throws IOException {
         for (String bot : new String[] {"rando", "chosenone"}) {
             String source = adapterSource(bot);
-            assertEquals(2, occurrences(source, ".isTdigwatt()"));
+            assertEquals(3, occurrences(source, ".isTdigwatt()"));
             assertEquals(1, occurrences(source, ".isTdigwattPreFlip()"));
             assertFalse(source.contains("tdigwattPlan = context.getObjectiveAnalyzer() != null\n"
                     + "                        && context.getObjectiveAnalyzer().isAnalyzed()\n"

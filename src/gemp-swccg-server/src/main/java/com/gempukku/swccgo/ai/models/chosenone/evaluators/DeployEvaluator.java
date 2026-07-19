@@ -883,7 +883,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     context.getObjectiveAnalyzer();
                 int bfTurn = context.getTurnNumber();
                 if (bespinFirstAnalyzer != null && bespinFirstAnalyzer.isAnalyzed()
-                    && bespinFirstAnalyzer.needsBespinSystemPresence()) {
+                    && bespinFirstAnalyzer.isTdigwatt()) {
                     // Check Bespin occupation FIRST — if we occupy it, guard is off permanently
                     boolean weOccupyBespinSpace = false;
                     GameState bfGs = context.getGameState();
@@ -919,13 +919,17 @@ public class DeployEvaluator extends ActionEvaluator {
                             guardCheckText = guardCheckText + " " + cardTitleFromGemp.toLowerCase(Locale.ROOT);
                         }
 
-                        // V29: If we resolved the card, check its category directly
+                        // V29: If we resolved the card, check its category directly.
+                        // Resolved non-character support cards are not part of this character gate.
+                        boolean isCardResolved = false;
+                        boolean isCharacterByCategory = false;
                         boolean isLocationByCategory = false;
                         boolean isShipByCategory = false;
-                        if (earlyCard != null && earlyCard.getBlueprint() != null) {
-                            CardCategory earlyCategory = earlyCard.getBlueprint().getCardCategory();
+                        if (earlyLocationCard != null && earlyLocationCard.getBlueprint() != null) {
+                            isCardResolved = true;
+                            CardCategory earlyCategory = earlyLocationCard.getBlueprint().getCardCategory();
+                            isCharacterByCategory = (earlyCategory == CardCategory.CHARACTER);
                             isLocationByCategory = (earlyCategory == CardCategory.LOCATION);
-                            com.gempukku.swccgo.common.CardSubtype earlySub = earlyCard.getBlueprint().getCardSubtype();
                             isShipByCategory = (earlyCategory == com.gempukku.swccgo.common.CardCategory.STARSHIP)
                                 || (earlyCategory == com.gempukku.swccgo.common.CardCategory.VEHICLE);
                         }
@@ -933,7 +937,8 @@ public class DeployEvaluator extends ActionEvaluator {
                         DeployObjectiveSequencingPolicy.BespinFirstRoute bespinFirstRoute =
                             DeployObjectiveSequencingPolicy.classifyBespinFirst(
                                 new DeployObjectiveSequencingFacts.BespinFirstCandidate(
-                                    guardCheckText, isLocationByCategory, isShipByCategory));
+                                    guardCheckText, isCardResolved, isCharacterByCategory,
+                                    isLocationByCategory, isShipByCategory));
                         if (bespinFirstRoute
                                 == DeployObjectiveSequencingPolicy.BespinFirstRoute.CANDIDATE) {
                             // V29 UPDATED 2026-07-06 (TDIGWATT bug B): release the -500 gate when there is
@@ -993,6 +998,11 @@ public class DeployEvaluator extends ActionEvaluator {
                             } else {
                                 LOG.warn("V29 BESPIN-FIRST: BLOCKING deploy '{}' on turn {} — Bespin not occupied, deploy Executor first!",
                                     actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn);
+                            }
+                            if (bespinFirst.adapterStep()
+                                    == DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION) {
+                                actions.add(action);
+                                continue;
                             }
                         }
                     }
