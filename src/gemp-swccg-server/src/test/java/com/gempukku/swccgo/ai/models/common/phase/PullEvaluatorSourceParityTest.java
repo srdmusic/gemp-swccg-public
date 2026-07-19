@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class PullEvaluatorSourceParityTest {
@@ -35,6 +36,7 @@ public class PullEvaluatorSourceParityTest {
     @Test
     public void pullScorerConstantsAndExternalContributionOrderStayVisible() throws IOException {
         String evaluator = evaluatorSource("rando", "ActionTextEvaluator.java");
+        String deploy = evaluatorSource("rando", "DeployEvaluator.java");
         String policy = commonPhaseSource("PullActionPolicy.java");
         int pullRegion = evaluator.indexOf("// === REGION: PULL ===");
         int externalContribution = policy.indexOf("\"V67ak-pull\"");
@@ -51,6 +53,17 @@ public class PullEvaluatorSourceParityTest {
         assertTrue(hardBlockGate >= 0);
         assertTrue(hardBlockGate < base);
         assertTrue(base < singleEmit);
+        int parent = policy.indexOf("public static Evaluation evaluateParent(");
+        int sharedWeaponOrder = policy.indexOf(
+                "WeaponOrderEvaluation weaponOrder = evaluateWeaponOrder(",
+                parent);
+        assertTrue(parent >= 0);
+        assertTrue(sharedWeaponOrder > parent);
+        assertTrue(deploy.contains("PullActionPolicy.evaluateWeaponOrder("));
+        assertFalse(deploy.contains(
+                "action.addReasoning(\"V67ao ORDER GATE:"));
+        assertFalse(deploy.contains(
+                "action.addReasoning(\"V149 NO LIGHTSABER WIELDER:"));
     }
 
     @Test

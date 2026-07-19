@@ -59,7 +59,9 @@ public class DeploySitingSourceCharacterizationTest {
                 "DeployObjectiveSitingPolicy.evaluateLandoLobot(",
                 "DeployObjectiveSitingPolicy.evaluateFlipSiting(",
                 "DeployFormationSitingPolicy.evaluateAbilityThreshold(",
-                "DeployFormationSitingPolicy.evaluateBuddyAbility("}) {
+                "DeployFormationSitingPolicy.evaluateBuddyAbility(",
+                "PullActionPolicy.evaluateWeaponOrder(",
+                "DeployTacticalPolicy.scoreEvazanCombo("}) {
             assertTrue(call, deploy.contains(call));
         }
 
@@ -93,6 +95,12 @@ public class DeploySitingSourceCharacterizationTest {
         assertFalse(deploy.contains("V67ag NON-BG STACK PENALTY: %s already has %s"));
         assertFalse(deploy.contains("V33 BUDDY FIX: Deploy brings ability"));
         assertFalse(deploy.contains("V33 BUDDY BONUS: Reinforcing ability"));
+        assertFalse(deploy.contains(
+                "action.addReasoning(\"V67ao ORDER GATE:"));
+        assertFalse(deploy.contains(
+                "action.addReasoning(\"V149 NO LIGHTSABER WIELDER:"));
+        assertFalse(deploy.contains(
+                "action.addReasoning(\"V24.3 EVAZAN COMBO:"));
 
         int earlyDanger = deploy.indexOf(
                 "DeployTacticalPolicy.PowerDangerOutcome.EARLY_DANGER");
@@ -139,6 +147,41 @@ public class DeploySitingSourceCharacterizationTest {
         assertTrue(nonBgPolicy > nonBattleground);
         assertTrue(nonBgBreak > nonBgPolicy);
         assertTrue(battlegroundAbilityRead > nonBgBreak);
+
+        int directWeaponOrder = deploy.indexOf(
+                "PullActionPolicy.WeaponOrderEvaluation weaponOrder");
+        int nextDeployRule = deploy.indexOf(
+                "// === V51: CLOUD CITY ARMY PRE-FLIP", directWeaponOrder);
+        assertTrue(directWeaponOrder >= 0);
+        assertTrue(nextDeployRule > directWeaponOrder);
+        String directWeaponAdapter = deploy.substring(
+                directWeaponOrder, nextDeployRule);
+        assertFalse(directWeaponAdapter.contains("continue;"));
+        assertFalse(directWeaponAdapter.contains("return "));
+        assertFalse(directWeaponAdapter.contains("actions.add("));
+
+        int comboOracle = deploy.indexOf(
+                "DeckOracle comboOracle = context.getDeckOracle()");
+        int evazanClassification = deploy.indexOf(
+                "boolean isEvazan =", comboOracle);
+        int evazanBranch = deploy.indexOf("if (isEvazan)", evazanClassification);
+        int partnerRead = deploy.indexOf(
+                "weaponPartnerInPlay = comboOracle.isCardInPlay(\"Maul With Lightsaber\")",
+                evazanBranch);
+        int weaponBranch = deploy.indexOf(
+                "else if (isWeaponChar)", partnerRead);
+        int evazanRead = deploy.indexOf(
+                "evazanInPlay = comboOracle.isCardInPlay(\"Evazan\")",
+                weaponBranch);
+        int comboPolicy = deploy.indexOf(
+                "DeployTacticalPolicy.scoreEvazanCombo(", evazanRead);
+        assertTrue(comboOracle >= 0);
+        assertTrue(evazanClassification > comboOracle);
+        assertTrue(evazanBranch > evazanClassification);
+        assertTrue(partnerRead > evazanBranch);
+        assertTrue(weaponBranch > partnerRead);
+        assertTrue(evazanRead > weaponBranch);
+        assertTrue(comboPolicy > evazanRead);
     }
 
     @Test

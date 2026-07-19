@@ -25,6 +25,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
@@ -2677,35 +2678,28 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
                             } catch (Exception e) { /* ignore */ }
                         }
-                        if (v67arUnarmed == 0 && v67arArmed > 0) {
-                            action.addReasoning(String.format(
-                                "V67ar UNIVERSAL BLOCK: every Rando character (%d) already armed — pulled weapon would stack a 2nd weapon (forbidden)!",
-                                v67arArmed), -9999.0f);
-                            LOG.warn("V67ar UNIVERSAL BLOCK (DeployEvaluator pull): '{}' — all {} chars armed",
-                                actionText, v67arArmed);
-                        } else if (v67arUnarmed == 0) {
-                            action.addReasoning(
-                                "V67ao ORDER GATE: weapon pull blocked — no Rando character on table to hold the weapon. Deploy a character first!",
-                                -9999.0f);
-                            LOG.warn("V67ao ORDER GATE (DeployEvaluator): weapon pull '{}' blocked (no chars on table)",
-                                actionText);
-                        } else if (v149IsLightsaberPull && v149AbilityCapableUnarmed == 0) {
-                            // V149: pulling a lightsaber but no unarmed [Warrior] with
-                            // ability >= 4 to wield it. Don't pull a lightsaber a cantina
-                            // alien can't use.
-                            action.addReasoning(
-                                "V149 NO LIGHTSABER WIELDER: no unarmed [Warrior] ability-4+ character on table — don't pull a lightsaber nobody can wield",
-                                -2000.0f);
-                            LOG.warn("V149 NO LIGHTSABER WIELDER (DeployEvaluator): '{}' — 0 unarmed [Warrior] ability-4+ chars → -2000",
-                                actionText);
-                        } else {
-                            // V67am +600 pull grant is owned by V192 in ActionTextEvaluator.
-                            // The former DeployEvaluator grant double-counted weapon pulls and was
-                            // removed 2026-07-13; git preserves it. Live V67ar/V67ao/V149
-                            // vetoes above remain unchanged, and V192 repeats them structurally
-                            // before emitting the same +600 weapon tier.
-                            LOG.info("V67am weapon pull detected for '{}' — grant owned by V192 (ActionTextEvaluator)",
-                                actionText);
+                        PullActionPolicy.WeaponOrderEvaluation weaponOrder =
+                            PullActionPolicy.evaluateWeaponOrder(
+                                new PullActionPolicy.WeaponOrderFacts(
+                                    actionId, true, false, v67arUnarmed,
+                                    v67arArmed, v149IsLightsaberPull,
+                                    v149AbilityCapableUnarmed));
+                        applySharedPolicy(action, decisionId, actionId,
+                            "deploy-weapon-order", weaponOrder.result());
+                        switch (weaponOrder.outcome()) {
+                            case ALL_ARMED ->
+                                LOG.warn("V67ar UNIVERSAL BLOCK (DeployEvaluator pull): '{}' — all {} chars armed",
+                                    actionText, v67arArmed);
+                            case NO_CHARACTER ->
+                                LOG.warn("V67ao ORDER GATE (DeployEvaluator): weapon pull '{}' blocked (no chars on table)",
+                                    actionText);
+                            case NO_LIGHTSABER_WIELDER ->
+                                LOG.warn("V149 NO LIGHTSABER WIELDER (DeployEvaluator): '{}' — 0 unarmed [Warrior] ability-4+ chars → -2000",
+                                    actionText);
+                            case READY ->
+                                LOG.info("V67am weapon pull detected for '{}' — grant owned by V192 (ActionTextEvaluator)",
+                                    actionText);
+                            case NONE -> { }
                         }
                     }
 
@@ -4180,24 +4174,34 @@ public class DeployEvaluator extends ActionEvaluator {
                                 || (cardTitleLower.contains("aurra") && cardTitleLower.contains("blaster"))
                                 || (cardTitleLower.contains("sing") && cardTitleLower.contains("blaster"));
 
+                            boolean weaponPartnerInPlay = false;
+                            boolean evazanInPlay = false;
                             if (isEvazan) {
                                 // Check if ANY weapon character is already in play
-                                boolean weaponPartnerInPlay = comboOracle.isCardInPlay("Maul With Lightsaber")
+                                weaponPartnerInPlay = comboOracle.isCardInPlay("Maul With Lightsaber")
                                     || comboOracle.isCardInPlay("Vader With Lightsaber")
                                     || comboOracle.isCardInPlay("Mara Jade With Lightsaber")
                                     || comboOracle.isCardInPlay("Jade With Lightsaber")
                                     || comboOracle.isCardInPlay("Aurra Sing With Blaster")
                                     || comboOracle.isCardInPlay("Sing With Blaster");
-                                if (weaponPartnerInPlay) {
-                                    action.addReasoning("V24.3 EVAZAN COMBO: Weapon character on table — deploy Evazan for kill combo!", 150.0f);
-                                    LOG.warn("V24.3 EVAZAN: Weapon partner in play — +150 deploy priority!");
-                                }
                             } else if (isWeaponChar) {
                                 // Check if Evazan is already in play
-                                if (comboOracle.isCardInPlay("Evazan")) {
-                                    action.addReasoning("V24.3 EVAZAN COMBO: Dr. Evazan on table — deploy weapon character for kill combo!", 100.0f);
+                                evazanInPlay = comboOracle.isCardInPlay("Evazan");
+                            }
+
+                            DeployTacticalPolicy.EvazanComboEvaluation evazanCombo =
+                                DeployTacticalPolicy.scoreEvazanCombo(
+                                    new DeployTacticalPolicy.EvazanComboFacts(
+                                        actionId, isEvazan, isWeaponChar,
+                                        weaponPartnerInPlay, evazanInPlay));
+                            applySharedPolicy(action, decisionId, actionId,
+                                "deploy-evazan-combo", evazanCombo.result());
+                            switch (evazanCombo.outcome()) {
+                                case DEPLOY_EVAZAN ->
+                                    LOG.warn("V24.3 EVAZAN: Weapon partner in play — +150 deploy priority!");
+                                case DEPLOY_WEAPON_CHARACTER ->
                                     LOG.warn("V24.3 WEAPON CHAR: Evazan in play — +100 deploy priority for {}!", card.getTitle());
-                                }
+                                case NONE -> { }
                             }
                         }
                     }

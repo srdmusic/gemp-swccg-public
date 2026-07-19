@@ -29,6 +29,31 @@ public final class PullActionPolicy {
         }
     }
 
+    public record WeaponOrderEvaluation(PolicyResult result,
+                                        WeaponOrderOutcome outcome) {
+        public WeaponOrderEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum WeaponOrderOutcome {
+        NONE,
+        ALL_ARMED,
+        NO_CHARACTER,
+        NO_LIGHTSABER_WIELDER,
+        READY
+    }
+
+    public record WeaponOrderFacts(
+            String actionId, boolean weaponPull, boolean locationPull,
+            int unarmedCharacters, int armedCharacters,
+            boolean lightsaberPull, int capableLightsaberWielders) {
+        public WeaponOrderFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
     private PullActionPolicy() {
     }
 
@@ -42,6 +67,39 @@ public final class PullActionPolicy {
         return evaluation(List.of(add(facts.actionId(), rule,
                 TraceOutputKind.VETO, -2000.0f, facts.reason())),
                 AdapterStep.CONTINUE_ACTION);
+    }
+
+    public static WeaponOrderEvaluation evaluateWeaponOrder(
+            WeaponOrderFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        WeaponOrderOutcome outcome = WeaponOrderOutcome.NONE;
+
+        if (facts.weaponPull() && !facts.locationPull()) {
+            if (facts.unarmedCharacters() == 0 && facts.armedCharacters() > 0) {
+                operations.add(add(facts.actionId(), "V67ar-weapon",
+                        TraceOutputKind.VETO, -9999.0f, String.format(
+                                "V67ar UNIVERSAL BLOCK: every Rando character (%d) already armed \u2014 pulled weapon would stack a 2nd weapon (forbidden)!",
+                                facts.armedCharacters())));
+                outcome = WeaponOrderOutcome.ALL_ARMED;
+            } else if (facts.unarmedCharacters() == 0) {
+                operations.add(add(facts.actionId(), "V67ao-weapon",
+                        TraceOutputKind.VETO, -9999.0f,
+                        "V67ao ORDER GATE: weapon pull blocked \u2014 no Rando character on table to hold the weapon. Deploy a character first!"));
+                outcome = WeaponOrderOutcome.NO_CHARACTER;
+            } else if (facts.lightsaberPull()
+                    && facts.capableLightsaberWielders() == 0) {
+                operations.add(add(facts.actionId(), "V149",
+                        TraceOutputKind.VETO, -2000.0f,
+                        "V149 NO LIGHTSABER WIELDER: no unarmed [Warrior] ability-4+ character on table \u2014 don't pull a lightsaber nobody can wield"));
+                outcome = WeaponOrderOutcome.NO_LIGHTSABER_WIELDER;
+            } else {
+                outcome = WeaponOrderOutcome.READY;
+            }
+        }
+
+        return new WeaponOrderEvaluation(
+                new PolicyResult(PRODUCER, operations), outcome);
     }
 
     public static Evaluation evaluateParent(PullActionFacts.Parent facts) {
@@ -152,26 +210,18 @@ public final class PullActionPolicy {
         }
 
         if (!hardBlocked && facts.weaponPull() && !facts.locationPull()) {
-            if (facts.unarmedCharacters() == 0 && facts.armedCharacters() > 0) {
-                operations.add(add(facts.actionId(), "V67ar-weapon",
-                        TraceOutputKind.VETO, -9999.0f,
-                        String.format("V67ar UNIVERSAL BLOCK: every Rando character (%d) already armed \u2014 pulled weapon would stack a 2nd weapon (forbidden)!",
-                                facts.armedCharacters())));
-                hardBlocked = true;
-            } else if (facts.unarmedCharacters() == 0) {
-                operations.add(add(facts.actionId(), "V67ao-weapon",
-                        TraceOutputKind.VETO, -9999.0f,
-                        "V67ao ORDER GATE: weapon pull blocked \u2014 no Rando character on table to hold the weapon. Deploy a character first!"));
-                hardBlocked = true;
-            } else if (facts.lightsaberPull() && facts.capableLightsaberWielders() == 0) {
-                operations.add(add(facts.actionId(), "V149",
-                        TraceOutputKind.VETO, -2000.0f,
-                        "V149 NO LIGHTSABER WIELDER: no unarmed [Warrior] ability-4+ character on table \u2014 don't pull a lightsaber nobody can wield"));
-                hardBlocked = true;
-            } else {
+            WeaponOrderEvaluation weaponOrder = evaluateWeaponOrder(
+                    new WeaponOrderFacts(facts.actionId(), facts.weaponPull(),
+                            facts.locationPull(), facts.unarmedCharacters(),
+                            facts.armedCharacters(), facts.lightsaberPull(),
+                            facts.capableLightsaberWielders()));
+            operations.addAll(weaponOrder.result().operations());
+            if (weaponOrder.outcome() == WeaponOrderOutcome.READY) {
                 typeTier = 600.0f;
                 typeDescription = String.format("WEAPON (V67am value, %d unarmed target(s) \u2014 %s)",
                         facts.unarmedCharacters(), facts.weaponReason());
+            } else if (weaponOrder.outcome() != WeaponOrderOutcome.NONE) {
+                hardBlocked = true;
             }
         }
 

@@ -283,6 +283,28 @@ public final class DeployTacticalPolicy {
         return new PolicyResult("DEPLOY_V51_V43_SPY_PLACEMENT_POLICY", operations);
     }
 
+    public static EvazanComboEvaluation scoreEvazanCombo(
+            EvazanComboFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        EvazanComboOutcome outcome = EvazanComboOutcome.NONE;
+
+        if (facts.deployingEvazan() && facts.weaponPartnerInPlay()) {
+            add(operations, facts.actionId(), "V24.3A-evazan", 150.0f,
+                    "V24.3 EVAZAN COMBO: Weapon character on table — deploy Evazan for kill combo!");
+            outcome = EvazanComboOutcome.DEPLOY_EVAZAN;
+        } else if (facts.deployingWeaponCharacter()
+                && facts.evazanInPlay()) {
+            add(operations, facts.actionId(), "V24.3A-weapon", 100.0f,
+                    "V24.3 EVAZAN COMBO: Dr. Evazan on table — deploy weapon character for kill combo!");
+            outcome = EvazanComboOutcome.DEPLOY_WEAPON_CHARACTER;
+        }
+
+        return new EvazanComboEvaluation(
+                new PolicyResult("DEPLOY_V24_3A_EVAZAN_COMBO_POLICY", operations),
+                outcome);
+    }
+
     public record ContestDrainFacts(String actionId, String locationTitle,
                                     float opponentPower, int opponentDrain,
                                     int netDrainBalance, float ourPower,
@@ -439,6 +461,29 @@ public final class DeployTacticalPolicy {
             Objects.requireNonNull(actionId, "actionId");
             highDrainTargets = List.copyOf(highDrainTargets);
         }
+    }
+
+    public record EvazanComboFacts(
+            String actionId, boolean deployingEvazan,
+            boolean deployingWeaponCharacter,
+            boolean weaponPartnerInPlay, boolean evazanInPlay) {
+        public EvazanComboFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record EvazanComboEvaluation(PolicyResult result,
+                                        EvazanComboOutcome outcome) {
+        public EvazanComboEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum EvazanComboOutcome {
+        NONE,
+        DEPLOY_EVAZAN,
+        DEPLOY_WEAPON_CHARACTER
     }
 
     private static void add(List<PolicyOperation> operations,

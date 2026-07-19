@@ -292,6 +292,53 @@ public class DeployTacticalPolicyTest {
     }
 
     @Test
+    public void evazanDeployWithWeaponPartnerKeepsExactComboBonus() {
+        DeployTacticalPolicy.EvazanComboEvaluation result =
+                evazanCombo(true, false, true, false);
+
+        assertEquals(DeployTacticalPolicy.EvazanComboOutcome.DEPLOY_EVAZAN,
+                result.outcome());
+        assertOperation(result.result(), "V24.3A-evazan", 150.0f,
+                "V24.3 EVAZAN COMBO: Weapon character on table — deploy Evazan for kill combo!");
+    }
+
+    @Test
+    public void weaponCharacterDeployWithEvazanKeepsExactComboBonus() {
+        DeployTacticalPolicy.EvazanComboEvaluation result =
+                evazanCombo(false, true, false, true);
+
+        assertEquals(
+                DeployTacticalPolicy.EvazanComboOutcome.DEPLOY_WEAPON_CHARACTER,
+                result.outcome());
+        assertOperation(result.result(), "V24.3A-weapon", 100.0f,
+                "V24.3 EVAZAN COMBO: Dr. Evazan on table — deploy weapon character for kill combo!");
+    }
+
+    @Test
+    public void evazanBranchPrecedesWeaponBranchWhenBothFactsAreTrue() {
+        DeployTacticalPolicy.EvazanComboEvaluation result =
+                evazanCombo(true, true, true, true);
+
+        assertEquals(DeployTacticalPolicy.EvazanComboOutcome.DEPLOY_EVAZAN,
+                result.outcome());
+        assertOperation(result.result(), "V24.3A-evazan", 150.0f,
+                "V24.3 EVAZAN COMBO: Weapon character on table — deploy Evazan for kill combo!");
+    }
+
+    @Test
+    public void evazanComboNoOpCasesStayNeutral() {
+        for (DeployTacticalPolicy.EvazanComboEvaluation result :
+                java.util.List.of(
+                        evazanCombo(false, false, true, true),
+                        evazanCombo(true, false, false, false),
+                        evazanCombo(false, true, false, false))) {
+            assertEquals(DeployTacticalPolicy.EvazanComboOutcome.NONE,
+                    result.outcome());
+            assertEmpty(result.result());
+        }
+    }
+
+    @Test
     public void legacyScoreBandsKeepTheirRelativeBoundaries() {
         float v166Softest = delta(v166Score(1));
         float v171 = delta(contact(true, true, 2,
@@ -402,6 +449,16 @@ public class DeployTacticalPolicyTest {
                 new DeployTacticalPolicy.SpyPlacementFacts(
                         "deploy-42", targets, opponentLocation,
                         friendlyLocation, opponentHasDrainTwoPlus));
+    }
+
+    private static DeployTacticalPolicy.EvazanComboEvaluation evazanCombo(
+            boolean deployingEvazan, boolean deployingWeaponCharacter,
+            boolean weaponPartnerInPlay, boolean evazanInPlay) {
+        return DeployTacticalPolicy.scoreEvazanCombo(
+                new DeployTacticalPolicy.EvazanComboFacts(
+                        "deploy-42", deployingEvazan,
+                        deployingWeaponCharacter, weaponPartnerInPlay,
+                        evazanInPlay));
     }
 
     private static void assertDrainOutcome(

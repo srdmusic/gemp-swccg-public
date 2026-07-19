@@ -7583,3 +7583,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     989e454773e52f64a702dd1972d27b74114ad83bb6b0618c87b0cec965535b97 contain the shared
     owner and both adapters. Runtime reload and live-game proof remain pending on the external
     runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V267 (2026-07-19): consolidate DEPLOY weapon-order and Evazan combo scoring ====
+    Shared AI-only PullActionPolicy now exposes one weapon-order decision owner used by both the
+    direct DEPLOY route and the existing V192 parent scorer. It preserves V67ar all-armed -9999,
+    V67ao no-character -9999, V149 no-capable-lightsaber-wielder -2000, exact reasons, and branch
+    precedence. Ready remains neutral in DeployEvaluator while V192 independently owns its +600
+    weapon tier. Shared DeployTacticalPolicy now owns V24.3A Evazan +150 and weapon-character +100.
+    Both bot adapters retain all action, card, icon, ability, host, and DeckOracle reads; the exact
+    six partner-title checks; short-circuit order; logs; catches; and separate contribution streams.
+    Focused 62/0/0/0, DEPLOY-named 191/0/0/0, full reactor 1740/0/0/26, normalized mirror parity,
+    exact boundary fixtures, lazy-Oracle source gates, AI-only scope, forbidden-symbol scan, diff
+    check, compiled-artifact gates, and clean package passed. Independent review returned PASS with
+    no P0-P2 findings on precedence, scores, reasons, read order, mirror parity, or scope. Server jar SHA-256
+    a9383f3c559fa148292d9aedd8296c53f81120d11c520e17896b822e901b72cf and web jar SHA-256
+    158c37f6a91ed639f25e71f216bd8b1bef1446d95548a0024d8832f112b6019e contain both shared
+    owners and mirrored adapters. Runtime reload and live-game proof remain pending on the external
+    runtime. AI source only; no GEMP engine or player-decision changes.
