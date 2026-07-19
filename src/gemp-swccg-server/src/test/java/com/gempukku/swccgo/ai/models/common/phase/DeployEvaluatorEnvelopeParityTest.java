@@ -51,12 +51,14 @@ public class DeployEvaluatorEnvelopeParityTest {
     }
 
     @Test
-    public void textOnlySiteFalsePositiveRemainsTerminalForStructuralPacket() {
+    public void textOnlySiteDestinationFallsThroughToNormalScoring() {
         Pair pair = evaluate("character", "Deploy character to a site", Set.of());
         assertMirrored(pair);
-        assertRaw(250.0f, pair.rando.getScore());
+        assertRaw(50.0f, pair.rando.getScore());
         assertEquals(1, pair.rando.getReasoning().size());
         assertTrue(pair.rando.getReasoningString().contains(
+                "V40: Unknown card"));
+        assertFalse(pair.rando.getReasoningString().contains(
                 "LOCATION - deploy first!"));
     }
 

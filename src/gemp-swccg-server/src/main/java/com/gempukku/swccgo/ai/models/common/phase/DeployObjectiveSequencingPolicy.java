@@ -59,6 +59,32 @@ public final class DeployObjectiveSequencingPolicy {
     private DeployObjectiveSequencingPolicy() {
     }
 
+    public static boolean isEarlyLocationCandidate(
+            DeployObjectiveSequencingFacts.EarlyLocationCandidate facts) {
+        Objects.requireNonNull(facts, "facts");
+        if (facts.cardResolved()) {
+            return facts.locationByCategory();
+        }
+
+        String text = facts.actionText().toLowerCase(java.util.Locale.ROOT)
+                .replaceAll("<[^>]*>", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+        int deploy = text.indexOf("deploy ");
+        if (deploy < 0) {
+            return false;
+        }
+        String subject = text.substring(deploy + "deploy ".length());
+        for (String boundary : new String[] {
+                " to ", " at ", " aboard ", " on ", " from ", " with "}) {
+            int index = subject.indexOf(boundary);
+            if (index >= 0) {
+                subject = subject.substring(0, index);
+            }
+        }
+        return subject.matches(".*\\b(location|site|system)\\b.*");
+    }
+
     public static EarlyLocationEvaluation evaluateEarlyLocation(
             DeployObjectiveSequencingFacts.EarlyLocation facts) {
         Objects.requireNonNull(facts, "facts");

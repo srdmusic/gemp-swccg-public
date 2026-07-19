@@ -8,6 +8,16 @@ public final class DeployObjectiveSequencingFacts {
     private DeployObjectiveSequencingFacts() {
     }
 
+    public record EarlyLocationCandidate(
+            String actionText,
+            boolean cardResolved,
+            boolean locationByCategory) {
+
+        public EarlyLocationCandidate {
+            actionText = actionText == null ? "" : actionText;
+        }
+    }
+
     public record EarlyLocation(
             String actionId,
             boolean piettOracleAnalyzed,

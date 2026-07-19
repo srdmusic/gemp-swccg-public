@@ -7450,3 +7450,24 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     1bc3bab174b0ec209ab207bd2385f9c2b2a3f59bd2ae8d2c81e831db8119ad0b contain the canonical
     identity and both mirrored adapters. Runtime reload and live-game proof remain pending on the
     external runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V260 (2026-07-19): repair DEPLOY early-location subject classification ════
+    The shared sequencing owner now classifies early location actions from the resolved deployed
+    card category whenever available. Both DeployEvaluator mirrors resolve a classification-only
+    card reference even when GEMP already supplied a title, while preserving the legacy earlyCard
+    title-null gate consumed by V29 and unknown-card routing. Only unresolved actions use text
+    fallback, and that fallback examines the direct deployed subject before destination/source prepositions.
+    Consequently, a character deployed to a site/system no longer receives location +200 and a
+    terminal continue that bypasses affordability, buddy, objective, and downstream scoring. A
+    real resolved LOCATION retains terminal +200 plus existing Piett/Bespin additions even when
+    its action text is bare Deploy. Unresolved direct-object forms such as Deploy a battleground
+    site from Reserve Deck remain supported. V29 Bespin-first, its additive -500, objective
+    weights, and every other deploy score are unchanged. Focused 16/0/0/0, DEPLOY-named
+    161/0/0/0, full reactor 1704/0/0/26, classifier/source/two-bot fixtures, a source gate proving
+    the classification-only card cannot enter V29, normalized mirror parity, AI-only boundary,
+    compiled-artifact gate, diff check, and clean package passed. Server jar SHA-256
+    51c1a483ace20250c7b5a28f6a4dba2d60c893ed362268663f9376a40d3d86ae and web jar SHA-256
+    44d887af117368807544c1811df0116aa0b9e7617588cbb83707034054d63992
+    contain the shared classifier and both mirrored adapters. Runtime reload and live-game proof
+    remain pending on the external runtime. Independent review caught and closed a possible V29
+    state leak before commit; re-review passed. AI source only; no GEMP engine or player-decision changes.

@@ -6,9 +6,27 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class DeployObjectiveSequencingPolicyTest {
+
+    @Test
+    public void earlyLocationClassificationUsesCategoryBeforeDestinationText() {
+        assertTrue(earlyLocationRoute("Deploy character to a site", true, true));
+        assertFalse(earlyLocationRoute("Deploy character to a site", true, false));
+        assertFalse(earlyLocationRoute("Deploy character to Bespin system", true, false));
+    }
+
+    @Test
+    public void unresolvedEarlyLocationFallbackRequiresDeployedSubjectPhrase() {
+        assertTrue(earlyLocationRoute("Deploy a location", false, false));
+        assertTrue(earlyLocationRoute("Deploy Bespin system location", false, false));
+        assertTrue(earlyLocationRoute("Deploy a battleground site from Reserve Deck", false, false));
+        assertFalse(earlyLocationRoute("Deploy character to a site", false, false));
+        assertFalse(earlyLocationRoute("Deploy device aboard a starship at system", false, false));
+    }
 
     @Test
     public void earlyLocationPreservesBasePiettAndTurnOneBespinOrder() {
@@ -124,6 +142,13 @@ public class DeployObjectiveSequencingPolicyTest {
                 "a", oracleAnalyzed, piettAccessible, piettLost,
                 piettTurn, objectiveAnalyzed, needsBespin,
                 objectiveTurn, bespinDeploy, bespinOnTable);
+    }
+
+    private static boolean earlyLocationRoute(
+            String text, boolean resolved, boolean location) {
+        return DeployObjectiveSequencingPolicy.isEarlyLocationCandidate(
+                new DeployObjectiveSequencingFacts.EarlyLocationCandidate(
+                        text, resolved, location));
     }
 
     private static List<PolicyOperation> evaluate(

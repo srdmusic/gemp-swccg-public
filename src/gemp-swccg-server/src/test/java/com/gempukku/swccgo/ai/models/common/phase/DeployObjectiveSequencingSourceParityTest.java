@@ -26,6 +26,8 @@ public class DeployObjectiveSequencingSourceParityTest {
         for (String bot : new String[] {"rando", "chosenone"}) {
             String source = adapterSource(bot);
             assertTrue(source.contains(
+                    "DeployObjectiveSequencingPolicy.isEarlyLocationCandidate("));
+            assertTrue(source.contains(
                     "DeployObjectiveSequencingPolicy.evaluateEarlyLocation("));
             assertTrue(source.contains(
                     "DeployObjectiveSequencingPolicy.classifyBespinFirst("));
@@ -45,6 +47,11 @@ public class DeployObjectiveSequencingSourceParityTest {
     public void policyCallsRetainTerminalAndLazyReadOrder() throws IOException {
         for (String bot : new String[] {"rando", "chosenone"}) {
             String source = adapterSource(bot);
+            int locationCard = source.indexOf("PhysicalCard earlyLocationCard = null;");
+            int titleNull = source.indexOf("if (cardTitleFromGemp == null)", locationCard);
+            int legacyEarlyCard = source.indexOf("earlyCard = earlyLocationCard;", titleNull);
+            int classifyEarly = source.indexOf(
+                    "DeployObjectiveSequencingPolicy.isEarlyLocationCandidate(");
             int early = source.indexOf(
                     "DeployObjectiveSequencingPolicy.evaluateEarlyLocation(");
             int earlyApply = source.indexOf(
@@ -63,10 +70,28 @@ public class DeployObjectiveSequencingSourceParityTest {
             int evaluate = source.indexOf(
                     "DeployObjectiveSequencingPolicy.evaluateBespinFirst(", oracleRead);
             assertTrue(bot + ": migrated calls must retain order",
-                    early >= 0 && earlyApply > early && earlyContinue > earlyApply
+                    locationCard >= 0 && titleNull > locationCard
+                            && legacyEarlyCard > titleNull
+                            && classifyEarly > legacyEarlyCard && early > classifyEarly
+                            && earlyApply > early && earlyContinue > earlyApply
                             && classify > earlyContinue && candidate > classify
                             && objectiveForbid > candidate && oracleGuard > objectiveForbid
                             && oracleRead > oracleGuard && evaluate > oracleRead);
+        }
+    }
+
+    @Test
+    public void classificationOnlyCardDoesNotLeakIntoV29Routing() throws IOException {
+        for (String bot : new String[] {"rando", "chosenone"}) {
+            String source = adapterSource(bot);
+            int v29 = source.indexOf("// === V29: TDIGWATT BESPIN-FIRST GUARD");
+            int mainLookup = source.indexOf("// === Look up the card using multiple methods", v29);
+            assertTrue(bot + ": V29 block bounds", v29 >= 0 && mainLookup > v29);
+            String v29Block = source.substring(v29, mainLookup);
+            assertFalse(bot + ": classification-only card leaked into V29",
+                    v29Block.contains("earlyLocationCard"));
+            assertTrue(bot + ": V29 must retain legacy earlyCard category read",
+                    v29Block.contains("if (earlyCard != null && earlyCard.getBlueprint() != null)"));
         }
     }
 

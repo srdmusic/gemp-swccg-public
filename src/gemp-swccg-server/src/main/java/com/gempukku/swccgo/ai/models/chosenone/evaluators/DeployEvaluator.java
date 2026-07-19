@@ -719,12 +719,16 @@ public class DeployEvaluator extends ActionEvaluator {
             // can't identify the card and may incorrectly block/penalize it.
             // Resolve via gameState.findCardById() which works for hand cards.
             PhysicalCard earlyCard = null;
-            if (cardTitleFromGemp == null && cardIdStr != null && !cardIdStr.isEmpty() && gameState != null) {
+            PhysicalCard earlyLocationCard = null;
+            if (cardIdStr != null && !cardIdStr.isEmpty() && gameState != null) {
                 try {
-                    earlyCard = gameState.findCardById(Integer.parseInt(cardIdStr));
-                    if (earlyCard != null && earlyCard.getTitle() != null) {
-                        cardTitleFromGemp = earlyCard.getTitle();
-                        LOG.info("V29 EARLY LOOKUP: Resolved bare 'Deploy' via cardId {} → '{}'", cardIdStr, cardTitleFromGemp);
+                    earlyLocationCard = gameState.findCardById(Integer.parseInt(cardIdStr));
+                    if (cardTitleFromGemp == null) {
+                        earlyCard = earlyLocationCard;
+                        if (earlyCard != null && earlyCard.getTitle() != null) {
+                            cardTitleFromGemp = earlyCard.getTitle();
+                            LOG.info("V29 EARLY LOOKUP: Resolved bare 'Deploy' via cardId {} → '{}'", cardIdStr, cardTitleFromGemp);
+                        }
                     }
                 } catch (NumberFormatException e) {
                     // Not an integer cardId — skip
@@ -774,8 +778,18 @@ public class DeployEvaluator extends ActionEvaluator {
             }
 
             // === LOCATION DEPLOYMENT - Highest Priority ===
-            // Deploying locations opens up deployment options
-            if (actionLower.contains("location") || actionLower.contains("site") || actionLower.contains("system")) {
+            // Resolve the deployed card's category first. Text is only a fallback for
+            // actions without card identity, and must name the deployed subject rather
+            // than merely mentioning a destination such as "character to a site".
+            boolean earlyCardResolved = earlyLocationCard != null
+                && earlyLocationCard.getBlueprint() != null;
+            boolean earlyLocationByCategory = earlyCardResolved
+                && earlyLocationCard.getBlueprint().getCardCategory() == CardCategory.LOCATION;
+            boolean earlyLocationCandidate =
+                DeployObjectiveSequencingPolicy.isEarlyLocationCandidate(
+                    new DeployObjectiveSequencingFacts.EarlyLocationCandidate(
+                        actionText, earlyCardResolved, earlyLocationByCategory));
+            if (earlyLocationCandidate) {
                 // === V24.10: EXTRA LOCATION PRIORITY WHEN PIETT NEEDS FINDING ===
                 // If Piett is stuck in the force pile, deploying more locations means
                 // more force generation → bigger force pile → draw through faster to find him.
