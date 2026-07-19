@@ -1,0 +1,239 @@
+package com.gempukku.swccgo.ai.models.common.phase;
+
+import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
+
+import java.util.Locale;
+
+/**
+ * Shared MOVE drain-routing rules. Each method preserves its legacy location
+ * collection and first-match behavior. Adapters retain score, ladder, and log
+ * application at the original positions.
+ */
+public final class MoveDrainRoutingPolicy {
+    public record Contribution(boolean applies, String reason, float delta) {
+        private static Contribution none() {
+            return new Contribution(false, null, 0.0f);
+        }
+    }
+
+    public record UncontestedDeparture(
+            Contribution contribution, PhysicalCard bestAdjacent,
+            float currentDrain, float bestAdjacentDrain) {
+    }
+
+    public enum DrainDirection {
+        NONE, LOSS, GAIN
+    }
+
+    public record ExplicitDestinationDrain(
+            Contribution contribution, DrainDirection direction,
+            PhysicalCard destination, float destinationDrain,
+            float currentDrain, float drainDelta) {
+    }
+
+    public record CantinaShuttle(
+            Contribution contribution, boolean pairMatched,
+            PhysicalCard destination, int sourceCharactersRemaining) {
+    }
+
+    private MoveDrainRoutingPolicy() {
+    }
+
+    public static UncontestedDeparture uncontestedDeparture(
+            GameState gameState, SwccgGame game, PhysicalCard source,
+            String playerId) {
+        float currentDrain = MovePredicates.drainAt(
+                game, gameState, source, playerId);
+        if (!(currentDrain > 0)) {
+            return new UncontestedDeparture(
+                    Contribution.none(), null, currentDrain,
+                    Float.NEGATIVE_INFINITY);
+        }
+
+        float bestAdjacentDrain = Float.NEGATIVE_INFINITY;
+        PhysicalCard bestAdjacent = null;
+        for (PhysicalCard adjacent : gameState.getLocationsInOrder()) {
+            if (adjacent == null || adjacent == source) {
+                continue;
+            }
+            try {
+                if (!game.getModifiersQuerying().isAdjacentSites(
+                        gameState, source, adjacent)) {
+                    continue;
+                }
+                float adjacentDrain = MovePredicates.drainAt(
+                        game, gameState, adjacent, playerId);
+                if (adjacentDrain > bestAdjacentDrain) {
+                    bestAdjacentDrain = adjacentDrain;
+                    bestAdjacent = adjacent;
+                }
+            } catch (Exception e) {
+                // Preserve V85's per-location skip.
+            }
+        }
+
+        if (bestAdjacent != null && bestAdjacentDrain < currentDrain) {
+            return new UncontestedDeparture(
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V85 UNCONTESTED: at %s (drain %.0f) with no opponent — "
+                                            + "best adjacent %s only drains %.0f. STAY for the better drain!",
+                                    source.getTitle(), currentDrain,
+                                    bestAdjacent.getTitle(),
+                                    bestAdjacentDrain),
+                            -800.0f),
+                    bestAdjacent, currentDrain, bestAdjacentDrain);
+        }
+
+        return new UncontestedDeparture(
+                Contribution.none(), bestAdjacent, currentDrain,
+                bestAdjacentDrain);
+    }
+
+    public static ExplicitDestinationDrain explicitDestinationDrain(
+            GameState gameState, SwccgGame game, PhysicalCard source,
+            String playerId, String actionTextLower) {
+        PhysicalCard destination = null;
+        for (PhysicalCard location : gameState.getLocationsInOrder()) {
+            if (location == null || location == source) {
+                continue;
+            }
+            String locationName = location.getTitle() != null
+                    ? location.getTitle().toLowerCase(Locale.ROOT) : "";
+            if (!locationName.isEmpty()
+                    && actionTextLower.contains(locationName)) {
+                destination = location;
+                break;
+            }
+        }
+
+        if (destination == null) {
+            return new ExplicitDestinationDrain(
+                    Contribution.none(), DrainDirection.NONE,
+                    null, 0.0f, 0.0f, 0.0f);
+        }
+
+        float destinationDrain = MovePredicates.drainAt(
+                game, gameState, destination, playerId);
+        float currentDrain = MovePredicates.drainAt(
+                game, gameState, source, playerId);
+
+        if (destinationDrain < currentDrain) {
+            float drainDelta = currentDrain - destinationDrain;
+            float drainPenalty = -40.0f * drainDelta;
+            if (destinationDrain <= 0) {
+                drainPenalty -= 80.0f;
+            }
+            return new ExplicitDestinationDrain(
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V29.13 BAD DRAIN SITE: %s has drain %.0f (current location has %.0f) — stay for better drain!",
+                                    destination.getTitle(), destinationDrain,
+                                    currentDrain),
+                            drainPenalty),
+                    DrainDirection.LOSS, destination, destinationDrain,
+                    currentDrain, drainDelta);
+        }
+
+        if (destinationDrain > currentDrain) {
+            float drainDelta = destinationDrain - currentDrain;
+            float drainBonus = 40.0f * drainDelta;
+            return new ExplicitDestinationDrain(
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V29.13 GOOD DRAIN SITE: %s has drain %.0f — better than current %.0f!",
+                                    destination.getTitle(), destinationDrain,
+                                    currentDrain),
+                            drainBonus),
+                    DrainDirection.GAIN, destination, destinationDrain,
+                    currentDrain, drainDelta);
+        }
+
+        return new ExplicitDestinationDrain(
+                Contribution.none(), DrainDirection.NONE, destination,
+                destinationDrain, currentDrain, 0.0f);
+    }
+
+    public static CantinaShuttle cantinaShuttle(
+            GameState gameState, PhysicalCard source,
+            PhysicalCard cardToMove, String playerId,
+            String actionDisplayLower) {
+        String sourceTitleLower =
+                source.getTitle().toLowerCase(Locale.ROOT);
+        String destinationTitleLower = "";
+        PhysicalCard destination = null;
+
+        for (PhysicalCard location : gameState.getTopLocations()) {
+            if (location == null || location == source) {
+                continue;
+            }
+            String locationTitle = location.getTitle();
+            if (locationTitle == null) {
+                continue;
+            }
+            String locationTitleLower =
+                    locationTitle.toLowerCase(Locale.ROOT);
+            if (!locationTitleLower.isEmpty()
+                    && actionDisplayLower.contains(locationTitleLower)) {
+                destination = location;
+                destinationTitleLower = locationTitleLower;
+                break;
+            }
+        }
+
+        if (destination == null) {
+            return new CantinaShuttle(
+                    Contribution.none(), false, null, 0);
+        }
+
+        boolean pairMatched =
+                (sourceTitleLower.contains("cantina")
+                        && destinationTitleLower.contains("mos eisley"))
+                || (sourceTitleLower.contains("mos eisley")
+                        && destinationTitleLower.contains("cantina"));
+        if (!pairMatched) {
+            return new CantinaShuttle(
+                    Contribution.none(), false, destination, 0);
+        }
+
+        int sourceCharactersRemaining = 0;
+        for (PhysicalCard card : gameState.getCardsAtLocation(source)) {
+            if (card == null || card == cardToMove) {
+                continue;
+            }
+            if (!playerId.equals(card.getOwner())) {
+                continue;
+            }
+            if (card.getBlueprint() == null) {
+                continue;
+            }
+            if (card.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER) {
+                continue;
+            }
+            sourceCharactersRemaining++;
+        }
+
+        if (sourceCharactersRemaining >= 1) {
+            return new CantinaShuttle(
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V73 SHUTTLE: Cantina ↔ Mos Eisley shuttle — drain BOTH this turn (%d chars stay at %s)",
+                                    sourceCharactersRemaining,
+                                    source.getTitle()),
+                            400.0f),
+                    true, destination, sourceCharactersRemaining);
+        }
+
+        return new CantinaShuttle(
+                Contribution.none(), true, destination, 0);
+    }
+}

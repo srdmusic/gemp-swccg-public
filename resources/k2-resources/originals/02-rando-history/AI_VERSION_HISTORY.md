@@ -1,3 +1,18 @@
+  ==== V220 AI-ONLY MOVE DRAIN-ROUTING POLICY OWNER (2026-07-18, both bots) ====
+Shared MoveDrainRoutingPolicy now owns the duplicated V85 drain-retention analysis, V29.13 explicit
+destination drain weighting, and V73 Cantina/Mos Eisley shuttle exception. Their three distinct scans
+remain distinct: V85 locations-in-order plus adjacency, V29.13 first textual locations-in-order match
+without adjacency, and V73 first textual top-location match. Both adapters retain score application,
+logs, catches, ladder claims, and call order. Behavior is unchanged: V85 remains -800 for a strictly
+lower best adjacent drain; V29.13 remains -40 per drain lost with an extra -80 at drain zero or +40 per
+drain gained; V73 remains +400 when another owned character stays, with no new control, adjacency, or
+drain checks. The shuttle boundary remains +5560. V34/V36/V60/V91/V111/V38.3, routing, finalization,
+and physical-card resolution are unchanged. Production edits are AI-only. Verification passed 97
+focused MOVE tests and the full 1,274-test reactor with 0 failures, 0 errors, and 26 skipped. Package,
+source-boundary, forbidden-symbol, artifact, mirror, diff, and independent gates passed; server jar
+SHA-256 is 6bc4cb167b756b32159671985069af2700b5346f988fac7210c39067a9929704. Runtime load and live-game
+proof remain separate gates. Revert the single V220 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V219 AI-ONLY MOVE THREAT POLICY OWNER (2026-07-18, both bots) ====
 Shared MoveThreatPolicy now owns the duplicated five-tier source-location threat classification,
 exact reason strings, raw deltas, and the RETREAT survival-claim fact. Both bot adapters retain the

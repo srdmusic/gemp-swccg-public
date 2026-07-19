@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
@@ -2228,41 +2229,22 @@ public class MoveEvaluator extends ActionEvaluator {
         // Fires BEFORE FLEE/ATTACK/V29.7 so the -2000 dominates their bonuses.
         if (gameState != null && game != null && location != null && !theirHasCards) {
             try {
-                // V85 UPDATED 2026-07-06 T4.1: drain math routed through the shared engine
-                // metric MovePredicates.drainAt (behavior-identical — this was already
-                // engine-based; move-6 single-detection consolidation).
-                float currentDrainV85 = MovePredicates.drainAt(game, gameState, location, playerId);
-                if (currentDrainV85 > 0) {
-                    float bestAdjDrain = Float.NEGATIVE_INFINITY;
-                    PhysicalCard bestAdjLoc = null;
-                    for (PhysicalCard adj : gameState.getLocationsInOrder()) {
-                        if (adj == null || adj == location) continue;
-                        try {
-                            if (!game.getModifiersQuerying().isAdjacentSites(gameState, location, adj)) continue;
-                            float adjDrain = MovePredicates.drainAt(game, gameState, adj, playerId);
-                            if (adjDrain > bestAdjDrain) {
-                                bestAdjDrain = adjDrain;
-                                bestAdjLoc = adj;
-                            }
-                        } catch (Exception ie) { /* skip non-comparable */ }
-                    }
-                    if (bestAdjLoc != null && bestAdjDrain < currentDrainV85) {
-                        // V85 UPDATED 2026-07-06 T4.1: the -2000 + bare return killed every
-                        // doctrine rule below it (move-1 boundary: the Cantina↔Mos Eisley
-                        // shuttle was dead; move-2: Vader farmed drain instead of hunting).
-                        // Now an R1-internal weight (-800, NO return): still blocks every
-                        // same-band R1 wander (V85-protect boundary: Rey stays at -720 < Pass),
-                        // while an R2+ doctrine claim (V73 shuttle, V35 hunt…) outranks it by band.
-                        action.addReasoning(String.format(
-                            "V85 UNCONTESTED: at %s (drain %.0f) with no opponent — "
-                                + "best adjacent %s only drains %.0f. STAY for the better drain!",
-                            location.getTitle(), currentDrainV85,
-                            bestAdjLoc.getTitle(), bestAdjDrain),
-                            -800.0f);
-                        logger.warn("V85 UNCONTESTED: {} drain {} → best adj {} drain {} → -800 (weight)",
-                            location.getTitle(), (int)currentDrainV85,
-                            bestAdjLoc.getTitle(), (int)bestAdjDrain);
-                    }
+                MoveDrainRoutingPolicy.UncontestedDeparture v85 =
+                    MoveDrainRoutingPolicy.uncontestedDeparture(
+                        gameState, game, location, playerId);
+                if (v85.contribution().applies()) {
+                    // V85 UPDATED 2026-07-06 T4.1: the -2000 + bare return killed every
+                    // doctrine rule below it (move-1 boundary: the Cantina↔Mos Eisley
+                    // shuttle was dead; move-2: Vader farmed drain instead of hunting).
+                    // Now an R1-internal weight (-800, NO return): still blocks every
+                    // same-band R1 wander (V85-protect boundary: Rey stays at -720 < Pass),
+                    // while an R2+ doctrine claim (V73 shuttle, V35 hunt…) outranks it by band.
+                    action.addReasoning(
+                        v85.contribution().reason(),
+                        v85.contribution().delta());
+                    logger.warn("V85 UNCONTESTED: {} drain {} → best adj {} drain {} → -800 (weight)",
+                        location.getTitle(), (int)v85.currentDrain(),
+                        v85.bestAdjacent().getTitle(), (int)v85.bestAdjacentDrain());
                 }
             } catch (Exception e) {
                 logger.debug("V85 UNCONTESTED CHECK: Error: {}", e.getMessage());
@@ -2547,58 +2529,35 @@ public class MoveEvaluator extends ActionEvaluator {
         // Penalize moves to locations where our force drain would be low/reduced.
         if (gameState != null && game != null && location != null) {
             try {
-                // Extract destination location from action text
-                // Format: "Move X from A to B using landspeed" or "Move X from A to B using card"
                 String actionTextLowerFD = action.getDisplayText() != null
                     ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
-                PhysicalCard destLocation = null;
-
-                // Try to match destination by checking all locations
-                for (PhysicalCard locCard : gameState.getLocationsInOrder()) {
-                    if (locCard == null || locCard == location) continue;
-                    String locName = locCard.getTitle() != null
-                        ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
-                    if (!locName.isEmpty() && actionTextLowerFD.contains(locName)) {
-                        destLocation = locCard;
-                        break;
-                    }
-                }
-
-                if (destLocation != null) {
-                    // V29.13 UPDATED 2026-07-06 T4.1: drain math routed through the shared engine
-                    // metric MovePredicates.drainAt (behavior-identical — already engine-based;
-                    // move-6 single-detection consolidation).
-                    float destDrainAmount = MovePredicates.drainAt(game, gameState, destLocation, playerId);
-                    float currentDrainAmount = MovePredicates.drainAt(game, gameState, location, playerId);
-
-                    // V73 (Steve, 2026-05-15): Dropped the `< 1` and `>= 2` thresholds
-                    // that left Cantina(2) → Lars Farm(1) un-penalized (and
-                    // drain-0 → drain-1 un-bonused). Now any drain decrease is
-                    // penalized, any drain increase is bonused, scaled by delta.
-                    if (destDrainAmount < currentDrainAmount) {
-                        float delta = currentDrainAmount - destDrainAmount;
-                        float drainPenalty = -40.0f * delta;  // -40 per drain lost
-                        if (destDrainAmount <= 0) drainPenalty -= 80.0f;  // extra penalty for drain-0
-                        action.addReasoning(String.format(
-                            "V29.13 BAD DRAIN SITE: %s has drain %.0f (current location has %.0f) — stay for better drain!",
-                            destLocation.getTitle(), destDrainAmount, currentDrainAmount), drainPenalty);
+                MoveDrainRoutingPolicy.ExplicitDestinationDrain drain =
+                    MoveDrainRoutingPolicy.explicitDestinationDrain(
+                        gameState, game, location, playerId,
+                        actionTextLowerFD);
+                if (drain.contribution().applies()) {
+                    action.addReasoning(
+                        drain.contribution().reason(),
+                        drain.contribution().delta());
+                    if (drain.direction()
+                            == MoveDrainRoutingPolicy.DrainDirection.LOSS) {
                         logger.warn("V29.13 BAD DRAIN: Moving to {} drain={} vs current {} drain={} — penalty {}",
-                            destLocation.getTitle(), (int)destDrainAmount,
-                            location.getTitle(), (int)currentDrainAmount, (int)drainPenalty);
-                    } else if (destDrainAmount > currentDrainAmount) {
-                        float delta = destDrainAmount - currentDrainAmount;
-                        float drainBonus = 40.0f * delta;  // +40 per drain gained
-                        action.addReasoning(String.format(
-                            "V29.13 GOOD DRAIN SITE: %s has drain %.0f — better than current %.0f!",
-                            destLocation.getTitle(), destDrainAmount, currentDrainAmount), drainBonus);
+                            drain.destination().getTitle(), (int)drain.destinationDrain(),
+                            location.getTitle(), (int)drain.currentDrain(),
+                            (int)drain.contribution().delta());
+                    } else if (drain.direction()
+                            == MoveDrainRoutingPolicy.DrainDirection.GAIN) {
                         logger.info("V29.13 GOOD DRAIN: Moving to {} drain={} from {} drain={} — bonus {}",
-                            destLocation.getTitle(), (int)destDrainAmount,
-                            location.getTitle(), (int)currentDrainAmount, (int)drainBonus);
+                            drain.destination().getTitle(), (int)drain.destinationDrain(),
+                            location.getTitle(), (int)drain.currentDrain(),
+                            (int)drain.contribution().delta());
                         // V29.13 UPDATED 2026-07-06 T4.1: a positive drain-delta claims R2 DOCTRINE
                         // (non-battle). L2 strength gate: accepted only when drainDelta >= 2
                         // (fine 40*delta alone is < +200 for small deltas — exactly ruling L2's
                         // drain-delta arm).
-                        ladderClaimR2("V29.13 GOOD DRAIN", drainBonus, delta, false);
+                        ladderClaimR2("V29.13 GOOD DRAIN",
+                            drain.contribution().delta(),
+                            drain.drainDelta(), false);
                     }
                 }
             } catch (Exception e) {
@@ -2691,57 +2650,26 @@ public class MoveEvaluator extends ActionEvaluator {
         // chars at the source (preserving the source drain).
         if (location != null && location.getTitle() != null && game != null) {
             try {
-                String srcTitleLower = location.getTitle().toLowerCase(Locale.ROOT);
-                String destTitleLower = "";
-                PhysicalCard destLoc = null;
                 String actionDisplay = action.getDisplayText() != null
                     ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
-                // Identify destination from action text
-                for (PhysicalCard loc : gameState.getTopLocations()) {
-                    if (loc == null || loc == location) continue;
-                    String locTitle = loc.getTitle();
-                    if (locTitle == null) continue;
-                    String ltLower = locTitle.toLowerCase(Locale.ROOT);
-                    if (!ltLower.isEmpty() && actionDisplay.contains(ltLower)) {
-                        destLoc = loc;
-                        destTitleLower = ltLower;
-                        break;
-                    }
-                }
-
-                if (destLoc != null) {
-                    // Specific shuttle: Cantina ↔ Mos Eisley (Mos Eisley's text grants the free-move)
-                    boolean cantinaMosEisleyShuttle =
-                        (srcTitleLower.contains("cantina") && destTitleLower.contains("mos eisley"))
-                        || (srcTitleLower.contains("mos eisley") && destTitleLower.contains("cantina"));
-
-                    if (cantinaMosEisleyShuttle) {
-                        // Check that source will RETAIN a character after this move
-                        // (we don't want to abandon Cantina entirely)
-                        int srcCharsRemainingAfterMove = 0;
-                        for (PhysicalCard c : gameState.getCardsAtLocation(location)) {
-                            if (c == null || c == cardToMove) continue;
-                            if (!playerId.equals(c.getOwner())) continue;
-                            if (c.getBlueprint() == null) continue;
-                            if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                            srcCharsRemainingAfterMove++;
-                        }
-                        if (srcCharsRemainingAfterMove >= 1) {
-                            // Source keeps a draining presence → shuttle is net-positive
-                            action.addReasoning(String.format(
-                                "V73 SHUTTLE: Cantina ↔ Mos Eisley shuttle — drain BOTH this turn (%d chars stay at %s)",
-                                srcCharsRemainingAfterMove, location.getTitle()), 400.0f);
-                            logger.warn("V73 SHUTTLE: {} → {} — drain BOTH Tatooine sites (+400)",
-                                location.getTitle(), destLoc.getTitle());
-                            // V73 UPDATED 2026-07-06 T4.1: the shuttle claims R2 DOCTRINE (non-battle;
-                            // +400 passes L2). This is the move-1 boundary fix: V85's old -2000+return
-                            // buried the shuttle forever; now R2 base + fines = +5560 > Pass.
-                            ladderClaimR2("V73 SHUTTLE", 400.0f, 0.0f, false);
-                        } else {
-                            // Source becomes empty → not a shuttle, just a relocation
-                            logger.debug("V73: Cantina ↔ Mos Eisley move but source goes empty — no shuttle bonus");
-                        }
-                    }
+                MoveDrainRoutingPolicy.CantinaShuttle shuttle =
+                    MoveDrainRoutingPolicy.cantinaShuttle(
+                        gameState, location, cardToMove, playerId,
+                        actionDisplay);
+                if (shuttle.contribution().applies()) {
+                    action.addReasoning(
+                        shuttle.contribution().reason(),
+                        shuttle.contribution().delta());
+                    logger.warn("V73 SHUTTLE: {} → {} — drain BOTH Tatooine sites (+400)",
+                        location.getTitle(), shuttle.destination().getTitle());
+                    // V73 UPDATED 2026-07-06 T4.1: the shuttle claims R2 DOCTRINE (non-battle;
+                    // +400 passes L2). This is the move-1 boundary fix: V85's old -2000+return
+                    // buried the shuttle forever; now R2 base + fines = +5560 > Pass.
+                    ladderClaimR2("V73 SHUTTLE",
+                        shuttle.contribution().delta(), 0.0f, false);
+                } else if (shuttle.pairMatched()) {
+                    // Source becomes empty → not a shuttle, just a relocation
+                    logger.debug("V73: Cantina ↔ Mos Eisley move but source goes empty — no shuttle bonus");
                 }
             } catch (Exception e) {
                 logger.debug("V73 SHUTTLE check error: {}", e.getMessage());
