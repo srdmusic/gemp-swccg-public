@@ -26,10 +26,16 @@ public class MoveThreatSourceParityTest {
 
         assertEquals(1, countOccurrences(
                 move, "MoveThreatPolicy.evaluate("));
+        assertEquals(1, countOccurrences(
+                move, "MoveThreatPolicy.flee("));
         assertFalse(move.contains("private enum ThreatLevel"));
         assertFalse(move.contains("calculateThreatLevel("));
+        assertFalse(move.contains(
+                "theirPower - myPower > POWER_DIFF_FOR_FLEE"));
         assertTrue(policy.contains("public enum ThreatLevel"));
         assertTrue(policy.contains("public static Evaluation evaluate("));
+        assertTrue(policy.contains(
+                "public static FleeEvaluation flee("));
         assertTrue(policy.contains("-1500.0f"));
         assertTrue(policy.contains("-500.0f"));
         assertTrue(policy.contains("20.0f"));
@@ -53,6 +59,8 @@ public class MoveThreatSourceParityTest {
                 "V37.1 STAY AND CRUSH at {}: power +{}"));
         assertTrue(move.contains(
                 "V37.1 STAY AND FIGHT at {}: power +{}"));
+        assertTrue(move.contains(
+                "action.addReasoning(flee.reason(), flee.delta())"));
     }
 
     @Test
@@ -70,6 +78,51 @@ public class MoveThreatSourceParityTest {
         assertTrue(sourceScan > rankMethod);
         assertTrue(policyCall > sourceScan);
         assertTrue(v85 > policyCall);
+    }
+
+    @Test
+    public void fleeCallRemainsAfterV85AndBeforeAttack()
+            throws IOException {
+        String move = evaluatorSource("rando");
+        int rankMethod = move.indexOf("private void rankMoveFromLocation(");
+        int v85 = move.indexOf("// === V85", rankMethod);
+        int flee = move.indexOf("MoveThreatPolicy.flee(", v85);
+        int fleeScore = move.indexOf(
+                "action.addReasoning(flee.reason(), flee.delta())", flee);
+        int attack = move.indexOf(
+                "// === OFFENSIVE ATTACK OPPORTUNITY ===", fleeScore);
+
+        assertTrue(v85 > rankMethod);
+        assertTrue(flee > v85);
+        assertTrue(fleeScore > flee);
+        assertTrue(attack > fleeScore);
+    }
+
+    @Test
+    public void fleeOwnerPreservesStrictGateFormulaAndCap()
+            throws IOException {
+        String policy = policySource();
+        int method = policy.indexOf(
+                "public static FleeEvaluation flee(");
+        int difference = policy.indexOf(
+                "float disadvantage = opponentPower - ourPower", method);
+        int strictGate = policy.indexOf(
+                "disadvantage > powerDifferenceThreshold", difference);
+        int opponentGate = policy.indexOf(
+                "opponentPower > 0.0f", strictGate);
+        int reason = policy.indexOf(
+                "\"Outmatched by \" + (int) disadvantage + \" - should flee\"",
+                opponentGate);
+        int formula = policy.indexOf(
+                "goodDelta * Math.min(disadvantage / 2.0f, 5.0f)",
+                reason);
+
+        assertTrue(method >= 0);
+        assertTrue(difference > method);
+        assertTrue(strictGate > difference);
+        assertTrue(opponentGate > strictGate);
+        assertTrue(reason > opponentGate);
+        assertTrue(formula > reason);
     }
 
     @Test

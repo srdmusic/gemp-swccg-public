@@ -17,6 +17,13 @@ public final class MoveThreatPolicy {
         }
     }
 
+    public record FleeEvaluation(boolean applies, String reason,
+                                 float delta, float disadvantage) {
+        private static FleeEvaluation none() {
+            return new FleeEvaluation(false, null, 0.0f, 0.0f);
+        }
+    }
+
     private MoveThreatPolicy() {
     }
 
@@ -60,5 +67,21 @@ public final class MoveThreatPolicy {
                 "Strategic retreat - badly outmatched ("
                         + (int) powerDiff + ")",
                 150.0f, true);
+    }
+
+    public static FleeEvaluation flee(
+            float ourPower, float opponentPower,
+            int powerDifferenceThreshold, float goodDelta) {
+        float disadvantage = opponentPower - ourPower;
+        if (!(disadvantage > powerDifferenceThreshold)
+                || !(opponentPower > 0.0f)) {
+            return FleeEvaluation.none();
+        }
+
+        return new FleeEvaluation(
+                true,
+                "Outmatched by " + (int) disadvantage + " - should flee",
+                goodDelta * Math.min(disadvantage / 2.0f, 5.0f),
+                disadvantage);
     }
 }

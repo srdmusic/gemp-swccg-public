@@ -1940,10 +1940,10 @@ public class MoveEvaluator extends ActionEvaluator {
         }
 
         // === FLEE LOGIC ===
-        if (theirPower - myPower > POWER_DIFF_FOR_FLEE && theirPower > 0) {
-            float disadvantage = theirPower - myPower;
-            action.addReasoning("Outmatched by " + (int)disadvantage + " - should flee",
-                               GOOD_DELTA * Math.min(disadvantage / 2, 5));
+        MoveThreatPolicy.FleeEvaluation flee = MoveThreatPolicy.flee(
+            myPower, theirPower, POWER_DIFF_FOR_FLEE, GOOD_DELTA);
+        if (flee.applies()) {
+            action.addReasoning(flee.reason(), flee.delta());
             // T4.1 (2026-07-06): early return removed — R1 fine (≤ +50), block falls through.
         }
 

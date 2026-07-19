@@ -1,3 +1,20 @@
+  ==== V227 AI-ONLY MOVE FLEE CONTRIBUTION OWNER (2026-07-19, both bots) ====
+Existing shared MoveThreatPolicy now also owns the duplicated generic FLEE strict predicates,
+disadvantage calculation, integer-truncated reason, caller-supplied threshold/base delta, and
+capped raw contribution. Both adapters retain board-power scanning, direct score application,
+the absence of logging or ladder mutation, and the original position after V85 and before attack
+analysis. Behavior is unchanged: FLEE applies only when opponentPower - ourPower is strictly above
+2 and opponent power is strictly positive; its score remains 10 * min(disadvantage / 2, 5), capped
+at +50. There is still no rank claim, veto, log, early return, destination check, or reachability
+check. Float truncation plus NaN, zero, negative, and exact-threshold behavior remain intact. V85,
+attack opportunity, V29.7/V29.9, routing, finalization, and physical-card resolution are untouched.
+Production edits are AI-only. Verification passed 201 focused MOVE tests and the full 1,378-test
+reactor with 0 failures, 0 errors, and 26 skipped. Package, source-boundary, forbidden-symbol,
+artifact, mirror, and independent source-review gates passed; server jar SHA-256 is
+d97739b368db5d5b957ceb9c1264666ddc6f6d19c76f7ccf08084146af6e8998 and packaged web.jar SHA-256 is
+203d1f5e917375aaba84abadcfc40b421ac599e9760e938400b9aaac8a32a279. Runtime load and live-game
+proof remain separate gates. Revert the single V227 commit. See AI_CHANGELOG 2026-07-19.
+
   ==== V226 AI-ONLY MOVE HIDDEN-PATH TRANSIT OWNER (2026-07-19, both bots) ====
 Existing shared MoveTransitPolicy now also owns the duplicated V53b/V60 Hidden Path parent MOVE
 classification: objective-title gate, source-title branches, landspeed predicate, exact reasons,

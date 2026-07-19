@@ -10,6 +10,8 @@ import static org.junit.Assert.assertTrue;
 public class MoveThreatPolicyTest {
     private static final int FAVORABLE = 4;
     private static final int DANGER = -6;
+    private static final int FLEE_THRESHOLD = 2;
+    private static final float GOOD_DELTA = 10.0f;
 
     @Test
     public void opponentPowerGatePreservesStrictGreaterThanZero() {
@@ -106,10 +108,55 @@ public class MoveThreatPolicyTest {
         assertTrue(result.claimSurvivalRank());
     }
 
+    @Test
+    public void fleePreservesStrictDifferenceAndOpponentPowerGates() {
+        assertNoFlee(3.0f, 5.0f);
+        assertTrue(flee(3.0f, Math.nextUp(5.0f)).applies());
+        assertNoFlee(-3.0f, 0.0f);
+        assertNoFlee(0.0f, -1.0f);
+        assertNoFlee(Float.NaN, 5.0f);
+        assertNoFlee(1.0f, Float.NaN);
+    }
+
+    @Test
+    public void fleePreservesReasonTruncationAndRawFormula() {
+        MoveThreatPolicy.FleeEvaluation result = flee(2.0f, 5.9f);
+
+        assertTrue(result.applies());
+        assertEquals("Outmatched by 3 - should flee", result.reason());
+        assertFloat(19.5f, result.delta());
+        assertFloat(3.9f, result.disadvantage());
+    }
+
+    @Test
+    public void fleePreservesFiveUnitMultiplierCap() {
+        assertFloat(49.5f, flee(0.0f, 9.9f).delta());
+        assertFloat(50.0f, flee(0.0f, 10.0f).delta());
+        assertFloat(50.0f, flee(0.0f, 100.0f).delta());
+    }
+
+    @Test
+    public void fleeUsesCallerSuppliedThresholdAndDelta() {
+        MoveThreatPolicy.FleeEvaluation below =
+                MoveThreatPolicy.flee(0.0f, 4.0f, 4, 3.0f);
+        MoveThreatPolicy.FleeEvaluation above =
+                MoveThreatPolicy.flee(0.0f, 5.0f, 4, 3.0f);
+
+        assertFalse(below.applies());
+        assertTrue(above.applies());
+        assertFloat(7.5f, above.delta());
+    }
+
     private static MoveThreatPolicy.Evaluation evaluate(
             float opponentPower, float powerDiff) {
         return MoveThreatPolicy.evaluate(
                 opponentPower, powerDiff, FAVORABLE, DANGER);
+    }
+
+    private static MoveThreatPolicy.FleeEvaluation flee(
+            float ourPower, float opponentPower) {
+        return MoveThreatPolicy.flee(
+                ourPower, opponentPower, FLEE_THRESHOLD, GOOD_DELTA);
     }
 
     private static void assertNoThreat(float opponentPower) {
@@ -124,6 +171,15 @@ public class MoveThreatPolicyTest {
     private static void assertLevel(
             MoveThreatPolicy.ThreatLevel expected, float powerDiff) {
         assertEquals(expected, evaluate(1.0f, powerDiff).level());
+    }
+
+    private static void assertNoFlee(float ourPower, float opponentPower) {
+        MoveThreatPolicy.FleeEvaluation result =
+                flee(ourPower, opponentPower);
+        assertFalse(result.applies());
+        assertNull(result.reason());
+        assertFloat(0.0f, result.delta());
+        assertFloat(0.0f, result.disadvantage());
     }
 
     private static void assertFloat(float expected, float actual) {
