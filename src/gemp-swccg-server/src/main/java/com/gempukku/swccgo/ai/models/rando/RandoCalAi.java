@@ -16,6 +16,7 @@ import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
+import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -761,55 +762,23 @@ public class RandoCalAi extends HeuristicAiBase {
             //   Rey deck    → "You Have That Power, Too"
             if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE) {
                 String[] results = params != null ? params.get("results") : null;
-                if (results != null && results.length > 0) {
-                    boolean isTfismfChoice = false;
-                    for (String r : results) {
-                        if (r == null) continue;
-                        String rLower = r.toLowerCase(java.util.Locale.ROOT);
-                        if (rLower.contains("i have it") || rLower.contains("my father has it")
-                            || rLower.contains("you have that power")) {
-                            isTfismfChoice = true;
-                            break;
-                        }
+                SetupPolicy.SagaSelection saga =
+                        SetupPolicy.chooseSaga(deckName, results);
+                if (saga.sagaChoice() && saga.index() >= 0) {
+                    LOG.warn("V61 EPIC EVENT SAGA: deck='{}' choices={} → {} (index {})",
+                            deckName, java.util.Arrays.asList(results),
+                            saga.reason(), saga.index());
+                    // TRACE ORACLE V2: route + final-response observation ONLY.
+                    if (traceOpened) {
+                        TraceSession.recordRoute(TraceRoute.V61_SAGA_CHOICE,
+                                "MULTIPLE_CHOICE results contain TFISMF saga options", null);
+                        // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
+                        TraceSession.recordEvaluatorLaneNotApplicable(
+                                "direct interceptor V61: evaluator lane never runs on this route");
+                        TraceSession.recordFinalResponse(
+                                String.valueOf(saga.index()), true);
                     }
-                    if (isTfismfChoice) {
-                        String deckLower = deckName != null
-                            ? deckName.toLowerCase(java.util.Locale.ROOT) : "";
-                        int luke = -1, anakin = -1, rey = -1;
-                        for (int i = 0; i < results.length; i++) {
-                            String rLower = results[i] != null
-                                ? results[i].toLowerCase(java.util.Locale.ROOT) : "";
-                            if (rLower.contains("my father has it")) anakin = i;
-                            else if (rLower.contains("you have that power")) rey = i;
-                            else if (rLower.contains("i have it")) luke = i;
-                        }
-                        int pick = -1;
-                        String why = "";
-                        if (deckLower.contains("luke") && luke >= 0) {
-                            pick = luke; why = "Luke deck → 'I Have It'";
-                        } else if (deckLower.contains("anakin") && anakin >= 0) {
-                            pick = anakin; why = "Anakin deck → 'My Father Has It'";
-                        } else if (deckLower.contains("rey") && rey >= 0) {
-                            pick = rey; why = "Rey deck → 'You Have That Power, Too'";
-                        } else if (luke >= 0) {
-                            // Default to Luke — most common, matches deck-name fallback in V29.15
-                            pick = luke; why = "Default (no deck match) → 'I Have It'";
-                        }
-                        if (pick >= 0) {
-                            LOG.warn("V61 EPIC EVENT SAGA: deck='{}' choices={} → {} (index {})",
-                                deckName, java.util.Arrays.asList(results), why, pick);
-                            // TRACE ORACLE V2: route + final-response observation ONLY.
-                            if (traceOpened) {
-                                TraceSession.recordRoute(TraceRoute.V61_SAGA_CHOICE,
-                                    "MULTIPLE_CHOICE results contain TFISMF saga options", null);
-                                // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
-                                TraceSession.recordEvaluatorLaneNotApplicable(
-                                    "direct interceptor V61: evaluator lane never runs on this route");
-                                TraceSession.recordFinalResponse(String.valueOf(pick), true);
-                            }
-                            return String.valueOf(pick);
-                        }
-                    }
+                    return String.valueOf(saga.index());
                 }
             }
 

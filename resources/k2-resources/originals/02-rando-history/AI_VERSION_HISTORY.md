@@ -7101,3 +7101,13 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     remain preserved. Offline package and logic tests pass; YesNoDecision exposes only Yes/No.
     Permanent boundary: AI work may not modify common, logic, cards, async/client, mediator, or
     player-decision wire code. Details in AI_CHANGELOG 2026-07-14.
+
+  ════ V240 (2026-07-18): shared AI-only SETUP phase policy (both bots) ════
+    Added common SetupPolicy + read-only SetupFactsReader and routed both bots' CardSelection,
+    ActionText, and real V61 saga interceptor through them. Existing V21/V22/V25/V43/V61/V67o/
+    V67q/V80/V126/V186/V187 magnitudes, order, terminal behavior, candidate order, temporary-ID
+    handling, and fail-open adapter boundaries are preserved. Duplicate inline scores and option
+    scans were deleted. AI-only boundary holds; no GEMP engine, card, wire, or client source changed.
+    Verified: focused 24/0/0/0; full reactor 1555/0/0/26; independent parity audit PASS; package
+    PASS; server/web jar hashes and artifact contents recorded in AI_CHANGELOG 2026-07-18.
+    Runtime reload is pending Docker availability and an empty game hall.

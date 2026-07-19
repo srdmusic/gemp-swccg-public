@@ -18,6 +18,8 @@ import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SetupFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
@@ -146,6 +148,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         super("CardSelection");
     }
 
+    private void applySetupContributions(
+            EvaluatedAction action,
+            List<SetupPolicy.Contribution> contributions) {
+        for (SetupPolicy.Contribution contribution : contributions) {
+            action.addReasoning(contribution.reason(), contribution.delta());
+            logger.warn("SETUP {}: {} ({})",
+                    contribution.branch(), contribution.reason(), contribution.delta());
+        }
+    }
+
+    private void applySetupContribution(
+            EvaluatedAction action, SetupPolicy.Contribution contribution) {
+        if (contribution != null) {
+            applySetupContributions(action, List.of(contribution));
+        }
+    }
+
     /**
      * Check if gameText contains a ship name, filtering out known false positives.
      * First checks if the text contains the ship name at all. If it does,
@@ -233,65 +252,35 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         logger.warn("🔍 Decision type: {}", context.getDecisionType());
         logger.warn("🔍 Decision text (FULL): {}", text);
 
-        // === V21: BAN CERTAIN EFFECTS AS STARTING EFFECTS ===
-        // These should never be deployed via starting interrupt (turn 0)
-        // They CAN still be deployed from hand during turn 1+ deploy phase
-        if (context.getTurnNumber() <= 0) {
-            java.util.Set<String> BANNED_STARTING_EFFECTS = new java.util.HashSet<>(java.util.Arrays.asList(
-                "no escape", "no escape (v)",
-                "coarse and rough and irritating",
-                // V67p (Steve): Tentacle is not a useful starting interrupt — it's a
-                // counter to Dianoga/garbage compactor scenarios, not a turn-0 setup card.
-                // Picking it as starting effect wastes the turn-0 slot.
-                "tentacle"
-            ));
-
-            // Check if any card in this selection is banned
+        // V21 terminal decision remains ahead of every other card-selection route.
+        if (SetupPolicy.isSetupTurn(context.getTurnNumber())) {
             GameState startGameState = context.getGameState();
             List<String> startCardIds = context.getCardIds();
-            boolean hasBannedCard = false;
-            java.util.Map<String, Boolean> cardBanStatus = new java.util.HashMap<>();
-
+            List<SetupPolicy.StartingCandidate> startCandidates = new ArrayList<>();
             if (startGameState != null && startCardIds != null) {
                 for (String cid : startCardIds) {
+                    String title = null;
                     try {
                         PhysicalCard pc = startGameState.findCardById(Integer.parseInt(cid));
                         if (pc != null) {
-                            String cardTitle = pc.getTitle();
-                            if (cardTitle != null) {
-                                String titleLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
-                                boolean banned = false;
-                                for (String b : BANNED_STARTING_EFFECTS) {
-                                    if (titleLower.contains(b)) {
-                                        banned = true;
-                                        break;
-                                    }
-                                }
-                                cardBanStatus.put(cid, banned);
-                                if (banned) {
-                                    hasBannedCard = true;
-                                    logger.warn("V21 STARTING BAN: '{}' is banned as starting effect", cardTitle);
-                                }
-                            }
+                            title = pc.getTitle();
                         }
                     } catch (Exception e) {
-                        // ignore
+                        // Preserve the real-card-only V21 lookup.
                     }
+                    startCandidates.add(new SetupPolicy.StartingCandidate(cid, title));
                 }
             }
-
-            if (hasBannedCard) {
+            SetupPolicy.EarlyBanEvaluation startBan =
+                    SetupPolicy.earlyStartingEffectBan(startCandidates);
+            if (startBan.terminalDecision()) {
                 List<EvaluatedAction> startBanActions = new ArrayList<>();
-                for (String cid : startCardIds) {
-                    Boolean banned = cardBanStatus.get(cid);
-                    boolean isBanned = banned != null && banned;
-                    EvaluatedAction action = new EvaluatedAction(
-                        cid,
+                for (SetupPolicy.EarlyBanCandidate candidate : startBan.candidates()) {
+                    startBanActions.add(new EvaluatedAction(
+                        candidate.actionId(),
                         ActionType.UNKNOWN,
-                        isBanned ? -500.0f : 100.0f,
-                        isBanned ? "BANNED as starting effect" : "OK as starting effect"
-                    );
-                    startBanActions.add(action);
+                        candidate.score(),
+                        candidate.reason()));
                 }
                 logger.warn("V21 STARTING BAN: Returning {} scored actions", startBanActions.size());
                 return startBanActions;
@@ -6310,40 +6299,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                 if (blueprint != null) {
                     title = blueprint.getTitle() != null ? blueprint.getTitle() : "?";
-                    String gameText = blueprint.getGameText() != null ? blueprint.getGameText().toLowerCase(java.util.Locale.ROOT) : "";
-
-                    // HARD PREFER: interrupts that deploy or reference the Epic Event
-                    if (gameText.contains("force is strong in my family")
-                        || gameText.contains("force is strong")
-                        || gameText.contains("epic")) {
-                        action.addReasoning("V43 EPIC EVENT: Deploys saga Epic Event — MUST USE THIS!", 1500.0f);
-                        logger.warn("V43 STARTING INTERRUPT: {} references Epic Event — HARD PREFER (+1500)", title);
-                    } else {
-                        // V43 UPDATED 2026-07-07 (take 2 — the first scan looked for "from reserve
-                        // deck", a phrase NEITHER card contains; read the actual cards this time):
-                        // Prepared Defenses STARTING = "Deploy up to three Effects if each of them
-                        // deploys for free..." (Card9_139). Surface Defense (V) STARTING = "draw up
-                        // to 12 cards instead of 8" (Card200_125) — deploys NOTHING at setup.
-                        // Discriminator: the STARTING clause deploys Effects → prefer, scaled by count.
-                        String startingClause = gameText;
-                        int sIdx = gameText.indexOf("starting:");
-                        if (sIdx >= 0) startingClause = gameText.substring(sIdx);
-                        boolean startingDeploysEffects = startingClause.contains("deploy")
-                            && startingClause.contains("effect");
-                        if (startingDeploysEffects) {
-                            float effectBonus = 200.0f;
-                            if (startingClause.contains("three effects") || startingClause.contains("3 effects")) effectBonus = 300.0f;
-                            else if (startingClause.contains("two effects") || startingClause.contains("2 effects")) effectBonus = 250.0f;
-                            action.addReasoning("V43 EFFECT-DEPLOYER: STARTING clause deploys Effects", effectBonus);
-                            logger.warn("V43 STARTING INTERRUPT: {} deploys Effects at setup — PREFER (+{})", title, effectBonus);
-                        } else if (startingClause.contains("deploy")) {
-                            action.addReasoning("V43: STARTING clause deploys something", 100.0f);
-                            logger.warn("V43 STARTING INTERRUPT: {} deploys at setup — mild prefer (+100)", title);
-                        } else {
-                            action.addReasoning("V43: Generic starting interrupt — no Epic Event", 0.0f);
-                            logger.warn("V43 STARTING INTERRUPT: {} is generic (no Epic Event reference)", title);
-                        }
-                    }
+                    applySetupContribution(
+                            action,
+                            SetupPolicy.startingInterrupt(blueprint.getGameText()));
+                    logger.warn("V43 STARTING INTERRUPT: {} scored by shared SETUP policy", title);
                 }
             } catch (Exception e) {
                 logger.debug("V43 STARTING INTERRUPT: Error evaluating card {}: {}", cardId, e.getMessage());
@@ -6413,81 +6372,38 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 }
 
                 if (locTitle != null && locBp != null) {
-                    // V22: +50 base ONLY if this location is mentioned in the starting interrupt
-                    if (decisionTextLower.contains(locTitleLower)) {
-                        action.addReasoning("V22 MENTIONED IN STARTING INTERRUPT", 50.0f);
-                        logger.warn("V22 STARTING LOC: {} is mentioned in interrupt text (+50)", locTitle);
-                    }
+                    applySetupContribution(
+                            action,
+                            SetupPolicy.startingLocationMention(
+                                    locTitle, decisionTextLower));
 
-                    // V22: Objective-relevant starting location gets big boost
                     if (startLocObjAnalyzer != null && startLocObjAnalyzer.isAnalyzed()) {
-                        if (startLocObjAnalyzer.isObjectiveRelevantLocation(locTitle)) {
-                            float objBonus = startLocObjAnalyzer.getLocationObjectiveBonus(locTitle);
-                            action.addReasoning("V22 OBJECTIVE STARTING LOCATION: " + locTitle, objBonus);
-                            logger.warn("V22 STARTING LOC: {} is objective-relevant (+{})", locTitle, objBonus);
+                        boolean objectiveRelevant =
+                                startLocObjAnalyzer.isObjectiveRelevantLocation(locTitle);
+                        if (objectiveRelevant) {
+                            applySetupContribution(
+                                    action,
+                                    SetupPolicy.startingLocationObjective(
+                                            locTitle,
+                                            true,
+                                            startLocObjAnalyzer.getLocationObjectiveBonus(locTitle)));
                         }
                     }
 
-                    // === V24.10: EXTERIOR CC SITE MUST BE STARTING LOCATION ===
                     if (locTitleLower.contains("cloud city")) {
                         boolean isExterior = locBp.hasIcon(com.gempukku.swccgo.common.Icon.EXTERIOR_SITE);
                         boolean isInterior = locBp.hasIcon(com.gempukku.swccgo.common.Icon.INTERIOR_SITE);
-                        if (isExterior && !isInterior) {
-                            action.addReasoning("V24.10 EXTERIOR CC STARTING LOCATION: Only way to deploy — I'm Sorry can't pull this!", 500.0f);
-                            logger.warn("V24.10 STARTING LOC: {} is EXTERIOR — HARD PREFER as starting location (+500)", locTitle);
-                        } else if (isInterior) {
-                            action.addReasoning("V24.10 INTERIOR CC: Slip Sliding or I'm Sorry will pull this — save starting slot for exterior!", -500.0f);
-                            logger.warn("V24.10 STARTING LOC: {} is INTERIOR — HARD BLOCK as starting location (-500)", locTitle);
-                        }
+                        applySetupContribution(
+                                action,
+                                SetupPolicy.startingLocationCloudCity(
+                                        locTitle, isExterior, isInterior));
                     }
 
-                    // V22: Starting locations that pull cards from Reserve Deck
-                    // V71 (Steve, 2026-05-15): For LOCATIONS, the base getGameText() often
-                    // returns empty. The actual game text lives in
-                    // getLocationLightSideGameText() and getLocationDarkSideGameText().
-                    // Concat ALL three so keyword checks (reserve / epic / force gen /
-                    // battleground) work for locations regardless of which side stores
-                    // the text. This fixes the Ajan Kloss bug: its "Epic Event" mention
-                    // is in the Light Side text, which V29.14 was missing.
-                    String locBaseText = locBp.getGameText();
-                    String locLightText = null;
-                    String locDarkText = null;
-                    try { locLightText = locBp.getLocationLightSideGameText(); } catch (Exception ignored) { }
-                    try { locDarkText = locBp.getLocationDarkSideGameText(); } catch (Exception ignored) { }
-                    StringBuilder locAllSb = new StringBuilder();
-                    if (locBaseText != null) locAllSb.append(locBaseText).append(' ');
-                    if (locLightText != null) locAllSb.append(locLightText).append(' ');
-                    if (locDarkText != null) locAllSb.append(locDarkText).append(' ');
-                    String locTextLower = locAllSb.toString().toLowerCase(java.util.Locale.ROOT);
-                    if (!locTextLower.isEmpty()) {
-                        if (locTextLower.contains("reserve")) {
-                            action.addReasoning("V22 RESERVE PULL: starting location pulls from reserve deck", 75.0f);
-                            logger.warn("V22 STARTING LOC: {} pulls from Reserve Deck (+75)", locTitle);
-                        }
-                        if (locTextLower.contains("force generation") || locTextLower.contains("force icon")
-                            || locTextLower.contains("adds one to")) {
-                            action.addReasoning("V22 FORCE GEN: starting location boosts force", 25.0f);
-                            logger.warn("V22 STARTING LOC: {} boosts force generation (+25)", locTitle);
-                        }
-
-                        // === V29.14: EPIC EVENT STARTING LOCATION ===
-                        // Locations whose game text mentions "epic" (e.g. Epic Event pull)
-                        // are critical starting locations — without starting here the deck
-                        // cannot pull its key starting effects.
-                        // V71: now scans Light/Dark side texts (Ajan Kloss text was missed).
-                        if (locTextLower.contains("epic")) {
-                            action.addReasoning("V29.14 EPIC EVENT: game text mentions 'epic' — critical starting location!", 1000.0f);
-                            logger.warn("V29.14 STARTING LOC: {} mentions 'epic' in game text — HARD PREFER (+1000)", locTitle);
-                        }
-                    }
-
-                    // === V29.14: FUNERAL PYRE TITLE CHECK ===
-                    // Belt-and-suspenders: also check card title for "Funeral Pyre"
-                    // This is a key starting location for Luke Saga decks.
-                    if (locTitleLower.contains("funeral pyre")) {
-                        action.addReasoning("V29.14 FUNERAL PYRE: critical starting location for Luke Saga!", 1000.0f);
-                        logger.warn("V29.14 STARTING LOC: {} title contains 'Funeral Pyre' — HARD PREFER (+1000)", locTitle);
-                    }
+                    applySetupContributions(
+                            action,
+                            SetupPolicy.startingLocationText(
+                                    locTitle,
+                                    SetupFactsReader.allLocationText(locBp)));
 
                     // === V67o BATTLEGROUND STARTING LOCATION ===
                     // Steve's rule: starting location should be a BATTLEGROUND so force
@@ -6506,35 +6422,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     // those specific overrides still win; above Force Gen (+25), Reserve
                     // Pull (+75), and Mention-in-Interrupt (+50) so battleground wins
                     // when no specific override applies.
-                    boolean v67oIsBg = false;
-                    String v67oReason = null;
                     String v67oGt = locBp.getGameText();
-                    if (v67oGt != null && v67oGt.toLowerCase(java.util.Locale.ROOT).contains("battleground")) {
-                        v67oIsBg = true;
-                        v67oReason = "game text contains 'battleground'";
-                    } else if (locTitleLower.contains("battleground")) {
-                        v67oIsBg = true;
-                        v67oReason = "title contains 'battleground'";
-                    } else {
+                    boolean v67oLightForce = false;
+                    boolean v67oDarkForce = false;
+                    if ((v67oGt == null || !v67oGt.toLowerCase(java.util.Locale.ROOT).contains("battleground"))
+                            && !locTitleLower.contains("battleground")) {
                         try {
-                            if (locBp.hasIcon(com.gempukku.swccgo.common.Icon.LIGHT_FORCE)
-                                && locBp.hasIcon(com.gempukku.swccgo.common.Icon.DARK_FORCE)) {
-                                v67oIsBg = true;
-                                v67oReason = "site has both LIGHT and DARK force icons";
+                            v67oLightForce = locBp.hasIcon(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
+                            if (v67oLightForce) {
+                                v67oDarkForce = locBp.hasIcon(com.gempukku.swccgo.common.Icon.DARK_FORCE);
                             }
                         } catch (Exception e) { /* ignore */ }
                     }
-                    if (v67oIsBg) {
-                        action.addReasoning("V67o BATTLEGROUND STARTING LOC: " + locTitle
-                            + " is a battleground (" + v67oReason
-                            + ") — drains and battles from turn 1!", 300.0f);
-                        logger.warn("V67o STARTING LOC: {} is BATTLEGROUND ({}) → +300", locTitle, v67oReason);
-                    } else {
-                        action.addReasoning("V67o NON-BATTLEGROUND STARTING LOC: " + locTitle
-                            + " — no force drains/battles possible here, prefer battleground!",
-                            -150.0f);
-                        logger.warn("V67o STARTING LOC: {} is NON-BATTLEGROUND → -150", locTitle);
-                    }
+                    SetupPolicy.BattlegroundEvaluation v67o =
+                            SetupPolicy.startingLocationBattleground(
+                                    locTitle,
+                                    v67oGt,
+                                    v67oLightForce,
+                                    v67oDarkForce);
+                    applySetupContribution(action, v67o.contribution());
+                    boolean v67oIsBg = v67o.battleground();
 
                     // === V67q SITH DECK SPECIFIC TIGHTENING ===
                     // Steve's Dooku deck uses Rise Of The Sith / Revenge Of The Sith.
@@ -6547,76 +6454,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     //   - Non-battleground:        -300 ADDITIONAL (net ~-450)
                     // This mirrors a previous K-2 session's design (lost when their session
                     // ended without committing).
-                    boolean v67qHasSithStart = false;
-                    try {
-                        String gsPlayerId = context.getPlayerId();
-                        if (gameState != null && gsPlayerId != null) {
-                            String[] sithMarkers = new String[] {
-                                "rise of the sith", "revenge of the sith"
-                            };
-                            // Scan every zone the card could be in
-                            java.util.List<PhysicalCard> v67qScanCards = new java.util.ArrayList<>();
-                            try { v67qScanCards.addAll(gameState.getHand(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getReserveDeck(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getForcePile(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getUsedPile(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getLostPile(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getOutOfPlayPile(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getOutsideOfDeck(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getSideOfTableFaceDown(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getVoid(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            try { v67qScanCards.addAll(gameState.getCardsRevealedAfterStartingEffect(gsPlayerId)); } catch (Exception e) { /* ignore */ }
-                            // V67x (Steve, 2026-05-03): getAllPermanentCards() returns BOTH players'
-                            // cards. If the OPPONENT plays Sith (Rise/Revenge Of The Sith), V67q
-                            // wrongly fired for ME — adding +600 to Tatooine and -300 to Funeral
-                            // Pyre, causing me to pick Tatooine as my Light-side starting location.
-                            // Filter to only my cards.
-                            try {
-                                for (PhysicalCard pc : gameState.getAllPermanentCards()) {
-                                    if (pc != null && gsPlayerId.equals(pc.getOwner())) {
-                                        v67qScanCards.add(pc);
-                                    }
-                                }
-                            } catch (Exception e) { /* ignore */ }
-                            for (PhysicalCard sc : v67qScanCards) {
-                                if (sc == null) continue;
-                                // V67x: defense in depth — also filter individual zone cards
-                                // in case a zone returns opponent-owned cards (shouldn't happen
-                                // with playerId-scoped getters, but guards against future regressions).
-                                if (sc.getOwner() != null && !gsPlayerId.equals(sc.getOwner())) continue;
-                                String t = sc.getTitle();
-                                if (t == null) continue;
-                                String tl = t.toLowerCase(java.util.Locale.ROOT);
-                                for (String marker : sithMarkers) {
-                                    if (tl.contains(marker)) {
-                                        v67qHasSithStart = true;
-                                        break;
-                                    }
-                                }
-                                if (v67qHasSithStart) break;
-                            }
-                        }
-                    } catch (Exception e) { logger.debug("V67q scan error: {}", e.getMessage()); }
-
-                    if (v67qHasSithStart) {
-                        boolean v67qIsPalace = locTitleLower.contains("palace");
-                        if (v67oIsBg && !v67qIsPalace) {
-                            action.addReasoning("V67q SITH START (RotS/RevotS): " + locTitle
-                                + " is non-Palace battleground — starting Effect WILL trigger here!",
-                                600.0f);
-                            logger.warn("V67q SITH START: {} non-Palace BG → +600 (RotS/RevotS triggers)", locTitle);
-                        } else if (v67qIsPalace) {
-                            action.addReasoning("V67q SITH START PALACE: " + locTitle
-                                + " is a Palace — RotS/RevotS Effect WON'T trigger here, avoid!",
-                                -350.0f);
-                            logger.warn("V67q SITH START: {} is PALACE → -350 (Effect won't trigger)", locTitle);
-                        } else {
-                            action.addReasoning("V67q SITH START NON-BG: " + locTitle
-                                + " is not a battleground — RotS/RevotS Effect cannot trigger!",
-                                -300.0f);
-                            logger.warn("V67q SITH START: {} non-BG → -300 (Effect cannot trigger)", locTitle);
-                        }
-                    }
+                    boolean v67qHasSithStart =
+                            SetupFactsReader.hasOwnedSithStartingEffect(
+                                    gameState, context.getPlayerId());
+                    applySetupContribution(
+                            action,
+                            SetupPolicy.startingLocationSith(
+                                    locTitle, v67oIsBg, v67qHasSithStart));
                 }
             } catch (Exception e) {
                 logger.warn("V28 STARTING LOC: Error looking up card {}: {}", cardId, e.getMessage());
@@ -6915,240 +6759,54 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             }
             PolicyOperationAdapter.apply(action, shieldLedger);
 
-            // === V22 STARTING EFFECTS: BAN + OBJECTIVE-AWARE PREFERENCE ===
-            if (context.getTurnNumber() <= 0 && cardTitle != null) {
-                String titleCheck = cardTitle.toLowerCase(java.util.Locale.ROOT);
-                if (titleCheck.contains("no escape") || titleCheck.contains("coarse and rough")) {
-                    action.addReasoning("V22 STARTING BAN: " + cardTitle + " banned!", -600.0f);
-                    logger.warn("V22 STARTING BAN: Blocking {} (-600)", cardTitle);
+            // SETUP tree: V22/V25/V43/V80/V126/V186/V187, preserving legacy order.
+            if (SetupPolicy.isSetupTurn(context.getTurnNumber()) && cardTitle != null) {
+                SetupPolicy.StartingEffectEvaluation setupBan =
+                        SetupPolicy.startingEffectBan(cardTitle);
+                applySetupContributions(action, setupBan.contributions());
+                if (setupBan.terminalCandidate()) {
                     actions.add(action);
                     continue;
                 }
-                // === V187 (Steve, 2026-06-28): DUPLICATE STARTING-EFFECT PENALTY ===
-                // Don't burn the turn-0 effect slot on an effect Rando has more than one of — the
-                // other copy is still drawable/deployable later, so spend the slot on a SINGLETON
-                // for more table variety. DeckOracle counts copies by title across the whole deck.
-                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v187Oracle = context.getDeckOracle();
-                if (v187Oracle != null && v187Oracle.isAnalyzed()) {
-                    int v187Copies = v187Oracle.countCopiesByTitle(cardTitle);
-                    if (v187Copies > 1) {
-                        action.addReasoning("V187 DUPLICATE: Rando has " + v187Copies + " copies of '"
-                            + cardTitle + "' — prefer a singleton starting effect", -300.0f);
-                        logger.warn("V187 DUPLICATE STARTING EFFECT: '{}' x{} — -300", cardTitle, v187Copies);
-                    }
-                }
-                // V22 (Steve, 2026-06-28): added Silence Is Golden to the preferred
-                // starting effects (a dark Effect: Card3_110 / Card210_045 V).
-                if (titleCheck.contains("endor shield") || titleCheck.contains("alert my star destroyer")
-                        || titleCheck.contains("silence is golden")) {
-                    action.addReasoning("V22 PREFERRED STARTING EFFECT: " + cardTitle, 200.0f);
-                    logger.warn("V22 PREFERRED START: {} (+200)", cardTitle);
-                }
 
-                // V22 (Steve, 2026-06-19): Shadow Collective payoff effects. Always pick
-                // these when the starting interrupt offers Effects from Reserve Deck.
-                // You'll Be Dead!: opponent loses 1 Force per battleground site with a
-                // non-permanent blaster present. Inconsequential Losses: weapon recycling
-                // (forfeit a non-lightsaber weapon at value 3, weapons go to Used Pile).
-                if (titleCheck.contains("you'll be dead") || titleCheck.contains("inconsequential losses")) {
-                    action.addReasoning("V22 PREFERRED STARTING EFFECT (Shadow Collective payoff): " + cardTitle, 500.0f);
-                    logger.warn("V22 PREFERRED START (Shadow Collective): {} (+500)", cardTitle);
-                }
+                boolean copyCountKnown = context.getDeckOracle() != null
+                        && context.getDeckOracle().isAnalyzed();
+                int copyCount = copyCountKnown
+                        ? context.getDeckOracle().countCopiesByTitle(cardTitle) : 0;
+                String iwtmEffect = context.getObjectiveAnalyzer() != null
+                        ? context.getObjectiveAnalyzer().getIwtmPreferredStartingEffect() : null;
+                boolean iwtmPreferred = context.getObjectiveAnalyzer() != null
+                        && context.getObjectiveAnalyzer().isAnalyzed()
+                        && context.getObjectiveAnalyzer().isWantThatMap()
+                        && iwtmEffect != null
+                        && cardTitle.toLowerCase(Locale.ROOT).contains(iwtmEffect);
+                applySetupContributions(action, SetupPolicy.startingEffectIdentity(
+                        cardTitle, copyCountKnown, copyCount, iwtmPreferred));
 
-                // V186 (Steve, 2026-06-23): I Want That Map starting effect. "The First Order
-                // Was Just The Beginning" is the immune-to-Alter Effect to deploy via You Know
-                // What I've Come For (208_46). It downloads Jakku/Kijimi battlegrounds to feed
-                // the 2-battleground flip. Gated on the active objective so it only fires for
-                // this deck; +1000 matches the V80 magnitude so it beats any other matching
-                // Effect in the same prompt. Pairs with the ObjectiveAnalyzer V186 block that
-                // names Starkiller Base + marks this effect required/pullable.
-                // V186 CONSOLIDATED (2026-07-07): identity AND preferred-effect title from analyzer
-                // (getIwtmPreferredStartingEffect() is non-null only under I Want That Map, so it
-                // double-gates exactly like the old title-contains + objective-contains pair).
-                {
-                    com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v186Obj = context.getObjectiveAnalyzer();
-                    String v186Eff = (v186Obj != null) ? v186Obj.getIwtmPreferredStartingEffect() : null;
-                    if (v186Obj != null && v186Obj.isAnalyzed() && v186Obj.isWantThatMap()
-                            && v186Eff != null && titleCheck.contains(v186Eff)) {
-                        action.addReasoning("V186 PREFERRED STARTING EFFECT (I Want That Map): " + cardTitle, 1000.0f);
-                        logger.warn("V186 PREFERRED START (I Want That Map): {} (+1000)", cardTitle);
-                    }
-                }
+                String setupGameText = blueprint != null ? blueprint.getGameText() : null;
+                boolean rotsOnTable = SetupPolicy.isRotsPairingCandidate(setupGameText)
+                        && SetupFactsReader.hasOwnedInPlayRevengeOfTheSith(
+                        gameState, context.getPlayerId());
+                applySetupContributions(action, SetupPolicy.startingEffectText(
+                        cardTitle, setupGameText, rotsOnTable));
 
-                // === V126 (Steve, 2026-05-22): EXPANDED STARTING-EFFECT BONUSES ===
-                // Per Steve: "Evil Is Everywhere should deploy if Revenge of the Sith on
-                // table. First Strike is good. Any effect that adds to force generation
-                // should get a bump." Three new bonus paths, all type-by-API detection
-                // where possible (game-text scan) instead of hardcoded title lists.
+                boolean huntDown = context.getObjectiveAnalyzer() != null
+                        && context.getObjectiveAnalyzer().isAnalyzed()
+                        && context.getObjectiveAnalyzer().isHuntDownV();
+                applySetupContributions(action,
+                        SetupPolicy.startingEffectDeck(cardTitle, huntDown));
 
-                // V126a: First Strike (free battle initiation + drain force gate).
-                // Detection: game text mentions "initiate battles for free" OR specifically
-                // "initiate a Force drain ... must first use" (the V Set 12 reissue).
-                // Falls back to title check since both regular and V variants are intended.
-                if (blueprint != null && blueprint.getGameText() != null) {
-                    String v126aText = blueprint.getGameText().toLowerCase(java.util.Locale.ROOT);
-                    boolean v126aIsBattleStarter =
-                        v126aText.contains("initiate battles for free")
-                        || titleCheck.contains("first strike");
-                    if (v126aIsBattleStarter) {
-                        action.addReasoning(
-                            "V126a STARTING EFFECT: free battle initiation / drain gate — strong tempo",
-                            500.0f);
-                        logger.warn("V126a STARTING (battle starter): {} (+500)", cardTitle);
-                    }
-                }
-
-                // V126b: Effects that boost FORCE GENERATION. Bumped from V22's +25 to
-                // +400 per Steve. Detection by game-text scan — "Your force generation
-                // is +N" / "+N to Force generation" / "during your activate phase, draw"
-                // patterns. Note: V22's older +25 block below still fires for borderline
-                // cases (just "force generation" anywhere in text); V126b stacks on top
-                // when the text says it's a GENERATION INCREASE specifically.
-                if (blueprint != null && blueprint.getGameText() != null) {
-                    String v126bText = blueprint.getGameText().toLowerCase(java.util.Locale.ROOT);
-                    // Strong signal: explicit force generation modifier.
-                    java.util.regex.Matcher v126bMatch = java.util.regex.Pattern.compile(
-                        "force\\s+generation\\s*(?:is|are|of|by)?\\s*[+]?\\s*[1-9]"
-                    ).matcher(v126bText);
-                    boolean v126bIsForceGen = v126bMatch.find()
-                        || (v126bText.contains("force generation") && v126bText.contains("+"));
-                    if (v126bIsForceGen) {
-                        action.addReasoning(
-                            "V126b STARTING EFFECT: increases Force generation — compounds every turn",
-                            400.0f);
-                        logger.warn("V126b STARTING (force gen +): {} (+400)", cardTitle);
-                    }
-                }
-
-                // V126c: Evil Is Everywhere ↔ Revenge of the Sith synergy.
-                // ROTS deploys at start of game and locks Dark Jedi to [Episode I] +
-                // chosen apprentice. Evil Is Everywhere makes non-[Episode I] Dark Jedi
-                // lost — perfect pairing.
-                // Universal-ish detection: check if Revenge of the Sith (or any "[Episode
-                // I]"-locking starting card) is already on the table, and the candidate
-                // effect's game text references "[Episode I]" Dark Jedi restrictions.
-                if (blueprint != null && blueprint.getGameText() != null && gameState != null) {
-                    String v126cText = blueprint.getGameText().toLowerCase(java.util.Locale.ROOT);
-                    boolean v126cMatchesROTSPairing =
-                        (v126cText.contains("[episode i]") || v126cText.contains("episode i"))
-                        && v126cText.contains("dark jedi");
-                    if (v126cMatchesROTSPairing) {
-                        boolean v126cROTSOnTable = false;
-                        try {
-                            for (PhysicalCard pc : gameState.getAllPermanentCards()) {
-                                if (pc == null || pc.getBlueprint() == null) continue;
-                                if (!context.getPlayerId().equals(pc.getOwner())) continue;
-                                com.gempukku.swccgo.common.Zone z = pc.getZone();
-                                if (z == null || !z.isInPlay()) continue;
-                                String pcTitle = pc.getTitle();
-                                if (pcTitle != null
-                                        && pcTitle.toLowerCase(java.util.Locale.ROOT)
-                                            .contains("revenge of the sith")) {
-                                    v126cROTSOnTable = true;
-                                    break;
-                                }
-                            }
-                        } catch (Exception ignore) { /* leave false */ }
-                        if (v126cROTSOnTable) {
-                            action.addReasoning(
-                                "V126c STARTING EFFECT: pairs with Revenge of the Sith ([Episode I] Dark Jedi lock)",
-                                600.0f);
-                            logger.warn("V126c STARTING (ROTS synergy): {} (+600)", cardTitle);
-                        }
-                    }
-                }
-
-                // V80 (Steve, 2026-05-15): SKYWALKER EPIC EVENT REQUIRED EFFECTS.
-                // The Rise Of Skywalker deploys "two Effects that deploy for free
-                // and are always immune to Alter." A Cunning Warrior and A Good
-                // Friend are the must-picks here — they require the Skywalker
-                // Epic Event on table to deploy, so they're meant for this slot.
-                //
-                // Cunning Warrior: "Where you have a Skywalker, you initiate
-                //   battles for free" + Anakin's Lightsaber pull
-                // Good Friend: built-in weapon redistribution (relocate Anakin's
-                //   Lightsaber) + Ben Solo recovery + multi-card pull
-                //
-                // Detection by title (these are unique starting effects).
-                if (titleCheck.contains("cunning warrior") || titleCheck.contains("good friend")) {
-                    action.addReasoning("V80 SKYWALKER STARTING EFFECT: " + cardTitle + " — required for Rey/Luke Saga deck!", 1000.0f);
-                    logger.warn("V80 SKYWALKER STARTING: {} → +1000 (required Skywalker Epic Event effect)", cardTitle);
-                }
-
-                // V25: HUNT DOWN V — Specific starting effects
-                // The three effects that make this deck work:
-                // 1. "There Are Many Hunting You Now" — hatred card engine
-                // 2. "I Am Your Father" — key interrupt/effect for Vader synergy
-                // 3. "Crush The Rebellion" — force drain enhancement
-                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer startHDAnalyzer =
-                    context.getObjectiveAnalyzer();
-                if (startHDAnalyzer != null && startHDAnalyzer.isAnalyzed() && startHDAnalyzer.isHuntDownV()) {
-                    if (titleCheck.contains("there are many hunting you now")
-                        || titleCheck.contains("i am your father")
-                        || titleCheck.contains("crush the rebellion")) {
-                        action.addReasoning("V25 HUNT DOWN STARTING EFFECT: " + cardTitle + " — REQUIRED!", 500.0f);
-                        logger.warn("V25 HUNT DOWN START: {} is a REQUIRED starting effect (+500)", cardTitle);
-                    } else {
-                        // Penalize other effects so the three required ones always win
-                        action.addReasoning("V25 HUNT DOWN: Not a required starting effect for Hunt Down", -300.0f);
-                        logger.warn("V25 HUNT DOWN START: {} is NOT a required starting effect (-300)", cardTitle);
-                    }
-                }
-
-                // V22: Check if this starting effect's game text references
-                // objective-relevant locations. Effects that pull locations needed
-                // for our objective should be strongly preferred.
-                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer startObjAnalyzer =
-                    context.getObjectiveAnalyzer();
-                if (startObjAnalyzer != null && startObjAnalyzer.isAnalyzed() && blueprint != null) {
-                    String effectGameText = blueprint.getGameText();
-                    if (effectGameText != null) {
-                        String effectTextLower = effectGameText.toLowerCase(java.util.Locale.ROOT);
-                        // Check if the effect's game text mentions objective-relevant location fragments
-                        for (String fragment : startObjAnalyzer.getFlipConditionLocationFragments()) {
-                            if (effectTextLower.contains(fragment)) {
-                                action.addReasoning("V22 OBJECTIVE-SYNERGY STARTING EFFECT: references '" + fragment + "'", 250.0f);
-                                logger.warn("V22 OBJECTIVE START: {} references objective location '{}' (+250)", cardTitle, fragment);
-                                break;
-                            }
-                        }
-                        // Check if it can pull cards needed for objective
-                        for (String required : startObjAnalyzer.getRequiredCardsOnTable()) {
-                            if (effectTextLower.contains(required)) {
-                                action.addReasoning("V22 OBJECTIVE-SYNERGY: pulls required card '" + required + "'", 200.0f);
-                                logger.warn("V22 OBJECTIVE START: {} can pull required card '{}' (+200)", cardTitle, required);
-                                break;
-                            }
-                        }
-                        // Check if it mentions "deploy" + "location", "site", or "system" (location-pulling effect)
-                        if (effectTextLower.contains("deploy") && (effectTextLower.contains("location") || effectTextLower.contains("site") || effectTextLower.contains("system"))) {
-                            action.addReasoning("V22 LOCATION-PULLING EFFECT: deploys locations", 100.0f);
-                            logger.warn("V22 OBJECTIVE START: {} appears to deploy locations (+100)", cardTitle);
-                        }
-                        // V22: Any effect that interacts with Reserve Deck gets a bonus
-                        if (effectTextLower.contains("reserve")) {
-                            action.addReasoning("V22 RESERVE DECK ACCESS: can pull from reserve", 50.0f);
-                            logger.warn("V22 OBJECTIVE START: {} references Reserve Deck (+50)", cardTitle);
-                        }
-                        // V22: Effects that boost force generation are valuable early game
-                        if (effectTextLower.contains("force generation") || effectTextLower.contains("activate")
-                            || effectTextLower.contains("force icon") || effectTextLower.contains("adds one to")) {
-                            action.addReasoning("V22 FORCE GENERATION: boosts early force economy", 25.0f);
-                            logger.warn("V22 OBJECTIVE START: {} boosts force generation (+25)", cardTitle);
-                        }
-
-                        // === V29.15: EPIC EVENT STARTING EFFECT/INTERRUPT ===
-                        // Starting effects or interrupts whose game text mentions "epic"
-                        // or deploys a key card like "Force Is Strong In My Family"
-                        // are critical for decks built around Epic Events.
-                        if (effectTextLower.contains("epic")
-                            || effectTextLower.contains("force is strong in my family")
-                            || effectTextLower.contains("force is strong")) {
-                            action.addReasoning("V43 EPIC: starting card deploys Epic Event — critical for deck strategy!", 1500.0f);
-                            logger.warn("V43 EPIC START: {} references Epic Event in game text — HARD PREFER (+1500)", cardTitle);
-                        }
-                    }
-                }
+                boolean objectiveAnalyzed = context.getObjectiveAnalyzer() != null
+                        && context.getObjectiveAnalyzer().isAnalyzed();
+                List<String> locationFragments = objectiveAnalyzed
+                        ? new ArrayList<>(context.getObjectiveAnalyzer()
+                        .getFlipConditionLocationFragments()) : List.of();
+                List<String> requiredCards = objectiveAnalyzed
+                        ? new ArrayList<>(context.getObjectiveAnalyzer()
+                        .getRequiredCardsOnTable()) : List.of();
+                applySetupContributions(action, SetupPolicy.startingEffectObjective(
+                        setupGameText, objectiveAnalyzed,
+                        locationFragments, requiredCards));
             }
             // V24.5: No randomness — deterministic decisions only
 
@@ -7392,27 +7050,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 continue;
             }
 
-            // V80 (Steve, 2026-05-15): SKYWALKER EPIC EVENT REQUIRED EFFECTS.
-            // Mirror of the V80 check in evaluateUnknown. Fires here when the
-            // starting interrupt's "deploy N Effects for free" prompt routes
-            // through evaluateReserveDeckSelection (cardIds empty, blueprints
-            // populated). Works for "deploy 2 Effects for free" AND "deploy 3
-            // Effects for free" variants — score is per-candidate, not per-prompt.
-            if (cardTitleLower.contains("cunning warrior") || cardTitleLower.contains("good friend")) {
-                action.addReasoning(
-                    "V80 SKYWALKER STARTING EFFECT: " + cardTitle + " — required for Rey/Luke Saga deck!",
-                    1000.0f);
-                logger.warn("V80 SKYWALKER STARTING (reserve-pick): {} → +1000", cardTitle);
-            }
-
-            // V22 (Steve, 2026-06-19): Shadow Collective payoff effects. Mirror of the
-            // V22 PREFERRED STARTING EFFECT check in evaluateUnknown, for when the starting
-            // interrupt's "deploy N Effects for free" prompt routes through here.
-            if (context.getTurnNumber() <= 0
-                    && (cardTitleLower.contains("you'll be dead") || cardTitleLower.contains("inconsequential losses"))) {
-                action.addReasoning("V22 PREFERRED STARTING EFFECT (Shadow Collective payoff): " + cardTitle, 500.0f);
-                logger.warn("V22 PREFERRED START (Shadow Collective, reserve-pick): {} (+500)", cardTitle);
-            }
+            applySetupContributions(action, SetupPolicy.reserveStartingEffect(
+                    cardTitle, SetupPolicy.isSetupTurn(context.getTurnNumber())));
 
             // === V24.10: CC SITE SELECTION — CONTEXT-AWARE ===
             // Two different effects pull CC sites from reserve:

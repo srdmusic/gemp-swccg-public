@@ -13,6 +13,7 @@ import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
@@ -2352,47 +2353,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 continue;
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // ═══ REGION: SETUP — saga choice (reorg 2026-07-06) ═══
-            // Owns: V29.15 The Force Is Strong In My Family saga pick keyed by deck name
-            // (+1000 correct / -500 wrong / +500 default to I Have It when no deck name).
-            // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
-            // Cross-refs: SETUP (CardSelectionEvaluator turn-0 block), PLAYBOOKS (V54/V61-saga deck scripts). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
-            // ═══════════════════════════════════════════════════════════
-            // ========== V29.15 Epic Event Saga Choice ==========
-            // "The Force Is Strong In My Family" presents choices:
-            //   "My Father Has It", "I Have It", "You Have That Power, Too"
-            // The correct choice depends on the deck name:
-            //   Luke deck → "I Have It"
-            //   Anakin deck → "My Father Has It"
-            //   Rey deck → "You Have That Power, Too"
-            if (textLower.contains("i have it") || textLower.contains("my father has it")
-                || textLower.contains("you have that power")) {
-                String deckName = context.getDeckName();
-                String deckLower = (deckName != null) ? deckName.toLowerCase(java.util.Locale.ROOT) : "";
-                boolean isCorrectChoice = false;
-
-                if (deckLower.contains("luke") && textLower.contains("i have it")
-                    && !textLower.contains("my father has it")) {
-                    isCorrectChoice = true;
-                } else if (deckLower.contains("anakin") && textLower.contains("my father has it")) {
-                    isCorrectChoice = true;
-                } else if (deckLower.contains("rey") && textLower.contains("you have that power")) {
-                    isCorrectChoice = true;
-                }
-
-                if (isCorrectChoice) {
-                    action.addReasoning("V29.15 EPIC EVENT: Correct saga choice for '" + deckName + "' deck!", 1000.0f);
-                    logger.warn("V29.15 EPIC EVENT: Choosing '{}' — correct for deck '{}'", actionText, deckName);
-                } else if (!deckLower.isEmpty()) {
-                    action.addReasoning("V29.15 EPIC EVENT: Wrong saga choice for '" + deckName + "' deck", -500.0f);
-                    logger.warn("V29.15 EPIC EVENT: Penalizing '{}' — wrong for deck '{}'", actionText, deckName);
-                } else {
-                    // No deck name available — default to "I Have It" (most common Luke deck)
-                    if (textLower.contains("i have it") && !textLower.contains("my father has it")) {
-                        action.addReasoning("V29.15 EPIC EVENT: Default to 'I Have It' (no deck name)", 500.0f);
-                        logger.warn("V29.15 EPIC EVENT: No deck name — defaulting to 'I Have It'");
-                    }
+            SetupPolicy.SagaEvaluation saga =
+                    SetupPolicy.sagaChoice(context.getDeckName(), actionText);
+            if (saga.sagaChoice()) {
+                if (saga.contribution() != null) {
+                    action.addReasoning(
+                            saga.contribution().reason(), saga.contribution().delta());
+                    logger.warn("SETUP {}: {} ({})", saga.contribution().branch(),
+                            saga.contribution().reason(), saga.contribution().delta());
                 }
                 actions.add(action);
                 continue;
