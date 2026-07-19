@@ -7180,3 +7180,23 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     policy, all nested decision types, and both adapters. Independent review found no correctness
     issues; exact live mirror byte parity passed. Runtime reload remains pending on the external
     runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V246 (2026-07-19): consolidate MOVE drain pressure and transit routing ════
+    MoveDrainRoutingPolicy now owns the pure CardSelection scoring decisions for V166 MOVE drain
+    contest, V67e drain potential, the V67n/V67g destination-drain branch, and V67g move-from-drain.
+    MoveTransitPolicy owns V67k's narrow case-insensitive Underground Corridor title classifier.
+    Both bot adapters retain printed-power and icon reads, engine drain and battleground reads,
+    bonus-aware net-drain aggregation, opponent-card counting, decision-text parsing, first matching
+    physical-card resolution, exception boundaries, exact logs, action mutation, and legacy order
+    after V169/V156 and before V67au. Behavior remains structural-only: V166 still scores
+    +350/+300/+250/+200 for 1/2/3/4+ cards behind its exact printed-power, engine-drain, and net>=2
+    gates; V67e still uses printed opponent icons plus the engine battleground multiplier; V67k/V67n
+    remain title-only; ordinary zero drain remains -200; and move-from-drain remains -250 per printed-
+    icon drop with blueprint-first mover resolution. Existing additive mismatches and fail-open catches
+    remain unchanged. Focused 46/0/0/0, MOVE-named 385/0/0/0, full reactor 1569/0/0/26,
+    normalized mirror parity, AI-only boundary, forbidden-symbol scan, and clean package passed.
+    Server jar SHA-256 de7b0dacaf88baf0e229eae6f5f0c599ba0b7a8694f49c5b8e0e309a5d4e2bbe and
+    web jar SHA-256 4a78c1c27531d5f8c879f1b873dd89413c45622a607869e62e63eea736540586 contain the
+    shared policies, nested branch types, and both adapters. Independent review found no remaining
+    correctness issues. Runtime reload and live-game proof remain pending on the external runtime.
+    AI source only; no GEMP engine or player-decision changes.

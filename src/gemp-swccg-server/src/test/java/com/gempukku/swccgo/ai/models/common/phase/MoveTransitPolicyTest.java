@@ -21,6 +21,17 @@ public class MoveTransitPolicyTest {
     private static final String OPPONENT = "opponent";
 
     @Test
+    public void drainTransitStagingClassifierPreservesNarrowTitleMatch() {
+        assertTrue(MoveTransitPolicy.isDrainTransitStagingSite(
+                "Mapuzo: Underground Corridor"));
+        assertTrue(MoveTransitPolicy.isDrainTransitStagingSite(
+                "UNDERGROUND CORRIDOR"));
+        assertFalse(MoveTransitPolicy.isDrainTransitStagingSite(
+                "Underground Hideout"));
+        assertFalse(MoveTransitPolicy.isDrainTransitStagingSite(null));
+    }
+
+    @Test
     public void nonPilotDoesNotReadAttachment() {
         PhysicalCard card = mock(PhysicalCard.class);
         when(card.isPilotOf()).thenReturn(false);

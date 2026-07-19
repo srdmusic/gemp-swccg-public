@@ -23,6 +23,161 @@ public class MoveDrainRoutingPolicyTest {
     private static final String OPPONENT = "opponent";
 
     @Test
+    public void contestOpponentDrainPreservesSoftestSiteCurve() {
+        MoveDrainRoutingPolicy.Contribution oneCard =
+                MoveDrainRoutingPolicy.contestOpponentDrain(
+                        "Cloud City: Guest Quarters",
+                        4.0f, 2, 2, 1);
+        MoveDrainRoutingPolicy.Contribution twoCards =
+                MoveDrainRoutingPolicy.contestOpponentDrain(
+                        "Cloud City: Guest Quarters",
+                        4.0f, 2, 2, 2);
+        MoveDrainRoutingPolicy.Contribution threeCards =
+                MoveDrainRoutingPolicy.contestOpponentDrain(
+                        "Cloud City: Guest Quarters",
+                        4.0f, 2, 2, 3);
+        MoveDrainRoutingPolicy.Contribution fourCards =
+                MoveDrainRoutingPolicy.contestOpponentDrain(
+                        "Cloud City: Guest Quarters",
+                        4.0f, 2, 2, 4);
+        MoveDrainRoutingPolicy.Contribution fiveCards =
+                MoveDrainRoutingPolicy.contestOpponentDrain(
+                        "Cloud City: Guest Quarters",
+                        4.0f, 2, 2, 5);
+
+        assertFloat(350.0f, oneCard.delta());
+        assertFloat(300.0f, twoCards.delta());
+        assertFloat(250.0f, threeCards.delta());
+        assertFloat(200.0f, fourCards.delta());
+        assertFloat(200.0f, fiveCards.delta());
+        assertEquals(
+                "V166 CONTEST DRAIN: opponent out-draining (net>=2) — contest Cloud City: Guest Quarters (their drain 2, 1 opp cards)",
+                oneCard.reason());
+    }
+
+    @Test
+    public void contestOpponentDrainPreservesStrictGates() {
+        assertFalse(MoveDrainRoutingPolicy.contestOpponentDrain(
+                "Site", 0.0f, 2, 2, 1).applies());
+        assertFalse(MoveDrainRoutingPolicy.contestOpponentDrain(
+                "Site", Float.NaN, 2, 2, 1).applies());
+        assertFalse(MoveDrainRoutingPolicy.contestOpponentDrain(
+                "Site", 1.0f, 0, 2, 1).applies());
+        assertFalse(MoveDrainRoutingPolicy.contestOpponentDrain(
+                "Site", 1.0f, 2, 1, 1).applies());
+        assertTrue(MoveDrainRoutingPolicy.contestOpponentDrain(
+                "Site", 0.0001f, 1, 2, 0).applies());
+        assertFloat(400.0f, MoveDrainRoutingPolicy.contestOpponentDrain(
+                "Site", 0.0001f, 1, 2, 0).delta());
+    }
+
+    @Test
+    public void destinationDrainPreservesPositiveDrainPrecedenceAndFormula() {
+        MoveDrainRoutingPolicy.DestinationDrain result =
+                MoveDrainRoutingPolicy.destinationDrain(
+                        "Mapuzo: Underground Corridor",
+                        2.5f, true);
+
+        assertEquals(
+                MoveDrainRoutingPolicy.DestinationDrainBranch.DRAIN_POTENTIAL,
+                result.branch());
+        assertFloat(30.0f, result.contribution().delta());
+        assertEquals(
+                "V67e DRAIN POTENTIAL: drain 2.5 at Mapuzo: Underground Corridor = +30 opponent force loss",
+                result.contribution().reason());
+    }
+
+    @Test
+    public void destinationDrainPreservesBattlegroundFormattedBoundary() {
+        MoveDrainRoutingPolicy.DestinationDrain result =
+                MoveDrainRoutingPolicy.destinationDrain(
+                        "Battleground", 1.25f, false);
+
+        assertFloat(15.0f, result.contribution().delta());
+        assertEquals(
+                "V67e DRAIN POTENTIAL: drain 1.3 at Battleground = +15 opponent force loss",
+                result.contribution().reason());
+    }
+
+    @Test
+    public void destinationDrainPreservesTransitAndZeroDrainBranches() {
+        MoveDrainRoutingPolicy.DestinationDrain transit =
+                MoveDrainRoutingPolicy.destinationDrain(
+                        "Mapuzo: Underground Corridor",
+                        0.0f, true);
+        MoveDrainRoutingPolicy.DestinationDrain zero =
+                MoveDrainRoutingPolicy.destinationDrain(
+                        "Cloud City: Upper Plaza Corridor",
+                        0.0f, false);
+
+        assertEquals(
+                MoveDrainRoutingPolicy.DestinationDrainBranch.TRANSIT_STAGING,
+                transit.branch());
+        assertFloat(1500.0f, transit.contribution().delta());
+        assertEquals(
+                "V67n TRANSIT STAGING DEST: Mapuzo: Underground Corridor is the Hidden Path transit hub — Jedi MUST channel through here!",
+                transit.contribution().reason());
+        assertEquals(
+                MoveDrainRoutingPolicy.DestinationDrainBranch.ZERO_DRAIN,
+                zero.branch());
+        assertFloat(-200.0f, zero.contribution().delta());
+        assertEquals(
+                "V67g ZERO DRAIN: Cloud City: Upper Plaza Corridor has no opponent force icons — wasted move!",
+                zero.contribution().reason());
+    }
+
+    @Test
+    public void moveFromDrainPreservesStrictDropAndExemptions() {
+        MoveDrainRoutingPolicy.Contribution drop =
+                MoveDrainRoutingPolicy.moveFromDrain(
+                        true, false,
+                        "Cloud City: Guest Quarters", 3,
+                        "Cloud City: Upper Plaza Corridor", 1);
+
+        assertTrue(drop.applies());
+        assertFloat(-500.0f, drop.delta());
+        assertEquals(
+                "V67g MOVE-FROM-DRAIN: leaving Cloud City: Guest Quarters (drain 3) for Cloud City: Upper Plaza Corridor (drain 1) — losing 2 drain!",
+                drop.reason());
+        assertFalse(MoveDrainRoutingPolicy.moveFromDrain(
+                false, false, "Source", 3, "Destination", 1)
+                .applies());
+        assertFalse(MoveDrainRoutingPolicy.moveFromDrain(
+                true, true, "Source", 3, "Destination", 1)
+                .applies());
+        assertFalse(MoveDrainRoutingPolicy.moveFromDrain(
+                true, false, "Source", 2, "Destination", 2)
+                .applies());
+        assertFalse(MoveDrainRoutingPolicy.moveFromDrain(
+                true, false, "Source", 1, "Destination", 2)
+                .applies());
+    }
+
+    @Test
+    public void destinationDrainPreservesLegacyAdditiveStacks() {
+        float ordinaryZeroDrain =
+                MoveDrainRoutingPolicy.destinationDrain(
+                        "Zero", 0.0f, false)
+                        .contribution().delta();
+        float twoIconDrop = MoveDrainRoutingPolicy.moveFromDrain(
+                true, false, "Source", 2, "Zero", 0)
+                .delta();
+        float transit = MoveDrainRoutingPolicy.destinationDrain(
+                "Mapuzo: Underground Corridor", 0.0f, true)
+                .contribution().delta();
+        float transitDrop = MoveDrainRoutingPolicy.moveFromDrain(
+                true, true, "Source", 2,
+                "Mapuzo: Underground Corridor", 0)
+                .delta();
+        float contest = MoveDrainRoutingPolicy.contestOpponentDrain(
+                "Printed Zero", 4.0f, 1, 2, 1).delta();
+
+        assertFloat(-700.0f, ordinaryZeroDrain + twoIconDrop);
+        assertFloat(1500.0f, transit + transitDrop);
+        assertFloat(150.0f, contest + ordinaryZeroDrain);
+    }
+
+    @Test
     public void uncontestedDeparturePreservesBestAdjacentPenalty() {
         Harness harness = new Harness();
         PhysicalCard source = location("Tatooine: Cantina");

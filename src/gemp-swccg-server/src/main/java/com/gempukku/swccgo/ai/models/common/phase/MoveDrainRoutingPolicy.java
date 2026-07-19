@@ -9,9 +9,9 @@ import com.gempukku.swccgo.game.state.GameState;
 import java.util.Locale;
 
 /**
- * Shared MOVE drain-routing rules. Each method preserves its legacy location
- * collection and first-match behavior. Adapters retain score, ladder, and log
- * application at the original positions.
+ * Shared MOVE drain-routing decisions. CardSelection rules consume facts read
+ * by their adapters; legacy MoveEvaluator routes preserve their original
+ * location scans. Adapters retain engine reads, action mutation, and logging.
  */
 public final class MoveDrainRoutingPolicy {
     public record Contribution(boolean applies, String reason, float delta) {
@@ -40,7 +40,104 @@ public final class MoveDrainRoutingPolicy {
             PhysicalCard destination, int sourceCharactersRemaining) {
     }
 
+    public enum DestinationDrainBranch {
+        DRAIN_POTENTIAL,
+        TRANSIT_STAGING,
+        ZERO_DRAIN
+    }
+
+    public record DestinationDrain(
+            DestinationDrainBranch branch,
+            Contribution contribution) {
+    }
+
     private MoveDrainRoutingPolicy() {
+    }
+
+    public static Contribution contestOpponentDrain(
+            String destinationTitle,
+            float opponentPowerAtDestination,
+            int opponentDrainAtDestination,
+            int netDrainBalance,
+            int opponentCardsAtDestination) {
+        if (!(opponentPowerAtDestination > 0.0f)
+                || opponentDrainAtDestination <= 0
+                || netDrainBalance < 2) {
+            return Contribution.none();
+        }
+
+        float bonus = 200.0f + Math.max(
+                0.0f,
+                150.0f - (opponentCardsAtDestination - 1) * 50.0f);
+        return new Contribution(
+                true,
+                String.format(
+                        "V166 CONTEST DRAIN: opponent out-draining (net>=2) — contest %s (their drain %d, %d opp cards)",
+                        destinationTitle,
+                        opponentDrainAtDestination,
+                        opponentCardsAtDestination),
+                bonus);
+    }
+
+    public static DestinationDrain destinationDrain(
+            String destinationTitle,
+            float expectedDrain,
+            boolean transitStagingSite) {
+        if (expectedDrain > 0.0f) {
+            float bonus = expectedDrain * 12.0f;
+            return new DestinationDrain(
+                    DestinationDrainBranch.DRAIN_POTENTIAL,
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V67e DRAIN POTENTIAL: drain %.1f at %s = +%.0f opponent force loss",
+                                    expectedDrain,
+                                    destinationTitle,
+                                    bonus),
+                            bonus));
+        }
+        if (transitStagingSite) {
+            return new DestinationDrain(
+                    DestinationDrainBranch.TRANSIT_STAGING,
+                    new Contribution(
+                            true,
+                            "V67n TRANSIT STAGING DEST: "
+                                    + destinationTitle
+                                    + " is the Hidden Path transit hub — Jedi MUST channel through here!",
+                            1500.0f));
+        }
+        return new DestinationDrain(
+                DestinationDrainBranch.ZERO_DRAIN,
+                new Contribution(
+                        true,
+                        "V67g ZERO DRAIN: " + destinationTitle
+                                + " has no opponent force icons — wasted move!",
+                        -200.0f));
+    }
+
+    public static Contribution moveFromDrain(
+            boolean moveDecision,
+            boolean transitStagingSite,
+            String sourceTitle,
+            int sourceOpponentIcons,
+            String destinationTitle,
+            int destinationOpponentIcons) {
+        if (!moveDecision || transitStagingSite
+                || sourceOpponentIcons <= destinationOpponentIcons) {
+            return Contribution.none();
+        }
+
+        int drainDrop = sourceOpponentIcons - destinationOpponentIcons;
+        return new Contribution(
+                true,
+                String.format(
+                        "V67g MOVE-FROM-DRAIN: leaving %s (drain %d) for %s (drain %d) — losing %d drain!",
+                        sourceTitle,
+                        sourceOpponentIcons,
+                        destinationTitle,
+                        destinationOpponentIcons,
+                        drainDrop),
+                -250.0f * drainDrop);
     }
 
     public static UncontestedDeparture uncontestedDeparture(

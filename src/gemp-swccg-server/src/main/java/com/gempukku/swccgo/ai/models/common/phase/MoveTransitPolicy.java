@@ -7,8 +7,8 @@ import com.gempukku.swccgo.game.state.GameState;
 import java.util.Locale;
 
 /**
- * Shared MOVE pilot safety and movement-type scoring.
- * Adapters retain score application and logging.
+ * Shared MOVE pilot safety, transit classification, and movement-type scoring.
+ * Adapters retain engine reads, score application, and logging.
  */
 public final class MoveTransitPolicy {
     public enum HiddenPathBranch {
@@ -72,6 +72,12 @@ public final class MoveTransitPolicy {
     }
 
     private MoveTransitPolicy() {
+    }
+
+    public static boolean isDrainTransitStagingSite(String locationTitle) {
+        return locationTitle != null
+                && locationTitle.toLowerCase(Locale.ROOT)
+                        .contains("underground corridor");
     }
 
     public static PilotLock pilotLock(PhysicalCard cardToMove) {

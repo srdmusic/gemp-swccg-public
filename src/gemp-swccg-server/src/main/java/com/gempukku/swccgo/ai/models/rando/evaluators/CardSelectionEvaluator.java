@@ -14,7 +14,9 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
+import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
@@ -5179,143 +5181,109 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     (int) v156JoinBonus, v156FromTitle);
                             }
 
-                            // === V166 (Steve, 2026-06): CONTEST THE OPPONENT'S DRAIN when out-drained ===
-                            // When the opponent out-drains us by net >= 2 (bonus-aware, weapons/objective/
-                            // Effect drains included), MOVE cards to contest their drain sites — creating
-                            // contested sites so V164a can battle and break the drain, instead of both sides
-                            // parallel-draining for 20+ turns. Prefer the SOFTEST site (fewest opponent cards
-                            // = easiest to clear or spy-block). Magnitude is decisive over a normal drain
-                            // destination (V67e ~+24-48) but stays well under the safety rails (V67n +1500,
-                            // battle reserve guards); V164a's own guards still stop suicide battles once the
-                            // site is contested. Only computes the (O(locations)) balance for genuinely
-                            // contested destinations (theirPower>0 && opp drains here).
+                            // MoveDrainRoutingPolicy owns V166 drain-contest scoring.
                             if (game != null && playerId != null && theirPower > 0) {
                                 try {
                                     String v166Opp = gameState.getOpponent(playerId);
                                     int v166OppDrainHere = (int) game.getModifiersQuerying()
                                         .getForceDrainAmount(gameState, location, v166Opp);
-                                    if (v166OppDrainHere > 0
-                                            && computeNetDrainBalance(game, gameState, playerId) >= 2) {
-                                        int v166OppCards = 0;
+                                    int v166NetDrainBalance = Integer.MIN_VALUE;
+                                    int v166OppCards = 0;
+                                    if (v166OppDrainHere > 0) {
+                                        v166NetDrainBalance = computeNetDrainBalance(
+                                            game, gameState, playerId);
+                                    }
+                                    if (v166NetDrainBalance >= 2) {
                                         for (PhysicalCard c : gameState.getCardsAtLocation(location))
                                             if (c != null && v166Opp.equals(c.getOwner())) v166OppCards++;
-                                        float v166 = 200.0f + Math.max(0f, 150f - (v166OppCards - 1) * 50f);
-                                        action.addReasoning(String.format(
-                                            "V166 CONTEST DRAIN: opponent out-draining (net>=2) — contest %s (their drain %d, %d opp cards)",
-                                            title, v166OppDrainHere, v166OppCards), v166);
+                                    }
+                                    MoveDrainRoutingPolicy.Contribution v166 =
+                                        MoveDrainRoutingPolicy.contestOpponentDrain(
+                                            title, theirPower, v166OppDrainHere,
+                                            v166NetDrainBalance, v166OppCards);
+                                    if (v166.applies()) {
+                                        action.addReasoning(v166.reason(), v166.delta());
                                         logger.warn("V166 CONTEST DRAIN: target={} oppDrainHere={} oppCards={} -> +{}",
-                                            title, v166OppDrainHere, v166OppCards, (int) v166);
+                                            title, v166OppDrainHere, v166OppCards, (int) v166.delta());
                                     }
                                 } catch (Exception e) { logger.debug("V166 error: {}", e.getMessage()); }
                             }
 
-                            // === V67e/V67g EXPECTED FORCE LOSS — TIE-BREAKER + DRAIN-AWARE PENALTY ===
-                            // Steve's rule: "When there is a tie for points the default scoring
-                            // should re-look at whether the decision will make opponent lose more
-                            // or less force. Less force drain should be considered a bad move."
-                            // V67g STRENGTHENED: −25 zero-drain wasn't enough to dominate tactical
-                            // bonuses — Luke + Leia moved Guest Quarters (drain) → Upper Plaza
-                            // Corridor (no drain) then back. Now penalty is much stronger AND a
-                            // new MOVE-FROM-DRAIN penalty fires when we're abandoning a draining
-                            // site for a non-draining one.
+                            // MoveDrainRoutingPolicy owns V67e/V67g destination drain scoring.
                             float v67eExpectedDrain = theirIcons;
                             try {
                                 if (game.getModifiersQuerying().isBattleground(gameState, location, null)) {
                                     v67eExpectedDrain *= 1.25f;
                                 }
                             } catch (Exception e) { /* ignore */ }
-                            // V67k: Some sites have 0 drain by design but are STRATEGIC
-                            // staging sites — penalizing them blocks key plays. Currently
-                            // recognized: Mapuzo: Underground Corridor (Hidden Path transit
-                            // staging — Jedi MUST go here to fire "Move Jedi Survivor here
-                            // to a site" and flip the objective).
-                            // FIXES "Rando still moving from higher-drain to lower-drain":
-                            // V67g was blocking Safehouse → Underground Corridor at −432
-                            // and Rando went Safehouse → Spaceport Docking Bay instead,
-                            // never reaching the transit hub.
-                            String v67kTitleLower = title != null
-                                ? title.toLowerCase(java.util.Locale.ROOT) : "";
                             boolean v67kIsTransitStagingSite =
-                                v67kTitleLower.contains("underground corridor");
-
-                            if (v67eExpectedDrain > 0) {
-                                float v67eBonus = v67eExpectedDrain * 12.0f;
-                                action.addReasoning(String.format(
-                                    "V67e DRAIN POTENTIAL: drain %.1f at %s = +%.0f opponent force loss",
-                                    v67eExpectedDrain, title, v67eBonus), v67eBonus);
-                                logger.info("V67e DRAIN POTENTIAL: {} drain={} → +{} (tiebreaker: prefer max drain)",
-                                    title, v67eExpectedDrain, (int)v67eBonus);
-                            } else if (v67kIsTransitStagingSite) {
-                                // V67n: Corridor needs to OUTSCORE other Mapuzo destinations,
-                                // not just be exempt from penalty. Other Mapuzo sites have
-                                // Dark icons (drain potential), giving them V67e + ICON_BONUS
-                                // (~+30) — Corridor with 0 score loses to them. Then Rando
-                                // ping-pongs Mining Village ↔ Safehouse and never reaches
-                                // Corridor to flip Hidden Path / Fallen Order.
-                                // +1500 dominates V67e/ICON_BONUS on other Mapuzo sites and
-                                // matches V67l location-pull priority. Only fires when destination
-                                // matches "underground corridor" — narrowly scoped.
-                                action.addReasoning("V67n TRANSIT STAGING DEST: " + title
-                                    + " is the Hidden Path transit hub — Jedi MUST channel through here!",
-                                    1500.0f);
-                                logger.warn("V67n TRANSIT STAGING DEST: {} → +1500 (dominates other Mapuzo destinations)", title);
-                            } else {
-                                // V67g: Zero-drain destination — STRONG penalty (was -25, now -200).
-                                // Interior corridors / non-icon sites have no drain potential and
-                                // characters parked there contribute nothing.
-                                action.addReasoning("V67g ZERO DRAIN: " + title
-                                    + " has no opponent force icons — wasted move!", -200.0f);
-                                logger.warn("V67g ZERO DRAIN: {} no drain — strong penalty (-200)", title);
+                                MoveTransitPolicy.isDrainTransitStagingSite(title);
+                            MoveDrainRoutingPolicy.DestinationDrain v67DestinationDrain =
+                                MoveDrainRoutingPolicy.destinationDrain(
+                                    title, v67eExpectedDrain,
+                                    v67kIsTransitStagingSite);
+                            action.addReasoning(
+                                v67DestinationDrain.contribution().reason(),
+                                v67DestinationDrain.contribution().delta());
+                            switch (v67DestinationDrain.branch()) {
+                                case DRAIN_POTENTIAL:
+                                    logger.info("V67e DRAIN POTENTIAL: {} drain={} → +{} (tiebreaker: prefer max drain)",
+                                        title, v67eExpectedDrain,
+                                        (int) v67DestinationDrain.contribution().delta());
+                                    break;
+                                case TRANSIT_STAGING:
+                                    logger.warn("V67n TRANSIT STAGING DEST: {} → +1500 (dominates other Mapuzo destinations)", title);
+                                    break;
+                                case ZERO_DRAIN:
+                                    logger.warn("V67g ZERO DRAIN: {} no drain — strong penalty (-200)", title);
+                                    break;
                             }
 
-                            // V67g MOVE-FROM-DRAIN — additional penalty when this is a MOVE
-                            // (not deploy) and we're leaving a draining site for a worse one.
-                            // The decision text "Choose where to move <X>" tells us this is a move.
-                            // V67k EXEMPTION: skip when destination is a transit staging site.
+                            // Adapter retains V67g decision parsing and physical-card lookup.
                             try {
                                 if (v67kIsTransitStagingSite) {
                                     logger.info("V67k MOVE-FROM-DRAIN exempt: {} is transit staging site", title);
                                 } else {
-                                String dt = context.getDecisionText() != null
-                                    ? context.getDecisionText().toLowerCase(java.util.Locale.ROOT) : "";
-                                boolean isMoveDecision = dt.contains("where to move") || dt.contains("move to,");
-                                if (isMoveDecision && playerId != null) {
-                                    // Find the moving character's current location and that
-                                    // location's drain potential — if higher than the destination,
-                                    // penalize abandoning it.
-                                    String dtForName = context.getDecisionText() != null
-                                        ? context.getDecisionText() : "";
-                                    java.util.regex.Matcher mvNameMatch = java.util.regex.Pattern.compile(
-                                        "value='([^']+)'>").matcher(dtForName);
-                                    if (mvNameMatch.find()) {
-                                        String mvBp = mvNameMatch.group(1);
-                                        // Find this character on the table
-                                        for (PhysicalCard cur : gameState.getAllPermanentCards()) {
-                                            if (cur == null || cur.getBlueprintId(true) == null) continue;
-                                            if (!playerId.equals(cur.getOwner())) continue;
-                                            if (!mvBp.equals(cur.getBlueprintId(true))) continue;
-                                            PhysicalCard fromLoc = cur.getAtLocation();
-                                            if (fromLoc == null || fromLoc == location) break;
-                                            SwccgCardBlueprint fromBp = fromLoc.getBlueprint();
-                                            if (fromBp == null) break;
-                                            int fromTheirIcons = (mySide == Side.LIGHT)
-                                                ? fromBp.getIconCount(Icon.DARK_FORCE)
-                                                : fromBp.getIconCount(Icon.LIGHT_FORCE);
-                                            if (fromTheirIcons > theirIcons) {
-                                                int dropAmt = fromTheirIcons - theirIcons;
-                                                float v67gPenalty = -250.0f * dropAmt;
-                                                action.addReasoning(String.format(
-                                                    "V67g MOVE-FROM-DRAIN: leaving %s (drain %d) for %s (drain %d) — losing %d drain!",
-                                                    fromLoc.getTitle(), fromTheirIcons, title, theirIcons, dropAmt),
-                                                    v67gPenalty);
-                                                logger.warn("V67g MOVE-FROM-DRAIN: leaving {} drain {} for {} drain {} → {}",
-                                                    fromLoc.getTitle(), fromTheirIcons, title, theirIcons, (int)v67gPenalty);
+                                    String dt = context.getDecisionText() != null
+                                        ? context.getDecisionText().toLowerCase(java.util.Locale.ROOT) : "";
+                                    boolean isMoveDecision = dt.contains("where to move") || dt.contains("move to,");
+                                    if (isMoveDecision && playerId != null) {
+                                        String dtForName = context.getDecisionText() != null
+                                            ? context.getDecisionText() : "";
+                                        java.util.regex.Matcher mvNameMatch = java.util.regex.Pattern.compile(
+                                            "value='([^']+)'>").matcher(dtForName);
+                                        if (mvNameMatch.find()) {
+                                            String mvBp = mvNameMatch.group(1);
+                                            for (PhysicalCard cur : gameState.getAllPermanentCards()) {
+                                                if (cur == null || cur.getBlueprintId(true) == null) continue;
+                                                if (!playerId.equals(cur.getOwner())) continue;
+                                                if (!mvBp.equals(cur.getBlueprintId(true))) continue;
+                                                PhysicalCard fromLoc = cur.getAtLocation();
+                                                if (fromLoc == null || fromLoc == location) break;
+                                                SwccgCardBlueprint fromBp = fromLoc.getBlueprint();
+                                                if (fromBp == null) break;
+                                                int fromTheirIcons = (mySide == Side.LIGHT)
+                                                    ? fromBp.getIconCount(Icon.DARK_FORCE)
+                                                    : fromBp.getIconCount(Icon.LIGHT_FORCE);
+                                                MoveDrainRoutingPolicy.Contribution v67gMoveFromDrain =
+                                                    MoveDrainRoutingPolicy.moveFromDrain(
+                                                        isMoveDecision,
+                                                        v67kIsTransitStagingSite,
+                                                        fromLoc.getTitle(),
+                                                        fromTheirIcons, title, theirIcons);
+                                                if (v67gMoveFromDrain.applies()) {
+                                                    action.addReasoning(
+                                                        v67gMoveFromDrain.reason(),
+                                                        v67gMoveFromDrain.delta());
+                                                    logger.warn("V67g MOVE-FROM-DRAIN: leaving {} drain {} for {} drain {} → {}",
+                                                        fromLoc.getTitle(), fromTheirIcons, title, theirIcons,
+                                                        (int) v67gMoveFromDrain.delta());
+                                                }
+                                                break;
                                             }
-                                            break;
                                         }
                                     }
                                 }
-                                }  // close else (v67kIsTransitStagingSite exemption)
                             } catch (Exception e) { /* ignore */ }
                         }
 
