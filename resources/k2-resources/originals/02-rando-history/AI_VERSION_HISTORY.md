@@ -1,3 +1,16 @@
+  ==== V219 AI-ONLY MOVE THREAT POLICY OWNER (2026-07-18, both bots) ====
+Shared MoveThreatPolicy now owns the duplicated five-tier source-location threat classification,
+exact reason strings, raw deltas, and the RETREAT survival-claim fact. Both bot adapters retain the
+printed-power and weapon scans, direct score application, original logs, R3 ladder mutation, and
+source order. Behavior is unchanged: +8 remains CRUSH -1500, +4 FAVORABLE -1500, -4 RISKY -500,
+-6 DANGEROUS +20, and below -6 RETREAT +150 with R3. The opponent-power > 0 gate, float and NaN
+comparison behavior, integer truncation, V47, V60, V169, routing, finalization, and physical-card
+resolution are unchanged. Production edits are AI-only. Verification passed 77 focused MOVE tests
+and the full 1,254-test reactor with 0 failures, 0 errors, and 26 skipped. Package, source-boundary,
+forbidden-symbol, artifact, mirror, diff, and independent gates passed; server jar SHA-256 is
+282db1335fbd276af4d010db5724fbb3664fd86c36407327db4fa85581b04b8c. Runtime load and live-game
+proof remain separate gates. Revert the single V219 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V218 AI-ONLY MOVE PILOT AND TRANSIT POLICY OWNER (2026-07-18, both bots) ====
 Shared MoveTransitPolicy now owns the duplicated V25 pilot-lock score, defensive-shuttle scan, docking-bay
 transit bonus, and takeoff bonus. Both adapters keep direct score application and original logging at the

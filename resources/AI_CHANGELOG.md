@@ -4,6 +4,14 @@ Base: `PlayersCommittee/gemp-swccg` @ `55c22cf49` (canonical devs repo, compiles
 Reference copy of the (broken) public release: `../gemp-swccg-public-PUBLIC-COPY-2026-06-22`.
 Everything below is the ONLY divergence from pure devs code — each is reversible.
 
+## 2026-07-18: V219 AI-ONLY MOVE THREAT POLICY OWNER (both bots)
+- Why: the five source-location threat tiers and their raw score contributions remained duplicated in both `MoveEvaluator` mirrors. Classification used shared thresholds but had no common MOVE-phase owner.
+- Consolidation: shared `MoveThreatPolicy` now owns the strict opponent-power gate, CRUSH/FAVORABLE/RISKY/DANGEROUS/RETREAT classification, exact reason strings, raw deltas, and the RETREAT survival-claim fact. Both bot adapters retain the printed-power and weapon scans, direct `addReasoning`, original logs, R3 ladder mutation, and source order.
+- Behavior boundary: this is structural only. With the existing thresholds, power difference `+8` remains CRUSH `-1500`, `+4` remains FAVORABLE `-1500`, `-4` remains RISKY `-500`, `-6` remains DANGEROUS `+20`, and below `-6` remains RETREAT `+150` with the unchanged R3 claim. Opponent power must still be strictly greater than zero. Float comparison, Java integer truncation in reasons, and `NaN` fallthrough behavior are unchanged.
+- Scope boundary: every production edit is under `gemp-swccg-server/.../ai/**`. No game engine, decision metadata, card, action, mediator, serializer, client, deck, or database source changed. V47 weapon handling, V60 transit, V169 retry behavior, source power scanning, ladder finalization, routing, and physical-card resolution are untouched.
+- Verification: 77 focused MOVE policy/source/parity/resolver tests passed. The full reactor passed 1,254 tests with 0 failures, 0 errors, and 26 skipped. Package, normalized Rando/Chosen One mirrors, AI-source boundary, forbidden-symbol, compiled-artifact, diff, and independent source-review gates passed. The packaged server jar SHA-256 is `282db1335fbd276af4d010db5724fbb3664fd86c36407327db4fa85581b04b8c`. Runtime JVM loading and live-game proof remain separate deployment gates.
+- Revert: revert the single V219 commit. V218 remains the prior MOVE pilot-and-transit boundary.
+
 ## 2026-07-18: V218 AI-ONLY MOVE PILOT AND TRANSIT POLICY OWNER (both bots)
 - Why: the V25 pilot lock, defensive-shuttle scan, docking-bay transit bonus, and takeoff bonus remained duplicated in both `MoveEvaluator` mirrors. These adjacent MOVE rules shared one ordered movement-type block but had no common score owner.
 - Consolidation: shared `MoveTransitPolicy` now owns pilot-lock classification and reason construction, the defensive-shuttle destination/power scan, and the exact docking-bay and takeoff contributions. Both bot adapters retain direct `addReasoning` application and the original warning, info, and no-bonus debug logs at the same positions.

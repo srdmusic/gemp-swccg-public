@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
@@ -118,11 +119,6 @@ public class MoveEvaluator extends ActionEvaluator {
     private boolean ladderWrongDirVeto;        // V38.3 wrong-direction — deferred so the transit carve-out can suppress it
     private String ladderWrongDirVetoReason;
     private boolean ladderRankMoveRan;         // rankMoveFromLocation executed (gates the finalizer's default -50)
-
-    // Threat levels (matching Python ThreatLevel enum)
-    private enum ThreatLevel {
-        CRUSH, FAVORABLE, RISKY, DANGEROUS, RETREAT
-    }
 
     // Track cards we've already tried moving this turn
     private Set<String> pendingMoveCardIds = new HashSet<>();
@@ -2169,22 +2165,24 @@ public class MoveEvaluator extends ActionEvaluator {
             location.getTitle(), myPower, theirPower, powerDiff);
 
         // === THREAT LEVEL ANALYSIS ===
-        if (theirPower > 0) {
-            ThreatLevel threat = calculateThreatLevel(powerDiff);
+        MoveThreatPolicy.Evaluation threat = MoveThreatPolicy.evaluate(
+                theirPower, powerDiff,
+                RandoConfig.BATTLE_FAVORABLE_THRESHOLD,
+                RandoConfig.BATTLE_DANGER_THRESHOLD);
+        if (threat.applies()) {
+            action.addReasoning(threat.reason(), threat.delta());
 
-            switch (threat) {
+            switch (threat.level()) {
                 case RETREAT:
-                    action.addReasoning("Strategic retreat - badly outmatched (" + (int)powerDiff + ")",
-                                       VERY_GOOD_DELTA);
                     logger.info("[MoveEvaluator] RETREAT recommended - outmatched by {}", -powerDiff);
                     // T4.1 (2026-07-06): the RETREAT tier claims R3 SURVIVAL; the early
                     // return is removed so later blocks (V29.13 drain, V34 contest…) still run.
-                    ladderClaimR3("THREAT RETREAT");
+                    if (threat.claimSurvivalRank()) {
+                        ladderClaimR3("THREAT RETREAT");
+                    }
                     break;
 
                 case DANGEROUS:
-                    action.addReasoning("Dangerous location - retreat recommended (" + (int)powerDiff + ")",
-                                       GOOD_DELTA * 2);
                     // T4.1 (2026-07-06): early return removed — R1 fine (+20), block falls through.
                     break;
 
@@ -2194,24 +2192,18 @@ public class MoveEvaluator extends ActionEvaluator {
                     // forever at a FAVORABLE Mining Village). Now an R1-internal weight (-1500,
                     // no return): still buries every same-band R1 move (V37.1-protect boundary:
                     // -1550 < Pass), but an R2+ claim outranks it by band.
-                    action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them!",
-                                       -1500.0f);
                     logger.warn("V37.1 STAY AND CRUSH at {}: power +{} — -1500 (weight)",
                         location.getTitle(), (int)powerDiff);
                     break;
 
                 case FAVORABLE:
                     // V37.1 UPDATED 2026-07-06 T4.1: same conversion as CRUSH (-9999+return → -1500 weight).
-                    action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — hold position!",
-                                       -1500.0f);
                     logger.warn("V37.1 STAY AND FIGHT at {}: power +{} — -1500 (weight)",
                         location.getTitle(), (int)powerDiff);
                     break;
 
                 case RISKY:
                     // V37.1: Even fight — very strong discouragement to leave
-                    action.addReasoning("V37.1 CONTESTED: Even power (" + (int)powerDiff + ") — hold position!",
-                                       -500.0f);
                     break;
             }
         }
@@ -2973,23 +2965,6 @@ public class MoveEvaluator extends ActionEvaluator {
             }
         } catch (Exception e) { /* fail-open: 0 bonus */ }
         return bonus;
-    }
-
-    private ThreatLevel calculateThreatLevel(float powerDiff) {
-        int favorable = RandoConfig.BATTLE_FAVORABLE_THRESHOLD;
-        int danger = RandoConfig.BATTLE_DANGER_THRESHOLD;
-
-        if (powerDiff >= favorable + 4) {
-            return ThreatLevel.CRUSH;
-        } else if (powerDiff >= favorable) {
-            return ThreatLevel.FAVORABLE;
-        } else if (powerDiff >= -favorable) {
-            return ThreatLevel.RISKY;
-        } else if (powerDiff >= danger) {
-            return ThreatLevel.DANGEROUS;
-        } else {
-            return ThreatLevel.RETREAT;
-        }
     }
 
 }
