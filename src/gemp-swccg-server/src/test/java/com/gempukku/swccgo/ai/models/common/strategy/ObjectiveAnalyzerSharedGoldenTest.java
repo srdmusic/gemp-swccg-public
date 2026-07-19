@@ -97,6 +97,19 @@ public class ObjectiveAnalyzerSharedGoldenTest {
                 "Deploy Tuanul Village. Flip this card if your First Order characters control two battlegrounds.");
         ObjectiveAnalyzer hiddenPath = analyzed("226_028", "The Hidden Path",
                 "Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. Flip this card if Jedi occupy two non-Mapuzo sites.");
+        ObjectiveAnalyzer tdigwatt = analyzed("109_012",
+                "This Deal Is Getting Worse All The Time",
+                "Deploy Bespin system. Flip this card if you occupy Bespin system.");
+        ObjectiveAnalyzer tdigwattV = analyzed("226_012",
+                "This Deal Is Getting Worse All The Time (V)",
+                "Deploy Bespin system. Flip this card if you occupy Bespin system.");
+        ObjectiveAnalyzer flippedTdigwatt = analyzed("109_012",
+                "This Deal Is Getting Worse All The Time",
+                "Deploy Bespin system. Flip this card if you occupy Bespin system.",
+                true);
+        ObjectiveAnalyzer otherBespin = analyzed("test_bespin",
+                "A Different Bespin Objective",
+                "Deploy Bespin system. Flip this card if you occupy Bespin system.");
 
         assertEquals("My Lord, Is That Legal?", myLord.getActivePlaybook().label);
         assertTrue(myLord.isMyLord());
@@ -116,6 +129,28 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         assertEquals("the first order was just the beginning", iwtm.getIwtmPreferredStartingEffect());
 
         assertTrue(hiddenPath.getFlipConditionText().contains("Jedi occupy two non-Mapuzo sites"));
+        assertTrue(tdigwatt.isTdigwatt());
+        assertTrue(tdigwatt.isTdigwattPreFlip());
+        assertTrue(tdigwattV.isTdigwatt());
+        assertTrue(flippedTdigwatt.isTdigwatt());
+        assertFalse(flippedTdigwatt.isTdigwattPreFlip());
+        assertTrue(tdigwatt.needsBespinSystemPresence());
+        assertFalse(otherBespin.isTdigwatt());
+        assertTrue(otherBespin.needsBespinSystemPresence());
+    }
+
+    @Test
+    public void tdigwattIdentityResetsWhenADifferentObjectiveIsAnalyzed() {
+        ObjectiveAnalyzer analyzer =
+                new com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer();
+        analyze(analyzer, "109_012", "This Deal Is Getting Worse All The Time",
+                "Deploy Bespin system. Flip this card if you occupy Bespin system.");
+        assertTrue(analyzer.isTdigwatt());
+
+        analyze(analyzer, "8_167", "Endor Operations",
+                "Deploy Endor system. Flip this card if you occupy Endor system.");
+        assertFalse(analyzer.isTdigwatt());
+        assertFalse(analyzer.isTdigwattPreFlip());
     }
 
     @Test
@@ -258,10 +293,25 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         return analyzer;
     }
 
+    private static ObjectiveAnalyzer analyzed(
+            String blueprintId, String title, String gameText, boolean flipped) {
+        ObjectiveAnalyzer analyzer =
+                new com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer();
+        analyze(analyzer, blueprintId, title, gameText, flipped);
+        return analyzer;
+    }
+
     private static void analyze(ObjectiveAnalyzer analyzer, String blueprintId, String title, String gameText) {
+        analyze(analyzer, blueprintId, title, gameText, false);
+    }
+
+    private static void analyze(
+            ObjectiveAnalyzer analyzer, String blueprintId, String title,
+            String gameText, boolean flipped) {
         SwccgCardBlueprint front = blueprint(title, gameText, CardCategory.OBJECTIVE);
         SwccgCardBlueprint back = blueprint(title + " Back", "Flip this card if the back condition is met.", CardCategory.OBJECTIVE);
-        PhysicalCard objective = card(front, back, blueprintId, PLAYER_ID, Zone.SIDE_OF_TABLE, false);
+        PhysicalCard objective = card(front, back, blueprintId, PLAYER_ID,
+                Zone.SIDE_OF_TABLE, flipped);
         GameState gameState = mock(GameState.class);
         when(gameState.getAllPermanentCards()).thenReturn(List.of(objective));
         SwccgGame game = mock(SwccgGame.class);

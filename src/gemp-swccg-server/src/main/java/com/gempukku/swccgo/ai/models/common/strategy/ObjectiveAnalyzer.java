@@ -122,6 +122,7 @@ public class ObjectiveAnalyzer {
     private boolean isInvasion = false;   // objective title contains "invasion"
     private boolean isMyLord = false;      // title contains "my lord" OR "make it legal" (MLITL)
     private boolean isEndor = false;       // title contains "endor operations" (ENDOR_PLAYBOOK pilot 2026-07-07)
+    private boolean isTdigwatt = false;    // title contains "this deal is getting worse all the time"
     // ObjectivePlaybook pilot (2026-07-07): the active objective's typed profile, or null. Selected
     // in analyze() when the objective matches a known playbook; consumed via getActivePlaybook().
     private ObjectivePlaybook activePlaybook = null;
@@ -217,6 +218,7 @@ public class ObjectiveAnalyzer {
             this.isInvasion = titleLowerId.contains("invasion");
             this.isMyLord = titleLowerId.contains("my lord") || titleLowerId.contains("make it legal");
             this.isEndor = titleLowerId.contains("endor operations");
+            this.isTdigwatt = titleLowerId.contains("this deal is getting worse all the time");
             // ObjectivePlaybook (2026-07-08): when the objective has a loaderEnabled JSON profile, the ACTIVE
             // playbook is BUILT FROM THE JSON (analyzer = pointer to the data). Otherwise fall back to the
             // compiled statics (My Lord/Endor) — the loaderEnabled=false path. prof/loaderOn reused post-parse
@@ -541,6 +543,10 @@ public class ObjectiveAnalyzer {
     //    table, not on the objective, so it stays a typed-Filter check, NOT isMyLord()-gated.)
     public boolean isInvasion() { return isInvasion; }
     public boolean isMyLord() { return isMyLord; }
+    public boolean isTdigwatt() { return isTdigwatt; }
+    public boolean isTdigwattPreFlip() {
+        return analyzed && isTdigwatt && !isFlipped;
+    }
     // V186 CONSOLIDATED accessors (2026-07-07): consumers = CardSelectionEvaluator V186
     // (+400 Starkiller-SYSTEM starting-location pick, +1000 preferred starting-effect pick).
     public boolean isWantThatMap() { return isWantThatMap; }
@@ -1332,6 +1338,7 @@ public class ObjectiveAnalyzer {
         isInvasion = false;
         isMyLord = false;
         isEndor = false;
+        isTdigwatt = false;
         activePlaybook = null;
         // V186 CONSOLIDATED: I Want That Map identity + typed steer data
         isWantThatMap = false;

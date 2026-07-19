@@ -675,15 +675,13 @@ public class DeployEvaluator extends ActionEvaluator {
             // After turn 2, HOLD_BACK can apply to non-location cards only.
             // Locations are ALWAYS exempt from HOLD_BACK regardless of turn.
             if (plan != null && plan.getStrategy() == DeployStrategy.HOLD_BACK) {
-                // V40: HOLD_BACK only applies to TDIGWATT (non-Hunt Down) decks.
+                // V40: HOLD_BACK only applies to TDIGWATT decks.
                 // Hunt Down and all other decks deploy freely — no hold back ever.
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer holdBackObjAnalyzer =
                     context.getObjectiveAnalyzer();
-                boolean isHuntDownHoldBack = holdBackObjAnalyzer != null && holdBackObjAnalyzer.isAnalyzed()
-                    && holdBackObjAnalyzer.isHuntDownV();
-                // V40: Only apply hold-back for TDIGWATT (non-Hunt Down). All others deploy freely.
+                // V40: Only apply hold-back for TDIGWATT. All others deploy freely.
                 boolean isTdigwattDeck = holdBackObjAnalyzer != null && holdBackObjAnalyzer.isAnalyzed()
-                    && !holdBackObjAnalyzer.isHuntDownV();
+                    && holdBackObjAnalyzer.isTdigwatt();
                 if (!isTdigwattDeck) {
                     // V40: NOT TDIGWATT — NEVER hold back, deploy freely
                     LOG.warn("V40 NO HOLD_BACK: Not TDIGWATT deck — ignoring hold-back, deploy freely! Action: '{}'",
@@ -1372,7 +1370,7 @@ public class DeployEvaluator extends ActionEvaluator {
                         && plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS;
                     boolean tdigwattPlan = context.getObjectiveAnalyzer() != null
                         && context.getObjectiveAnalyzer().isAnalyzed()
-                        && !context.getObjectiveAnalyzer().isHuntDownV();
+                        && context.getObjectiveAnalyzer().isTdigwatt();
                     DeployPlanPolicy.Evaluation planEvaluation = DeployPlanPolicy.evaluate(
                         new DeployPlanPolicy.Facts(
                             actionId, plan != null,
@@ -4489,9 +4487,7 @@ public class DeployEvaluator extends ActionEvaluator {
             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer sequencingObjective =
                 context.getObjectiveAnalyzer();
             boolean tdigwattPreFlip = sequencingObjective != null
-                && sequencingObjective.isAnalyzed()
-                && sequencingObjective.needsBespinSystemPresence()
-                && !sequencingObjective.isHuntDownV();
+                && sequencingObjective.isTdigwattPreFlip();
             String sequencingObjectiveTitle = sequencingObjective != null
                 ? sequencingObjective.getObjectiveTitle() : null;
             boolean hiddenPath = sequencingObjectiveTitle != null

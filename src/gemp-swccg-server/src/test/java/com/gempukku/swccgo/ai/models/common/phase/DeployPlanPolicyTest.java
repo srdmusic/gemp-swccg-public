@@ -30,6 +30,20 @@ public class DeployPlanPolicyTest {
     }
 
     @Test
+    public void turnOneNonTdigwattLocationPlanFallsThrough() {
+        DeployPlanPolicy.Evaluation evaluation = DeployPlanPolicy.evaluate(
+                new DeployPlanPolicy.Facts(
+                        "a", true, true, false, 99,
+                        false, false, true, false,
+                        false, 1, 6, false, 0,
+                        false, "locations"));
+        assertEquals(DeployPlanPolicy.AdapterStep.FALL_THROUGH,
+                evaluation.adapterStep());
+        assertOperations(evaluation.result().operations(),
+                new String[]{"V40-plan-non-tdigwatt"}, new float[]{0.0f});
+    }
+
+    @Test
     public void lowForceWaitStopsButSurplusFallsThrough() {
         DeployPlanPolicy.Evaluation low = DeployPlanPolicy.evaluate(
                 facts(true, true, false, 99, false, true,

@@ -7433,3 +7433,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     68a911a1915bdbf7b59311c1d7e9a8af68801a44de3afd46340d95ae0ada8893 contain the pure owner
     and both mirrored adapters. Runtime reload and live-game proof remain pending on the external
     runtime. AI source only; no GEMP engine or player-decision changes.
+
+  ════ V259 (2026-07-19): repair TDIGWATT objective identity and pre-flip routing ════
+    Shared AI ObjectiveAnalyzer now exposes one title-derived isTdigwatt flag for classic and
+    virtual TDIGWATT. Both DeployEvaluator mirrors use it for HOLD_BACK diagnostics, the turn-one
+    DEPLOY_LOCATIONS plan gate, and V52 tail scripts; the tail additionally requires !isFlipped.
+    Actual TDIGWATT retains additive -1000 plus terminal continue and its unflipped turn-one V52
+    script. Other objectives now take neutral V40 fallthrough, a deliberate +1000 raw difference
+    plus restored downstream evaluation. Post-flip TDIGWATT no longer receives a pre-flip script.
+    General Bespin-aware rules remain unchanged. Focused 22/0/0/0, DEPLOY-named 158/0/0/0, full
+    reactor 1701/0/0/26, objective identity, direct flipped/reset, and plan boundary fixtures, source gate checks,
+    normalized mirror parity, AI-only boundary, forbidden-symbol scan, compiled-artifact gates,
+    diff check, and clean package passed. Independent review passed after its only coverage note
+    was closed with direct post-flip and identity-reset fixtures. Server jar SHA-256
+    47a60ad0c670b9a02c7e93d7923c9cfb29c2b29b64c5a007485129a71bc0fa82 and web jar SHA-256
+    1bc3bab174b0ec209ab207bd2385f9c2b2a3f59bd2ae8d2c81e831db8119ad0b contain the canonical
+    identity and both mirrored adapters. Runtime reload and live-game proof remain pending on the
+    external runtime. AI source only; no GEMP engine or player-decision changes.
