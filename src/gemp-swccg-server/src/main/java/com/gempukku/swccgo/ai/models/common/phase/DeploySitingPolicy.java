@@ -259,6 +259,29 @@ public final class DeploySitingPolicy {
         return new PolicyResult("DEPLOY_OPPONENT_FORCE_ICONS_POLICY", operations);
     }
 
+    public static PolicyResult evaluateMapuzoDestination(
+            MapuzoDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (!facts.jediSurvivor()) {
+            if (facts.opponentPower() > 0.0f) {
+                operations.add(addSiting(facts.actionId(), "V64-mapuzo-defense",
+                        TraceOutputKind.BANDED, 30.0f,
+                        "V64 MAPUZO DEFENSE: Opponent at "
+                                + facts.destinationTitle() + " (power "
+                                + (int) facts.opponentPower()
+                                + ") — non-Jedi defender OK here"));
+            } else {
+                operations.add(addSiting(facts.actionId(), "V64-mapuzo-trap",
+                        TraceOutputKind.VETO, -1500.0f,
+                        "V64 MAPUZO TRAP: Non-Jedi character at "
+                                + facts.destinationTitle()
+                                + " will be STUCK — only Jedi Survivors transit off Mapuzo!"));
+            }
+        }
+        return new PolicyResult("DEPLOY_MAPUZO_DESTINATION_POLICY", operations);
+    }
+
     private static void addFormation(List<PolicyOperation> operations,
                                      Facts facts) {
         switch (facts.formationState()) {
@@ -331,6 +354,16 @@ public final class DeploySitingPolicy {
                                           int opponentIcons) {
         public OpponentForceIconsFacts {
             Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record MapuzoDestinationFacts(
+            String actionId, String destinationTitle,
+            boolean jediSurvivor, float opponentPower) {
+        public MapuzoDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            destinationTitle = destinationTitle == null
+                    ? "null" : destinationTitle;
         }
     }
 

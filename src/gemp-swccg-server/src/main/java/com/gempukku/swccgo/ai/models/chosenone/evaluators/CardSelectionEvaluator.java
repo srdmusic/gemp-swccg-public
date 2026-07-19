@@ -12,6 +12,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
@@ -213,6 +214,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
                 "deploy-weapon-selection-" + result.producerId()
                         + "-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyDeployPlanDestinationPolicy(EvaluatedAction action,
+                                                  PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "deploy-plan-destination-" + action.getActionId());
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
     }
@@ -1434,22 +1443,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 } catch (Exception e) { /* ignore */ }
                             }
 
+                            applyDeploySitingPolicy(action,
+                                DeploySitingPolicy.evaluateMapuzoDestination(
+                                    new DeploySitingPolicy.MapuzoDestinationFacts(
+                                        action.getActionId(), title,
+                                        isJediSurvivor, oppPowerAtMapuzo)));
                             if (!isJediSurvivor) {
                                 if (oppPowerAtMapuzo > 0) {
-                                    // Opponent is attacking/draining Mapuzo — defenders welcome
-                                    action.addReasoning(
-                                        "V64 MAPUZO DEFENSE: Opponent at " + title
-                                            + " (power " + (int)oppPowerAtMapuzo
-                                            + ") — non-Jedi defender OK here",
-                                        30.0f);
                                     logger.info("V64 MAPUZO DEFENSE: {} needs defender vs opponent power {} (+30)",
                                         title, (int)oppPowerAtMapuzo);
                                 } else {
-                                    // Non-Jedi to empty Mapuzo = trapped forever. Hard block.
-                                    action.addReasoning(
-                                        "V64 MAPUZO TRAP: Non-Jedi character at " + title
-                                            + " will be STUCK — only Jedi Survivors transit off Mapuzo!",
-                                        -1500.0f);
                                     logger.warn("V64 MAPUZO TRAP: Non-Jedi deploy to empty {} BLOCKED (-1500)", title);
                                 }
                             }
@@ -1459,11 +1462,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // FOLLOW THE DEPLOY PLAN!
                         // =====================================================
                         if (plannedTargetId != null) {
-                            if (cardId.equals(plannedTargetId)) {
-                                action.addReasoning("PLANNED TARGET: " + plannedTargetName, 200.0f);
+                            boolean isPlannedTarget = cardId.equals(plannedTargetId);
+                            applyDeployPlanDestinationPolicy(action,
+                                DeployPlanPolicy.evaluateDestinationTarget(
+                                    new DeployPlanPolicy.DestinationTargetFacts(
+                                        action.getActionId(), isPlannedTarget,
+                                        plannedTargetName)));
+                            if (isPlannedTarget) {
                                 logger.info("✅ {} is the PLANNED target (+200)", title);
-                            } else {
-                                action.addReasoning("Not planned target (want " + plannedTargetName + ")", -100.0f);
                             }
                         }
 

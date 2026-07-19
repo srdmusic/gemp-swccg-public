@@ -103,6 +103,23 @@ public final class DeployPlanPolicy {
         return evaluation(operations, step);
     }
 
+    public static PolicyResult evaluateDestinationTarget(
+            DestinationTargetFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.plannedTarget()) {
+            operations.add(add(facts.actionId(), "deploy-plan-target-match",
+                    200.0f,
+                    "PLANNED TARGET: " + facts.plannedTargetName()));
+        } else {
+            operations.add(add(facts.actionId(), "deploy-plan-target-other",
+                    -100.0f,
+                    "Not planned target (want "
+                            + facts.plannedTargetName() + ")"));
+        }
+        return new PolicyResult("DEPLOY_PLAN_DESTINATION_POLICY", operations);
+    }
+
     public record Facts(String actionId, boolean hasPlan,
                         boolean hasPendingInstructions, boolean plannedCard,
                         int instructionPriority, boolean forceAllowExtras,
@@ -114,6 +131,16 @@ public final class DeployPlanPolicy {
         public Facts {
             Objects.requireNonNull(actionId, "actionId");
             strategyValue = strategyValue == null ? "" : strategyValue;
+        }
+    }
+
+    public record DestinationTargetFacts(
+            String actionId, boolean plannedTarget,
+            String plannedTargetName) {
+        public DestinationTargetFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            plannedTargetName = plannedTargetName == null
+                    ? "null" : plannedTargetName;
         }
     }
 

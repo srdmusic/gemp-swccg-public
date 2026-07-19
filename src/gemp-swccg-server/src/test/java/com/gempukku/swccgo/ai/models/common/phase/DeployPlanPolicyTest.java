@@ -1,6 +1,9 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import java.util.List;
@@ -69,6 +72,26 @@ public class DeployPlanPolicyTest {
                 new String[]{"deploy-plan-locations-complete",
                         "deploy-plan-extra-budget", "V40-plan-hold-back"},
                 new float[]{25.0f, 25.0f, 0.0f});
+    }
+
+    @Test
+    public void destinationTargetPreservesMatchAndMismatchScores() {
+        PolicyOperation match = DeployPlanPolicy.evaluateDestinationTarget(
+                new DeployPlanPolicy.DestinationTargetFacts(
+                        "a", true, "Bespin")).operations().get(0);
+        assertEquals("deploy-plan-target-match", match.ruleArmId().id());
+        assertEquals(200.0f, match.delta(), 0.0f);
+        assertEquals("PLANNED TARGET: Bespin", match.reason());
+        assertEquals(PolicyOperationKind.ADD, match.kind());
+        assertEquals(TraceDomainId.DEPLOY_SEQUENCING, match.domainId());
+        assertEquals(TraceOutputKind.ORDERING, match.outputKind());
+
+        PolicyOperation other = DeployPlanPolicy.evaluateDestinationTarget(
+                new DeployPlanPolicy.DestinationTargetFacts(
+                        "a", false, null)).operations().get(0);
+        assertEquals("deploy-plan-target-other", other.ruleArmId().id());
+        assertEquals(-100.0f, other.delta(), 0.0f);
+        assertEquals("Not planned target (want null)", other.reason());
     }
 
     private static DeployPlanPolicy.Facts facts(

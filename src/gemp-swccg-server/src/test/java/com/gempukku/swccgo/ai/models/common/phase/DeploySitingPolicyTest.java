@@ -297,6 +297,38 @@ public class DeploySitingPolicyTest {
                 three.reason());
     }
 
+    @Test
+    public void mapuzoDestinationPreservesSurvivorDefenseAndTrapBranches() {
+        assertTrue(DeploySitingPolicy.evaluateMapuzoDestination(
+                new DeploySitingPolicy.MapuzoDestinationFacts(
+                        "action-1", "Mapuzo: Streets", true, 0.0f))
+                .operations().isEmpty());
+
+        PolicyOperation defense = DeploySitingPolicy.evaluateMapuzoDestination(
+                new DeploySitingPolicy.MapuzoDestinationFacts(
+                        "action-1", "Mapuzo: Streets", false, 0.01f))
+                .operations().get(0);
+        assertEquals("V64-mapuzo-defense", defense.ruleArmId().id());
+        assertEquals(30.0f, defense.delta(), 0.0f);
+        assertEquals(PolicyOperationKind.ADD, defense.kind());
+        assertEquals(TraceOutputKind.BANDED, defense.outputKind());
+        assertEquals("V64 MAPUZO DEFENSE: Opponent at Mapuzo: Streets"
+                        + " (power 0) — non-Jedi defender OK here",
+                defense.reason());
+
+        PolicyOperation trap = DeploySitingPolicy.evaluateMapuzoDestination(
+                new DeploySitingPolicy.MapuzoDestinationFacts(
+                        "action-1", null, false, 0.0f))
+                .operations().get(0);
+        assertEquals("V64-mapuzo-trap", trap.ruleArmId().id());
+        assertEquals(-1500.0f, trap.delta(), 0.0f);
+        assertEquals(PolicyOperationKind.ADD, trap.kind());
+        assertEquals(TraceOutputKind.VETO, trap.outputKind());
+        assertEquals("V64 MAPUZO TRAP: Non-Jedi character at null"
+                        + " will be STUCK — only Jedi Survivors transit off Mapuzo!",
+                trap.reason());
+    }
+
     private static void assertDestination(
             DeploySitingPolicy.StarshipDestinationState state,
             float expectedDelta, TraceOutputKind expectedKind,

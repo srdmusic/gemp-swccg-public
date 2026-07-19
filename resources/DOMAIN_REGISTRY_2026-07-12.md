@@ -151,6 +151,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V274 owner note:** `DeployWeaponPolicy` now also owns the V25 `CardSelectionEvaluator` destination-slot and Hunt Down lightsaber outcomes. Adapters retain both declaration-order attachment scans, first-match breaks, the deploying-card blueprint/title read, lazy ObjectiveAnalyzer access, catches, and diagnostics. The two separate additive `-9999` arms intentionally remain independently reachable for a second lightsaber; no engine metadata or candidate control moved.
 
+**V275 owner note:** `DeploySitingPolicy` now owns the V64 Mapuzo destination outcome after the adapters gather opponent power and literal Jedi Survivor text, while `DeployPlanPolicy` owns the physical planned-target `+200/-100` choice after the adapters compare IDs. All board, blueprint, objective, plan, catch, and log behavior remains in the mirrored adapters; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

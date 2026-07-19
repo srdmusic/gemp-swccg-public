@@ -7731,3 +7731,19 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and both adapters. Runtime reload and live-game proof remain separate deployment gates.
     Clean V274 is based on live V273 124fa575b. AI source only; no GEMP engine or player-decision
     changes.
+
+  ==== V275 (2026-07-19): consolidate Mapuzo and planned-destination scoring ====
+    Shared AI-only DeploySitingPolicy now owns the V64 Mapuzo outcome after each adapter gathers
+    opponent power and literal Jedi Survivor text; DeployPlanPolicy now owns the physical planned-
+    target match after each adapter compares candidate and planned IDs. Both CardSelectionEvaluator
+    mirrors retain every Mapuzo/character guard, opponent and power read with zero fallback,
+    blueprint/game-text read, physical ID comparison, catch, exact log, and contribution position.
+    Jedi Survivors remain silent; non-Jedi score +30 only when opponent power is strictly above
+    zero, otherwise additive -1500. Planned target remains +200 and other physical targets -100.
+    No continue or temp-ID behavior changed. Focused policy/source/parity 34/0/0/0, DEPLOY-named
+    237/0/0/0, full reactor 1848/0/0/26, exact mirror parity, threshold/reason/domain fixtures,
+    read-order, failed-read, physical-ID, temp-route, AI-only, diff, and clean package gates passed.
+    Server jar SHA-256 eb7af3dc53b4661a521c3446e3d05cf048e27e8377de4b01ea1dc6f7f0c42c52 and web jar SHA-256
+    edb5748ae2d759d48e5ef24f2577d30e5445d3fdd74a778843ce39e35d2697b8 contain both owners and
+    adapters. Runtime reload and live-game proof remain separate deployment gates. Clean V275 is
+    based on live V274 fcf4c3efc. AI source only; no GEMP engine or player-decision changes.
