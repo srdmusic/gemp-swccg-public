@@ -6,8 +6,14 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class MoveForceEconomyPolicyTest {
+    private static final String TRANSPORT_GAME_TEXT =
+            "During your move phase, target characters to 'transport'. "
+                    + "Draw destiny. Use that much Force to 'transport,' or place Interrupt in Lost Pile.";
+
     @Test
     public void reserveRequiresAnActualFutureObligation() {
         assertEquals(MoveForceEconomyPolicy.Mode.NONE,
@@ -98,6 +104,81 @@ public class MoveForceEconomyPolicyTest {
         }
     }
 
+    @Test
+    public void odinFloorPreservesFiveForceBoundaryAndVetoReason() {
+        for (int forcePile = 0; forcePile < 5; forcePile++) {
+            assertTrue(MoveForceEconomyPolicy.isOdinNesloorAction(
+                    "Odin Nesloor & First Aid",
+                    "transport characters using odin nesloor"));
+            MoveForceEconomyPolicy.ActionGate gate =
+                    MoveForceEconomyPolicy.odinNesloorFloor(forcePile);
+
+            assertGate(gate, -100000.0f,
+                    "V134 ODIN NESLOOR FLOOR: only " + forcePile
+                            + " force in pile (need 5+) — hold the interrupt (LADDER VETO)");
+        }
+
+        assertFalse(MoveForceEconomyPolicy.odinNesloorFloor(5).applies());
+    }
+
+    @Test
+    public void odinFloorPreservesTitleAndActionMatchGuards() {
+        assertFalse(MoveForceEconomyPolicy.isOdinNesloorAction(
+                "First Aid", "transport characters"));
+        assertFalse(MoveForceEconomyPolicy.isOdinNesloorAction(
+                "Odin Nesloor & First Aid", "Activate Force"));
+        assertFalse(MoveForceEconomyPolicy.isOdinNesloorAction(
+                null, "transport characters"));
+    }
+
+    @Test
+    public void namedTransportClassifierPreservesLegacyTitles() {
+        assertTrue(MoveForceEconomyPolicy.isNamedTransportInterrupt(
+                "Elis Helrot"));
+        assertTrue(MoveForceEconomyPolicy.isNamedTransportInterrupt(
+                "NABRUN LEIDS"));
+        assertFalse(MoveForceEconomyPolicy.isNamedTransportInterrupt(
+                "Odin Nesloor & First Aid"));
+        assertFalse(MoveForceEconomyPolicy.isNamedTransportInterrupt(null));
+    }
+
+    @Test
+    public void transportFloorPreservesForceAndReserveBoundaries() {
+        assertTrue(MoveForceEconomyPolicy.isTransportInterruptAction(
+                "Elis Helrot", null, "play elis helrot to transport"));
+        assertGate(MoveForceEconomyPolicy.transportInterruptFloor(3, 1),
+                -2000.0f,
+                "V141 TRANSPORT INTERRUPT BLOCK: only 3 force in pile (need 4+ to cover destiny draw) — hold the interrupt");
+        assertTrue(MoveForceEconomyPolicy.isTransportInterruptAction(
+                "Nabrun Leids", null, "relocate using nabrun leids"));
+        assertGate(MoveForceEconomyPolicy.transportInterruptFloor(4, 0),
+                -2000.0f,
+                "V141 TRANSPORT INTERRUPT BLOCK: reserve deck empty — cannot draw destiny — hold the interrupt");
+        assertFalse(MoveForceEconomyPolicy.transportInterruptFloor(4, 1)
+                .applies());
+    }
+
+    @Test
+    public void transportFloorPreservesGenericGameTextFallback() {
+        assertTrue(MoveForceEconomyPolicy.isTransportInterruptAction(
+                "Odin Nesloor & First Aid", TRANSPORT_GAME_TEXT,
+                "transport characters"));
+        MoveForceEconomyPolicy.ActionGate gate =
+                MoveForceEconomyPolicy.transportInterruptFloor(5, 0);
+
+        assertGate(gate, -2000.0f,
+                "V141 TRANSPORT INTERRUPT BLOCK: reserve deck empty — cannot draw destiny — hold the interrupt");
+        assertFalse(MoveForceEconomyPolicy.isTransportInterruptAction(
+                "Other Interrupt", "Draw destiny to 'transport'.",
+                "transport characters"));
+    }
+
+    @Test
+    public void transportFloorPreservesActualActionGuard() {
+        assertFalse(MoveForceEconomyPolicy.isTransportInterruptAction(
+                "Elis Helrot", null, "Activate Force"));
+    }
+
     private static MoveForceEconomyPolicy.Evaluation reserve(
             int forcePile, boolean dtf, boolean grabber, boolean critical) {
         return MoveForceEconomyPolicy.reserve(
@@ -115,6 +196,15 @@ public class MoveForceEconomyPolicyTest {
         assertEquals(domainId, operation.domainId());
         assertEquals(Float.floatToRawIntBits(delta),
                 Float.floatToRawIntBits(operation.delta()));
+    }
+
+    private static void assertGate(
+            MoveForceEconomyPolicy.ActionGate gate,
+            float delta, String reason) {
+        assertTrue(gate.applies());
+        assertEquals(reason, gate.reason());
+        assertEquals(Float.floatToRawIntBits(delta),
+                Float.floatToRawIntBits(gate.delta()));
     }
 
     private static float legacyReserveDelta(

@@ -12,6 +12,8 @@ import com.gempukku.swccgo.ai.models.common.phase.ControlActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
@@ -339,11 +341,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // These capacity-slot swaps gain nothing for the AI — once a pilot is
             // placed, swapping pilot↔passenger doesn't change combat/movement value.
             // Hard-block both directions outright.
-            if (textLower.contains("move to passenger capacity slot")
-                    || textLower.contains("move to pilot capacity slot")) {
-                action.addReasoning(
-                    "V87 NO SWAP: pilot↔passenger capacity slot rearrangement is pointless — hard block",
-                    -3000.0f);
+            MoveTransitPolicy.Contribution v87CapacitySwap =
+                    MoveTransitPolicy.capacitySlotSwap(textLower);
+            if (v87CapacitySwap.applies()) {
+                action.addReasoning(v87CapacitySwap.reason(),
+                        v87CapacitySwap.delta());
                 logger.warn("V87 NO SWAP blocking: '{}' → -3000", actionText);
                 actions.add(action);
                 continue;
@@ -370,36 +372,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // substring as fallback because the Persona constant may not be
             // registered in the engine enum yet — verify and migrate to
             // Filters.persona(Persona.ODIN_NESLOOR) when available.
+            // MoveForceEconomyPolicy owns the title/action match, threshold,
+            // score, and exact reason. This adapter retains phase/card reads,
+            // scoring mutation, logging, and fail-open exception boundaries.
             if (cardId != null && gameState != null
                     && context.getPhase() == Phase.MOVE) {
                 try {
                     PhysicalCard v134Src = gameState.findCardById(Integer.parseInt(cardId));
-                    if (v134Src != null && v134Src.getTitle() != null) {
-                        String v134Lower = v134Src.getTitle().toLowerCase(java.util.Locale.ROOT);
-                        // BUGFIX 2026-05-28: require the ACTION to actually be a play of
-                        // Odin Nesloor (text mentions the card or its transport mechanic),
-                        // not a generic move action that happens to carry its cardId.
-                        // Same misfire class as the V142/Activate-Force bug.
-                        boolean v134ActionMatches = textLower.contains("odin nesloor")
-                            || textLower.contains("transport") || textLower.contains("relocate");
-                        if (v134Lower.contains("odin nesloor") && v134ActionMatches) {
-                            int v134ForcePile = context.getForcePileSize();
-                            if (v134ForcePile < 5) {
-                                // V134 UPDATED 2026-07-06 T4.1: -9999 raised to the MOVE-ladder veto
-                                // class -100000. Its "transport" text co-sums with MoveEvaluator-scored
-                                // actions (ME keyword "Transport"), so it must stay veto-class across
-                                // the new R2-R4 bands (an R4 transit +20000 would have outvoted -9999).
-                                // OLD: action.addReasoning(
-                                //     "V134 ODIN NESLOOR FLOOR: only " + v134ForcePile
-                                //         + " force in pile (need 5+) — hold the interrupt",
-                                //     -9999.0f);
-                                action.addReasoning(
-                                    "V134 ODIN NESLOOR FLOOR: only " + v134ForcePile
-                                        + " force in pile (need 5+) — hold the interrupt (LADDER VETO)",
-                                    -100000.0f);
-                                logger.warn("V134 ODIN NESLOOR BLOCK: forcePile={} < 5 — block in MOVE phase (-100000)",
-                                    v134ForcePile);
-                            }
+                    if (v134Src != null
+                            && MoveForceEconomyPolicy.isOdinNesloorAction(
+                                    v134Src.getTitle(), textLower)) {
+                        int v134ForcePile = context.getForcePileSize();
+                        MoveForceEconomyPolicy.ActionGate v134Gate =
+                                MoveForceEconomyPolicy.odinNesloorFloor(
+                                        v134ForcePile);
+                        if (v134Gate.applies()) {
+                            action.addReasoning(v134Gate.reason(),
+                                    v134Gate.delta());
+                            logger.warn("V134 ODIN NESLOOR BLOCK: forcePile={} < 5 — block in MOVE phase (-100000)",
+                                v134ForcePile);
                         }
                     }
                 } catch (NumberFormatException nfe) { /* */ }
@@ -417,59 +408,34 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Steve's rule 2026-05-26: "needs probably 4+ force to move characters
             // with that card." Below 4 force in pile, hard-block the play.
             //
-            // Detection: source card title is Elis Helrot OR Nabrun Leids (universal
-            // transport — Odin Nesloor handled separately by V134).
-            // Generic-text fallback: action text contains "'transport'" AND "destiny"
-            // pattern (captures both cards plus any future "transport-style" interrupt).
+            // Detection: source card title is Elis Helrot or Nabrun Leids, with a
+            // generic three-marker game-text fallback. That fallback also preserves
+            // the legacy V134+V141 stack for Odin Nesloor & First Aid.
+            // MoveForceEconomyPolicy owns classification, thresholds, score, and
+            // exact reason. This adapter retains card/game-text/Force reads,
+            // scoring mutation, logging, and fail-open exception boundaries.
             if (cardId != null && context.getGameState() != null) {
                 try {
                     com.gempukku.swccgo.game.state.GameState v141Gs = context.getGameState();
                     PhysicalCard v141Src = v141Gs.findCardById(Integer.parseInt(cardId));
                     if (v141Src != null && v141Src.getTitle() != null) {
-                        String v141TitleLower = v141Src.getTitle().toLowerCase(java.util.Locale.ROOT);
-                        boolean v141IsTransport =
-                            v141TitleLower.contains("elis helrot")
-                            || v141TitleLower.contains("nabrun leids");
-                        // Generic fallback: check source game text for the transport
-                        // mechanic (any card with "draw destiny" + "transport" + Lost Pile fallback)
-                        if (!v141IsTransport && v141Src.getBlueprint() != null) {
-                            String gt = v141Src.getBlueprint().getGameText();
-                            if (gt != null) {
-                                String gtLower = gt.toLowerCase(java.util.Locale.ROOT);
-                                if (gtLower.contains("'transport'")
-                                        && gtLower.contains("draw destiny")
-                                        && gtLower.contains("place interrupt in lost pile")) {
-                                    v141IsTransport = true;
-                                }
-                            }
+                        String v141GameText = null;
+                        if (!MoveForceEconomyPolicy.isNamedTransportInterrupt(
+                                v141Src.getTitle())
+                                && v141Src.getBlueprint() != null) {
+                            v141GameText = v141Src.getBlueprint().getGameText();
                         }
-                        // BUGFIX 2026-05-26: V141 was firing on "Activate Force" actions
-                        // when the cardId happened to be Elis Helrot/Nabrun Leids in hand.
-                        // Action text "Activate Force" has nothing to do with playing the
-                        // transport interrupt — but V141 only checked source card title.
-                        // Result: -1500 penalty on Activate Force → Rando skipped activate
-                        // phase entirely.
-                        // Fix: also require the action text to mention the card or its
-                        // transport mechanic (so we only block ACTUAL plays of the card).
-                        boolean v141ActionMatches = false;
-                        if (v141IsTransport) {
-                            v141ActionMatches = textLower.contains(v141TitleLower)
-                                || textLower.contains("transport")
-                                || textLower.contains("relocate");
-                        }
-                        if (v141IsTransport && v141ActionMatches) {
+                        if (MoveForceEconomyPolicy.isTransportInterruptAction(
+                                v141Src.getTitle(), v141GameText,
+                                textLower)) {
                             int v141ForcePile = context.getForcePileSize();
                             int v141Reserve = context.getReserveDeckSize();
-                            // Per Steve 2026-05-26: must have at least 1 card in
-                            // reserve to draw destiny. Empty reserve = can't draw =
-                            // transport fails. Combine with the 4-force floor.
-                            if (v141ForcePile < 4 || v141Reserve < 1) {
-                                String v141Why = v141ForcePile < 4
-                                    ? "only " + v141ForcePile + " force in pile (need 4+ to cover destiny draw)"
-                                    : "reserve deck empty — cannot draw destiny";
-                                action.addReasoning(
-                                    "V141 TRANSPORT INTERRUPT BLOCK: " + v141Why + " — hold the interrupt",
-                                    -2000.0f);
+                            MoveForceEconomyPolicy.ActionGate v141Gate =
+                                    MoveForceEconomyPolicy.transportInterruptFloor(
+                                            v141ForcePile, v141Reserve);
+                            if (v141Gate.applies()) {
+                                action.addReasoning(v141Gate.reason(),
+                                        v141Gate.delta());
                                 logger.warn("V141 TRANSPORT BLOCK: {} forcePile={} reserve={} → -2000",
                                     v141Src.getTitle(), v141ForcePile, v141Reserve);
                             }

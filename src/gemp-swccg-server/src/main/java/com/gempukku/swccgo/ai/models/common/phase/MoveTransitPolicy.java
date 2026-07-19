@@ -7,7 +7,8 @@ import com.gempukku.swccgo.game.state.GameState;
 import java.util.Locale;
 
 /**
- * Shared MOVE pilot safety, transit classification, and movement-type scoring.
+ * Shared MOVE pilot safety, capacity-loop, transit classification, and
+ * movement-type scoring.
  * Adapters retain engine reads, score application, and logging.
  */
 public final class MoveTransitPolicy {
@@ -69,6 +70,17 @@ public final class MoveTransitPolicy {
                     CapacitySlotBranch.NONE, 0.0f,
                     Contribution.none());
         }
+    }
+
+    public static Contribution capacitySlotSwap(String actionLower) {
+        if (actionLower.contains("move to passenger capacity slot")
+                || actionLower.contains("move to pilot capacity slot")) {
+            return new Contribution(
+                    true,
+                    "V87 NO SWAP: pilot↔passenger capacity slot rearrangement is pointless — hard block",
+                    -3000.0f);
+        }
+        return Contribution.none();
     }
 
     private MoveTransitPolicy() {

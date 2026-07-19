@@ -6316,8 +6316,9 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Steve's standing rule: must have 5 force in force pile to play Odin
     Nesloor during MOVE phase. Odin Nesloor & First Aid lets multiple
     characters reposition cheaply but is wasted when we lack force to
-    actually drain at the destination next turn. Hard-block -9999 when
-    forcePile < 5 during MOVE.
+    actually drain at the destination next turn. Originally -9999 when
+    forcePile < 5 during MOVE; T4.1 raised the live contribution to the
+    current -100000 ladder-veto class on 2026-07-06.
     TODO (Steve): migrate to Filters.persona(Persona.ODIN_NESLOOR) once
     Persona enum is verified for this card; title substring is the
     fallback.
@@ -7200,3 +7201,24 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     shared policies, nested branch types, and both adapters. Independent review found no remaining
     correctness issues. Runtime reload and live-game proof remain pending on the external runtime.
     AI source only; no GEMP engine or player-decision changes.
+
+  ════ V247 (2026-07-19): consolidate MOVE ActionText capacity and transport gates ════
+    MoveTransitPolicy now owns V87's exact pilot/passenger capacity-slot swap classifier, -3000
+    contribution, and reason. MoveForceEconomyPolicy now owns V134 Odin action classification,
+    V141 named and three-marker game-text transport classification, and the exact 5-Force, 4-Force,
+    empty-Reserve thresholds, reasons, and -100000/-2000 contributions. Both ActionTextEvaluator
+    mirrors retain phase/card gates, card and blueprint reads, lazy Force/Reserve reads, exception
+    boundaries, score mutation, logging, V87's terminal append/continue, and V134-before-V141 order.
+    Behavior remains structural-only. V87 pilot can still stack MoveEvaluator's +100/+50 to net
+    -2850; V134 remains dominant against the current ladder ceiling; V141 intentionally remains an
+    additive -2000 rather than a true veto; low Force still wins its reason precedence; and Odin's
+    actual three-marker game text still allows the legacy V134+V141 stack. Focused 52/0/0/0,
+    MOVE-named 396/0/0/0, full reactor 1580/0/0/26, normalized mirror parity, AI-only boundary,
+    forbidden-symbol scan, and clean package passed. Independent review found no behavior drift or
+    blocking test gaps. Server jar SHA-256
+    5bed23372867e7b9b34894aaeeb6fac00690d627570253c76d159b37db1a6ae6 and web jar SHA-256
+    03c292b4aac056204354b1b3876e42799aef18d33d8c5fe07f0bee8a4aca39dc contain the
+    shared policies, nested gate types, and both adapters. V67ae remains separate because its icon,
+    system, weapon, and retreat-exemption reads have different failure boundaries. Runtime reload and
+    live-game proof remain pending on the external runtime. AI source only; no GEMP engine or
+    player-decision changes.

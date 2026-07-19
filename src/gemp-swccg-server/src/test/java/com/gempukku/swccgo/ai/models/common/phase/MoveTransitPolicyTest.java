@@ -32,6 +32,33 @@ public class MoveTransitPolicyTest {
     }
 
     @Test
+    public void capacitySlotSwapPreservesBothDirectionsAndExactPenalty() {
+        for (String action : new String[]{
+                "move to passenger capacity slot",
+                "move to pilot capacity slot"}) {
+            MoveTransitPolicy.Contribution result =
+                    MoveTransitPolicy.capacitySlotSwap(action);
+
+            assertTrue(result.applies());
+            assertEquals(
+                    "V87 NO SWAP: pilot↔passenger capacity slot rearrangement is pointless — hard block",
+                    result.reason());
+            assertRawFloat(-3000.0f, result.delta());
+        }
+    }
+
+    @Test
+    public void capacitySlotSwapRejectsUnrelatedCapacityChoice() {
+        MoveTransitPolicy.Contribution result =
+                MoveTransitPolicy.capacitySlotSwap(
+                        "choose passenger capacity slot");
+
+        assertFalse(result.applies());
+        assertNull(result.reason());
+        assertRawFloat(0.0f, result.delta());
+    }
+
+    @Test
     public void nonPilotDoesNotReadAttachment() {
         PhysicalCard card = mock(PhysicalCard.class);
         when(card.isPilotOf()).thenReturn(false);

@@ -189,18 +189,36 @@ public class MoveTransitSourceParityTest {
     }
 
     @Test
-    public void actionTextNoSwapPenaltyRemainsSeparateAndUntouched()
+    public void actionTextNoSwapUsesSharedOwnerAndRetainsTerminalContinue()
             throws IOException {
+        String policy = policySource();
+        assertTrue(policy.contains(
+                "public static Contribution capacitySlotSwap("));
+        assertTrue(policy.contains(
+                "V87 NO SWAP: pilot↔passenger capacity slot rearrangement is pointless — hard block"));
+
         for (String bot : new String[]{"rando", "chosenone"}) {
             String actionText = evaluatorSource(
                     bot, "ActionTextEvaluator.java");
-            assertTrue(actionText.contains(
+            assertEquals(1, countOccurrences(actionText,
+                    "MoveTransitPolicy.capacitySlotSwap("));
+            assertFalse(actionText.contains(
                     "textLower.contains(\"move to passenger capacity slot\")"));
-            assertTrue(actionText.contains(
+            assertFalse(actionText.contains(
                     "textLower.contains(\"move to pilot capacity slot\")"));
-            assertTrue(actionText.contains(
-                    "V87 NO SWAP: pilot↔passenger capacity slot rearrangement is pointless — hard block"));
-            assertTrue(actionText.contains("-3000.0f"));
+
+            int call = actionText.indexOf(
+                    "MoveTransitPolicy.capacitySlotSwap(");
+            int score = actionText.indexOf(
+                    "action.addReasoning(v87CapacitySwap.reason()", call);
+            int append = actionText.indexOf("actions.add(action);", score);
+            int terminalContinue = actionText.indexOf("continue;", append);
+            int odin = actionText.indexOf("// === V134", terminalContinue);
+            assertTrue(call >= 0);
+            assertTrue(score > call);
+            assertTrue(append > score);
+            assertTrue(terminalContinue > append);
+            assertTrue(odin > terminalContinue);
         }
     }
 
