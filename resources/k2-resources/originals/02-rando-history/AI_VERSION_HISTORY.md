@@ -1,3 +1,18 @@
+  ==== V209 AI-ONLY PULL PHASE POLICY OWNERS (2026-07-18, both bots) ====
+Shared PullActionPolicy now owns the existing parent action-text stream, PullDeployPolicy owns the V60/V66/V67h/
+V185/V190 deploy-search stream, PullTakeCandidatePolicy owns take-card candidates, and PullDeployCandidatePolicy
+owns V70 Reserve-deploy candidates. Both bots retain thin stock-decision, identity, board, objective, and DeckOracle
+adapters. CombinedEvaluator remains the only selector in its original Deploy, CardSelection, ActionText order;
+first-seen ties, selectable filtering, stable descending candidate sort, populated-id versus blueprint-only child
+routing, additive duplicate guards, V66 WASTEFUL fallthrough/WILL_FAIL stop, V192 local suppression, V67ak outside
+the clamp, and parent-versus-destination formation ownership are unchanged. Missing or unanalyzed oracle facts remain
+unknown, source validation requires an analyzed oracle, missing game state records Reserve as -1, and staged fact
+reads preserve the legacy short-circuit sequence before late hand/battle queries. V194 failed-search memory remains
+disabled. Production edits are AI-only. Gate: 45 focused tests; full affected reactor 1,075 tests, 0 failures,
+0 errors, 26 skipped; package, mirror, source-boundary, forbidden-symbol, artifact, and diff checks pass. Packaged jar
+SHA-256: 8272c2c0a0868ad4b833682354e7c28c0429a96db342efeaf758a6501935fe14.
+Revert the single V209 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V208 AI-ONLY BATTLE PHASE POLICY OWNERS (2026-07-18, both bots) ====
 Shared BattleDecisionPolicy now owns the former 928-line BattleEvaluator score stream; both bots retain thin stock
 context/predictor adapters, and V198 still runs exactly once per candidate. The independent V25 ActionText initiation

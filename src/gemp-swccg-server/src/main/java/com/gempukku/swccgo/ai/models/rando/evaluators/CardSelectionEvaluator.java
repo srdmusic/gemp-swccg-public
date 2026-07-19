@@ -9,6 +9,9 @@ import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
+import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
+import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
@@ -6927,6 +6930,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      */
     private List<EvaluatedAction> evaluateTakeIntoHand(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
+        String decisionId = context.getDecisionId();
+        PolicyContributionLedger pullLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "pull-take-decision" : decisionId + "-pull-take");
         GameState gameState = context.getGameState();
         SwccgGame game = context.getGame();
         List<String> cardIds = context.getCardIds();
@@ -6980,302 +6987,27 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 continue;
             }
 
-            // Now we have card info
-            Float destiny = null;
-            Float power = null;
-            Float ability = null;
-            CardCategory category = null;
+            PullTakeCandidateFacts pullFacts = PullPolicyAdapter.readTakeCandidate(
+                    context, cardId, cardTitle, blueprintId, blueprint);
 
-            // Log the final card title we determined
-            logger.info("📋 evaluateTakeIntoHand[{}]: cardId='{}', blueprintId='{}', TITLE='{}'",
-                i, cardId, blueprintId, cardTitle);
-
-            // Extract card properties from blueprint (if we have one)
-            if (blueprint != null) {
-                try {
-                    destiny = blueprint.getDestiny();
-                } catch (UnsupportedOperationException e) {
-                    // Card type doesn't support destiny
-                }
-                if (blueprint.hasPowerAttribute()) {
-                    power = blueprint.getPower();
-                }
-                if (blueprint.hasAbilityAttribute()) {
-                    ability = blueprint.getAbility();
-                }
-                category = blueprint.getCardCategory();
-            }
-
-            // Check for priority cards by blueprintId if we have one but couldn't get card info
-            boolean isPriorityByBlueprint = false;
-            int priorityScoreByBlueprint = 0;
-            if (blueprintId != null) {
-                isPriorityByBlueprint = AiPriorityCards.isPriorityCard(blueprintId);
-                priorityScoreByBlueprint = AiPriorityCards.getProtectionScore(blueprintId);
-            }
-
-            // Create action with proper display text
-            float baseScore = 50.0f;
             EvaluatedAction action = new EvaluatedAction(
-                cardId,
-                ActionType.SELECT_CARD,
-                baseScore,
-                "Take " + cardTitle + " into hand"
-            );
+                    cardId,
+                    ActionType.SELECT_CARD,
+                    50.0f,
+                    "Take " + cardTitle + " into hand");
             action.setCardName(cardTitle);
             if (blueprintId != null) {
                 action.setBlueprintId(blueprintId);
             }
 
-            // === SCORING LOGIC ===
+            pullLedger.register(PullTakeCandidatePolicy.evaluate(pullFacts));
+            PolicyOperationAdapter.apply(action, pullLedger);
 
-            // High destiny cards are VERY valuable - they're used for destiny draws
-            if (destiny != null) {
-                if (destiny >= 6) {
-                    action.addReasoning("Excellent destiny (" + destiny + ")", 60.0f);
-                } else if (destiny >= 5) {
-                    action.addReasoning("High destiny (" + destiny + ")", 40.0f);
-                } else if (destiny >= 4) {
-                    action.addReasoning("Good destiny (" + destiny + ")", 20.0f);
-                } else if (destiny >= 3) {
-                    action.addReasoning("Decent destiny (" + destiny + ")", 5.0f);
-                } else if (destiny <= 1) {
-                    action.addReasoning("Low destiny (" + destiny + ")", -20.0f);
-                }
-            }
-
-            // Priority cards (Houjix, Sense, etc.) are always good
-            // Check by title first (when we have the actual card)
-            if (!cardTitle.equals("Unknown") && !cardTitle.startsWith("Card ") &&
-                AiPriorityCards.isPriorityCardByTitle(cardTitle)) {
-                int priorityScore = AiPriorityCards.getProtectionScoreByTitle(cardTitle);
-                action.addReasoning("Priority card: " + cardTitle, priorityScore * 0.5f);
-            } else if (isPriorityByBlueprint) {
-                // Check by blueprint ID (when we only have the blueprintId)
-                action.addReasoning("Priority card (by ID: " + blueprintId + ")", priorityScoreByBlueprint * 0.5f);
-            }
-
-            // Prefer characters with high power
-            if (category == CardCategory.CHARACTER && power != null) {
-                if (power >= 6) {
-                    action.addReasoning("High power character (" + power + ")", 30.0f);
-                } else if (power >= 4) {
-                    action.addReasoning("Strong character (" + power + ")", 15.0f);
-                }
-            }
-
-            // Prefer characters with high ability (can draw battle destiny)
-            if (category == CardCategory.CHARACTER && ability != null && ability >= 4) {
-                action.addReasoning("High ability (" + ability + ") - draws battle destiny", 25.0f);
-            }
-
-            // Locations are often good early game
-            if (category == CardCategory.LOCATION) {
-                int turnNumber = context.getTurnNumber();
-                if (turnNumber <= 3) {
-                    action.addReasoning("Location (good early game)", 20.0f);
-                } else {
-                    action.addReasoning("Location", 5.0f);
-                }
-            }
-
-            // === V22.6: UNIVERSAL LOCATION PRIORITY FOR OBJECTIVE PULLS ===
-            // When an objective offers multiple cards to pull from the reserve deck,
-            // locations (systems, sites, sectors) should ALWAYS be pulled first.
-            // Locations are prerequisites — effects and characters deploy ON locations,
-            // so without the location on table first, those other pulls are wasted.
-            // Example: Bespin system must be pulled before Alert My Star Destroyer,
-            // because AMSD deploys on Bespin system.
-            // This is universal for ALL objectives, not just Bespin-related ones.
-            // If the location is NOT among the reserve deck options, the game engine
-            // already filtered it out (it's in hand, on table, or not in deck), so
-            // pulling other cards is fine — no extra hand/table checks needed here.
-            if (category == CardCategory.LOCATION) {
-                action.addReasoning("V22.6 LOCATION PRIORITY: locations are prerequisites — pull before effects/characters", 500.0f);
-                logger.warn("🌍 V22.6 LOCATION PRIORITY: {} gets +500 (always pull locations first from objective)", cardTitle);
-            }
-
-            // === V22.6: FAILED PULL AVOIDANCE (DeckOracle) ===
-            // If we've tried to pull this card 2+ times and failed, it's likely not in the
-            // reserve deck. Stop wasting actions trying to pull it.
-            com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle = context.getDeckOracle();
-            if (oracle != null && blueprintId != null && oracle.shouldAvoidPulling(blueprintId)) {
-                action.addReasoning("V22.6 FAILED PULL: tried 2+ times, card likely unavailable — skipping", -500.0f);
-                logger.warn("📚 V22.6 FAILED PULL BLOCK: {} has failed 2+ pull attempts — score crushed (-500)", cardTitle);
-            } else if (oracle != null && cardTitle != null && oracle.shouldAvoidPullingByTitle(cardTitle)) {
-                action.addReasoning("V22.6 FAILED PULL (by title): tried 2+ times, card likely unavailable", -500.0f);
-                logger.warn("📚 V22.6 FAILED PULL BLOCK: '{}' has failed 2+ pull attempts by title — score crushed (-500)", cardTitle);
-            }
-
-            // === V24.1: CARD-SPECIFIC PULL PREFERENCES (TDIGWATT) ===
-            // These priorities ensure the correct TDIGWATT setup sequence:
-            // Endor Shield → Piett first (matches Executor for AMSD)
-            // Piett → Gherant first (deploys an Executor site = free location)
-            String pullDecisionText = context.getDecisionText() != null ?
-                context.getDecisionText().toLowerCase(java.util.Locale.ROOT) : "";
-            String cardTitleLower = cardTitle != null ? cardTitle.toLowerCase(java.util.Locale.ROOT) : "";
-
-            // V24.1A: Endor Shield admiral pull — Piett first, Chiraneau backup
-            // V24.12: GEMP decision text is just "Choose card to take into hand" — no "admiral"
-            // in it. So also detect admiral pulls by checking if this card IS an admiral.
-            // The Endor Shield action restricts choices to admirals, so if Piett/Chiraneau
-            // are among the options, we know it's an admiral pull.
-            boolean isAdmiralPull = (pullDecisionText.contains("admiral") && pullDecisionText.contains("reserve"));
-            // V24.12: GEMP text is generic — detect admiral pulls by known admiral names in card title
-            if (!isAdmiralPull) {
-                if (cardTitleLower.contains("admiral") || cardTitleLower.contains("piett")
-                    || cardTitleLower.contains("chiraneau") || cardTitleLower.contains("ozzel")
-                    || cardTitleLower.contains("motti") || cardTitleLower.contains("firmus")) {
-                    isAdmiralPull = true;
-                }
-            }
-            if (isAdmiralPull) {
-                if (cardTitleLower.contains("piett")) {
-                    action.addReasoning("V24.12 ADMIRAL PULL: Piett is #1 pick — matches Executor for AMSD!", 300.0f);
-                    logger.warn("V24.12 ADMIRAL PULL: Piett gets +300 — best AMSD pilot for Executor!");
-                } else if (cardTitleLower.contains("chiraneau")) {
-                    action.addReasoning("V24.12 ADMIRAL PULL: Chiraneau is backup — can pilot Executor manually", 150.0f);
-                    logger.warn("V24.12 ADMIRAL PULL: Chiraneau gets +150 — backup pilot");
-                } else if (cardTitleLower.contains("ozzel")) {
-                    action.addReasoning("V24.12 ADMIRAL PULL: Ozzel matches Executor — decent AMSD option", 100.0f);
-                    logger.warn("V24.12 ADMIRAL PULL: Ozzel gets +100");
-                }
-            }
-
-            // V24.1B: Piett's commander pull — Gherant first (pulls Executor site = free location)
-            if ((pullDecisionText.contains("commander") || pullDecisionText.contains("admiral's order")) &&
-                pullDecisionText.contains("reserve")) {
-                if (cardTitleLower.contains("gherant")) {
-                    action.addReasoning("V24.1 PIETT PULL: Gherant deploys an Executor site — free location + force generation!", 400.0f);
-                    logger.warn("V24.1 COMMANDER PULL: Gherant gets +400 — pulls Executor site on deploy!");
-                }
-            }
-
-            // === V24.2B: LANDO/LOBOT PULL PRIORITY (TDIGWATT) ===
-            // Lando and Lobot are key to flipping the TDIGWATT objective.
-            // Lando can move to unoccupied CC sites at start of control phase = 3-site drains.
-            // Both deploy cheap. Prioritize pulling them from reserve when available.
-            // V47: BUT don't pull Lando if he'd be alone at CC — he gets clobbered!
-            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer pullObjAnalyzer =
-                context.getObjectiveAnalyzer();
-            if (pullObjAnalyzer != null && pullObjAnalyzer.isAnalyzed()
-                && pullObjAnalyzer.needsBespinSystemPresence()) {
-                if (cardTitleLower.contains("lando")) {
-                    // V47: Check if we have ANY friendly characters at Cloud City sites
-                    boolean friendlyAtCC = false;
-                    String pullPlayerId = context.getPlayerId();
-                    if (game != null && gameState != null && pullPlayerId != null) {
-                        try {
-                            for (PhysicalCard checkLoc : gameState.getLocationsInOrder()) {
-                                if (checkLoc == null || checkLoc.getTitle() == null) continue;
-                                String checkLocLower = checkLoc.getTitle().toLowerCase(java.util.Locale.ROOT);
-                                boolean isCCsite = checkLocLower.contains("cloud city") || checkLocLower.contains("upper walkway")
-                                    || checkLocLower.contains("carbonite") || checkLocLower.contains("security tower")
-                                    || checkLocLower.contains("dining room") || checkLocLower.contains("platform")
-                                    || checkLocLower.contains("lower corridor");
-                                if (!isCCsite) continue;
-                                java.util.List<PhysicalCard> siteCards = gameState.getCardsAtLocation(checkLoc);
-                                if (siteCards != null) {
-                                    for (PhysicalCard sc : siteCards) {
-                                        if (sc != null && pullPlayerId.equals(sc.getOwner()) && sc.getBlueprint() != null
-                                            && sc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                            friendlyAtCC = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (friendlyAtCC) break;
-                            }
-                        } catch (Exception e) {
-                            logger.debug("V47: Error checking CC friendlies: {}", e.getMessage());
-                        }
-                    }
-
-                    // V47: Also check if we have chars in hand + enough force to deploy both
-                    boolean hasHandBuddy = false;
-                    int forceAvailable = 0;
-                    if (!friendlyAtCC && game != null && gameState != null) {
-                        try {
-                            forceAvailable = context.getForcePileSize();
-                            java.util.List<PhysicalCard> hand = gameState.getHand(pullPlayerId);
-                            if (hand != null) {
-                                for (PhysicalCard hc : hand) {
-                                    if (hc != null && hc.getBlueprint() != null
-                                        && hc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                        hasHandBuddy = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            logger.debug("V47: Error checking hand chars: {}", e.getMessage());
-                        }
-                    }
-
-                    if (friendlyAtCC) {
-                        action.addReasoning("V24.2 TDIGWATT: Lando is KEY — moves to 3rd CC site for extra drains + occupation!", 250.0f);
-                        logger.warn("V24.2 PULL: Lando gets +250 — friendlies at CC, safe to pull!");
-                    } else if (hasHandBuddy && forceAvailable >= 5) {
-                        // Have a buddy in hand and enough force to deploy Lando (~2) + buddy (~3)
-                        action.addReasoning("V47 LANDO PULL OK: No CC friendlies but have char in hand + force to deploy both!", 250.0f);
-                        logger.warn("V47 LANDO PULL: {} force available + char in hand — OK to pull Lando with buddy!", forceAvailable);
-                    } else {
-                        action.addReasoning("V47 LANDO PULL BLOCK: No friendlies at CC, no buddy in hand or not enough force — Lando would die alone!", -9999.0f);
-                        logger.warn("V47 LANDO PULL BLOCK: No CC friendlies, handBuddy={}, force={} — don't pull Lando!", hasHandBuddy, forceAvailable);
-                    }
-                } else if (cardTitleLower.contains("lobot")) {
-                    action.addReasoning("V24.2 TDIGWATT: Lobot deploys cheap — helps flip objective!", 200.0f);
-                    logger.warn("V24.2 PULL: Lobot gets +200 — cheap deploy, helps flip!");
-                }
-            }
-
-            // === DOWNLOAD-ENABLER PULL PRIORITY (Steve, 2026-05-31) ===
-            // Universal text-scan: when pulling from Reserve, prefer cards whose
-            // game text contains "[download]" of a LOCATION target (site / location
-            // / system / battleground). These are deploy-enablers — once on the
-            // table, their [download] fetches MORE locations from Reserve, building
-            // a value chain that puts 2-3 locations on table per turn for almost
-            // no Force. Examples (none hardcoded — all detected by text):
-            //   • Vigo (200_91): "may use 1 Force to [download] a non-war room
-            //     battleground planet site (or system) not already on table" —
-            //     turn-1 Coruscant: Xizor's Palace pull.
-            //   • Coruscant: Xizor's Palace: "may [download] a Xizor's Palace
-            //     site" — fetches Sewer / Uplink Station once on table.
-            //   • Shadows Of The Empire: "may use 1 Force to [download] Imperial
-            //     Square".
-            // Detection mirrors the V71 location-text pattern at line 6337:
-            // concat base + light-side + dark-side game text since LOCATION cards
-            // store their text in the side-specific fields. The "[download]" token
-            // is the canonical Reserve-pull marker. Magnitude +500 — on par with
-            // the strongest TDIGWATT-specific pull boosts (V24.1 Gherant +400),
-            // because the chain compounds: each enabler pull sets up 2-3 future
-            // location deploys. Appended into existing V60/V24 take-into-hand
-            // logic, no new V-tag per Steve's "avoid splintering" directive.
-            if (blueprint != null) {
-                StringBuilder enablerSb = new StringBuilder();
-                try { String gt = blueprint.getGameText(); if (gt != null) enablerSb.append(gt).append(' '); } catch (Exception ignored) { }
-                try { String lt = blueprint.getLocationLightSideGameText(); if (lt != null) enablerSb.append(lt).append(' '); } catch (Exception ignored) { }
-                try { String dt = blueprint.getLocationDarkSideGameText(); if (dt != null) enablerSb.append(dt).append(' '); } catch (Exception ignored) { }
-                String enablerTextLower = enablerSb.toString().toLowerCase(java.util.Locale.ROOT);
-                if (enablerTextLower.contains("[download]")
-                        && (enablerTextLower.contains("site")
-                            || enablerTextLower.contains("location")
-                            || enablerTextLower.contains("system")
-                            || enablerTextLower.contains("battleground"))) {
-                    action.addReasoning(
-                        "DOWNLOAD ENABLER: [download] of a location in game text — pulling builds a deploy chain",
-                        500.0f);
-                    logger.warn("DOWNLOAD ENABLER PULL: '{}' has location-[download] in game text → +500 (universal deploy-chain rule)",
-                        cardTitle);
-                }
-            }
-
-            // Log the decision
             logger.debug("🎯 {} ({}): score={}, destiny={}, power={}",
-                        cardTitle, blueprintId != null ? blueprintId : cardId,
-                        action.getScore(),
-                        destiny != null ? destiny : "?",
-                        power != null ? power : "?");
+                    cardTitle, blueprintId != null ? blueprintId : cardId,
+                    action.getScore(),
+                    pullFacts.destiny() != null ? pullFacts.destiny() : "?",
+                    pullFacts.power() != null ? pullFacts.power() : "?");
 
             actions.add(action);
         }
@@ -7309,6 +7041,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
                 shieldDecisionId == null || shieldDecisionId.isBlank()
                         ? "shield-unknown-decision" : shieldDecisionId + "-shields");
+        PolicyContributionLedger pullCandidateLedger = new PolicyContributionLedger(
+                shieldDecisionId == null || shieldDecisionId.isBlank()
+                        ? "pull-deploy-candidate-unknown-decision"
+                        : shieldDecisionId + "-pull-deploy-candidate");
         GameState gameState = context.getGameState();
         SwccgGame game = context.getGame();
         List<String> cardIds = context.getCardIds();
@@ -7409,28 +7145,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 action.setBlueprintId(blueprintId);
             }
 
-            // V70 (Steve, 2026-05-12): ONE-WEAPON-PER-CHARACTER rule in
-            // evaluateUnknown path. The Dooku replay showed Asajj Ventress'
-            // Lightsabers landing on already-armed Lord Sidious via Evil Is
-            // Everywhere's reserve-deck pull. The decision text "Choose card
-            // to deploy from Reserve Deck" doesn't match any specific dispatch
-            // pattern, so the decision flows here. V70 in
-            // evaluateReserveDeckSelection never fires for cardIds-populated
-            // decisions. This block fixes that path.
-            //
-            // Per Steve's standing rule: "No character should ever have two
-            // weapons." Same helper as in evaluateReserveDeckSelection — see
-            // v70CheckWeaponDeviceBlock. Comprehensive criteria search across
-            // title, lore, gametext, dynamic card types (engine-aware), icons,
-            // keywords, persona.
-            String v70UnkReason = v70CheckWeaponDeviceBlock(
-                game, context.getPlayerId(), category, blueprint);
-            if (v70UnkReason != null) {
-                action.addReasoning(
-                    "V70 NO 2ND WEAPON: " + v70UnkReason + " — '" + cardTitle + "'",
-                    -9999.0f);
-                logger.warn("V70 BLOCK (evaluateUnknown, {}): '{}' (bp {}) — {}",
-                    category, cardTitle, blueprintId, v70UnkReason);
+            PullDeployCandidatePolicy.Evaluation pullCandidate =
+                    PullDeployCandidatePolicy.evaluate(
+                            PullPolicyAdapter.readDeployCandidate(
+                                    context, cardId, cardTitle, category, blueprint));
+            pullCandidateLedger.register(pullCandidate.result());
+            PolicyOperationAdapter.apply(action, pullCandidateLedger);
+            if (pullCandidate.adapterStep()
+                    == PullDeployCandidatePolicy.AdapterStep.CONTINUE_CANDIDATE) {
                 actions.add(action);
                 continue;
             }
@@ -7896,6 +7618,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
                 decisionId == null || decisionId.isBlank()
                         ? "shield-reserve-decision" : decisionId + "-shield-reserve");
+        PolicyContributionLedger pullCandidateLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "pull-deploy-candidate-reserve-decision"
+                        : decisionId + "-pull-deploy-candidate-reserve");
         List<String> blueprints = context.getBlueprints();
         ShieldStrategy shieldStrategy = context.getShieldStrategy();
         DeployPhasePlanner planner = context.getDeployPhasePlanner();
@@ -7905,61 +7631,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         int turnNumber = context.getTurnNumber();
 
         logger.info("[CardSelectionEvaluator] Evaluating Reserve Deck selection: {}", textLower);
-
-        // V67ay (Steve, 2026-05-08): UNIVERSAL ONE-WEAPON RULE for reserve-deck SELECT step.
-        //
-        // Rando's V67ar block in ActionTextEvaluator's "from reserve deck" branch
-        // SKIPS weapon-pull actions whose source card ALSO offers a location pull
-        // (because of the `!v67lAddsLocation` exclusion). Evil Is Everywhere is
-        // the canonical case: '[download] a mobile hallway or [Episode I]
-        // lightsaber'. V67ar lets the parent action through; Rando initiates it,
-        // GEMP shuffles reserve, then asks "pick a card to deploy" with a list of
-        // matching candidates (weapons + locations). At THAT prompt the weapon
-        // option needs to be hard-blocked when every Rando character on table is
-        // already armed — otherwise Rando picks Asajj's Lightsabers and stacks
-        // it on Sidious (already wielding Sidious' Lightsaber).
-        //
-        // This check fires UNCONDITIONALLY before the per-blueprint loop
-        // computes the all-friendly-chars-armed counters once, then the loop
-        // applies -9999 to every weapon-category candidate. Locations (the
-        // mobile hallway alternative) are unaffected — Rando still picks one if
-        // available.
-        boolean v67ayAllArmed = false;
-        int v67ayUnarmed = 0;
-        int v67ayArmed = 0;
-        if (game != null && playerId != null) {
-            try {
-                GameState gs = game.getGameState();
-                if (gs != null) {
-                    for (PhysicalCard pc : gs.getAllPermanentCards()) {
-                        if (pc == null || pc.getBlueprint() == null) continue;
-                        if (!playerId.equals(pc.getOwner())) continue;
-                        com.gempukku.swccgo.common.Zone z = pc.getZone();
-                        if (z == null || !z.isInPlay()) continue;
-                        if (pc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                        boolean armed = false;
-                        java.util.List<PhysicalCard> atts = gs.getAttachedCards(pc);
-                        if (atts != null) {
-                            for (PhysicalCard a : atts) {
-                                if (a != null && a.getBlueprint() != null
-                                        && a.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
-                                    armed = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (armed) v67ayArmed++; else v67ayUnarmed++;
-                    }
-                    v67ayAllArmed = (v67ayUnarmed == 0 && v67ayArmed > 0);
-                }
-            } catch (Exception e) {
-                logger.debug("V67ay weapon-armed scan failed: {}", e.getMessage());
-            }
-        }
-        if (v67ayAllArmed) {
-            logger.warn("V67ay GUARD: every Rando character armed (armed={}, unarmed=0) — weapon picks from reserve will be hard-blocked",
-                v67ayArmed);
-        }
 
         // Get deployment plan if available
         DeploymentPlan plan = null;
@@ -7992,22 +7663,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 "Deploy " + (cardTitle != null ? cardTitle : blueprintId)
             );
 
-            // V70 (Steve, 2026-05-12): ONE-WEAPON-PER-CHARACTER rule.
-            // Per Steve's standing rule: "No character should ever have two weapons."
-            // Uses comprehensive criteria search (helper). See v70CheckWeaponDeviceBlock.
-            SwccgCardBlueprint v70Bp = null;
-            CardCategory v70Cat = null;
+            SwccgCardBlueprint pullBlueprint = null;
+            CardCategory pullCategory = null;
             try {
-                v70Bp = getBlueprintFromId(context, blueprintId);
-                if (v70Bp != null) v70Cat = v70Bp.getCardCategory();
+                pullBlueprint = getBlueprintFromId(context, blueprintId);
+                if (pullBlueprint != null) {
+                    pullCategory = pullBlueprint.getCardCategory();
+                }
             } catch (Exception e) { /* ignore */ }
-            String v70Reason = v70CheckWeaponDeviceBlock(game, playerId, v70Cat, v70Bp);
-            if (v70Reason != null) {
-                action.addReasoning(
-                    "V70 NO 2ND WEAPON: " + v70Reason + " — '" + (cardTitle != null ? cardTitle : blueprintId) + "'",
-                    -9999.0f);
-                logger.warn("V70 BLOCK (reserve-pick, {}): '{}' (bp {}) — {}",
-                    v70Cat, cardTitle, blueprintId, v70Reason);
+            PullDeployCandidatePolicy.Evaluation pullCandidate =
+                    PullDeployCandidatePolicy.evaluate(
+                            PullPolicyAdapter.readDeployCandidate(
+                                    context,
+                                    action.getActionId(),
+                                    cardTitle != null ? cardTitle : blueprintId,
+                                    pullCategory,
+                                    pullBlueprint));
+            pullCandidateLedger.register(pullCandidate.result());
+            PolicyOperationAdapter.apply(action, pullCandidateLedger);
+            if (pullCandidate.adapterStep()
+                    == PullDeployCandidatePolicy.AdapterStep.CONTINUE_CANDIDATE) {
                 actions.add(action);
                 continue;
             }
@@ -8522,9 +8197,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      * be hard-blocked, else null. The candidate's game text is parsed for
      * deploy criteria; matching friendlies are checked for armed status.
      */
-    private static String v70CheckWeaponDeviceBlock(SwccgGame game, String playerId,
-                                                     CardCategory candidateCategory,
-                                                     SwccgCardBlueprint candidateBp) {
+    static String v70CheckWeaponDeviceBlock(SwccgGame game, String playerId,
+                                            CardCategory candidateCategory,
+                                            SwccgCardBlueprint candidateBp) {
         if (candidateCategory != CardCategory.WEAPON && candidateCategory != CardCategory.DEVICE) return null;
         if (candidateBp == null || game == null || playerId == null) return null;
 

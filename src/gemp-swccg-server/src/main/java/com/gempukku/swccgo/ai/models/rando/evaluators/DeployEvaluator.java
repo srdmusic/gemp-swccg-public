@@ -8,6 +8,8 @@ import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.CardKnowledge;
+import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.common.Phase;
@@ -558,6 +560,10 @@ public class DeployEvaluator extends ActionEvaluator {
         // Now: any actionId / actionText in blockedResponses is hard-blocked
         // -9999 so Rando picks something else (Play a card or Pass).
         java.util.Set<String> v159DeployBlocked = context.getBlockedResponses();
+        String decisionId = context.getDecisionId();
+        PolicyContributionLedger pullLedger = new PolicyContributionLedger(
+                decisionId == null || decisionId.isBlank()
+                        ? "pull-deploy-decision" : decisionId + "-pull-deploy");
         for (int i = 0; i < actionIds.size(); i++) {
             String actionId = actionIds.get(i);
             String actionText = i < actionTexts.size() ? actionTexts.get(i) : "";
@@ -596,325 +602,25 @@ public class DeployEvaluator extends ActionEvaluator {
                 actionText
             );
 
-            // === V60 RESERVE DECK PULL GUARDS ===
-            // FIXES Issue #B from peaceful-pike replay: Rando invoked "Deploy Tala Durith
-            // from Reserve Deck" and "Deploy a Padawan" at force=0, search failed, opponent
-            // saw Rando's entire Reserve Deck. NEVER invoke a Reserve pull unless:
-            //   1. We can afford the deploy cost (tricky: unknown cost for "a Padawan")
-            //   2. DeckOracle confirms a valid target exists (prevents reveal)
-            //   3. This specific action hasn't failed 2x this game (shouldAvoidPulling)
-            // For generic-target actions ("Deploy a Padawan"), guards #1-2 are best-effort.
-            String v60ActionLower = actionText != null ? actionText.toLowerCase(Locale.ROOT) : "";
-            boolean v60IsReservePull = v60ActionLower.contains("from reserve deck")
-                || v60ActionLower.contains("[download]");
-            if (v60IsReservePull) {
-                // Guard: failed 2x — stop trying
-                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v60Oracle = context.getDeckOracle();
-                if (v60Oracle != null) {
-                    String failKey = "action:" + actionText;
-                    if (v60Oracle.shouldAvoidPulling(failKey)) {
-                        action.addReasoning("V60 RESERVE FAIL-STOP: '" + actionText
-                            + "' failed 2x — stop trying!", -9999.0f);
-                        LOG.warn("V60 RESERVE FAIL-STOP: {} hard-blocked after 2+ failures", actionText);
-                        actions.add(action);
-                        continue;
-                    }
+            // V209 PULL deploy-side guards. The shared policy keeps this evaluator's
+            // historical additive veto layer separate from ActionText's parent scorer.
+            boolean reservePull = actionLower.contains("from reserve deck")
+                    || actionLower.contains("[download]");
+            if (reservePull) {
+                String sourceCardId = ctxCardIds != null && i < ctxCardIds.size()
+                        ? ctxCardIds.get(i) : null;
+                PullDeployPolicy.Evaluation pull = PullDeployPolicy.evaluate(
+                        PullPolicyAdapter.readDeploy(
+                                context, actionId, actionText, sourceCardId));
+                pullLedger.register(pull.result());
+                PolicyOperationAdapter.apply(action, pullLedger);
+                if (pull.adapterStep()
+                        == PullDeployPolicy.AdapterStep.CONTINUE_ACTION) {
+                    actions.add(action);
+                    continue;
                 }
-                // Guard: reserve deck critically small (reveal risk)
-                GameState v60Gs = context.getGameState();
-                if (v60Gs != null) {
-                    try {
-                        int v60ReserveSize = v60Gs.getReserveDeckSize(context.getPlayerId());
-                        if (v60ReserveSize <= 2) {
-                            action.addReasoning("V60 RESERVE RISK: " + v60ReserveSize
-                                + " cards in Reserve — reveal almost the whole deck!", -9999.0f);
-                            LOG.warn("V60 RESERVE RISK: {} blocked — only {} cards in reserve",
-                                actionText, v60ReserveSize);
-                            actions.add(action);
-                            continue;
-                        }
-                    } catch (Exception e) { /* ignore */ }
-                }
-                // Guard: named target check — "Deploy [Name] from Reserve Deck"
-                // Only blocks SPECIFIC MULTI-WORD proper-noun targets (e.g. "Tala Durith",
-                // "Admiral Piett", "Padme Naberrie"). Generic placeholders like "card",
-                // "a farm", "a Padawan" are NOT blocked — the game engine picks the actual
-                // target from the card's filter list, and pulling for "any matching"
-                // categories is still valuable even if our DeckOracle can't verify.
-                // FIXES Issue from lft7u9prpd6q6r9v replay: Yarna's "Deploy card from
-                // Reserve Deck" was hard-blocked every turn because regex extracted "card"
-                // as a target name and DeckOracle couldn't find a card titled "card".
-                // Case-sensitive regex — proper-noun targets start with uppercase.
-                if (v60Oracle != null) {
-                    java.util.regex.Matcher namedMatch = java.util.regex.Pattern.compile(
-                        "Deploy ([A-Z][A-Za-z']+ [A-Z][A-Za-z' -]+?) from Reserve Deck")
-                        .matcher(actionText);
-                    if (namedMatch.find()) {
-                        String v60Target = namedMatch.group(1).trim();
-                        if (!v60Oracle.hasTargetInReserve(v60Target.split(" "))) {
-                            action.addReasoning("V60 RESERVE MISS: '" + v60Target
-                                + "' not in Reserve — pull fails + reveals deck!", -9999.0f);
-                            LOG.warn("V60 RESERVE MISS: {} not in reserve — hard-blocked", v60Target);
-                            actions.add(action);
-                            continue;
-                        }
-                    }
-                }
-
-                // Guard: generic category pull — "Deploy a farm from Reserve Deck",
-                // "Deploy a Padawan from Reserve Deck". Regex: lowercase 'a'/'an' + noun.
-                // If DeckOracle shows 0 cards match the keyword in Reserve, block.
-                // FIXES Issue from lft7u9prpd6q6r9v replay: Rando fired IMBATS "Deploy a
-                // farm from Reserve Deck" when LMF(V) was already in hand and no other
-                // farms were in the deck. Search failed, revealed reserve to opponent.
-                if (v60Oracle != null) {
-                    java.util.regex.Matcher genMatch = java.util.regex.Pattern.compile(
-                        "Deploy an? ([a-z][a-z ]*?) from Reserve Deck").matcher(actionText);
-                    if (genMatch.find()) {
-                        String v60Kw = genMatch.group(1).trim();
-                        // V67bg (Steve, 2026-05-10): TYPE-AWARE pull validation.
-                        //
-                        // The old code substring-matched a generic noun ("location",
-                        // "site", "weapon", "bay") against card TITLES. That always
-                        // misses for category nouns because no card is literally
-                        // titled "location" — the SWCCG vocabulary uses these words
-                        // as TYPE indicators (CardCategory / CardSubtype / Icon /
-                        // Keyword), not as titles. Symptom: Hunt Down's '[download]
-                        // a Cloud City or Malachor battleground site' hard-blocked
-                        // every turn. Same on IBS (docking bay).
-                        //
-                        // Fix: resolve the noun to a typed Filter via
-                        // DeckOracle.resolveCommonNounToFilter(). The engine's own
-                        // filter semantics then answer "is anything in reserve
-                        // satisfying this filter?" — the same way the card's
-                        // DeployCardFromReserveDeckEffect would search. Proper-noun
-                        // targets like "Tala Durith" still hit the named-target
-                        // matcher above (case-sensitive proper-noun regex).
-                        //
-                        // Memory: ~/.claude/projects/-Users-steve-gemp-swccg-public/
-                        //   memory/feedback_card_search_by_type_not_text.md
-                        com.gempukku.swccgo.filters.Filter v67bgTypedFilter =
-                            com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
-                                .resolveCommonNounToFilter(v60Kw);
-                        if (v67bgTypedFilter != null) {
-                            // Type-aware reserve check using engine filter semantics.
-                            boolean v67bgMatch = v60Oracle.hasFilterMatchInReserve(
-                                context.getGame(), context.getPlayerId(), v67bgTypedFilter);
-                            if (!v67bgMatch) {
-                                action.addReasoning("V67bg RESERVE MISS (typed '" + v60Kw
-                                    + "'): no card matching Filter in Reserve — pull will fail!",
-                                    -9999.0f);
-                                LOG.warn("V67bg RESERVE MISS: typed filter for '{}' has no match in reserve — hard-blocked",
-                                    v60Kw);
-                                actions.add(action);
-                                continue;
-                            } else {
-                                LOG.warn("V67bg RESERVE OK: typed filter for '{}' has matches in reserve — pull valid",
-                                    v60Kw);
-                            }
-                        } else if (v60Kw.length() >= 3 && !v60Oracle.hasTargetInReserve(v60Kw)) {
-                            // Unknown noun — fall back to title-substring (legacy behavior).
-                            // If this fires for a category noun, add it to
-                            // DeckOracle.resolveCommonNounToFilter() and re-test.
-                            action.addReasoning("V60 RESERVE MISS (generic, untyped): no '" + v60Kw
-                                + "' in Reserve — pull fails + reveals deck!", -9999.0f);
-                            LOG.warn("V60 RESERVE MISS (untyped): keyword '{}' not in reserve — hard-blocked (CONSIDER adding to resolveCommonNounToFilter)", v60Kw);
-                            actions.add(action);
-                            continue;
-                        }
-                    }
-                }
-
-                // V66 MEMORY AUDIT: Unified pull validation via DeckOracle.
-                // Catches pulls that the named-target/generic regexes miss,
-                // AND catches "WASTEFUL" pulls (target already in hand/play).
-                // Steve's feedback: "Rando doesn't seem to remember what's in
-                // his hand, force pile, reserve, used or lost pile."
-                // This runs AFTER the older named/generic guards so those more
-                // specific penalties still fire first.
-                if (v60Oracle != null && v60Oracle.isAnalyzed()) {
-                    com.gempukku.swccgo.common.Zone v66Zone =
-                        com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.parseSourceZone(actionText);
-                    if (v66Zone != null) {
-                        // Extract candidate target keyword(s) from action text.
-                        // Prefer multi-word proper noun, fall back to generic "a X".
-                        String[] v66Keywords = null;
-                        java.util.regex.Matcher v66Named = java.util.regex.Pattern.compile(
-                            "(?:Deploy|Take) ([A-Z][A-Za-z']+ [A-Z][A-Za-z' -]+?) "
-                                + "(?:from Reserve|from Lost|from Used|from Force|into hand from)")
-                            .matcher(actionText);
-                        if (v66Named.find()) {
-                            v66Keywords = v66Named.group(1).trim().split(" ");
-                        } else {
-                            java.util.regex.Matcher v66Gen = java.util.regex.Pattern.compile(
-                                "(?:Deploy|Take) an? ([a-z]+) (?:from|into hand from)")
-                                .matcher(actionText);
-                            if (v66Gen.find()) {
-                                String kw = v66Gen.group(1).trim();
-                                // V123-DEPLOY (Steve, 2026-05-22): V66 STOPWORD GUARD — same fix
-                                // as ActionTextEvaluator V66 from earlier commit. This SECOND
-                                // V66 block in DeployEvaluator was missed in the original V123,
-                                // so the keyword-lookup version still fired here and
-                                // hard-blocked Hunt Down V site pulls at -9999 even when
-                                // V67bg correctly reported "RESERVE OK" with locations
-                                // available. Replay 2026-05-22 confirmed: V67bg said locations
-                                // are in reserve, V66 right after said "no match for 'location'"
-                                // because no card is literally TITLED "location".
-                                java.util.Set<String> v66Stopwords = new java.util.HashSet<>(java.util.Arrays.asList(
-                                    "location", "site", "battleground", "system", "sector",
-                                    "ship", "starship", "vehicle", "transport", "fighter",
-                                    "weapon", "lightsaber", "blaster", "bowcaster", "device",
-                                    "character", "alien", "droid", "jedi", "sith", "padawan",
-                                    "inquisitor", "senator", "pilot", "warrior", "soldier",
-                                    "leader", "admiral", "general", "trooper", "officer",
-                                    "rebel", "imperial", "scout", "spy",
-                                    "effect", "interrupt", "objective", "epic", "shield",
-                                    "card"
-                                ));
-                                if (v66Stopwords.contains(kw.toLowerCase(java.util.Locale.ROOT))) {
-                                    LOG.info("V123-DEPLOY V66 STOPWORD: '{}' is a generic category — skip V66 title lookup, defer to V67bg typed filter",
-                                        kw);
-                                } else if (kw.length() >= 3) {
-                                    v66Keywords = new String[] { kw };
-                                }
-                            }
-                        }
-                        if (v66Keywords != null && v66Keywords.length > 0) {
-                            com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullValidation v66Result =
-                                v60Oracle.validatePull(v66Zone, v66Keywords);
-                            if (v66Result.outcome ==
-                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullOutcome.WILL_FAIL) {
-                                action.addReasoning("V66 MEMORY: " + v66Result.reason, -9999.0f);
-                                LOG.warn("V66 MEMORY WILL_FAIL: '{}' — {}", actionText, v66Result.reason);
-                                actions.add(action);
-                                continue;
-                            } else if (v66Result.outcome ==
-                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullOutcome.WASTEFUL) {
-                                action.addReasoning("V66 MEMORY: " + v66Result.reason, -800.0f);
-                                LOG.warn("V66 MEMORY WASTEFUL: '{}' — {} (-800)", actionText, v66Result.reason);
-                            } else if (v66Result.outcome ==
-                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
-                                LOG.info("V66 MEMORY OK: {} — {}", actionText, v66Result.reason);
-                            }
-                        }
-
-                        // V67h: When the action text is generic ("Choose card to deploy from
-                        // Reserve Deck", "[Download] a matching weapon"), use the SOURCE CARD's
-                        // game text to identify what filter the action targets. This catches
-                        // the failures the regex-based V66 misses — e.g., Yarna's "[download]
-                        // Arleil, Doallyn, Tessek, Wild Karrde, or a Tatooine battleground"
-                        // when none of those is in Reserve.
-                        // Steve's expectation: "Rando is already aware of what's in his deck
-                        // at the start of game and would know when he would have a successful
-                        // search."
-                        try {
-                            List<String> v67hCardIds = context.getCardIds();
-                            String v67hCardIdStr = (v67hCardIds != null && i < v67hCardIds.size())
-                                ? v67hCardIds.get(i) : null;
-                            if (v67hCardIdStr != null && !v67hCardIdStr.isEmpty() && gameState != null) {
-                                PhysicalCard v67hSrcCard =
-                                    gameState.findCardById(Integer.parseInt(v67hCardIdStr));
-                                if (v67hSrcCard != null && v67hSrcCard.getBlueprint() != null) {
-                                    // BATCH1-CORR (2026-07-13, Codex m00229): side-aware owner — location
-                                    // pull text lives in per-side getters, getGameText() alone is blind.
-                                    String v67hGT = com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
-                                        .getSourceCardFullGameText(v67hSrcCard.getBlueprint(), context.getSide());
-                                    if (v67hGT != null) {
-                                        com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullValidation v67hResult =
-                                            v60Oracle.validatePullFromSourceCard(v66Zone, v67hGT);
-                                        if (v67hResult.outcome ==
-                                            com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullOutcome.WILL_FAIL) {
-                                            action.addReasoning("V67h MEMORY (game-text): " + v67hResult.reason, -9999.0f);
-                                            LOG.warn("V67h MEMORY WILL_FAIL: source={} — {}",
-                                                v67hSrcCard.getTitle(), v67hResult.reason);
-                                            actions.add(action);
-                                            continue;
-                                        } else if (v67hResult.outcome ==
-                                            com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.PullOutcome.WILL_SUCCEED) {
-                                            LOG.info("V67h MEMORY OK: source={} — {}",
-                                                v67hSrcCard.getTitle(), v67hResult.reason);
-                                            // === V185 (Steve, 2026-06): WEAPON-DEPLOYABILITY GATE ===
-                                            // V67h confirms the target is IN the Reserve Deck, but NOT that it
-                                            // can be DEPLOYED. A Good Friend (225_37) deploys one of {location,
-                                            // epic event, Leia's Lightsaber} from Reserve; once the location +
-                                            // epic event are deployed, only the lightsaber remains — and a weapon
-                                            // can only attach to the SPECIFIC characters its own matching-character
-                                            // filter accepts (Leia's Lightsaber -> Leia/Ben Solo/Rey ability>4;
-                                            // Anakin's Lightsaber -> Skywalker ability>3). If Rando has no such
-                                            // character on the table the deploy has no legal target, so the pull
-                                            // FAILS: wasted action + Reserve revealed/reshuffled. Steve: "no one was
-                                            // on table that could hold a lightsaber, so the pull failed. If Rando had
-                                            // waited for characters to deploy first he would have been successful.
-                                            // This lost Rando the game." (Refined 2026-06-23: the first pass checked
-                                            // "any character" — too crude; Rando can have bodies out yet none able to
-                                            // hold THIS weapon. Now we read each weapon's own filter.) Block when
-                                            // EVERY remaining Reserve target is a weapon with NO in-play character its
-                                            // own filter accepts. A non-weapon target still pullable, a weapon with a
-                                            // legal holder already down, or a game-text (Filters.none) weapon we can't
-                                            // predict, all leave the pull untouched. -2000 matches V177's dead-pull
-                                            // penalty (drops below the V60 +100 baseline; not the absolute -9999 of a
-                                            // no-target search — a safety valve if this heuristic ever over-fires).
-                                            List<String> v185Targets =
-                                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
-                                                    .parseSourceCardPullTargets(v67hGT);
-                                            com.gempukku.swccgo.game.SwccgGame v185Game = context.getGame();
-                                            if (v185Game != null
-                                                    && v60Oracle.reserveTargetsAreAllUnattachableWeapons(
-                                                        v185Game, context.getPlayerId(), v185Targets)) {
-                                                action.addReasoning("V185 WEAPON, NO LEGAL HOLDER: every Reserve-Deck target left for '"
-                                                    + actionText + "' is a weapon Rando has no in-play character to hold (per the weapon's own deploy filter) — deploy a valid character first",
-                                                    -2000.0f);
-                                                LOG.warn("V185 WEAPON-NO-HOLDER blocked: source={} targets={} — all weapons, no legal in-play holder",
-                                                    v67hSrcCard.getTitle(), v185Targets);
-                                                actions.add(action);
-                                                continue;
-                                            }
-                                            // === V190 (Steve, 2026-07-04): STARSHIPS DEPLOY TO SYSTEMS ===
-                                            // "He should not have deployed starships to a docking bay.
-                                            // Only deploy starships to systems." Game 20jqtseod148of4y:
-                                            // Court Of The Vile Gangster's pull fetched Elis In Hinthra
-                                            // (then Dengar In Punishing One) and parked them at Executor:
-                                            // Docking Bay at 0 power — the 4 Force it burned starved the
-                                            // V29 PAIRED buddy deploy the same turn. When every fetchable
-                                            // Reserve target left for this pull is a STARSHIP and no
-                                            // space location is on table, the ship can only park at a
-                                            // site: block the pull until a system/sector lands. Known
-                                            // limits (see AI_CHANGELOG 2026-07-04): a space location the
-                                            // ship can't legally deploy to still stands the gate down,
-                                            // and the gate does not itself make Rando deploy the system
-                                            // first (follow-up item). Boundary: the continue skips this
-                                            // evaluator's later bonuses (V60 +100, V38.4, V100 +1500,
-                                            // V67ai +2000), so the blocked action lands ~-6400 vs the
-                                            // -100 viability floor — dominated, and no other rule reads
-                                            // this action after a continue.
-                                            if (v60Oracle.reservePullFetchesOnlyStarships(v67hGT)
-                                                    && !com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle
-                                                        .spaceLocationOnTable(gameState)) {
-                                                action.addReasoning("V190 STARSHIP PULL, NO SPACE LOCATION ON TABLE: every Reserve target left for '"
-                                                    + actionText + "' is a starship and there is no system to deploy it to — it would park at a docking bay at 0 power; deploy a system first",
-                                                    -12000.0f);
-                                                LOG.warn("V190 STARSHIP-NO-SYSTEM blocked: source={} — starship-only fetch, no space location on table (-12000)",
-                                                    v67hSrcCard.getTitle());
-                                                actions.add(action);
-                                                continue;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (NumberFormatException nfe) { /* ignore */ }
-                        catch (Exception e) { LOG.debug("V67h: error: {}", e.getMessage()); }
-                    }
-                }
-
-                // Passed all guards — V192 (2026-07-06, T4.2 pull-engine merge): the +100
-                // baseline is ABSORBED by the single V192 pull scorer in ActionTextEvaluator
-                // (ds-3 same-tag drift: this DE twin used +100 while the ATE arm used +150 —
-                // ONE baseline lives in the scorer now, and CombinedEvaluator's additive
-                // merge means this line double-counted on every pull). The guards above
-                // (V60 FAIL-STOP/RISK/MISS, V67bg, V66, V67h, V185, V190) STAY as vetoes —
-                // duplicate -9999s are harmless. Superseded +100 baseline removed 2026-07-13; see git.
-                LOG.info("V60 RESERVE PULL guards passed for '{}' — baseline owned by V192 (ActionTextEvaluator)", actionText);
+                LOG.info("V60 RESERVE PULL guards passed for '{}' "
+                        + "— baseline owned by V192 (ActionTextEvaluator)", actionText);
             }
 
             // === V38.4 + V56 FIX 18: AGGRESSIVE DEPLOY — HAND SIZE + FORCE PILE URGENCY ===
