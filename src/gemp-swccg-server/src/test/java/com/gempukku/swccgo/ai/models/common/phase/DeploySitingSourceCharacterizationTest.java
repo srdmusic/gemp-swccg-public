@@ -50,7 +50,14 @@ public class DeploySitingSourceCharacterizationTest {
                 "DeployTacticalPolicy.evaluateV50PowerDanger(",
                 "DeployTacticalPolicy.scoreV34DirectEngage(",
                 "DeployTacticalPolicy.scoreV36EmptyDeploy(",
-                "DeployTacticalPolicy.scoreV51V43SpyPlacement("}) {
+                "DeployTacticalPolicy.scoreV51V43SpyPlacement(",
+                "DeployObjectiveSitingPolicy.scoreCloudCityArmy(",
+                "DeployObjectiveSitingPolicy.scoreObjectiveFirst(",
+                "DeployObjectiveSitingPolicy.scoreKeyCharacter(",
+                "DeployObjectiveSitingPolicy.evaluateCloudCityEngine(",
+                "DeployObjectiveSitingPolicy.scoreGherant(",
+                "DeployObjectiveSitingPolicy.evaluateLandoLobot(",
+                "DeployObjectiveSitingPolicy.evaluateFlipSiting("}) {
             assertTrue(call, deploy.contains(call));
         }
 
@@ -63,6 +70,20 @@ public class DeploySitingSourceCharacterizationTest {
         assertFalse(deploy.contains("V50 EARLY DANGER: Turn %d"));
         assertFalse(deploy.contains("V34 DIRECT ENGAGE: Deploy %s"));
         assertFalse(deploy.contains("V51 SPY CRIPPLE: Spy at %s"));
+        assertFalse(deploy.contains("V51 CC ARMY: Deploy to %s pre-flip"));
+        assertFalse(deploy.contains("V51 OBJ FIRST: Deploy to %s"));
+        assertFalse(deploy.contains("V67ak KEY CHARACTER: %s is named"));
+        assertFalse(deploy.contains("action.addReasoning(\"V22.7 BLOCKED:"));
+        assertFalse(deploy.contains("V24 TDIGWATT ENGINE: Deploy \" + card.getTitle()"));
+        assertFalse(deploy.contains("V24.1 GHERANT: Deploys an Executor site"));
+        assertFalse(deploy.contains("V29.2 LANDO: Key piece + backup present"));
+        assertFalse(deploy.contains("V47 LANDO SOLO BLOCK: No friendlies at CC"));
+        assertFalse(deploy.contains("V29.2 LOBOT: Helps flip TDIGWATT"));
+        assertFalse(deploy.contains("V47 LOBOT SOLO BLOCK: No friendlies at CC"));
+        assertFalse(deploy.contains("V36 DEFEND TERRITORY: Deploy to unoccupied obj location"));
+        assertFalse(deploy.contains("V31 PRE-FLIP: %d obj locations still unoccupied"));
+        assertFalse(deploy.contains("V31 POST-FLIP: Reinforce key hold location"));
+        assertFalse(deploy.contains("V40 POST-FLIP: Deploying to 3rd obj loc"));
 
         int earlyDanger = deploy.indexOf(
                 "DeployTacticalPolicy.PowerDangerOutcome.EARLY_DANGER");
@@ -72,6 +93,17 @@ public class DeploySitingSourceCharacterizationTest {
         assertTrue(earlyDanger >= 0);
         assertTrue(locationContinue > earlyDanger);
         assertTrue(directEngage > locationContinue);
+
+        int cloudCityBlocked = deploy.indexOf(
+                "new DeployObjectiveSitingPolicy.CloudCityEngineFacts(\n"
+                        + "                                        actionId, card.getTitle(), false, false)");
+        int blockedActionsAdd = deploy.indexOf("actions.add(action);", cloudCityBlocked);
+        int blockedContinue = deploy.indexOf("continue;", blockedActionsAdd);
+        int lazyDeckOracle = deploy.indexOf("context.getDeckOracle()", blockedContinue);
+        assertTrue(cloudCityBlocked >= 0);
+        assertTrue(blockedActionsAdd > cloudCityBlocked);
+        assertTrue(blockedContinue > blockedActionsAdd);
+        assertTrue(lazyDeckOracle > blockedContinue);
     }
 
     @Test

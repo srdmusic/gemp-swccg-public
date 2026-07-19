@@ -14,6 +14,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
@@ -2722,9 +2723,11 @@ public class DeployEvaluator extends ActionEvaluator {
                                 String ccLocLower = ccLoc.getTitle().toLowerCase(Locale.ROOT);
                                 if (!actionLower.contains(ccLocLower)) continue;
                                 if (ccLocLower.contains("cloud city")) {
-                                    action.addReasoning(String.format(
-                                        "V51 CC ARMY: Deploy to %s pre-flip — build Cloud City army!",
-                                        ccLoc.getTitle()), 500.0f);
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-cloud-city-army",
+                                        DeployObjectiveSitingPolicy.scoreCloudCityArmy(
+                                            new DeployObjectiveSitingPolicy.CloudCityArmyFacts(
+                                                actionId, ccLoc.getTitle())));
                                     LOG.warn("V51 CC ARMY: {} to {} pre-flip — +500", card.getTitle(), ccLoc.getTitle());
                                 }
                                 break;
@@ -2745,9 +2748,11 @@ public class DeployEvaluator extends ActionEvaluator {
                                 String ofLocLower = ofLoc.getTitle().toLowerCase(Locale.ROOT);
                                 if (!actionLower.contains(ofLocLower)) continue;
                                 if (objFirstAnalyzer.isObjectiveRelevantLocation(ofLoc.getTitle())) {
-                                    action.addReasoning(String.format(
-                                        "V51 OBJ FIRST: Deploy to %s — objective-relevant location pre-flip!",
-                                        ofLoc.getTitle()), 300.0f);
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-objective-first",
+                                        DeployObjectiveSitingPolicy.scoreObjectiveFirst(
+                                            new DeployObjectiveSitingPolicy.ObjectiveFirstFacts(
+                                                actionId, ofLoc.getTitle())));
                                     LOG.warn("V51 OBJ FIRST: {} to {} — objective location pre-flip +300",
                                         card.getTitle(), ofLoc.getTitle());
                                 }
@@ -2811,9 +2816,11 @@ public class DeployEvaluator extends ActionEvaluator {
                                     if (alreadyOnTable) break;
                                 }
                                 if (!alreadyOnTable) {
-                                    action.addReasoning(String.format(
-                                        "V67ak KEY CHARACTER: %s is named in objective/epic-event text — deploy first to enable flip!",
-                                        card.getTitle()), 800.0f);
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-key-character",
+                                        DeployObjectiveSitingPolicy.scoreKeyCharacter(
+                                            new DeployObjectiveSitingPolicy.KeyCharacterFacts(
+                                                actionId, card.getTitle())));
                                     LOG.warn("V67ak KEY CHARACTER: {} matches strategy token — +800 deploy priority",
                                         card.getTitle());
                                 } else {
@@ -2878,8 +2885,12 @@ public class DeployEvaluator extends ActionEvaluator {
                             LOG.debug("V22.7: Could not check Bespin occupation: {}", e.getMessage());
                         }
                         if (!weOccupyBespin) {
-                            action.addReasoning("V22.7 BLOCKED: " + card.getTitle() +
-                                " will SELF-CANCEL — we don't occupy Bespin system!", -800.0f);
+                            DeployObjectiveSitingPolicy.CloudCityEngineEvaluation
+                                cloudCityEngine = DeployObjectiveSitingPolicy.evaluateCloudCityEngine(
+                                    new DeployObjectiveSitingPolicy.CloudCityEngineFacts(
+                                        actionId, card.getTitle(), false, false));
+                            applySharedPolicy(action, decisionId, actionId,
+                                "deploy-cloud-city-engine", cloudCityEngine.result());
                             LOG.warn("🚫 V22.7: BLOCKING {} — we don't occupy Bespin, it will self-cancel!",
                                 card.getTitle());
                             actions.add(action);
@@ -2896,12 +2907,16 @@ public class DeployEvaluator extends ActionEvaluator {
                             } catch (Exception e) {
                                 LOG.debug("V24: Error checking if effect is on table: {}", e.getMessage());
                             }
-                            if (!effectAlreadyOnTable) {
-                                action.addReasoning("V24 TDIGWATT ENGINE: Deploy " + card.getTitle() +
-                                    " NOW — enables objective damage engine!", 300.0f);
+                            DeployObjectiveSitingPolicy.CloudCityEngineEvaluation
+                                cloudCityEngine = DeployObjectiveSitingPolicy.evaluateCloudCityEngine(
+                                    new DeployObjectiveSitingPolicy.CloudCityEngineFacts(
+                                        actionId, card.getTitle(), true,
+                                        effectAlreadyOnTable));
+                            applySharedPolicy(action, decisionId, actionId,
+                                "deploy-cloud-city-engine", cloudCityEngine.result());
+                            if (cloudCityEngine.outcome()
+                                    == DeployObjectiveSitingPolicy.CloudCityEngineOutcome.ENGINE_PRIORITY) {
                                 LOG.warn("V24 TDIGWATT ENGINE: {} gets +300 — CRITICAL engine piece, deploy ASAP!", card.getTitle());
-                            } else {
-                                action.addReasoning("V22.7: We occupy Bespin — safe to deploy " + card.getTitle(), 50.0f);
                             }
                         }
                     }
@@ -3103,7 +3118,10 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (gherantObjAnalyzer != null && gherantObjAnalyzer.isAnalyzed()
                             && gherantObjAnalyzer.needsBespinSystemPresence()) {
-                            action.addReasoning("V24.1 GHERANT: Deploys an Executor site — free location + force generation!", 150.0f);
+                            applySharedPolicy(action, decisionId, actionId,
+                                "deploy-gherant",
+                                DeployObjectiveSitingPolicy.scoreGherant(
+                                    new DeployObjectiveSitingPolicy.GherantFacts(actionId)));
                             LOG.warn("V24.1 GHERANT: {} gets +150 — pulls Executor site on deploy!", card.getTitle());
                         }
                     }
@@ -3162,24 +3180,23 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
 
-                                if (isLandoDeploy) {
-                                    if (haveCharAtCCSite) {
-                                        action.addReasoning("V29.2 LANDO: Key piece + backup present — safe to deploy!", 200.0f);
+                                DeployObjectiveSitingPolicy.LandoLobotEvaluation
+                                    landoLobot = DeployObjectiveSitingPolicy.evaluateLandoLobot(
+                                        new DeployObjectiveSitingPolicy.LandoLobotFacts(
+                                            actionId, isLandoDeploy, isLobotDeploy,
+                                            haveCharAtCCSite));
+                                applySharedPolicy(action, decisionId, actionId,
+                                    "deploy-lando-lobot", landoLobot.result());
+                                switch (landoLobot.outcome()) {
+                                    case LANDO_SAFE ->
                                         LOG.warn("V29.2 LANDO: +200 — has backup at CC site! (actionText='{}')", actionText);
-                                    } else {
-                                        // V47: Lando alone at CC gets clobbered EVERY TIME. HARD BLOCK.
-                                        action.addReasoning("V47 LANDO SOLO BLOCK: No friendlies at CC — Lando dies alone!", -9999.0f);
+                                    case LANDO_BLOCKED ->
                                         LOG.warn("V47 LANDO SOLO BLOCK: No friendly chars at CC — blocking Lando reserve deploy! (actionText='{}')", actionText);
-                                    }
-                                } else if (isLobotDeploy) {
-                                    if (haveCharAtCCSite) {
-                                        action.addReasoning("V29.2 LOBOT: Helps flip TDIGWATT + backup present!", 150.0f);
+                                    case LOBOT_SAFE ->
                                         LOG.warn("V29.2 LOBOT: +150 — has backup!");
-                                    } else {
-                                        // V47: Same as Lando — don't deploy Lobot alone either
-                                        action.addReasoning("V47 LOBOT SOLO BLOCK: No friendlies at CC — Lobot dies alone!", -9999.0f);
+                                    case LOBOT_BLOCKED ->
                                         LOG.warn("V47 LOBOT SOLO BLOCK: No friendly chars at CC — blocking Lobot reserve deploy!");
-                                    }
+                                    case NONE -> { }
                                 }
                             }
                         }
@@ -3239,43 +3256,41 @@ public class DeployEvaluator extends ActionEvaluator {
                                         }
                                     }
 
+                                    int turnNum = 0;
+                                    boolean isHuntDown36 = false;
+                                    boolean isInquisitor36 = false;
                                     if (unoccupiedObjLocs > 0 && deploysToUnoccupiedObjLoc) {
-                                        // V36: DEFEND YOUR TERRITORY — objective sites left empty get
-                                        // occupied by opponent Jedi who drain 2-3 per turn. Malachor sites
-                                        // must have presence BEFORE the opponent gets there.
-                                        // On turns 1-3, this is the #1 priority for Inquisitors.
-                                        float defendBonus = 250.0f;
-                                        int turnNum = context.getTurnNumber();
-                                        boolean isHuntDown36 = flipObjAnalyzer.isHuntDownV();
+                                        turnNum = context.getTurnNumber();
+                                        isHuntDown36 = flipObjAnalyzer.isHuntDownV();
                                         String deployCardLower36 = card.getTitle() != null
                                             ? card.getTitle().toLowerCase(Locale.ROOT) : "";
-                                        boolean isInquisitor36 = isInquisitor(deployCardLower36);
-
+                                        isInquisitor36 = isInquisitor(deployCardLower36);
+                                    }
+                                    DeployObjectiveSitingPolicy.FlipSitingEvaluation
+                                        flipSiting = DeployObjectiveSitingPolicy.evaluateFlipSiting(
+                                            new DeployObjectiveSitingPolicy.FlipSitingFacts(
+                                                actionId, false, turnNum,
+                                                isHuntDown36, isInquisitor36,
+                                                occupiedObjLocs, unoccupiedObjLocs,
+                                                deploysToUnoccupiedObjLoc,
+                                                false, false));
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-flip-siting", flipSiting.result());
+                                    if (flipSiting.outcome()
+                                            == DeployObjectiveSitingPolicy.FlipSitingOutcome.PREFLIP_DEFEND) {
+                                        float defendBonus = flipSiting.result().operations()
+                                            .get(0).delta();
                                         if (isHuntDown36 && turnNum <= 3) {
-                                            // Early game Hunt Down — CRITICAL to defend Malachor
-                                            defendBonus = 800.0f; // V36: Overrides Hunt Block -2000
-                                            if (isInquisitor36) defendBonus = 1000.0f; // Inquisitors are ideal defenders
                                             LOG.warn("V36 DEFEND MALACHOR: {} to empty obj site EARLY (turn {}) — must defend! (+{})",
                                                 card.getTitle(), turnNum, (int)defendBonus);
                                         } else if (isHuntDown36) {
-                                            // Later turns — still important but less urgent
-                                            defendBonus = 500.0f;
                                             LOG.warn("V36 DEFEND TERRITORY: {} to empty obj site (turn {}) — +{}",
                                                 card.getTitle(), turnNum, (int)defendBonus);
                                         }
-
-                                        action.addReasoning(String.format(
-                                            "V36 DEFEND TERRITORY: Deploy to unoccupied obj location! (%d/%d occupied%s)",
-                                            occupiedObjLocs, occupiedObjLocs + unoccupiedObjLocs,
-                                            isHuntDown36 && turnNum <= 3 ? " — EARLY DEFENSE CRITICAL" : ""), defendBonus);
                                         LOG.warn("V36 PRE-FLIP: {} to unoccupied obj loc (+{}) — {}/{} occupied",
-                                            card.getTitle(), (int)defendBonus, occupiedObjLocs, occupiedObjLocs + unoccupiedObjLocs);
-                                    } else if (unoccupiedObjLocs > 0) {
-                                        // Mild penalty for deploying to already-occupied location when
-                                        // unoccupied objective locations still need presence
-                                        action.addReasoning(String.format(
-                                            "V31 PRE-FLIP: %d obj locations still unoccupied — spread out instead of stacking!",
-                                            unoccupiedObjLocs), -50.0f);
+                                            card.getTitle(), (int)defendBonus,
+                                            occupiedObjLocs,
+                                            occupiedObjLocs + unoccupiedObjLocs);
                                     }
                                 } else {
                                     // === POST-FLIP: Consolidate to fewer locations ===
@@ -3329,22 +3344,31 @@ public class DeployEvaluator extends ActionEvaluator {
                                         }
                                     }
 
-                                    if (deploysToHoldLoc) {
-                                        action.addReasoning("V31 POST-FLIP: Reinforce key hold location!", 200.0f);
-                                        LOG.warn("V31 POST-FLIP: {} reinforcing hold location (+200)", card.getTitle());
-                                    } else {
-                                        // Deploying to a non-hold objective location post-flip — mild penalty
-                                        boolean deploysToAnyObjLoc = false;
+                                    // Deploying to a non-hold objective location post-flip.
+                                    boolean deploysToAnyObjLoc = false;
+                                    if (!deploysToHoldLoc) {
                                         for (String frag : objLocFragments) {
                                             if (actionLower.contains(frag.toLowerCase(Locale.ROOT))) {
                                                 deploysToAnyObjLoc = true;
                                                 break;
                                             }
                                         }
-                                        if (deploysToAnyObjLoc && occupiedObjLocCards.size() > 2) {
-                                            action.addReasoning("V40 POST-FLIP: Deploying to 3rd obj loc (neutral)", 0.0f);
-                                            LOG.warn("V40 POST-FLIP: {} deploy to 3rd obj loc — neutral (was -100)", card.getTitle());
-                                        }
+                                    }
+                                    DeployObjectiveSitingPolicy.FlipSitingEvaluation
+                                        flipSiting = DeployObjectiveSitingPolicy.evaluateFlipSiting(
+                                            new DeployObjectiveSitingPolicy.FlipSitingFacts(
+                                                actionId, true, 0, false, false,
+                                                occupiedObjLocCards.size(), 0,
+                                                false, deploysToHoldLoc,
+                                                deploysToAnyObjLoc));
+                                    applySharedPolicy(action, decisionId, actionId,
+                                        "deploy-flip-siting", flipSiting.result());
+                                    if (flipSiting.outcome()
+                                            == DeployObjectiveSitingPolicy.FlipSitingOutcome.POSTFLIP_HOLD) {
+                                        LOG.warn("V31 POST-FLIP: {} reinforcing hold location (+200)", card.getTitle());
+                                    } else if (flipSiting.outcome()
+                                            == DeployObjectiveSitingPolicy.FlipSitingOutcome.POSTFLIP_THIRD_NEUTRAL) {
+                                        LOG.warn("V40 POST-FLIP: {} deploy to 3rd obj loc — neutral (was -100)", card.getTitle());
                                     }
                                 }
                             } catch (Exception e) {

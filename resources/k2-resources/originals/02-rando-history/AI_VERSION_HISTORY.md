@@ -7545,3 +7545,23 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     329467f22f4807c7524ef3937bbc40f00468fb8f2e565e383cfbc0df45a94518 contain the shared policy.
     Runtime reload and live-game proof remain pending on the external runtime. AI source only; no
     GEMP engine or player-decision changes.
+
+  ════ V265 (2026-07-19): consolidate objective-specific DEPLOY scoring ════
+    Shared AI-only DeployObjectiveSitingPolicy now owns V51 Cloud City army and objective-first,
+    V67ak key-character, V22.7/V24 Cloud City engine, V24.1 Gherant, V29.2/V47 Lando-Lobot,
+    and V31/V36/V40 pre/post-flip scores and exact reasons. Both bot adapters retain every game,
+    card, analyzer, Oracle, power, location, hand, and action-text read plus first-match loops,
+    strict top-two hold-location selection, exception boundaries, logs, and action-list control.
+    Behavior is structural-only. V22.7 remains additive -800 plus outer append/continue before a
+    lazy Oracle read; Oracle failure still gives V24 +300. Lando retains precedence over Lobot,
+    failed backup reads retain -9999 without continue, and the pre-flip defense ladder remains
+    +250/+500/+800/+1000 with mutually exclusive V31/V36/V40 routes. Distinct typed arms prevent
+    objective-score ledger collisions. Focused objective/source/parity 26/0/0/0, DEPLOY-named
+    185/0/0/0, full reactor 1728/0/0/26, normalized mirror parity, blocked-control and lazy-read
+    source gates, score/outcome fixtures, AI-only boundary, forbidden-symbol scan, diff check,
+    compiled-artifact gates, and clean package passed. Independent review passed scores, reasons,
+    order, control and failure boundaries, tie handling, rule IDs, mirror parity, and scope. Server
+    jar SHA-256 a0b9ec1165f36e937705e7187764ba510cda51049b16b83427f3621372eaae27 and web jar SHA-256
+    cfdde6e782fe38933131bd0cbcac46462471f1dc71ed76af076f2dd603da06bc contain the shared owner
+    and both mirrored adapters. Runtime reload and live-game proof remain pending on the external
+    runtime. AI source only; no GEMP engine or player-decision changes.
