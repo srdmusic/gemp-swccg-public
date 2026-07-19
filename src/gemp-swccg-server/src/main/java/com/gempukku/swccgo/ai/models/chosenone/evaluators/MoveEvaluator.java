@@ -12,6 +12,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveUnarmedVaderPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
@@ -1952,8 +1953,10 @@ public class MoveEvaluator extends ActionEvaluator {
             // V29.9 PRE-CHECK: If this is Vader without a weapon, BLOCK aggressive moves
             try {
                 String preCharTitle = cardToMove.getTitle() != null ? cardToMove.getTitle().toLowerCase(Locale.ROOT) : "";
-                if (preCharTitle.contains("vader")) {
-                    boolean vaderHasWeapon = false;
+                boolean v29TitleMarksVader = preCharTitle.contains("vader");
+                boolean vaderHasWeapon = false;
+                boolean saberInHand = false;
+                if (v29TitleMarksVader) {
                     List<PhysicalCard> vaderAtt = gameState.getAttachedCards(cardToMove);
                     if (vaderAtt != null) {
                         for (PhysicalCard att : vaderAtt) {
@@ -1966,7 +1969,6 @@ public class MoveEvaluator extends ActionEvaluator {
                     }
                     if (!vaderHasWeapon) {
                         // Check if lightsaber is in hand — if so, equip first!
-                        boolean saberInHand = false;
                         List<PhysicalCard> vHand = gameState.getHand(playerId);
                         if (vHand != null) {
                             for (PhysicalCard hCard : vHand) {
@@ -1977,14 +1979,20 @@ public class MoveEvaluator extends ActionEvaluator {
                                 }
                             }
                         }
-                        if (saberInHand) {
-                            action.addReasoning("V29.9 UNARMED VADER: Lightsaber in hand — EQUIP FIRST before attacking!", -250.0f);
-                            logger.warn("V29.9 UNARMED VADER: Vader has no weapon but lightsaber in hand — blocking attack move (-250)");
-                            // T4.1 (2026-07-06): early return removed — R1 weight, block falls through.
-                        } else {
-                            action.addReasoning("V29.9 UNARMED VADER: No weapon — vulnerable without lightsaber!", -100.0f);
-                            logger.warn("V29.9 UNARMED VADER: Vader has no weapon and none in hand — penalizing attack move (-100)");
-                        }
+                    }
+                }
+                MoveUnarmedVaderPolicy.Evaluation v29Readiness =
+                    MoveUnarmedVaderPolicy.evaluate(
+                        v29TitleMarksVader, vaderHasWeapon, saberInHand);
+                if (v29Readiness.applies()) {
+                    action.addReasoning(
+                        v29Readiness.reason(), v29Readiness.delta());
+                    if (v29Readiness.branch()
+                            == MoveUnarmedVaderPolicy.Branch.EQUIP_FIRST) {
+                        logger.warn("V29.9 UNARMED VADER: Vader has no weapon but lightsaber in hand — blocking attack move (-250)");
+                        // T4.1 (2026-07-06): early return removed — R1 weight, block falls through.
+                    } else {
+                        logger.warn("V29.9 UNARMED VADER: Vader has no weapon and none in hand — penalizing attack move (-100)");
                     }
                 }
             } catch (Exception e) {

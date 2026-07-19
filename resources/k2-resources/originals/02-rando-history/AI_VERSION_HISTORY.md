@@ -1,3 +1,20 @@
+  ==== V231 AI-ONLY MOVE UNARMED-VADER READINESS OWNER (2026-07-19, both bots) ====
+Shared MoveUnarmedVaderPolicy now owns the duplicated V29.9 NONE, EQUIP_FIRST, and UNARMED
+classification plus exact reasons and -250/-100 contributions. Both adapters retain the aggressive-
+solo outer gate, Vader title read, attached-card WEAPON scan, conditional lightsaber-title hand scan,
+broad catch, direct score application, logs, and fallthrough into V29.7. Behavior is unchanged: an
+unarmed title-containing Vader with any lightsaber title in hand receives -250, otherwise -100;
+armed Vader and non-Vader cards receive nothing. The rule remains additive R1 scoring with no early
+exit, ladder claim, or veto. Its attached-card-only weapon limitation remains intact, so blueprint
+permanent-weapon variants can still be classified as unarmed. The separate V29.7 MOVE weapon hunter
+and battle-side V29.9 Barrier/Hunt Down owners are untouched. Production edits are AI-only.
+Verification passed 251 focused MOVE tests and the full 1,428-test reactor with 0 failures, 0 errors,
+and 26 skipped. Package, order, cross-owner guards, source-boundary, forbidden-symbol, artifact,
+mirror, diff, and independent source-review gates passed; server jar SHA-256 is
+652f5895c4318d3fed82b2ba6334fae2f0f7da084db3dba250f4cab562246456 and packaged web.jar SHA-256 is
+a613f073814c0390580f5159097833ed27427d4745baba9673b7b899318a9ea0. Runtime load and live-game
+proof remain separate gates. Revert the single V231 commit. See AI_CHANGELOG 2026-07-19.
+
   ==== V230 AI-ONLY MOVE VERGE STEERING POLICY OWNER (2026-07-19, both bots) ====
 Shared MoveVergePolicy now owns the duplicated V79/V79b pure branch order, last-successful parsec
 parse, exact reasons, raw contributions, and post-flip hard-veto fact. Both adapters retain the
