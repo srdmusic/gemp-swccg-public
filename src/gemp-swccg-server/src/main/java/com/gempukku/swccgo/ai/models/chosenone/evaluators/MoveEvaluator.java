@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.phase.MoveAbilityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBuddyProtectionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
@@ -876,13 +877,17 @@ public class MoveEvaluator extends ActionEvaluator {
                                 }
                             }
 
-                            float abilityAfterMove = totalAbilityHere - moverAbility;
+                            MoveAbilityPolicy.Analysis v32Analysis =
+                                MoveAbilityPolicy.analyze(
+                                    friendlyCharsHere,
+                                    totalAbilityHere,
+                                    moverAbility);
+                            float abilityAfterMove = v32Analysis.abilityAfterMove();
 
                             // Only applies if there will be remaining characters after move
-                            if (friendlyCharsHere > 1 && abilityAfterMove > 0 && abilityAfterMove < 4.0f) {
+                            if (v32Analysis.branch()
+                                    == MoveAbilityPolicy.Branch.DESTINY_DANGER) {
                                 // Moving away drops ability below 4 — heavy penalty
-                                float abilityPenalty = -300.0f;
-
                                 // Check if opponent has presence (makes it even worse)
                                 String v32Opponent = game.getOpponent(playerId);
                                 float theirPower = 0;
@@ -891,25 +896,30 @@ public class MoveEvaluator extends ActionEvaluator {
                                         gameState, currentLocation, v32Opponent, false, false);
                                 } catch (Exception e) { /* ignore */ }
 
-                                if (theirPower > 0) {
-                                    abilityPenalty = -500.0f; // Enemy present + can't draw destiny = disaster
-                                }
-
-                                action.addReasoning(String.format(
-                                    "V32 ABILITY DANGER: Moving %s away drops ability from %.0f to %.0f (< 4) at %s! NO BATTLE DESTINY!%s",
-                                    cardToMove.getTitle(), totalAbilityHere, abilityAfterMove,
-                                    currentLocation.getTitle(),
-                                    theirPower > 0 ? " ENEMY POWER=" + (int)theirPower : ""),
-                                    abilityPenalty);
+                                MoveAbilityPolicy.Evaluation v32Danger =
+                                    MoveAbilityPolicy.destinyDanger(
+                                        cardToMove.getTitle(),
+                                        currentLocation.getTitle(),
+                                        totalAbilityHere,
+                                        abilityAfterMove,
+                                        theirPower);
+                                action.addReasoning(
+                                    v32Danger.reason(),
+                                    v32Danger.delta());
                                 logger.warn("V32 ABILITY MOVE BLOCK: {} moving from {} would leave ability {} < 4!{}",
                                     cardToMove.getTitle(), currentLocation.getTitle(),
                                     abilityAfterMove, theirPower > 0 ? " ENEMY=" + (int)theirPower : "");
-                            } else if (friendlyCharsHere == 1 && totalAbilityHere < 4.0f) {
+                            } else if (v32Analysis.branch()
+                                    == MoveAbilityPolicy.Branch.SOLO_ESCAPE) {
                                 // This is the ONLY character and has < 4 ability — moving AWAY is actually GOOD
                                 // because we should consolidate with allies who have more ability
-                                action.addReasoning(String.format(
-                                    "V32 ABILITY SOLO ESCAPE: %s alone with ability %.0f < 4 — move to join allies!",
-                                    cardToMove.getTitle(), totalAbilityHere), 50.0f);
+                                MoveAbilityPolicy.Evaluation v32Solo =
+                                    MoveAbilityPolicy.soloEscape(
+                                        cardToMove.getTitle(),
+                                        totalAbilityHere);
+                                action.addReasoning(
+                                    v32Solo.reason(),
+                                    v32Solo.delta());
 
                                 // === V156 JOIN-GROUP (2026-07-07, move arm; Fel-at-Beach loss, audit deploy-siting-2) ===
                                 // The deploy-side V156 hold now blocks CREATING weak solos at BGs on all
@@ -942,7 +952,10 @@ public class MoveEvaluator extends ActionEvaluator {
                                             && !com.gempukku.swccgo.ai.models.common.strategy.CharacterDeploySiteEvaluator
                                                 .isV156FlipNotReady(gameState, playerId);
                                     } catch (Exception ignore) { /* false */ }
-                                    if (v156OppPowerHere == 0f && !cardToMove.isUndercover() && !v156AtReadyFlipSite) {
+                                    if (MoveAbilityPolicy.isUncontested(v156OppPowerHere)
+                                            && MoveAbilityPolicy.canJoinGroup(
+                                                cardToMove.isUndercover(),
+                                                v156AtReadyFlipSite)) {
                                         // STACK-MATH REFIT (2026-07-07): join by ABILITY-TOTAL, not headcount.
                                         // Pick the adjacent site that becomes destiny-capable (total ability >= 4)
                                         // when this body joins, via the shared MovePredicates.bestJoinDestination.
@@ -953,11 +966,23 @@ public class MoveEvaluator extends ActionEvaluator {
                                         if (v156JoinLoc != null) {
                                             float v156DestTotal = com.gempukku.swccgo.ai.models.common.strategy.MovePredicates
                                                 .siteAbilityTotal(gameState, v156JoinLoc, playerId) + v156MoverAb;
-                                            action.addReasoning(String.format(
-                                                "V156 JOIN-GROUP: %s (ability %.0f) solo at uncontested %s — join %s (stack reaches ability %.0f)!",
-                                                cardToMove.getTitle(), totalAbilityHere, currentLocation.getTitle(),
-                                                v156JoinLoc.getTitle(), v156DestTotal), 250.0f);
-                                            ladderClaimR2("V156 JOIN-GROUP", 250.0f, 0.0f, false);
+                                            MoveAbilityPolicy.Evaluation v156Join =
+                                                MoveAbilityPolicy.joinGroup(
+                                                    cardToMove.getTitle(),
+                                                    totalAbilityHere,
+                                                    currentLocation.getTitle(),
+                                                    v156JoinLoc.getTitle(),
+                                                    v156DestTotal);
+                                            action.addReasoning(
+                                                v156Join.reason(),
+                                                v156Join.delta());
+                                            if (v156Join.claimDoctrine()) {
+                                                ladderClaimR2(
+                                                    "V156 JOIN-GROUP",
+                                                    v156Join.delta(),
+                                                    0.0f,
+                                                    false);
+                                            }
                                             logger.warn("V156 JOIN-GROUP: {} (ability {}) solo at {} — R2 claim to join {} (stack ability {})",
                                                 cardToMove.getTitle(), (int) totalAbilityHere, currentLocation.getTitle(),
                                                 v156JoinLoc.getTitle(), (int) v156DestTotal);
