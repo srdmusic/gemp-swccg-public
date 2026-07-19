@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveHuntGroupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveHuntTargetPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
@@ -1510,67 +1511,29 @@ public class MoveEvaluator extends ActionEvaluator {
                     com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer moveObjAnalyzer =
                         context.getObjectiveAnalyzer();
                     if (moveObjAnalyzer != null && moveObjAnalyzer.isAnalyzed() && !moveObjAnalyzer.isFlipped()) {
-                        String preFlipLocTitle = currentLocation.getTitle();
-                        String preFlipOpponent = game.getOpponent(playerId);
-
-                        // Count our characters at this location
-                        int preFlipOurChars = 0;
-                        float preFlipOurPower = 0;
-                        for (PhysicalCard card : gameState.getCardsAtLocation(currentLocation)) {
-                            if (card != null && playerId.equals(card.getOwner())
-                                && card.getBlueprint() != null && card.getBlueprint().hasPowerAttribute()) {
-                                preFlipOurChars++;
-                                Float p = card.getBlueprint().getPower();
-                                preFlipOurPower += (p != null ? p : 0);
-                            }
+                        MoveObjectiveConsolidationPolicy.Evaluation preFlip =
+                            MoveObjectiveConsolidationPolicy.preFlip(
+                                gameState, game, currentLocation, playerId);
+                        if (preFlip.contribution().applies()) {
+                            action.addReasoning(
+                                preFlip.contribution().reason(),
+                                preFlip.contribution().delta());
                         }
-
-                        // Get opponent power here
-                        float preFlipTheirPower = 0;
-                        try {
-                            preFlipTheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                gameState, currentLocation, preFlipOpponent, false, false);
-                        } catch (Exception e) {
-                            // Ignore
-                        }
-
-                        // V22.5: Lone character badly outgunned — should move to join allies
-                        if (preFlipOurChars == 1 && preFlipTheirPower > preFlipOurPower * 2 && preFlipTheirPower > 6) {
-                            // Find a friendly location with allies to join
-                            String bestAllyLoc = null;
-                            float bestAllyPower = 0;
-                            try {
-                                for (PhysicalCard loc : gameState.getLocationsInOrder()) {
-                                    if (loc == null || loc == currentLocation) continue;
-                                    float allyPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                        gameState, loc, playerId, false, false);
-                                    if (allyPower > bestAllyPower) {
-                                        bestAllyPower = allyPower;
-                                        bestAllyLoc = loc.getTitle();
-                                    }
-                                }
-                            } catch (Exception e) {
-                                // Ignore
-                            }
-
-                            float consolidateBonus = 100.0f;
-                            if (preFlipTheirPower > preFlipOurPower * 3) consolidateBonus = 160.0f;
-                            action.addReasoning("V22.5 PRE-FLIP: LONE & OUTGUNNED (" + (int)preFlipOurPower +
-                                " vs " + (int)preFlipTheirPower + ") - move to join allies" +
-                                (bestAllyLoc != null ? " at " + bestAllyLoc : ""), consolidateBonus);
+                        if (preFlip.branch()
+                                == MoveObjectiveConsolidationPolicy.Branch.PRE_FLIP_LONE_OUTGUNNED) {
                             logger.warn("V22.5 CONSOLIDATE PRE-FLIP: {} alone at {} ({}v{}) should join allies{}",
-                                cardToMove.getTitle(), preFlipLocTitle,
-                                (int)preFlipOurPower, (int)preFlipTheirPower,
-                                bestAllyLoc != null ? " at " + bestAllyLoc : "");
-                            // V22.5 UPDATED 2026-07-06 T4.1: consolidation attempts an R2 DOCTRINE claim
-                            // (spec Table 2). NOTE: +100/+160 fails the L2 strength gate (< +200, no
-                            // drain-delta) so today it stays R1 by ruling — the attempt is kept so a
-                            // future magnitude bump promotes cleanly.
-                            ladderClaimR2("V22.5 PRE-FLIP CONSOLIDATE", consolidateBonus, 0.0f, false);
-                        } else if (preFlipOurChars <= 2 && preFlipTheirPower > preFlipOurPower * 1.5f && preFlipTheirPower > 8) {
-                            // Small group outgunned — moderate consolidation pressure
-                            action.addReasoning("V22.5 PRE-FLIP: Outgunned at " + preFlipLocTitle +
-                                " (" + (int)preFlipOurPower + " vs " + (int)preFlipTheirPower + ")", 60.0f);
+                                cardToMove.getTitle(),
+                                preFlip.currentLocationName(),
+                                (int) preFlip.ownPower(),
+                                (int) preFlip.opponentPowerAtCurrentLocation(),
+                                preFlip.bestAllyLocation() != null
+                                    ? " at " + preFlip.bestAllyLocation() : "");
+                        }
+                        if (preFlip.contribution().claimDoctrineRank()) {
+                            ladderClaimR2(
+                                "V22.5 PRE-FLIP CONSOLIDATE",
+                                preFlip.contribution().delta(),
+                                0.0f, false);
                         }
                     }
 
@@ -1578,91 +1541,47 @@ public class MoveEvaluator extends ActionEvaluator {
                     // After objective flips, protect flip-back locations at all costs.
                     // Scale required power based on opponent's threat level.
                     if (moveObjAnalyzer != null && moveObjAnalyzer.isAnalyzed() && moveObjAnalyzer.isFlipped()) {
-                        String curLocTitle = currentLocation.getTitle();
-                        boolean atProtectionLoc = moveObjAnalyzer.isFlipBackProtectionLocation(curLocTitle);
-                        String opponent = game.getOpponent(playerId);
-
-                        // Count our characters and power at current location
-                        int ourCharsHere = 0;
-                        float ourPowerHere = 0;
-                        for (PhysicalCard card : gameState.getCardsAtLocation(currentLocation)) {
-                            if (card != null && playerId.equals(card.getOwner())
-                                && card.getBlueprint() != null && card.getBlueprint().hasPowerAttribute()) {
-                                ourCharsHere++;
-                                Float p = card.getBlueprint().getPower();
-                                ourPowerHere += (p != null ? p : 0);
-                            }
+                        MoveObjectiveConsolidationPolicy.Evaluation postFlip =
+                            MoveObjectiveConsolidationPolicy.postFlip(
+                                gameState, game, currentLocation, playerId,
+                                moveObjAnalyzer::isFlipBackProtectionLocation,
+                                e -> logger.debug(
+                                    "Could not sum opponent power: {}",
+                                    e.getMessage()),
+                                e -> logger.debug(
+                                    "Could not analyze protection locations: {}",
+                                    e.getMessage()));
+                        if (postFlip.contribution().applies()) {
+                            action.addReasoning(
+                                postFlip.contribution().reason(),
+                                postFlip.contribution().delta());
                         }
-
-                        // Check opponent total power on table (measure of threat)
-                        float opponentTotalPower = 0;
-                        try {
-                            for (PhysicalCard loc : gameState.getLocationsInOrder()) {
-                                if (loc != null) {
-                                    opponentTotalPower += game.getModifiersQuerying().getTotalPowerAtLocation(
-                                        gameState, loc, opponent, false, false);
-                                }
-                            }
-                        } catch (Exception e) {
-                            logger.debug("Could not sum opponent power: {}", e.getMessage());
-                        }
-
-                        // Find the most vulnerable protection location (lowest our power vs their power)
-                        float worstDeficit = 0;
-                        String weakestLoc = null;
-                        try {
-                            for (PhysicalCard loc : gameState.getLocationsInOrder()) {
-                                if (loc == null || loc.getTitle() == null) continue;
-                                if (!moveObjAnalyzer.isFlipBackProtectionLocation(loc.getTitle())) continue;
-                                float ourPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                    gameState, loc, playerId, false, false);
-                                float theirPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                    gameState, loc, opponent, false, false);
-                                float deficit = (theirPwr + 4.0f) - ourPwr;
-                                if (deficit > worstDeficit) {
-                                    worstDeficit = deficit;
-                                    weakestLoc = loc.getTitle();
-                                }
-                            }
-                        } catch (Exception e) {
-                            logger.debug("Could not analyze protection locations: {}", e.getMessage());
-                        }
-
-                        if (atProtectionLoc) {
-                            // AT a protection location — DO NOT LEAVE unless massively overkill
-                            if (ourCharsHere >= 3 && ourPowerHere > 12) {
-                                // Strong presence, can afford to move one character
-                                action.addReasoning("V22.2 POST-FLIP: Strong at protection loc - can move", -30.0f);
-                            } else {
-                                // Must stay and defend! Penalty scales with opponent threat
-                                float stayPenalty = -80.0f;
-                                if (opponentTotalPower > 15) stayPenalty = -120.0f;
-                                if (opponentTotalPower > 25) stayPenalty = -160.0f;
-                                action.addReasoning("V22.2 POST-FLIP: STAY at protection location! Opponent power=" +
-                                    (int)opponentTotalPower, stayPenalty);
+                        switch (postFlip.branch()) {
+                            case POST_FLIP_STAY ->
                                 logger.warn("V22.2 PROTECT: {} must stay at {} (our power={}, opponent total={})",
-                                    cardToMove.getTitle(), curLocTitle, (int)ourPowerHere, (int)opponentTotalPower);
-                            }
-                        } else {
-                            // NOT at a protection location — encourage moving to one that needs help
-                            if (ourCharsHere == 1) {
-                                float moveBonus = 80.0f;
-                                if (worstDeficit > 4) moveBonus = 120.0f;
-                                if (worstDeficit > 8) moveBonus = 160.0f;
-                                action.addReasoning("V22.2 POST-FLIP: Lone char should reinforce " +
-                                    (weakestLoc != null ? weakestLoc : "protection locs"), moveBonus);
+                                    cardToMove.getTitle(),
+                                    postFlip.currentLocationName(),
+                                    (int) postFlip.ownPower(),
+                                    (int) postFlip.opponentTotalPower());
+                            case POST_FLIP_LONE_REINFORCE -> {
                                 logger.warn("V22.2 CONSOLIDATE: {} alone at {} - move to reinforce (worst deficit={})",
-                                    cardToMove.getTitle(), curLocTitle, (int)worstDeficit);
-                                // V22.2 UPDATED 2026-07-06 T4.1: reinforce attempts an R2 DOCTRINE claim
-                                // (spec Table 2). NOTE: +80/+120/+160 fails the L2 strength gate (< +200)
-                                // so today it stays R1 by ruling; attempt kept for a future magnitude bump.
-                                ladderClaimR2("V22.2 POST-FLIP REINFORCE", moveBonus, 0.0f, false);
-                            } else if (worstDeficit > 6) {
-                                // Even non-lone characters should move if protection locs are severely underguarded
-                                action.addReasoning("V22.2 POST-FLIP: Protection locations severely under-guarded!", 60.0f);
-                                logger.warn("V22.2 CONSOLIDATE: {} at {} but {} needs help (deficit={})",
-                                    cardToMove.getTitle(), curLocTitle, weakestLoc, (int)worstDeficit);
+                                    cardToMove.getTitle(),
+                                    postFlip.currentLocationName(),
+                                    (int) postFlip.worstProtectionDeficit());
                             }
+                            case POST_FLIP_SEVERE_REINFORCE ->
+                                logger.warn("V22.2 CONSOLIDATE: {} at {} but {} needs help (deficit={})",
+                                    cardToMove.getTitle(),
+                                    postFlip.currentLocationName(),
+                                    postFlip.weakestProtectionLocation(),
+                                    (int) postFlip.worstProtectionDeficit());
+                            default -> { }
+                        }
+                        if (postFlip.contribution().claimDoctrineRank()) {
+                            ladderClaimR2(
+                                "V22.2 POST-FLIP REINFORCE",
+                                postFlip.contribution().delta(),
+                                0.0f, false);
                         }
                     }
                 } else {

@@ -1,3 +1,21 @@
+  ==== V224 AI-ONLY MOVE OBJECTIVE-CONSOLIDATION POLICY OWNER (2026-07-19, both bots) ====
+Shared MoveObjectiveConsolidationPolicy now owns the duplicated V22.5 pre-flip consolidation and
+V22.2 post-flip protection scans, strict thresholds, partial-result behavior, exact reasons, raw
+contributions, and doctrine-claim facts. Both adapters retain analyzer gating, direct score
+application, logs, R2 ladder claims, and the original position after Hunt Down cohesion and
+before movement-type scoring. Behavior is unchanged: pre-flip lone movement remains +100/+160
+and small-group pressure +60; post-flip protection remains -30 or -80/-120/-160, lone
+reinforcement remains +80/+120/+160, and severe non-lone reinforcement remains +60. The scan
+still counts every owned power-bearing card, stays destination-blind, uses strict > thresholds
+and first-best ties, and preserves partial facts after exceptions. V60, V137, routing,
+finalization, and physical-card resolution are untouched. Production edits are AI-only.
+Verification passed 172 focused MOVE tests and the full 1,349-test reactor with 0 failures, 0
+errors, and 26 skipped. Package, source-boundary, forbidden-symbol, artifact, mirror, exact-diff,
+and source-review gates passed; server jar SHA-256 is
+bc3c1ed9ae014c17c42e53a6a7e3c9be4844da4945cc68822a1f8577c43cdbff and packaged web.jar SHA-256
+is 19fa725adc9d434f1b89b558c6659a6c5efeec9b6bc109e64c53ab95025f5217. Runtime load and live-game
+proof remain separate gates. Revert the single V224 commit. See AI_CHANGELOG 2026-07-19.
+
   ==== V223 AI-ONLY MOVE HUNT-TARGET POLICY OWNER (2026-07-19, both bots) ====
 Shared MoveHuntTargetPolicy now owns the duplicated V29.12/V35 armed Dark Jedi target search:
 Vader/Tyranus/Dooku title fallbacks, fail-open Dark Jedi classification, current opponent power,
