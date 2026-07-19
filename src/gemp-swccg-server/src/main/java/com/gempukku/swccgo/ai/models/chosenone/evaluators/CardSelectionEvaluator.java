@@ -179,6 +179,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         PolicyOperationAdapter.apply(action, ledger);
     }
 
+    private void applyDeployPilotPolicy(EvaluatedAction action,
+                                        PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "deploy-pilot-selection-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
     private static PullSelectionCandidateFacts.CloudCitySite pullCloudCitySite(
             String titleLower) {
         if (titleLower.contains("upper walkway")
@@ -4620,36 +4628,33 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 continue;
                             }
 
-                            // Prefer high-ability pilots
+                            Float pilotAbility = null;
+                            Float pilotPower = null;
+                            Float pilotDeployCost = null;
+
+                            // Adapter retains the exact blueprint read order.
                             if (blueprint.hasAbilityAttribute()) {
-                                Float ability = blueprint.getAbility();
-                                if (ability != null) {
-                                    float abilityScore = ability * 10.0f;
-                                    action.addReasoning("Ability " + ability.intValue(), abilityScore);
-                                }
+                                pilotAbility = blueprint.getAbility();
                             }
 
-                            // Prefer pilots that add power
                             if (blueprint.hasPowerAttribute()) {
-                                Float power = blueprint.getPower();
-                                if (power != null && power >= 3) {
-                                    action.addReasoning("Good power bonus (" + power.intValue() + ")", 20.0f);
-                                }
+                                pilotPower = blueprint.getPower();
                             }
 
-                            // Lower deploy cost is better
                             // V43: Wrap in try-catch — some cards (Interrupts, Effects like
                             // "Hidden Weapons") don't support getDeployCost() and throw
                             // UnsupportedOperationException, crashing the cleanup thread.
                             try {
-                                Float deployCost = blueprint.getDeployCost();
-                                if (deployCost != null) {
-                                    float costScore = Math.max(0, 30 - deployCost * 5);
-                                    action.addReasoning("Deploy cost " + deployCost.intValue(), costScore);
-                                }
+                                pilotDeployCost = blueprint.getDeployCost();
                             } catch (UnsupportedOperationException e) {
                                 // Card type doesn't support deployCost — skip
                             }
+
+                            applyDeployPilotPolicy(action,
+                                DeployPilotShipPolicy.evaluatePilotCandidate(
+                                    new DeployPilotShipPolicy.PilotCandidateFacts(
+                                        action.getActionId(), pilotAbility,
+                                        pilotPower, pilotDeployCost)));
                         }
                     }
                 } catch (NumberFormatException e) {
@@ -4722,61 +4727,64 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (blueprint != null) {
                             action.setDisplayText("Deploy pilot " + (title != null ? title : cardId));
 
-                            // STAR DESTROYER GUARD: Only Imperial/First Order pilots belong
-                            // on Star Destroyers. Block others to prevent failed searches.
+                            boolean imperialPilot = false;
+                            boolean firstOrderPilot = false;
                             if (isStarDestroyerDeploy) {
-                                boolean isImperial = blueprint.hasIcon(com.gempukku.swccgo.common.Icon.IMPERIAL);
-                                boolean isFirstOrder = blueprint.hasIcon(com.gempukku.swccgo.common.Icon.FIRST_ORDER);
-                                if (!isImperial && !isFirstOrder) {
-                                    action.setScore(-500.0f);
-                                    action.addReasoning("SD BLOCKED: non-Imperial/FO can't pilot Star Destroyers!", -500.0f);
-                                    logger.warn("🚫 SD GUARD: Blocking {} for Star Destroyer — not Imperial or FO", title);
-                                    actions.add(action);
-                                    continue;
-                                } else {
-                                    action.addReasoning("SD: Imperial/First Order pilot — valid!", 100.0f);
-                                }
+                                imperialPilot = blueprint.hasIcon(Icon.IMPERIAL);
+                                firstOrderPilot = blueprint.hasIcon(Icon.FIRST_ORDER);
+                            }
+                            DeployPilotShipPolicy.Evaluation guardEvaluation =
+                                DeployPilotShipPolicy.evaluateSimultaneousPilotGuard(
+                                    new DeployPilotShipPolicy.SimultaneousPilotGuardFacts(
+                                        action.getActionId(), isStarDestroyerDeploy,
+                                        imperialPilot, firstOrderPilot));
+                            if (guardEvaluation.resetScore() != null) {
+                                action.setScore(guardEvaluation.resetScore());
+                            }
+                            applyDeployPilotPolicy(action, guardEvaluation.result());
+                            if (guardEvaluation.adapterStep()
+                                    == DeployPilotShipPolicy.AdapterStep.CONTINUE_CANDIDATE) {
+                                logger.warn("🚫 SD GUARD: Blocking {} for Star Destroyer — not Imperial or FO", title);
+                                actions.add(action);
+                                continue;
                             }
 
-                            // Check if this is the planned pilot
-                            if (plannedPilotBlueprintId != null && blueprintId != null &&
-                                blueprintId.equals(plannedPilotBlueprintId)) {
-                                action.addReasoning("PLANNED pilot for " + shipName, 200.0f);
-                                logger.info("   ✅ {} is the PLANNED pilot (+200)", title);
-                            } else {
-                                // Score based on pilot quality
+                            boolean plannedPilot = plannedPilotBlueprintId != null
+                                && blueprintId != null
+                                && blueprintId.equals(plannedPilotBlueprintId);
+                            Float pilotDeployCost = null;
+                            Float pilotAbility = null;
+                            boolean matchingPilot = false;
 
-                                // Lower deploy cost is better (we're paying extra for this)
-                                // V43: try-catch for cards that don't support getDeployCost()
+                            if (!plannedPilot) {
+                                // V43: preserve the fail-open deploy-cost read.
                                 try {
-                                    Float deployCost = blueprint.getDeployCost();
-                                    if (deployCost != null) {
-                                        float costScore = Math.max(0, 30 - deployCost * 5);
-                                        action.addReasoning("Deploy cost " + deployCost.intValue(), costScore);
-                                    }
+                                    pilotDeployCost = blueprint.getDeployCost();
                                 } catch (UnsupportedOperationException e) {
                                     // Card type doesn't support deployCost — skip
                                 }
 
-                                // Higher ability is better for piloting
                                 if (blueprint.hasAbilityAttribute()) {
-                                    Float ability = blueprint.getAbility();
-                                    if (ability != null) {
-                                        float abilityScore = ability * 10.0f;
-                                        action.addReasoning("Ability " + ability.intValue(), abilityScore);
-                                    }
+                                    pilotAbility = blueprint.getAbility();
                                 }
 
-                                // Check for matching pilot (pilot name contains ship name)
                                 if (title != null && shipName != null) {
                                     String titleLower = title.toLowerCase();
                                     String shipNameLower = shipName.toLowerCase().replace("•", "").trim();
-                                    if (titleLower.contains(shipNameLower) ||
-                                        shipNameLower.contains(titleLower.replace(" ", ""))) {
-                                        action.addReasoning("Matching pilot for " + shipName + "!", 50.0f);
-                                        logger.info("   🎯 {} appears to be matching pilot for {}", title, shipName);
-                                    }
+                                    matchingPilot = titleLower.contains(shipNameLower)
+                                        || shipNameLower.contains(titleLower.replace(" ", ""));
                                 }
+                            }
+
+                            applyDeployPilotPolicy(action,
+                                DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(
+                                    new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
+                                        action.getActionId(), shipName, plannedPilot,
+                                        pilotDeployCost, pilotAbility, matchingPilot)));
+                            if (plannedPilot) {
+                                logger.info("   ✅ {} is the PLANNED pilot (+200)", title);
+                            } else if (matchingPilot) {
+                                logger.info("   🎯 {} appears to be matching pilot for {}", title, shipName);
                             }
                         }
                     }

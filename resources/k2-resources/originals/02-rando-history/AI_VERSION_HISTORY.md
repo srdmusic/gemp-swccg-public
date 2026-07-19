@@ -7646,3 +7646,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and mirrored adapters. Runtime reload and live-game proof remain pending. Quarantined commits
     2219f4760 and descendant 0b4045805 are superseded references and must never land. AI source
     only; no GEMP engine or player-decision changes.
+
+  ==== V270 (2026-07-19): consolidate DEPLOY pilot-candidate scoring ====
+    Shared AI-only DeployPilotShipPolicy now owns generic pilot ability, power, and deploy-cost
+    ranking plus simultaneous-pilot Star Destroyer eligibility, planned-pilot priority, and
+    matching-pilot ranking. Both bot adapters retain decision and phase classification, AMSD
+    handling, GameState, card, blueprint, plan, icon, cost, ability, title, and matching reads;
+    exact logs; catches; score reset; candidate control; and lazy read boundaries. Generic scoring
+    remains ability then power then cost. Invalid Star Destroyer pilots still set -500, add -500,
+    and continue before plan or quality reads; valid pilots get +100 first. Planned pilots get only
+    +200; unplanned pilots keep cost, ability, matching order. Focused policy/source/parity
+    18/0/0/0, DEPLOY-named 200/0/0/0, full reactor 1811/0/0/26, exact mirror parity, source-order
+    gates, AI-only scope, diff check, and clean package passed. Server jar SHA-256
+    4d0ba1ffaf3c0c14b9f534dba4d74026d8a160ec46fa1afba9c24ca4e1d4a888 and web jar SHA-256
+    212def7df852d489551833900db3677ed3163ec8b902694130acbe5a1f304c14 contain the shared owner
+    and both adapters. Runtime reload and live-game proof remain separate deployment gates.
+    Clean V270 is based on clean V269 75ec7cfcf; quarantined reference 4397472ed and its ancestors
+    remain reference-only. AI source only; no GEMP engine or player-decision changes.

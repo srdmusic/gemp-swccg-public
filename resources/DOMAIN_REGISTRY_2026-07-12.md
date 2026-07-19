@@ -187,6 +187,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 ### deploy-attach — 25 rules
 *Weapons, devices, pilots, ships: attach/aboard gates.* Target owner: DEPLOY pipeline / DEPLOY-3 (gate = V158; weapon pulls also gated by V185/V120).
 
+**V270 owner note:** `DeployPilotShipPolicy` now also owns the untagged generic pilot-candidate quality ladder and simultaneous-pilot Star Destroyer guard, plan, and matching ladder. Both `CardSelectionEvaluator` mirrors remain fact and control adapters; AMSD remains independently PULL-owned. The legacy Star Destroyer block is still an additive set-then-add score costume, not a hard-veto operation.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V30 |  | DEPLOY-3 | DE:4206 | BANDED | +/-1000 tier (+1000 pair deploy, +300 pilot-onto-ship, -500 AMSD soft-prefer) | Matching pilot+ship deploy-together | LIVE |

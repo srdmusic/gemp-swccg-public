@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import java.util.List;
@@ -151,6 +152,82 @@ public class DeployPilotShipPolicyTest {
                                 true, true, true, false)).operations(),
                 new String[]{"pilot-base", "V40.1"},
                 new float[]{10.0f, 300.0f});
+    }
+
+    @Test
+    public void genericPilotCandidatePreservesAbilityPowerCostOrder() {
+        List<PolicyOperation> operations = DeployPilotShipPolicy.evaluatePilotCandidate(
+                new DeployPilotShipPolicy.PilotCandidateFacts(
+                        "a", 3.0f, 4.0f, 2.0f)).operations();
+
+        assertRules(operations,
+                new String[]{"pilot-ability", "pilot-power", "pilot-deploy-cost"},
+                new float[]{30.0f, 20.0f, 20.0f});
+        assertEquals("Ability 3", operations.get(0).reason());
+        assertEquals("Good power bonus (4)", operations.get(1).reason());
+        assertEquals("Deploy cost 2", operations.get(2).reason());
+
+        List<PolicyOperation> zeroCostScore =
+                DeployPilotShipPolicy.evaluatePilotCandidate(
+                        new DeployPilotShipPolicy.PilotCandidateFacts(
+                                "a", null, 2.0f, 8.0f)).operations();
+        assertRules(zeroCostScore,
+                new String[]{"pilot-deploy-cost"}, new float[]{0.0f});
+    }
+
+    @Test
+    public void simultaneousStarDestroyerGuardPreservesSetThenAddContract() {
+        DeployPilotShipPolicy.Evaluation blocked =
+                DeployPilotShipPolicy.evaluateSimultaneousPilotGuard(
+                        new DeployPilotShipPolicy.SimultaneousPilotGuardFacts(
+                                "a", true, false, false));
+
+        assertEquals(DeployPilotShipPolicy.AdapterStep.CONTINUE_CANDIDATE,
+                blocked.adapterStep());
+        assertEquals(-500.0f, blocked.resetScore(), 0.0f);
+        assertRules(blocked.result().operations(),
+                new String[]{"pilot-sd-block"}, new float[]{-500.0f});
+        assertEquals(TraceOutputKind.VETO,
+                blocked.result().operations().get(0).outputKind());
+
+        DeployPilotShipPolicy.Evaluation valid =
+                DeployPilotShipPolicy.evaluateSimultaneousPilotGuard(
+                        new DeployPilotShipPolicy.SimultaneousPilotGuardFacts(
+                                "a", true, true, false));
+        assertEquals(DeployPilotShipPolicy.AdapterStep.FALL_THROUGH,
+                valid.adapterStep());
+        assertEquals(null, valid.resetScore());
+        assertRules(valid.result().operations(),
+                new String[]{"pilot-sd-valid"}, new float[]{100.0f});
+    }
+
+    @Test
+    public void simultaneousPlannedPilotSuppressesQualityAndMatching() {
+        List<PolicyOperation> operations =
+                DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(
+                        new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
+                                "a", "Executor", true,
+                                1.0f, 6.0f, true)).operations();
+
+        assertRules(operations,
+                new String[]{"pilot-plan-match"}, new float[]{200.0f});
+        assertEquals("PLANNED pilot for Executor", operations.get(0).reason());
+    }
+
+    @Test
+    public void simultaneousUnplannedPilotPreservesCostAbilityMatchingOrder() {
+        List<PolicyOperation> operations =
+                DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(
+                        new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
+                                "a", "Executor", false,
+                                2.0f, 4.0f, true)).operations();
+
+        assertRules(operations,
+                new String[]{"pilot-deploy-cost", "pilot-ability", "pilot-ship-match"},
+                new float[]{20.0f, 40.0f, 50.0f});
+        assertEquals("Deploy cost 2", operations.get(0).reason());
+        assertEquals("Ability 4", operations.get(1).reason());
+        assertEquals("Matching pilot for Executor!", operations.get(2).reason());
     }
 
     private static void assertRules(List<PolicyOperation> operations,

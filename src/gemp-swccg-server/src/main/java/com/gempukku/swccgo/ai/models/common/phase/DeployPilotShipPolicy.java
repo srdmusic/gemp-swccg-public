@@ -12,6 +12,19 @@ import java.util.Objects;
 
 /** Pure DEPLOY-3 pilot, ship, and vehicle scoring over adapter-produced facts. */
 public final class DeployPilotShipPolicy {
+    public enum AdapterStep {
+        FALL_THROUGH,
+        CONTINUE_CANDIDATE
+    }
+
+    public record Evaluation(PolicyResult result, AdapterStep adapterStep,
+                             Float resetScore) {
+        public Evaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(adapterStep, "adapterStep");
+        }
+    }
+
     private DeployPilotShipPolicy() {
     }
 
@@ -214,6 +227,91 @@ public final class DeployPilotShipPolicy {
         return new PolicyResult("DEPLOY_ASSET_TAIL_POLICY", operations);
     }
 
+    public static PolicyResult evaluatePilotCandidate(PilotCandidateFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(3);
+        addPilotQuality(operations, facts.actionId(), facts.ability(),
+                facts.power(), facts.deployCost());
+        return new PolicyResult("DEPLOY_PILOT_CANDIDATE_POLICY", operations);
+    }
+
+    public static Evaluation evaluateSimultaneousPilotGuard(
+            SimultaneousPilotGuardFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (facts.starDestroyerDeploy()
+                && !facts.imperialPilot()
+                && !facts.firstOrderPilot()) {
+            addAttach(operations, facts.actionId(), "pilot-sd-block",
+                    TraceOutputKind.VETO, -500.0f,
+                    "SD BLOCKED: non-Imperial/FO can't pilot Star Destroyers!");
+            return new Evaluation(
+                    new PolicyResult("DEPLOY_SIMULTANEOUS_PILOT_GUARD_POLICY", operations),
+                    AdapterStep.CONTINUE_CANDIDATE, -500.0f);
+        }
+
+        if (facts.starDestroyerDeploy()) {
+            addAttach(operations, facts.actionId(), "pilot-sd-valid",
+                    TraceOutputKind.ORDERING, 100.0f,
+                    "SD: Imperial/First Order pilot — valid!");
+        }
+
+        return new Evaluation(
+                new PolicyResult("DEPLOY_SIMULTANEOUS_PILOT_GUARD_POLICY", operations),
+                AdapterStep.FALL_THROUGH, null);
+    }
+
+    public static PolicyResult evaluateSimultaneousPilotChoice(
+            SimultaneousPilotChoiceFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(3);
+        if (facts.plannedPilot()) {
+            addAttach(operations, facts.actionId(), "pilot-plan-match",
+                    TraceOutputKind.ORDERING, 200.0f,
+                    "PLANNED pilot for " + facts.shipName());
+        } else {
+            if (facts.deployCost() != null) {
+                addAttach(operations, facts.actionId(), "pilot-deploy-cost",
+                        TraceOutputKind.ORDERING,
+                        Math.max(0.0f, 30.0f - facts.deployCost() * 5.0f),
+                        "Deploy cost " + facts.deployCost().intValue());
+            }
+            if (facts.ability() != null) {
+                addAttach(operations, facts.actionId(), "pilot-ability",
+                        TraceOutputKind.ORDERING, facts.ability() * 10.0f,
+                        "Ability " + facts.ability().intValue());
+            }
+            if (facts.matchingPilot()) {
+                addAttach(operations, facts.actionId(), "pilot-ship-match",
+                        TraceOutputKind.ORDERING, 50.0f,
+                        "Matching pilot for " + facts.shipName() + "!");
+            }
+        }
+        return new PolicyResult("DEPLOY_SIMULTANEOUS_PILOT_CHOICE_POLICY", operations);
+    }
+
+    private static void addPilotQuality(List<PolicyOperation> operations,
+                                        String actionId, Float ability,
+                                        Float power, Float deployCost) {
+        if (ability != null) {
+            addAttach(operations, actionId, "pilot-ability",
+                    TraceOutputKind.ORDERING, ability * 10.0f,
+                    "Ability " + ability.intValue());
+        }
+        if (power != null && power >= 3.0f) {
+            addAttach(operations, actionId, "pilot-power",
+                    TraceOutputKind.ORDERING, 20.0f,
+                    "Good power bonus (" + power.intValue() + ")");
+        }
+        if (deployCost != null) {
+            addAttach(operations, actionId, "pilot-deploy-cost",
+                    TraceOutputKind.ORDERING,
+                    Math.max(0.0f, 30.0f - deployCost * 5.0f),
+                    "Deploy cost " + deployCost.intValue());
+        }
+    }
+
     public record MatchingPilotFacts(String actionId, String pilotTitle,
                                      String matchingShipTitle,
                                      boolean matchingShipInHand,
@@ -302,6 +400,30 @@ public final class DeployPilotShipPolicy {
         public AssetTailFacts {
             Objects.requireNonNull(actionId, "actionId");
             cardTitle = cardTitle == null ? "" : cardTitle;
+        }
+    }
+
+    public record PilotCandidateFacts(String actionId, Float ability,
+                                      Float power, Float deployCost) {
+        public PilotCandidateFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record SimultaneousPilotGuardFacts(
+            String actionId, boolean starDestroyerDeploy,
+            boolean imperialPilot, boolean firstOrderPilot) {
+        public SimultaneousPilotGuardFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record SimultaneousPilotChoiceFacts(
+            String actionId, String shipName, boolean plannedPilot,
+            Float deployCost, Float ability, boolean matchingPilot) {
+        public SimultaneousPilotChoiceFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            shipName = shipName == null ? "null" : shipName;
         }
     }
 
