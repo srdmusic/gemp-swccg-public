@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.common.CardCategory;
@@ -725,11 +727,6 @@ public class MoveEvaluator extends ActionEvaluator {
                     boolean dtfActive = context.getForceReserveFacts().dtfActive;
                     boolean grabberNeedsForce = context.getForceReserveFacts().grabberUnused;
 
-                    // Calculate total Force we should reserve
-                    int reserveNeeded = 0;
-                    if (dtfActive) reserveNeeded += 1;       // DTF interrupt tax
-                    if (grabberNeedsForce) reserveNeeded += 1; // Grabber activation
-
                     // Check hand for critical interrupts (Ghhhk, etc.)
                     boolean hasCriticalInterrupt = false;
                     java.util.List<PhysicalCard> hand = gameState.getHand(playerId);
@@ -747,19 +744,23 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // Apply penalties based on Force situation
-                    // If we have things that need Force (DTF, grabber, interrupts), save it
-                    if (reserveNeeded > 0 && forcePile <= reserveNeeded) {
-                        float penalty = -100.0f;
-                        if (hasCriticalInterrupt) penalty = -150.0f; // Even worse if we have Ghhhk
-                        action.addReasoning(String.format(
-                            "V29 FORCE RESERVE: Only %d Force, need %d (DTF=%s, grabber=%s) — save Force!",
-                            forcePile, reserveNeeded, dtfActive, grabberNeedsForce), penalty);
+                    MoveForceEconomyPolicy.Evaluation reserveEvaluation =
+                        MoveForceEconomyPolicy.reserve(actionId, forcePile,
+                            dtfActive, grabberNeedsForce, hasCriticalInterrupt);
+                    PolicyContributionLedger reserveLedger = new PolicyContributionLedger(
+                        "move-force-reserve-" + actionId);
+                    reserveLedger.register(reserveEvaluation.result());
+                    PolicyOperationAdapter.apply(action, reserveLedger);
+                    if (reserveEvaluation.mode()
+                            == MoveForceEconomyPolicy.Mode.HARD_RESERVE) {
+                        float penalty = reserveEvaluation.result().operations().get(0).delta();
                         logger.warn("V29 MOVE RESERVE: {} Force left, need {} (DTF={}, grabber={}, interrupt={}) — penalty {}",
-                            forcePile, reserveNeeded, dtfActive, grabberNeedsForce, hasCriticalInterrupt, (int)penalty);
-                    } else if (reserveNeeded > 0 && forcePile <= reserveNeeded + 1) {
-                        action.addReasoning("V29 FORCE RESERVE: Low Force — move cautiously", -60.0f);
-                        logger.info("V29 MOVE RESERVE: {} Force, need {} — mild penalty", forcePile, reserveNeeded);
+                            forcePile, reserveEvaluation.reserveNeeded(), dtfActive,
+                            grabberNeedsForce, hasCriticalInterrupt, (int)penalty);
+                    } else if (reserveEvaluation.mode()
+                            == MoveForceEconomyPolicy.Mode.LOW_RESERVE) {
+                        logger.info("V29 MOVE RESERVE: {} Force, need {} — mild penalty",
+                            forcePile, reserveEvaluation.reserveNeeded());
                     }
                 } catch (Exception e) {
                     logger.debug("V29 MOVE RESERVE: Error checking force: {}", e.getMessage());
@@ -1925,10 +1926,16 @@ public class MoveEvaluator extends ActionEvaluator {
                         int maintenanceCost = context.getForceReserveFacts().maintenanceObligation;
                         if (maintenanceCost > 0) {
                             int forcePile = gameState.getForcePileSize(playerId);
-                            if (forcePile <= maintenanceCost + 1) {
-                                action.addReasoning(String.format(
-                                    "V27 MAINTENANCE: Need %d Force for upkeep, only %d left — DON'T waste Force moving!",
-                                    maintenanceCost, forcePile), -80.0f);
+                            MoveForceEconomyPolicy.Evaluation maintenanceEvaluation =
+                                MoveForceEconomyPolicy.maintenance(
+                                    actionId, maintenanceCost, forcePile);
+                            PolicyContributionLedger maintenanceLedger =
+                                new PolicyContributionLedger(
+                                    "move-maintenance-" + actionId);
+                            maintenanceLedger.register(maintenanceEvaluation.result());
+                            PolicyOperationAdapter.apply(action, maintenanceLedger);
+                            if (maintenanceEvaluation.mode()
+                                    == MoveForceEconomyPolicy.Mode.MAINTENANCE_CONSERVE) {
                                 logger.warn("V27 MAINTENANCE MOVE BLOCK: {} Force in pile, need {} for maintenance — penalizing move!",
                                     forcePile, maintenanceCost);
                             }

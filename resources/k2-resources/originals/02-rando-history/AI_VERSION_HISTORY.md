@@ -1,3 +1,14 @@
+  ==== V215 AI-ONLY MOVE FORCE-ECONOMY POLICY OWNER (2026-07-18, both bots) ====
+Shared MoveForceEconomyPolicy now owns the duplicated V29 move-reserve and V27 move-maintenance score
+bodies. Both bot adapters keep the original Force-pile reads, shared DTF/grabber/maintenance facts,
+critical-interrupt scan, logging, catches, and exact additive positions. V29 remains -100, -150 with a
+critical interrupt, or -60 at the mild boundary; V27 remains -80 at maintenance cost plus one or lower.
+No MOVE ladder, routing, objective, physical-card resolution, movement helper, or engine source changed.
+Verification passed 14 focused tests and the full 1,191-test affected reactor with 0 failures, 0 errors,
+and 26 skipped. Package and source-boundary gates passed; server jar SHA-256 is
+978f51d1cb00f4f77a5c62cc8fcafc256e58c985023964add000c25636e90cb0. Runtime load and live-game
+proof remain separate gates. Revert the single V215 commit. See AI_CHANGELOG 2026-07-18.
+
   ==== V214 AI-ONLY DEPLOY OBJECTIVE-PROGRESS FACTS (2026-07-18, both bots) ====
 
 Shared ObjectiveAnalyzer now assesses one exact physical deploy child against the active physical objective and
