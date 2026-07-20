@@ -7,10 +7,10 @@ import java.util.*;
 
 // ═══════════════════════════════════════════════════════════
 // ═══ DEAD CODE — DO NOT WIRE (reorg 2026-07-06) ═══
-// Owns: nothing live. This class is instantiated in RandoCalAi and threaded through DecisionContext
-// plumbing, but the LIVE objective brain is strategy/ObjectiveAnalyzer.java (SVC-INTEL).
+// Owns: nothing live. V295 retired its inert RandoCalAi and DecisionContext wiring;
+// the LIVE objective brain is strategy/ObjectiveAnalyzer.java (SVC-INTEL).
 // Do NOT add rules here, do NOT wire new callers, do NOT delete (revert path / history only).
-// Verified dead 2026-06-23 (3-K2 consolidation); re-confirmed 2026-07-06.
+// Verified dead 2026-06-23; re-confirmed 2026-07-06 and retired 2026-07-19.
 // Cross-refs: SVC-INTEL (ObjectiveAnalyzer). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
 // ═══════════════════════════════════════════════════════════
 /**

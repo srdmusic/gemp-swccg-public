@@ -57,7 +57,7 @@ import com.gempukku.swccgo.game.state.GameState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
+// V295 RETIRED: import java.util.Random;
 
 /**
  * Evaluates CARD_SELECTION and ARBITRARY_CARDS decisions.
@@ -157,7 +157,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         "vengeance of the dark prince"  // contains "vengeance" — unrelated card reference
     };
 
-    private final Random random = new Random();
+    // V295 RETIRED (unused, zero reads): private final Random random = new Random();
 
     public CardSelectionEvaluator() {
         super("CardSelection");

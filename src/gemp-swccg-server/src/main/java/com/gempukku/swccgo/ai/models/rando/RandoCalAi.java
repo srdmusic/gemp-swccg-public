@@ -11,7 +11,7 @@ import com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
-import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
+// V295 RETIRED: import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
@@ -51,7 +51,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
+// V295 RETIRED: import java.util.Random;
 import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
@@ -84,8 +84,8 @@ public class RandoCalAi extends HeuristicAiBase {
     // Strategy controller for game-wide strategy
     private final StrategyController strategyController;
 
-    // Objective handler for starting card requirements
-    private final ObjectiveHandler objectiveHandler;
+    // V295 RETIRED: private final ObjectiveHandler objectiveHandler;
+    // Objective intelligence for phase and flip-aware scoring
     private final ObjectiveAnalyzer objectiveAnalyzer;
 
     // Shield strategy for defensive shields
@@ -112,7 +112,7 @@ public class RandoCalAi extends HeuristicAiBase {
     private SwccgGame currentGame;
     private final ActivateDecisionRouting.AmountLatch activationAmountLatch =
         new ActivateDecisionRouting.AmountLatch();
-    private Random random = new Random();
+    // V295 RETIRED: private Random random = new Random();
 
     // State tracking
     private String currentGameId;
@@ -264,7 +264,7 @@ public class RandoCalAi extends HeuristicAiBase {
         this.combinedEvaluator = new CombinedEvaluator();
         this.decisionTracker = new DecisionTracker();
         this.strategyController = new StrategyController();
-        this.objectiveHandler = new ObjectiveHandler();
+        // V295 RETIRED: this.objectiveHandler = new ObjectiveHandler();
         this.objectiveAnalyzer = new ObjectiveAnalyzer();
         this.shieldStrategy = new ShieldStrategy();
         this.deployPhasePlanner = new DeployPhasePlanner();
@@ -307,7 +307,7 @@ public class RandoCalAi extends HeuristicAiBase {
         // Test 2: Verify strategy components
         LOG.info("🔧 Test 2: Strategy Components");
         LOG.info("   ✅ StrategyController: {}", strategyController != null ? "OK" : "MISSING");
-        LOG.info("   ✅ ObjectiveHandler: {}", objectiveHandler != null ? "OK" : "MISSING");
+        // V295 RETIRED: LOG.info("   ✅ ObjectiveHandler: {}", objectiveHandler != null ? "OK" : "MISSING");
         LOG.info("   ✅ ShieldStrategy: {}", shieldStrategy != null ? "OK" : "MISSING");
         LOG.info("   ✅ DeployPhasePlanner: {}", deployPhasePlanner != null ? "OK" : "MISSING");
 
@@ -328,7 +328,7 @@ public class RandoCalAi extends HeuristicAiBase {
         LOG.info("   ✅ DEPLOY_THRESHOLD: {}", RandoConfig.DEPLOY_THRESHOLD);
         LOG.info("   ✅ BATTLE_FAVORABLE_THRESHOLD: {}", RandoConfig.BATTLE_FAVORABLE_THRESHOLD);
         LOG.info("   ✅ BATTLE_DANGER_THRESHOLD: {}", RandoConfig.BATTLE_DANGER_THRESHOLD);
-        LOG.info("   ✅ CHAOS_PERCENT: {}", RandoConfig.CHAOS_PERCENT);
+        // V295 RETIRED: LOG.info("   ✅ CHAOS_PERCENT: {}", RandoConfig.CHAOS_PERCENT);
         LOG.info("   ✅ CHAT_ENABLED: {}", RandoConfig.CHAT_ENABLED);
 
         LOG.info("========================================");
@@ -498,12 +498,9 @@ public class RandoCalAi extends HeuristicAiBase {
         return strategyController;
     }
 
-    /**
-     * Get the objective handler for starting card selection.
-     */
-    public ObjectiveHandler getObjectiveHandler() {
-        return objectiveHandler;
-    }
+    // V295 RETIRED: public ObjectiveHandler getObjectiveHandler() {
+    // V295 RETIRED:     return objectiveHandler;
+    // V295 RETIRED: }
 
     /**
      * Get the shield strategy for defensive shield decisions.
@@ -915,57 +912,53 @@ public class RandoCalAi extends HeuristicAiBase {
                 }
             }
 
-            // Maybe apply chaos (random action)
-            // CRITICAL: Never use chaos mode during DEPLOY phase - deploy decisions are strategic
-            // and random deploys can waste resources or violate the deployment plan
             Phase currentPhase = gameState != null ? gameState.getCurrentPhase() : null;
-            boolean isSafeForChaos = currentPhase != Phase.DEPLOY && currentPhase != Phase.BATTLE;
-            if (isSafeForChaos && shouldApplyChaos()) {
-                RandoLogger.debug("Chaos mode: selecting random action");
-                // TRACE ORACLE V2: explicit chaos route (recorded AFTER shouldApplyChaos()
-                // consumed its one RNG draw — the trace never draws).
+            // V295: the disabled 0% chaos bypass was retired. Every decision now enters
+            // the evaluator lane before the existing heuristic fallback.
+            // V295 RETIRED: boolean isSafeForChaos = currentPhase != Phase.DEPLOY
+            // V295 RETIRED:     && currentPhase != Phase.BATTLE;
+            // V295 RETIRED: if (isSafeForChaos && shouldApplyChaos()) {
+            // V295 RETIRED:     RandoLogger.debug("Chaos mode: selecting random action");
+            // V295 RETIRED:     if (traceOpened) {
+            // V295 RETIRED:         TraceSession.recordRoute(TraceRoute.CHAOS_FALLBACK,
+            // V295 RETIRED:             "chaos gate passed (phase=" + currentPhase
+            // V295 RETIRED:                 + ", outside deploy/battle)", null);
+            // V295 RETIRED:         TraceSession.recordEvaluatorLaneNotApplicable(
+            // V295 RETIRED:             "chaos fallback: heuristic base bypassed the evaluator lane");
+            // V295 RETIRED:     }
+            // V295 RETIRED:     result = super.decide(playerId, decision, gameState);
+            // V295 RETIRED: } else {
+            String evaluatorResult = tryEvaluators(
+                playerId, decision, gameState, activationAmountDecision);
+            if (evaluatorResult != null) {
+                // TRACE ORACLE V2: normal CombinedEvaluator route.
                 if (traceOpened) {
-                    TraceSession.recordRoute(TraceRoute.CHAOS_FALLBACK,
-                        "chaos gate passed (phase=" + currentPhase + ", outside deploy/battle)", null);
-                    // GATE P0-3: chaos bypasses the evaluator lane — facts explicitly n/a.
+                    TraceSession.recordRoute(TraceRoute.COMBINED_EVALUATOR,
+                        "evaluator lane handled decisionType=" + decisionType, null);
+                }
+                result = evaluatorResult;
+            } else {
+                // Fall back to keyword-based heuristics
+                LOG.debug("Evaluators returned null, falling back to heuristics");
+                // TRACE ORACLE V2: explicit heuristic-fallback route (no invisible side exit).
+                if (traceOpened) {
+                    TraceSession.recordRoute(TraceRoute.HEURISTIC_FALLBACK,
+                        "no evaluator handled decisionType=" + decisionType, null);
+                    // GATE P0-3: explicit n/a — a per-fact no-op when the evaluator
+                    // lane DID run (and record its facts) before declining.
                     TraceSession.recordEvaluatorLaneNotApplicable(
-                        "chaos fallback: heuristic base bypassed the evaluator lane");
+                        "heuristic fallback: no evaluator lane facts for this decision");
                 }
                 result = super.decide(playerId, decision, gameState);
-            } else {
-                // Try evaluator system for supported decision types
-                String evaluatorResult = tryEvaluators(
-                    playerId, decision, gameState, activationAmountDecision);
-                if (evaluatorResult != null) {
-                    // TRACE ORACLE V2: normal CombinedEvaluator route.
-                    if (traceOpened) {
-                        TraceSession.recordRoute(TraceRoute.COMBINED_EVALUATOR,
-                            "evaluator lane handled decisionType=" + decisionType, null);
-                    }
-                    result = evaluatorResult;
-                } else {
-                    // Fall back to keyword-based heuristics
-                    LOG.debug("Evaluators returned null, falling back to heuristics");
-                    // TRACE ORACLE V2: explicit heuristic-fallback route (no invisible side exit).
-                    if (traceOpened) {
-                        TraceSession.recordRoute(TraceRoute.HEURISTIC_FALLBACK,
-                            "no evaluator handled decisionType=" + decisionType, null);
-                        // GATE P0-3: explicit n/a — a per-fact no-op when the evaluator
-                        // lane DID run (and record its facts) before declining.
-                        TraceSession.recordEvaluatorLaneNotApplicable(
-                            "heuristic fallback: no evaluator lane facts for this decision");
-                    }
-                    result = super.decide(playerId, decision, gameState);
-                    // V191 (2026-07-06): TOP-N breadcrumb for the fallback path.
-                    // The per-candidate score loop (scoreAction + penalty stack)
-                    // lives in HeuristicAiBase.decide — private penalties there
-                    // make a faithful top-5 impossible from this subclass without
-                    // duplicating scoring, so log the path + final pick only.
-                    // Instrumentation only: zero scoring changes.
-                    LOG.warn("V191 TOPN: {} phase={} :: fallback-heuristic picked='{}' (top-5 n/a: pick loop in HeuristicAiBase)",
-                        decision.getDecisionType(), currentPhase,
-                        result != null ? result : "(pass)");
-                }
+                // V191 (2026-07-06): TOP-N breadcrumb for the fallback path.
+                // The per-candidate score loop (scoreAction + penalty stack)
+                // lives in HeuristicAiBase.decide — private penalties there
+                // make a faithful top-5 impossible from this subclass without
+                // duplicating scoring, so log the path + final pick only.
+                // Instrumentation only: zero scoring changes.
+                LOG.warn("V191 TOPN: {} phase={} :: fallback-heuristic picked='{}' (top-5 n/a: pick loop in HeuristicAiBase)",
+                    decision.getDecisionType(), currentPhase,
+                    result != null ? result : "(pass)");
             }
 
             // === SAFETY LAYER 1: Emergency Fallback ===
@@ -1511,7 +1504,7 @@ public class RandoCalAi extends HeuristicAiBase {
 
         // Set strategy components so evaluators can use them
         evalContext.setStrategyController(strategyController);
-        evalContext.setObjectiveHandler(objectiveHandler);
+        // V295 RETIRED: evalContext.setObjectiveHandler(objectiveHandler);
         evalContext.setObjectiveAnalyzer(objectiveAnalyzer);
 
         if (!objectiveAnalyzer.isAnalyzed() && currentGame != null && mySide != null) {
@@ -1579,7 +1572,7 @@ public class RandoCalAi extends HeuristicAiBase {
         // V194: game-scoped planning facts must not survive a rematch.
         if (this.currentGame != game) {
             activationAmountLatch.reset();
-            objectiveHandler.reset();
+            // V295 RETIRED: objectiveHandler.reset();
             objectiveAnalyzer.reset();
             deployPhasePlanner.reset();
             deckOracle.reset();
@@ -1953,7 +1946,7 @@ public class RandoCalAi extends HeuristicAiBase {
             // Reset and update strategy components with new side
             strategyController.setSide(mySide);
             strategyController.reset();
-            objectiveHandler.reset();
+            // V295 RETIRED: objectiveHandler.reset();
             objectiveAnalyzer.reset();
             shieldStrategy.setSide(mySide);
             shieldStrategy.reset();
@@ -2379,9 +2372,9 @@ public class RandoCalAi extends HeuristicAiBase {
         }
     }
 
-    private boolean shouldApplyChaos() {
-        return random.nextInt(100) < RandoConfig.CHAOS_PERCENT;
-    }
+    // V295 RETIRED: private boolean shouldApplyChaos() {
+    // V295 RETIRED:     return random.nextInt(100) < RandoConfig.CHAOS_PERCENT;
+    // V295 RETIRED: }
 
     // =========================================================================
     // Context Class

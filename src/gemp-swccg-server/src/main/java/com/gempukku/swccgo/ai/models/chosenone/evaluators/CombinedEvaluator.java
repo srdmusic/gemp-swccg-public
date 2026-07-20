@@ -14,7 +14,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+// V295 RETIRED: import java.util.Random;
 
 /**
  * Combines multiple evaluators to make a final decision.
@@ -43,7 +43,7 @@ public class CombinedEvaluator {
     }
 
     private final List<ActionEvaluator> evaluators;
-    private final Random random = new Random();
+    // V295 RETIRED (unused, zero reads): private final Random random = new Random();
     // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): per-decision trace sink.
     // Production default = NoOpTraceSink: no session is opened, EvaluatedAction's guards
     // short-circuit on the absent thread-local, and behavior/score bits/winner/V191 output

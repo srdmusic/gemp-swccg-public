@@ -171,6 +171,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V294 owner note:** `ControlActionPolicy` now also owns the final steal `+30` and Stardust/On The Edge `-50` utility leaves. Both action-text adapters retain exact recognition, first-match order, action insertion, and `ActionType.STEAL`; only the duplicate additive scalars moved.
 
+**V295 retirement note:** `ObjectiveAnalyzer` remains the only live objective intelligence owner. The unused `ObjectiveHandler` transport lifecycle, configured-0% chaos bypass, and zero-read evaluator RNG fields are retained only as V295 comment markers, with the two historical handler classes and `TraceRoute.CHAOS_FALLBACK` vocabulary preserved. Live blocked-response protection and every phase policy owner remain unchanged.
+
 **V283 owner note:** `BattleActionTextPolicy` and `BattleWeaponsPolicy` now also own the mirrored top-level BATTLE initiation, board-fallback, and fire-weapon score bands. Both bot coordinators retain phase/action recognition, guarded location and board observations, title matching, first-match control, fallback gating, and contribution placement. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
 **V284 owner note:** `ResponsePolicy` now also owns the mirrored fixed-score V184 when-deployed, V29.8 Sense redraw, V53b save-Jedi, react, cancel-own, and Houjix/Ghhhk action-text operations. Both `ActionTextEvaluator` adapters retain text recognition, all game observations, catches, action types, diagnostics, branch order, and contribution placement. The two Sense classifiers remain separate additive arms. This is an AI-only structural extraction; no engine metadata or candidate control moved.

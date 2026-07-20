@@ -8,7 +8,7 @@ import com.gempukku.swccgo.ai.models.common.decision.DecisionFacts;
  *
  * Constants mirror the ACTUAL runtime route map
  * (Handoffs/CODEX_RANDO_RUNTIME_ROUTE_MAP_2026-07-13.md stages 3-14): the five direct
- * interceptors, the chaos bypass, the normal CombinedEvaluator lane, the heuristic
+ * interceptors, the retired chaos vocabulary, the normal CombinedEvaluator lane, the heuristic
  * fallback, and the raw-noPass emergency. OBSERVATION ONLY: recording a route never
  * redirects control flow (route-map "Cutover order" step 1 binds absolutely).
  * Phase/window subroutes are ADDED here as they are introduced, never reused with
@@ -27,7 +27,7 @@ public enum TraceRoute {
      *  TheChosenOneAi lacks this branch (declared personality route per the
      *  V2 contract's minimum gate corpus). */
     V79B_PARSEC_CHOICE,
-    /** Chaos gate passed outside deploy/battle: heuristic base bypasses evaluators. */
+    /** V295 RETIRED: route vocabulary retained; its configured-0% call sites are retired. */
     CHAOS_FALLBACK,
     /** Normal lane: CombinedEvaluator handled the decision. */
     COMBINED_EVALUATOR,

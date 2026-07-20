@@ -22,8 +22,8 @@ public final class RandoConfig {
     /** Soft cap - start penalizing draws above this */
     public static final int HAND_SOFT_CAP = 12;
 
-    /** Random action chance (0-100) - adds some unpredictability */
-    public static final int CHAOS_PERCENT = 0;  // Reduced from 25% for better strategic play
+    /** V295 RETIRED: the configured-0% chaos bypass never owned a live decision. */
+    // public static final int CHAOS_PERCENT = 0;
 
     // =========================================================================
     // Deploy Strategy

@@ -8103,3 +8103,28 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     on V293 716d3efaa298649312d3fcd1aaeb77dcfadedff6. Nothing was pushed, deployed, or run in a game.
     AI source only; no engine or player-decision changes. Revert the single V294 commit; V293 and every
     earlier CONTROL owner remain independent.
+
+  ==== V295 (2026-07-19): retire inert AI scaffolding ====
+    Both AI entry points and DecisionContext mirrors now retain the dead ObjectiveHandler transport
+    lifecycle only as V295 comment markers: import, field, construction, startup log, public getter,
+    context injection, and resets. The two ObjectiveHandler classes remain packaged as explicitly marked
+    historical recovery references; ObjectiveAnalyzer remains the only live objective intelligence owner.
+
+    The configured-0% chaos bypass is likewise comment-only in both entry points and configs. Its dedicated
+    Random, startup log, helper, and route-recording call sites are retired together. The active path now
+    directly executes the same evaluator-then-heuristic branch that the constant-zero guard always selected.
+    TraceRoute.CHAOS_FALLBACK remains in the shared enum vocabulary with a V295 retired marker. Both
+    CardSelectionEvaluator and CombinedEvaluator mirrors also retain their zero-read Random imports and
+    fields only as V295 comments. Active personality, holiday, battle-prediction, and safety RNG owners stay live.
+
+    DecisionTracker.blockedResponses, turnBlockedActions, DecisionContext.blockedResponses, and evaluator
+    loop-protection checks remain untouched. offeredConcedeThisGame, finalization fixtures, V67 comments,
+    StrategyController, and all other residuals are deferred. No score, weight, classifier, action order,
+    response, phase route, GEMP observation, card rule, objective rule, engine decision, or player-choice
+    contract changed. Focused V295 source ownership passed 5/0/0/0; the clean full reactor passed
+    2046/0/0/26 across 284 suites; async packaging passed. Comment treatment, enum stability, active RNG,
+    blocked-response preservation, normalized mirrors, forbidden exclusions, AI-only scope, and diff gates
+    passed. Server jar SHA-256 is a4b00f7d8f2314ef22903e43e867c13f645a3c19f5462c5ba5b848418c89fe5a
+    and web jar SHA-256 is 8170fbb7059ce0c5d05b40dba222cbb91f1d308441273960216834e90eb489b0.
+    Clean V295 is based exactly on deployed V294 e29a12be91cf8e2b3488e26e802d1e438e436642.
+    Nothing was pushed or run in a game. Revert the single V295 commit; every live phase owner remains.

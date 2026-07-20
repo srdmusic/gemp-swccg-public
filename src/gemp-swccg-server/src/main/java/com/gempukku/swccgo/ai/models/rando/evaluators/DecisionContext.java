@@ -4,7 +4,7 @@ import com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle;
 import com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
-import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
+// V295 RETIRED: import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.common.Phase;
@@ -78,7 +78,7 @@ public class DecisionContext {
 
     // Strategy components (optional, set by AI)
     private StrategyController strategyController;
-    private ObjectiveHandler objectiveHandler;
+    // V295 RETIRED: private ObjectiveHandler objectiveHandler;
     private ShieldStrategy shieldStrategy;
     private DeployPhasePlanner deployPhasePlanner;
     private ObjectiveAnalyzer objectiveAnalyzer;
@@ -354,13 +354,12 @@ public class DecisionContext {
         this.strategyController = strategyController;
     }
 
-    public ObjectiveHandler getObjectiveHandler() {
-        return objectiveHandler;
-    }
-
-    public void setObjectiveHandler(ObjectiveHandler objectiveHandler) {
-        this.objectiveHandler = objectiveHandler;
-    }
+    // V295 RETIRED: public ObjectiveHandler getObjectiveHandler() {
+    // V295 RETIRED:     return objectiveHandler;
+    // V295 RETIRED: }
+    // V295 RETIRED: public void setObjectiveHandler(ObjectiveHandler objectiveHandler) {
+    // V295 RETIRED:     this.objectiveHandler = objectiveHandler;
+    // V295 RETIRED: }
 
     public ShieldStrategy getShieldStrategy() {
         return shieldStrategy;
