@@ -7877,3 +7877,17 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     7ed42e9b1eedf9a39bdd7d8fb6b7badb8f9331ee1be19128da20fa643e013901 contain V283.
     Independent review, runtime reload, and live-game proof remain separate gates. Clean V283 is
     based on V282 candidate 1c8d0ffaa. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V284 (2026-07-19): consolidate RESPONSE fixed action-text scoring ====
+    Shared AI-only ResponsePolicy now also owns the mirrored fixed-score V184 when-deployed,
+    V29.8 Sense redraw-hand and mutual-redraw, V53b save-Jedi, react, cancel-own, and Houjix/Ghhhk
+    action-text operations. Both ActionTextEvaluator adapters retain every classifier, game read,
+    catch, action type, diagnostic, branch, and contribution position. Values remain +300, two
+    independently additive -600 Sense arms, +500, -30, -50, and +30 respectively. Focused RESPONSE
+    policy/source 17/0/0/0, RESPONSE-named 33/0/0/0, full reactor 1918/0/0/26, exact mirror parity,
+    fixed-score/additive boundaries, adapter source gates, AI-only scope, diff, and clean package
+    gates passed. Server jar SHA-256 8333636dd502f9a06781603e999f2b6b849fb7ac808b926f1f4c8599a0d47b0c
+    and web jar SHA-256 bdcade186719081be4ddd6f12f0a295814b9f1fadfaa86095920a51c53846434
+    contain V284. Independent review, runtime reload, and live-game proof remain separate gates.
+    Clean V284 is based on live V283 92edabf5d. AI source only; no GEMP engine or player-decision
+    changes.

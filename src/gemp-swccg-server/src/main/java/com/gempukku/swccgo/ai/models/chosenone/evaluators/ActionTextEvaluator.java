@@ -22,6 +22,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
@@ -336,8 +337,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         if (v184HasLost) { v184Fire = true; v184Why = "retrieve Force from Lost Pile"; }
                     }
                     if (v184Fire) {
-                        action.addReasoning("V184 WHEN-DEPLOYED TRIGGER: free value (" + v184Why
-                            + ") — fire it, don't pass", 300.0f);
+                        applyResponsePolicy(action,
+                            ResponsePolicy.scoreWhenDeployedFreeTrigger(
+                                actionId, v184Why));
                         logger.warn("V184 WHEN-DEPLOYED TRIGGER: '{}' → +300 ({})", actionText, v184Why);
                     }
                 } catch (Exception e) { logger.debug("V184 error: {}", e.getMessage()); }
@@ -1727,12 +1729,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
             //      costs 3 Force, loses cards currently in hand, is a Lost Interrupt)
             // Rando must NEVER use the redraw hand function. Save Sense for defense.
             if (textLower.contains("redraw") && textLower.contains("hand")) {
-                action.addReasoning("V29.8 SENSE REDRAW BLOCKED: NEVER redraw hand — save Sense for canceling opponent interrupts! Costs 3 Force AND helps opponent!", -600.0f);
+                applyResponsePolicy(action,
+                    ResponsePolicy.scoreSenseRedraw(actionId, true, false));
                 logger.warn("V29.8 SENSE REDRAW BLOCKED: Attempted to redraw hand — massive penalty (-600)");
             }
             // Also catch the "make each player" variant
             if (textLower.contains("each player") && (textLower.contains("redraw") || textLower.contains("shuffle"))) {
-                action.addReasoning("V29.8 SENSE UNCERTAIN BLOCKED: Don't make both players redraw — helps opponent!", -600.0f);
+                applyResponsePolicy(action,
+                    ResponsePolicy.scoreSenseRedraw(actionId, false, true));
                 logger.warn("V29.8 SENSE UNCERTAIN BLOCKED: Attempted mutual redraw — massive penalty (-600)");
             }
 
@@ -2097,7 +2101,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                          || textLower.contains("cal kestis") || textLower.contains("ezra")
                          || textLower.contains("ahsoka") || textLower.contains("cere")
                          || textLower.contains("sabine") || textLower.contains("luke"))) {
-                action.addReasoning("V53b SAVE JEDI: Stack Jedi on Fallen Order — lose 1 force to save them!", 500.0f);
+                applyResponsePolicy(action,
+                    ResponsePolicy.scoreSaveJedi(actionId));
                 logger.warn("V53b SAVE JEDI: '{}' — +500, always save Jedi Survivors!", actionText);
             }
 
@@ -2849,7 +2854,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== React ==========
             else if (textLower.contains("react")) {
                 action.setActionType(ActionType.REACT);
-                action.addReasoning("Avoid reacts (bot doesn't understand timing)", BAD_DELTA);
+                applyResponsePolicy(action,
+                    ResponsePolicy.scoreReact(actionId));
             }
 
             // ========== Steal ==========
@@ -2867,7 +2873,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Cancel Own Cards (Bad!) ==========
             else if (textLower.contains("cancel your")) {
                 action.setActionType(ActionType.CANCEL);
-                action.addReasoning("Never cancel own cards", VERY_BAD_DELTA);
+                applyResponsePolicy(action,
+                    ResponsePolicy.scoreCancelOwn(actionId));
             }
 
             // ========== Cancel Opponent's Interrupt (Sense/Control) ==========
@@ -4024,6 +4031,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
     // ========== Helper Methods ==========
 
+    private void applyResponsePolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+            "response-action-text-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
     private void applyBattleActionTextPolicy(
             EvaluatedAction action,
             PolicyResult result) {
@@ -4168,7 +4184,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
     private void evaluateHoujixGhhhk(EvaluatedAction action, DecisionContext context) {
         // These are CRITICAL survival cards
         // For now, give moderate positive score - ideally we'd check damage remaining
-        action.addReasoning("Cancel battle damage - valuable survival card", GOOD_DELTA);
+        applyResponsePolicy(action,
+            ResponsePolicy.scoreRemainingBattleDamageCancel(
+                action.getActionId()));
 
         // TODO: Add proper damage analysis when we have access to battle state
         // Check attrition/damage remaining and cards available to forfeit
