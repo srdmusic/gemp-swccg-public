@@ -8060,3 +8060,28 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     on V291 b75bec70d286279de06216c9198e0a645bfbe386. Nothing was pushed, deployed, or run in a game.
     AI source only; no engine or player-decision routing changes. Exact revert boundary: revert the
     single V292 commit to that parent, restoring only this packet's MOVE AI and assigned docs/tests.
+  ==== V293 (2026-07-19): consolidate deploy plan ranking policy ====
+    Shared AI-only DeployPlanRankingPolicy now owns the pure scalar DEPLOY-1 candidate-plan stream:
+    per-instruction power*2; ordered V22 objective-location bonus; favorable, marginal, or losing
+    tactical delta; contested destiny or vulnerability delta; one composite establish delta; and the
+    separate V22 Bespin-capital +200 adjunct. Every operation remains ADD in DEPLOY_SEQUENCING with a
+    unique internal contribution identity. The internal ledger sums contributions without emitting
+    policy reasons to action reasoning or logger output. The additive -500 BLOCKED annotation did not
+    become a hard veto.
+
+    Both DeployPhasePlanner mirrors retain null/empty handling, instruction scan and maps, V32 fallback
+    per instruction, card/location matching, all board and ObjectiveAnalyzer reads, exact V22 warning,
+    generation and equal-score insertion order, catches, and early-game behavior. Only the
+    objective_capital_bespin candidate receives the adjunct after scorePlan; early rescore remains 281
+    in the +150 objective fixture. Existing apply-side DeployPlanPolicy is byte-unchanged. Exact raw-bit
+    vector [38,65,131,-452,50,75,481] and sorted-domain parity passed for both bots. Focused policy,
+    adapter, ownership, phase, apply-side, and ledger tests passed 31/0/0/0; the full reactor passed
+    2039/0/0/26 across 282 suites; normalized mirrors, scope, forbidden exclusions, diff, async package,
+    and packaged-class gates passed. Server jar SHA-256 is
+    08648bf4de37c4f453323aea1c4e7932d2ce8e2e9f5a89e362aa7db2d8e77453 and web jar SHA-256 is
+    6d017d849b1f1e41d7910efb34c33a4d96ac06abd0bd23868224e02d613208a9. Source ownership, tests,
+    compilation, and packaged-jar presence are complete proof layers. JVM load, deployment, replay,
+    sandbox-game, and live-game proof remain separate and were deliberately not performed. Clean V293
+    is based exactly on V292 54e53bf7fd251f4923a84c1b0e6012c734c5a37f. Nothing was pushed or deployed.
+    Revert the single V293 commit; V292 and the unchanged apply-side owner remain independent. AI source
+    only; no engine or player-decision changes.

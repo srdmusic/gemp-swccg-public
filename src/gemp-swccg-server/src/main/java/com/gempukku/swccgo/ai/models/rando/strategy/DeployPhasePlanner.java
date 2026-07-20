@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.rando.strategy;
 
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
+import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.common.CardCategory;
@@ -807,7 +808,7 @@ public class DeployPhasePlanner {
                 DeploymentPlan executorPlan = generateObjectiveCapitalPlan(
                     starships, characters, allLocations, forceAvailable, game, playerId);
                 if (!executorPlan.getInstructions().isEmpty()) {
-                    float score = scorePlan(executorPlan, allLocations, turn) + 200.0f;
+                    float score = scoreObjectiveCapitalPlan(executorPlan, allLocations, turn);
                     plans.add(new ScoredPlan(executorPlan, score, "objective_capital_bespin"));
                     LOG.warn("📋 V22: Added objective capital ship plan for Bespin (score boost +200)");
                 }
@@ -1392,13 +1393,14 @@ public class DeployPhasePlanner {
             return 0.0f;
         }
 
-        float score = 0.0f;
+        List<DeployPlanRankingPolicy.InstructionFacts> instructionFacts = new ArrayList<>();
         Map<String, Integer> powerByLocation = new HashMap<>();
         Map<String, Integer> abilityByLocation = new HashMap<>();
 
+        int instructionIndex = 0;
         for (DeploymentInstruction inst : plan.getInstructions()) {
-            // Base power value
-            score += inst.getPowerContribution() * 2;
+            instructionFacts.add(new DeployPlanRankingPolicy.InstructionFacts(
+                "instruction-" + instructionIndex++, inst.getPowerContribution()));
 
             // Track by location
             if (inst.getTargetLocationId() != null) {
@@ -1418,6 +1420,8 @@ public class DeployPhasePlanner {
         }
 
         // Analyze each target location
+        List<DeployPlanRankingPolicy.LocationFacts> locationFacts = new ArrayList<>();
+        int locationIndex = 0;
         for (Map.Entry<String, Integer> entry : powerByLocation.entrySet()) {
             String locId = entry.getKey();
             int ourPower = entry.getValue();
@@ -1435,72 +1439,36 @@ public class DeployPhasePlanner {
             if (targetLoc == null) continue;
 
             // V22: Objective-relevant location bonus for plan scoring
+            boolean objectiveRelevant = false;
+            float objectiveBonus = 0.0f;
             if (objectiveAnalyzer != null && objectiveAnalyzer.isAnalyzed()) {
                 String locTitle = targetLoc.location.getTitle();
                 if (locTitle != null && objectiveAnalyzer.isObjectiveRelevantLocation(locTitle)) {
                     float objBonus = objectiveAnalyzer.getLocationObjectiveBonus(locTitle);
-                    score += objBonus;
+                    objectiveRelevant = true;
+                    objectiveBonus = objBonus;
                     LOG.warn("V22 PLAN SCORE: {} is objective-relevant, +{} to plan score", locTitle, objBonus);
                 }
             }
 
-            if (targetLoc.theirPower > 0) {
-                // CONTESTED LOCATION
-                int powerAdvantage = ourPower - (int) targetLoc.theirPower;
-
-                // Deny drain bonus
-                int denyDrainBonus = 0;
-                if (targetLoc.ourForceIcons > 0) {
-                    denyDrainBonus = targetLoc.ourForceIcons * 20;
-                }
-
-                // Win control bonus
-                int winControlBonus = 0;
-                if (powerAdvantage > 0 && targetLoc.theirForceIcons > 0) {
-                    winControlBonus = targetLoc.theirForceIcons * 15;
-                }
-
-                if (powerAdvantage >= RandoConfig.BATTLE_FAVORABLE_THRESHOLD) {
-                    // FAVORABLE FIGHT
-                    score += 50 + (powerAdvantage * 10) + denyDrainBonus + winControlBonus;
-                } else if (powerAdvantage > 0) {
-                    // MARGINAL FIGHT
-                    score += 25 + (powerAdvantage * 5) + denyDrainBonus + winControlBonus;
-                } else {
-                    // LOSING
-                    score += 5 + denyDrainBonus;
-                }
-
-                // Ability bonus/penalty
-                if (ourAbility >= RandoConfig.ABILITY_THRESHOLD) {
-                    score += 25;  // Can draw destiny
-                } else {
-                    score -= 20 + (ourPower * 2);  // Vulnerable
-                }
-
-            } else {
-                // EMPTY/ESTABLISH LOCATION
-                float establishBonus = 40;
-
-                if (targetLoc.theirForceIcons > 0) {
-                    establishBonus += targetLoc.theirForceIcons * 15;
-                }
-                if (targetLoc.ourForceIcons > 0) {
-                    establishBonus += targetLoc.ourForceIcons * 15;
-                }
-
-                // Ability check for establish safety
-                if (ourAbility >= RandoConfig.ABILITY_THRESHOLD) {
-                    establishBonus += 25;
-                } else if (ourPower < 5) {
-                    establishBonus -= 500;  // BLOCKED - easy crush target
-                }
-
-                score += establishBonus;
-            }
+            locationFacts.add(new DeployPlanRankingPolicy.LocationFacts(
+                "location-" + locationIndex++, ourPower, ourAbility,
+                targetLoc.theirPower, targetLoc.ourForceIcons,
+                targetLoc.theirForceIcons, objectiveRelevant, objectiveBonus));
         }
 
-        return score;
+        return DeployPlanRankingPolicy.apply(0.0f,
+            DeployPlanRankingPolicy.evaluate(instructionFacts, locationFacts));
+    }
+
+    private float scoreObjectiveCapitalPlan(DeploymentPlan plan,
+                                             List<AiBoardAnalyzer.LocationAnalysis> locations,
+                                             int turn) {
+        float score = scorePlan(plan, locations, turn);
+        return DeployPlanRankingPolicy.apply(score,
+            DeployPlanRankingPolicy.evaluateAdjunct(
+                new DeployPlanRankingPolicy.AdjunctFacts(
+                    "objective-capital-bespin", true)));
     }
 
     /**
