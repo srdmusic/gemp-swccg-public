@@ -303,6 +303,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V208 owner note:** `BattleWeaponsPolicy` now owns Force Push exchange/exclusion, fire-before-throw, redraw, generic fire/cancel/draw, V51 already-hit, V36 targeting, and final V38.3 self-target scoring. The mirrored evaluators retain stock fact recognition and the other card-specific battle-interrupt arms. Row anchors below are historical for the migrated slice.
 
+**V290 owner note:** `TargetSelectionPolicy` now owns the mirrored generic target base and target-value arithmetic: beneficial own/opponent ownership, beneficial power/unique value, harmful opponent ownership, V51 undercover-spy priority, outside-battle power value, and harmful unique value. `BattleWeaponsPolicy` remains the unchanged owner of V51 already-hit, V36 destiny bands/priorities, and V38.3 harmful self-targeting. Both adapters retain routing and recognition, all card/blueprint/game/destiny/title observations, catches, logs, candidate order, and one final per-candidate application. The `TARGET-base` score is tagged initial state, not an additive reasoning operation. No engine metadata or player-choice code moved.
+
 **V268 owner note:** `BattleActionTextPolicy` retains only V144's battle-freeze arm. The IAYF-search arm of V144, the V147 Lost-Pile search gate, and the V155 mode-1 pull-save gate are now owned by `PullSpecificActionPolicy` under pull-search.
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |

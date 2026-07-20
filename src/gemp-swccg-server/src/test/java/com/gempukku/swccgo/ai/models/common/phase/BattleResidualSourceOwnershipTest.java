@@ -72,6 +72,85 @@ public class BattleResidualSourceOwnershipTest {
         }
     }
 
+    @Test
+    public void targetResidualArithmeticBelongsOnlyToTargetSelectionPolicy()
+            throws IOException {
+        String rando = evaluatorSource("rando", "CardSelectionEvaluator.java");
+        String chosenOne = evaluatorSource("chosenone", "CardSelectionEvaluator.java");
+        String randoTarget = targetMethod(rando);
+        String chosenTarget = targetMethod(chosenOne);
+        String targetPolicy = policySource("TargetSelectionPolicy.java");
+        String targetFacts = policySource("TargetSelectionFacts.java");
+
+        assertEquals(normalize(rando), normalize(chosenOne));
+        assertEquals(normalize(randoTarget), normalize(chosenTarget));
+        for (String target : new String[] {randoTarget, chosenTarget}) {
+            assertFalse(target.contains("action.addReasoning("));
+            assertEquals(1, occurrences(target,
+                    "PolicyOperationAdapter.apply(action, targetLedger)"));
+            assertEquals(1, occurrences(target,
+                    "PolicyContributionLedger targetLedger"));
+            assertTrue(target.indexOf("for (String cardId : context.getCardIds())")
+                    < target.indexOf("PolicyContributionLedger targetLedger"));
+            assertTrue(target.indexOf("PolicyContributionLedger targetLedger")
+                    < target.indexOf("PolicyOperationAdapter.apply(action, targetLedger)"));
+            assertTrue(target.indexOf("PolicyOperationAdapter.apply(action, targetLedger)")
+                    < target.indexOf("actions.add(action)"));
+
+            assertTrue(target.contains("isBeneficialTargetingCard(decisionText)"));
+            assertTrue(target.contains(
+                    "gameState.findCardById(Integer.parseInt(cardId))"));
+            assertTrue(target.contains("String owner = card.getOwner()"));
+            assertTrue(target.contains(
+                    "SwccgCardBlueprint blueprint = card.getBlueprint()"));
+            assertTrue(target.contains("if (card.isHit())"));
+            assertTrue(target.contains("boolean undercover = card.isUndercover()"));
+            assertTrue(target.contains(
+                    "targetGame != null && gameState != null && context.getPhase() == Phase.BATTLE"));
+            assertTrue(target.contains(
+                    "getModifiersQuerying().getDefenseValue(gameState, card)"));
+            assertTrue(target.contains("context.getDeckOracle()"));
+            assertTrue(target.contains(
+                    "targetLower.contains(\"padme\") || targetLower.contains(\"naberrie\")"));
+            assertTrue(target.contains("isJediOrPadawan(targetLower)"));
+            assertTrue(target.contains("catch (Exception e)"));
+            assertTrue(target.contains("catch (NumberFormatException e)"));
+            assertTrue(target.contains(
+                    "logger.warn(\"V51 ALREADY HIT: Weapon targeting"));
+            assertTrue(target.contains(
+                    "logger.warn(\"V51 KILL SPY: Targeting spy"));
+            assertTrue(target.contains(
+                    "logger.warn(\"V36 WEAPON TARGET:"));
+            assertTrue(target.contains(
+                    "logger.debug(\"V36 WEAPON TARGET: Error calculating hit probability:"));
+            assertTrue(target.contains(
+                    "logger.warn(\"V38.3 SELF-TARGET BLOCKED:"));
+        }
+
+        for (String movedReason : new String[] {
+                "Beneficial effect on our card",
+                "High-power target for buff",
+                "Unique target for buff",
+                "Don't buff opponent's card!",
+                "Target opponent's card",
+                "V51 KILL SPY: Target is an undercover spy — eliminate it!",
+                "High-power target",
+                "Unique target"}) {
+            assertFalse(movedReason, randoTarget.contains(movedReason));
+            assertFalse(movedReason, chosenTarget.contains(movedReason));
+            assertTrue(movedReason, targetPolicy.contains(movedReason));
+        }
+
+        assertTrue(randoTarget.contains("TargetSelectionPolicy.initialScore(cardId)"));
+        assertTrue(randoTarget.contains("TargetSelectionPolicy.scoreOwnership("));
+        assertTrue(randoTarget.contains("TargetSelectionPolicy.scoreUndercover("));
+        assertEquals(2, occurrences(randoTarget,
+                "TargetSelectionPolicy.scoreValue("));
+        assertTrue(randoTarget.contains("BattleWeaponsPolicy.scoreTarget("));
+        assertPolicyIsAiPure(targetPolicy);
+        assertPolicyIsAiPure(targetFacts);
+    }
+
     private static String evaluatorSource(String bot, String file) throws IOException {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
@@ -86,6 +165,25 @@ public class BattleResidualSourceOwnershipTest {
 
     private static Path mainJavaRoot() {
         return Path.of("src", "main", "java");
+    }
+
+    private static String targetMethod(String source) {
+        int start = source.indexOf(
+                "private List<EvaluatedAction> evaluateTargetSelection");
+        int end = source.indexOf("* Location selection", start);
+        assertTrue(start >= 0);
+        assertTrue(end > start);
+        return source.substring(start, end);
+    }
+
+    private static int occurrences(String text, String needle) {
+        int count = 0;
+        int offset = 0;
+        while ((offset = text.indexOf(needle, offset)) >= 0) {
+            count++;
+            offset += needle.length();
+        }
+        return count;
     }
 
     private static String normalize(String source) {

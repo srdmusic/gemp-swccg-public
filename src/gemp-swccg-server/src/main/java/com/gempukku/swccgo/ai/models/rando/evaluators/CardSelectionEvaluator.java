@@ -30,6 +30,8 @@ import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TargetSelectionFacts;
+import com.gempukku.swccgo.ai.models.common.phase.TargetSelectionPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
@@ -6262,26 +6264,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         String playerId = context.getPlayerId();
         String decisionText = context.getDecisionText();
         String targetDecisionId = context.getDecisionId();
-        PolicyContributionLedger battleHitTargetLedger = new PolicyContributionLedger(
-            targetDecisionId == null || targetDecisionId.isBlank()
-                ? "battle-hit-target-decision" : targetDecisionId + "-battle-hit-target");
-        PolicyContributionLedger battleDestinyTargetLedger = new PolicyContributionLedger(
-            targetDecisionId == null || targetDecisionId.isBlank()
-                ? "battle-destiny-target-decision" : targetDecisionId + "-battle-destiny-target");
-        PolicyContributionLedger battleSelfTargetLedger = new PolicyContributionLedger(
-            targetDecisionId == null || targetDecisionId.isBlank()
-                ? "battle-self-target-decision" : targetDecisionId + "-battle-self-target");
 
         // Check if we're playing a beneficial card that targets our own cards
         boolean targetOwnCards = isBeneficialTargetingCard(decisionText);
 
         for (String cardId : context.getCardIds()) {
+            TargetSelectionPolicy.InitialScore initial =
+                TargetSelectionPolicy.initialScore(cardId);
             EvaluatedAction action = new EvaluatedAction(
-                cardId,
+                initial.actionId(),
                 ActionType.UNKNOWN,
-                50.0f,
-                "Target " + cardId
-            );
+                initial.score(),
+                initial.displayText(),
+                initial.ruleArmId(),
+                initial.domainId(),
+                initial.outputKind(),
+                null);
+            PolicyContributionLedger targetLedger = new PolicyContributionLedger(
+                targetDecisionId == null || targetDecisionId.isBlank()
+                    ? "target-selection-candidate-" + actions.size()
+                    : targetDecisionId + "-target-candidate-" + actions.size());
 
             if (gameState != null) {
                 try {
@@ -6290,57 +6292,65 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         String owner = card.getOwner();
                         SwccgCardBlueprint blueprint = card.getBlueprint();
                         boolean isOurCard = playerId.equals(owner);
+                        TargetSelectionFacts.Intent intent = targetOwnCards
+                            ? TargetSelectionFacts.Intent.BENEFICIAL
+                            : TargetSelectionFacts.Intent.HARMFUL;
+                        TargetSelectionFacts.Ownership ownership = isOurCard
+                            ? TargetSelectionFacts.Ownership.OWN
+                            : TargetSelectionFacts.Ownership.OPPONENT;
+                        targetLedger.register(TargetSelectionPolicy.scoreOwnership(
+                            new TargetSelectionFacts.OwnershipFacts(
+                                cardId, intent, ownership)));
 
                         if (targetOwnCards) {
                             // Beneficial card - target OUR cards, not opponent's
                             if (isOurCard) {
-                                action.addReasoning("Beneficial effect on our card", 50.0f);
-
                                 // Prefer high-value targets for buffs
                                 if (blueprint != null) {
+                                    boolean highPower = false;
                                     if (blueprint.hasPowerAttribute()) {
                                         Float power = blueprint.getPower();
                                         if (power != null && power >= 5) {
-                                            action.addReasoning("High-power target for buff", 30.0f);
+                                            highPower = true;
                                         }
                                     }
-
-                                    if (blueprint.getUniqueness() == Uniqueness.UNIQUE) {
-                                        action.addReasoning("Unique target for buff", 20.0f);
-                                    }
+                                    targetLedger.register(TargetSelectionPolicy.scoreValue(
+                                        new TargetSelectionFacts.ValueFacts(
+                                            cardId, intent, ownership, false, highPower,
+                                            blueprint.getUniqueness() == Uniqueness.UNIQUE)));
                                 }
-                            } else {
-                                action.addReasoning("Don't buff opponent's card!", -200.0f);
                             }
                         } else {
                             // Harmful card (weapon, etc.) - target OPPONENT cards
                             if (!isOurCard) {
-                                action.addReasoning("Target opponent's card", 50.0f);
-
                                 // V51: Don't waste weapons on already-hit characters
                                 if (card.isHit()) {
-                                    battleHitTargetLedger.register(BattleWeaponsPolicy.scoreTarget(
+                                    targetLedger.register(BattleWeaponsPolicy.scoreTarget(
                                         new BattleWeaponsFacts.TargetFacts(
                                             cardId, card.getTitle(), true,
                                             BattleWeaponsFacts.DestinyAssessment.unavailable(),
                                             false, false, false, false)));
-                                    PolicyOperationAdapter.apply(action, battleHitTargetLedger);
                                     logger.warn("V51 ALREADY HIT: Weapon targeting {} but already hit — -500", card.getTitle());
                                 }
 
                                 // V51: Force Lightning / Trample — prioritize opponent spies
-                                if (card.isUndercover()) {
-                                    action.addReasoning("V51 KILL SPY: Target is an undercover spy — eliminate it!", 500.0f);
+                                boolean undercover = card.isUndercover();
+                                targetLedger.register(TargetSelectionPolicy.scoreUndercover(
+                                    new TargetSelectionFacts.UndercoverFacts(
+                                        cardId, intent, ownership, undercover)));
+                                if (undercover) {
                                     logger.warn("V51 KILL SPY: Targeting spy {} — +500!", card.getTitle());
                                 }
 
                                 if (blueprint != null) {
+                                    boolean highPower = false;
                                     // === V36: DESTINY-BASED WEAPON TARGETING ===
                                     // Calculate hit probability: avgDestiny * numDraws vs defense value
                                     // Lightsaber draws 2 destiny. Other weapons draw 1-2.
                                     // Only fire at targets we can actually hit!
                                     SwccgGame targetGame = context.getGame();
-                                    if (targetGame != null && gameState != null && context.getPhase() == Phase.BATTLE) {
+                                    boolean battleMode = targetGame != null && gameState != null && context.getPhase() == Phase.BATTLE;
+                                    if (battleMode) {
                                         try {
                                             // Get target's defense value (ability for characters)
                                             float defenseValue = targetGame.getModifiersQuerying().getDefenseValue(gameState, card);
@@ -6360,7 +6370,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             String targetTitle = card.getTitle() != null ? card.getTitle() : "?";
                                             String targetLower = targetTitle.toLowerCase(java.util.Locale.ROOT);
 
-                                            battleDestinyTargetLedger.register(BattleWeaponsPolicy.scoreTarget(
+                                            targetLedger.register(BattleWeaponsPolicy.scoreTarget(
                                                 new BattleWeaponsFacts.TargetFacts(
                                                     cardId,
                                                     targetTitle,
@@ -6372,7 +6382,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                         || targetLower.contains("wedge") || targetLower.contains("chewie"),
                                                     isJediOrPadawan(targetLower),
                                                     false)));
-                                            PolicyOperationAdapter.apply(action, battleDestinyTargetLedger);
 
                                             if (hitMargin < 0.0f) {
                                                 logger.warn("V36 WEAPON TARGET: {} defense {} vs expected {} — LIKELY MISS",
@@ -6387,25 +6396,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         if (blueprint.hasPowerAttribute()) {
                                             Float power = blueprint.getPower();
                                             if (power != null && power >= 5) {
-                                                action.addReasoning("High-power target", 30.0f);
+                                                highPower = true;
                                             }
                                         }
                                     }
-
-                                    if (blueprint.getUniqueness() == Uniqueness.UNIQUE) {
-                                        action.addReasoning("Unique target", 20.0f);
-                                    }
+                                    targetLedger.register(TargetSelectionPolicy.scoreValue(
+                                        new TargetSelectionFacts.ValueFacts(
+                                            cardId, intent, ownership, battleMode, highPower,
+                                            blueprint.getUniqueness() == Uniqueness.UNIQUE)));
                                 }
                             } else {
                                 // V38.3: HARD BLOCK targeting own cards with harmful effects!
                                 // Force Lightning on own Vader, weapon fire at own characters, etc.
                                 // -200 wasn't enough — other bonuses could override it.
-                                battleSelfTargetLedger.register(BattleWeaponsPolicy.scoreTarget(
+                                targetLedger.register(BattleWeaponsPolicy.scoreTarget(
                                     new BattleWeaponsFacts.TargetFacts(
                                         cardId, card.getTitle(), false,
                                         BattleWeaponsFacts.DestinyAssessment.unavailable(),
                                         false, false, false, true)));
-                                PolicyOperationAdapter.apply(action, battleSelfTargetLedger);
                                 logger.warn("V38.3 SELF-TARGET BLOCKED: Harmful effect targeting own card!");
                             }
                         }
@@ -6415,6 +6423,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 }
             }
 
+            PolicyOperationAdapter.apply(action, targetLedger);
             actions.add(action);
         }
 

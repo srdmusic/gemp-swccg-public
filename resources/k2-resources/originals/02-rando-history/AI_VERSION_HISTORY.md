@@ -7980,3 +7980,24 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     f3b91b11fb733bb23d7233d5d7ddf60e987f9fc4453c8b6e4fda3cc6faf382cb. Runtime reload and live
     proof were not performed. Clean V289 is based exactly on V288 e47bb188f04a1122f332d6a2e3a98997ccdf89b2.
     Nothing was pushed or deployed. AI source only; no engine or player-decision changes.
+
+  ==== V290 (2026-07-19): consolidate target selection scoring ====
+    Shared AI-only TargetSelectionFacts/Policy now own the generic target base 50 initial score,
+    beneficial own/opponent ownership, beneficial power and unique value, harmful opponent ownership,
+    V51 undercover-spy priority, outside-battle power value, and harmful unique value. BattleWeaponsPolicy
+    and BattleWeaponsFacts are unchanged and remain the sole owners of V51 already-hit -500, V36 destiny
+    margins/priorities, and V38.3 harmful self -9999. Both CardSelectionEvaluator mirrors retain routing,
+    beneficial-card recognition, all physical-card/blueprint/game/destiny/title reads, catches, logs,
+    candidate order, and append behavior. Each candidate registers contributions in legacy order and
+    applies one ledger once. TARGET-base is tagged initial state with no new reasoning line. Exact legacy
+    totals remain: unresolved 50, beneficial own 100..150, beneficial opponent -150, harmful opponent
+    outside battle 100..150, undercover 600..650, already hit -400..-350, hit plus undercover 100..150,
+    and harmful self -9949. Focused TARGETING/BATTLE tests passed 28/0/0/0; the clean full reactor passed
+    1985/0/0/26; normalized bot parity, raw-float and reason-byte matrices, ordered cross-owner composition,
+    once-only application, source ownership, AI-only scope, forbidden exclusions, diff, package, and compiled
+    class gates passed. Server jar SHA-256 is
+    a5bc4b313a530201d4be29b10b437964ccbe7631deda24766af7b93398316229 and web jar SHA-256 is
+    ab3fce731acd22fca673c98741c8ce6af32dd10fc6eef95b447fe6831786b969. Independent review, runtime,
+    deployment, and live-game proof were not performed. Clean V290 is based exactly on V289
+    08f05b05dafe5ceb9467ea9f0830cb359560d916. Nothing was pushed or deployed. AI source only; no engine
+    or player-decision changes.
