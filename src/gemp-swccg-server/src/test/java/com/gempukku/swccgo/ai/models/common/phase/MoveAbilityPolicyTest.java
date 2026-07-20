@@ -132,6 +132,51 @@ public class MoveAbilityPolicyTest {
     }
 
     @Test
+    public void weakSplitRequiresEveryLegacyFact() {
+        MoveAbilityPolicy.Evaluation applies =
+                MoveAbilityPolicy.weakSplit(
+                        3.999f, true, 0.0f, 0, 1, 3.999f);
+
+        assertEvaluation(
+                applies,
+                MoveAbilityPolicy.Branch.WEAK_SPLIT,
+                -800.0f,
+                false);
+        assertEquals(MoveAbilityPolicy.Branch.NONE,
+                MoveAbilityPolicy.weakSplit(
+                        4.0f, true, 0.0f, 0, 1, 3.0f).branch());
+        assertEquals(MoveAbilityPolicy.Branch.NONE,
+                MoveAbilityPolicy.weakSplit(
+                        3.0f, true, 0.0f, 1, 1, 3.0f).branch());
+        assertEquals(MoveAbilityPolicy.Branch.NONE,
+                MoveAbilityPolicy.weakSplit(
+                        3.0f, true, 0.0f, 0, 1, 4.0f).branch());
+    }
+
+    @Test
+    public void joinDestinationPreserves250410And450Arithmetic() {
+        MoveAbilityPolicy.Evaluation base =
+                MoveAbilityPolicy.joinDestination(
+                        "Site", 0.0f, 3.0f, false, "Origin");
+        MoveAbilityPolicy.Evaluation capable =
+                MoveAbilityPolicy.joinDestination(
+                        "Site", 1.0f, 3.0f, true, "Origin");
+        MoveAbilityPolicy.Evaluation capped =
+                MoveAbilityPolicy.joinDestination(
+                        "Site", 10.0f, 3.0f, true, "Origin");
+
+        assertEvaluation(base,
+                MoveAbilityPolicy.Branch.JOIN_DESTINATION,
+                250.0f, false);
+        assertEvaluation(capable,
+                MoveAbilityPolicy.Branch.JOIN_DESTINATION,
+                410.0f, false);
+        assertEvaluation(capped,
+                MoveAbilityPolicy.Branch.JOIN_DESTINATION,
+                450.0f, false);
+    }
+
+    @Test
     public void abilityBuddyBreakUsesExactThresholdsAndPenalty() {
         MoveAbilityPolicy.Evaluation result =
                 MoveAbilityPolicy.abilityBuddy(

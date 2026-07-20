@@ -25,6 +25,17 @@ public final class MoveTransitPolicy {
         PILOT_PREFER
     }
 
+    public enum EmbarkBranch {
+        NO_CONTEXT,
+        NO_CARD,
+        NON_PILOT,
+        POWER_FOUR_PLUS,
+        NO_LOCATION,
+        UNMANNED_TARGET,
+        NO_UNMANNED_TARGET,
+        ERROR
+    }
+
     public record Contribution(boolean applies, String reason, float delta) {
         private static Contribution none() {
             return new Contribution(false, null, 0.0f);
@@ -70,6 +81,27 @@ public final class MoveTransitPolicy {
                     CapacitySlotBranch.NONE, 0.0f,
                     Contribution.none());
         }
+    }
+
+    public record CapacityChoice(
+            CapacitySlotBranch branch,
+            float replacementScore,
+            Contribution contribution) {
+        private static CapacityChoice none() {
+            return new CapacityChoice(
+                    CapacitySlotBranch.NONE, 0.0f,
+                    Contribution.none());
+        }
+    }
+
+    public record EmbarkEvaluation(
+            EmbarkBranch branch,
+            Contribution contribution) {
+    }
+
+    public record SpaceDestinationPenalties(
+            Contribution permanentWeaponCharacter,
+            Contribution vehicle) {
     }
 
     public static Contribution capacitySlotSwap(String actionLower) {
@@ -150,6 +182,124 @@ public final class MoveTransitPolicy {
                             50.0f));
         }
         return CapacitySlot.none();
+    }
+
+    public static CapacityChoice capacityChoice(
+            boolean pilotMarker,
+            boolean passengerMarker) {
+        if (pilotMarker) {
+            return new CapacityChoice(
+                    CapacitySlotBranch.PILOT_PREFER,
+                    100.0f,
+                    new Contribution(
+                            true,
+                            "Pilot slot adds power to ship!",
+                            100.0f));
+        }
+        if (passengerMarker) {
+            return new CapacityChoice(
+                    CapacitySlotBranch.PASSENGER_SKIP,
+                    -50.0f,
+                    new Contribution(
+                            true,
+                            "Passenger gives NO power bonus!",
+                            -50.0f));
+        }
+        return CapacityChoice.none();
+    }
+
+    public static EmbarkEvaluation embark(
+            boolean contextAvailable,
+            boolean cardAvailable,
+            boolean eligiblePilotOrTrooper,
+            Float power,
+            boolean locationAvailable,
+            boolean unmannedTargetAtSite,
+            boolean readFailed,
+            String embarkerTitle,
+            String unmannedTargetTitle) {
+        if (readFailed) {
+            return new EmbarkEvaluation(
+                    EmbarkBranch.ERROR,
+                    new Contribution(true, "Embark action (error)", 0.0f));
+        }
+        if (!contextAvailable) {
+            return new EmbarkEvaluation(
+                    EmbarkBranch.NO_CONTEXT,
+                    new Contribution(true, "Embark action (no context)", 0.0f));
+        }
+        if (!cardAvailable) {
+            return new EmbarkEvaluation(
+                    EmbarkBranch.NO_CARD,
+                    new Contribution(true, "Embark action (no card)", 0.0f));
+        }
+        if (!eligiblePilotOrTrooper) {
+            return new EmbarkEvaluation(
+                    EmbarkBranch.NON_PILOT,
+                    new Contribution(true, "Embark action (non-pilot)", 0.0f));
+        }
+        if (power != null && power >= 4.0f) {
+            return new EmbarkEvaluation(
+                    EmbarkBranch.POWER_FOUR_PLUS,
+                    new Contribution(
+                            true,
+                            "Embark action (skipped: power " + power.intValue()
+                                    + " — better as ground troop)",
+                            0.0f));
+        }
+        if (!locationAvailable) {
+            return new EmbarkEvaluation(
+                    EmbarkBranch.NO_LOCATION,
+                    new Contribution(true, "Embark action (no location)", 0.0f));
+        }
+        if (unmannedTargetAtSite) {
+            return new EmbarkEvaluation(
+                    EmbarkBranch.UNMANNED_TARGET,
+                    new Contribution(
+                            true,
+                            "EMBARK PILOT: '" + embarkerTitle
+                                    + "' boarding unmanned '" + unmannedTargetTitle
+                                    + "' — vehicle gets power & protection",
+                            500.0f));
+        }
+        return new EmbarkEvaluation(
+                EmbarkBranch.NO_UNMANNED_TARGET,
+                new Contribution(
+                        true,
+                        "Embark action (no unmanned target at site)",
+                        0.0f));
+    }
+
+    public static Contribution residualTransfer() {
+        return new Contribution(
+                true,
+                "Usually avoid disembark/relocate/transfer",
+                -50.0f);
+    }
+
+    public static Contribution shipDock() {
+        return new Contribution(true, "Avoid ship-docking", -50.0f);
+    }
+
+    public static SpaceDestinationPenalties spaceDestination(
+            boolean systemDestination,
+            boolean permanentWeaponCharacter,
+            boolean vehicle) {
+        Contribution weaponPenalty = systemDestination
+                && permanentWeaponCharacter
+                ? new Contribution(
+                        true,
+                        "V24.14B WEAPON CHAR TO SPACE: Permanent weapon can't fire at system locations — don't shuttle here!",
+                        -300.0f)
+                : Contribution.none();
+        Contribution vehiclePenalty = systemDestination && vehicle
+                ? new Contribution(
+                        true,
+                        "V24.14B VEHICLE TO SPACE: Vehicles don't belong in space!",
+                        -300.0f)
+                : Contribution.none();
+        return new SpaceDestinationPenalties(
+                weaponPenalty, vehiclePenalty);
     }
 
     public static MovementTypes movementTypes(

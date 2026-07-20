@@ -8043,3 +8043,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     on V290 49704129c5b59a1c5c4ea59ca035a97062510ec6. Nothing was pushed, deployed, or run in a game.
     AI source only; no engine or player-decision routing changes. Exact revert boundary: revert the single
     V291 commit to that parent, restoring only this packet's AI, SHIELDS tests, and assigned docs.
+  ==== V292 (2026-07-19): consolidate MOVE residual scoring ====
+    Existing shared MOVE owners now own the remaining live scalar arithmetic from MoveEvaluator,
+    ActionTextEvaluator, and CardSelectionEvaluator: missing source; capacity replacement plus
+    contribution; embark, residual transfer, and ship-dock; weak split and join destination;
+    ordered icons, power, and battleground tri-state; Cloud City and Hidden Path objectives;
+    break-cover and spy dilution; Lando support/stay; independently stacking system penalties;
+    and Evazan partner movement. Both bot adapters retain recognition, all GEMP/card/objective
+    reads, loops, first breaks, catches, logs, setScore, action types, candidate order, append,
+    terminal continue, contribution positions, and the battleground scoring catch envelope.
+    Exact normalized mirrors and source ownership are enforced. Focused tests passed 117/0/0/0;
+    the clean full reactor passed 2028/0/0/26; async packaging passed. The complete forbidden-symbol,
+    AI-only scope, diff, destination-order, catch-envelope, and adapter-control-flow gates passed.
+    Server jar SHA-256 is 1c033bb2ff2344c102ef9865fbccea95736e06c2adea3e56b163f7457376927a and web jar SHA-256 is
+    d201ce1d7ebe74c47a3186c742fb902e846b3de0986ae3aa56abc40fe7913a3b. Clean V292 is based exactly
+    on V291 b75bec70d286279de06216c9198e0a645bfbe386. Nothing was pushed, deployed, or run in a game.
+    AI source only; no engine or player-decision routing changes. Exact revert boundary: revert the
+    single V292 commit to that parent, restoring only this packet's MOVE AI and assigned docs/tests.

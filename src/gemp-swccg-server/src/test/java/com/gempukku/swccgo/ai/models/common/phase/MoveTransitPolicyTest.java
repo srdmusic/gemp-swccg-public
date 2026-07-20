@@ -189,6 +189,175 @@ public class MoveTransitPolicyTest {
     }
 
     @Test
+    public void actionTextCapacityChoicePreservesReplacementAndContribution() {
+        MoveTransitPolicy.CapacityChoice pilot =
+                MoveTransitPolicy.capacityChoice(true, false);
+        MoveTransitPolicy.CapacityChoice passenger =
+                MoveTransitPolicy.capacityChoice(false, true);
+
+        assertEquals(MoveTransitPolicy.CapacitySlotBranch.PILOT_PREFER,
+                pilot.branch());
+        assertRawFloat(100.0f, pilot.replacementScore());
+        assertRawFloat(100.0f, pilot.contribution().delta());
+        assertRawFloat(200.0f,
+                pilot.replacementScore() + pilot.contribution().delta());
+        assertEquals(MoveTransitPolicy.CapacitySlotBranch.PASSENGER_SKIP,
+                passenger.branch());
+        assertRawFloat(-50.0f, passenger.replacementScore());
+        assertRawFloat(-50.0f, passenger.contribution().delta());
+        assertRawFloat(-100.0f,
+                passenger.replacementScore()
+                        + passenger.contribution().delta());
+    }
+
+    @Test
+    public void actionTextCapacityChoicePreservesPilotFirstPrecedence() {
+        MoveTransitPolicy.CapacityChoice both =
+                MoveTransitPolicy.capacityChoice(true, true);
+
+        assertEquals(MoveTransitPolicy.CapacitySlotBranch.PILOT_PREFER,
+                both.branch());
+        assertRawFloat(100.0f, both.replacementScore());
+        assertRawFloat(100.0f, both.contribution().delta());
+    }
+
+    @Test
+    public void embarkPreservesPowerBoundaryAndUnknownPowerEligibility() {
+        MoveTransitPolicy.EmbarkEvaluation below =
+                MoveTransitPolicy.embark(
+                        true, true, true, 3.999f,
+                        true, true, false, "Pilot", "Walker");
+        MoveTransitPolicy.EmbarkEvaluation exact =
+                MoveTransitPolicy.embark(
+                        true, true, true, 4.0f,
+                        true, true, false, "Pilot", "Walker");
+        MoveTransitPolicy.EmbarkEvaluation unknown =
+                MoveTransitPolicy.embark(
+                        true, true, true, null,
+                        true, true, false, "Pilot", "Walker");
+
+        assertEquals(MoveTransitPolicy.EmbarkBranch.UNMANNED_TARGET,
+                below.branch());
+        assertRawFloat(500.0f, below.contribution().delta());
+        assertEquals(MoveTransitPolicy.EmbarkBranch.POWER_FOUR_PLUS,
+                exact.branch());
+        assertRawFloat(0.0f, exact.contribution().delta());
+        assertEquals(MoveTransitPolicy.EmbarkBranch.UNMANNED_TARGET,
+                unknown.branch());
+        assertRawFloat(500.0f, unknown.contribution().delta());
+    }
+
+    @Test
+    public void embarkNeutralOutcomesRemainZero() {
+        MoveTransitPolicy.EmbarkEvaluation nonPilot =
+                MoveTransitPolicy.embark(
+                        true, true, false, 2.0f,
+                        true, true, false, "Passenger", "Walker");
+        MoveTransitPolicy.EmbarkEvaluation noTarget =
+                MoveTransitPolicy.embark(
+                        true, true, true, 2.0f,
+                        true, false, false, "Pilot", null);
+
+        assertEquals(MoveTransitPolicy.EmbarkBranch.NON_PILOT,
+                nonPilot.branch());
+        assertRawFloat(0.0f, nonPilot.contribution().delta());
+        assertEquals(MoveTransitPolicy.EmbarkBranch.NO_UNMANNED_TARGET,
+                noTarget.branch());
+        assertRawFloat(0.0f, noTarget.contribution().delta());
+    }
+
+    @Test
+    public void embarkPreservesEveryLegacyNeutralReasonAndGuardPrecedence() {
+        assertEmbark(
+                MoveTransitPolicy.embark(
+                        false, false, false, 9.0f,
+                        false, false, true, null, null),
+                MoveTransitPolicy.EmbarkBranch.ERROR,
+                "Embark action (error)", 0.0f);
+        assertEmbark(
+                MoveTransitPolicy.embark(
+                        false, false, false, 9.0f,
+                        false, false, false, null, null),
+                MoveTransitPolicy.EmbarkBranch.NO_CONTEXT,
+                "Embark action (no context)", 0.0f);
+        assertEmbark(
+                MoveTransitPolicy.embark(
+                        true, false, false, 9.0f,
+                        false, false, false, null, null),
+                MoveTransitPolicy.EmbarkBranch.NO_CARD,
+                "Embark action (no card)", 0.0f);
+        assertEmbark(
+                MoveTransitPolicy.embark(
+                        true, true, false, 9.0f,
+                        false, false, false, "Passenger", null),
+                MoveTransitPolicy.EmbarkBranch.NON_PILOT,
+                "Embark action (non-pilot)", 0.0f);
+        assertEmbark(
+                MoveTransitPolicy.embark(
+                        true, true, true, 4.75f,
+                        false, false, false, "Pilot", null),
+                MoveTransitPolicy.EmbarkBranch.POWER_FOUR_PLUS,
+                "Embark action (skipped: power 4 — better as ground troop)",
+                0.0f);
+        assertEmbark(
+                MoveTransitPolicy.embark(
+                        true, true, true, 3.0f,
+                        false, true, false, "Pilot", "Walker"),
+                MoveTransitPolicy.EmbarkBranch.NO_LOCATION,
+                "Embark action (no location)", 0.0f);
+        assertEmbark(
+                MoveTransitPolicy.embark(
+                        true, true, true, 3.0f,
+                        true, false, false, "Pilot", null),
+                MoveTransitPolicy.EmbarkBranch.NO_UNMANNED_TARGET,
+                "Embark action (no unmanned target at site)", 0.0f);
+    }
+
+    @Test
+    public void embarkUnmannedTargetPreservesLegacyBoostAndReason() {
+        assertEmbark(
+                MoveTransitPolicy.embark(
+                        true, true, true, 3.0f,
+                        true, true, false, "Veers", "Blizzard 1"),
+                MoveTransitPolicy.EmbarkBranch.UNMANNED_TARGET,
+                "EMBARK PILOT: 'Veers' boarding unmanned 'Blizzard 1' — vehicle gets power & protection",
+                500.0f);
+    }
+
+    @Test
+    public void residualTransferAndShipDockPreserveLegacyPenalties() {
+        MoveTransitPolicy.Contribution transfer =
+                MoveTransitPolicy.residualTransfer();
+        MoveTransitPolicy.Contribution shipDock =
+                MoveTransitPolicy.shipDock();
+
+        assertTrue(transfer.applies());
+        assertEquals("Usually avoid disembark/relocate/transfer",
+                transfer.reason());
+        assertRawFloat(-50.0f, transfer.delta());
+        assertTrue(shipDock.applies());
+        assertEquals("Avoid ship-docking", shipDock.reason());
+        assertRawFloat(-50.0f, shipDock.delta());
+    }
+
+    @Test
+    public void systemDestinationPenaltiesStackIndependently() {
+        MoveTransitPolicy.SpaceDestinationPenalties both =
+                MoveTransitPolicy.spaceDestination(true, true, true);
+        MoveTransitPolicy.SpaceDestinationPenalties ground =
+                MoveTransitPolicy.spaceDestination(false, true, true);
+
+        assertRawFloat(-300.0f,
+                both.permanentWeaponCharacter().delta());
+        assertRawFloat(-300.0f, both.vehicle().delta());
+        assertRawFloat(-600.0f,
+                both.permanentWeaponCharacter().delta()
+                        + both.vehicle().delta());
+        assertFalse(ground.permanentWeaponCharacter().applies());
+        assertFalse(ground.vehicle().applies());
+    }
+
+    @Test
     public void defensiveShuttlePreservesExactTwoToOneBoundary() {
         PhysicalCard location = location("Cloud City: Upper Walkway");
         GameState gameState = gameState(
@@ -465,5 +634,15 @@ public class MoveTransitPolicyTest {
     private static void assertRawFloat(float expected, float actual) {
         assertEquals(Float.floatToRawIntBits(expected),
                 Float.floatToRawIntBits(actual));
+    }
+
+    private static void assertEmbark(
+            MoveTransitPolicy.EmbarkEvaluation evaluation,
+            MoveTransitPolicy.EmbarkBranch branch,
+            String reason, float delta) {
+        assertEquals(branch, evaluation.branch());
+        assertTrue(evaluation.contribution().applies());
+        assertEquals(reason, evaluation.contribution().reason());
+        assertRawFloat(delta, evaluation.contribution().delta());
     }
 }

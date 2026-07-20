@@ -24,6 +24,23 @@ public class MoveObjectiveConsolidationPolicyTest {
     private static final String OPPONENT = "opponent";
 
     @Test
+    public void hiddenPathSplitPreservesJediPresentAndEmptyScores() {
+        MoveObjectiveConsolidationPolicy.Contribution occupied =
+                MoveObjectiveConsolidationPolicy.hiddenPathSplit(
+                        true, true, true, 1, "Malachor");
+        MoveObjectiveConsolidationPolicy.Contribution empty =
+                MoveObjectiveConsolidationPolicy.hiddenPathSplit(
+                        true, true, true, 0, "Jabiim");
+
+        assertEquals(-500.0f, occupied.delta(), 0.0f);
+        assertEquals(200.0f, empty.delta(), 0.0f);
+        assertFalse(MoveObjectiveConsolidationPolicy.hiddenPathSplit(
+                true, false, true, 0, "Mapuzo").applies());
+        assertFalse(MoveObjectiveConsolidationPolicy.hiddenPathSplit(
+                false, true, true, 0, "Jabiim").applies());
+    }
+
+    @Test
     public void lonePreFlipUsesStrictBestAllyAndTripleBonus() {
         Harness harness = new Harness();
         PhysicalCard current = location("Current");

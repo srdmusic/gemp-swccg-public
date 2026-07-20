@@ -99,7 +99,6 @@ public class MoveEvaluator extends ActionEvaluator {
 
     // Score deltas (from Python)
     private static final float GOOD_DELTA = 10.0f;
-    private static final float BAD_DELTA = -10.0f;
 
     // T4.1 ladder thresholds, score bands, and veto order live in MoveLadderPolicy.
     private static boolean ladderBandsChecked = false;
@@ -1538,7 +1537,10 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
                 } else {
-                    action.addReasoning("Card not at a location", BAD_DELTA);
+                    MoveDestinationPolicy.Contribution missingSource =
+                        MoveDestinationPolicy.missingSourceLocation();
+                    action.addReasoning(
+                        missingSource.reason(), missingSource.delta());
                 }
             }
 

@@ -7,6 +7,20 @@ import java.util.Locale;
  * Adapters retain objective, power, weapon, score application, and logging reads.
  */
 public final class MoveLandoStayPolicy {
+    public record Contribution(boolean applies, String reason, float delta) {
+        private static Contribution none() {
+            return new Contribution(false, null, 0.0f);
+        }
+    }
+
+    public record DestinationEvaluation(
+            Contribution support,
+            Contribution stay) {
+        public float totalDelta() {
+            return support.delta() + stay.delta();
+        }
+    }
+
     public record Evaluation(boolean hardVeto, String reason) {
         private static Evaluation none() {
             return new Evaluation(false, null);
@@ -45,5 +59,40 @@ public final class MoveLandoStayPolicy {
                 true,
                 "V47 LANDO STAY: Lando at " + locationTitle
                         + " — stay for occupation! Don't move!");
+    }
+
+    public static DestinationEvaluation destination(
+            boolean landoAtDestination,
+            int friendlyCharacterCount,
+            boolean landoMover,
+            boolean bespinPresenceObjective) {
+        return new DestinationEvaluation(
+                destinationSupport(
+                        landoAtDestination, friendlyCharacterCount),
+                destinationStay(landoMover, bespinPresenceObjective));
+    }
+
+    public static Contribution destinationSupport(
+            boolean landoAtDestination,
+            int friendlyCharacterCount) {
+        if (landoAtDestination && friendlyCharacterCount == 1) {
+            return new Contribution(
+                    true,
+                    "V24.13 LANDO SUPPORT: Lando is ALONE here — move to protect him!",
+                    250.0f);
+        }
+        return Contribution.none();
+    }
+
+    public static Contribution destinationStay(
+            boolean landoMover,
+            boolean bespinPresenceObjective) {
+        if (landoMover && bespinPresenceObjective) {
+            return new Contribution(
+                    true,
+                    "V47 LANDO STAY: Lando should stay put — moving wastes force and loses occupation!",
+                    -9999.0f);
+        }
+        return Contribution.none();
     }
 }

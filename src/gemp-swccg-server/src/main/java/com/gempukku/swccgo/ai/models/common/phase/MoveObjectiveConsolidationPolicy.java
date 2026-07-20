@@ -63,6 +63,61 @@ public final class MoveObjectiveConsolidationPolicy {
     private MoveObjectiveConsolidationPolicy() {
     }
 
+    public static Contribution cloudCityDestination(
+            boolean bespinPresenceObjective,
+            boolean objectiveRelevantDestination,
+            float opponentPower,
+            float ownPower) {
+        if (!bespinPresenceObjective
+                || !objectiveRelevantDestination
+                || opponentPower != 0.0f) {
+            return Contribution.none();
+        }
+        if (ownPower == 0.0f) {
+            return new Contribution(
+                    true,
+                    "V24.9: Unoccupied CC site — free force drain if we move here!",
+                    200.0f,
+                    false);
+        }
+        if (ownPower > 0.0f) {
+            return new Contribution(
+                    true,
+                    "V24.9: CC site with only our presence — already draining",
+                    20.0f,
+                    false);
+        }
+        return Contribution.none();
+    }
+
+    public static Contribution hiddenPathSplit(
+            boolean hiddenPathPreFlip,
+            boolean nonMapuzoDestination,
+            boolean battlegroundDestination,
+            int friendlyJediAtDestination,
+            String destinationTitle) {
+        if (!hiddenPathPreFlip
+                || !nonMapuzoDestination
+                || !battlegroundDestination) {
+            return Contribution.none();
+        }
+        if (friendlyJediAtDestination >= 1) {
+            return new Contribution(
+                    true,
+                    "V62 SPLIT SITE: Already have " + friendlyJediAtDestination
+                            + " Jedi at " + destinationTitle
+                            + " — move 2nd Jedi to a DIFFERENT battleground to flip Hidden Path!",
+                    -500.0f,
+                    false);
+        }
+        return new Contribution(
+                true,
+                "V62 SPLIT SITE: No friendly Jedi at " + destinationTitle
+                        + " yet — great split-site target for Hidden Path flip!",
+                200.0f,
+                false);
+    }
+
     public static Evaluation preFlip(
             GameState gameState, SwccgGame game,
             PhysicalCard currentLocation, String playerId) {

@@ -98,7 +98,112 @@ public final class MoveDestinationPolicy {
             String castleVetoReason) {
     }
 
+    public record IconScoring(
+            Contribution opponentIcons,
+            Contribution ownIcons,
+            Contribution noIcons) {
+    }
+
     private MoveDestinationPolicy() {
+    }
+
+    public static Contribution missingSourceLocation() {
+        return new Contribution(true, "Card not at a location", -10.0f);
+    }
+
+    public static IconScoring icons(int ownIcons, int opponentIcons) {
+        Contribution opponent = opponentIcons > 0
+                ? new Contribution(
+                        true,
+                        opponentIcons + " opponent icons = force drain potential!",
+                        opponentIcons * 15.0f)
+                : Contribution.none();
+        Contribution own = ownIcons > 0
+                ? new Contribution(
+                        true,
+                        ownIcons + " of our icons = force generation",
+                        ownIcons * 7.5f)
+                : Contribution.none();
+        Contribution none = ownIcons + opponentIcons == 0
+                ? new Contribution(
+                        true,
+                        "No icons at location - low value",
+                        -10.0f)
+                : Contribution.none();
+        return new IconScoring(opponent, own, none);
+    }
+
+    public static Contribution power(
+            float ownPower,
+            float opponentPower,
+            int ownIcons,
+            int opponentIcons) {
+        if (ownPower >= opponentPower && opponentPower > 0.0f) {
+            return new Contribution(
+                    true, "We have power advantage here", 10.0f);
+        }
+        if (opponentPower - ownPower <= 2.0f
+                && opponentPower > 0.0f) {
+            return new Contribution(
+                    true, "Can help reinforce here", 10.0f);
+        }
+        if (opponentPower == 0.0f) {
+            if (opponentIcons > 0) {
+                return new Contribution(
+                        true,
+                        "Unoccupied with opponent icons - force drain!",
+                        20.0f);
+            }
+            if (ownIcons > 0) {
+                return new Contribution(
+                        true,
+                        "Unoccupied with our icons - control",
+                        10.0f);
+            }
+            return new Contribution(
+                    true,
+                    "Unoccupied but no icons - low priority",
+                    0.0f);
+        }
+        return new Contribution(
+                true,
+                "Enemy too strong (" + (int) opponentPower + " power)",
+                -5.0f * opponentPower);
+    }
+
+    public static Contribution battleground(
+            Boolean engineBattleground,
+            boolean titleContainsBattleground) {
+        if (engineBattleground != null) {
+            return engineBattleground
+                    ? new Contribution(
+                            true,
+                            "V29.7 Move to battleground — force drains!",
+                            40.0f)
+                    : new Contribution(
+                            true,
+                            "V29.7 Non-battleground destination",
+                            0.0f);
+        }
+        if (titleContainsBattleground) {
+            return new Contribution(
+                    true, "Battleground location", 15.0f);
+        }
+        return Contribution.none();
+    }
+
+    public static Contribution evazanCombo(
+            boolean movingEvazan,
+            boolean movingWeaponCharacter,
+            boolean comboPartnerAtDestination) {
+        if ((movingEvazan || movingWeaponCharacter)
+                && comboPartnerAtDestination) {
+            return new Contribution(
+                    true,
+                    "V24.3 EVAZAN COMBO: Move here — combo partner at this site for weapon kill combo!",
+                    200.0f);
+        }
+        return Contribution.none();
     }
 
     public static PhysicalCard resolveDestination(

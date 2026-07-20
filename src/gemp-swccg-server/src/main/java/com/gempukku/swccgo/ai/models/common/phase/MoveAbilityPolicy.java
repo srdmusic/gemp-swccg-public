@@ -10,6 +10,8 @@ public final class MoveAbilityPolicy {
         DESTINY_DANGER,
         SOLO_ESCAPE,
         JOIN_GROUP,
+        WEAK_SPLIT,
+        JOIN_DESTINATION,
         ABILITY_BUDDY_BREAK,
         ABILITY_BUDDY_DOOMED_SKIP
     }
@@ -115,6 +117,55 @@ public final class MoveAbilityPolicy {
                         destinationAbilityTotal),
                 250.0f,
                 true);
+    }
+
+    public static Evaluation weakSplit(
+            Float moverAbility,
+            boolean differentDestination,
+            float destinationOpponentPower,
+            int destinationFriendlyCharacters,
+            int remainingFriendlyCharacters,
+            float maximumRemainingAbility) {
+        if (moverAbility != null
+                && moverAbility < 4.0f
+                && differentDestination
+                && destinationOpponentPower <= 0.0f
+                && destinationFriendlyCharacters == 0
+                && remainingFriendlyCharacters == 1
+                && maximumRemainingAbility < 4.0f) {
+            return new Evaluation(
+                    Branch.WEAK_SPLIT,
+                    true,
+                    "L1/L4 SPLIT (batch1b): weak mover to empty site would create TWO weak solos",
+                    -800.0f,
+                    false);
+        }
+        return Evaluation.none();
+    }
+
+    public static Evaluation joinDestination(
+            String destinationTitle,
+            float destinationAbility,
+            float moverAbility,
+            boolean destinyCapable,
+            String sourceTitle) {
+        float delta = Math.min(
+                450.0f,
+                250.0f
+                        + Math.min(100.0f, destinationAbility * 10.0f)
+                        + (destinyCapable ? 150.0f : 0.0f));
+        return new Evaluation(
+                Branch.JOIN_DESTINATION,
+                true,
+                String.format(
+                        "V156 JOIN-GROUP DEST: %s reaches ability %.0f%s"
+                                + " — join (weak solo leaving %s)!",
+                        destinationTitle,
+                        destinationAbility + moverAbility,
+                        destinyCapable ? " (destiny-capable)" : "",
+                        sourceTitle),
+                delta,
+                false);
     }
 
     public static Evaluation abilityBuddy(

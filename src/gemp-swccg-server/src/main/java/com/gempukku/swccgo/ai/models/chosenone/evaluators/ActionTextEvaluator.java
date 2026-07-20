@@ -18,6 +18,7 @@ import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
@@ -56,7 +57,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
     // Rank deltas (from Python)
     private static final float VERY_GOOD_DELTA = 50.0f;
     private static final float GOOD_DELTA = 30.0f;
-    private static final float BAD_DELTA = -30.0f;
     private static final float VERY_BAD_DELTA = -50.0f;
 
     // Pattern for extracting blueprint ID from action text HTML
@@ -2048,16 +2048,28 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Capacity Slot Selection (Pilot vs Passenger) ==========
             if (textLower.contains("capacity slot")) {
-                if (textLower.contains("pilot capacity slot")) {
-                    action.setScore(100.0f);
-                    action.addReasoning("Pilot slot adds power to ship!", 100.0f);
+                boolean pilotCapacity = textLower.contains("pilot capacity slot");
+                boolean passengerCapacity = textLower.contains("passenger capacity slot");
+                MoveTransitPolicy.CapacityChoice capacity =
+                    MoveTransitPolicy.capacityChoice(
+                        pilotCapacity, passengerCapacity);
+                if (capacity.branch()
+                        == MoveTransitPolicy.CapacitySlotBranch.PILOT_PREFER) {
+                    action.setScore(capacity.replacementScore());
+                    action.addReasoning(
+                        capacity.contribution().reason(),
+                        capacity.contribution().delta());
                     action.setActionType(ActionType.MOVE);
                     logger.info("PILOT SLOT: Strongly preferring pilot capacity (+100)");
-                } else if (textLower.contains("passenger capacity slot")) {
-                    action.setScore(VERY_BAD_DELTA);
-                    action.addReasoning("Passenger gives NO power bonus!", VERY_BAD_DELTA);
+                } else if (capacity.branch()
+                        == MoveTransitPolicy.CapacitySlotBranch.PASSENGER_SKIP) {
+                    action.setScore(capacity.replacementScore());
+                    action.addReasoning(
+                        capacity.contribution().reason(),
+                        capacity.contribution().delta());
                     action.setActionType(ActionType.MOVE);
-                    logger.warn("PASSENGER SLOT: Penalizing - no power contribution ({})", VERY_BAD_DELTA);
+                    logger.warn("PASSENGER SLOT: Penalizing - no power contribution ({})",
+                        capacity.contribution().delta());
                 }
                 actions.add(action);
                 continue;
@@ -3671,12 +3683,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
             else if (actionText.contains("Disembark") || actionText.contains("Relocate") ||
                      actionText.contains("Transfer")) {
                 action.setActionType(ActionType.MOVE);
-                action.addReasoning("Usually avoid disembark/relocate/transfer", VERY_BAD_DELTA);
+                MoveTransitPolicy.Contribution residualTransfer =
+                    MoveTransitPolicy.residualTransfer();
+                action.addReasoning(
+                    residualTransfer.reason(), residualTransfer.delta());
             }
 
             // ========== Ship-dock ==========
             else if (actionText.contains("Ship-dock")) {
-                action.addReasoning("Avoid ship-docking", VERY_BAD_DELTA);
+                MoveTransitPolicy.Contribution shipDock =
+                    MoveTransitPolicy.shipDock();
+                action.addReasoning(shipDock.reason(), shipDock.delta());
             }
 
             // ========== Place in Lost Pile ==========
@@ -4489,7 +4506,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             com.gempukku.swccgo.game.state.GameState embarkGs = context.getGameState();
             com.gempukku.swccgo.game.SwccgGame embarkGame = context.getGame();
             if (embarkGs == null || embarkGame == null || cardId == null) {
-                action.addReasoning("Embark action (no context)", 0.0f);
+                applyEmbarkPolicy(action, false, false, false, null,
+                    false, false, false, null, null);
                 return;
             }
             com.gempukku.swccgo.game.PhysicalCard embarker = null;
@@ -4497,7 +4515,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 embarker = embarkGs.findCardById(Integer.parseInt(cardId));
             } catch (NumberFormatException nfe) { /* temp ids — skip */ }
             if (embarker == null || embarker.getBlueprint() == null) {
-                action.addReasoning("Embark action (no card)", 0.0f);
+                applyEmbarkPolicy(action, true, false, false, null,
+                    false, false, false, null, null);
                 return;
             }
             SwccgCardBlueprint embarkerBp = embarker.getBlueprint();
@@ -4506,7 +4525,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 || embarkerBp.hasKeyword(com.gempukku.swccgo.common.Keyword.TROOPER);
             if (!embarkerIsPilot) {
                 // Non-pilot character embarking is usually a passenger move — neutral.
-                action.addReasoning("Embark action (non-pilot)", 0.0f);
+                applyEmbarkPolicy(action, true, true, false, null,
+                    false, false, false, embarker.getTitle(), null);
                 return;
             }
             // 2026-06-01 POWER-3 GATE (Steve): "If pilot is power 4 or more
@@ -4516,9 +4536,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // valuable hitting people on the ground than crewing a vehicle.
             Float embarkerPower = embarkerBp.hasPowerAttribute() ? embarkerBp.getPower() : null;
             if (embarkerPower != null && embarkerPower >= 4f) {
-                action.addReasoning(
-                    "Embark action (skipped: power " + embarkerPower.intValue()
-                    + " — better as ground troop)", 0.0f);
+                applyEmbarkPolicy(action, true, true, true, embarkerPower,
+                    false, false, false, embarker.getTitle(), null);
                 return;
             }
             // Find the embarker's current location.
@@ -4528,7 +4547,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     .getLocationThatCardIsAt(embarkGs, embarker);
             } catch (Exception ignore) { /* */ }
             if (embarkLoc == null) {
-                action.addReasoning("Embark action (no location)", 0.0f);
+                applyEmbarkPolicy(action, true, true, true, embarkerPower,
+                    false, false, false, embarker.getTitle(), null);
                 return;
             }
             // Walk permanents at the same site for an unmanned vehicle/ship owned by us.
@@ -4555,18 +4575,38 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
             if (unmannedTitle != null) {
-                action.addReasoning(
-                    "EMBARK PILOT: '" + embarker.getTitle() + "' boarding unmanned '"
-                    + unmannedTitle + "' — vehicle gets power & protection", 500.0f);
+                applyEmbarkPolicy(action, true, true, true, embarkerPower,
+                    true, true, false, embarker.getTitle(), unmannedTitle);
                 logger.warn("EMBARK PILOT: {} boarding unmanned {} → +500",
                     embarker.getTitle(), unmannedTitle);
             } else {
-                action.addReasoning("Embark action (no unmanned target at site)", 0.0f);
+                applyEmbarkPolicy(action, true, true, true, embarkerPower,
+                    true, false, false, embarker.getTitle(), null);
             }
         } catch (Exception e) {
             logger.debug("evaluateEmbark error: {}", e.getMessage());
-            action.addReasoning("Embark action (error)", 0.0f);
+            applyEmbarkPolicy(action, true, true, true, null,
+                true, false, true, null, null);
         }
+    }
+
+    private void applyEmbarkPolicy(
+            EvaluatedAction action,
+            boolean contextAvailable,
+            boolean cardAvailable,
+            boolean eligiblePilotOrTrooper,
+            Float power,
+            boolean locationAvailable,
+            boolean unmannedTargetAtSite,
+            boolean readFailed,
+            String embarkerTitle,
+            String unmannedTargetTitle) {
+        MoveTransitPolicy.EmbarkEvaluation embark = MoveTransitPolicy.embark(
+            contextAvailable, cardAvailable, eligiblePilotOrTrooper, power,
+            locationAvailable, unmannedTargetAtSite, readFailed,
+            embarkerTitle, unmannedTargetTitle);
+        action.addReasoning(
+            embark.contribution().reason(), embark.contribution().delta());
     }
 
     private void evaluateGrab(EvaluatedAction action, DecisionContext context, String actionText) {
@@ -4684,13 +4724,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
         boolean isOpponentSpy = (ownerIsUs != null && !ownerIsUs)
             || (ownerIsUs == null && ((mySide == Side.DARK && looksLightSide) || (mySide == Side.LIGHT && looksDarkSide)));
 
-        if (isOpponentSpy) {
-            action.addReasoning("Break opponent's spy cover — expose them!", GOOD_DELTA);
-        } else if (isOwnSpy) {
+        boolean friendlyCharAtSpyLocation = false;
+        if (isOwnSpy && !isOpponentSpy) {
             // V53: Check if we have a non-spy friendly character at the spy's location.
             // If yes, flip the spy to fight alongside them (+500).
             // If no, don't blow cover for nothing (-500).
-            boolean friendlyCharAtSpyLocation = false;
             if (gameState != null) {
                 try {
                     String pid = context.getPlayerId();
@@ -4715,17 +4753,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                 } catch (Exception e) { /* ignore */ }
             }
+        }
 
-            if (friendlyCharAtSpyLocation) {
-                action.addReasoning("V53 FLIP SPY: We have a character at spy's location — flip spy to protect them!", 500.0f);
-                logger.warn("V53 FLIP SPY: Breaking own spy cover — friendly character present, +500!");
-            } else {
-                action.addReasoning("V53 KEEP COVER: No friendly character at spy location — don't blow cover!", -500.0f);
-                logger.warn("V53 KEEP COVER: No friendly at spy location — blocking break cover, -500");
-            }
-        } else {
+        MoveSpyFollowPolicy.Contribution breakCover =
+            MoveSpyFollowPolicy.breakCover(
+                isOpponentSpy, isOwnSpy, friendlyCharAtSpyLocation);
+        action.addReasoning(breakCover.reason(), breakCover.delta());
+        if (isOwnSpy && !isOpponentSpy && friendlyCharAtSpyLocation) {
+            logger.warn("V53 FLIP SPY: Breaking own spy cover — friendly character present, +500!");
+        } else if (isOwnSpy && !isOpponentSpy) {
+            logger.warn("V53 KEEP COVER: No friendly at spy location — blocking break cover, -500");
+        } else if (!isOpponentSpy) {
             // Unknown spy - check for friendly presence as tiebreaker
-            action.addReasoning("Break cover (spy owner unknown - cautious)", BAD_DELTA);
             logger.info("Break cover owner unknown, avoiding: {}", actionText);
         }
     }

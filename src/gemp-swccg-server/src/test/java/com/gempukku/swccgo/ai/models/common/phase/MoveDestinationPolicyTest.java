@@ -706,6 +706,88 @@ public class MoveDestinationPolicyTest {
                 result.reason());
     }
 
+    @Test
+    public void residualIconScoringPreservesOpponentThenOwnStack() {
+        MoveDestinationPolicy.IconScoring both =
+                MoveDestinationPolicy.icons(2, 3);
+        MoveDestinationPolicy.IconScoring none =
+                MoveDestinationPolicy.icons(0, 0);
+
+        assertFloat(45.0f, both.opponentIcons().delta());
+        assertFloat(15.0f, both.ownIcons().delta());
+        assertFloat(60.0f,
+                both.opponentIcons().delta() + both.ownIcons().delta());
+        assertFalse(both.noIcons().applies());
+        assertFloat(-10.0f, none.noIcons().delta());
+    }
+
+    @Test
+    public void missingSourceLocationPreservesLegacyPenaltyAndReason() {
+        MoveDestinationPolicy.Contribution result =
+                MoveDestinationPolicy.missingSourceLocation();
+
+        assertTrue(result.applies());
+        assertEquals("Card not at a location", result.reason());
+        assertFloat(-10.0f, result.delta());
+    }
+
+    @Test
+    public void residualPowerScoringPreservesBoundaries() {
+        assertFloat(10.0f,
+                MoveDestinationPolicy.power(4.0f, 4.0f, 0, 0).delta());
+        assertFloat(10.0f,
+                MoveDestinationPolicy.power(3.0f, 5.0f, 0, 0).delta());
+        assertFloat(-25.0f,
+                MoveDestinationPolicy.power(2.99f, 5.0f, 0, 0).delta());
+        assertFloat(20.0f,
+                MoveDestinationPolicy.power(0.0f, 0.0f, 0, 1).delta());
+        assertFloat(10.0f,
+                MoveDestinationPolicy.power(0.0f, 0.0f, 1, 0).delta());
+        assertFloat(0.0f,
+                MoveDestinationPolicy.power(0.0f, 0.0f, 0, 0).delta());
+    }
+
+    @Test
+    public void battlegroundTriStatePreservesEngineAndFallbackScores() {
+        assertFloat(40.0f,
+                MoveDestinationPolicy.battleground(true, false).delta());
+        MoveDestinationPolicy.Contribution engineFalse =
+                MoveDestinationPolicy.battleground(false, true);
+        assertTrue(engineFalse.applies());
+        assertFloat(0.0f, engineFalse.delta());
+        assertFloat(15.0f,
+                MoveDestinationPolicy.battleground(null, true).delta());
+        assertFalse(MoveDestinationPolicy.battleground(
+                null, false).applies());
+    }
+
+    @Test
+    public void cloudCityResidualPreservesEmptyAndFriendlyTiers() {
+        MoveObjectiveConsolidationPolicy.Contribution empty =
+                MoveObjectiveConsolidationPolicy.cloudCityDestination(
+                        true, true, 0.0f, 0.0f);
+        MoveObjectiveConsolidationPolicy.Contribution friendly =
+                MoveObjectiveConsolidationPolicy.cloudCityDestination(
+                        true, true, 0.0f, 3.0f);
+
+        assertFloat(200.0f, empty.delta());
+        assertFloat(20.0f, friendly.delta());
+        assertFalse(MoveObjectiveConsolidationPolicy.cloudCityDestination(
+                true, true, 1.0f, 0.0f).applies());
+    }
+
+    @Test
+    public void evazanResidualRequiresMoverAndPartner() {
+        assertFloat(200.0f, MoveDestinationPolicy.evazanCombo(
+                true, false, true).delta());
+        assertFloat(200.0f, MoveDestinationPolicy.evazanCombo(
+                false, true, true).delta());
+        assertFalse(MoveDestinationPolicy.evazanCombo(
+                true, false, false).applies());
+        assertFalse(MoveDestinationPolicy.evazanCombo(
+                false, false, true).applies());
+    }
+
     private static PhysicalCard location(
             String title, CardSubtype subtype) {
         PhysicalCard card = mock(PhysicalCard.class);

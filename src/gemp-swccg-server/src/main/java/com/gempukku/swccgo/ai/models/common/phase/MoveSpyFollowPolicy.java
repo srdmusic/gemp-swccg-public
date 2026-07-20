@@ -120,4 +120,52 @@ public final class MoveSpyFollowPolicy {
                 opponentPowerAtSource,
                 destinationHasOpponent, destination);
     }
+
+    public static Contribution breakCover(
+            boolean opponentSpy,
+            boolean ownSpy,
+            boolean friendlyCharacterAtSpyLocation) {
+        if (opponentSpy) {
+            return new Contribution(
+                    true,
+                    "Break opponent's spy cover — expose them!",
+                    30.0f,
+                    false);
+        }
+        if (ownSpy && friendlyCharacterAtSpyLocation) {
+            return new Contribution(
+                    true,
+                    "V53 FLIP SPY: We have a character at spy's location — flip spy to protect them!",
+                    500.0f,
+                    false);
+        }
+        if (ownSpy) {
+            return new Contribution(
+                    true,
+                    "V53 KEEP COVER: No friendly character at spy location — don't blow cover!",
+                    -500.0f,
+                    false);
+        }
+        return new Contribution(
+                true,
+                "Break cover (spy owner unknown - cautious)",
+                -30.0f,
+                false);
+    }
+
+    public static Contribution dilution(
+            boolean friendlyUndercoverSpyAtDestination,
+            boolean recognizedSpyMover,
+            String destinationTitle) {
+        if (friendlyUndercoverSpyAtDestination && !recognizedSpyMover) {
+            return new Contribution(
+                    true,
+                    "V62 SPY DILUTION: Our undercover spy is at "
+                            + destinationTitle
+                            + " — moving a non-spy here wastes the spy's drain-blocking!",
+                    -1500.0f,
+                    false);
+        }
+        return Contribution.none();
+    }
 }

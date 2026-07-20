@@ -17,9 +17,13 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveAbilityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveLandoStayPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
+import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidateFacts;
@@ -77,8 +81,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
     // Score constants
     private static final float VERY_GOOD_DELTA = 150.0f;
-    private static final float GOOD_DELTA = 10.0f;
-    private static final float BAD_DELTA = -10.0f;
     private static final float VERY_BAD_DELTA = -150.0f;
     private static final SwccgCardBlueprintLibrary FALLBACK_LIBRARY = new SwccgCardBlueprintLibrary();
 
@@ -5146,8 +5148,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         Side mySide = context.getSide();
 
         // Icon bonus constant (same as MoveEvaluator/Python)
-        final float ICON_BONUS = 15.0f;
-
         // === V169 (Steve, 2026-06): RETREAT MODE — is the card being moved ENDANGERED? ===
         // Replay lk6xgsokjcwrwxuu fatal move 1: Asajj at Guest Quarters with Luke AT her site
         // could not retreat — every safe (empty) destination was V41-wrong-direction blocked
@@ -5325,10 +5325,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 Float oa = oc.getBlueprint().hasAbilityAttribute() ? oc.getBlueprint().getAbility() : null;
                                                 if (oa != null && oa > fsRemainMaxAb) fsRemainMaxAb = oa;
                                             }
-                                            if (fsRemain == 1 && fsRemainMaxAb < 4f) {
+                                            MoveAbilityPolicy.Evaluation weakSplit =
+                                                MoveAbilityPolicy.weakSplit(
+                                                    fsMa, true, fsDestOpp,
+                                                    fsDestOurChars, fsRemain, fsRemainMaxAb);
+                                            if (weakSplit.applies()) {
                                                 action.addReasoning(
-                                                    "L1/L4 SPLIT (batch1b): weak mover to empty site would create TWO weak solos",
-                                                    -800.0f);
+                                                    weakSplit.reason(), weakSplit.delta());
                                                 logger.warn("FORMATION SAFETY (move-dest): L1/L4 SPLIT -800 — {} to {} leaves lone weak buddy at {}",
                                                     fsMover.getTitle(), location.getTitle(), fsOrigin.getTitle());
                                             }
@@ -5400,24 +5403,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 theirIcons = lightIcons;
                             }
 
-                            // Bonus for opponent icons (force drain potential!)
-                            if (theirIcons > 0) {
-                                float iconScore = theirIcons * ICON_BONUS;
-                                action.addReasoning(theirIcons + " opponent icons = force drain potential!", iconScore);
+                            MoveDestinationPolicy.IconScoring iconScoring =
+                                MoveDestinationPolicy.icons(myIcons, theirIcons);
+                            if (iconScoring.opponentIcons().applies()) {
+                                action.addReasoning(
+                                    iconScoring.opponentIcons().reason(),
+                                    iconScoring.opponentIcons().delta());
                                 logger.debug("Move dest {}: +{} for {} opponent icons",
-                                    title, iconScore, theirIcons);
+                                    title, iconScoring.opponentIcons().delta(), theirIcons);
                             }
 
                             // Smaller bonus for our icons (force generation)
-                            if (myIcons > 0) {
-                                float iconScore = myIcons * (ICON_BONUS / 2);
-                                action.addReasoning(myIcons + " of our icons = force generation", iconScore);
+                            if (iconScoring.ownIcons().applies()) {
+                                action.addReasoning(
+                                    iconScoring.ownIcons().reason(),
+                                    iconScoring.ownIcons().delta());
                             }
 
                             // Penalty for no icons at all
-                            int totalIcons = myIcons + theirIcons;
-                            if (totalIcons == 0) {
-                                action.addReasoning("No icons at location - low value", -10.0f);
+                            if (iconScoring.noIcons().applies()) {
+                                action.addReasoning(
+                                    iconScoring.noIcons().reason(),
+                                    iconScoring.noIcons().delta());
                             }
 
                             // === V169 RETREAT BONUS: endangered mover -> safe destination ===
@@ -5444,15 +5451,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             if (v156JoinMode && v156DestFriendlyChars > 0) {
                                 boolean v156Defensible = (v156DestAbilityTotal + v156MoverAbility)
                                     >= com.gempukku.swccgo.ai.models.common.strategy.MovePredicates.DEFENSIBLE_ABILITY;
-                                float v156JoinBonus = Math.min(450.0f,
-                                    250.0f + Math.min(100.0f, v156DestAbilityTotal * 10.0f) + (v156Defensible ? 150.0f : 0.0f));
-                                action.addReasoning(String.format(
-                                    "V156 JOIN-GROUP DEST: %s reaches ability %.0f%s — join (weak solo leaving %s)!",
-                                    title, v156DestAbilityTotal + v156MoverAbility,
-                                    v156Defensible ? " (destiny-capable)" : "", v156FromTitle), v156JoinBonus);
+                                MoveAbilityPolicy.Evaluation v156JoinDestination =
+                                    MoveAbilityPolicy.joinDestination(
+                                        title, v156DestAbilityTotal,
+                                        v156MoverAbility, v156Defensible,
+                                        v156FromTitle);
+                                action.addReasoning(
+                                    v156JoinDestination.reason(),
+                                    v156JoinDestination.delta());
                                 logger.warn("V156 JOIN-GROUP DEST: {} (stack ability {}->{}) -> +{} (mover from {})",
                                     title, (int) v156DestAbilityTotal, (int) (v156DestAbilityTotal + v156MoverAbility),
-                                    (int) v156JoinBonus, v156FromTitle);
+                                    (int) v156JoinDestination.delta(), v156FromTitle);
                             }
 
                             // MoveDrainRoutingPolicy owns V166 drain-contest scoring.
@@ -5618,45 +5627,27 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         } catch (Exception e) { logger.debug("V67au error: {}", e.getMessage()); }
 
                         // === POWER-BASED SCORING ===
-                        if (ourPower >= theirPower && theirPower > 0) {
-                            action.addReasoning("We have power advantage here", GOOD_DELTA);
-                        } else if (theirPower - ourPower <= 2 && theirPower > 0) {
-                            action.addReasoning("Can help reinforce here", GOOD_DELTA);
-                        } else if (theirPower == 0) {
-                            // Unoccupied - good if it has icons
-                            if (theirIcons > 0) {
-                                action.addReasoning("Unoccupied with opponent icons - force drain!", GOOD_DELTA * 2);
-                            } else if (myIcons > 0) {
-                                action.addReasoning("Unoccupied with our icons - control", GOOD_DELTA);
-                            } else {
-                                action.addReasoning("Unoccupied but no icons - low priority", 0.0f);
-                            }
-                        } else {
-                            // Enemy is much stronger - penalty scales with their power
-                            float penalty = BAD_DELTA * (theirPower / 2);
-                            action.addReasoning("Enemy too strong (" + (int)theirPower + " power)", penalty);
-                        }
+                        MoveDestinationPolicy.Contribution powerScoring =
+                            MoveDestinationPolicy.power(
+                                ourPower, theirPower, myIcons, theirIcons);
+                        action.addReasoning(
+                            powerScoring.reason(), powerScoring.delta());
 
                         // V29.7: Bonus for battleground locations (move preference)
                         // Use real game engine API for accurate battleground detection.
                         // Only penalize non-BG if BG alternatives exist on the table.
                         if (location != null && game != null && gameState != null) {
                             try {
-                                boolean isBG = game.getModifiersQuerying().isBattleground(gameState, location, null);
-                                if (isBG) {
-                                    action.addReasoning("V29.7 Move to battleground — force drains!", 40.0f);
-                                } else {
-                                    // V29.7: Don't penalize non-BG moves when no BG exists
-                                    action.addReasoning("V29.7 Non-battleground destination", 0.0f);
-                                }
+                                boolean isBG = game.getModifiersQuerying()
+                                    .isBattleground(gameState, location, null);
+                                applyMoveBattlegroundPolicy(action, isBG, false);
                             } catch (Exception e) {
                                 // Fallback to old heuristic
-                                if (bp != null) {
-                                    String titleLowerBg = title != null ? title.toLowerCase() : "";
-                                    if (titleLowerBg.contains("battleground")) {
-                                        action.addReasoning("Battleground location", 15.0f);
-                                    }
-                                }
+                                boolean titleContainsBattleground = bp != null
+                                    && title != null
+                                    && title.toLowerCase().contains("battleground");
+                                applyMoveBattlegroundPolicy(
+                                    action, null, titleContainsBattleground);
                             }
                         }
 
@@ -5666,16 +5657,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         {
                             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer moveObjCheck =
                                 context.getObjectiveAnalyzer();
-                            if (moveObjCheck != null && moveObjCheck.needsBespinSystemPresence()) {
-                                String destTitle = title != null ? title : "";
-                                boolean isObjLoc = moveObjCheck.isObjectiveRelevantLocation(destTitle);
-                                if (isObjLoc && theirPower == 0 && ourPower == 0) {
-                                    // Unoccupied CC site — moving here creates a new drain site!
-                                    action.addReasoning("V24.9: Unoccupied CC site — free force drain if we move here!", 200.0f);
+                            boolean bespinPresenceObjective = moveObjCheck != null
+                                && moveObjCheck.needsBespinSystemPresence();
+                            String destTitle = title != null ? title : "";
+                            boolean isObjLoc = bespinPresenceObjective
+                                && moveObjCheck.isObjectiveRelevantLocation(destTitle);
+                            MoveObjectiveConsolidationPolicy.Contribution cloudCityDestination =
+                                MoveObjectiveConsolidationPolicy.cloudCityDestination(
+                                    bespinPresenceObjective, isObjLoc,
+                                    theirPower, ourPower);
+                            if (cloudCityDestination.applies()) {
+                                action.addReasoning(
+                                    cloudCityDestination.reason(),
+                                    cloudCityDestination.delta());
+                                if (ourPower == 0.0f) {
                                     logger.info("V24.9: Move dest {} is unoccupied CC — big bonus (+200)", title);
-                                } else if (isObjLoc && theirPower == 0 && ourPower > 0) {
-                                    // We already have presence — reinforcement is less critical
-                                    action.addReasoning("V24.9: CC site with only our presence — already draining", 20.0f);
                                 }
                             }
                         }
@@ -5749,20 +5745,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 }
                                             }
                                         }
+                                        MoveObjectiveConsolidationPolicy.Contribution hiddenPathSplit =
+                                            MoveObjectiveConsolidationPolicy.hiddenPathSplit(
+                                                onHiddenPath, true, isBGDest,
+                                                ourJediHere, title);
+                                        action.addReasoning(
+                                            hiddenPathSplit.reason(),
+                                            hiddenPathSplit.delta());
                                         if (ourJediHere >= 1) {
-                                            action.addReasoning(
-                                                "V62 SPLIT SITE: Already have " + ourJediHere
-                                                    + " Jedi at " + title
-                                                    + " — move 2nd Jedi to a DIFFERENT battleground to flip Hidden Path!",
-                                                -500.0f);
                                             logger.warn("V62 SPLIT SITE: {} has {} friendly Jedi — penalize duplicate dest (-500)",
                                                 title, ourJediHere);
                                         } else {
                                             // Empty BG outside Mapuzo — ideal split-site destination
-                                            action.addReasoning(
-                                                "V62 SPLIT SITE: No friendly Jedi at " + title
-                                                    + " yet — great split-site target for Hidden Path flip!",
-                                                200.0f);
                                             logger.info("V62 SPLIT SITE: {} is ideal split-site for Hidden Path (+200)",
                                                 title);
                                         }
@@ -5812,10 +5806,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     // getting overridden by +300 V41 CONTEST DEST + +300 contest
                                     // bonus from the spy's enemy presence. -1500 ensures spy
                                     // dilution is a near-hard block when safer alternatives exist.
+                                    MoveSpyFollowPolicy.Contribution spyDilution =
+                                        MoveSpyFollowPolicy.dilution(
+                                            ourSpyHere, movingCardIsSpy, title);
                                     action.addReasoning(
-                                        "V62 SPY DILUTION: Our undercover spy is at " + title
-                                            + " — moving a non-spy here wastes the spy's drain-blocking!",
-                                        -1500.0f);
+                                        spyDilution.reason(), spyDilution.delta());
                                     logger.warn("V62 SPY DILUTION: {} has our spy — don't dilute (-1500)", title);
                                 }
                             } catch (Exception e) { /* ignore */ }
@@ -5840,9 +5835,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             landoAlone = true;
                                         }
                                     }
-                                    if (landoAlone && ourCharCount == 1) {
+                                    MoveLandoStayPolicy.Contribution landoSupport =
+                                        MoveLandoStayPolicy.destinationSupport(
+                                            landoAlone, ourCharCount);
+                                    if (landoSupport.applies()) {
                                         action.addReasoning(
-                                            "V24.13 LANDO SUPPORT: Lando is ALONE here — move to protect him!", 250.0f);
+                                            landoSupport.reason(),
+                                            landoSupport.delta());
                                         logger.warn("V24.13 LANDO ALONE AT {}: Moving here to support (+250)", title);
                                     }
                                 }
@@ -5858,9 +5857,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (moveDecisionText.contains("lando")) {
                             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer moveObjAnalyzer =
                                 context.getObjectiveAnalyzer();
-                            if (moveObjAnalyzer != null && moveObjAnalyzer.needsBespinSystemPresence()) {
+                            boolean bespinPresenceObjective = moveObjAnalyzer != null
+                                && moveObjAnalyzer.needsBespinSystemPresence();
+                            MoveLandoStayPolicy.Contribution landoStay =
+                                MoveLandoStayPolicy.destinationStay(
+                                    true, bespinPresenceObjective);
+                            if (landoStay.applies()) {
                                 // V47: Block most Lando moves — he stays where he is
-                                action.addReasoning("V47 LANDO STAY: Lando should stay put — moving wastes force and loses occupation!", -9999.0f);
+                                action.addReasoning(
+                                    landoStay.reason(), landoStay.delta());
                                 logger.warn("V47 LANDO STAY: Blocking Lando move to {} — stay at current location!", title);
                             }
                         }
@@ -5901,13 +5906,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                 }
-                                if (movingCharHasWeapon) {
-                                    action.addReasoning("V24.14B WEAPON CHAR TO SPACE: Permanent weapon can't fire at system locations — don't shuttle here!", -300.0f);
+                                boolean movingVehicle = moveDecisionText.contains("vehicle");
+                                MoveTransitPolicy.SpaceDestinationPenalties spaceDestination =
+                                    MoveTransitPolicy.spaceDestination(
+                                        destIsSpace, movingCharHasWeapon,
+                                        movingVehicle);
+                                if (spaceDestination.permanentWeaponCharacter().applies()) {
+                                    action.addReasoning(
+                                        spaceDestination.permanentWeaponCharacter().reason(),
+                                        spaceDestination.permanentWeaponCharacter().delta());
                                     logger.warn("V24.14B WEAPON MOVE: Char with permanent weapon moving to space {} — penalized (-300)", title);
                                 }
                                 // Also penalize vehicles moving to space
-                                if (moveDecisionText.contains("vehicle")) {
-                                    action.addReasoning("V24.14B VEHICLE TO SPACE: Vehicles don't belong in space!", -300.0f);
+                                if (spaceDestination.vehicle().applies()) {
+                                    action.addReasoning(
+                                        spaceDestination.vehicle().reason(),
+                                        spaceDestination.vehicle().delta());
                                     logger.warn("V24.14B VEHICLE MOVE: Vehicle moving to space {} — penalized (-300)", title);
                                 }
                             }
@@ -6156,10 +6170,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             } catch (Exception e) { /* ignore */ }
 
-                            if (comboPartnerAtDest) {
+                            MoveDestinationPolicy.Contribution evazanCombo =
+                                MoveDestinationPolicy.evazanCombo(
+                                    movingEvazan, movingWeaponChar,
+                                    comboPartnerAtDest);
+                            if (evazanCombo.applies()) {
                                 action.addReasoning(
-                                    "V24.3 EVAZAN COMBO: Move here — combo partner at this site for weapon kill combo!",
-                                    200.0f);
+                                    evazanCombo.reason(), evazanCombo.delta());
                                 logger.warn("V24.3 EVAZAN COMBO MOVE: Partner found at {} (+200)", title);
                             }
                         }
@@ -6173,6 +6190,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         return actions;
+    }
+
+    private void applyMoveBattlegroundPolicy(
+            EvaluatedAction action,
+            Boolean engineBattleground,
+            boolean titleContainsBattleground) {
+        MoveDestinationPolicy.Contribution battleground =
+            MoveDestinationPolicy.battleground(
+                engineBattleground, titleContainsBattleground);
+        if (battleground.applies()) {
+            action.addReasoning(
+                battleground.reason(), battleground.delta());
+        }
     }
 
     /**

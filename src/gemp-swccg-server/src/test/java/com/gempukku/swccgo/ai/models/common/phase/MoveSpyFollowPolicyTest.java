@@ -159,6 +159,33 @@ public class MoveSpyFollowPolicyTest {
         harness.evaluate(spy, "destination");
     }
 
+    @Test
+    public void breakCoverPreservesOpponentOwnAndUnknownArithmetic() {
+        assertFloat(30.0f,
+                MoveSpyFollowPolicy.breakCover(true, false, false).delta());
+        assertFloat(500.0f,
+                MoveSpyFollowPolicy.breakCover(false, true, true).delta());
+        assertFloat(-500.0f,
+                MoveSpyFollowPolicy.breakCover(false, true, false).delta());
+        assertFloat(-30.0f,
+                MoveSpyFollowPolicy.breakCover(false, false, true).delta());
+        assertFloat(30.0f,
+                MoveSpyFollowPolicy.breakCover(true, true, true).delta());
+    }
+
+    @Test
+    public void spyDilutionRequiresFriendlySpyAndRecognizedNonSpyMover() {
+        MoveSpyFollowPolicy.Contribution applies =
+                MoveSpyFollowPolicy.dilution(true, false, "Sith Temple");
+
+        assertTrue(applies.applies());
+        assertFloat(-1500.0f, applies.delta());
+        assertFalse(MoveSpyFollowPolicy.dilution(
+                true, true, "Sith Temple").applies());
+        assertFalse(MoveSpyFollowPolicy.dilution(
+                false, false, "Sith Temple").applies());
+    }
+
     private static PhysicalCard location(String title) {
         PhysicalCard location = mock(PhysicalCard.class);
         when(location.getTitle()).thenReturn(title);

@@ -57,6 +57,25 @@ public class MoveLandoStayPolicyTest {
                 result.reason());
     }
 
+    @Test
+    public void destinationResidualsPreserveIndependentStacking() {
+        MoveLandoStayPolicy.DestinationEvaluation support =
+                MoveLandoStayPolicy.destination(
+                        true, 1, false, false);
+        MoveLandoStayPolicy.DestinationEvaluation stay =
+                MoveLandoStayPolicy.destination(
+                        false, 0, true, true);
+        MoveLandoStayPolicy.DestinationEvaluation both =
+                MoveLandoStayPolicy.destination(
+                        true, 1, true, true);
+
+        assertEquals(250.0f, support.totalDelta(), 0.0f);
+        assertEquals(-9999.0f, stay.totalDelta(), 0.0f);
+        assertEquals(-9749.0f, both.totalDelta(), 0.0f);
+        assertTrue(both.support().applies());
+        assertTrue(both.stay().applies());
+    }
+
     private static void assertNone(MoveLandoStayPolicy.Evaluation result) {
         assertFalse(result.hardVeto());
         assertNull(result.reason());

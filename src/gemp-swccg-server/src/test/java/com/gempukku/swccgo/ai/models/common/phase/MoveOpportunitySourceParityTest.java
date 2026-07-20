@@ -61,6 +61,8 @@ public class MoveOpportunitySourceParityTest {
         assertTrue(move.contains(
                 "ladderClaimR2(\"SPREAD\", spread.score, 0.0f,"));
         assertTrue(move.contains(
+                "MoveDestinationPolicy.missingSourceLocation()"));
+        assertFalse(move.contains(
                 "action.addReasoning(\"Card not at a location\", BAD_DELTA)"));
         assertTrue(move.contains(
                 "action.addReasoning(\"Move phase\", 0.0f)"));
