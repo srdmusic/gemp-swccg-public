@@ -175,6 +175,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V286 owner note:** `ResponsePolicy` now also owns the mirrored Sense/Alter cancel bands, shadowed late force-drain twin, Barrier scoring ladder, Grab ownership ladder, and cancel-target selection operations. Both action-text and card-selection adapters retain all route recognition, AiPriorityCards and GEMP observations, catches, logs, action construction, Barrier turn state, Grab `setScore` behavior, early returns, and contribution/state-mutation positions. V52 self-drain remains CONTROL-owned. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
+**V287 owner note:** `CoordinatorPosturePolicy` owns the mirrored top-level life-force, board-posture, and hand-title fallback arithmetic, while `DeployActionTextPolicy` owns the mirrored top-level DEPLOY fallback arithmetic. Both bot coordinators retain phase/action recognition, every context and board observation, null behavior, independent scans, first-match control, and contribution order. This is an AI-only structural extraction; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

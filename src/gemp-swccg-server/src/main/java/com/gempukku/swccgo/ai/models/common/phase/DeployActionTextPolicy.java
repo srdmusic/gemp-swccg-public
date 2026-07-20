@@ -261,6 +261,63 @@ public final class DeployActionTextPolicy {
                 5.0f, "Generic play card — moderate priority"));
     }
 
+    /** Pure arithmetic for the top-level legacy DEPLOY fallback. */
+    public static int scoreLegacyFallbackDeployLocation(
+            int deployLocationScore) {
+        return deployLocationScore;
+    }
+
+    /** Pure arithmetic for a matched losing-location fallback candidate. */
+    public static int scoreLegacyFallbackReinforce(
+            int reinforceScore,
+            float powerAdvantage,
+            boolean battleground) {
+        int score = reinforceScore;
+        if (powerAdvantage < -5) {
+            score += 15;
+        }
+        if (battleground) {
+            score += 10;
+        }
+        return score;
+    }
+
+    /** Pure arithmetic for a matched opponent-only fallback candidate. */
+    public static int scoreLegacyFallbackGainGround(
+            int gainGroundScore,
+            boolean hasOpponentForceIcons,
+            boolean battleground,
+            float opponentPower) {
+        if (!hasOpponentForceIcons) {
+            return 0;
+        }
+        int score = gainGroundScore;
+        if (battleground) {
+            score += 15;
+        }
+        if (opponentPower > 8) {
+            score -= 10;
+        }
+        return score;
+    }
+
+    /** Pure arithmetic for a matched analyzed-location fallback candidate. */
+    public static int scoreLegacyFallbackDomainMatch(
+            boolean matchingDomain,
+            boolean emptyWithoutFriendlyIcons) {
+        int score = matchingDomain ? 5 : 0;
+        if (emptyWithoutFriendlyIcons) {
+            score -= 20;
+        }
+        return score;
+    }
+
+    /** Pure arithmetic for the matching-pilot fallback. */
+    public static int scoreLegacyFallbackMatchingPilot(
+            int matchingPilotScore) {
+        return matchingPilotScore;
+    }
+
     private static PolicyOperation operation(
             String actionId,
             String ruleId,

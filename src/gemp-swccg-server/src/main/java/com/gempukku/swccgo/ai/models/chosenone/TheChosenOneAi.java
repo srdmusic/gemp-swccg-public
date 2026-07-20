@@ -18,6 +18,8 @@ import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
 import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
+import com.gempukku.swccgo.ai.models.common.phase.CoordinatorPosturePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
@@ -1518,38 +1520,14 @@ public class TheChosenOneAi extends HeuristicAiBase {
         // =====================================================================
         score += ResponsePolicy.scorePriorityCards(actionLower, decisionText);
 
-        // =====================================================================
-        // Situational Adjustments
-        // =====================================================================
-
-        // Desperate play when behind on life force
-        if (context.behindOnLifeForce()) {
-            if (actionLower.contains("force drain") || actionLower.contains("initiate battle")) {
-                score += 40;
-            }
-        }
-
-        // Aggressive when ahead
-        if (context.aheadOnBoard()) {
-            if (actionLower.contains("initiate battle")) {
-                score += 30;
-            }
-        }
-
-        // Conservative when behind on board
-        if (context.behindOnBoard()) {
-            if (actionLower.contains("initiate battle")) {
-                score -= 30;
-            }
-            if (actionLower.contains("deploy") || actionLower.contains("draw")) {
-                score += 20;
-            }
-        }
-
-        // Hand title matching (like AdvancedAi)
-        if (context.matchesHandTitle(actionLower)) {
-            score += 60;
-        }
+        score += CoordinatorPosturePolicy.score(
+                context.behindOnLifeForce(),
+                context.aheadOnBoard(),
+                context.behindOnBoard(),
+                actionLower.contains("force drain"),
+                actionLower.contains("initiate battle"),
+                actionLower.contains("deploy") || actionLower.contains("draw"),
+                context.matchesHandTitle(actionLower));
 
         return score;
     }
@@ -1563,7 +1541,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
         // Deploying locations is high priority (opens options)
         if (actionText.contains("deploy") && actionText.contains("location")) {
-            score += RandoConfig.SCORE_DEPLOY_LOCATION;
+            score += DeployActionTextPolicy.scoreLegacyFallbackDeployLocation(
+                    RandoConfig.SCORE_DEPLOY_LOCATION);
         }
 
         // Use board analyzer if game is available
@@ -1576,18 +1555,10 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 for (LocationAnalysis loc : losingLocations) {
                     String locName = loc.location.getTitle();
                     if (locName != null && actionText.contains(locName.toLowerCase(Locale.ROOT))) {
-                        score += RandoConfig.SCORE_REINFORCE_LOSING;
-
-                        // Extra bonus based on how badly we're losing (use power advantage)
                         float powerDiff = loc.getPowerAdvantage();
-                        if (powerDiff < -5) {
-                            score += 15;  // Critical location
-                        }
-
-                        // Battleground locations are higher priority
-                        if (loc.isBattleground) {
-                            score += 10;
-                        }
+                        score += DeployActionTextPolicy.scoreLegacyFallbackReinforce(
+                                RandoConfig.SCORE_REINFORCE_LOSING,
+                                powerDiff, loc.isBattleground);
                         break;
                     }
                 }
@@ -1600,20 +1571,11 @@ public class TheChosenOneAi extends HeuristicAiBase {
             for (LocationAnalysis loc : opponentOnly) {
                 String locName = loc.location.getTitle();
                 if (locName != null && actionText.contains(locName.toLowerCase(Locale.ROOT))) {
-                    // Only if location has opponent force icons (worth fighting for)
-                    if (loc.theirForceIcons > 0) {
-                        score += RandoConfig.SCORE_GAIN_GROUND;
-
-                        // More valuable if battleground (can force drain after control)
-                        if (loc.isBattleground) {
-                            score += 15;
-                        }
-
-                        // Lower priority if they have much more power there
-                        if (loc.theirPower > 8) {
-                            score -= 10;  // Risky deploy
-                        }
-                    }
+                    score += DeployActionTextPolicy.scoreLegacyFallbackGainGround(
+                            RandoConfig.SCORE_GAIN_GROUND,
+                            loc.theirForceIcons > 0,
+                            loc.isBattleground,
+                            loc.theirPower);
                     break;
                 }
             }
@@ -1630,24 +1592,23 @@ public class TheChosenOneAi extends HeuristicAiBase {
                     continue;
                 }
 
-                // Match domain: characters go to ground, starships to space
+                boolean matchingDomain = false;
                 if (isCharacterDeploy && loc.isGround()) {
-                    score += 5;
+                    matchingDomain = true;
                 } else if (isStarshipDeploy && loc.isSpace()) {
-                    score += 5;
+                    matchingDomain = true;
                 }
-
-                // Avoid deploying to empty uncontested locations (wasteful)
-                if (loc.status == ContestStatus.EMPTY && loc.ourForceIcons == 0) {
-                    score -= 20;  // Discourage wasteful deploys
-                }
+                score += DeployActionTextPolicy.scoreLegacyFallbackDomainMatch(
+                        matchingDomain,
+                        loc.status == ContestStatus.EMPTY && loc.ourForceIcons == 0);
                 break;
             }
         }
 
         // Matching pilot bonus
         if (actionText.contains("pilot") && actionText.contains("matching")) {
-            score += RandoConfig.SCORE_MATCHING_PILOT;
+            score += DeployActionTextPolicy.scoreLegacyFallbackMatchingPilot(
+                    RandoConfig.SCORE_MATCHING_PILOT);
         }
 
         return score;

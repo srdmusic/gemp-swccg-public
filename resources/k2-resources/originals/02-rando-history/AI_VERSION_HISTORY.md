@@ -7926,3 +7926,19 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     without conflict and the combined regression/full gates passed after rebase. Runtime reload
     and live-game proof remain separate gates. Clean V286 is rebased onto live V285 4019e4ed0.
     AI source only; no GEMP engine or player-decision changes.
+
+  ==== V287 (2026-07-19): close the legacy coordinator scoring lane ====
+    Shared AI-only CoordinatorPosturePolicy now owns the mirrored life-force, board-posture, and
+    hand-title bands +40/+30/-30/+20/+60. DeployActionTextPolicy now also owns the top-level
+    DEPLOY fallback arithmetic: location +100; reinforce +80 with strict below--5 +15 and
+    battleground +10; gain-ground +60 with icons, battleground +15, above-8-risk -10; domain +5;
+    empty/no-friendly-icons -20; matching pilot +40. Both bot coordinators retain phase and text
+    recognition, every context and board read, null behavior, independent scans, first-match
+    breaks, and contribution order. Focused policy/source 24/0/0/0, combined DEPLOY/RESPONSE/
+    legacy regression 336/0/0/0, full clean reactor 1948/0/0/26, exact mirror parity, boundary
+    matrices, adapter-order and owner-purity gates, AI-only scope, diff, and clean package passed.
+    Server jar SHA-256 07d2af4156534f3d36940366fdbcf09da461346f4f213296fccd899c8b0c9075
+    and web jar SHA-256 fd01a8394fdd35ef93438c4cce4b0c8c84ca901f58b7a6ff3bad9ff5caf5182c
+    contain V287. Independent review, runtime reload, and live-game proof remain separate gates.
+    Clean V287 is based on live V286 fad46d13e. AI source only; no GEMP engine or player-decision
+    changes.

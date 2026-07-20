@@ -244,6 +244,40 @@ public class DeployActionTextPolicyTest {
                 "Generic play card — moderate priority");
     }
 
+    @Test
+    public void legacyDeployFallbackRetainsExactBandsAndThresholds() {
+        assertEquals(100,
+                DeployActionTextPolicy.scoreLegacyFallbackDeployLocation(100));
+
+        assertEquals(90, DeployActionTextPolicy.scoreLegacyFallbackReinforce(
+                80, -5.0f, true));
+        assertEquals(105, DeployActionTextPolicy.scoreLegacyFallbackReinforce(
+                80, -5.01f, true));
+        assertEquals(95, DeployActionTextPolicy.scoreLegacyFallbackReinforce(
+                80, -6.0f, false));
+
+        assertEquals(0, DeployActionTextPolicy.scoreLegacyFallbackGainGround(
+                60, false, true, 9.0f));
+        assertEquals(75, DeployActionTextPolicy.scoreLegacyFallbackGainGround(
+                60, true, true, 8.0f));
+        assertEquals(65, DeployActionTextPolicy.scoreLegacyFallbackGainGround(
+                60, true, true, 8.01f));
+        assertEquals(60, DeployActionTextPolicy.scoreLegacyFallbackGainGround(
+                60, true, false, 8.0f));
+
+        assertEquals(5, DeployActionTextPolicy.scoreLegacyFallbackDomainMatch(
+                true, false));
+        assertEquals(0, DeployActionTextPolicy.scoreLegacyFallbackDomainMatch(
+                false, false));
+        assertEquals(-20, DeployActionTextPolicy.scoreLegacyFallbackDomainMatch(
+                false, true));
+        assertEquals(-15, DeployActionTextPolicy.scoreLegacyFallbackDomainMatch(
+                true, true));
+
+        assertEquals(40,
+                DeployActionTextPolicy.scoreLegacyFallbackMatchingPilot(40));
+    }
+
     private static DeployActionTextFacts.AmsdFacts amsd(
             boolean bespin,
             boolean alreadyFailed,

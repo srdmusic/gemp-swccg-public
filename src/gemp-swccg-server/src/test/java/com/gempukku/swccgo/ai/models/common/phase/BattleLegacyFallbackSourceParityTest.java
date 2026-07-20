@@ -89,7 +89,7 @@ public class BattleLegacyFallbackSourceParityTest {
     }
 
     @Test
-    public void outerFallbackKeepsBattleBeforePriorityAndSituationalScores()
+    public void outerFallbackKeepsBattleBeforePriorityAndPosturePolicy()
             throws IOException {
         String method = actionContextMethod(source("rando"));
 
@@ -98,16 +98,20 @@ public class BattleLegacyFallbackSourceParityTest {
                 "score += scoreBattleAction(actionLower, decisionText)", battleGate);
         int priority = method.indexOf(
                 "score += ResponsePolicy.scorePriorityCards(", battleCall);
-        int behindLife = method.indexOf("if (context.behindOnLifeForce())", priority);
-        int aheadBoard = method.indexOf("if (context.aheadOnBoard())", behindLife);
-        int behindBoard = method.indexOf("if (context.behindOnBoard())", aheadBoard);
+        int posture = method.indexOf(
+                "score += CoordinatorPosturePolicy.score(", priority);
+        int methodReturn = method.indexOf("return score;", posture);
 
         assertTrue(battleGate >= 0);
         assertTrue(battleCall > battleGate);
         assertTrue(priority > battleCall);
-        assertTrue(behindLife > priority);
-        assertTrue(aheadBoard > behindLife);
-        assertTrue(behindBoard > aheadBoard);
+        assertTrue(posture > priority);
+        assertTrue(methodReturn > posture);
+        assertFalse(method.contains("score += 40"));
+        assertFalse(method.contains("score += 30"));
+        assertFalse(method.contains("score -= 30"));
+        assertFalse(method.contains("score += 20"));
+        assertFalse(method.contains("score += 60"));
     }
 
     @Test
