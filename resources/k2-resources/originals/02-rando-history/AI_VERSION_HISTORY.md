@@ -8128,3 +8128,31 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and web jar SHA-256 is 8170fbb7059ce0c5d05b40dba222cbb91f1d308441273960216834e90eb489b0.
     Clean V295 is based exactly on deployed V294 e29a12be91cf8e2b3488e26e802d1e438e436642.
     Nothing was pushed or run in a game. Revert the single V295 commit; every live phase owner remains.
+
+  ==== V296 (2026-07-20): restore deploy-plan execution and drain contact ====
+    Replay d77g2od7m8irp1mm exposed four AI-only execution faults. I Want That Map's setup fragment
+    incorrectly made every live Starkiller Base location objective-relevant, giving Finalizer a false
+    +150 at a non-battleground. FormationSafety hard-vetoed the first ability-below-4 body of an exact
+    affordable five-character Night Club wave. Apply-side plan weights could still lose to unrelated
+    destination arithmetic. Two-step starship destination selection did not reuse the existing V36/V51
+    drain-contact logic, and remote attack targets could score unrelated parent moves before adjacency.
+
+    V296 keeps the exact Starkiller Base setup choice but requires a battleground for live physical
+    objective relevance. A contested weak first body is allowed only with an exact affordable planned
+    companion after it. Selectable exact plan destinations defer alternatives, while unavailable targets
+    preserve fallback behavior. Survivable starship entries into an opponent drain reuse V36/V51 only when
+    current plus deploying power is at least raw opposing power. Move attack scoring now requires adjacency.
+
+    Finalizer changes from false Starkiller Base 230 to 80; the survivable power-10 entry against Rey/Red 5
+    at Jakku power 8 and drain 2 receives the unchanged V51 +500. Losing entries receive no bonus. The exact
+    Night Club wave can start, but no-companion and unaffordable weak solo deployments remain blocked. Grand
+    Admiral Thrawn was ability 4, not below 4; plan dominance fixes his separate wrong Forest destination.
+
+    Focused replay regression passed 33/0/0/0; the expanded policy/parity suite passed; the clean full reactor
+    passed 2051/0/0/26 across 284 suites. Exact normalized Rando/ChosenOne card-selection and move parity,
+    source characterization, AI-only scope, and diff gates passed. Clean async packaging passed, and the
+    compiled V296 classes and markers are present in web.jar. Server jar SHA-256 is
+    3470eeeb352a7bb0950b74902e8179ea1f50502ea7827c93d76809d1a666118f; web jar SHA-256 is
+    b87e7db1596d8a606d7facdd908c850c3f730f57585f0e4f8fa429f8afdc771c. Runtime reload and live-game
+    proof are separate gates. No engine, card, action, decision metadata, objective data, player-choice,
+    database, client, or deck-library source changed. Revert the single V296 commit.

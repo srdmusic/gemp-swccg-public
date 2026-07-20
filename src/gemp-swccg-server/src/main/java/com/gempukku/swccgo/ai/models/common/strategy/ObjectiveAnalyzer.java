@@ -290,6 +290,14 @@ public class ObjectiveAnalyzer {
         if (game == null) return false;
         GameState gs = game.getGameState();
         if (gs == null) return false;
+        // V296: I Want That Map's live flip geography is any battleground. The
+        // named Starkiller Base system is only a turn-0 setup choice and must
+        // not make that non-battleground system a preferred deploy target.
+        if (isWantThatMap) {
+            try {
+                if (game.getModifiersQuerying().isBattleground(gs, loc, null)) return true;
+            } catch (Exception ignored) { /* fail closed */ }
+        }
         if (activeFlipLocationRules != null) {
             for (FlipLocationRule rule : activeFlipLocationRules) {
                 if (rule == null || rule.alternatives == null) continue;
@@ -1639,22 +1647,21 @@ public class ObjectiveAnalyzer {
 
         // V186 (Steve, 2026-06-23): I Want That Map / And Now You'll Give It To Me (208_57).
         // The flip text ("First Order characters control two battlegrounds") names no
-        // location, so the regex never marks Starkiller Base relevant. Two named picks for
-        // this deck's turn-0 setup:
+        // location. The physical-card relevance path above handles those battlegrounds.
+        // Two named picks remain for this deck's turn-0 setup:
         //   - Starkiller Base SYSTEM (208_51) is the "any other [Episode VII] location" the
         //     objective deploys. It has NO battleground icon (a battleground heuristic would
         //     miss it), but its once-per-turn [download] fetches Starkiller Base battleground
-        //     sites, feeding the 2-battleground flip. Naming it here grants the +150 objective
-        //     location bonus so it wins the "Choose [Episode VII] location to deploy" pick.
+        //     sites, feeding the 2-battleground flip. CardSelectionEvaluator selects it by
+        //     exact blueprint/temp ID during setup, so it must not become live deploy geography.
         //   - The First Order Was Just The Beginning: marked required/pullable so it is
         //     protected + objective-critical. The WINNING starting-effect preference lives in
         //     CardSelectionEvaluator (V186).
         if (objectiveTitle != null
                 && objectiveTitle.toLowerCase(Locale.ROOT).contains("i want that map")) {
-            addLocationFragment("starkiller base");
             requiredCardsOnTable.add("the first order was just the beginning");
             pullableCards.add("the first order was just the beginning");
-            LOG.warn("[ObjectiveAnalyzer] V186: I Want That Map detected - naming Starkiller Base (location) + The First Order Was Just The Beginning (effect).");
+            LOG.warn("[ObjectiveAnalyzer] V296: I Want That Map detected - battlegrounds are live objective geography; Starkiller Base remains setup-only.");
         }
 
         // V193 (Steve, 2026-07-07): Endor Operations (dark, Card8_167) — Establish Secret Base

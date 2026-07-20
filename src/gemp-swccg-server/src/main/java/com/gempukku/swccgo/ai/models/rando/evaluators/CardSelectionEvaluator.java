@@ -1484,10 +1484,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // =====================================================
                         if (plannedTargetId != null) {
                             boolean isPlannedTarget = cardId.equals(plannedTargetId);
+                            int plannedTargetIndex = context.getCardIds().indexOf(plannedTargetId);
+                            boolean plannedTargetOffered = plannedTargetIndex >= 0
+                                && isCardSelectable(context, plannedTargetIndex);
                             applyDeployPlanDestinationPolicy(action,
                                 DeployPlanPolicy.evaluateDestinationTarget(
                                     new DeployPlanPolicy.DestinationTargetFacts(
                                         action.getActionId(), isPlannedTarget,
+                                        plannedTargetOffered,
                                         plannedTargetName)));
                             if (isPlannedTarget) {
                                 logger.info("✅ {} is the PLANNED target (+200)", title);
@@ -1860,6 +1864,44 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
                             // V190's -1500 veto owns starship-to-site; the retired branch is in git history.
+                        }
+
+                        // V296: the existing V36/V51 drain-contest policy used to see only
+                        // one-step deploy actions. Starships use a separate destination choice,
+                        // so reconnect that owner here after proving the resulting space power
+                        // can at least tie the opponent.
+                        if (isStarship && isSpaceSystem && game != null && playerId != null) {
+                            try {
+                                String v296Opp = gameState.getOpponent(playerId);
+                                float v296OppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, location, v296Opp, false, false);
+                                float v296OurPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, location, playerId, false, false);
+                                float v296ShipPower = 0f;
+                                SwccgCardBlueprint v296Bp = getBlueprintFromId(context, deployingBlueprintId);
+                                if (v296Bp != null && v296Bp.hasPowerAttribute()
+                                        && v296Bp.getPower() != null) {
+                                    v296ShipPower = v296Bp.getPower();
+                                }
+                                float v296OppDrain = game.getModifiersQuerying().getForceDrainAmount(
+                                    gameState, location, v296Opp);
+                                DeployTacticalPolicy.DrainContestEvaluation v296Contact =
+                                    DeployTacticalPolicy.evaluateStarshipDrainContact(
+                                        new DeployTacticalPolicy.StarshipDrainContactFacts(
+                                            action.getActionId(), v296Opp, title,
+                                            v296OppPower, v296OurPower, v296ShipPower,
+                                            v296OppDrain));
+                                applyDeployTacticalPolicy(action, v296Contact.result());
+                                if (!v296Contact.outcomes().isEmpty()) {
+                                    logger.warn("V296 SPACE DRAIN CONTACT: {} to {} projects {} vs {} and challenges drain {} ({})",
+                                        deployingCardName, title,
+                                        (int) (v296OurPower + v296ShipPower),
+                                        (int) v296OppPower, (int) v296OppDrain,
+                                        v296Contact.outcomes());
+                                }
+                            } catch (Exception e) {
+                                logger.debug("V296 space drain contact error: {}", e.getMessage());
+                            }
                         }
 
                         // =====================================================

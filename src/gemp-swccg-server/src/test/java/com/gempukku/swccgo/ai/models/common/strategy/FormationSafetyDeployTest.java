@@ -86,9 +86,21 @@ public class FormationSafetyDeployTest {
     }
 
     @Test
-    public void contestedWeakSoloHardBlocks() {
-        assertEquals(FormationSafety.DeployConstraint.HARD_BLOCK,
+    public void contestedAffordableExactCompanionAllowsFirstBody() {
+        assertEquals(FormationSafety.DeployConstraint.ALLOW,
             assess(3, 8, 2f, 3f, false, 4).constraint());
+    }
+
+    @Test
+    public void contestedUnaffordableCompanionHardBlocks() {
+        assertEquals(FormationSafety.DeployConstraint.HARD_BLOCK,
+            assess(3, 4, 2f, 3f, false, 4).constraint());
+    }
+
+    @Test
+    public void contestedWeakSoloWithoutCompanionHardBlocks() {
+        assertEquals(FormationSafety.DeployConstraint.HARD_BLOCK,
+            assess(3, 8, 2f, null, false, 4).constraint());
     }
 
     @Test

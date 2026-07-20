@@ -55,7 +55,7 @@ public class MoveOpportunitySourceParityTest {
         assertFalse(move.contains(
                 "action.addReasoning(\"Can't spread: \" + spread.reason, BAD_DELTA)"));
         assertTrue(move.contains(
-                "isAdjacentSites(\n                            gameState, location, attack.targetLocation)"));
+                "isAdjacentSites(\n                        gameState, location, attack.targetLocation)"));
         assertTrue(move.contains(
                 "ladderClaimR2(\"ATTACK\", attack.score, 0.0f, true);"));
         assertTrue(move.contains(
@@ -66,6 +66,17 @@ public class MoveOpportunitySourceParityTest {
                 "action.addReasoning(\"Card not at a location\", BAD_DELTA)"));
         assertTrue(move.contains(
                 "action.addReasoning(\"Move phase\", 0.0f)"));
+    }
+
+    @Test
+    public void remoteAttackTargetCannotScoreDestinationBlindMove() throws IOException {
+        String move = evaluatorSource("rando");
+        assertTrue(move.contains(
+                "if (attackContribution.applies()\n                    && attackTargetAdjacent\n                    && attack.hasForcedrainPotential)"));
+        assertTrue(move.contains(
+                "else if (attackContribution.applies() && attackTargetAdjacent)"));
+        assertTrue(move.contains("V296 ATTACK ignored"));
+        assertFalse(move.contains("LADDER: ATTACK no R2 claim"));
     }
 
     @Test

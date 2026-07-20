@@ -40,6 +40,10 @@ public class DeploySitingSourceCharacterizationTest {
         assertTrue(destination.contains("DeployTacticalPolicy.scoreV170SpyDrainBlock("));
         assertTrue(destination.contains("DeployTacticalPolicy.scoreV171V172Contact("));
         assertTrue(destination.contains(
+                "DeployTacticalPolicy.evaluateStarshipDrainContact("));
+        assertTrue(destination.contains(
+                "new DeployTacticalPolicy.StarshipDrainContactFacts("));
+        assertTrue(destination.contains(
                 ".evaluateEmptyDestinationTopology("));
         assertTrue(destination.contains(
                 ".evaluateReinforcementTopology("));

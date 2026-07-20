@@ -170,6 +170,28 @@ public final class DeployTacticalPolicy {
                 List.copyOf(outcomes));
     }
 
+    /**
+     * V296: bridge the existing V36/V51 drain contest owner into two-step
+     * starship deploy decisions. A ship may chase the drain only when the
+     * resulting raw power is at least tied, so the old pressure rule cannot
+     * turn into a space suicide bonus.
+     */
+    public static DrainContestEvaluation evaluateStarshipDrainContact(
+            StarshipDrainContactFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        if (facts.opponentPower() <= 0.0f || facts.opponentDrain() <= 0.0f
+                || facts.ourPower() + facts.deployingPower()
+                < facts.opponentPower()) {
+            return new DrainContestEvaluation(
+                    new PolicyResult("DEPLOY_STARSHIP_DRAIN_CONTACT_POLICY", List.of()),
+                    List.of());
+        }
+        return evaluateV53V51Drain(new DrainContestFacts(
+                facts.actionId(), facts.opponentId(), facts.locationTitle(),
+                facts.opponentPower(), facts.ourPower(), 0.0f,
+                facts.opponentDrain()));
+    }
+
     public static PolicyResult scoreV51VaderFlip(VaderFlipFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
@@ -723,6 +745,17 @@ public final class DeployTacticalPolicy {
                                     float undercoverSpyPower,
                                     float opponentDrain) {
         public DrainContestFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            opponentId = opponentId == null ? "" : opponentId;
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record StarshipDrainContactFacts(
+            String actionId, String opponentId, String locationTitle,
+            float opponentPower, float ourPower, float deployingPower,
+            float opponentDrain) {
+        public StarshipDrainContactFacts {
             Objects.requireNonNull(actionId, "actionId");
             opponentId = opponentId == null ? "" : opponentId;
             locationTitle = locationTitle == null ? "" : locationTitle;

@@ -188,6 +188,18 @@ public class DeployTacticalPolicyTest {
     }
 
     @Test
+    public void starshipDrainContactRequiresARealDrainAndNonLosingPower() {
+        assertDrainOutcome(starshipDrainContact(8.0f, 0.0f, 10.0f, 2.0f),
+                "V51", 500.0f,
+                DeployTacticalPolicy.DrainContestOutcome.CONTEST_BATTLEGROUND);
+        assertDrainOutcome(starshipDrainContact(8.0f, 10.0f, 3.0f, 2.0f),
+                "V51", 500.0f,
+                DeployTacticalPolicy.DrainContestOutcome.REINFORCE_BATTLEGROUND);
+        assertEmpty(starshipDrainContact(8.0f, 0.0f, 3.0f, 2.0f).result());
+        assertEmpty(starshipDrainContact(8.0f, 0.0f, 10.0f, 0.0f).result());
+    }
+
+    @Test
     public void v51VaderFlipRequiresAnOpponentSite() {
         assertEmpty(DeployTacticalPolicy.scoreV51VaderFlip(
                 new DeployTacticalPolicy.VaderFlipFacts(
@@ -541,6 +553,16 @@ public class DeployTacticalPolicyTest {
                         "deploy-42", "opponent",
                         "Cloud City: Guest Quarters", opponentPower,
                         ourPower, spyPower, opponentDrain));
+    }
+
+    private static DeployTacticalPolicy.DrainContestEvaluation starshipDrainContact(
+            float opponentPower, float ourPower, float deployingPower,
+            float opponentDrain) {
+        return DeployTacticalPolicy.evaluateStarshipDrainContact(
+                new DeployTacticalPolicy.StarshipDrainContactFacts(
+                        "deploy-42", "opponent", "Jakku",
+                        opponentPower, ourPower, deployingPower,
+                        opponentDrain));
     }
 
     private static DeployTacticalPolicy.PowerDangerEvaluation powerDanger(

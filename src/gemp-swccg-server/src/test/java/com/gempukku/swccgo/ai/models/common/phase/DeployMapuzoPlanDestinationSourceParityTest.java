@@ -24,6 +24,7 @@ public class DeployMapuzoPlanDestinationSourceParityTest {
         String source = packetSlice(evaluatorSource("rando"));
         assertTrue(source.contains("DeploySitingPolicy.evaluateMapuzoDestination("));
         assertTrue(source.contains("DeployPlanPolicy.evaluateDestinationTarget("));
+        assertTrue(source.contains("isCardSelectable(context, plannedTargetIndex)"));
         for (String retired : new String[]{
                 "action.addReasoning(\"V64 MAPUZO DEFENSE:",
                 "action.addReasoning(\"V64 MAPUZO TRAP:",

@@ -260,6 +260,19 @@ public final class FormationSafety {
                         "solo-dominance deployment");
                 }
                 if (landsSolo && ability < DESTINY_ABILITY_THRESHOLD) {
+                    if (plannedBuddyCost != null) {
+                        if (thisDeployCost == null) {
+                            return new DeployVerdict(DeployConstraint.UNKNOWN,
+                                "planned contested companion exists but first deploy cost is unknown");
+                        }
+                        if (forceAvailable - thisDeployCost < plannedBuddyCost) {
+                            return new DeployVerdict(DeployConstraint.HARD_BLOCK, String.format(
+                                "L4 PAIR-BUDGET: deploying this ability-%.0f body (cost %.0f) leaves %.0f Force < planned contested companion cost %.0f",
+                                ability, thisDeployCost, forceAvailable - thisDeployCost, plannedBuddyCost));
+                        }
+                        return new DeployVerdict(DeployConstraint.ALLOW,
+                            "exact same-destination contested companion remains affordable");
+                    }
                     return new DeployVerdict(DeployConstraint.HARD_BLOCK, String.format(
                         "L4 WEAK SOLO INTO CONTESTED: ability %.0f alone into %s (their eff %.0f)",
                         ability, destination.getTitle(), oppEff));

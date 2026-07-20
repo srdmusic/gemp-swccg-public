@@ -127,6 +127,7 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         assertTrue(iwtm.getIwtmSystemBpIds().contains("208_51"));
         assertEquals("starkiller base", iwtm.getIwtmSystemTitleFragment());
         assertEquals("the first order was just the beginning", iwtm.getIwtmPreferredStartingEffect());
+        assertFalse(iwtm.isObjectiveRelevantLocation("Starkiller Base"));
 
         assertTrue(hiddenPath.getFlipConditionText().contains("Jedi occupy two non-Mapuzo sites"));
         assertTrue(tdigwatt.isTdigwatt());
@@ -137,6 +138,27 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         assertTrue(tdigwatt.needsBespinSystemPresence());
         assertFalse(otherBespin.isTdigwatt());
         assertTrue(otherBespin.needsBespinSystemPresence());
+    }
+
+    @Test
+    public void iwtmUsesBattlegroundsForLiveRelevanceButNotSetupSystemName() {
+        ObjectiveAnalyzer iwtm = analyzed("208_057", "I Want That Map",
+                "Deploy Tuanul Village. Flip this card if your First Order characters control two battlegrounds.");
+        SwccgGame game = mock(SwccgGame.class);
+        GameState gameState = mock(GameState.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard battleground = mock(PhysicalCard.class);
+        PhysicalCard nonBattlegroundSystem = mock(PhysicalCard.class);
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(battleground.getTitle()).thenReturn("Starkiller Base: Forest");
+        when(nonBattlegroundSystem.getTitle()).thenReturn("Starkiller Base");
+        when(modifiers.isBattleground(gameState, battleground, null)).thenReturn(true);
+        when(modifiers.isBattleground(gameState, nonBattlegroundSystem, null)).thenReturn(false);
+
+        assertTrue(iwtm.isObjectiveRelevantLocation(battleground, game, PLAYER_ID));
+        assertFalse(iwtm.isObjectiveRelevantLocation(nonBattlegroundSystem, game, PLAYER_ID));
     }
 
     @Test

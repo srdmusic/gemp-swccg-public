@@ -78,7 +78,7 @@ public class DeployPlanPolicyTest {
     public void destinationTargetPreservesMatchAndMismatchScores() {
         PolicyOperation match = DeployPlanPolicy.evaluateDestinationTarget(
                 new DeployPlanPolicy.DestinationTargetFacts(
-                        "a", true, "Bespin")).operations().get(0);
+                        "a", true, true, "Bespin")).operations().get(0);
         assertEquals("deploy-plan-target-match", match.ruleArmId().id());
         assertEquals(200.0f, match.delta(), 0.0f);
         assertEquals("PLANNED TARGET: Bespin", match.reason());
@@ -86,12 +86,22 @@ public class DeployPlanPolicyTest {
         assertEquals(TraceDomainId.DEPLOY_SEQUENCING, match.domainId());
         assertEquals(TraceOutputKind.ORDERING, match.outputKind());
 
-        PolicyOperation other = DeployPlanPolicy.evaluateDestinationTarget(
+        List<PolicyOperation> offeredOther = DeployPlanPolicy.evaluateDestinationTarget(
                 new DeployPlanPolicy.DestinationTargetFacts(
-                        "a", false, null)).operations().get(0);
+                        "a", false, true, null)).operations();
+        PolicyOperation other = offeredOther.get(0);
         assertEquals("deploy-plan-target-other", other.ruleArmId().id());
         assertEquals(-100.0f, other.delta(), 0.0f);
         assertEquals("Not planned target (want null)", other.reason());
+        assertEquals(2, offeredOther.size());
+        assertEquals("deploy-plan-target-defer", offeredOther.get(1).ruleArmId().id());
+        assertEquals(PolicyOperationKind.DEFER, offeredOther.get(1).kind());
+
+        List<PolicyOperation> unavailableOther = DeployPlanPolicy.evaluateDestinationTarget(
+                new DeployPlanPolicy.DestinationTargetFacts(
+                        "a", false, false, "Bespin")).operations();
+        assertEquals(1, unavailableOther.size());
+        assertEquals(PolicyOperationKind.ADD, unavailableOther.get(0).kind());
     }
 
     private static DeployPlanPolicy.Facts facts(

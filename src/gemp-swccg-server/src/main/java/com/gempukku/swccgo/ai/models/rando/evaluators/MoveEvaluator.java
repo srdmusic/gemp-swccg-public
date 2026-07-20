@@ -1903,7 +1903,8 @@ public class MoveEvaluator extends ActionEvaluator {
 
         // === OFFENSIVE ATTACK OPPORTUNITY ===
         // If we're at an uncontested location with significant power, look for attack targets
-        // NOTE: We can't verify reachability here, so be conservative - only recommend if:
+        // Destination-blind parent actions may score an attack only when the best target is
+        // adjacent. The child destination evaluator still chooses the exact legal move.
         // 1. We have overwhelming force AND
         // 2. There are high-value targets (opponent icons for force drain)
         if (!theirHasCards && myPower >= ATTACK_MIN_POWER && myCardCount >= 2) {
@@ -1912,9 +1913,16 @@ public class MoveEvaluator extends ActionEvaluator {
                     gameState, playerId, mySide, location, myPower);
             MoveOpportunityPolicy.Contribution attackContribution =
                 MoveOpportunityPolicy.attackContribution(attack);
+            boolean attackTargetAdjacent = false;
+            try {
+                attackTargetAdjacent = attack.targetLocation != null
+                    && game.getModifiersQuerying().isAdjacentSites(
+                        gameState, location, attack.targetLocation);
+            } catch (Exception ignore) { /* false */ }
             // Only recommend attack if there's force drain potential (icons > 0)
             // and we have a significant power advantage
             if (attackContribution.applies()
+                    && attackTargetAdjacent
                     && attack.hasForcedrainPotential) {
                 action.addReasoning(
                     attackContribution.reason(), attackContribution.delta());
@@ -1923,24 +1931,18 @@ public class MoveEvaluator extends ActionEvaluator {
                 // (battle-seeking) — NEWLY gated on isAdjacentSites reachability to the
                 // best target (same engine call V85 uses) so the destination-blind Rey
                 // class can't claim a band for an unreachable fight (V85-protect boundary).
-                boolean attackTargetAdjacent = false;
-                try {
-                    attackTargetAdjacent = attack.targetLocation != null
-                        && game.getModifiersQuerying().isAdjacentSites(
-                            gameState, location, attack.targetLocation);
-                } catch (Exception ignore) { /* false */ }
-                if (attackTargetAdjacent) {
-                    ladderClaimR2("ATTACK", attack.score, 0.0f, true);
-                } else {
-                    logger.info("LADDER: ATTACK no R2 claim (target not adjacent) — fine kept as R1 weight");
-                }
-            } else if (attackContribution.applies()) {
+                ladderClaimR2("ATTACK", attack.score, 0.0f, true);
+            } else if (attackContribution.applies() && attackTargetAdjacent) {
                 // Attack possible but no force drain - much smaller bonus
                 // Don't waste moves just to attack weak positions
                 action.addReasoning(
                     attackContribution.reason(), attackContribution.delta());
                 logger.debug("[MoveEvaluator] Weak attack opportunity (no icons): {}", attack.reason);
                 // T4.1 (2026-07-06): early return removed — R1 fine, block falls through.
+            } else if (attackContribution.applies()) {
+                logger.info("V296 ATTACK ignored: best target {} is not adjacent to {}",
+                    attack.targetLocation != null ? attack.targetLocation.getTitle() : "null",
+                    location.getTitle());
             }
         }
 

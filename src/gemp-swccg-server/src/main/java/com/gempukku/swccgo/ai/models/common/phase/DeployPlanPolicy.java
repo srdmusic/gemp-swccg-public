@@ -106,7 +106,7 @@ public final class DeployPlanPolicy {
     public static PolicyResult evaluateDestinationTarget(
             DestinationTargetFacts facts) {
         Objects.requireNonNull(facts, "facts");
-        List<PolicyOperation> operations = new ArrayList<>(1);
+        List<PolicyOperation> operations = new ArrayList<>(2);
         if (facts.plannedTarget()) {
             operations.add(add(facts.actionId(), "deploy-plan-target-match",
                     200.0f,
@@ -116,6 +116,14 @@ public final class DeployPlanPolicy {
                     -100.0f,
                     "Not planned target (want "
                             + facts.plannedTargetName() + ")"));
+            if (facts.plannedTargetOffered()) {
+                operations.add(PolicyOperation.defer(
+                        facts.actionId(), TraceRuleId.of("deploy-plan-target-defer"),
+                        TraceDomainId.DEPLOY_SEQUENCING, TraceOutputKind.VETO,
+                        0.0f,
+                        "Exact planned target is offered: "
+                                + facts.plannedTargetName()));
+            }
         }
         return new PolicyResult("DEPLOY_PLAN_DESTINATION_POLICY", operations);
     }
@@ -136,7 +144,7 @@ public final class DeployPlanPolicy {
 
     public record DestinationTargetFacts(
             String actionId, boolean plannedTarget,
-            String plannedTargetName) {
+            boolean plannedTargetOffered, String plannedTargetName) {
         public DestinationTargetFacts {
             Objects.requireNonNull(actionId, "actionId");
             plannedTargetName = plannedTargetName == null
