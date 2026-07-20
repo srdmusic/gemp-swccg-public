@@ -5,6 +5,7 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.common.Side;
 import org.junit.Test;
 
 import java.util.List;
@@ -163,6 +164,194 @@ public class ResponsePolicyTest {
                 0.0f);
         assertTrue(ResponsePolicy.scoreSenseRedraw(
                 "sense", false, false).operations().isEmpty());
+    }
+
+    @Test
+    public void senseCancelBoundariesPreserveExactLegacyBandsAndReasons() {
+        List<ExpectedOperation> matrix = List.of(
+                expected(ResponsePolicy.scoreSenseSelfCancel("self"),
+                        "self", "V37.3-sense-self-cancel", -9999.0f,
+                        "V37.3 SENSE SELF-CANCEL: NEVER cancel our OWN interrupt!"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "destiny-80", true, true, 80,
+                                "barrier", false, true).result(),
+                        "destiny-80", "RESPONSE-sense-destiny-critical", 10.0f,
+                        "Destiny cancel critical target: barrier"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "destiny-79", true, true, 79,
+                                "near", false, false).result(),
+                        "destiny-79", "RESPONSE-sense-destiny-skip", -10.0f,
+                        "Destiny-based cancel (unreliable, skip)"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "critical-80", false, true, 80,
+                                "barrier", false, true).result(),
+                        "critical-80", "RESPONSE-sense-critical", 70.0f,
+                        "Cancel CRITICAL target: barrier!"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "high-79", false, true, 79,
+                                "near", false, true).result(),
+                        "high-79", "RESPONSE-sense-high-value", 50.0f,
+                        "Cancel high-value target: near"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "high-60", false, true, 60,
+                                "nabrun leids", false, false).result(),
+                        "high-60", "RESPONSE-sense-high-value", 50.0f,
+                        "Cancel high-value target: nabrun leids"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "valuable-59", false, true, 59,
+                                "alter", false, false).result(),
+                        "valuable-59", "RESPONSE-sense-valuable", 45.0f,
+                        "Cancel valuable target: alter"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "drain-opponent", false, false, 100,
+                                "ignored", true, false).result(),
+                        "drain-opponent", "RESPONSE-sense-force-drain-opponent", 35.0f,
+                        "Cancel opponent's force drain"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "their-turn", false, false, 0,
+                                "", false, false).result(),
+                        "their-turn", "RESPONSE-sense-opponent-turn", 30.0f,
+                        "Cancel opponent interrupt (their turn)"),
+                expected(ResponsePolicy.scoreSenseCancel(
+                                "our-turn", false, false, 0,
+                                "", false, true).result(),
+                        "our-turn", "RESPONSE-sense-own-turn", 15.0f,
+                        "Cancel opponent interrupt (our turn)"));
+
+        for (ExpectedOperation expected : matrix) {
+            assertEquals("RESPONSE_ACTION_TEXT_POLICY",
+                    expected.result().producerId());
+            assertEquals(1, expected.result().operations().size());
+            assertOperation(expected.result().operations().get(0), expected);
+        }
+    }
+
+    @Test
+    public void senseCancelPrecedenceAndDrainDelegationStayExact() {
+        ResponsePolicy.CancelEvaluation ownDrain =
+                ResponsePolicy.scoreSenseCancel(
+                        "own-drain", false, false, 0, "", true, true);
+        assertTrue(ownDrain.delegatesSelfCancelDrain());
+        assertTrue(ownDrain.result().operations().isEmpty());
+
+        ResponsePolicy.CancelEvaluation destinyOwnDrain =
+                ResponsePolicy.scoreSenseCancel(
+                        "destiny-drain", true, true, 80,
+                        "barrier", true, true);
+        assertFalse(destinyOwnDrain.delegatesSelfCancelDrain());
+        assertEquals(10.0f,
+                destinyOwnDrain.result().operations().get(0).delta(), 0.0f);
+
+        ResponsePolicy.CancelEvaluation valuableOwnDrain =
+                ResponsePolicy.scoreSenseCancel(
+                        "valuable-drain", false, true, 60,
+                        "nabrun leids", true, true);
+        assertFalse(valuableOwnDrain.delegatesSelfCancelDrain());
+        assertEquals(50.0f,
+                valuableOwnDrain.result().operations().get(0).delta(), 0.0f);
+
+        ResponsePolicy.CancelEvaluation lateOwn =
+                ResponsePolicy.scoreLateForceDrainCancel("late-own", true);
+        assertTrue(lateOwn.delegatesSelfCancelDrain());
+        assertTrue(lateOwn.result().operations().isEmpty());
+
+        ResponsePolicy.CancelEvaluation lateOpponent =
+                ResponsePolicy.scoreLateForceDrainCancel("late-opponent", false);
+        assertFalse(lateOpponent.delegatesSelfCancelDrain());
+        assertOperation(lateOpponent.result().operations().get(0),
+                expected(lateOpponent.result(), "late-opponent",
+                        "RESPONSE-late-force-drain-opponent", 30.0f,
+                        "Cancel opponent's force drain"));
+    }
+
+    @Test
+    public void barrierBandsPreserveExactOrderReasonsAndRememberSignal() {
+        List<ResponsePolicy.BarrierEvaluation> matrix = List.of(
+                ResponsePolicy.scoreBarrier("already", "Vader", true, false,
+                        true, true, 5.0f, 3.0f, 3.0f),
+                ResponsePolicy.scoreBarrier("own", "Vader", false, true,
+                        true, true, 5.0f, 3.0f, 3.0f),
+                ResponsePolicy.scoreBarrier("none", "Vader", false, false,
+                        false, true, 5.0f, 3.0f, 3.0f),
+                ResponsePolicy.scoreBarrier("quiet", "Vader", false, false,
+                        true, false, 5.0f, 3.0f, 3.0f),
+                ResponsePolicy.scoreBarrier("dominant", "Vader", false, false,
+                        true, true, 5.0f, 12.0f, 4.0f),
+                ResponsePolicy.scoreBarrier("high", "Vader", false, false,
+                        true, true, 5.0f, 4.0f, 5.0f),
+                ResponsePolicy.scoreBarrier("behind", "Vader", false, false,
+                        true, true, 4.0f, 4.0f, 4.0f),
+                ResponsePolicy.scoreBarrier("ahead", "Vader", false, false,
+                        true, true, 4.0f, 5.0f, 4.0f));
+        List<ExpectedOperation> expected = List.of(
+                expected(matrix.get(0).result(), "already", "RESPONSE-barrier-already", -50.0f,
+                        "Already barriered Vader this turn - wasteful!"),
+                expected(matrix.get(1).result(), "own", "RESPONSE-barrier-own", -9999.0f,
+                        "V35.1 SELF-BARRIER BLOCK: Vader is OUR character — NEVER prevent our own from battling!"),
+                expected(matrix.get(2).result(), "none", "RESPONSE-barrier-no-presence", -9999.0f,
+                        "V48 BARRIER USELESS: No friendly presence at location — serves no purpose!"),
+                expected(matrix.get(3).result(), "quiet", "RESPONSE-barrier-not-contested", -30.0f,
+                        "Save barrier - location not contested"),
+                expected(matrix.get(4).result(), "dominant", "RESPONSE-barrier-dominating", -30.0f,
+                        "Save barrier - already dominating (12 vs 4)"),
+                expected(matrix.get(5).result(), "high", "RESPONSE-barrier-high-target", 50.0f,
+                        "Barrier on HIGH POWER target (5)!"),
+                expected(matrix.get(6).result(), "behind", "RESPONSE-barrier-protect", 40.0f,
+                        "Barrier to protect (losing 4 vs 4)"),
+                expected(matrix.get(7).result(), "ahead", "RESPONSE-barrier-contested", 30.0f,
+                        "Barrier at contested location"));
+
+        for (int i = 0; i < matrix.size(); i++) {
+            assertOperation(matrix.get(i).result().operations().get(0), expected.get(i));
+        }
+        assertTrue(matrix.get(0).terminal());
+        assertTrue(matrix.get(1).terminal());
+        assertFalse(matrix.get(2).rememberTarget());
+        assertTrue(matrix.get(5).rememberTarget());
+        assertTrue(matrix.get(6).rememberTarget());
+        assertTrue(matrix.get(7).rememberTarget());
+    }
+
+    @Test
+    public void grabAndCancelSelectionPolicyPreserveExactOutcomes() {
+        ResponsePolicy.GrabEvaluation confirmedBoth = ResponsePolicy.scoreGrab(
+                "both", true, true, Side.DARK, false, false, true);
+        ResponsePolicy.GrabEvaluation confirmedOwn = ResponsePolicy.scoreGrab(
+                "own", true, false, Side.DARK, false, false, true);
+        ResponsePolicy.GrabEvaluation namedOwn = ResponsePolicy.scoreGrab(
+                "named-own", false, false, Side.LIGHT, true, false, true);
+        ResponsePolicy.GrabEvaluation unknownOpponent = ResponsePolicy.scoreGrab(
+                "unknown-opponent", false, false, Side.DARK, false, false, false);
+        ResponsePolicy.GrabEvaluation unknownOwn = ResponsePolicy.scoreGrab(
+                "unknown-own", false, false, Side.DARK, false, false, true);
+
+        assertOperation(confirmedBoth.result().operations().get(0),
+                expected(confirmedBoth.result(), "both", "RESPONSE-grab-confirmed-opponent", 30.0f,
+                        "V53 GRAB OPPONENT: Confirmed opponent's interrupt — grab it!"));
+        assertTrue(confirmedBoth.terminal());
+        assertFalse(confirmedBoth.setScoreBeforeAdd());
+        assertOperation(confirmedOwn.result().operations().get(0),
+                expected(confirmedOwn.result(), "own", "RESPONSE-grab-confirmed-own", -9999.0f,
+                        "V53 NEVER GRAB OWN: Grabbing own interrupt is suicide!"));
+        assertTrue(confirmedOwn.terminal());
+        assertTrue(confirmedOwn.setScoreBeforeAdd());
+        assertTrue(namedOwn.setScoreBeforeAdd());
+        assertEquals(ResponsePolicy.GrabOutcome.NAME_OWN_LIGHT, namedOwn.outcome());
+        assertEquals(30.0f, unknownOpponent.result().operations().get(0).delta(), 0.0f);
+        assertEquals(-200.0f, unknownOwn.result().operations().get(0).delta(), 0.0f);
+
+        assertTrue(ResponsePolicy.scoreCancelSelection("unresolved", false, false)
+                .operations().isEmpty());
+        assertOperation(ResponsePolicy.scoreCancelSelection("opponent", true, true)
+                        .operations().get(0),
+                expected(ResponsePolicy.scoreCancelSelection("opponent", true, true),
+                        "opponent", "RESPONSE-cancel-selection-opponent", 100.0f,
+                        "Opponent's card - cancel!"));
+        assertOperation(ResponsePolicy.scoreCancelSelection("own-cancel", true, false)
+                        .operations().get(0),
+                expected(ResponsePolicy.scoreCancelSelection("own-cancel", true, false),
+                        "own-cancel", "RESPONSE-cancel-selection-own", -200.0f,
+                        "Our card - don't cancel!"));
     }
 
     @Test(expected = NullPointerException.class)

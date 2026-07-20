@@ -7908,3 +7908,21 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     reload and live-game proof remain separate gates. Clean V285 is based on live V284 d97c1d90f.
     Divergent 349ff34a7 was a file-scoped patch oracle only; none of its alternate ancestry or V184
     ownership was merged. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V286 (2026-07-19): consolidate remaining RESPONSE scoring ====
+    Shared AI-only ResponsePolicy now also owns the mirrored Sense/Alter cancel bands, shadowed
+    late force-drain twin, Barrier scoring ladder, Grab ownership ladder, and cancel-target
+    card-selection operations. Both bot adapters retain route recognition, AiPriorityCards and
+    GEMP observations, catches, logs, action construction, Barrier turn state, Grab setScore
+    behavior, early returns, and state-mutation order. Exact legacy bands and precedence remain
+    unchanged, including V194's carve-out, opponent-drain +35 versus the shadowed +30 twin,
+    Barrier target memory, confirmed-both Grab precedence, and own-Grab total -19998. Focused V286
+    RESPONSE 32/0/0/0, all RESPONSE-named 48/0/0/0, merged RESPONSE plus V285 DEPLOY regression
+    75/0/0/0, full reactor 1942/0/0/26, exact mirror parity, route/state/source boundaries, V285
+    adapter preservation, AI-only scope, forbidden-symbol scan, diff, and clean package gates
+    passed. Server jar SHA-256 034f4cfc6b1574abc55ef63e815e5141b3d71302065775a4ce6d9b3d93c07680
+    and web jar SHA-256 90647ad3f28e934fb3859f9213c9fe6ff9e0c1dce8aec11ec9172eb337f08a1e
+    contain V286 and V285. Independent review passed before rebase; production hunks applied
+    without conflict and the combined regression/full gates passed after rebase. Runtime reload
+    and live-game proof remain separate gates. Clean V286 is rebased onto live V285 4019e4ed0.
+    AI source only; no GEMP engine or player-decision changes.

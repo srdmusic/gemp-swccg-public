@@ -26,6 +26,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
@@ -231,6 +232,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                   PolicyResult result) {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
                 "deploy-plan-destination-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyResponsePolicy(EvaluatedAction action, PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "response-cancel-selection-" + action.getActionId());
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
     }
@@ -6172,11 +6180,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         String owner = card.getOwner();
 
                         // Cancel opponent's cards, not ours!
-                        if (!playerId.equals(owner)) {
-                            action.addReasoning("Opponent's card - cancel!", 100.0f);
-                        } else {
-                            action.addReasoning("Our card - don't cancel!", -200.0f);
-                        }
+                        applyResponsePolicy(action, ResponsePolicy.scoreCancelSelection(
+                                cardId, true, !playerId.equals(owner)));
                     }
                 } catch (NumberFormatException e) {
                     // Ignore

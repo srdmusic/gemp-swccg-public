@@ -17,6 +17,8 @@ public class ResponsePolicySourceParityTest {
             throws IOException {
         assertEquals(normalizeBotSource(actionTextSource("rando")),
                 normalizeBotSource(actionTextSource("chosenone")));
+        assertEquals(normalizeBotSource(cardSelectionSource("rando")),
+                normalizeBotSource(cardSelectionSource("chosenone")));
     }
 
     @Test
@@ -100,6 +102,46 @@ public class ResponsePolicySourceParityTest {
     }
 
     @Test
+    public void senseCancelScoringHasOneSharedPolicyOwner()
+            throws IOException {
+        String policy = policySource();
+
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String source = actionTextSource(bot);
+            assertEquals(1, countOccurrences(source,
+                    "ResponsePolicy.scoreSenseSelfCancel("));
+            assertEquals(1, countOccurrences(source,
+                    "ResponsePolicy.scoreSenseCancel("));
+            assertEquals(1, countOccurrences(source,
+                    "ResponsePolicy.scoreLateForceDrainCancel("));
+            assertFalse(source.contains(
+                    "action.addReasoning(\"Destiny cancel critical target:"));
+            assertFalse(source.contains(
+                    "action.addReasoning(\"Cancel CRITICAL target:"));
+            assertFalse(source.contains(
+                    "action.addReasoning(\"Cancel high-value target:"));
+            assertFalse(source.contains(
+                    "action.addReasoning(\"Cancel valuable target:"));
+            assertFalse(source.contains(
+                    "action.addReasoning(\"Cancel opponent interrupt"));
+        }
+
+        for (String ruleId : new String[]{
+                "V37.3-sense-self-cancel",
+                "RESPONSE-sense-destiny-critical",
+                "RESPONSE-sense-destiny-skip",
+                "RESPONSE-sense-critical",
+                "RESPONSE-sense-high-value",
+                "RESPONSE-sense-valuable",
+                "RESPONSE-sense-force-drain-opponent",
+                "RESPONSE-sense-opponent-turn",
+                "RESPONSE-sense-own-turn",
+                "RESPONSE-late-force-drain-opponent"}) {
+            assertEquals(ruleId, 1, countOccurrences(policy, ruleId));
+        }
+    }
+
+    @Test
     public void actionTextControlOrderMatchesLegacy()
             throws IOException {
         String source = actionTextSource("rando");
@@ -124,6 +166,86 @@ public class ResponsePolicySourceParityTest {
                 "else if (textLower.contains(\"cancel\") && textLower.contains(\"redraw\") && textLower.contains(\"destiny\"))",
                 "else if (actionText.contains(\"Cancel all remaining battle damage\"))",
                 "evaluateHoujixGhhhk(action, context)");
+    }
+
+    @Test
+    public void cancelRoutePrecedenceAndV194CarveOutStayExact()
+            throws IOException {
+        String source = actionTextSource("rando");
+        String broadCancel = block(source,
+                "// ========== Cancel Opponent's Interrupt",
+                "// ========== V37: Cancel/Redraw Destiny");
+
+        assertInOrder(broadCancel,
+                "else if (textLower.contains(\"cancel\")",
+                "textLower.contains(\"force drain\")",
+                "!textLower.contains(\"your\")",
+                "// V194: let the dedicated cancel-and-redraw branch score this action.",
+                "&& !(textLower.contains(\"redraw\") && textLower.contains(\"destiny\"))",
+                "action.setActionType(ActionType.CANCEL)",
+                "evaluateSenseCancel(action, context, actionText, controlLedger)");
+        assertInOrder(source,
+                "// ========== Cancel Opponent's Interrupt",
+                "// ========== V37: Cancel/Redraw Destiny",
+                "// ========== Force Drain Cancellation");
+    }
+
+    @Test
+    public void senseCancelAdapterRetainsReadsLogsCatchesAndReturnOrder()
+            throws IOException {
+        String source = actionTextSource("rando");
+        String sense = block(source,
+                "private void evaluateSenseCancel(",
+                "private void evaluateHoujixGhhhk(");
+
+        assertEquals(1, countOccurrences(sense, "catch (Exception"));
+        for (String interrupt : new String[]{
+                "far more frightening", "force lightning", "force push",
+                "stunning leader", "i have you now", "sniper", "dark strike",
+                "we must accelerate", "ghhhk", "force field", "no escape"}) {
+            assertEquals(interrupt, 1,
+                    countOccurrences(sense, "\"" + interrupt + "\""));
+        }
+        assertInOrder(sense,
+                "String textLower = actionText.toLowerCase()",
+                "boolean isDestinyBased =",
+                "GameState senseGs = context.getGameState()",
+                "if (senseGs != null)",
+                "try {",
+                "String sensePid = context.getPlayerId()",
+                "String[] ourInterrupts =",
+                "if (textLower.contains(ourInt))",
+                "ResponsePolicy.scoreSenseSelfCancel(action.getActionId())",
+                "Tried to cancel our own '{}' — HARD BLOCKED!",
+                "return;",
+                "catch (Exception e) { /* ignore */ }",
+                "AiPriorityCards.getSenseTargetValue(actionText)",
+                "ResponsePolicy.scoreSenseCancel(",
+                "cancelEvaluation.delegatesSelfCancelDrain()",
+                "ControlActionPolicy.selfCancelDrain(",
+                "Tried to cancel OWN force drain — HARD BLOCKED!",
+                "applyResponsePolicy(action, cancelEvaluation.result())");
+    }
+
+    @Test
+    public void lateCaseSensitiveForceDrainTwinStaysInPlace()
+            throws IOException {
+        String source = actionTextSource("rando");
+        String lateTwin = block(source,
+                "// ========== Force Drain Cancellation",
+                "// ========== V74: Maintenance Cost Satisfaction");
+
+        assertTrue(lateTwin.contains(
+                "else if (actionText.contains(\"Cancel Force drain\"))"));
+        assertFalse(lateTwin.contains(
+                "textLower.contains(\"cancel force drain\")"));
+        assertInOrder(lateTwin,
+                "ResponsePolicy.scoreLateForceDrainCancel(",
+                "cancelEvaluation.delegatesSelfCancelDrain()",
+                "ControlActionPolicy.selfCancelDrain(actionId,",
+                "V52 NEVER SELF-CANCEL: Don't cancel own force drain!",
+                "Cancel Force drain on own turn — HARD BLOCKED!",
+                "applyResponsePolicy(action, cancelEvaluation.result())");
     }
 
     @Test
@@ -186,6 +308,46 @@ public class ResponsePolicySourceParityTest {
     }
 
     @Test
+    public void remainingResponseAdaptersKeepLazyReadsAndLegacyOrder()
+            throws IOException {
+        String actionText = actionTextSource("rando");
+        String barrier = block(actionText,
+                "private void evaluateBarrier", "private void evaluateEmbark");
+        String grab = block(actionText,
+                "private void evaluateGrab", "private void evaluateBreakCover");
+        String cancelSelection = block(cardSelectionSource("rando"),
+                "private List<EvaluatedAction> evaluateCancelSelection",
+                "/**\n     * Check if the decision text indicates");
+
+        assertInOrder(barrier,
+                "String targetCardName = extractCardNameFromPreventText(actionText)",
+                "if (currentTurn != barrierTurn)",
+                "barrieredTargets.clear()",
+                "barrieredTargets.contains(targetCardName.toLowerCase())",
+                "ResponsePolicy.scoreBarrier(",
+                "GameState gameState = context.getGameState()");
+        assertInOrder(barrier,
+                "weHavePresence, locationContested, targetPower, ourPower, theirPower)",
+                "applyResponsePolicy(action, barrierEvaluation.result())",
+                "barrierEvaluation.rememberTarget()",
+                "barrieredTargets.add(targetCardName.toLowerCase())");
+        assertInOrder(grab,
+                "catch (Exception e) { /* fall through to name matching */ }",
+                "if (confirmedOwnCard || confirmedOpponentCard)",
+                "ResponsePolicy.scoreGrab(",
+                "return;",
+                "// Fallback: name-based side detection",
+                "boolean looksLightSide",
+                "ResponsePolicy.scoreGrab(");
+        assertInOrder(cancelSelection,
+                "50.0f",
+                "gameState.findCardById(Integer.parseInt(cardId))",
+                "ResponsePolicy.scoreCancelSelection(",
+                "catch (NumberFormatException e)",
+                "actions.add(action)");
+    }
+
+    @Test
     public void retiredBotConfigScoresAreGone() throws IOException {
         for (String bot : new String[]{"rando", "chosenone"}) {
             String config = botSource(bot, "RandoConfig.java");
@@ -235,6 +397,14 @@ public class ResponsePolicySourceParityTest {
                 .resolve("com/gempukku/swccgo/ai/models")
                 .resolve(bot).resolve("evaluators")
                 .resolve("ActionTextEvaluator.java"));
+    }
+
+    private static String cardSelectionSource(String bot)
+            throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models")
+                .resolve(bot).resolve("evaluators")
+                .resolve("CardSelectionEvaluator.java"));
     }
 
     private static String policySource() throws IOException {

@@ -3742,13 +3742,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Force Drain Cancellation ==========
             else if (actionText.contains("Cancel Force drain")) {
-                if (context.isMyTurn()) {
+                ResponsePolicy.CancelEvaluation cancelEvaluation =
+                    ResponsePolicy.scoreLateForceDrainCancel(
+                        actionId, context.isMyTurn());
+                if (cancelEvaluation.delegatesSelfCancelDrain()) {
                     controlLedger.register(ControlActionPolicy.selfCancelDrain(actionId,
                             "V52 NEVER SELF-CANCEL: Don't cancel own force drain!"));
                     PolicyOperationAdapter.apply(action, controlLedger);
                     logger.warn("V52 SELF-CANCEL BLOCKED: Cancel Force drain on own turn — HARD BLOCKED!");
                 } else {
-                    action.addReasoning("Cancel opponent's force drain", GOOD_DELTA);
+                    applyResponsePolicy(action, cancelEvaluation.result());
                 }
             }
 
@@ -4144,7 +4147,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     "we must accelerate", "ghhhk", "force field", "no escape"};
                 for (String ourInt : ourInterrupts) {
                     if (textLower.contains(ourInt)) {
-                        action.addReasoning("V37.3 SENSE SELF-CANCEL: NEVER cancel our OWN interrupt!", -9999.0f);
+                        applyResponsePolicy(action,
+                            ResponsePolicy.scoreSenseSelfCancel(action.getActionId()));
                         logger.warn("V37.3 SENSE SELF-CANCEL: Tried to cancel our own '{}' — HARD BLOCKED!", ourInt);
                         return;
                     }
@@ -4155,32 +4159,20 @@ public class ActionTextEvaluator extends ActionEvaluator {
         // Check priority cards system for target value
         AiPriorityCards.SenseTargetResult senseResult = AiPriorityCards.getSenseTargetValue(actionText);
 
-        if (isDestinyBased) {
-            if (senseResult.isHighValue && senseResult.score >= 80) {
-                action.addReasoning("Destiny cancel critical target: " + senseResult.matchedPattern, 10.0f);
-            } else {
-                action.addReasoning("Destiny-based cancel (unreliable, skip)", -10.0f);
-            }
-        } else if (senseResult.isHighValue && senseResult.score >= 80) {
-            action.addReasoning("Cancel CRITICAL target: " + senseResult.matchedPattern + "!", VERY_GOOD_DELTA + 20.0f);
-        } else if (senseResult.isHighValue && senseResult.score >= 60) {
-            action.addReasoning("Cancel high-value target: " + senseResult.matchedPattern, VERY_GOOD_DELTA);
-        } else if (senseResult.isHighValue) {
-            action.addReasoning("Cancel valuable target: " + senseResult.matchedPattern, GOOD_DELTA + 15.0f);
-        } else if (textLower.contains("force drain")) {
+        ResponsePolicy.CancelEvaluation cancelEvaluation =
+            ResponsePolicy.scoreSenseCancel(
+                action.getActionId(), isDestinyBased,
+                senseResult.isHighValue, senseResult.score,
+                senseResult.matchedPattern,
+                textLower.contains("force drain"), context.isMyTurn());
+        if (cancelEvaluation.delegatesSelfCancelDrain()) {
             // V52: NEVER cancel your OWN force drain! Surprise Assault on own drain = self-sabotage.
-            if (context.isMyTurn()) {
-                controlLedger.register(ControlActionPolicy.selfCancelDrain(action.getActionId(),
-                        "V52 NEVER SELF-CANCEL DRAIN: Canceling own force drain is suicide!"));
-                PolicyOperationAdapter.apply(action, controlLedger);
-                logger.warn("V52 SELF-CANCEL BLOCKED: Tried to cancel OWN force drain — HARD BLOCKED!");
-            } else {
-                action.addReasoning("Cancel opponent's force drain", GOOD_DELTA + 5.0f);
-            }
-        } else if (!context.isMyTurn()) {
-            action.addReasoning("Cancel opponent interrupt (their turn)", GOOD_DELTA);
+            controlLedger.register(ControlActionPolicy.selfCancelDrain(action.getActionId(),
+                    "V52 NEVER SELF-CANCEL DRAIN: Canceling own force drain is suicide!"));
+            PolicyOperationAdapter.apply(action, controlLedger);
+            logger.warn("V52 SELF-CANCEL BLOCKED: Tried to cancel OWN force drain — HARD BLOCKED!");
         } else {
-            action.addReasoning("Cancel opponent interrupt (our turn)", 15.0f);
+            applyResponsePolicy(action, cancelEvaluation.result());
         }
     }
 
@@ -4293,7 +4285,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
         // Check if we already barriered this target
         if (targetCardName != null && barrieredTargets.contains(targetCardName.toLowerCase())) {
-            action.addReasoning("Already barriered " + targetCardName + " this turn - wasteful!", VERY_BAD_DELTA);
+            ResponsePolicy.BarrierEvaluation barrierEvaluation = ResponsePolicy.scoreBarrier(
+                    action.getActionId(), targetCardName, true, false,
+                    false, false, 0.0f, 0.0f, 0.0f);
+            applyResponsePolicy(action, barrierEvaluation.result());
             return;
         }
 
@@ -4308,9 +4303,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 if (card == null || card.getTitle() == null) continue;
                 if (card.getTitle().toLowerCase().contains(targetLower) || targetLower.contains(card.getTitle().toLowerCase())) {
                     if (playerId.equals(card.getOwner())) {
-                        action.addReasoning(String.format(
-                            "V35.1 SELF-BARRIER BLOCK: %s is OUR character — NEVER prevent our own from battling!",
-                            targetCardName), -9999.0f);
+                        ResponsePolicy.BarrierEvaluation barrierEvaluation = ResponsePolicy.scoreBarrier(
+                                action.getActionId(), targetCardName, false, true,
+                                false, false, 0.0f, 0.0f, 0.0f);
+                        applyResponsePolicy(action, barrierEvaluation.result());
                         logger.warn("V35.1 SELF-BARRIER: Blocking barrier on OWN character {} (-9999)", targetCardName);
                         return;
                     }
@@ -4386,35 +4382,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
         // Barrier prevents battling/moving. If we have nobody there, it serves no purpose.
         boolean weHavePresence = ourPower > 0;
 
-        // Apply scoring based on situation
+        ResponsePolicy.BarrierEvaluation barrierEvaluation = ResponsePolicy.scoreBarrier(
+                action.getActionId(), targetCardName, false, false,
+                weHavePresence, locationContested, targetPower, ourPower, theirPower);
+        applyResponsePolicy(action, barrierEvaluation.result());
         if (!weHavePresence) {
-            // V48: We have NOBODY at this location — barrier is completely useless!
-            action.addReasoning("V48 BARRIER USELESS: No friendly presence at location — serves no purpose!", -9999.0f);
             logger.warn("V48 BARRIER BLOCK: No friendly presence at target location — HARD BLOCK!");
-        } else if (!locationContested) {
-            // Location NOT contested - save barrier for when we need it
-            action.addReasoning("Save barrier - location not contested", BAD_DELTA);
-        } else if (ourPower >= theirPower + 8) {
-            // We're already dominating - don't waste the barrier
-            action.addReasoning("Save barrier - already dominating (" + (int)ourPower + " vs " + (int)theirPower + ")", BAD_DELTA);
-        } else if (targetPower >= 5) {
-            // High-power target at contested location - VERY valuable!
-            action.addReasoning("Barrier on HIGH POWER target (" + (int)targetPower + ")!", VERY_GOOD_DELTA);
-            if (targetCardName != null) {
-                barrieredTargets.add(targetCardName.toLowerCase());
-            }
-        } else if (theirPower >= ourPower) {
-            // They're winning or tied - barrier is valuable
-            action.addReasoning("Barrier to protect (losing " + (int)ourPower + " vs " + (int)theirPower + ")", GOOD_DELTA + 10.0f);
-            if (targetCardName != null) {
-                barrieredTargets.add(targetCardName.toLowerCase());
-            }
-        } else {
-            // We're ahead but not dominating - still useful
-            action.addReasoning("Barrier at contested location", GOOD_DELTA);
-            if (targetCardName != null) {
-                barrieredTargets.add(targetCardName.toLowerCase());
-            }
+        }
+        if (barrierEvaluation.rememberTarget() && targetCardName != null) {
+            barrieredTargets.add(targetCardName.toLowerCase());
         }
     }
 
@@ -4539,14 +4515,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
             } catch (Exception e) { /* fall through to name matching */ }
         }
 
-        if (confirmedOwnCard && !confirmedOpponentCard) {
-            action.setScore(-9999.0f);
-            action.addReasoning("V53 NEVER GRAB OWN: Grabbing own interrupt is suicide!", -9999.0f);
-            logger.warn("V53 GRAB BLOCKED: Confirmed own card — HARD BLOCKED! {}", actionText);
-            return;
-        } else if (confirmedOpponentCard) {
-            action.addReasoning("V53 GRAB OPPONENT: Confirmed opponent's interrupt — grab it!", GOOD_DELTA);
-            logger.warn("V53 GRAB: Confirmed opponent card — grabbing! {}", actionText);
+        if (confirmedOwnCard || confirmedOpponentCard) {
+            ResponsePolicy.GrabEvaluation grabEvaluation = ResponsePolicy.scoreGrab(
+                    action.getActionId(), confirmedOwnCard, confirmedOpponentCard, mySide,
+                    false, false, context.isMyTurn());
+            if (grabEvaluation.setScoreBeforeAdd()) {
+                action.setScore(-9999.0f);
+            }
+            applyResponsePolicy(action, grabEvaluation.result());
+            if (grabEvaluation.outcome() == ResponsePolicy.GrabOutcome.CONFIRMED_OWN) {
+                logger.warn("V53 GRAB BLOCKED: Confirmed own card — HARD BLOCKED! {}", actionText);
+            } else {
+                logger.warn("V53 GRAB: Confirmed opponent card — grabbing! {}", actionText);
+            }
             return;
         }
 
@@ -4561,27 +4542,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                  textLower.contains("stormtrooper") || textLower.contains("death star") ||
                                  textLower.contains("maul") || textLower.contains("dooku") ||
                                  textLower.contains("boba fett") || textLower.contains("jango");
-
-        if (mySide == Side.DARK && looksLightSide) {
-            action.addReasoning("Grab Light side card (we are Dark)", GOOD_DELTA);
-        } else if (mySide == Side.LIGHT && looksDarkSide) {
-            action.addReasoning("Grab Dark side card (we are Light)", GOOD_DELTA);
-        } else if (mySide == Side.DARK && looksDarkSide) {
+        ResponsePolicy.GrabEvaluation grabEvaluation = ResponsePolicy.scoreGrab(
+                action.getActionId(), false, false, mySide,
+                looksLightSide, looksDarkSide, context.isMyTurn());
+        if (grabEvaluation.setScoreBeforeAdd()) {
             action.setScore(-9999.0f);
-            action.addReasoning("V53 NEVER GRAB OWN: Grabbing own Dark card!", -9999.0f);
+        }
+        applyResponsePolicy(action, grabEvaluation.result());
+        if (grabEvaluation.outcome() == ResponsePolicy.GrabOutcome.NAME_OWN_DARK) {
             logger.warn("V53 GRAB BLOCKED: Likely own Dark card — {}", actionText);
-        } else if (mySide == Side.LIGHT && looksLightSide) {
-            action.setScore(-9999.0f);
-            action.addReasoning("V53 NEVER GRAB OWN: Grabbing own Light card!", -9999.0f);
+        } else if (grabEvaluation.outcome() == ResponsePolicy.GrabOutcome.NAME_OWN_LIGHT) {
             logger.warn("V53 GRAB BLOCKED: Likely own Light card — {}", actionText);
-        } else {
-            // Unknown owner — only grab if it's opponent's turn (their interrupt just played)
-            if (!context.isMyTurn()) {
-                action.addReasoning("Grab unknown card (opponent's turn — likely theirs)", GOOD_DELTA);
-            } else {
-                action.addReasoning("V53 GRAB CAUTION: Unknown owner on our turn — avoid!", -200.0f);
-                logger.info("V53 GRAB CAUTION: Unknown owner on our turn, avoiding: {}", actionText);
-            }
+        } else if (grabEvaluation.outcome() == ResponsePolicy.GrabOutcome.UNKNOWN_OWN_TURN) {
+            logger.info("V53 GRAB CAUTION: Unknown owner on our turn, avoiding: {}", actionText);
         }
     }
 

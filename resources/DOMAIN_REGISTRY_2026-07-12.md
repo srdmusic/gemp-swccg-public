@@ -173,6 +173,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V285 owner note:** `DeployActionTextPolicy` now also owns V160 Target The Main Generator priority, late generic Deploy-on/projection/unique scoring, and the generic Play-a-card Force baseline. The mirrored adapters retain all text and objective recognition, shield routing, action-type mutation, Force reads, logs, and the existing ordinary-Deploy skip gate. V184 remains solely `ResponsePolicy`-owned. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
+**V286 owner note:** `ResponsePolicy` now also owns the mirrored Sense/Alter cancel bands, shadowed late force-drain twin, Barrier scoring ladder, Grab ownership ladder, and cancel-target selection operations. Both action-text and card-selection adapters retain all route recognition, AiPriorityCards and GEMP observations, catches, logs, action construction, Barrier turn state, Grab `setScore` behavior, early returns, and contribution/state-mutation positions. V52 self-drain remains CONTROL-owned. This is an AI-only structural extraction; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |
