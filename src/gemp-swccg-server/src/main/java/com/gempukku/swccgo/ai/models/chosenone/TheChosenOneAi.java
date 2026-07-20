@@ -15,6 +15,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
+import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
@@ -1655,16 +1656,19 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
         // Force drain is primary control phase action
         if (actionText.contains("force drain")) {
-            score += RandoConfig.SCORE_FORCE_DRAIN;
+            int controlledBattlegrounds = 0;
 
             // Extra bonus if we control battlegrounds
             if (currentGame != null && context != null && mySide != null) {
                 List<LocationAnalysis> controlled = AiBoardAnalyzer.getControlledBattlegrounds(
                     currentGame, context.playerId, context.opponentId, mySide);
                 if (!controlled.isEmpty()) {
-                    score += 20 * controlled.size();
+                    controlledBattlegrounds = controlled.size();
                 }
             }
+
+            score += ControlDrainAssessment.scoreLegacyFallback(
+                RandoConfig.SCORE_FORCE_DRAIN, controlledBattlegrounds);
         }
 
         return score;

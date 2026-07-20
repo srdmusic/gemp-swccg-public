@@ -165,6 +165,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V281 owner note:** `DeployFormationSitingPolicy` now also owns the mirrored V29.7 battleground preference and V67ah non-battleground penalty ladder. Both `CardSelectionEvaluator` adapters retain battleground, top-location, blueprint, side, and force-icon observations plus all catches and contribution placement. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
+**V282 owner note:** `ControlDrainAssessment` now also owns the mirrored top-level CONTROL fallback arithmetic: the adapter-supplied force-drain base plus `+20` per controlled battleground. Both bot coordinators retain phase/action recognition, guarded board observation, counting, exception behavior, and contribution placement. This is an AI-only structural extraction; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

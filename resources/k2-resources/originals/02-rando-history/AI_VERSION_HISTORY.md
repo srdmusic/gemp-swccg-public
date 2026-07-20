@@ -7850,3 +7850,16 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     55bbe08c8fc2302d2febb23648069c00cd0b971ddffe01b63d848ee90cf98f05 contain V281.
     Independent review, runtime reload, and live-game proof remain separate gates. Clean V281 is
     based on live V280 e9f194fdf. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V282 (2026-07-19): consolidate CONTROL legacy fallback scoring ====
+    Shared AI-only ControlDrainAssessment now also owns the mirrored top-level force-drain fallback
+    arithmetic. RandoCalAi and TheChosenOneAi retain action recognition, phase routing, guarded
+    AiBoardAnalyzer observation, controlled-location counting, exception behavior, and contribution
+    order. The adapter-supplied RandoConfig.SCORE_FORCE_DRAIN base and +20 per controlled
+    battleground are unchanged. Focused CONTROL fallback/source 5/0/0/0, CONTROL-named 22/0/0/0,
+    full reactor 1903/0/0/26, exact fallback mirror parity, boundary/source/order gates, AI-only
+    scope, diff, and clean package gates passed. Server jar SHA-256
+    f40fc0b1cd6259f2505872c8e3d027e31f4c8ade60a890cfc7e5db84ccbfb56c and web jar SHA-256
+    d08703349113f147895c308166291f7652e9bc1df248298101b47e22caac5924 contain V282.
+    Independent review, runtime reload, and live-game proof remain separate gates. Clean V282 is
+    based on live V281 a09099cbd. AI source only; no GEMP engine or player-decision changes.

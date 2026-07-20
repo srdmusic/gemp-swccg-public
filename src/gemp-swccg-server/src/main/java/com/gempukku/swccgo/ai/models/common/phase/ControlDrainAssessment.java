@@ -13,6 +13,8 @@ import java.util.Objects;
 /** Ordered, pure CONTROL force-drain policy over lazily collected fact slices. */
 public final class ControlDrainAssessment {
 
+    private static final int LEGACY_CONTROLLED_BATTLEGROUND_BONUS = 20;
+
     public interface Facts {
         Primary primary();
         boolean simpleTricksBlocks();
@@ -50,6 +52,18 @@ public final class ControlDrainAssessment {
     }
 
     private ControlDrainAssessment() {
+    }
+
+    /** Pure arithmetic for the top-level legacy CONTROL fallback. */
+    public static int scoreLegacyFallback(
+            int forceDrainScore, int controlledBattlegrounds) {
+        int score = 0;
+        score += forceDrainScore;
+        if (controlledBattlegrounds > 0) {
+            score += LEGACY_CONTROLLED_BATTLEGROUND_BONUS
+                    * controlledBattlegrounds;
+        }
+        return score;
     }
 
     public static PolicyResult assess(String actionId, Facts facts) {
