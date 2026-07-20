@@ -69,15 +69,19 @@ public class PullOwnershipSourceTest {
     }
 
     @Test
-    public void nonPullTakeIntoHandRulesStayOutsidePullSearchOwner()
+    public void parentTakeIntoHandRulesHaveOnePullActionOwner()
             throws IOException {
         String adapter = evaluator("rando", "ActionTextEvaluator.java");
-        String policy = phase("PullSpecificActionPolicy.java");
+        String parentPolicy = phase("PullActionPolicy.java");
+        String specificPolicy = phase("PullSpecificActionPolicy.java");
 
-        assertTrue(adapter.contains("V29.7 BOUNCE: Return own card from table to hand"));
-        assertTrue(adapter.contains("Take card into hand from Lost Pile"));
-        assertFalse(policy.contains("V29.7 BOUNCE:"));
-        assertFalse(policy.contains("Take card into hand from Lost Pile"));
+        assertTrue(adapter.contains("PullActionPolicy.scoreTakeIntoHand("));
+        assertFalse(adapter.contains("V29.7 BOUNCE: Return own card from table to hand"));
+        assertFalse(adapter.contains("Take card into hand from Lost Pile"));
+        assertTrue(parentPolicy.contains("V29.7 BOUNCE: Return own card from table to hand"));
+        assertTrue(parentPolicy.contains("Take card into hand from Lost Pile"));
+        assertFalse(specificPolicy.contains("scoreTakeIntoHand"));
+        assertFalse(phase("PullTakeCandidatePolicy.java").contains("V29.7 BOUNCE:"));
     }
 
     @Test
@@ -99,7 +103,8 @@ public class PullOwnershipSourceTest {
     @Test
     public void pureOwnersHaveNoGameEngineOrForbiddenMetadataDependencies()
             throws IOException {
-        String sources = phase("PullSpecificActionFacts.java")
+        String sources = phase("PullActionPolicy.java")
+                + phase("PullSpecificActionFacts.java")
                 + phase("PullSpecificActionPolicy.java")
                 + phase("PullSelectionCandidateFacts.java")
                 + phase("PullSelectionCandidatePolicy.java");

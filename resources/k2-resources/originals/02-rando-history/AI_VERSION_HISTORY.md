@@ -7958,3 +7958,25 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     7b13644a10f6f4601077ec6bf07d1b69760244930f4524f2f240ed3ce7b9b26b and web jar SHA-256 is
     26f013587348da56c89561b93b0ed9fc28ea85997b281d9215cb43fbec482751. Clean V288 is rebased
     onto live V287 79de68635. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V289 (2026-07-19): consolidate force economy and utility residuals ====
+    Shared AI-only ForceLossPolicy now owns the residual action-text loss/cost stream and the
+    unknown-selection loss-category stream followed by V25; unmatched categories emit no operation
+    or reasoning and preserve the legacy neutral base. ControlActionPolicy now owns Monnok reveal,
+    make-opponent-lose, generic retrieve, and USED peek. PullActionPolicy owns the parent action-text
+    take-into-hand residuals; PullSpecificActionPolicy remains card-specific and PullTakeCandidatePolicy
+    remains child-only. Both bot
+    adapters retain exact recognition; all GEMP, objective, card, and pile reads; scans; catches;
+    logs; returns/continues; candidate base 30; and first-match positions. ResponsePolicy remains
+    the sole owner of opponent-drain Sense +35 and late +30; CONTROL still owns only delegated
+    V52 self-drain vetoes. Standalone/battle lightsaber protections remain -500/-400, V184 remains
+    additive before retrieve, V23 still exits truly empty piles at -300, one-card no-match remains
+    -10099, and Reserve Deck takes still bypass to V192. Every moved operation is ADD. Focused
+    Packet E plus unchanged V286 RESPONSE tests passed 125/0/0/0; clean full reactor passed
+    1972/0/0/26; normalized mirrors, all nine FORCE-LOSS action-text adapter routes, CSE category-before-V25 order,
+    complete ownership/comment gates, matrices, unmatched-category no-op, thresholds, stacking, E0 nondup,
+    AI-only scope, diff, package, and bundled-class/marker gates passed. Server jar SHA-256 is
+    99e3ce7d2260e4e2c87f7bb36c191cccdcb789f45b7aef285c4a85553e0c2427 and web jar SHA-256 is
+    f3b91b11fb733bb23d7233d5d7ddf60e987f9fc4453c8b6e4fda3cc6faf382cb. Runtime reload and live
+    proof were not performed. Clean V289 is based exactly on V288 e47bb188f04a1122f332d6a2e3a98997ccdf89b2.
+    Nothing was pushed or deployed. AI source only; no engine or player-decision changes.

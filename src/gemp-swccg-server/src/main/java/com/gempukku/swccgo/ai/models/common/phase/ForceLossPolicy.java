@@ -5,6 +5,7 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
+import com.gempukku.swccgo.common.CardCategory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,18 @@ import java.util.Objects;
 
 /** Canonical ordered FORCE-LOSS payment tree shared by Rando and ChosenOne. */
 public final class ForceLossPolicy {
+
+    public enum ActionTextChoice {
+        PLACE_IN_LOST_PILE,
+        MAINTENANCE_PAY,
+        MAINTENANCE_OUT_OF_PLAY,
+        MAINTENANCE_USED_PILE,
+        MAINTENANCE_SACRIFICE,
+        GENERIC_USE_UPKEEP,
+        GENERIC_USE,
+        GENERIC_LOSE,
+        GENERIC_SACRIFICE
+    }
 
     public enum Route {
         STANDALONE,
@@ -29,6 +42,76 @@ public final class ForceLossPolicy {
     }
 
     private ForceLossPolicy() {
+    }
+
+    public static PolicyResult scoreActionTextChoice(String actionId,
+                                                     ActionTextChoice choice) {
+        Objects.requireNonNull(actionId, "actionId");
+        Objects.requireNonNull(choice, "choice");
+        return switch (choice) {
+            case PLACE_IN_LOST_PILE -> one(actionId, "FORCE-LOSS-place-lost",
+                    TraceOutputKind.ORDERING, -50.0f, "Avoid losing cards");
+            case MAINTENANCE_PAY -> one(actionId, "V74-maintenance-pay",
+                    TraceOutputKind.ORDERING, 400.0f,
+                    "V74 MAINTENANCE PAY: keep the card alive!");
+            case MAINTENANCE_OUT_OF_PLAY -> one(actionId,
+                    "V74-maintenance-out-of-play", TraceOutputKind.ORDERING,
+                    -800.0f,
+                    "V74 MAINTENANCE SACRIFICE: place out of play is PERMANENT loss!");
+            case MAINTENANCE_USED_PILE -> one(actionId,
+                    "V74-maintenance-used-pile", TraceOutputKind.ORDERING,
+                    -200.0f,
+                    "V74 MAINTENANCE USED-PILE: lose card to used pile, keep blueprint");
+            case MAINTENANCE_SACRIFICE -> one(actionId,
+                    "V74-maintenance-sacrifice", TraceOutputKind.ORDERING,
+                    -800.0f, "V74 MAINTENANCE SACRIFICE: avoid");
+            case GENERIC_USE_UPKEEP -> one(actionId, "V22.3-maintenance-use",
+                    TraceOutputKind.ORDERING, 150.0f,
+                    "V22.3 MAINTENANCE: Pay upkeep cost!");
+            case GENERIC_USE -> one(actionId, "FORCE-LOSS-generic-use",
+                    TraceOutputKind.ORDERING, -20.0f,
+                    "'Use Force' action \u2014 prefer not to use force unnecessarily");
+            case GENERIC_LOSE -> one(actionId, "FORCE-LOSS-generic-lose",
+                    TraceOutputKind.ORDERING, -30.0f,
+                    "'Lose Force' action \u2014 avoid losing force");
+            case GENERIC_SACRIFICE -> one(actionId, "V22.3-generic-sacrifice",
+                    TraceOutputKind.ORDERING, -150.0f,
+                    "V22.3: Avoid sacrificing cards \u2014 prefer alternatives");
+        };
+    }
+
+    public static PolicyResult scoreUnknownLoss(String actionId,
+                                                CardCategory category,
+                                                boolean huntDownLightsaber) {
+        Objects.requireNonNull(actionId, "actionId");
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (category == CardCategory.EFFECT || category == CardCategory.INTERRUPT) {
+            add(operations, actionId, "FORCE-LOSS-unknown-effect-interrupt",
+                    TraceOutputKind.ORDERING, 25.0f,
+                    "Effect/Interrupt - OK to lose");
+        } else if (category == CardCategory.CHARACTER) {
+            add(operations, actionId, "FORCE-LOSS-unknown-character",
+                    TraceOutputKind.ORDERING, -15.0f,
+                    "Character - avoid losing");
+        } else if (category == CardCategory.STARSHIP) {
+            add(operations, actionId, "FORCE-LOSS-unknown-starship",
+                    TraceOutputKind.ORDERING, -15.0f,
+                    "Starship - avoid losing");
+        } else if (category == CardCategory.VEHICLE) {
+            add(operations, actionId, "FORCE-LOSS-unknown-vehicle",
+                    TraceOutputKind.ORDERING, -10.0f,
+                    "Vehicle - avoid losing");
+        } else if (category == CardCategory.LOCATION) {
+            add(operations, actionId, "FORCE-LOSS-unknown-location",
+                    TraceOutputKind.ORDERING, -20.0f,
+                    "Location - avoid losing");
+        }
+        if (huntDownLightsaber) {
+            add(operations, actionId, "V25-unknown-loss",
+                    TraceOutputKind.ORDERING, -300.0f,
+                    "V25 HUNT DOWN: PROTECT LIGHTSABER from loss!");
+        }
+        return new PolicyResult("FORCE_LOSS_POLICY", operations);
     }
 
     public static PolicyResult score(String actionId,
@@ -212,6 +295,17 @@ public final class ForceLossPolicy {
 
     private static boolean isLightsaber(String title) {
         return title != null && title.toLowerCase(Locale.ROOT).contains("lightsaber");
+    }
+
+    private static PolicyResult one(String actionId,
+                                    String ruleId,
+                                    TraceOutputKind outputKind,
+                                    float delta,
+                                    String reason) {
+        return new PolicyResult("FORCE_LOSS_POLICY", List.of(
+                PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                        TraceDomainId.FORCE_LOSS_PAYMENT, outputKind,
+                        delta, reason)));
     }
 
     private static void add(List<PolicyOperation> operations,

@@ -79,4 +79,72 @@ public class ControlActionTextPolicyParityTest {
         assertEquals(Float.floatToRawIntBits(-9999.0f),
                 Float.floatToRawIntBits(actions.get(1).getScore()));
     }
+
+    @Test
+    public void revealRetrieveBoundariesAndV184StackingStayMirrored() {
+        assertUtilityBoundary(6, 15, -50.0f, 270.0f);
+        assertUtilityBoundary(7, 16, 50.0f, 330.0f);
+    }
+
+    private static void assertUtilityBoundary(int opponentHandSize,
+                                              int lostPileSize,
+                                              float revealScore,
+                                              float retrieveScore) {
+        GameState gameState = mock(GameState.class);
+        when(gameState.getPlayersLatestTurnNumber("tester")).thenReturn(4);
+        when(gameState.getCurrentPlayerId()).thenReturn("tester");
+        when(gameState.getOpponent("tester")).thenReturn("opponent");
+        when(gameState.getHand("opponent")).thenReturn(
+                java.util.Collections.nCopies(opponentHandSize,
+                        mock(PhysicalCard.class)));
+        when(gameState.getLostPile("tester")).thenReturn(
+                java.util.Collections.nCopies(lostPileSize,
+                        mock(PhysicalCard.class)));
+        when(gameState.getHand("tester")).thenReturn(List.of());
+        when(gameState.getAllPermanentCards()).thenReturn(List.of());
+
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, "tester", "ACTION_CHOICE", "Choose CONTROL action",
+                "control-utility-boundary", Phase.CONTROL);
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, "tester", "ACTION_CHOICE", "Choose CONTROL action",
+                "control-utility-boundary", Phase.CONTROL);
+        List<String> ids = List.of("reveal", "retrieve", "peek", "make-lose");
+        List<String> texts = List.of(
+                "LOST: Reveal opponent's hand",
+                "retrieve Force",
+                "USED: Peek at top card",
+                "Make opponent lose 1 Force");
+        randoContext.setActionIds(ids);
+        randoContext.setActionTexts(texts);
+        randoContext.setCardIds(List.of("", "", "", ""));
+        chosenContext.setActionIds(ids);
+        chosenContext.setActionTexts(texts);
+        chosenContext.setCardIds(List.of("", "", "", ""));
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
+                .evaluate(chosenContext);
+
+        assertEquals(4, rando.size());
+        assertEquals(4, chosen.size());
+        for (int i = 0; i < rando.size(); i++) {
+            assertEquals(rando.get(i).getActionId(), chosen.get(i).getActionId());
+            assertEquals(Float.floatToRawIntBits(rando.get(i).getScore()),
+                    Float.floatToRawIntBits(chosen.get(i).getScore()));
+            assertEquals(rando.get(i).getReasoning(), chosen.get(i).getReasoning());
+        }
+        assertEquals(Float.floatToRawIntBits(revealScore),
+                Float.floatToRawIntBits(rando.get(0).getScore()));
+        assertEquals(Float.floatToRawIntBits(retrieveScore),
+                Float.floatToRawIntBits(rando.get(1).getScore()));
+        assertEquals(Float.floatToRawIntBits(30.0f),
+                Float.floatToRawIntBits(rando.get(2).getScore()));
+        assertEquals(Float.floatToRawIntBits(30.0f),
+                Float.floatToRawIntBits(rando.get(3).getScore()));
+        assertEquals(2, rando.get(1).getReasoning().size());
+        assertEquals(true, rando.get(1).getReasoning().get(0)
+                .startsWith("V184 WHEN-DEPLOYED TRIGGER:"));
+    }
 }

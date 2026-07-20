@@ -6756,6 +6756,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 shieldDecisionId == null || shieldDecisionId.isBlank()
                         ? "pull-deploy-candidate-unknown-decision"
                         : shieldDecisionId + "-pull-deploy-candidate");
+        PolicyContributionLedger forceLossLedger = new PolicyContributionLedger(
+                shieldDecisionId == null || shieldDecisionId.isBlank()
+                        ? "force-loss-unknown-decision"
+                        : shieldDecisionId + "-force-loss-unknown");
         GameState gameState = context.getGameState();
         SwccgGame game = context.getGame();
         List<String> cardIds = context.getCardIds();
@@ -6974,35 +6978,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
             // Score based on card type (like Python)
             if (isLossDecision) {
-                // For loss decisions: prefer effects/interrupts
-                if (category == CardCategory.EFFECT || category == CardCategory.INTERRUPT) {
-                    action.addReasoning("Effect/Interrupt - OK to lose", 25.0f);
-                } else if (category == CardCategory.CHARACTER) {
-                    action.addReasoning("Character - avoid losing", -15.0f);
-                } else if (category == CardCategory.STARSHIP) {
-                    action.addReasoning("Starship - avoid losing", -15.0f);
-                } else if (category == CardCategory.VEHICLE) {
-                    action.addReasoning("Vehicle - avoid losing", -10.0f);
-                } else if (category == CardCategory.LOCATION) {
-                    action.addReasoning("Location - avoid losing", -20.0f);
-                }
-            }
-
-            // === V25: HUNT DOWN V — LIGHTSABER PRIORITY (evaluateUnknown path) ===
-            // For Hunt Down V, lightsabers are critical for the deck engine:
-            // - Vader + lightsaber cancels drain bonuses (back side)
-            // - Hatred engine needs lightsabers stacked
-            // - "I Am Your Father" pulls Vader's Lightsaber
-            if (cardTitle != null) {
-                String lsTitleLower = cardTitle.toLowerCase(java.util.Locale.ROOT);
+                // === V25: HUNT DOWN V — LIGHTSABER PRIORITY (evaluateUnknown path) ===
+                // For Hunt Down V, lightsabers are critical for the deck engine:
+                // - Vader + lightsaber cancels drain bonuses (back side)
+                // - Hatred engine needs lightsabers stacked
+                // - "I Am Your Father" pulls Vader's Lightsaber
+                boolean huntDownLightsaber = false;
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer lsObjAnalyzer =
                     context.getObjectiveAnalyzer();
-                if (isLossDecision && lsObjAnalyzer != null
+                if (cardTitle != null && lsObjAnalyzer != null
                     && lsObjAnalyzer.isAnalyzed() && lsObjAnalyzer.isHuntDownV()
-                    && lsTitleLower.contains("lightsaber")) {
-                    action.addReasoning("V25 HUNT DOWN: PROTECT LIGHTSABER from loss!", -300.0f);
+                    && cardTitle.toLowerCase(java.util.Locale.ROOT).contains("lightsaber")) {
+                    huntDownLightsaber = true;
                     logger.warn("V25 HUNT DOWN UNKNOWN-LOSS: {} is a lightsaber — PROTECT (-300)", cardTitle);
                 }
+                forceLossLedger.register(ForceLossPolicy.scoreUnknownLoss(
+                        cardId, category, huntDownLightsaber));
+                PolicyOperationAdapter.apply(action, forceLossLedger);
             }
 
             // Shared PULL child policy owns gain value, Hunt Down lightsaber,

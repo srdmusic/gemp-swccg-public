@@ -167,6 +167,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V282 owner note:** `ControlDrainAssessment` now also owns the mirrored top-level CONTROL fallback arithmetic: the adapter-supplied force-drain base plus `+20` per controlled battleground. Both bot coordinators retain phase/action recognition, guarded board observation, counting, exception behavior, and contribution placement. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
+**V289 owner note:** `ControlActionPolicy` now also owns the residual Monnok hand-size, make-opponent-lose, generic retrieve, and used-pile peek action-text arithmetic. Both action-text adapters retain exact case-sensitive recognition, opponent-hand and Lost Pile reads, V184 stacking position, and first-match control flow. Opponent force-drain cancellation remains exclusively `ResponsePolicy`-owned; CONTROL still owns only the two delegated self-drain veto sites.
+
 **V283 owner note:** `BattleActionTextPolicy` and `BattleWeaponsPolicy` now also own the mirrored top-level BATTLE initiation, board-fallback, and fire-weapon score bands. Both bot coordinators retain phase/action recognition, guarded location and board observations, title matching, first-match control, fallback gating, and contribution placement. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
 **V284 owner note:** `ResponsePolicy` now also owns the mirrored fixed-score V184 when-deployed, V29.8 Sense redraw, V53b save-Jedi, react, cancel-own, and Houjix/Ghhhk action-text operations. Both `ActionTextEvaluator` adapters retain text recognition, all game observations, catches, action types, diagnostics, branch order, and contribution placement. The two Sense classifiers remain separate additive arms. This is an AI-only structural extraction; no engine metadata or candidate control moved.
@@ -426,6 +428,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V153 |  | FORCE-LOSS | FLP | ORDERING | — | FORCE-LOSS hub: shared route-aware loss order, char/life-force tiers (protect chars when lifeForce>=4, survival mode <4), HAND FLOOR -700, PRIORITY CARD -100, THIN RESERVE -335. | CONSOLIDATED V206 |
 | V175a |  | FORCE-LOSS | FLP | ORDERING | — | Turn-gate on battle-interrupt protection inside the standalone V153 order: protection starts turn 4; turns 1-3 lose the known interrupt before a blind reserve hit. V178-loss separately protects weapons. | CONSOLIDATED V206 |
 | V178-loss | V178 | FORCE-LOSS | CSE:4013 | ORDERING | — | §8 arm split (forfeit vs force-loss): loss arm reranks wielded weapons zone 600 -> 150 (CSE 4071-4103). UNCLAIMED ARM: forfeit arm (CSE:9217, armed chars slightly… | LIVE |
+
+**V289 owner note:** `ForceLossPolicy` now also owns the residual action-text loss/cost choices and the unknown-selection loss-category stream, followed by the V25 Hunt Down lightsaber `-300` arm; unmatched categories emit no operation and preserve the legacy neutral base. `PullActionPolicy` owns the parent action-text take-into-hand residuals, `PullSpecificActionPolicy` remains card-specific, and `PullTakeCandidatePolicy` remains the child candidate owner. Both bot adapters retain recognition, every GEMP read and scan, logs, catches, return/continue behavior, and exact first-match position. All moved operations remain additive.
 
 ### shields — 13 rules
 *Shield pick tables, pacing, 4th-slot gate.* Target owner: SHIELDS engine (ShieldStrategy + ShieldFacts).

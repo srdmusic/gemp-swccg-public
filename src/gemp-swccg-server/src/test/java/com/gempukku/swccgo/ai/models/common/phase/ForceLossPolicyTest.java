@@ -259,6 +259,63 @@ public class ForceLossPolicyTest {
         assertEquals(result.operations().size(), keys.size());
     }
 
+    @Test
+    public void actionTextChoiceMatrixKeepsExactOrderedAdditiveScores() {
+        assertChoice(ForceLossPolicy.ActionTextChoice.PLACE_IN_LOST_PILE,
+                -50.0f, "Avoid losing cards");
+        assertChoice(ForceLossPolicy.ActionTextChoice.MAINTENANCE_PAY,
+                400.0f, "V74 MAINTENANCE PAY: keep the card alive!");
+        assertChoice(ForceLossPolicy.ActionTextChoice.MAINTENANCE_OUT_OF_PLAY,
+                -800.0f,
+                "V74 MAINTENANCE SACRIFICE: place out of play is PERMANENT loss!");
+        assertChoice(ForceLossPolicy.ActionTextChoice.MAINTENANCE_USED_PILE,
+                -200.0f,
+                "V74 MAINTENANCE USED-PILE: lose card to used pile, keep blueprint");
+        assertChoice(ForceLossPolicy.ActionTextChoice.MAINTENANCE_SACRIFICE,
+                -800.0f, "V74 MAINTENANCE SACRIFICE: avoid");
+        assertChoice(ForceLossPolicy.ActionTextChoice.GENERIC_USE_UPKEEP,
+                150.0f, "V22.3 MAINTENANCE: Pay upkeep cost!");
+        assertChoice(ForceLossPolicy.ActionTextChoice.GENERIC_USE,
+                -20.0f,
+                "'Use Force' action — prefer not to use force unnecessarily");
+        assertChoice(ForceLossPolicy.ActionTextChoice.GENERIC_LOSE,
+                -30.0f, "'Lose Force' action — avoid losing force");
+        assertChoice(ForceLossPolicy.ActionTextChoice.GENERIC_SACRIFICE,
+                -150.0f,
+                "V22.3: Avoid sacrificing cards — prefer alternatives");
+    }
+
+    @Test
+    public void unknownLossCategoryMatrixAndV25OrderStayExact() {
+        assertUnknown(CardCategory.EFFECT,
+                "FORCE-LOSS-unknown-effect-interrupt", 25.0f,
+                "Effect/Interrupt - OK to lose");
+        assertUnknown(CardCategory.INTERRUPT,
+                "FORCE-LOSS-unknown-effect-interrupt", 25.0f,
+                "Effect/Interrupt - OK to lose");
+        assertUnknown(CardCategory.CHARACTER,
+                "FORCE-LOSS-unknown-character", -15.0f,
+                "Character - avoid losing");
+        assertUnknown(CardCategory.STARSHIP,
+                "FORCE-LOSS-unknown-starship", -15.0f,
+                "Starship - avoid losing");
+        assertUnknown(CardCategory.VEHICLE,
+                "FORCE-LOSS-unknown-vehicle", -10.0f,
+                "Vehicle - avoid losing");
+        assertUnknown(CardCategory.LOCATION,
+                "FORCE-LOSS-unknown-location", -20.0f,
+                "Location - avoid losing");
+        assertOperations(ForceLossPolicy.scoreUnknownLoss(
+                ACTION_ID, CardCategory.WEAPON, false));
+        assertOperations(ForceLossPolicy.scoreUnknownLoss(
+                ACTION_ID, null, false));
+
+        assertOperations(ForceLossPolicy.scoreUnknownLoss(
+                        ACTION_ID, CardCategory.WEAPON, true),
+                op("V25-unknown-loss", -300.0f,
+                        "V25 HUNT DOWN: PROTECT LIGHTSABER from loss!"));
+    }
+
     private static void assertZone(ZoneCase zoneCase, int lifeForce,
                                    float expectedScore, boolean protectChars) {
         ForceLossFacts.CandidateFacts candidate = candidate("Zone Card",
@@ -270,6 +327,25 @@ public class ForceLossPolicyTest {
                 op("V153-zone", expectedScore,
                         "V153 ZONE (" + renderedZone + ", lifeForce=" + lifeForce
                                 + ", protectChars=" + protectChars + ")"));
+    }
+
+    private static void assertChoice(ForceLossPolicy.ActionTextChoice choice,
+                                     float score, String reason) {
+        PolicyResult result = ForceLossPolicy.scoreActionTextChoice(ACTION_ID, choice);
+        assertEquals(1, result.operations().size());
+        PolicyOperation operation = result.operations().get(0);
+        assertBits(score, operation.delta());
+        assertEquals(reason, operation.reason());
+        assertEquals(TraceDomainId.FORCE_LOSS_PAYMENT, operation.domainId());
+        assertEquals(TraceOutputKind.ORDERING, operation.outputKind());
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+    }
+
+    private static void assertUnknown(CardCategory category, String ruleId,
+                                      float score, String reason) {
+        PolicyResult result = ForceLossPolicy.scoreUnknownLoss(
+                ACTION_ID, category, false);
+        assertOperations(result, op(ruleId, score, reason));
     }
 
     private static PolicyResult score(ForceLossPolicy.Route route,

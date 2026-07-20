@@ -45,6 +45,22 @@ public final class PullActionPolicy {
         READY
     }
 
+    public enum TakeIntoHandKind {
+        PALPATINE,
+        BOUNCE,
+        RESERVE_LOG_ONLY,
+        LOST_PILE_NO_MATCH,
+        LOST_PILE_MATCH,
+        GENERIC
+    }
+
+    public record TakeIntoHandFacts(String actionId, TakeIntoHandKind kind) {
+        public TakeIntoHandFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            Objects.requireNonNull(kind, "kind");
+        }
+    }
+
     public record WeaponOrderFacts(
             String actionId, boolean weaponPull, boolean locationPull,
             int unarmedCharacters, int armedCharacters,
@@ -100,6 +116,30 @@ public final class PullActionPolicy {
 
         return new WeaponOrderEvaluation(
                 new PolicyResult(PRODUCER, operations), outcome);
+    }
+
+    public static PolicyResult scoreTakeIntoHand(TakeIntoHandFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = switch (facts.kind()) {
+            case PALPATINE -> List.of(add(facts.actionId(),
+                    "PULL-take-palpatine", TraceOutputKind.ORDERING,
+                    -30.0f, "Avoid taking Palpatine"));
+            case BOUNCE -> List.of(add(facts.actionId(), "V29.7-bounce",
+                    TraceOutputKind.ORDERING, -300.0f,
+                    "V29.7 BOUNCE: Return own card from table to hand \u2014 DON'T undo your deploy!"));
+            case RESERVE_LOG_ONLY -> List.of();
+            case LOST_PILE_NO_MATCH -> List.of(add(facts.actionId(),
+                    "V63-lost-pile-no-match", TraceOutputKind.VETO,
+                    -9999.0f,
+                    "V63 LOST PILE EMPTY: no matching target in Lost Pile \u2014 search will FAIL and reveal our pile!"));
+            case LOST_PILE_MATCH -> List.of(add(facts.actionId(),
+                    "PULL-take-lost-pile", TraceOutputKind.ORDERING,
+                    30.0f, "Take card into hand from Lost Pile"));
+            case GENERIC -> List.of(add(facts.actionId(), "PULL-take-generic",
+                    TraceOutputKind.ORDERING, 30.0f,
+                    "Take card into hand"));
+        };
+        return new PolicyResult(PRODUCER, operations);
     }
 
     public static Evaluation evaluateParent(PullActionFacts.Parent facts) {

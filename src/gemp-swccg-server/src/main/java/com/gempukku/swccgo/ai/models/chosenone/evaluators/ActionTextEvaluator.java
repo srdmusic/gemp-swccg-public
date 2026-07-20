@@ -8,6 +8,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
@@ -3202,11 +3203,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Monnok-type (Reveal Hand) ==========
             else if (actionText.contains("LOST: Reveal opponent's hand")) {
                 int theirHandSize = gameState != null ? gameState.getHand(context.getOpponentId()).size() : 0;
-                if (theirHandSize > 6) {
-                    action.addReasoning("Opponent has many cards - reveal worth it", VERY_GOOD_DELTA);
-                } else {
-                    action.addReasoning("Opponent has few cards - save reveal", VERY_BAD_DELTA);
-                }
+                controlLedger.register(ControlActionPolicy.revealOpponentHand(
+                        actionId, theirHandSize));
+                PolicyOperationAdapter.apply(action, controlLedger);
             }
 
             // ========== Dangerous Cards ==========
@@ -3503,7 +3502,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Make Opponent Lose Force ==========
             else if (actionText.contains("Make opponent lose")) {
-                action.addReasoning("Making opponent lose force", GOOD_DELTA);
+                controlLedger.register(ControlActionPolicy.makeOpponentLose(actionId));
+                PolicyOperationAdapter.apply(action, controlLedger);
             }
 
             // ========== V29.7: Deploy Docking Bay — Smart Strategy ==========
@@ -3679,7 +3679,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Place in Lost Pile ==========
             else if (actionText.contains("Place in Lost Pile")) {
-                action.addReasoning("Avoid losing cards", VERY_BAD_DELTA);
+                applyForceLossActionTextPolicy(action,
+                        ForceLossPolicy.scoreActionTextChoice(actionId,
+                                ForceLossPolicy.ActionTextChoice.PLACE_IN_LOST_PILE));
             }
 
             // ========== Grab ==========
@@ -3695,11 +3697,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Retrieve Force ==========
             else if (textLower.contains("retrieve") || actionText.contains("Place out of play to retrieve")) {
                 int lostPileSize = gameState != null ? gameState.getLostPile(context.getPlayerId()).size() : 0;
-                if (lostPileSize > 15) {
-                    action.addReasoning("High lost pile - retrieve worth it", GOOD_DELTA);
-                } else {
-                    action.addReasoning("Low lost pile - save retrieve", BAD_DELTA);
-                }
+                controlLedger.register(ControlActionPolicy.retrieve(
+                        actionId, lostPileSize));
+                PolicyOperationAdapter.apply(action, controlLedger);
             }
 
             // ========== Defensive Shields ==========
@@ -3740,7 +3740,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== USED: Peek at top ==========
             else if (actionText.startsWith("USED: Peek at top")) {
-                action.addReasoning("Peek for card advantage", GOOD_DELTA);
+                controlLedger.register(ControlActionPolicy.peekAtTop(actionId));
+                PolicyOperationAdapter.apply(action, controlLedger);
             }
 
             // ========== Force Drain Cancellation ==========
@@ -3777,19 +3778,27 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .contains("maintenance")) {
                 if (textLower.contains("use ") && textLower.contains(" force")) {
                     // PAY option — strongly prefer
-                    action.addReasoning("V74 MAINTENANCE PAY: keep the card alive!", 400.0f);
+                    applyForceLossActionTextPolicy(action,
+                            ForceLossPolicy.scoreActionTextChoice(actionId,
+                                    ForceLossPolicy.ActionTextChoice.MAINTENANCE_PAY));
                     logger.warn("V74 MAINTENANCE PAY: '{}' → +400", actionText);
                 } else if (textLower.contains("out of play")) {
                     // PERMANENT LOSS — avoid heavily
-                    action.addReasoning("V74 MAINTENANCE SACRIFICE: place out of play is PERMANENT loss!", -800.0f);
+                    applyForceLossActionTextPolicy(action,
+                            ForceLossPolicy.scoreActionTextChoice(actionId,
+                                    ForceLossPolicy.ActionTextChoice.MAINTENANCE_OUT_OF_PLAY));
                     logger.warn("V74 MAINTENANCE SACRIFICE: '{}' → -800", actionText);
                 } else if (textLower.contains("lose ") && textLower.contains(" force")
                            && (textLower.contains("used pile") || textLower.contains("place in used"))) {
                     // Recyclable — better than out-of-play but worse than paying
-                    action.addReasoning("V74 MAINTENANCE USED-PILE: lose card to used pile, keep blueprint", -200.0f);
+                    applyForceLossActionTextPolicy(action,
+                            ForceLossPolicy.scoreActionTextChoice(actionId,
+                                    ForceLossPolicy.ActionTextChoice.MAINTENANCE_USED_PILE));
                     logger.warn("V74 MAINTENANCE USED-PILE: '{}' → -200", actionText);
                 } else if (textLower.contains("sacrifice")) {
-                    action.addReasoning("V74 MAINTENANCE SACRIFICE: avoid", -800.0f);
+                    applyForceLossActionTextPolicy(action,
+                            ForceLossPolicy.scoreActionTextChoice(actionId,
+                                    ForceLossPolicy.ActionTextChoice.MAINTENANCE_SACRIFICE));
                     logger.warn("V74 MAINTENANCE SACRIFICE: '{}' → -800", actionText);
                 }
             }
@@ -3800,20 +3809,28 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // Maintenance decisions often just say "Use X Force" without "maintenance" keyword
                 // If the decision context involves a maintenance card, prefer paying
                 if (textLower.contains("cost") || textLower.contains("upkeep")) {
-                    action.addReasoning("V22.3 MAINTENANCE: Pay upkeep cost!", 150.0f);
+                    applyForceLossActionTextPolicy(action,
+                            ForceLossPolicy.scoreActionTextChoice(actionId,
+                                    ForceLossPolicy.ActionTextChoice.GENERIC_USE_UPKEEP));
                     logger.warn("V22.3 MAINTENANCE: Likely upkeep payment - '{}'", actionText);
                 } else {
                     // V24.5: No randomness — generic use force should be avoided
-                    action.addReasoning("'Use Force' action — prefer not to use force unnecessarily", -20.0f);
+                    applyForceLossActionTextPolicy(action,
+                            ForceLossPolicy.scoreActionTextChoice(actionId,
+                                    ForceLossPolicy.ActionTextChoice.GENERIC_USE));
                 }
             }
             else if (textLower.startsWith("lose ") && textLower.contains(" force ")) {
                 // V24.5: No randomness — losing force is almost always bad
-                action.addReasoning("'Lose Force' action — avoid losing force", -30.0f);
+                applyForceLossActionTextPolicy(action,
+                        ForceLossPolicy.scoreActionTextChoice(actionId,
+                                ForceLossPolicy.ActionTextChoice.GENERIC_LOSE));
             }
             // V22.3: Catch generic sacrifice options that aren't tagged as maintenance
             else if (textLower.contains("sacrifice") || textLower.contains("place out of play")) {
-                action.addReasoning("V22.3: Avoid sacrificing cards — prefer alternatives", -150.0f);
+                applyForceLossActionTextPolicy(action,
+                        ForceLossPolicy.scoreActionTextChoice(actionId,
+                                ForceLossPolicy.ActionTextChoice.GENERIC_SACRIFICE));
                 logger.info("V22.3 SACRIFICE PENALTY: '{}'", actionText);
             }
 
@@ -4098,6 +4115,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
         PolicyOperationAdapter.apply(action, ledger);
     }
 
+    private void applyPullActionPolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+            "pull-action-text-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyForceLossActionTextPolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+            "force-loss-action-text-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
     private void applyNamedReserveSourcePolicy(
             EvaluatedAction action,
             PullSpecificActionFacts.ReserveSourceKind sourceKind,
@@ -4210,7 +4245,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
     private void evaluateTakeIntoHand(EvaluatedAction action, DecisionContext context, String actionText, String textLower) {
         if (textLower.contains("palpatine")) {
-            action.addReasoning("Avoid taking Palpatine", BAD_DELTA);
+            applyPullActionPolicy(action,
+                    PullActionPolicy.scoreTakeIntoHand(
+                            new PullActionPolicy.TakeIntoHandFacts(
+                                    action.getActionId(),
+                                    PullActionPolicy.TakeIntoHandKind.PALPATINE)));
             return;
         }
 
@@ -4226,7 +4265,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
         if (!isFromDeck && !isDestinyAction) {
             // This is a bounce/return from table — VERY bad! We just paid to deploy that character.
-            action.addReasoning("V29.7 BOUNCE: Return own card from table to hand — DON'T undo your deploy!", -300.0f);
+            applyPullActionPolicy(action,
+                    PullActionPolicy.scoreTakeIntoHand(
+                            new PullActionPolicy.TakeIntoHandFacts(
+                                    action.getActionId(),
+                                    PullActionPolicy.TakeIntoHandKind.BOUNCE)));
             logger.warn("V29.7 BOUNCE BLOCKED: '{}' would return deployed card to hand (-300)", actionText);
         } else if (isFromDeck && textLower.contains("from reserve")) {
             // V29.7: PULL FIRST RULE — retrievals from Reserve Deck are FREE actions
@@ -4239,6 +4282,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Grant commented out (feedback_comment_out_old_rules); the TDIGWATT-specific
             // admiral/general +250/+300 branch earlier in the chain is untouched.
             // action.addReasoning("V29.7 PULL FIRST: Get cards into hand before deploying!", 250.0f);
+            applyPullActionPolicy(action,
+                    PullActionPolicy.scoreTakeIntoHand(
+                            new PullActionPolicy.TakeIntoHandFacts(
+                                    action.getActionId(),
+                                    PullActionPolicy.TakeIntoHandKind.RESERVE_LOG_ONLY)));
             logger.info("V29.7 PULL FIRST (absorbed by V192): '{}' — no standalone +250", actionText);
         } else if (isFromDeck && textLower.contains("from lost pile")) {
             // V63 LOST PILE GUARD: "take a character into hand from Lost Pile"
@@ -4265,19 +4313,29 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                 } catch (Exception e) { /* ignore */ }
                 if (matchingInLostPile == 0) {
-                    action.addReasoning(
-                        "V63 LOST PILE EMPTY: no matching target in Lost Pile — search will FAIL and reveal our pile!",
-                        -9999.0f);
+                    applyPullActionPolicy(action,
+                            PullActionPolicy.scoreTakeIntoHand(
+                                    new PullActionPolicy.TakeIntoHandFacts(
+                                            action.getActionId(),
+                                            PullActionPolicy.TakeIntoHandKind.LOST_PILE_NO_MATCH)));
                     logger.warn("V63 LOST PILE EMPTY: '{}' has 0 matching targets — hard-blocked", actionText);
                     return;
                 }
                 logger.info("V63 LOST PILE OK: '{}' — {} matching targets in Lost Pile",
                     actionText, matchingInLostPile);
             }
-            action.addReasoning("Take card into hand from Lost Pile", GOOD_DELTA);
+            applyPullActionPolicy(action,
+                    PullActionPolicy.scoreTakeIntoHand(
+                            new PullActionPolicy.TakeIntoHandFacts(
+                                    action.getActionId(),
+                                    PullActionPolicy.TakeIntoHandKind.LOST_PILE_MATCH)));
         } else {
             // From force pile, used pile, or destiny management — normal priority
-            action.addReasoning("Take card into hand", GOOD_DELTA);
+            applyPullActionPolicy(action,
+                    PullActionPolicy.scoreTakeIntoHand(
+                            new PullActionPolicy.TakeIntoHandFacts(
+                                    action.getActionId(),
+                                    PullActionPolicy.TakeIntoHandKind.GENERIC)));
         }
     }
 

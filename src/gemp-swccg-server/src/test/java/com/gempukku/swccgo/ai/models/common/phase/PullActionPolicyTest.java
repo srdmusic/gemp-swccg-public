@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
@@ -59,6 +60,27 @@ public class PullActionPolicyTest {
         assertReady(weaponOrder(true, false, 1, 3, true, 1));
     }
 
+    @Test
+    public void takeIntoHandParentMatrixKeepsExactScoresAndReserveNoOp() {
+        assertTake(take(PullActionPolicy.TakeIntoHandKind.PALPATINE),
+                "PULL-take-palpatine", TraceOutputKind.ORDERING,
+                -30.0f, "Avoid taking Palpatine");
+        assertTake(take(PullActionPolicy.TakeIntoHandKind.BOUNCE),
+                "V29.7-bounce", TraceOutputKind.ORDERING, -300.0f,
+                "V29.7 BOUNCE: Return own card from table to hand \u2014 DON'T undo your deploy!");
+        assertEquals(0, take(PullActionPolicy.TakeIntoHandKind.RESERVE_LOG_ONLY)
+                .operations().size());
+        assertTake(take(PullActionPolicy.TakeIntoHandKind.LOST_PILE_NO_MATCH),
+                "V63-lost-pile-no-match", TraceOutputKind.VETO, -9999.0f,
+                "V63 LOST PILE EMPTY: no matching target in Lost Pile \u2014 search will FAIL and reveal our pile!");
+        assertTake(take(PullActionPolicy.TakeIntoHandKind.LOST_PILE_MATCH),
+                "PULL-take-lost-pile", TraceOutputKind.ORDERING, 30.0f,
+                "Take card into hand from Lost Pile");
+        assertTake(take(PullActionPolicy.TakeIntoHandKind.GENERIC),
+                "PULL-take-generic", TraceOutputKind.ORDERING, 30.0f,
+                "Take card into hand");
+    }
+
     private static PullActionPolicy.WeaponOrderEvaluation weaponOrder(
             boolean weaponPull, boolean locationPull,
             int unarmedCharacters, int armedCharacters,
@@ -68,6 +90,26 @@ public class PullActionPolicyTest {
                         "pull-42", weaponPull, locationPull,
                         unarmedCharacters, armedCharacters,
                         lightsaberPull, capableWielders));
+    }
+
+    private static PolicyResult take(PullActionPolicy.TakeIntoHandKind kind) {
+        return PullActionPolicy.scoreTakeIntoHand(
+                new PullActionPolicy.TakeIntoHandFacts("pull-42", kind));
+    }
+
+    private static void assertTake(PolicyResult result, String ruleId,
+                                   TraceOutputKind outputKind, float delta,
+                                   String reason) {
+        assertEquals("PULL_ACTION_POLICY", result.producerId());
+        assertEquals(1, result.operations().size());
+        PolicyOperation operation = result.operations().get(0);
+        assertEquals("pull-42", operation.actionId());
+        assertEquals(ruleId, operation.ruleArmId().id());
+        assertEquals(TraceDomainId.PULL_SEARCH, operation.domainId());
+        assertEquals(outputKind, operation.outputKind());
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(delta, operation.delta(), 0.0f);
+        assertEquals(reason, operation.reason());
     }
 
     private static void assertNoOperation(

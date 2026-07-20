@@ -362,6 +362,40 @@ public class PullActionTextCharacterizationTest {
     }
 
     @Test
+    public void lowLostPileWithoutMatchingTargetStacksV23ThenReturnsAtV63() {
+        String actionText = "Take a character into hand from Lost Pile";
+        Fixture fixture = fixture(10, Phase.DEPLOY, null);
+        PhysicalCard effect = mock(PhysicalCard.class);
+        SwccgCardBlueprint effectBlueprint = mock(SwccgCardBlueprint.class);
+        when(effect.getBlueprint()).thenReturn(effectBlueprint);
+        when(effectBlueprint.getCardCategory()).thenReturn(CardCategory.EFFECT);
+        when(fixture.gameState.getLostPile(PLAYER)).thenReturn(List.of(effect));
+
+        var rando = evaluateRando(fixture, actionText, null, null);
+        var chosen = evaluateChosen(fixture, actionText, null, null);
+
+        assertMirrored(rando, chosen);
+        assertBits(-10099.0f, rando.getScore());
+        assertEquals(2, rando.getReasoning().size());
+        assertTrue(rando.getReasoning().get(0).startsWith("V23 LOW PILE:"));
+        assertEquals("V63 LOST PILE EMPTY: no matching target in Lost Pile — search will FAIL and reveal our pile! (-9999.0)",
+                rando.getReasoning().get(1));
+    }
+
+    @Test
+    public void palpatineBounceAndGenericTakeRoutesStayMirrored() {
+        assertTakeRoute("Take Emperor Palpatine into hand from Used Pile",
+                -30.0f, "Avoid taking Palpatine (-30.0)");
+        assertTakeRoute("Take an ISB agent into hand",
+                -300.0f,
+                "V29.7 BOUNCE: Return own card from table to hand — DON'T undo your deploy! (-300.0)");
+        assertTakeRoute("Take a card into hand from Used Pile",
+                30.0f, "Take card into hand (+30.0)");
+        assertTakeRoute("Take a destiny card into hand",
+                30.0f, "Take card into hand (+30.0)");
+    }
+
+    @Test
     public void sorryLocationReserveRiskAndV192StayAdditiveAndMirrored() {
         String actionText = "Deploy an interior Cloud City site from Reserve Deck";
         Fixture fixture = fixture(10, Phase.DEPLOY, null);
@@ -449,6 +483,20 @@ public class PullActionTextCharacterizationTest {
             Fixture fixture,
             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objective) {
         return evaluateRando(fixture, null, objective);
+    }
+
+    private static void assertTakeRoute(String actionText, float score,
+                                        String reason) {
+        Fixture fixture = fixture(10, Phase.DEPLOY, null);
+        if (actionText.contains("Used Pile")) {
+            when(fixture.gameState.getUsedPile(PLAYER)).thenReturn(
+                    List.of(mock(PhysicalCard.class)));
+        }
+        var rando = evaluateRando(fixture, actionText, null, null);
+        var chosen = evaluateChosen(fixture, actionText, null, null);
+        assertMirrored(rando, chosen);
+        assertEquals(List.of(reason), rando.getReasoning());
+        assertBits(score, rando.getScore());
     }
 
     private static com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction evaluateRando(

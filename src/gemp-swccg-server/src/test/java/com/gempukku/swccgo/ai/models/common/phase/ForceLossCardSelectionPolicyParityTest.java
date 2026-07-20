@@ -200,6 +200,72 @@ public class ForceLossCardSelectionPolicyParityTest {
         assertFalse(hasReason(unknownRando.get(0), "V153"));
     }
 
+    @Test
+    public void unknownLossCategoryMatrixKeepsBaseThirtyAndBotParity() {
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(20, card("Effect", Zone.HAND, CardCategory.EFFECT));
+        candidates.put(21, card("Character", Zone.HAND, CardCategory.CHARACTER));
+        candidates.put(22, card("Starship", Zone.HAND, CardCategory.STARSHIP));
+        candidates.put(23, card("Vehicle", Zone.HAND, CardCategory.VEHICLE));
+        candidates.put(24, card("Location", Zone.HAND, CardCategory.LOCATION));
+        candidates.put(25, card("Weapon", Zone.HAND, CardCategory.WEAPON));
+        List<String> ids = List.of("20", "21", "22", "23", "24", "25");
+        GameState gameState = gameState(candidates, List.of(), List.of(), 5, 0, 2);
+        String prompt = "Choose a card to place in Used Pile";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt, ids, Phase.CONTROL));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt, ids, Phase.CONTROL));
+
+        assertActionParity(rando, chosen);
+        assertBits(55.0f, action(rando, "20").getScore());
+        assertBits(15.0f, action(rando, "21").getScore());
+        assertBits(15.0f, action(rando, "22").getScore());
+        assertBits(20.0f, action(rando, "23").getScore());
+        assertBits(10.0f, action(rando, "24").getScore());
+        assertBits(30.0f, action(rando, "25").getScore());
+        assertReasons(action(rando, "20").getReasoning(),
+                "Effect/Interrupt - OK to lose (+25.0)");
+        assertReasons(action(rando, "25").getReasoning());
+    }
+
+    @Test
+    public void huntDownUnknownLossKeepsCategoryBeforeV25WithBotParity() {
+        PhysicalCard lightsaber = card("Test Lightsaber", Zone.HAND,
+                CardCategory.EFFECT);
+        GameState gameState = gameState(Map.of(26, lightsaber),
+                List.of(), List.of(), 5, 0, 2);
+        String prompt = "Choose a card to place in Used Pile";
+
+        var randoContext = randoContext(gameState, prompt,
+                List.of("26"), Phase.CONTROL);
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.isHuntDownV()).thenReturn(true);
+        randoContext.setObjectiveAnalyzer(randoObjective);
+
+        var chosenContext = chosenContext(gameState, prompt,
+                List.of("26"), Phase.CONTROL);
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.isHuntDownV()).thenReturn(true);
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertActionParity(rando, chosen);
+        assertBits(-245.0f, rando.get(0).getScore());
+        assertReasons(rando.get(0).getReasoning(),
+                "Effect/Interrupt - OK to lose (+25.0)",
+                "V25 HUNT DOWN: PROTECT LIGHTSABER from loss! (-300.0)");
+    }
+
     private static void assertCombinedDamageTier(int damageRemaining,
                                                  float expectedPenalty,
                                                  String damageText) {

@@ -31,6 +31,36 @@ public class ControlActionPolicyTest {
                 "V52-self-cancel", TraceOutputKind.VETO, -9999.0f, reason);
     }
 
+    @Test
+    public void revealBoundaryIsSixThenSeven() {
+        assertOperation(ControlActionPolicy.revealOpponentHand("A", 6),
+                "CONTROL-reveal-opponent-hand", TraceOutputKind.ORDERING,
+                -50.0f, "Opponent has few cards - save reveal");
+        assertOperation(ControlActionPolicy.revealOpponentHand("A", 7),
+                "CONTROL-reveal-opponent-hand", TraceOutputKind.ORDERING,
+                50.0f, "Opponent has many cards - reveal worth it");
+    }
+
+    @Test
+    public void retrieveBoundaryIsFifteenThenSixteen() {
+        assertOperation(ControlActionPolicy.retrieve("A", 15),
+                "CONTROL-retrieve", TraceOutputKind.ORDERING,
+                -30.0f, "Low lost pile - save retrieve");
+        assertOperation(ControlActionPolicy.retrieve("A", 16),
+                "CONTROL-retrieve", TraceOutputKind.ORDERING,
+                30.0f, "High lost pile - retrieve worth it");
+    }
+
+    @Test
+    public void fixedUtilityArmsKeepExactAdditiveScores() {
+        assertOperation(ControlActionPolicy.makeOpponentLose("A"),
+                "CONTROL-make-opponent-lose", TraceOutputKind.ORDERING,
+                30.0f, "Making opponent lose force");
+        assertOperation(ControlActionPolicy.peekAtTop("A"),
+                "CONTROL-peek-at-top", TraceOutputKind.ORDERING,
+                30.0f, "Peek for card advantage");
+    }
+
     private static void assertOperation(PolicyResult result, String ruleId,
                                         TraceOutputKind outputKind, float delta,
                                         String reason) {
