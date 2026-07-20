@@ -200,6 +200,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         PolicyOperationAdapter.apply(action, ledger);
     }
 
+    private void applyDeployTacticalPolicy(EvaluatedAction action,
+                                            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+                "deploy-tactical-residual-" + result.producerId()
+                        + "-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
     private void applyDeployCardValuePolicy(EvaluatedAction action,
                                             PolicyResult result) {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
@@ -2819,19 +2828,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 boolean v2415NetNeg = v2415InitCost > 0f && (v2415RawDrain - v2415InitCost) <= -2f;
                                 Float v2415CharPower = (blueprint != null && blueprint.hasPowerAttribute()) ? blueprint.getPower() : null;
                                 float v2415PowerVal = (v2415CharPower != null) ? v2415CharPower : 3.0f;
-                                if (v2415ZeroDrain) {
-                                    // ORIGINAL behavior, unchanged: gentle nudge off a literal 0-drain site.
-                                    float zeroDrainPenalty = -50.0f - (v2415PowerVal * 10.0f);
-                                    action.addReasoning("V24.15 ZERO DRAIN: Location has 0 drain — character wasted here!", zeroDrainPenalty);
-                                    logger.warn("V24.15 ZERO DRAIN: {} has 0 drain — penalizing {} (power {}) by {}",
-                                        title, decisionText, v2415PowerVal, zeroDrainPenalty);
-                                } else if (v2415NetNeg) {
-                                    // NEW arm (tax-capped drain = net loss). Exempt objective flip/seed
-                                    // sites (e.g. Endor: Bunker) and legit V166 contests; else a stronger
-                                    // deterrent so a genuinely drainable site wins the body instead.
-                                    boolean v2415ObjRelevant = locObjAnalyzer != null && locObjAnalyzer.isAnalyzed()
+                                boolean v2415ObjRelevant = false;
+                                boolean v2415V166Contest = false;
+                                if (!v2415ZeroDrain && v2415NetNeg) {
+                                    v2415ObjRelevant = locObjAnalyzer != null && locObjAnalyzer.isAnalyzed()
                                         && title != null && locObjAnalyzer.isObjectiveRelevantLocation(title);
-                                    boolean v2415V166Contest = false;
                                     if (!v2415ObjRelevant) {
                                         String v2415Opp = gameState.getOpponent(playerId);
                                         float v2415TheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
@@ -2841,16 +2842,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         v2415V166Contest = (v2415TheirPower > 0 && v2415OppDrain > 0
                                             && computeNetDrainBalance(game, gameState, playerId) >= 2);
                                     }
-                                    if (!v2415ObjRelevant && !v2415V166Contest) {
-                                        // -(300 + power*30) cap -700: stays above the -1500/-2000/-9999
-                                        // hard blocks so a forced/objective deploy can still exceed it.
-                                        float v2415Pen = Math.min(700.0f, 300.0f + v2415PowerVal * 30.0f);
-                                        action.addReasoning(String.format(
-                                            "V24.15 EFFECTIVE DRAIN: raw %.0f - initiate cost %.0f <= -2 at %s (a drain here is a net loss) — don't pile bodies",
-                                            v2415RawDrain, v2415InitCost, title), -v2415Pen);
-                                        logger.warn("V24.15 EFFECTIVE DRAIN: {} raw={} cost={} power={} -> {}",
-                                            title, (int) v2415RawDrain, (int) v2415InitCost, (int) v2415PowerVal, (int) (-v2415Pen));
-                                    }
+                                }
+                                DeployTacticalPolicy.V2415DrainEvaluation v2415Drain =
+                                    DeployTacticalPolicy.evaluateV2415Drain(
+                                        new DeployTacticalPolicy.V2415DrainFacts(
+                                            action.getActionId(), title, v2415RawDrain,
+                                            v2415InitCost, v2415PowerVal,
+                                            v2415ObjRelevant, v2415V166Contest));
+                                applyDeployTacticalPolicy(action, v2415Drain.result());
+                                if (v2415Drain.outcome()
+                                        == DeployTacticalPolicy.V2415DrainOutcome.ZERO_DRAIN) {
+                                    logger.warn("V24.15 ZERO DRAIN: {} has 0 drain — penalizing {} (power {}) by {}",
+                                        title, decisionText, v2415PowerVal, v2415Drain.delta());
+                                } else if (v2415Drain.outcome()
+                                        == DeployTacticalPolicy.V2415DrainOutcome.EFFECTIVE_DRAIN) {
+                                    logger.warn("V24.15 EFFECTIVE DRAIN: {} raw={} cost={} power={} -> {}",
+                                        title, (int) v2415RawDrain, (int) v2415InitCost, (int) v2415PowerVal,
+                                        (int) v2415Drain.delta());
                                 }
                             } catch (Exception e) {
                                 logger.debug("V24.15: Error checking drain amount for deploy: {}", e.getMessage());
@@ -3158,27 +3166,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 float oppPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     game.getGameState(), location, opp, false, false);
 
-                                if (oppPwr > 0 && ourPwr == 0) {
-                                    // BEST: Opponent actively draining/occupying — block them!
-                                    action.addReasoning("V59 SPY UNIVERSAL: Opp has power " + (int)oppPwr
-                                        + ", we have 0 — IDEAL spy site, blocks their drain!", 600.0f);
+                                DeployTacticalPolicy.UniversalSpyEvaluation v59Spy =
+                                    DeployTacticalPolicy.evaluateV59UniversalSpy(
+                                        new DeployTacticalPolicy.UniversalSpyFacts(
+                                            action.getActionId(), title, oppPwr, ourPwr));
+                                applyDeployTacticalPolicy(action, v59Spy.result());
+                                if (v59Spy.outcome()
+                                        == DeployTacticalPolicy.UniversalSpyOutcome.OPPONENT_ONLY) {
                                     logger.warn("V59 SPY UNIVERSAL: {} — opp {}, us 0 — IDEAL! (+600)", title, (int)oppPwr);
-                                } else if (oppPwr > 0 && ourPwr > 0) {
-                                    // Both sides — spy would block our own drain while undercover
-                                    action.addReasoning("V59 SPY UNIVERSAL: Both sides present at " + title
-                                        + " — spy blocks OWN drain while undercover", -200.0f);
+                                } else if (v59Spy.outcome()
+                                        == DeployTacticalPolicy.UniversalSpyOutcome.BOTH_SIDES) {
                                     logger.warn("V59 SPY UNIVERSAL: {} — opp {}, us {} — hurts us (-200)",
                                         title, (int)oppPwr, (int)ourPwr);
-                                } else if (oppPwr == 0 && ourPwr > 0) {
-                                    // Only us — spy blocks OUR drain, catastrophic
-                                    action.addReasoning("V59 SPY UNIVERSAL: Only we have presence at " + title
-                                        + " — spy would block OWN drain!", -2000.0f);
+                                } else if (v59Spy.outcome()
+                                        == DeployTacticalPolicy.UniversalSpyOutcome.FRIENDLY_ONLY) {
                                     logger.warn("V59 SPY UNIVERSAL: {} — only us {} — BLOCKED (-2000)",
                                         title, (int)ourPwr);
                                 } else {
-                                    // Empty — no drain to block
-                                    action.addReasoning("V59 SPY UNIVERSAL: " + title
-                                        + " is empty — no drain to block", -300.0f);
                                     logger.warn("V59 SPY UNIVERSAL: {} — empty, wasted spy (-300)", title);
                                 }
                                 spyScoringApplied = true;
@@ -3205,52 +3209,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     game.getGameState(), location, opponent, false, false);
 
                                 if (theirPower > 0) {
-                                    float powerDiff = theirPower - ourPower;
+                                    Float deployPower = null;
+                                    boolean v223ObjectiveRelevant = false;
                                     if (ourPower < theirPower) {
-                                        // V22.3: Contested penalty SCALES with how badly we're losing
-                                        // Must be strong enough to override objective bonus (+200)
-                                        // when deploying would just feed the opponent cards
-                                        // V22.3 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c): tier
-                                        // boundaries were exclusive (>), so a gap of EXACTLY 10 (0 vs 10,
-                                        // Yoda into Kylo+Mara) only drew -150 while the contest-bonus stack
-                                        // (+830) dwarfed it. Boundaries now inclusive (>=): gap 10 → -250.
-                                        float contestPenalty = -80.0f;
-                                        if (powerDiff >= 5) contestPenalty = -150.0f;   // Significantly outgunned
-                                        if (powerDiff >= 10) contestPenalty = -250.0f;  // Massively outgunned — overrides obj bonus
-                                        if (powerDiff >= 15) contestPenalty = -350.0f;  // Suicide — hard no
-
-                                        // Check if deploying THIS card would actually close the gap meaningfully
-                                        Float deployPower = (blueprint != null && blueprint.hasPowerAttribute()) ? blueprint.getPower() : null;
-                                        float addedPower = (deployPower != null) ? deployPower : 0;
-                                        if (addedPower > 0 && (ourPower + addedPower) >= theirPower) {
-                                            // This character would tip the balance — reduce penalty
-                                            contestPenalty = Math.min(contestPenalty + 100.0f, -20.0f);
-                                            action.addReasoning("V22.3: Would tip balance at contested location (" +
-                                                (int)(ourPower + addedPower) + " vs " + (int)theirPower + ")", 0.0f);
-                                        }
-
-                                        // V22.7: If this is an objective-critical location, reduce the
-                                        // contest penalty — we NEED to fight here even at a disadvantage
-                                        if (locObjAnalyzer != null && locObjAnalyzer.isAnalyzed()
-                                            && locObjAnalyzer.isObjectiveRelevantLocation(title)) {
-                                            float objOverride = Math.min(200.0f, Math.abs(contestPenalty) * 0.6f);
-                                            action.addReasoning("V22.7: Objective-critical location — must contest!", objOverride);
-                                            logger.warn("V22.7 OBJ CONTEST: {} is objective-critical — reducing contest penalty by {}",
-                                                title, (int)objOverride);
-                                        }
-
-                                        if (plannedTargetId == null || !cardId.equals(plannedTargetId)) {
-                                            action.addReasoning("CONTESTED & LOSING (" + (int)ourPower + " vs " + (int)theirPower +
-                                                " power, gap=" + (int)powerDiff + ")", contestPenalty);
-                                            logger.warn("V22.3 CONTEST: {} at {} losing {}-vs-{} penalty={}",
-                                                title, (int)ourPower, (int)theirPower, contestPenalty);
-                                        }
-                                    } else if (ourPower > theirPower + 4) {
-                                        // We're already winning big - don't need more here
-                                        action.addReasoning("Already winning big here", -20.0f);
-                                    } else if (ourPower >= theirPower) {
-                                        // We're winning or tied - reinforce is reasonable
-                                        action.addReasoning("Can reinforce winning position", 10.0f);
+                                        deployPower = (blueprint != null && blueprint.hasPowerAttribute()) ? blueprint.getPower() : null;
+                                        v223ObjectiveRelevant = locObjAnalyzer != null && locObjAnalyzer.isAnalyzed()
+                                            && locObjAnalyzer.isObjectiveRelevantLocation(title);
+                                    }
+                                    float addedPower = (deployPower != null) ? deployPower : 0;
+                                    DeployTacticalPolicy.ContestEvaluation v223Contest =
+                                        DeployTacticalPolicy.evaluateV223Contest(
+                                            new DeployTacticalPolicy.ContestFacts(
+                                                action.getActionId(), ourPower, theirPower,
+                                                addedPower, v223ObjectiveRelevant,
+                                                plannedTargetId == null || !cardId.equals(plannedTargetId)));
+                                    applyDeployTacticalPolicy(action, v223Contest.result());
+                                    if (v223Contest.objectiveOverride() > 0.0f) {
+                                        logger.warn("V22.7 OBJ CONTEST: {} is objective-critical — reducing contest penalty by {}",
+                                            title, (int)v223Contest.objectiveOverride());
+                                    }
+                                    if (v223Contest.contestPenaltyApplied()) {
+                                        logger.warn("V22.3 CONTEST: {} at {} losing {}-vs-{} penalty={}",
+                                            title, (int)ourPower, (int)theirPower,
+                                            v223Contest.contestPenalty());
                                     }
                                 } else {
                                     // No opponent power - uncontested
@@ -3667,8 +3648,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             }
                                         } catch (Exception e) { /* ignore */ }
 
-                                        if (comboPartnerHere) {
-                                            action.addReasoning("V24.3 EVAZAN COMBO: Deploy here — combo partner at this site for weapon kill combo!", 200.0f);
+                                        DeployTacticalPolicy.V243BPartnerEvaluation v243bPartner =
+                                            DeployTacticalPolicy.evaluateV243BPartner(
+                                                new DeployTacticalPolicy.V243BPartnerFacts(
+                                                    action.getActionId(), comboPartnerHere));
+                                        applyDeployTacticalPolicy(action, v243bPartner.result());
+                                        if (v243bPartner.outcome()
+                                                == DeployTacticalPolicy.V243BPartnerOutcome.PARTNER_PRESENT) {
                                             logger.warn("V24.3 EVAZAN COMBO: {} — combo partner found at {} (+200)", decisionText, title);
                                         }
                                     }
@@ -3904,44 +3890,34 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 v24bSpyPow = v24bBp.getPower();
                                         } catch (Exception ignore) { }
 
-                                        if (v24bSpyHere) {
-                                            // A friendly spy already blocks here — a 2nd spy is wasted.
-                                            action.addReasoning("V24.14B SPY DOUBLED: a friendly spy already blocks here — send this spy to an open enemy drain!", -1200.0f);
+                                        DeployTacticalPolicy.FallbackSpyEvaluation v2414bSpy =
+                                            DeployTacticalPolicy.evaluateV2414BFallbackSpy(
+                                                new DeployTacticalPolicy.FallbackSpyFacts(
+                                                    action.getActionId(), title, v24bSpyHere,
+                                                    oppPowerHere, ourPower, v24bSpyPow,
+                                                    isObjLocation || isFlipBackLocation));
+                                        applyDeployTacticalPolicy(action, v2414bSpy.result());
+                                        if (v2414bSpy.outcome()
+                                                == DeployTacticalPolicy.FallbackSpyOutcome.FRIENDLY_SPY_DOUBLED) {
                                             logger.warn("V24.14B SPY DOUBLED: {} — friendly spy already here — -1200 (route to open drain)", title);
-                                        } else if (oppPowerHere > 0 && ourPower == 0) {
-                                            // BEST: Opponent controls, we don't — spy stays undercover, blocks THEIR drain!
-                                            // Works at ANY site including CC if opponent moved in.
-                                            action.addReasoning("V24.14B SPY: Opponent controls here, we don't — block their force drain!", 300.0f);
+                                        } else if (v2414bSpy.outcome()
+                                                == DeployTacticalPolicy.FallbackSpyOutcome.OPPONENT_ONLY) {
                                             logger.warn("V24.14B SPY: {} — opp power {}, our power 0 — IDEAL spy location! (+300)", title, oppPowerHere);
-                                        } else if (oppPowerHere > 0 && ourPower > 0) {
-                                            // Both sides present. OK ONLY if we can flip this spy and the
-                                            // combined force contests (Steve's buddy-system caveat) —
-                                            // otherwise the spy is wasted on a site we already hold.
-                                            if ((ourPower + v24bSpyPow) >= oppPowerHere) {
-                                                action.addReasoning("V24.14B SPY FLIP-BUDDY: our character + this spy can contest here — OK to break cover and fight!", 50.0f);
-                                                logger.warn("V24.14B SPY FLIP-BUDDY: {} — char {} + spy {} >= opp {} — allow (flip to fight)", title, ourPower, v24bSpyPow, oppPowerHere);
-                                            } else if (isObjLocation || isFlipBackLocation) {
-                                                // CC site — we already drain here, breaking cover wastes spy AND blocks our drain while undercover
-                                                action.addReasoning("V24.14B SPY: Both sides at CC, can't flip-and-win — spy blocks OUR drain undercover!", -500.0f);
-                                                logger.warn("V24.14B SPY: {} — both sides at CC, can't flip-win — bad (-500)", title);
-                                            } else {
-                                                // Non-CC, can't flip-and-win — the spy is wasted here (Steve's mistake 1).
-                                                action.addReasoning("V24.14B SPY: Both sides present, can't flip-and-win — spy wasted, route to an open drain!", -800.0f);
-                                                logger.warn("V24.14B SPY: {} — both sides, can't flip-win — wasted (-800)", title);
-                                            }
-                                        } else if (oppPowerHere == 0 && ourPower > 0) {
-                                            // BAD: Only WE have presence — spy blocks OUR drain!
-                                            action.addReasoning("V24.14B SPY: Only we have presence — spy blocks OUR drain!", -2000.0f);
+                                        } else if (v2414bSpy.outcome()
+                                                == DeployTacticalPolicy.FallbackSpyOutcome.FLIP_BUDDY) {
+                                            logger.warn("V24.14B SPY FLIP-BUDDY: {} — char {} + spy {} >= opp {} — allow (flip to fight)", title, ourPower, v24bSpyPow, oppPowerHere);
+                                        } else if (v2414bSpy.outcome()
+                                                == DeployTacticalPolicy.FallbackSpyOutcome.BOTH_SIDES_OBJECTIVE) {
+                                            logger.warn("V24.14B SPY: {} — both sides at CC, can't flip-win — bad (-500)", title);
+                                        } else if (v2414bSpy.outcome()
+                                                == DeployTacticalPolicy.FallbackSpyOutcome.BOTH_SIDES_NON_OBJECTIVE) {
+                                            logger.warn("V24.14B SPY: {} — both sides, can't flip-win — wasted (-800)", title);
+                                        } else if (v2414bSpy.outcome()
+                                                == DeployTacticalPolicy.FallbackSpyOutcome.FRIENDLY_ONLY) {
                                             logger.warn("V24.14B SPY: {} — only our power {} — spy HURTS us! (-2000)", title, ourPower);
-                                        } else {
-                                            // Empty location — spy doesn't help either side
-                                            if (isObjLocation || isFlipBackLocation) {
-                                                // Empty CC site — we want to drain here, not block it with a spy
-                                                action.addReasoning("V24.14B SPY: Empty CC site — don't waste spy here!", -300.0f);
-                                                logger.warn("V24.14B SPY: {} — empty CC site, spy wastes potential drain (-300)", title);
-                                            } else {
-                                                action.addReasoning("V24.14B SPY: Empty non-CC location — no drain to block", -100.0f);
-                                            }
+                                        } else if (v2414bSpy.outcome()
+                                                == DeployTacticalPolicy.FallbackSpyOutcome.EMPTY_OBJECTIVE) {
+                                            logger.warn("V24.14B SPY: {} — empty CC site, spy wastes potential drain (-300)", title);
                                         }
                                     } else if (!isObjLocation && !isFlipBackLocation) {
                                         if (isCharacter && deployObjAnalyzer.needsBespinSystemPresence()) {

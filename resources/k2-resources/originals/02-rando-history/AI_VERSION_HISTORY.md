@@ -7787,3 +7787,19 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     reload and live-game proof remain separate deployment gates. Clean V277 is based on live V276
     8a2720d09. Reference 72976ca77 was a patch oracle only; no quarantined ancestry was landed. AI
     source only; no GEMP engine or player-decision changes.
+
+  ==== V278 (2026-07-19): consolidate tactical DEPLOY residual scoring ====
+    Shared AI-only DeployTacticalPolicy now also owns V24.15 zero/effective-drain siting, V59
+    universal spy siting, the V22.3 contest ladder, V24.14B fallback-spy siting, and V24.3B
+    destination partner scoring. Both CardSelectionEvaluator mirrors retain every GEMP, blueprint,
+    objective, power, drain, hand, location, undercover-spy, and partner read plus nested catches,
+    lazy exemptions, scans, first-match breaks, logs, fallback state, and contribution positions.
+    The zero-point V22.3 tip trace uses a distinct internal arm identity so the contribution ledger
+    preserves both legacy additions; user-facing reasons and totals remain unchanged. TDIGWATT and
+    the V22 objective tail are untouched. Focused tactical/source/characterization 35/0/0/0,
+    DEPLOY-named 251/0/0/0, full reactor 1869/0/0/26, exact mirror parity, ledger, lazy-read,
+    catch/scan/control gates, AI-only scope, forbidden-symbol scan, diff, and clean package gates
+    passed. Server jar SHA-256 22e51a8ce909975817dee37d6b2f56d615113d0a16aa4ebba1ccd8a9f716eb99
+    and web jar SHA-256 2262feb19b209bbd60b4da235d7368d2dce65033c822476226daea17c5e27d10
+    contain V278. Runtime reload and live-game proof remain separate gates. Clean V278 is based on
+    live V277 ebb679cb5. AI source only; no GEMP engine or player-decision changes.

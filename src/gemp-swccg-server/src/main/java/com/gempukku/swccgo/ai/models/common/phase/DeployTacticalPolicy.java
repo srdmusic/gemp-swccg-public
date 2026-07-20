@@ -305,6 +305,365 @@ public final class DeployTacticalPolicy {
                 outcome);
     }
 
+    public static V2415DrainEvaluation evaluateV2415Drain(
+            V2415DrainFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (facts.rawDrain() <= 0.0f) {
+            float penalty = -50.0f - facts.powerValue() * 10.0f;
+            add(operations, facts.actionId(), "V24.15", penalty,
+                    "V24.15 ZERO DRAIN: Location has 0 drain — character wasted here!");
+            return new V2415DrainEvaluation(
+                    new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V24_15_POLICY",
+                            operations),
+                    V2415DrainOutcome.ZERO_DRAIN, penalty);
+        }
+
+        boolean netNegative = facts.initiationCost() > 0.0f
+                && facts.rawDrain() - facts.initiationCost() <= -2.0f;
+        if (netNegative && !facts.objectiveRelevant()
+                && !facts.v166Contest()) {
+            float penalty = -Math.min(700.0f,
+                    300.0f + facts.powerValue() * 30.0f);
+            add(operations, facts.actionId(), "V24.15", penalty, String.format(
+                    "V24.15 EFFECTIVE DRAIN: raw %.0f - initiate cost %.0f <= -2 at %s (a drain here is a net loss) — don't pile bodies",
+                    facts.rawDrain(), facts.initiationCost(), facts.locationTitle()));
+            return new V2415DrainEvaluation(
+                    new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V24_15_POLICY",
+                            operations),
+                    V2415DrainOutcome.EFFECTIVE_DRAIN, penalty);
+        }
+
+        return new V2415DrainEvaluation(
+                new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V24_15_POLICY",
+                        operations),
+                V2415DrainOutcome.NONE, 0.0f);
+    }
+
+    public static UniversalSpyEvaluation evaluateV59UniversalSpy(
+            UniversalSpyFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (facts.opponentPower() > 0.0f && facts.ourPower() == 0.0f) {
+            add(operations, facts.actionId(), "V59", 600.0f,
+                    "V59 SPY UNIVERSAL: Opp has power " + (int) facts.opponentPower()
+                            + ", we have 0 — IDEAL spy site, blocks their drain!");
+            return universalSpyEvaluation(operations,
+                    UniversalSpyOutcome.OPPONENT_ONLY);
+        }
+        if (facts.opponentPower() > 0.0f && facts.ourPower() > 0.0f) {
+            add(operations, facts.actionId(), "V59", -200.0f,
+                    "V59 SPY UNIVERSAL: Both sides present at "
+                            + facts.locationTitle()
+                            + " — spy blocks OWN drain while undercover");
+            return universalSpyEvaluation(operations,
+                    UniversalSpyOutcome.BOTH_SIDES);
+        }
+        if (facts.opponentPower() == 0.0f && facts.ourPower() > 0.0f) {
+            add(operations, facts.actionId(), "V59", -2000.0f,
+                    "V59 SPY UNIVERSAL: Only we have presence at "
+                            + facts.locationTitle()
+                            + " — spy would block OWN drain!");
+            return universalSpyEvaluation(operations,
+                    UniversalSpyOutcome.FRIENDLY_ONLY);
+        }
+
+        add(operations, facts.actionId(), "V59", -300.0f,
+                "V59 SPY UNIVERSAL: " + facts.locationTitle()
+                        + " is empty — no drain to block");
+        return universalSpyEvaluation(operations, UniversalSpyOutcome.EMPTY);
+    }
+
+    public static ContestEvaluation evaluateV223Contest(
+            ContestFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(3);
+
+        if (facts.opponentPower() > 0.0f
+                && facts.ourPower() < facts.opponentPower()) {
+            float powerDifference = facts.opponentPower() - facts.ourPower();
+            float contestPenalty = -80.0f;
+            if (powerDifference >= 5.0f) {
+                contestPenalty = -150.0f;
+            }
+            if (powerDifference >= 10.0f) {
+                contestPenalty = -250.0f;
+            }
+            if (powerDifference >= 15.0f) {
+                contestPenalty = -350.0f;
+            }
+
+            boolean tipsBalance = facts.deployingPower() > 0.0f
+                    && facts.ourPower() + facts.deployingPower()
+                    >= facts.opponentPower();
+            if (tipsBalance) {
+                contestPenalty = Math.min(contestPenalty + 100.0f, -20.0f);
+                add(operations, facts.actionId(), "V22.3-TIPS-BALANCE", 0.0f,
+                        "V22.3: Would tip balance at contested location ("
+                                + (int) (facts.ourPower()
+                                + facts.deployingPower()) + " vs "
+                                + (int) facts.opponentPower() + ")");
+            }
+
+            float objectiveOverride = 0.0f;
+            if (facts.objectiveRelevant()) {
+                objectiveOverride = Math.min(200.0f,
+                        Math.abs(contestPenalty) * 0.6f);
+                add(operations, facts.actionId(), "V22.7", objectiveOverride,
+                        "V22.7: Objective-critical location — must contest!");
+            }
+
+            if (facts.applyContestPenalty()) {
+                add(operations, facts.actionId(), "V22.3", contestPenalty,
+                        "CONTESTED & LOSING (" + (int) facts.ourPower()
+                                + " vs " + (int) facts.opponentPower()
+                                + " power, gap=" + (int) powerDifference + ")");
+            }
+            return new ContestEvaluation(
+                    new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V22_3_POLICY",
+                            operations),
+                    ContestOutcome.LOSING, contestPenalty, objectiveOverride,
+                    facts.applyContestPenalty());
+        }
+
+        if (facts.opponentPower() > 0.0f
+                && facts.ourPower() > facts.opponentPower() + 4.0f) {
+            add(operations, facts.actionId(), "V22", -20.0f,
+                    "Already winning big here");
+            return new ContestEvaluation(
+                    new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V22_3_POLICY",
+                            operations),
+                    ContestOutcome.WINNING_BIG, 0.0f, 0.0f, false);
+        }
+
+        if (facts.opponentPower() > 0.0f
+                && facts.ourPower() >= facts.opponentPower()) {
+            add(operations, facts.actionId(), "V22", 10.0f,
+                    "Can reinforce winning position");
+            return new ContestEvaluation(
+                    new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V22_3_POLICY",
+                            operations),
+                    ContestOutcome.REINFORCE, 0.0f, 0.0f, false);
+        }
+
+        return new ContestEvaluation(
+                new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V22_3_POLICY",
+                        operations),
+                ContestOutcome.NONE, 0.0f, 0.0f, false);
+    }
+
+    public static FallbackSpyEvaluation evaluateV2414BFallbackSpy(
+            FallbackSpyFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (facts.friendlySpyPresent()) {
+            add(operations, facts.actionId(), "V24.14B", -1200.0f,
+                    "V24.14B SPY DOUBLED: a friendly spy already blocks here — send this spy to an open enemy drain!");
+            return fallbackSpyEvaluation(operations,
+                    FallbackSpyOutcome.FRIENDLY_SPY_DOUBLED);
+        }
+        if (facts.opponentPower() > 0.0f && facts.ourPower() == 0.0f) {
+            add(operations, facts.actionId(), "V24.14B", 300.0f,
+                    "V24.14B SPY: Opponent controls here, we don't — block their force drain!");
+            return fallbackSpyEvaluation(operations,
+                    FallbackSpyOutcome.OPPONENT_ONLY);
+        }
+        if (facts.opponentPower() > 0.0f && facts.ourPower() > 0.0f) {
+            if (facts.ourPower() + facts.spyPower()
+                    >= facts.opponentPower()) {
+                add(operations, facts.actionId(), "V24.14B", 50.0f,
+                        "V24.14B SPY FLIP-BUDDY: our character + this spy can contest here — OK to break cover and fight!");
+                return fallbackSpyEvaluation(operations,
+                        FallbackSpyOutcome.FLIP_BUDDY);
+            }
+            if (facts.objectiveOrFlipBackLocation()) {
+                add(operations, facts.actionId(), "V24.14B", -500.0f,
+                        "V24.14B SPY: Both sides at CC, can't flip-and-win — spy blocks OUR drain undercover!");
+                return fallbackSpyEvaluation(operations,
+                        FallbackSpyOutcome.BOTH_SIDES_OBJECTIVE);
+            }
+            add(operations, facts.actionId(), "V24.14B", -800.0f,
+                    "V24.14B SPY: Both sides present, can't flip-and-win — spy wasted, route to an open drain!");
+            return fallbackSpyEvaluation(operations,
+                    FallbackSpyOutcome.BOTH_SIDES_NON_OBJECTIVE);
+        }
+        if (facts.opponentPower() == 0.0f && facts.ourPower() > 0.0f) {
+            add(operations, facts.actionId(), "V24.14B", -2000.0f,
+                    "V24.14B SPY: Only we have presence — spy blocks OUR drain!");
+            return fallbackSpyEvaluation(operations,
+                    FallbackSpyOutcome.FRIENDLY_ONLY);
+        }
+
+        if (facts.objectiveOrFlipBackLocation()) {
+            add(operations, facts.actionId(), "V24.14B", -300.0f,
+                    "V24.14B SPY: Empty CC site — don't waste spy here!");
+            return fallbackSpyEvaluation(operations,
+                    FallbackSpyOutcome.EMPTY_OBJECTIVE);
+        }
+        add(operations, facts.actionId(), "V24.14B", -100.0f,
+                "V24.14B SPY: Empty non-CC location — no drain to block");
+        return fallbackSpyEvaluation(operations,
+                FallbackSpyOutcome.EMPTY_NON_OBJECTIVE);
+    }
+
+    public static V243BPartnerEvaluation evaluateV243BPartner(
+            V243BPartnerFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (facts.comboPartnerPresent()) {
+            add(operations, facts.actionId(), "V24.3B", 200.0f,
+                    "V24.3 EVAZAN COMBO: Deploy here — combo partner at this site for weapon kill combo!");
+            return new V243BPartnerEvaluation(
+                    new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V24_3B_POLICY",
+                            operations),
+                    V243BPartnerOutcome.PARTNER_PRESENT);
+        }
+
+        return new V243BPartnerEvaluation(
+                new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V24_3B_POLICY",
+                        operations),
+                V243BPartnerOutcome.NONE);
+    }
+
+    private static UniversalSpyEvaluation universalSpyEvaluation(
+            List<PolicyOperation> operations, UniversalSpyOutcome outcome) {
+        return new UniversalSpyEvaluation(
+                new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V59_POLICY",
+                        operations), outcome);
+    }
+
+    private static FallbackSpyEvaluation fallbackSpyEvaluation(
+            List<PolicyOperation> operations, FallbackSpyOutcome outcome) {
+        return new FallbackSpyEvaluation(
+                new PolicyResult("DEPLOY_TACTICAL_RESIDUAL_V24_14B_POLICY",
+                        operations), outcome);
+    }
+
+    public record V2415DrainFacts(String actionId, String locationTitle,
+                                  float rawDrain, float initiationCost,
+                                  float powerValue, boolean objectiveRelevant,
+                                  boolean v166Contest) {
+        public V2415DrainFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record V2415DrainEvaluation(PolicyResult result,
+                                        V2415DrainOutcome outcome,
+                                        float delta) {
+        public V2415DrainEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum V2415DrainOutcome {
+        NONE,
+        ZERO_DRAIN,
+        EFFECTIVE_DRAIN
+    }
+
+    public record UniversalSpyFacts(String actionId, String locationTitle,
+                                    float opponentPower, float ourPower) {
+        public UniversalSpyFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record UniversalSpyEvaluation(PolicyResult result,
+                                         UniversalSpyOutcome outcome) {
+        public UniversalSpyEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum UniversalSpyOutcome {
+        OPPONENT_ONLY,
+        BOTH_SIDES,
+        FRIENDLY_ONLY,
+        EMPTY
+    }
+
+    public record ContestFacts(String actionId, float ourPower,
+                               float opponentPower, float deployingPower,
+                               boolean objectiveRelevant,
+                               boolean applyContestPenalty) {
+        public ContestFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record ContestEvaluation(PolicyResult result, ContestOutcome outcome,
+                                    float contestPenalty,
+                                    float objectiveOverride,
+                                    boolean contestPenaltyApplied) {
+        public ContestEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum ContestOutcome {
+        NONE,
+        LOSING,
+        WINNING_BIG,
+        REINFORCE
+    }
+
+    public record FallbackSpyFacts(String actionId, String locationTitle,
+                                   boolean friendlySpyPresent,
+                                   float opponentPower, float ourPower,
+                                   float spyPower,
+                                   boolean objectiveOrFlipBackLocation) {
+        public FallbackSpyFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record FallbackSpyEvaluation(PolicyResult result,
+                                        FallbackSpyOutcome outcome) {
+        public FallbackSpyEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum FallbackSpyOutcome {
+        FRIENDLY_SPY_DOUBLED,
+        OPPONENT_ONLY,
+        FLIP_BUDDY,
+        BOTH_SIDES_OBJECTIVE,
+        BOTH_SIDES_NON_OBJECTIVE,
+        FRIENDLY_ONLY,
+        EMPTY_OBJECTIVE,
+        EMPTY_NON_OBJECTIVE
+    }
+
+    public record V243BPartnerFacts(String actionId,
+                                    boolean comboPartnerPresent) {
+        public V243BPartnerFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record V243BPartnerEvaluation(PolicyResult result,
+                                         V243BPartnerOutcome outcome) {
+        public V243BPartnerEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum V243BPartnerOutcome {
+        NONE,
+        PARTNER_PRESENT
+    }
+
     public record ContestDrainFacts(String actionId, String locationTitle,
                                     float opponentPower, int opponentDrain,
                                     int netDrainBalance, float ourPower,

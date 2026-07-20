@@ -339,6 +339,131 @@ public class DeployTacticalPolicyTest {
     }
 
     @Test
+    public void v2415PreservesZeroEffectiveAndSuppressedDrainBoundaries() {
+        DeployTacticalPolicy.V2415DrainEvaluation zero = v2415(
+                0.0f, 4.0f, 3.0f, false, false);
+        assertEquals(DeployTacticalPolicy.V2415DrainOutcome.ZERO_DRAIN,
+                zero.outcome());
+        assertOperation(zero.result(), "V24.15", -80.0f,
+                "V24.15 ZERO DRAIN: Location has 0 drain — character wasted here!");
+        assertEquals(DeployTacticalPolicy.V2415DrainOutcome.NONE,
+                v2415(Math.nextUp(0.0f), 0.0f, 3.0f,
+                        false, false).outcome());
+
+        DeployTacticalPolicy.V2415DrainEvaluation effective = v2415(
+                1.0f, 3.0f, 3.0f, false, false);
+        assertEquals(DeployTacticalPolicy.V2415DrainOutcome.EFFECTIVE_DRAIN,
+                effective.outcome());
+        assertOperation(effective.result(), "V24.15", -390.0f,
+                "V24.15 EFFECTIVE DRAIN: raw 1 - initiate cost 3 <= -2 at Cloud City: Guest Quarters (a drain here is a net loss) — don't pile bodies");
+        assertEquals(DeployTacticalPolicy.V2415DrainOutcome.NONE,
+                v2415(1.0f, Math.nextDown(3.0f), 3.0f,
+                        false, false).outcome());
+        assertEquals(DeployTacticalPolicy.V2415DrainOutcome.NONE,
+                v2415(1.0f, 3.0f, 3.0f, true, false).outcome());
+        assertEquals(DeployTacticalPolicy.V2415DrainOutcome.NONE,
+                v2415(1.0f, 3.0f, 3.0f, false, true).outcome());
+        assertEquals(-700.0f, v2415(1.0f, 3.0f, 20.0f,
+                false, false).delta(), 0.0f);
+    }
+
+    @Test
+    public void v59UniversalSpyPreservesAllPresenceBandsAndStrictZero() {
+        assertUniversalSpy(2.0f, 0.0f,
+                DeployTacticalPolicy.UniversalSpyOutcome.OPPONENT_ONLY, 600.0f,
+                "V59 SPY UNIVERSAL: Opp has power 2, we have 0 — IDEAL spy site, blocks their drain!");
+        assertUniversalSpy(2.0f, Float.MIN_VALUE,
+                DeployTacticalPolicy.UniversalSpyOutcome.BOTH_SIDES, -200.0f,
+                "V59 SPY UNIVERSAL: Both sides present at Cloud City: Guest Quarters — spy blocks OWN drain while undercover");
+        assertUniversalSpy(0.0f, 2.0f,
+                DeployTacticalPolicy.UniversalSpyOutcome.FRIENDLY_ONLY, -2000.0f,
+                "V59 SPY UNIVERSAL: Only we have presence at Cloud City: Guest Quarters — spy would block OWN drain!");
+        assertUniversalSpy(0.0f, 0.0f,
+                DeployTacticalPolicy.UniversalSpyOutcome.EMPTY, -300.0f,
+                "V59 SPY UNIVERSAL: Cloud City: Guest Quarters is empty — no drain to block");
+    }
+
+    @Test
+    public void v223PreservesTiersTipOverridePlannedAndReinforceBoundaries() {
+        assertDelta(contest(0.0f, Math.nextDown(5.0f), 0.0f,
+                false, true).result(), -80.0f);
+        assertDelta(contest(0.0f, 5.0f, 0.0f,
+                false, true).result(), -150.0f);
+        assertDelta(contest(0.0f, 10.0f, 0.0f,
+                false, true).result(), -250.0f);
+        assertDelta(contest(0.0f, 15.0f, 0.0f,
+                false, true).result(), -350.0f);
+
+        DeployTacticalPolicy.ContestEvaluation tippedObjective = contest(
+                0.0f, 10.0f, 10.0f, true, true);
+        assertOperationAt(tippedObjective.result(), 0,
+                "V22.3-TIPS-BALANCE", 0.0f,
+                "V22.3: Would tip balance at contested location (10 vs 10)");
+        assertOperationAt(tippedObjective.result(), 1, "V22.7", 90.0f,
+                "V22.7: Objective-critical location — must contest!");
+        assertOperationAt(tippedObjective.result(), 2, "V22.3", -150.0f,
+                "CONTESTED & LOSING (0 vs 10 power, gap=10)");
+        PolicyContributionLedger contestLedger =
+                new PolicyContributionLedger("deploy-contest-ledger");
+        contestLedger.register(tippedObjective.result());
+        assertEquals(3, contestLedger.orderedOperations().size());
+
+        DeployTacticalPolicy.ContestEvaluation plannedTarget = contest(
+                0.0f, 10.0f, 10.0f, true, false);
+        assertEquals(2, plannedTarget.result().operations().size());
+        assertEquals(-150.0f, plannedTarget.contestPenalty(), 0.0f);
+        assertTrue(!plannedTarget.contestPenaltyApplied());
+        assertOperation(contest(5.0f, 1.0f, 0.0f, false, true).result(),
+                "V22", 10.0f, "Can reinforce winning position");
+        assertOperation(contest(Math.nextUp(5.0f), 1.0f, 0.0f,
+                false, true).result(), "V22", -20.0f,
+                "Already winning big here");
+        assertEmpty(contest(Float.NaN, 1.0f, 0.0f,
+                false, true).result());
+        assertEmpty(contest(1.0f, 0.0f, 0.0f,
+                false, true).result());
+    }
+
+    @Test
+    public void fallbackSpyAndV243bKeepEveryDestinationOutcome() {
+        assertFallbackSpy(true, 5.0f, 0.0f, 0.0f, false,
+                DeployTacticalPolicy.FallbackSpyOutcome.FRIENDLY_SPY_DOUBLED,
+                -1200.0f,
+                "V24.14B SPY DOUBLED: a friendly spy already blocks here — send this spy to an open enemy drain!");
+        assertFallbackSpy(false, 5.0f, 0.0f, 0.0f, false,
+                DeployTacticalPolicy.FallbackSpyOutcome.OPPONENT_ONLY, 300.0f,
+                "V24.14B SPY: Opponent controls here, we don't — block their force drain!");
+        assertFallbackSpy(false, 5.0f, 3.0f, 2.0f, false,
+                DeployTacticalPolicy.FallbackSpyOutcome.FLIP_BUDDY, 50.0f,
+                "V24.14B SPY FLIP-BUDDY: our character + this spy can contest here — OK to break cover and fight!");
+        assertFallbackSpy(false, 5.0f, 3.0f, 1.9f, true,
+                DeployTacticalPolicy.FallbackSpyOutcome.BOTH_SIDES_OBJECTIVE,
+                -500.0f,
+                "V24.14B SPY: Both sides at CC, can't flip-and-win — spy blocks OUR drain undercover!");
+        assertFallbackSpy(false, 5.0f, 3.0f, 1.9f, false,
+                DeployTacticalPolicy.FallbackSpyOutcome.BOTH_SIDES_NON_OBJECTIVE,
+                -800.0f,
+                "V24.14B SPY: Both sides present, can't flip-and-win — spy wasted, route to an open drain!");
+        assertFallbackSpy(false, 0.0f, 3.0f, 0.0f, false,
+                DeployTacticalPolicy.FallbackSpyOutcome.FRIENDLY_ONLY, -2000.0f,
+                "V24.14B SPY: Only we have presence — spy blocks OUR drain!");
+        assertFallbackSpy(false, 0.0f, 0.0f, 0.0f, true,
+                DeployTacticalPolicy.FallbackSpyOutcome.EMPTY_OBJECTIVE, -300.0f,
+                "V24.14B SPY: Empty CC site — don't waste spy here!");
+        assertFallbackSpy(false, 0.0f, 0.0f, 0.0f, false,
+                DeployTacticalPolicy.FallbackSpyOutcome.EMPTY_NON_OBJECTIVE,
+                -100.0f,
+                "V24.14B SPY: Empty non-CC location — no drain to block");
+
+        assertEmpty(v243b(false).result());
+        DeployTacticalPolicy.V243BPartnerEvaluation partner = v243b(true);
+        assertEquals(DeployTacticalPolicy.V243BPartnerOutcome.PARTNER_PRESENT,
+                partner.outcome());
+        assertOperation(partner.result(), "V24.3B", 200.0f,
+                "V24.3 EVAZAN COMBO: Deploy here — combo partner at this site for weapon kill combo!");
+    }
+
+    @Test
     public void legacyScoreBandsKeepTheirRelativeBoundaries() {
         float v166Softest = delta(v166Score(1));
         float v171 = delta(contact(true, true, 2,
@@ -459,6 +584,72 @@ public class DeployTacticalPolicyTest {
                         "deploy-42", deployingEvazan,
                         deployingWeaponCharacter, weaponPartnerInPlay,
                         evazanInPlay));
+    }
+
+    private static DeployTacticalPolicy.V2415DrainEvaluation v2415(
+            float rawDrain, float initiationCost, float powerValue,
+            boolean objectiveRelevant, boolean v166Contest) {
+        return DeployTacticalPolicy.evaluateV2415Drain(
+                new DeployTacticalPolicy.V2415DrainFacts(
+                        "deploy-42", "Cloud City: Guest Quarters", rawDrain,
+                        initiationCost, powerValue, objectiveRelevant,
+                        v166Contest));
+    }
+
+    private static DeployTacticalPolicy.UniversalSpyEvaluation universalSpy(
+            float opponentPower, float ourPower) {
+        return DeployTacticalPolicy.evaluateV59UniversalSpy(
+                new DeployTacticalPolicy.UniversalSpyFacts(
+                        "deploy-42", "Cloud City: Guest Quarters",
+                        opponentPower, ourPower));
+    }
+
+    private static void assertUniversalSpy(float opponentPower, float ourPower,
+                                           DeployTacticalPolicy.UniversalSpyOutcome outcome,
+                                           float score, String reason) {
+        DeployTacticalPolicy.UniversalSpyEvaluation evaluation = universalSpy(
+                opponentPower, ourPower);
+        assertEquals(outcome, evaluation.outcome());
+        assertOperation(evaluation.result(), "V59", score, reason);
+    }
+
+    private static DeployTacticalPolicy.ContestEvaluation contest(
+            float ourPower, float opponentPower, float deployingPower,
+            boolean objectiveRelevant, boolean applyContestPenalty) {
+        return DeployTacticalPolicy.evaluateV223Contest(
+                new DeployTacticalPolicy.ContestFacts("deploy-42", ourPower,
+                        opponentPower, deployingPower, objectiveRelevant,
+                        applyContestPenalty));
+    }
+
+    private static DeployTacticalPolicy.FallbackSpyEvaluation fallbackSpy(
+            boolean friendlySpyPresent, float opponentPower, float ourPower,
+            float spyPower, boolean objectiveOrFlipBackLocation) {
+        return DeployTacticalPolicy.evaluateV2414BFallbackSpy(
+                new DeployTacticalPolicy.FallbackSpyFacts("deploy-42",
+                        "Cloud City: Guest Quarters", friendlySpyPresent,
+                        opponentPower, ourPower, spyPower,
+                        objectiveOrFlipBackLocation));
+    }
+
+    private static void assertFallbackSpy(boolean friendlySpyPresent,
+                                          float opponentPower, float ourPower,
+                                          float spyPower,
+                                          boolean objectiveOrFlipBackLocation,
+                                          DeployTacticalPolicy.FallbackSpyOutcome outcome,
+                                          float score, String reason) {
+        DeployTacticalPolicy.FallbackSpyEvaluation evaluation = fallbackSpy(
+                friendlySpyPresent, opponentPower, ourPower, spyPower,
+                objectiveOrFlipBackLocation);
+        assertEquals(outcome, evaluation.outcome());
+        assertOperation(evaluation.result(), "V24.14B", score, reason);
+    }
+
+    private static DeployTacticalPolicy.V243BPartnerEvaluation v243b(
+            boolean comboPartnerPresent) {
+        return DeployTacticalPolicy.evaluateV243BPartner(
+                new DeployTacticalPolicy.V243BPartnerFacts("deploy-42",
+                        comboPartnerPresent));
     }
 
     private static void assertDrainOutcome(

@@ -157,6 +157,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V277 owner note:** `DeployFormationSitingPolicy` now also owns generic empty-destination concentration and committed reinforcement. This includes contested-solo `-200` scaling, solo `-100` scaling, empty establishment `+20`, V67bn/V67bu's inclusive `4..5` deficit and escape precedence, weak-solo `+150/+250`, and strict-above-`1.5x` pair `+100`. The adapters retain all board scans, lazy escape reads, catches, scan continues, first-found breaks, and logs. Existing V29.5 buddy and V113 operations remain later and independently additive.
 
+**V278 owner note:** `DeployTacticalPolicy` now also owns V24.15 zero/effective-drain siting, V59 universal spy siting, V22.3 contest scoring, V24.14B fallback-spy siting, and V24.3B destination partner scoring. The mirrored adapters retain all GEMP reads, lazy exemptions, nested catches, scans, first-found breaks, fallback state, logs, and contribution positions. TDIGWATT and the V22 objective tail remain adapter-owned. This is an AI-only structural extraction; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |
