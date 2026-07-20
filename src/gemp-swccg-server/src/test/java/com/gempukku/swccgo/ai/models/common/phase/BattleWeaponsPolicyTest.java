@@ -17,6 +17,43 @@ import static org.junit.Assert.assertTrue;
 public class BattleWeaponsPolicyTest {
 
     @Test
+    public void forceLightningRetainsHardBlockAndAllowsOpponentTarget() {
+        PolicyResult blocked = BattleWeaponsPolicy.scoreForceLightning(
+                new BattleWeaponsFacts.ForceLightningFacts("lightning", false));
+        PolicyResult allowed = BattleWeaponsPolicy.scoreForceLightning(
+                new BattleWeaponsFacts.ForceLightningFacts("lightning", true));
+
+        assertOperation(only(blocked), "lightning",
+                "V67bi-force-lightning-no-opponent", TraceOutputKind.VETO,
+                -9999.0f,
+                "V67bi FORCE LIGHTNING BLOCK: no opponent character in play — never self-target!");
+        assertTrue(allowed.operations().isEmpty());
+        assertPolicyShape(allowed);
+    }
+
+    @Test
+    public void blasterRackRetainsBattleLocationPrecedenceAndExactBands() {
+        PolicyOperation atBattle = only(BattleWeaponsPolicy.scoreBlasterRack(
+                new BattleWeaponsFacts.BlasterRackFacts("rack", true, true)));
+        PolicyOperation elsewhere = only(BattleWeaponsPolicy.scoreBlasterRack(
+                new BattleWeaponsFacts.BlasterRackFacts("rack", true, false)));
+        PolicyOperation outside = only(BattleWeaponsPolicy.scoreBlasterRack(
+                new BattleWeaponsFacts.BlasterRackFacts("rack", false, true)));
+
+        assertOperation(atBattle, "rack", "V35.2-rack-character-at-battle",
+                TraceOutputKind.ORDERING, 80.0f,
+                "V35.2 RACK: Character in battle — save weapon!");
+        assertOperation(elsewhere, "rack", "V35.2-rack-character-not-at-battle",
+                TraceOutputKind.VETO, -500.0f,
+                "V35.2 RACK: Character NOT in this battle — do NOT rack!");
+        assertOperation(outside, "rack", "V29.6-blaster-rack-outside-battle",
+                TraceOutputKind.VETO, -500.0f,
+                "V29.6 BLASTER RACK: Do NOT rack weapons outside battle — characters need them!");
+        assertRawFloat(580.0f, atBattle.delta() - elsewhere.delta());
+        assertRawFloat(580.0f, atBattle.delta() - outside.delta());
+    }
+
+    @Test
     public void forcePushModesRetainLegacyAdditiveScoresAndReasons() {
         PolicyOperation battle = only(BattleWeaponsPolicy.scoreActionText(actionText(
                 "force-push-battle", BattleWeaponsFacts.ForcePushMode.BATTLE_EXCLUSION,

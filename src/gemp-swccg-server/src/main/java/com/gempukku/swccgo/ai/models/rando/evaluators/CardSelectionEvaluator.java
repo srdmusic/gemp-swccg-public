@@ -4233,9 +4233,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // =======================================================
                         SwccgGame game = context.getGame();
                         String playerId = context.getPlayerId();
-                        if (game != null && playerId != null &&
-                            AiCardHelper.isDeadCard(card, game, playerId)) {
-                            action.addReasoning("☠️ DEAD CARD (persona on table) - forfeit!", 140.0f);
+                        boolean deadCard = game != null && playerId != null
+                            && AiCardHelper.isDeadCard(card, game, playerId);
+                        if (deadCard) {
+                            PolicyContributionLedger deadCardForfeitLedger =
+                                new PolicyContributionLedger("standalone-battle-forfeit-dead-" + cardId);
+                            deadCardForfeitLedger.register(
+                                BattleForfeitPolicy.scoreStandalonePriority(
+                                    BattleForfeitPolicy.StandaloneResidualFacts.priority(
+                                        cardId, true, false)));
+                            PolicyOperationAdapter.apply(action, deadCardForfeitLedger);
                             logger.info("☠️ {} is a DEAD CARD - prioritizing for forfeit", title);
                         }
 
@@ -4243,13 +4250,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // Check if this is a pilot attached to a ship
                         // Pilots on ships should be forfeited BEFORE the ship!
                         // =======================================================
+                        boolean pilotOnShip = false;
                         PhysicalCard attachedTo = card.getAttachedTo();
                         if (attachedTo != null) {
                             SwccgCardBlueprint attachedBlueprint = attachedTo.getBlueprint();
                             if (attachedBlueprint != null) {
                                 CardCategory attachedCat = attachedBlueprint.getCardCategory();
                                 if (attachedCat == CardCategory.STARSHIP || attachedCat == CardCategory.VEHICLE) {
-                                    action.addReasoning("PILOT ON SHIP - forfeit first!", 50.0f);
+                                    pilotOnShip = true;
+                                    PolicyContributionLedger pilotForfeitLedger =
+                                        new PolicyContributionLedger("standalone-battle-forfeit-pilot-" + cardId);
+                                    pilotForfeitLedger.register(
+                                        BattleForfeitPolicy.scoreStandalonePriority(
+                                            BattleForfeitPolicy.StandaloneResidualFacts.priority(
+                                                cardId, false, true)));
+                                    PolicyOperationAdapter.apply(action, pilotForfeitLedger);
                                 }
                             }
                         }
@@ -4332,7 +4347,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             new PolicyContributionLedger("standalone-battle-forfeit-" + cardId);
                         standaloneForfeitLedger.register(BattleForfeitPolicy.scoreStandaloneResidual(
                             new BattleForfeitPolicy.StandaloneResidualFacts(
-                                cardId, forfeit, power, unique, uniqueAbility, uniquePower,
+                                cardId, deadCard, pilotOnShip,
+                                forfeit, power, unique, uniqueAbility, uniquePower,
                                 new BattleForfeitFacts.ObjectiveFlags(requiredForFlip, pullable))));
                         PolicyOperationAdapter.apply(action, standaloneForfeitLedger);
                         if (requiredForFlip) {

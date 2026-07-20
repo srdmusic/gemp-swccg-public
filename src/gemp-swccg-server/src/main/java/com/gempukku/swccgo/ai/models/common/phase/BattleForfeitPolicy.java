@@ -67,6 +67,8 @@ public final class BattleForfeitPolicy {
      * evaluator so their legacy ordering and failure boundaries stay unchanged.
      */
     public record StandaloneResidualFacts(String actionId,
+                                          boolean deadCard,
+                                          boolean pilotOnShip,
                                           Float forfeitValue,
                                           Float power,
                                           boolean unique,
@@ -76,6 +78,15 @@ public final class BattleForfeitPolicy {
         public StandaloneResidualFacts {
             Objects.requireNonNull(actionId, "actionId");
             Objects.requireNonNull(objective, "objective");
+        }
+
+        public static StandaloneResidualFacts priority(String actionId,
+                                                       boolean deadCard,
+                                                       boolean pilotOnShip) {
+            return new StandaloneResidualFacts(
+                    actionId, deadCard, pilotOnShip,
+                    null, null, false, null, null,
+                    BattleForfeitFacts.ObjectiveFlags.none());
         }
     }
 
@@ -125,6 +136,23 @@ public final class BattleForfeitPolicy {
             add(operations, actionId, "V48-ship-with-crew", TraceOutputKind.VETO, -9999.0f,
                     String.format("V48 SHIP WITH CREW: %s has %d crew aboard \u2014 forfeit crew first, not the ship!",
                             title, crewCount));
+        }
+        return result(operations);
+    }
+
+    /** Fixed standalone priorities applied at their original adapter positions. */
+    public static PolicyResult scoreStandalonePriority(StandaloneResidualFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (facts.deadCard()) {
+            add(operations, facts.actionId(), "BATTLE-forfeit-dead-card",
+                    TraceOutputKind.ORDERING, 140.0f,
+                    "☠️ DEAD CARD (persona on table) - forfeit!");
+        }
+        if (facts.pilotOnShip()) {
+            add(operations, facts.actionId(), "BATTLE-forfeit-pilot-on-ship",
+                    TraceOutputKind.ORDERING, 50.0f,
+                    "PILOT ON SHIP - forfeit first!");
         }
         return result(operations);
     }

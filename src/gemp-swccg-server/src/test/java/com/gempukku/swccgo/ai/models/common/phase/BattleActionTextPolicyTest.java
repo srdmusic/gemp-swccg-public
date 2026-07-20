@@ -332,6 +332,10 @@ public class BattleActionTextPolicyTest {
 
     @Test
     public void genericBattleArmsRemainAdditive() {
+        assertOperation(onlyWeapons(BattleActionTextPolicy.scoreRaceDestiny(
+                new BattleActionTextFacts.ActionFacts("race"))),
+                "BATTLE-race-destiny", 50.0f,
+                "Race destiny always high priority");
         assertOperation(onlyWeapons(BattleActionTextPolicy.scoreGenericYouAreBeaten(
                 new BattleActionTextFacts.GenericYouAreBeatenFacts("generic", true))),
                 "V35.4-you-are-beaten-battle", 150.0f,

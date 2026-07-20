@@ -21,8 +21,13 @@ public class BattleForfeitSourceOwnershipTest {
         assertEquals(normalize(rando), normalize(chosenOne));
         for (String evaluator : new String[] {rando, chosenOne}) {
             assertTrue(evaluator.contains("BattleForfeitPolicy.scoreStandaloneShipWithCrew("));
+            assertTrue(evaluator.contains("BattleForfeitPolicy.scoreStandalonePriority("));
             assertTrue(evaluator.contains("BattleForfeitPolicy.scoreStandaloneResidual("));
             assertFalse(evaluator.contains("V48 SHIP WITH CREW:"));
+            assertFalse(evaluator.contains(
+                    "action.addReasoning(\"☠️ DEAD CARD (persona on table) - forfeit!\""));
+            assertFalse(evaluator.contains(
+                    "action.addReasoning(\"PILOT ON SHIP - forfeit first!\""));
             assertFalse(evaluator.contains("float forfeitScore = Math.max"));
             assertFalse(evaluator.contains("V139 High power - prefer keeping for battle"));
             assertFalse(evaluator.contains("V139 VALUABLE UNIQUE - never forfeit unless forced"));
@@ -36,8 +41,11 @@ public class BattleForfeitSourceOwnershipTest {
                             + "                        // V21: OBJECTIVE-CRITICAL CARD PROTECTION"));
         }
         assertTrue(policy.contains("scoreStandaloneShipWithCrew"));
+        assertTrue(policy.contains("scoreStandalonePriority"));
         assertTrue(policy.contains("scoreStandaloneResidual"));
         assertTrue(policy.contains("V48 SHIP WITH CREW:"));
+        assertTrue(policy.contains("☠️ DEAD CARD (persona on table) - forfeit!"));
+        assertTrue(policy.contains("PILOT ON SHIP - forfeit first!"));
         assertTrue(policy.contains("V139 High power - prefer keeping for battle"));
         assertTrue(policy.contains("V139 VALUABLE UNIQUE - never forfeit unless forced"));
         assertTrue(policy.contains("OBJECTIVE CRITICAL - NEVER FORFEIT!"));

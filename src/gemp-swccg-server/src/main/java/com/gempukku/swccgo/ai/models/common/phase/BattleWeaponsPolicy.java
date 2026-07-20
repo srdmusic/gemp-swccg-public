@@ -36,6 +36,40 @@ public final class BattleWeaponsPolicy {
         return new PolicyResult("BATTLE_WEAPONS_ACTION_TEXT_POLICY", operations);
     }
 
+    public static PolicyResult scoreForceLightning(
+            BattleWeaponsFacts.ForceLightningFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (!facts.opponentCharacterInPlay()) {
+            add(operations, facts.actionId(), "V67bi-force-lightning-no-opponent",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "V67bi FORCE LIGHTNING BLOCK: no opponent character in play — never self-target!");
+        }
+        return new PolicyResult("BATTLE_WEAPONS_ACTION_TEXT_POLICY", operations);
+    }
+
+    public static PolicyResult scoreBlasterRack(
+            BattleWeaponsFacts.BlasterRackFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (facts.duringBattleDamage()) {
+            if (facts.weaponCharacterAtBattle()) {
+                add(operations, facts.actionId(), "V35.2-rack-character-at-battle",
+                        TraceOutputKind.ORDERING, 80.0f,
+                        "V35.2 RACK: Character in battle — save weapon!");
+            } else {
+                add(operations, facts.actionId(), "V35.2-rack-character-not-at-battle",
+                        TraceOutputKind.VETO, -500.0f,
+                        "V35.2 RACK: Character NOT in this battle — do NOT rack!");
+            }
+        } else {
+            add(operations, facts.actionId(), "V29.6-blaster-rack-outside-battle",
+                    TraceOutputKind.VETO, -500.0f,
+                    "V29.6 BLASTER RACK: Do NOT rack weapons outside battle — characters need them!");
+        }
+        return new PolicyResult("BATTLE_WEAPONS_ACTION_TEXT_POLICY", operations);
+    }
+
     public static PolicyResult scoreBattleEvaluator(
             BattleWeaponsFacts.BattleEvaluatorFacts facts) {
         Objects.requireNonNull(facts, "facts");

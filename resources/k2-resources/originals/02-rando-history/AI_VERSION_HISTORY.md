@@ -7942,3 +7942,19 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     contain V287. Independent review, runtime reload, and live-game proof remain separate gates.
     Clean V287 is based on live V286 fad46d13e. AI source only; no GEMP engine or player-decision
     changes.
+
+  ==== V288 (2026-07-19): consolidate final BATTLE residual scoring ====
+    Shared AI-only BattleWeaponsPolicy/Facts now own V67bi Force Lightning -9999 and Blaster
+    Rack +80/-500/-500; BattleActionTextPolicy owns race destiny +50; BattleForfeitPolicy owns
+    standalone dead-card +140 and pilot-on-ship +50 through StandaloneResidualFacts flags. Both
+    ActionTextEvaluator and CardSelectionEvaluator mirrors retain source/action recognition, all
+    GameState, card, attachment, and battle-location reads, catches, logs, action types, early
+    returns, and contribution order. Dead-card and pilot contributions remain before V48, then
+    the unchanged V139/V21 residual ladder. The Rack allow/block gap remains 580 points and all
+    values are exact structural moves. After rebasing onto V287, the candidate passed focused
+    policy/source/order 48/0/0/0, BATTLE-named 95/0/0/0, clean full reactor 1953/0/0/26, exact
+    mirror parity, false-guard and boundary fixtures, AI-only scope, diff, clean package, and
+    compiled-jar gates. Server jar SHA-256 is
+    7b13644a10f6f4601077ec6bf07d1b69760244930f4524f2f240ed3ce7b9b26b and web jar SHA-256 is
+    26f013587348da56c89561b93b0ed9fc28ea85997b281d9215cb43fbec482751. Clean V288 is rebased
+    onto live V287 79de68635. AI source only; no GEMP engine or player-decision changes.

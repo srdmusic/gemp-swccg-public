@@ -121,6 +121,12 @@ public final class BattleActionTextPolicy {
                 50.0f, "Adding battle destiny is great");
     }
 
+    public static PolicyResult scoreRaceDestiny(BattleActionTextFacts.ActionFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        return oneWeapons(facts.actionId(), "BATTLE-race-destiny", TraceOutputKind.BANDED,
+                50.0f, "Race destiny always high priority");
+    }
+
     public static PolicyResult scoreHatred(BattleActionTextFacts.HatredFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>();

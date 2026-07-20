@@ -1117,9 +1117,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 if (v67biOpps > 0) break;
                             }
                             if (v67biOpps == 0) {
-                                action.addReasoning(
-                                    "V67bi FORCE LIGHTNING BLOCK: no opponent character in play — never self-target!",
-                                    -9999.0f);
+                                applyBattleWeaponsPolicy(action,
+                                    BattleWeaponsPolicy.scoreForceLightning(
+                                        new BattleWeaponsFacts.ForceLightningFacts(
+                                            actionId, false)));
                                 logger.warn("V67bi FORCE LIGHTNING BLOCK: 0 opponent chars in play — hard-block '{}'",
                                     actionText);
                             } else {
@@ -2142,7 +2143,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Race Destiny ==========
             else if (actionText.equals("Draw race destiny")) {
                 action.setActionType(ActionType.RACE_DESTINY);
-                action.addReasoning("Race destiny always high priority", VERY_GOOD_DELTA);
+                applyBattleActionTextPolicy(action,
+                    BattleActionTextPolicy.scoreRaceDestiny(
+                        new BattleActionTextFacts.ActionFacts(actionId)));
             }
 
             // ========== Play a Card ==========
@@ -3976,15 +3979,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
 
                     if (weaponCharAtBattle) {
-                        action.addReasoning("V35.2 RACK: Character in battle — save weapon!", 80.0f);
+                        applyBattleWeaponsPolicy(action,
+                            BattleWeaponsPolicy.scoreBlasterRack(
+                                new BattleWeaponsFacts.BlasterRackFacts(
+                                    actionId, true, true)));
                         logger.warn("V35.2 RACK: Weapon's character AT battle — saving '{}'", actionText);
                     } else {
-                        action.addReasoning("V35.2 RACK: Character NOT in this battle — do NOT rack!", -500.0f);
+                        applyBattleWeaponsPolicy(action,
+                            BattleWeaponsPolicy.scoreBlasterRack(
+                                new BattleWeaponsFacts.BlasterRackFacts(
+                                    actionId, true, false)));
                         logger.warn("V35.2 RACK: BLOCKED — weapon's character not at battle! '{}'", actionText);
                     }
                 } else {
                     // Outside battle — proactive racking is TERRIBLE
-                    action.addReasoning("V29.6 BLASTER RACK: Do NOT rack weapons outside battle — characters need them!", -500.0f);
+                    applyBattleWeaponsPolicy(action,
+                        BattleWeaponsPolicy.scoreBlasterRack(
+                            new BattleWeaponsFacts.BlasterRackFacts(
+                                actionId, false, false)));
                     logger.warn("V29.6 BLASTER RACK: BLOCKED proactive racking outside battle — '{}'", actionText);
                 }
             }
@@ -4055,6 +4067,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
             PolicyResult result) {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
             "battle-action-text-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyBattleWeaponsPolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger = new PolicyContributionLedger(
+            "battle-weapons-" + action.getActionId());
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
     }

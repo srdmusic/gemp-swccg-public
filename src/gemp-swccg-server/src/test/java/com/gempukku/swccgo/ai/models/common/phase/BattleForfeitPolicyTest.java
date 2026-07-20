@@ -72,7 +72,7 @@ public class BattleForfeitPolicyTest {
                 ACTION_ID, "Executor", 3);
         PolicyResult residual = BattleForfeitPolicy.scoreStandaloneResidual(
                 new BattleForfeitPolicy.StandaloneResidualFacts(
-                        ACTION_ID, 7.0f, 5.0f, true, 5.0f, 4.0f,
+                        ACTION_ID, false, false, 7.0f, 5.0f, true, 5.0f, 4.0f,
                         new BattleForfeitFacts.ObjectiveFlags(true, true)));
 
         assertOperations(shipWithCrew,
@@ -93,10 +93,43 @@ public class BattleForfeitPolicyTest {
     }
 
     @Test
+    public void standalonePriorityKeepsDeadCardThenPilotOrderAndExactAdvantages() {
+        BattleForfeitPolicy.StandaloneResidualFacts both =
+                new BattleForfeitPolicy.StandaloneResidualFacts(
+                        ACTION_ID, true, true, 5.0f, 2.0f, false, null, null,
+                        BattleForfeitFacts.ObjectiveFlags.none());
+        PolicyResult priority = BattleForfeitPolicy.scoreStandalonePriority(both);
+        PolicyResult residual = BattleForfeitPolicy.scoreStandaloneResidual(both);
+        PolicyResult aliveResidual = BattleForfeitPolicy.scoreStandaloneResidual(
+                new BattleForfeitPolicy.StandaloneResidualFacts(
+                        ACTION_ID, false, false, 5.0f, 2.0f, false, null, null,
+                        BattleForfeitFacts.ObjectiveFlags.none()));
+
+        assertOperations(priority,
+                op("BATTLE-forfeit-dead-card", 140.0f,
+                        "☠️ DEAD CARD (persona on table) - forfeit!",
+                        TraceOutputKind.ORDERING),
+                op("BATTLE-forfeit-pilot-on-ship", 50.0f,
+                        "PILOT ON SHIP - forfeit first!",
+                        TraceOutputKind.ORDERING));
+        assertOperations(residual,
+                op("V139-forfeit-value", 50.0f, "Forfeit value 5"),
+                op("V139-low-power", 50.0f,
+                        "Low power - cheap loss, forfeit first"));
+        float aliveScore = aliveResidual.operations().stream()
+                .map(PolicyOperation::delta).reduce(0.0f, Float::sum);
+        float deadPilotScore = priority.operations().stream()
+                .map(PolicyOperation::delta).reduce(0.0f, Float::sum)
+                + residual.operations().stream()
+                .map(PolicyOperation::delta).reduce(0.0f, Float::sum);
+        assertBits(190.0f, deadPilotScore - aliveScore);
+    }
+
+    @Test
     public void standaloneResidualPinsV139BoundsAndV21PullableFirstMatch() {
         PolicyResult bounded = BattleForfeitPolicy.scoreStandaloneResidual(
                 new BattleForfeitPolicy.StandaloneResidualFacts(
-                        ACTION_ID, 13.0f, 2.0f, true, 4.0f, 4.0f,
+                        ACTION_ID, false, false, 13.0f, 2.0f, true, 4.0f, 4.0f,
                         new BattleForfeitFacts.ObjectiveFlags(false, true)));
         assertOperations(bounded,
                 op("V139-forfeit-value", 0.0f, "Forfeit value 13"),
@@ -109,13 +142,13 @@ public class BattleForfeitPolicyTest {
 
         PolicyResult middlePower = BattleForfeitPolicy.scoreStandaloneResidual(
                 new BattleForfeitPolicy.StandaloneResidualFacts(
-                        ACTION_ID, null, 3.0f, false, null, null,
+                        ACTION_ID, false, false, null, 3.0f, false, null, null,
                         BattleForfeitFacts.ObjectiveFlags.none()));
         assertOperations(middlePower);
 
         PolicyResult objectiveOnly = BattleForfeitPolicy.scoreStandaloneResidual(
                 new BattleForfeitPolicy.StandaloneResidualFacts(
-                        ACTION_ID, null, null, false, null, null,
+                        ACTION_ID, false, false, null, null, false, null, null,
                         new BattleForfeitFacts.ObjectiveFlags(true, false)));
         assertOperations(objectiveOnly,
                 op("V21-forfeit-required", -9999.0f,

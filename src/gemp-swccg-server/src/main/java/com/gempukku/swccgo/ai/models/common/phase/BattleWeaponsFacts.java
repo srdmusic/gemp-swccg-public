@@ -71,6 +71,21 @@ public final class BattleWeaponsFacts {
         }
     }
 
+    public record ForceLightningFacts(String actionId,
+                                      boolean opponentCharacterInPlay) {
+        public ForceLightningFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record BlasterRackFacts(String actionId,
+                                   boolean duringBattleDamage,
+                                   boolean weaponCharacterAtBattle) {
+        public BlasterRackFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
     public enum CancelBattleMode {
         NONE,
         OWN_INITIATED,
