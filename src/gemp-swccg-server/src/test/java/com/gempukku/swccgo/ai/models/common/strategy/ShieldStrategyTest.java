@@ -10,15 +10,15 @@ import static org.junit.Assert.assertTrue;
 public class ShieldStrategyTest {
 
     @Test
-    public void pacingTableAndTurnZeroBugRemainFrozenForStructuralExtraction() {
+    public void pacingTableHonorsTheStoredTurnZeroAllowance() {
         ShieldStrategy strategy = new ShieldStrategy(Side.DARK);
 
-        assertEquals(0, strategy.shieldsAllowedThisTurn(0));
+        assertEquals(4, strategy.shieldsAllowedThisTurn(0));
         assertEquals(2, strategy.shieldsAllowedThisTurn(1));
         assertEquals(3, strategy.shieldsAllowedThisTurn(2));
         assertEquals(4, strategy.shieldsAllowedThisTurn(3));
         assertEquals(4, strategy.shieldsAllowedThisTurn(20));
-        assertTrue(strategy.atPacingCap(0));
+        assertFalse(strategy.atPacingCap(0));
         assertFalse(strategy.atPacingCap(1));
     }
 
@@ -46,17 +46,25 @@ public class ShieldStrategyTest {
     }
 
     @Test
-    public void reservePathUnknownBlueprintCrossTalkRemainsBugForBug() {
+    public void unknownShieldMetadataIsNullSafeAndKeepsTheUnknownBase() {
         ShieldStrategy strategy = new ShieldStrategy(Side.DARK);
 
         assertBits(50.0f, strategy.scoreShield("not_a_shield", "not_a_shield", 3));
-        assertBits(50.0f, strategy.scoreShield("601_67", "601_67", 3));
+        assertBits(50.0f, strategy.scoreShield("unknown_shield", null, 3));
+        assertEquals(0, strategy.minTurnToPlay("unknown_shield", null));
+        assertEquals("Unknown shield", strategy.getShieldDescription(null, null));
     }
 
     @Test
-    public void storedMinimumTurnRemainsUnconsultedInThisStructuralPhase() {
+    public void storedMinimumTurnIsExposedWithoutChangingBaseScoreOwnership() {
         ShieldStrategy strategy = new ShieldStrategy(Side.DARK);
+        ShieldStrategy lightStrategy = new ShieldStrategy(Side.LIGHT);
 
+        assertEquals(2, strategy.minTurnToPlay("13_54", null));
+        assertEquals(2, strategy.minTurnToPlay(null, "Battle Order"));
+        assertEquals(2, strategy.minTurnToPlay("13_61", "Come Here You Big Coward"));
+        assertEquals(2, lightStrategy.minTurnToPlay(
+                "200_28", "Simple Tricks And Nonsense"));
         assertBits(80.0f, strategy.scoreShield("13_54", "Battle Order", 1));
         assertBits(80.0f, strategy.scoreShield("13_54", "Battle Order", 2));
     }

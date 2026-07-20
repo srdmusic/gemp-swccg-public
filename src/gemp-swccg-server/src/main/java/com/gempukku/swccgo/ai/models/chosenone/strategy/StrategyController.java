@@ -132,7 +132,8 @@ public class StrategyController {
 
     // Game state
     private boolean underBattleOrderRules = false;
-    private boolean hasShieldsToPlay = true;
+    // V291 RETIRED (commented, not deleted): hasShieldsToPlay was write-only state.
+    // private boolean hasShieldsToPlay = true;
     private boolean offeredConcedeThisGame = false;
 
     // Game phase
@@ -198,7 +199,7 @@ public class StrategyController {
      */
     public void reset() {
         underBattleOrderRules = false;
-        hasShieldsToPlay = true;
+        // V291 RETIRED (commented, not deleted): hasShieldsToPlay reset was write-only.
         offeredConcedeThisGame = false;
 
         phase = GamePhase.EARLY;

@@ -6758,9 +6758,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     private List<EvaluatedAction> evaluateUnknown(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
         String shieldDecisionId = context.getDecisionId();
-        PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
-                shieldDecisionId == null || shieldDecisionId.isBlank()
-                        ? "shield-unknown-decision" : shieldDecisionId + "-shields");
         PolicyContributionLedger pullCandidateLedger = new PolicyContributionLedger(
                 shieldDecisionId == null || shieldDecisionId.isBlank()
                         ? "pull-deploy-candidate-unknown-decision"
@@ -6881,6 +6878,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 continue;
             }
 
+            PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
+                    shieldDecisionId == null || shieldDecisionId.isBlank()
+                            ? "shield-unknown-" + cardId
+                            : shieldDecisionId + "-shields-" + cardId);
+
             // === V112: BATTLE ORDER / BATTLE PLAN GATE (evaluateUnknown path) ===
             // When K&D plays Battle Order/Plan from stacked, the decision may route
             // through evaluateUnknown rather than evaluateDefensiveShieldSelection
@@ -6921,8 +6923,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         new ShieldPolicy.FourthSlotPick(null, false,
                                 ShieldPolicy.FourthSlotTrigger.CLOSED);
                 if (shieldsOnTable >= 3 && shieldStrategy != null) {
-                    fourthSlot = shieldStrategy.fourthSlotPick(
-                            context.getGameState(), context.getGame(), context.getPlayerId(),
+                    ShieldFacts.FourthSlotFacts fourthSlotFacts =
+                            ShieldFacts.fourthSlotFacts(context.getGameState(),
+                                    context.getGame(), context.getPlayerId());
+                    fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts,
                             preferred -> preferredShieldInCandidates(context, preferred));
                 }
                 shieldLedger.register(ShieldPolicy.unknownFourthSlot(
@@ -7067,9 +7071,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     private List<EvaluatedAction> evaluateReserveDeckSelection(DecisionContext context, String textLower) {
         List<EvaluatedAction> actions = new ArrayList<>();
         String decisionId = context.getDecisionId();
-        PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
-                decisionId == null || decisionId.isBlank()
-                        ? "shield-reserve-decision" : decisionId + "-shield-reserve");
         PolicyContributionLedger pullCandidateLedger = new PolicyContributionLedger(
                 decisionId == null || decisionId.isBlank()
                         ? "pull-deploy-candidate-reserve-decision"
@@ -7100,11 +7101,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         for (int i = 0; i < blueprints.size(); i++) {
             String blueprintId = blueprints.get(i);
 
-            // Get card title if available
-            String cardTitle = null;
+            String testingTitle = null;
             if (reserveTestingTexts != null && i < reserveTestingTexts.size()) {
-                cardTitle = reserveTestingTexts.get(i);
+                testingTitle = reserveTestingTexts.get(i);
             }
+
+            SwccgCardBlueprint pullBlueprint = null;
+            CardCategory pullCategory = null;
+            String cardTitle = null;
+            try {
+                pullBlueprint = getBlueprintFromId(context, blueprintId);
+                if (pullBlueprint != null) {
+                    pullCategory = pullBlueprint.getCardCategory();
+                    cardTitle = pullBlueprint.getTitle();
+                }
+            } catch (Exception e) { /* ignore */ }
+            if (cardTitle == null) {
+                cardTitle = testingTitle;
+            }
+
             // Use index as action ID for blueprint-based selections
             EvaluatedAction action = new EvaluatedAction(
                 String.valueOf(i),
@@ -7112,15 +7127,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 50.0f,
                 "Deploy " + (cardTitle != null ? cardTitle : blueprintId)
             );
-
-            SwccgCardBlueprint pullBlueprint = null;
-            CardCategory pullCategory = null;
-            try {
-                pullBlueprint = getBlueprintFromId(context, blueprintId);
-                if (pullBlueprint != null) {
-                    pullCategory = pullBlueprint.getCardCategory();
-                }
-            } catch (Exception e) { /* ignore */ }
             PullDeployCandidatePolicy.Evaluation pullCandidate =
                     PullDeployCandidatePolicy.evaluate(
                             PullPolicyAdapter.readDeployCandidate(
@@ -7146,23 +7152,54 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     action, blueprintId, cardTitle, textLower, plan);
 
             // === Shield scoring ===
-            if (shieldStrategy != null) {
-                // Check if this is a defensive shield by blueprint pattern
-                float shieldScore = shieldStrategy.scoreShield(blueprintId, blueprintId, turnNumber);
-
-                if (shieldScore > -50) {
-                    // Likely a shield - use shield scoring
-                    // Add to existing score rather than replacing
+            if (pullCategory == CardCategory.DEFENSIVE_SHIELD) {
+                float shieldScore = 0.0f;
+                int minTurnToPlay = 0;
+                if (shieldStrategy != null) {
+                    shieldScore = shieldStrategy.scoreShield(
+                            blueprintId, cardTitle, turnNumber);
                     action.addReasoning("Shield scoring", shieldScore);
-                    String description = shieldStrategy.getShieldDescription(blueprintId, blueprintId);
-                    logger.info("[ReserveDeck] Shield {}: score={} ({})", blueprintId, shieldScore, description);
+                    String description = shieldStrategy.getShieldDescription(
+                            blueprintId, cardTitle);
+                    logger.info("[ReserveDeck] Shield {}: score={} ({})",
+                            cardTitle, shieldScore, description);
+                    minTurnToPlay = shieldStrategy.minTurnToPlay(
+                            blueprintId, cardTitle);
+                }
+
+                int shieldsOnTable = ShieldFacts.shieldsOnTable(
+                        context.getGameState(), playerId);
+                ShieldPolicy.FourthSlotPick fourthSlot =
+                        new ShieldPolicy.FourthSlotPick(null, false,
+                                ShieldPolicy.FourthSlotTrigger.CLOSED);
+                if (shieldsOnTable >= 3) {
+                    ShieldFacts.FourthSlotFacts fourthSlotFacts =
+                            ShieldFacts.fourthSlotFacts(context.getGameState(),
+                                    game, playerId);
+                    if (shieldStrategy != null) {
+                        fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts,
+                                preferred -> preferredShieldInCandidates(context, preferred));
+                    } else {
+                        fourthSlot = ShieldPolicy.fourthSlotPick(side, fourthSlotFacts,
+                                preferred -> preferredShieldInCandidates(context, preferred));
+                    }
                 }
 
                 boolean occupiesBoth = !ShieldPolicy.isBattleOrderOrPlan(cardTitle)
                         || ShieldFacts.occupiesBothTheaters(game, playerId);
-                shieldLedger.register(ShieldPolicy.reserveBattleOrderAdjustments(
-                        action.getActionId(), cardTitle, shieldScore, occupiesBoth));
+                PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
+                        decisionId == null || decisionId.isBlank()
+                                ? "shield-reserve-" + action.getActionId()
+                                : decisionId + "-shield-reserve-" + action.getActionId());
+                shieldLedger.register(ShieldPolicy.shieldCandidateAdjustments(
+                        action.getActionId(), cardTitle, shieldScore, minTurnToPlay,
+                        turnNumber, shieldsOnTable, fourthSlot, occupiesBoth,
+                        ShieldPolicy.CandidateRoute.RESERVE));
                 PolicyOperationAdapter.apply(action, shieldLedger);
+                if (shieldsOnTable >= 3) {
+                    logger.warn("V105/V107 4TH SLOT (reserve): '{}' preferred={} pursue={}",
+                            cardTitle, fourthSlot.preferred(), fourthSlot.pursue());
+                }
                 if (ShieldPolicy.isBattleOrderOrPlan(cardTitle)) {
                     logger.warn("V51 BATTLE ORDER (reserve): occupiesBoth={} base={}",
                             occupiesBoth, shieldScore);
@@ -7248,19 +7285,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         try {
             List<String> pcIds = context.getCardIds();
             List<String> pcBps = context.getBlueprints();
-            boolean arbitrary = "ARBITRARY_CARDS".equals(context.getDecisionType());
             GameState pcGs = context.getGameState();
-            int n = pcIds != null ? pcIds.size() : 0;
+            int n = Math.max(pcIds != null ? pcIds.size() : 0,
+                    pcBps != null ? pcBps.size() : 0);
             for (int i = 0; i < n; i++) {
                 String t = null;
-                if (arbitrary && pcBps != null && i < pcBps.size()) {
-                    SwccgCardBlueprint bp = getBlueprintFromId(context, pcBps.get(i));
-                    if (bp != null) t = bp.getTitle();
-                } else if (pcGs != null) {
+                if (pcGs != null && pcIds != null && i < pcIds.size()) {
                     try {
                         PhysicalCard c = pcGs.findCardById(Integer.parseInt(pcIds.get(i)));
                         if (c != null) t = c.getTitle();
                     } catch (NumberFormatException nfe) { /* skip unparseable */ }
+                }
+                if (t == null && pcBps != null && i < pcBps.size()) {
+                    SwccgCardBlueprint bp = getBlueprintFromId(context, pcBps.get(i));
+                    if (bp != null) t = bp.getTitle();
                 }
                 if (t != null && t.toLowerCase(java.util.Locale.ROOT).contains(want)) return true;
             }
@@ -7273,9 +7311,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     private List<EvaluatedAction> evaluateShieldSelection(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
         String decisionId = context.getDecisionId();
-        PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
-                decisionId == null || decisionId.isBlank()
-                        ? "shield-selection-decision" : decisionId + "-shield-selection");
         GameState gameState = context.getGameState();
         ShieldStrategy shieldStrategy = context.getShieldStrategy();
         int turnNumber = context.getTurnNumber();
@@ -7326,47 +7361,64 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 if (blueprint != null &&
                     blueprint.getCardCategory() == CardCategory.DEFENSIVE_SHIELD) {
 
+                    float shieldScore = 50.0f;
+                    int minTurnToPlay = 0;
                     // Use ShieldStrategy for scoring
                     if (shieldStrategy != null && blueprintId != null && title != null) {
-                        float shieldScore = shieldStrategy.scoreShield(
+                        shieldScore = shieldStrategy.scoreShield(
                             blueprintId, title, turnNumber);
 
                         // Set score directly (ShieldStrategy fully controls priority)
                         action.setScore(shieldScore);
                         String description = shieldStrategy.getShieldDescription(blueprintId, title);
                         action.addReasoning("Shield: " + description, 0.0f);
+                        minTurnToPlay = shieldStrategy.minTurnToPlay(blueprintId, title);
 
                         logger.warn("V29.5 [Shield] {}: score={} ({})", title, shieldScore, description);
-
-                        ShieldPolicy.FourthSlotPick fourthSlot =
-                                new ShieldPolicy.FourthSlotPick(null, false,
-                                        ShieldPolicy.FourthSlotTrigger.CLOSED);
-                        if (shieldStrategy.shieldsRemaining() <= 1) {
-                            fourthSlot = shieldStrategy.fourthSlotPick(
-                                    context.getGameState(), context.getGame(),
-                                    context.getPlayerId(),
-                                    preferred -> preferredShieldInCandidates(context, preferred));
-                        }
-                        boolean occupiesBoth = !ShieldPolicy.isBattleOrderOrPlan(title)
-                                || ShieldFacts.occupiesBothTheaters(
-                                    context.getGame(), context.getPlayerId());
-                        shieldLedger.register(ShieldPolicy.shieldSelectionAdjustments(
-                                cardId, title, shieldScore, shieldStrategy.shieldsRemaining(),
-                                fourthSlot, occupiesBoth));
-                        PolicyOperationAdapter.apply(action, shieldLedger);
-
-                        if (shieldStrategy.shieldsRemaining() <= 1) {
-                            logger.warn("V105/V107 4TH SLOT: '{}' preferred={} pursue={}",
-                                    title, fourthSlot.preferred(), fourthSlot.pursue());
-                        }
-                        if (ShieldPolicy.isBattleOrderOrPlan(title)) {
-                            logger.warn("V51 BATTLE ORDER (shield): occupiesBoth={} base={}",
-                                    occupiesBoth, shieldScore);
-                        }
                     } else {
                         // Fallback if no shield strategy
                         action.addReasoning("Defensive shield (no strategy)", 50.0f);
                         logger.warn("V29.5 [Shield] {}: NO STRATEGY — fallback score 100", title);
+                    }
+
+                    int shieldsOnTable = ShieldFacts.shieldsOnTable(
+                            context.getGameState(), context.getPlayerId());
+                    ShieldPolicy.FourthSlotPick fourthSlot =
+                            new ShieldPolicy.FourthSlotPick(null, false,
+                                    ShieldPolicy.FourthSlotTrigger.CLOSED);
+                    if (shieldsOnTable >= 3) {
+                        ShieldFacts.FourthSlotFacts fourthSlotFacts =
+                                ShieldFacts.fourthSlotFacts(context.getGameState(),
+                                        context.getGame(), context.getPlayerId());
+                        if (shieldStrategy != null) {
+                            fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts,
+                                    preferred -> preferredShieldInCandidates(context, preferred));
+                        } else {
+                            fourthSlot = ShieldPolicy.fourthSlotPick(context.getSide(),
+                                    fourthSlotFacts,
+                                    preferred -> preferredShieldInCandidates(context, preferred));
+                        }
+                    }
+                    boolean occupiesBoth = !ShieldPolicy.isBattleOrderOrPlan(title)
+                            || ShieldFacts.occupiesBothTheaters(
+                                context.getGame(), context.getPlayerId());
+                    PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
+                            decisionId == null || decisionId.isBlank()
+                                    ? "shield-selection-" + cardId
+                                    : decisionId + "-shield-selection-" + cardId);
+                    shieldLedger.register(ShieldPolicy.shieldCandidateAdjustments(
+                            cardId, title, shieldScore, minTurnToPlay, turnNumber,
+                            shieldsOnTable, fourthSlot, occupiesBoth,
+                            ShieldPolicy.CandidateRoute.DEDICATED));
+                    PolicyOperationAdapter.apply(action, shieldLedger);
+
+                    if (shieldsOnTable >= 3) {
+                        logger.warn("V105/V107 4TH SLOT: '{}' preferred={} pursue={}",
+                                title, fourthSlot.preferred(), fourthSlot.pursue());
+                    }
+                    if (ShieldPolicy.isBattleOrderOrPlan(title)) {
+                        logger.warn("V51 BATTLE ORDER (shield): occupiesBoth={} base={}",
+                                occupiesBoth, shieldScore);
                     }
                 } else if (blueprint != null) {
                     // Not a shield - low priority

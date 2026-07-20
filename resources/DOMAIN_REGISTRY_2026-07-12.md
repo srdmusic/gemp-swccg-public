@@ -9,7 +9,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 - Backbone: `resources/Rando_Section_Manifest_2026-07-06.xlsx` (340 single-owner arms, T0.3/T0.4), re-verified against the live tree; 30 rows added (manifest gaps + everything shipped 2026-07-07 → 2026-07-12: V192 pull hub, V193, FORMATION SAFETY, batch-1 hotfixes).
 - A *rule* = one V-tag arm (multi-arm tags appear once per arm, `Arm of` set). KIND per plan §4: VETO / ORDERING / BANDED.
 - **Anchor semantics**: `FILE:line` = first live occurrence of the base tag in that file at HEAD (block may start at a nearby comment); multi-arm tags share the base-tag anchor — grep the arm's log string for the exact block. Manifest 07-06 line refs inside Trigger text have drifted; re-grep before moving code.
-- File abbrevs: ATE=ActionTextEvaluator CSE=CardSelectionEvaluator DE=DeployEvaluator ME=MoveEvaluator BE=BattleEvaluator DrE=DrawEvaluator PE=PassEvaluator FAE=ForceActivationEvaluator CE=CombinedEvaluator DPP=DeployPhasePlanner DPS=DeployPhaseScript OA=bot-local ObjectiveAnalyzer facade SS=ShieldStrategy DO=DeckOracle SC=StrategyController AA=ActionAudit RCA=RandoCalAi DC=DecisionContext DSf=DecisionSafety / shared common: cOA=ObjectiveAnalyzer CDSE=CharacterDeploySiteEvaluator FS=FormationSafety FRS=ForceReserveService MF=MaintenanceFacts MP=MovePredicates ShF=ShieldFacts. The file IS the decision route (ATE=text-ranked top-level, CSE=card-selection prompts, DE=deploy scoring, ME=move destinations, BE=initiation, CE=merge/select).
+- File abbrevs: ATE=ActionTextEvaluator CSE=CardSelectionEvaluator DE=DeployEvaluator ME=MoveEvaluator BE=BattleEvaluator DrE=DrawEvaluator PE=PassEvaluator FAE=ForceActivationEvaluator CE=CombinedEvaluator DPP=DeployPhasePlanner DPS=DeployPhaseScript OA=bot-local ObjectiveAnalyzer facade SS=ShieldStrategy DO=DeckOracle SC=StrategyController AA=ActionAudit RCA=RandoCalAi DC=DecisionContext DSf=DecisionSafety / shared common: cOA=ObjectiveAnalyzer CDSE=CharacterDeploySiteEvaluator FS=FormationSafety FRS=ForceReserveService MF=MaintenanceFacts MP=MovePredicates ShF=ShieldFacts ShP=ShieldPolicy. The file IS the decision route (ATE=text-ranked top-level, CSE=card-selection prompts, DE=deploy scoring, ME=move destinations, BE=initiation, CE=merge/select).
 - Every rando evaluator has a **chosenone mirror**; `common/strategy` files are SHARED (no mirror drift). "Both bots" applies to every row unless noted.
 
 ## 1. Domain overview
@@ -30,7 +30,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | move | 49 | AA ATE CSE DE DPP ME RCA RandoConfig.java (8) | MOVE pipeline (T4 clobber ladder; dual-utility semantics) |
 | draw-count | 6 | DrE (1) | DRAW (DrE) |
 | force-loss-payment | 8 | CSE FLF FLP (3) | FORCE-LOSS policy (hub = shared ForceLossPolicy; CSE is the stock-choice adapter) |
-| shields | 13 | ATE CSE RCA SS (4) | SHIELDS engine (ShieldStrategy + ShieldFacts) |
+| shields | 14 | ATE CSE RCA SS ShF ShP (6) | SHIELDS engine (ShieldStrategy catalog/state/base scores + ShieldPolicy candidate/parent ordering + ShieldFacts board reads) |
 | pull-search | 33 | AA ATE CE CSE DC DE DO RCA (8) | PULL ENGINE (hub = V192 in ATE since T4.2); facts stay SVC-ORACLE (DeckOracle) |
 | objective-intent | 7 | AA ATE BP cOA CSE DC DE DPP ODT RCA (10) | SVC-INTEL (shared ObjectiveAnalyzer is the LIVE brain; bot OA files are compatibility facades; ObjectiveHandler.java is DEAD, do not wire) |
 | loop-safety | 10 | AA ATE CE CSE DSf DrE RCA EvaluatedAction.java (8) | SVC-SAFETY (DecisionSafety + ATE loop guards + CE finalizer incl. the generic hardVeto OR-merge/enforcement) |
@@ -433,8 +433,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V289 owner note:** `ForceLossPolicy` now also owns the residual action-text loss/cost choices and the unknown-selection loss-category stream, followed by the V25 Hunt Down lightsaber `-300` arm; unmatched categories emit no operation and preserve the legacy neutral base. `PullActionPolicy` owns the parent action-text take-into-hand residuals, `PullSpecificActionPolicy` remains card-specific, and `PullTakeCandidatePolicy` remains the child candidate owner. Both bot adapters retain recognition, every GEMP read and scan, logs, catches, return/continue behavior, and exact first-match position. All moved operations remain additive.
 
-### shields — 13 rules
-*Shield pick tables, pacing, 4th-slot gate.* Target owner: SHIELDS engine (ShieldStrategy + ShieldFacts).
+### shields — 14 rules
+*Shield pick tables, pacing, candidate timing, 4th-slot gate.* Target owner: SHIELDS engine (ShieldStrategy catalog/state/base scores + ShieldPolicy candidate/parent ordering + ShieldFacts board reads).
 
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
@@ -443,6 +443,7 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 | V29.5-shield-plumbing | V29.5 | SHIELDS | CSE:1027 | ORDERING | — | CSE 8667-8974: isShieldSelectionByContent + DEFENSIVE SHIELD selection scoring path (ShieldStrategy lookup, fallback 100) + ARBITRARY_CARDS temp-ID handling. Same tag,… | LIVE |
 | V51-battle-order-gate | V51 | SHIELDS | CSE:7407 | VETO | — | §8 arm 'Battle-Order-gate'. -9999 unless Rando occupies BOTH a BG site and BG system; +50/+200 EARLY-DEPLOY when met. UPDATED 2026-07-06 (occupiesBothTheaters predicate… | LIVE |
 | V53-shield-priority | V53 | SHIELDS | SS:12 | ORDERING | — | §8 arm: shield priority order — grabber first (A Tragedy/Allegations +100), retrieval tax second (Aim High/Secret Plans +50); Battle Order/Plan downgraded IMMEDIATE ->… | LIVE |
+| V53-shield-min-turn | V53 | SHIELDS | ShP CSE | VETO | -5000 additive | V291 behavior fix: before minTurnToPlay, candidate receives one ADD -5000; turn-1 Battle Order/Plan skips only this arm when both battleground theaters are occupied. Runs before fourth-slot and V51 operations. | LIVE |
 | V102 |  | SHIELDS | RCA:1899 ATE:2589 SS:13 | VETO | — | K&D per-turn ACTIVATION CAP hard block (separate counter from shieldsPlayed; RandoCalAi tracks activations, ShieldStrategy holds counter, ATE | LIVE |
 | V105 |  | SHIELDS | ATE:2612 CSE:8440 SS:14 | ORDERING | — | 4th-slot Trigger A (Battle Order/Plan when we occupy system+site BGs). UPDATED 2026-07-06 (Verge game deadlock fix): only pursue when preferred card is actually… | LIVE |
 | V106 |  | SHIELDS | SS:14 CSE:9393 | ORDERING | — | 4th-slot Trigger B (CHYBC/Simple Tricks: opp drains non-BG + opp bg<2 + we occupy BG). CSE:8854 records the CSE-side copy was dropped per Steve 2026-05-20;… | LIVE |

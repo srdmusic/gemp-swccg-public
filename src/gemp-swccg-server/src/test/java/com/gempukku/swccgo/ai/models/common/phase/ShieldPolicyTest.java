@@ -34,6 +34,29 @@ public class ShieldPolicyTest {
     }
 
     @Test
+    public void validatedTopLevelPlayCardRequiresOneFullyAlignedSource() {
+        String[] actionIds = {"deploy", "shield", "pass"};
+        String[] actionTexts = {"Deploy", "Play a card", "Pass"};
+        String[] sourceCardIds = {"7", "8", "9"};
+
+        assertEquals("8", ShieldPolicy.selectedTopLevelPlayCardSourceId(
+                "ACTION_CHOICE", actionIds, actionTexts, sourceCardIds, "shield"));
+        assertEquals("8", ShieldPolicy.selectedTopLevelPlayCardSourceId(
+                "CARD_ACTION_CHOICE", actionIds, actionTexts, sourceCardIds, "shield"));
+        assertNull(ShieldPolicy.selectedTopLevelPlayCardSourceId(
+                "CARD_SELECTION", actionIds, actionTexts, sourceCardIds, "shield"));
+        assertNull(ShieldPolicy.selectedTopLevelPlayCardSourceId(
+                "ACTION_CHOICE", actionIds, new String[] {"Play a card"},
+                sourceCardIds, "shield"));
+        assertNull(ShieldPolicy.selectedTopLevelPlayCardSourceId(
+                "ACTION_CHOICE", new String[] {"shield", "shield"},
+                new String[] {"Play a card", "Play a card"},
+                new String[] {"8", "9"}, "shield"));
+        assertNull(ShieldPolicy.selectedTopLevelPlayCardSourceId(
+                "ACTION_CHOICE", actionIds, actionTexts, sourceCardIds, "deploy"));
+    }
+
+    @Test
     public void fourthSlotDefaultsClosedAndRequiresThePreferredMenuCard() {
         ShieldPolicy.FourthSlotPick closed = ShieldPolicy.fourthSlotPick(
                 Side.DARK, facts(false, false, 2, false, 1, false, false), title -> true);
@@ -125,48 +148,89 @@ public class ShieldPolicyTest {
     }
 
     @Test
-    public void dedicatedSelectionPreservesFourthSlotThenBattleOrderOrder() {
-        PolicyResult blocked = ShieldPolicy.shieldSelectionAdjustments(
-                "A", "Battle Order", 80.0f, 1, closed(), false);
+    public void candidatePolicyOrdersTimingThenFourthSlotThenBattleOrder() {
+        PolicyResult blocked = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", 80.0f, 2, 1, 3, closed(), false,
+                ShieldPolicy.CandidateRoute.DEDICATED);
         assertOperations(blocked,
+                "V53-shield-min-turn", -5000.0f,
                 "V105-V107-selection", -5000.0f,
                 "V51-battle-order-gate", -9999.0f);
 
-        PolicyResult preferred = ShieldPolicy.shieldSelectionAdjustments(
-                "A", "Battle Order", 80.0f, 1, pick("Battle Order"), true);
+        PolicyResult preferred = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", 80.0f, 2, 1, 3,
+                pick("Battle Order"), true,
+                ShieldPolicy.CandidateRoute.DEDICATED);
         assertOperations(preferred,
                 "V105-V107-selection", 2000.0f,
                 "V51-battle-order-early", 200.0f);
 
-        PolicyResult rejectedBase = ShieldPolicy.shieldSelectionAdjustments(
-                "A", "Battle Order", -50.0f, 2, closed(), true);
+        PolicyResult rejectedBase = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", -50.0f, 2, 2, 2, closed(), true,
+                ShieldPolicy.CandidateRoute.DEDICATED);
         assertTrue(rejectedBase.operations().isEmpty());
     }
 
     @Test
     public void reserveSelectionKeepsReadyBonusAndGuardedEarlyBonus() {
-        assertOperations(ShieldPolicy.reserveBattleOrderAdjustments(
-                "A", "Battle Order", 80.0f, false),
+        assertOperations(ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", 80.0f, 2, 2, 2, closed(), false,
+                ShieldPolicy.CandidateRoute.RESERVE),
                 "V51-battle-order-gate", -9999.0f);
-        assertOperations(ShieldPolicy.reserveBattleOrderAdjustments(
-                "A", "Battle Plan", 80.0f, true),
+        assertOperations(ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Plan", 80.0f, 2, 1, 2, closed(), true,
+                ShieldPolicy.CandidateRoute.RESERVE),
                 "V51-battle-order-ready", 50.0f,
                 "V51-battle-order-early", 200.0f);
-        assertOperations(ShieldPolicy.reserveBattleOrderAdjustments(
-                "A", "Battle Plan", -50.0f, true),
+        assertOperations(ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Plan", -50.0f, 2, 1, 2, closed(), true,
+                ShieldPolicy.CandidateRoute.RESERVE),
                 "V51-battle-order-ready", 50.0f);
-        assertTrue(ShieldPolicy.reserveBattleOrderAdjustments(
-                "A", "Ultimatum", 50.0f, false).operations().isEmpty());
+        assertTrue(ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Ultimatum", 50.0f, 0, 1, 2, closed(), false,
+                ShieldPolicy.CandidateRoute.RESERVE).operations().isEmpty());
+    }
+
+    @Test
+    public void earlyPreferredFourthSlotCannotReviveMinimumTurnVeto() {
+        PolicyResult earlyPreferred = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Come Here You Big Coward", 80.0f, 2, 1, 3,
+                pick("Come Here You Big Coward"), false,
+                ShieldPolicy.CandidateRoute.DEDICATED);
+        assertOperations(earlyPreferred,
+                "V53-shield-min-turn", -5000.0f,
+                "V105-V107-selection", 2000.0f);
+        assertBits(-3000.0f, sum(earlyPreferred));
+
+        assertOperations(ShieldPolicy.shieldCandidateAdjustments(
+                        "B", "Simple Tricks And Nonsense", 80.0f, 2, 1, 3,
+                        pick("Simple Tricks And Nonsense"), false,
+                        ShieldPolicy.CandidateRoute.RESERVE),
+                "V53-shield-min-turn", -5000.0f,
+                "V105-V107-selection", 2000.0f);
+
+        assertOperations(ShieldPolicy.shieldCandidateAdjustments(
+                        "A", "Resistance", 50.0f, 0, 3, 3,
+                        closed(), false, ShieldPolicy.CandidateRoute.DEDICATED),
+                "V105-V107-selection", -5000.0f);
+        assertOperations(ShieldPolicy.shieldCandidateAdjustments(
+                        "A", "Resistance", 50.0f, 0, 3, 3,
+                        pick("Battle Order"), false,
+                        ShieldPolicy.CandidateRoute.DEDICATED),
+                "V105-V107-selection", -5000.0f);
     }
 
     @Test
     public void onePolicyResultNeverRepeatsAnActionRuleContribution() {
         List<PolicyResult> results = List.of(
                 ShieldPolicy.stackedPileParent("A", 3, closed(), true, 2, true, 1),
-                ShieldPolicy.shieldSelectionAdjustments(
-                        "B", "Battle Order", 80.0f, 1, pick("Battle Order"), true),
-                ShieldPolicy.reserveBattleOrderAdjustments(
-                        "C", "Battle Plan", 80.0f, true));
+                ShieldPolicy.shieldCandidateAdjustments(
+                        "B", "Battle Order", 80.0f, 2, 1, 3,
+                        pick("Battle Order"), true,
+                        ShieldPolicy.CandidateRoute.DEDICATED),
+                ShieldPolicy.shieldCandidateAdjustments(
+                        "C", "Battle Plan", 80.0f, 2, 1, 2, closed(), true,
+                        ShieldPolicy.CandidateRoute.RESERVE));
         for (PolicyResult result : results) {
             Set<String> contributions = new HashSet<>();
             for (PolicyOperation operation : result.operations()) {
@@ -221,6 +285,14 @@ public class ShieldPolicyTest {
                     || operation.outputKind() == TraceOutputKind.VETO
                     || operation.outputKind() == TraceOutputKind.BANDED);
         }
+    }
+
+    private static float sum(PolicyResult result) {
+        float total = 0.0f;
+        for (PolicyOperation operation : result.operations()) {
+            total += operation.delta();
+        }
+        return total;
     }
 
     private static void assertBits(float expected, float actual) {

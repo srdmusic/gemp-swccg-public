@@ -22,6 +22,7 @@ import com.gempukku.swccgo.ai.models.common.phase.CoordinatorPosturePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -1008,6 +1009,23 @@ public class RandoCalAi extends HeuristicAiBase {
                 LOG.warn("🚨 Response corrected: {}", validated[1]);
             }
             result = validated[0];
+
+            String stackedPileSourceCardId = ShieldPolicy.selectedTopLevelPlayCardSourceId(
+                    decisionType, actionIds,
+                    params != null ? params.get("actionText") : null,
+                    cardIds, result);
+            if (stackedPileSourceCardId != null && gameState != null) {
+                try {
+                    PhysicalCard sourceCard = gameState.findCardById(
+                            Integer.parseInt(stackedPileSourceCardId));
+                    if (sourceCard != null
+                            && ShieldPolicy.isStackedPileShieldSource(sourceCard.getTitle())) {
+                        shieldStrategy.recordKnDActivation(activationTurn);
+                    }
+                } catch (Exception v102e) {
+                    LOG.debug("V102 K&D activation tracking error: {}", v102e.getMessage());
+                }
+            }
 
             if (ActivateDecisionRouting.selectedTopLevelActivate(
                     phase, decisionType,
@@ -2183,17 +2201,6 @@ public class RandoCalAi extends HeuristicAiBase {
                     seenOwnShields.add(shieldKey);
                     shieldStrategy.recordShieldPlayed(blueprintId, title);
                     LOG.info("🛡️ Tracked own shield: {} ({})", title, blueprintId);
-                    // V102 (Steve, 2026-05-20): K&D activation tracking.
-                    // Each new shield committed to SIDE_OF_TABLE corresponds to one K&D
-                    // activation (the activation is what fires the "play a card" effect
-                    // that places the shield). Bump the per-turn K&D activation counter
-                    // so atKnDActivationCap() correctly hard-blocks further K&D plays.
-                    try {
-                        int v102Turn = gameState.getPlayersLatestTurnNumber(playerId);
-                        shieldStrategy.recordKnDActivation(v102Turn);
-                    } catch (Exception v102e) {
-                        LOG.debug("V102 K&D activation tracking error: {}", v102e.getMessage());
-                    }
                 }
             }
         } catch (Exception e) {

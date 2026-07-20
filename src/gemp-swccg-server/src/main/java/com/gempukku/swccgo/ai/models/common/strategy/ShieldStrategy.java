@@ -60,8 +60,9 @@ public class ShieldStrategy {
         public final ShieldCategory category;
         public final String description;
         public final List<String> playIfOpponentHas;
-        public final List<String> playIfWeHave;
         public final List<String> playIfOpponentObjective;
+        // V291 RETIRED (commented, not deleted): playIfWeHave was write-only catalog metadata.
+        // public final List<String> playIfWeHave;
         public final int maxTurnToPlay;
         public final int minTurnToPlay;
         // V42: When true, this shield scores NEGATIVE unless conditions are met.
@@ -69,16 +70,17 @@ public class ShieldStrategy {
         // — playing them speculatively is net negative.
         public final boolean requireConditions;
 
+        // V291 RETIRED (commented, not deleted): playIfWeHave constructor input was never read.
         public ShieldInfo(String name, List<String> blueprintIds, ShieldCategory category,
                          String description, List<String> playIfOpponentHas,
-                         List<String> playIfWeHave, List<String> playIfOpponentObjective,
+                         List<String> playIfOpponentObjective,
                          int maxTurnToPlay, int minTurnToPlay, boolean requireConditions) {
             this.name = name;
             this.blueprintIds = blueprintIds;
             this.category = category;
             this.description = description;
             this.playIfOpponentHas = playIfOpponentHas != null ? playIfOpponentHas : Collections.emptyList();
-            this.playIfWeHave = playIfWeHave != null ? playIfWeHave : Collections.emptyList();
+            // V291 RETIRED (commented, not deleted): this.playIfWeHave assignment was write-only.
             this.playIfOpponentObjective = playIfOpponentObjective != null ? playIfOpponentObjective : Collections.emptyList();
             this.maxTurnToPlay = maxTurnToPlay;
             this.minTurnToPlay = minTurnToPlay;
@@ -86,19 +88,20 @@ public class ShieldStrategy {
         }
 
         // Standard constructor (requireConditions defaults to false)
+        // V291 RETIRED (commented, not deleted): playIfWeHave overload input was never read.
         public ShieldInfo(String name, List<String> blueprintIds, ShieldCategory category,
                          String description, List<String> playIfOpponentHas,
-                         List<String> playIfWeHave, List<String> playIfOpponentObjective,
+                         List<String> playIfOpponentObjective,
                          int maxTurnToPlay, int minTurnToPlay) {
             this(name, blueprintIds, category, description, playIfOpponentHas,
-                playIfWeHave, playIfOpponentObjective, maxTurnToPlay, minTurnToPlay, false);
+                playIfOpponentObjective, maxTurnToPlay, minTurnToPlay, false);
         }
 
         // Convenience constructor for simpler shields
         public ShieldInfo(String name, String blueprintId, ShieldCategory category,
                          String description, int maxTurnToPlay) {
             this(name, Collections.singletonList(blueprintId), category, description,
-                null, null, null, maxTurnToPlay, 0, false);
+                null, null, maxTurnToPlay, 0, false);
         }
     }
 
@@ -129,7 +132,7 @@ public class ShieldStrategy {
         DARK_SHIELDS.put("Battle Order", new ShieldInfo(
             "Battle Order", Collections.singletonList("13_54"), ShieldCategory.SITUATIONAL_HIGH,
             "Opponent pays 3 to drain — only if they lack both theaters",
-            null, null, null, 10, 2));
+            null, null, 10, 2));
 
         // V53: Come Here You Big Coward — deploy if opponent drains at non-battleground
         // via lightsaber, objective, or other card adding drain to non-BG location.
@@ -137,35 +140,35 @@ public class ShieldStrategy {
             "Come Here You Big Coward", Arrays.asList("13_61", "225_3"),
             ShieldCategory.SITUATIONAL_HIGH,
             "Cancels non-BG drains — deploy when opponent drains at non-battleground",
-            null, null, null, 10, 2));
+            null, null, 10, 2));
 
         // === SITUATIONAL HIGH ===
         DARK_SHIELDS.put("A Useless Gesture (V)", new ShieldInfo(
             "A Useless Gesture (V)", Arrays.asList("223_7"),
             ShieldCategory.SITUATIONAL_HIGH,
             "Limits Watch Your Step lost pile plays",
-            null, null, Arrays.asList("watch your step"), 99, 0));
+            null, Arrays.asList("watch your step"), 99, 0));
 
         DARK_SHIELDS.put("Do They Have A Code Clearance?", new ShieldInfo(
             "Do They Have A Code Clearance?", Arrays.asList("13_66"),
             ShieldCategory.SITUATIONAL_HIGH,
             "Grabs retrieval interrupts, reduces all retrieval by 1",
             Arrays.asList("kessel run", "death star plans", "on the edge", "harvest", "jedi levitation"),
-            null, null, 99, 0));
+            null, 99, 0));
 
         DARK_SHIELDS.put("Firepower (V)", new ShieldInfo(
             "Firepower (V)", Arrays.asList("200_95"),
             ShieldCategory.SITUATIONAL_HIGH,
             "Damage when opponent moves away, retrieval when in both theaters",
             Arrays.asList("dodge", "path of least resistance", "run luke run", "hyper escape"),
-            null, null, 99, 0));
+            null, 99, 0));
 
         DARK_SHIELDS.put("We'll Let Fate-a Decide, Huh?", new ShieldInfo(
             "We'll Let Fate-a Decide, Huh?", Arrays.asList("13_96", "223_26"),
             ShieldCategory.SITUATIONAL_HIGH,
             "Cancels Sabacc, Beggar, Frozen Assets",
             Arrays.asList("sabacc", "beggar", "frozen assets", "draw their fire"),
-            null, null, 99, 0));
+            null, 99, 0));
 
         DARK_SHIELDS.put("You Cannot Hide Forever (V)", new ShieldInfo(
             "You Cannot Hide Forever (V)", "200_100", ShieldCategory.SITUATIONAL_HIGH,
@@ -183,7 +186,7 @@ public class ShieldStrategy {
             "There Is No Try", Arrays.asList("13_90"),
             ShieldCategory.SITUATIONAL_HIGH,
             "Anti-Sense/Alter (punishes both players — ONLY play if opponent uses Sense/Alter)",
-            Arrays.asList("sense", "alter"), null, null, 99, 0, true));
+            Arrays.asList("sense", "alter"), null, 99, 0, true));
 
         // V42: Only play Oppressive Enforcement if opponent actually plays Sense/Alter.
         // Without Sense/Alter in the meta, this shield does nothing. requireConditions=true.
@@ -191,7 +194,7 @@ public class ShieldStrategy {
             "Oppressive Enforcement", Arrays.asList("13_81"),
             ShieldCategory.SITUATIONAL_MEDIUM,
             "Anti-Sense/Alter (ONLY play if opponent uses Sense/Alter)",
-            Arrays.asList("sense", "alter"), Arrays.asList("sense", "alter"), null, 99, 0, true));
+            Arrays.asList("sense", "alter"), null, 99, 0, true));
 
         // === LOW PRIORITY ===
         // V42: Fixed blueprint ID — 223_7 is the combo card, 200_94 is standalone Death Star Sentry (V)
@@ -229,21 +232,21 @@ public class ShieldStrategy {
         LIGHT_SHIELDS.put("Battle Plan", new ShieldInfo(
             "Battle Plan", Collections.singletonList("13_8"), ShieldCategory.SITUATIONAL_HIGH,
             "Opponent pays 3 to drain — only if they lack both theaters",
-            null, null, null, 10, 2));
+            null, null, 10, 2));
 
         // V53: Simple Tricks And Nonsense — Light mirror of Come Here You Big Coward.
         // Deploy when opponent drains at non-battleground location.
         LIGHT_SHIELDS.put("Simple Tricks And Nonsense", new ShieldInfo(
             "Simple Tricks And Nonsense", Collections.singletonList("200_28"), ShieldCategory.SITUATIONAL_HIGH,
             "Cancels non-BG drains — deploy when opponent drains at non-battleground",
-            null, null, null, 10, 2));
+            null, null, 10, 2));
 
         LIGHT_SHIELDS.put("Goldenrod", new ShieldInfo(
             "Goldenrod", Arrays.asList("223_49"),
             ShieldCategory.AUTO_PLAY_EARLY,
             "Makes Blizzard 4 deploys cost 2, Executor cost 2",
             Arrays.asList("blizzard 4", "they must never again leave this city"),
-            null, null, 3, 0));
+            null, 3, 0));
 
         // === SITUATIONAL HIGH ===
         LIGHT_SHIELDS.put("Weapons Display (V)", new ShieldInfo(
@@ -251,7 +254,7 @@ public class ShieldStrategy {
             ShieldCategory.SITUATIONAL_HIGH,
             "Damage when opponent excludes from battle, retrieval in both theaters",
             Arrays.asList("imperial barrier", "stunning leader", "you are beaten", "force push"),
-            null, null, 99, 0));
+            null, 99, 0));
 
         LIGHT_SHIELDS.put("Your Insight Serves You Well (V)", new ShieldInfo(
             "Your Insight Serves You Well (V)", "200_32", ShieldCategory.SITUATIONAL_HIGH,
@@ -268,7 +271,7 @@ public class ShieldStrategy {
             "Do, Or Do Not", Arrays.asList("13_15"),
             ShieldCategory.SITUATIONAL_HIGH,
             "Anti-Sense/Alter (punishes both players — ONLY play if opponent uses Sense/Alter)",
-            Arrays.asList("sense", "alter"), null, null, 99, 0, true));
+            Arrays.asList("sense", "alter"), null, 99, 0, true));
 
         // V42: Only play Wise Advice if opponent actually plays Sense/Alter.
         // Without Sense/Alter in the meta, this shield does nothing. requireConditions=true.
@@ -276,7 +279,7 @@ public class ShieldStrategy {
             "Wise Advice", Arrays.asList("13_47"),
             ShieldCategory.SITUATIONAL_MEDIUM,
             "Anti-Sense/Alter (ONLY play if opponent uses Sense/Alter)",
-            Arrays.asList("sense", "alter"), null, null, 99, 0, true));
+            Arrays.asList("sense", "alter"), null, 99, 0, true));
 
         // === LOW PRIORITY ===
         LIGHT_SHIELDS.put("He Can Go About His Business", new ShieldInfo(
@@ -382,7 +385,7 @@ public class ShieldStrategy {
      * How many shields should we have played by this turn (pacing limit).
      */
     public int shieldsAllowedThisTurn(int turnNumber) {
-        for (int turn : new int[]{3, 2, 1}) {
+        for (int turn : new int[]{3, 2, 1, 0}) {
             if (turnNumber >= turn && SHIELD_PACING.containsKey(turn)) {
                 return SHIELD_PACING.get(turn);
             }
@@ -464,11 +467,8 @@ public class ShieldStrategy {
      * to preserve V124's current preferred-title-only semantics.
      */
     public com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy.FourthSlotPick fourthSlotPick(
-            com.gempukku.swccgo.game.state.GameState gs,
-            com.gempukku.swccgo.game.SwccgGame game,
-            String playerId,
+            ShieldFacts.FourthSlotFacts facts,
             java.util.function.Predicate<String> preferredOnMenu) {
-        ShieldFacts.FourthSlotFacts facts = ShieldFacts.fourthSlotFacts(gs, game, playerId);
         com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy.FourthSlotPick pick =
                 com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy.fourthSlotPick(
                         mySide, facts, preferredOnMenu);
@@ -498,18 +498,14 @@ public class ShieldStrategy {
     public void recordShieldPlayed(String blueprintId, String cardTitle) {
         shieldsPlayed.add(blueprintId);
         // V29: Track whether this was an auto-play shield
-        Map<String, ShieldInfo> shieldDb = (mySide == Side.DARK) ? DARK_SHIELDS : LIGHT_SHIELDS;
-        for (ShieldInfo info : shieldDb.values()) {
-            if (info.blueprintIds.contains(blueprintId) ||
-                info.name.toLowerCase(Locale.ROOT).contains(cardTitle.toLowerCase(Locale.ROOT))) {
-                if (info.category == ShieldCategory.AUTO_PLAY_IMMEDIATE ||
-                    info.category == ShieldCategory.AUTO_PLAY_EARLY) {
-                    autoPlayShieldsUsed++;
-                    LOG.info("V29 Auto-play shield #{}: {} ({})", autoPlayShieldsUsed, cardTitle, info.category);
-                } else {
-                    LOG.info("V29 Situational shield played: {} ({})", cardTitle, info.category);
-                }
-                break;
+        ShieldInfo info = findShieldInfo(blueprintId, cardTitle);
+        if (info != null) {
+            if (info.category == ShieldCategory.AUTO_PLAY_IMMEDIATE ||
+                info.category == ShieldCategory.AUTO_PLAY_EARLY) {
+                autoPlayShieldsUsed++;
+                LOG.info("V29 Auto-play shield #{}: {} ({})", autoPlayShieldsUsed, cardTitle, info.category);
+            } else {
+                LOG.info("V29 Situational shield played: {} ({})", cardTitle, info.category);
             }
         }
         int played = shieldsPlayed.size();
@@ -584,6 +580,30 @@ public class ShieldStrategy {
         return new ConditionResult(!reasons.isEmpty(), reasons);
     }
 
+    private ShieldInfo findShieldInfo(String blueprintId, String cardTitle) {
+        Map<String, ShieldInfo> shieldDb =
+                (mySide == Side.DARK) ? DARK_SHIELDS : LIGHT_SHIELDS;
+        String titleLower = cardTitle != null && !cardTitle.isBlank()
+                ? cardTitle.toLowerCase(Locale.ROOT) : null;
+        for (Map.Entry<String, ShieldInfo> entry : shieldDb.entrySet()) {
+            ShieldInfo info = entry.getValue();
+            if (blueprintId != null && info.blueprintIds.contains(blueprintId)) {
+                return info;
+            }
+            if (titleLower != null
+                    && entry.getKey().toLowerCase(Locale.ROOT).contains(titleLower)) {
+                return info;
+            }
+        }
+        return null;
+    }
+
+    /** Stored catalog minimum for candidate-timing policy; unknown shields default to turn zero. */
+    public int minTurnToPlay(String blueprintId, String cardTitle) {
+        ShieldInfo info = findShieldInfo(blueprintId, cardTitle);
+        return info != null ? info.minTurnToPlay : 0;
+    }
+
     /**
      * Score a defensive shield for deployment priority.
      *
@@ -606,20 +626,7 @@ public class ShieldStrategy {
         }
 
         // Find the shield info
-        Map<String, ShieldInfo> shieldDb = (mySide == Side.DARK) ? DARK_SHIELDS : LIGHT_SHIELDS;
-        ShieldInfo shieldInfo = null;
-
-        for (Map.Entry<String, ShieldInfo> entry : shieldDb.entrySet()) {
-            if (entry.getValue().blueprintIds.contains(blueprintId)) {
-                shieldInfo = entry.getValue();
-                break;
-            }
-            // Also check by title match
-            if (entry.getKey().toLowerCase(Locale.ROOT).contains(cardTitle.toLowerCase(Locale.ROOT))) {
-                shieldInfo = entry.getValue();
-                break;
-            }
-        }
+        ShieldInfo shieldInfo = findShieldInfo(blueprintId, cardTitle);
 
         if (shieldInfo == null) {
             LOG.debug("Unknown shield: {} ({})", cardTitle, blueprintId);
@@ -633,7 +640,7 @@ public class ShieldStrategy {
 
         // V43: Don't play Battle Order/Battle Plan if opponent already has the equivalent.
         // Only one of these shields takes effect — playing both wastes a shield slot.
-        String titleLower = cardTitle.toLowerCase(Locale.ROOT);
+        String titleLower = cardTitle != null ? cardTitle.toLowerCase(Locale.ROOT) : "";
         if (titleLower.contains("battle order") || titleLower.contains("battle plan")) {
             for (String oppShield : opponentShields) {
                 String oppLower = oppShield.toLowerCase(Locale.ROOT);
@@ -750,14 +757,9 @@ public class ShieldStrategy {
      * Get the description of a shield for logging.
      */
     public String getShieldDescription(String blueprintId, String cardTitle) {
-        Map<String, ShieldInfo> shieldDb = (mySide == Side.DARK) ? DARK_SHIELDS : LIGHT_SHIELDS;
-
-        for (Map.Entry<String, ShieldInfo> entry : shieldDb.entrySet()) {
-            ShieldInfo info = entry.getValue();
-            if (info.blueprintIds.contains(blueprintId) ||
-                entry.getKey().toLowerCase(Locale.ROOT).contains(cardTitle.toLowerCase(Locale.ROOT))) {
-                return info.category.getValue() + ": " + info.description;
-            }
+        ShieldInfo info = findShieldInfo(blueprintId, cardTitle);
+        if (info != null) {
+            return info.category.getValue() + ": " + info.description;
         }
         return "Unknown shield";
     }

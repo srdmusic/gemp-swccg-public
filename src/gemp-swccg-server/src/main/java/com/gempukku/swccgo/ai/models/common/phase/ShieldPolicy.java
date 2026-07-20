@@ -17,6 +17,11 @@ import java.util.function.Predicate;
 /** Shared SHIELDS decision tree for parent actions and shield candidates. */
 public final class ShieldPolicy {
 
+    public enum CandidateRoute {
+        DEDICATED,
+        RESERVE
+    }
+
     public enum FourthSlotTrigger {
         CLOSED,
         BATTLE_ORDER_PLAN,
@@ -42,6 +47,38 @@ public final class ShieldPolicy {
         String lower = sourceTitle.toLowerCase(Locale.ROOT);
         return lower.contains("knowledge and defense")
                 || lower.contains("anger, fear, aggression");
+    }
+
+    /** Returns the physical source-card id for one validated, aligned top-level Play-a-card action. */
+    public static String selectedTopLevelPlayCardSourceId(String decisionType,
+                                                          String[] actionIds,
+                                                          String[] actionTexts,
+                                                          String[] sourceCardIds,
+                                                          String selectedActionId) {
+        if (!("ACTION_CHOICE".equals(decisionType)
+                || "CARD_ACTION_CHOICE".equals(decisionType))
+                || actionIds == null || actionTexts == null || sourceCardIds == null
+                || actionIds.length == 0
+                || actionIds.length != actionTexts.length
+                || actionIds.length != sourceCardIds.length
+                || selectedActionId == null) {
+            return null;
+        }
+
+        int selectedMatches = 0;
+        String sourceCardId = null;
+        for (int i = 0; i < actionIds.length; i++) {
+            if (!selectedActionId.equals(actionIds[i])) {
+                continue;
+            }
+            selectedMatches++;
+            String actionText = actionTexts[i] != null ? actionTexts[i].trim() : null;
+            if ("Play a card".equals(actionText)) {
+                sourceCardId = sourceCardIds[i];
+            }
+        }
+        return selectedMatches == 1 && sourceCardId != null && !sourceCardId.isBlank()
+                ? sourceCardId : null;
     }
 
     public static boolean isShieldSelection(int shieldCount, int candidateCount) {
@@ -169,15 +206,29 @@ public final class ShieldPolicy {
                 "V117 4TH SHIELD BOOST: matches preferred '" + pick.preferred() + "' +2000");
     }
 
-    public static PolicyResult shieldSelectionAdjustments(String actionId,
+    public static PolicyResult shieldCandidateAdjustments(String actionId,
                                                           String cardTitle,
                                                           float shieldScore,
-                                                          int shieldsRemaining,
+                                                          int minTurnToPlay,
+                                                          int turnNumber,
+                                                          int shieldsOnTable,
                                                           FourthSlotPick pick,
-                                                          boolean occupiesBothTheaters) {
+                                                          boolean occupiesBothTheaters,
+                                                          CandidateRoute route) {
         Objects.requireNonNull(pick, "pick");
+        Objects.requireNonNull(route, "route");
         List<PolicyOperation> operations = new ArrayList<>();
-        if (shieldsRemaining <= 1) {
+
+        boolean battleOrderTurnOneException = turnNumber == 1
+                && isBattleOrderOrPlan(cardTitle) && occupiesBothTheaters;
+        if (turnNumber < minTurnToPlay && !battleOrderTurnOneException) {
+            add(operations, actionId, "V53-shield-min-turn",
+                    TraceOutputKind.VETO, -5000.0f,
+                    "V53 SHIELD MIN-TURN: '" + cardTitle + "' waits until turn "
+                            + minTurnToPlay + " (current turn " + turnNumber + ") -5000");
+        }
+
+        if (shieldsOnTable >= 3) {
             if (!pick.pursue()) {
                 add(operations, actionId, "V105-V107-selection",
                         TraceOutputKind.ORDERING, -5000.0f,
@@ -196,18 +247,8 @@ public final class ShieldPolicy {
         }
 
         addBattleOrderSelection(operations, actionId, cardTitle, shieldScore,
-                occupiesBothTheaters, false);
-        return result("SHIELD_SELECTION_POLICY", operations);
-    }
-
-    public static PolicyResult reserveBattleOrderAdjustments(String actionId,
-                                                             String cardTitle,
-                                                             float shieldScore,
-                                                             boolean occupiesBothTheaters) {
-        List<PolicyOperation> operations = new ArrayList<>();
-        addBattleOrderSelection(operations, actionId, cardTitle, shieldScore,
-                occupiesBothTheaters, true);
-        return result("SHIELD_RESERVE_POLICY", operations);
+                occupiesBothTheaters, route == CandidateRoute.RESERVE);
+        return result("SHIELD_CANDIDATE_POLICY", operations);
     }
 
     private static void addBattleOrderSelection(List<PolicyOperation> operations,

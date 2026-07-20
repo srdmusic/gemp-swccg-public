@@ -2176,8 +2176,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             new ShieldPolicy.FourthSlotPick(null, false,
                                     ShieldPolicy.FourthSlotTrigger.CLOSED);
                     if (shieldsOnTable >= 3 && shieldStrategy != null) {
-                        fourthSlot = shieldStrategy.fourthSlotPick(gameState, context.getGame(),
-                                context.getPlayerId(), null);
+                        ShieldFacts.FourthSlotFacts fourthSlotFacts =
+                                ShieldFacts.fourthSlotFacts(gameState, context.getGame(),
+                                        context.getPlayerId());
+                        fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts, null);
                     }
                     boolean activationCap = shieldStrategy != null
                             && shieldStrategy.atKnDActivationCap(turnNumber);

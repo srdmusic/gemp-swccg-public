@@ -8001,3 +8001,45 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     deployment, and live-game proof were not performed. Clean V290 is based exactly on V289
     08f05b05dafe5ceb9467ea9f0830cb359560d916. Nothing was pushed or deployed. AI source only; no engine
     or player-decision changes.
+
+  ==== V291 (2026-07-19): consolidate shield candidate policy and fix residuals ====
+    Shared AI-only ShieldStrategy remains the sole catalog/state/pacing/base-score owner and performs
+    no board reads; it now receives ShieldFacts.FourthSlotFacts, reaches the existing turn-0 allowance
+    0 -> 4, exposes null-safe minTurnToPlay metadata, and retires unused playIfWeHave executable plumbing;
+    a concise V291 commented marker remains with zero live usages. Shared
+    ShieldPolicy now owns one ordered dedicated/reserve candidate result: min-turn first, fourth-slot
+    second, V51 Battle Order/Plan last. V53-shield-min-turn is additive VETO-labeled -5000.0f; the
+    turn-1 both-theaters Battle Order/Plan exception skips it. Board shieldsOnTable >= 3 is the sole
+    fourth-slot trigger, with -5000 closed/unavailable, +2000 preferred, and -5000 all other titles.
+    Trigger B retains the card-function gate opponentDrainsNonBattleground in addition to own battleground,
+    opponent battleground-count, and opponent drain-bonus facts. Priority remains A then C then B.
+    V51 stays -9999 without both theaters, dedicated +200 above -50, and reserve +50 ready then +200
+    above -50. All operations remain ADD.
+
+    Both CardSelectionEvaluator mirrors now resolve reserve blueprint/category/canonical title before
+    SHIELDS. Old -> new: blueprintId-as-title cross-talk could score a non-shield as an unknown shield;
+    non-shields now remain base 50 with no SHIELDS reason. Actual reserve shields apply exact strategy
+    scalars including -50/-100, producing 0/-50 from base 50. Dedicated actual shields retain SET
+    semantics; null strategy is 100 before policy. Both routes apply one per-candidate SHIELDS ledger
+    once, enforce fourth-slot policy from authoritative board count, and discover preferred shields in
+    card-id, arbitrary-blueprint, and blueprint-only menus. Unknown actual shields remain +50. Exact
+    turn-1 both-theaters totals remain dedicated 280 and reserve 380. Existing V112 then V117 mixed-menu
+    order is unchanged, and the early -5000 remains effective even beside preferred +2000.
+
+    Activation provenance is corrected in both bot entry points. Own-shield observation still records
+    successful shields but no longer increments K&D/AFA activation count. Exactly one increment occurs
+    only after DecisionSafety validates an aligned top-level Play a card result and the resolved physical
+    source title is Knowledge And Defense or Anger, Fear, Aggression. The mirrored write-only
+    hasShieldsToPlay fields are retired from executable state; concise V291 commented markers remain
+    with zero live usages. All adapter routing, engine reads, catches, logs, candidate order,
+    response format, base categories, V29/V42/V43/V53 behavior, state order, and normalized parity remain;
+    evaluateGrab/V53 grab targeting is excluded.
+
+    Clean focused SHIELDS tests passed 42/0/0/0; full reactor passed 2001/0/0/26. Raw-float/order,
+    both-bot parity, no-double-application, source ownership, activation provenance, AI-only path,
+    retired-field live-usage/forbidden-symbol, diff, clean async package, and bundled class/marker gates passed. Server jar
+    SHA-256 is b1386a6eb693f4e29013e5480abf11b21588b3b2f0c46a4e9d15f1a14bc44a52 and web jar SHA-256 is
+    23546bb85e393bbc6d64385b77cdc75eed06210ff7d4bba560b8c50bedf6d314. Clean V291 is based exactly
+    on V290 49704129c5b59a1c5c4ea59ca035a97062510ec6. Nothing was pushed, deployed, or run in a game.
+    AI source only; no engine or player-decision routing changes. Exact revert boundary: revert the single
+    V291 commit to that parent, restoring only this packet's AI, SHIELDS tests, and assigned docs.
