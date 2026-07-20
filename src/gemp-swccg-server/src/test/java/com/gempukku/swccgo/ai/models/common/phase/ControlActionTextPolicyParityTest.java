@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.rando.evaluators.ActionType;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
@@ -84,6 +85,45 @@ public class ControlActionTextPolicyParityTest {
     public void revealRetrieveBoundariesAndV184StackingStayMirrored() {
         assertUtilityBoundary(6, 15, -50.0f, 270.0f);
         assertUtilityBoundary(7, 16, 50.0f, 330.0f);
+    }
+
+    @Test
+    public void stealAndDangerousCardKeepExactScoresAndMirrorParity() {
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                null, "tester", "ACTION_CHOICE", "Choose CONTROL utility",
+                "control-final-utility", Phase.CONTROL);
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                null, "tester", "ACTION_CHOICE", "Choose CONTROL utility",
+                "control-final-utility", Phase.CONTROL);
+        List<String> ids = List.of("steal", "stardust", "on-edge");
+        List<String> texts = List.of("Steal a card", "Stardust", "On The Edge");
+        randoContext.setActionIds(ids);
+        randoContext.setActionTexts(texts);
+        randoContext.setCardIds(List.of("", "", ""));
+        chosenContext.setActionIds(ids);
+        chosenContext.setActionTexts(texts);
+        chosenContext.setCardIds(List.of("", "", ""));
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
+                .evaluate(chosenContext);
+
+        assertEquals(3, rando.size());
+        assertEquals(3, chosen.size());
+        for (int i = 0; i < rando.size(); i++) {
+            assertEquals(rando.get(i).getActionId(), chosen.get(i).getActionId());
+            assertEquals(Float.floatToRawIntBits(rando.get(i).getScore()),
+                    Float.floatToRawIntBits(chosen.get(i).getScore()));
+            assertEquals(rando.get(i).getReasoning(), chosen.get(i).getReasoning());
+        }
+        assertEquals(ActionType.STEAL, rando.get(0).getActionType());
+        assertEquals(Float.floatToRawIntBits(30.0f),
+                Float.floatToRawIntBits(rando.get(0).getScore()));
+        assertEquals(Float.floatToRawIntBits(-50.0f),
+                Float.floatToRawIntBits(rando.get(1).getScore()));
+        assertEquals(Float.floatToRawIntBits(-50.0f),
+                Float.floatToRawIntBits(rando.get(2).getScore()));
     }
 
     private static void assertUtilityBoundary(int opponentHandSize,

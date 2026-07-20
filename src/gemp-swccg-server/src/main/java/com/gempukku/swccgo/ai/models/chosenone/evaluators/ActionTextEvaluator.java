@@ -2879,7 +2879,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Steal ==========
             else if (textLower.contains("steal")) {
                 action.setActionType(ActionType.STEAL);
-                action.addReasoning("Stealing is good", GOOD_DELTA);
+                controlLedger.register(ControlActionPolicy.steal(actionId));
+                PolicyOperationAdapter.apply(action, controlLedger);
             }
 
             // ========== Sabacc ==========
@@ -3224,7 +3225,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Dangerous Cards ==========
             else if (textLower.contains("stardust") || textLower.contains("on the edge")) {
-                action.addReasoning("Known dangerous card", VERY_BAD_DELTA);
+                controlLedger.register(ControlActionPolicy.dangerousCard(actionId));
+                PolicyOperationAdapter.apply(action, controlLedger);
             }
 
             // ========== Draw Card Into Hand ==========

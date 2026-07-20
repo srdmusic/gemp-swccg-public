@@ -8085,3 +8085,21 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     is based exactly on V292 54e53bf7fd251f4923a84c1b0e6012c734c5a37f. Nothing was pushed or deployed.
     Revert the single V293 commit; V292 and the unchanged apply-side owner remain independent. AI source
     only; no engine or player-decision changes.
+
+  ==== V294 (2026-07-19): consolidate final CONTROL utility scoring ====
+    Shared AI-only ControlActionPolicy now owns the final two live CONTROL action-text utility leaves:
+    CONTROL-steal is additive ORDERING +30 with reason "Stealing is good"; CONTROL-dangerous-card is
+    additive ORDERING -50 with reason "Known dangerous card". Both mirrored ActionTextEvaluator adapters
+    retain the exact steal, Stardust, and On The Edge classifiers and their first-match positions. Steal
+    still assigns ActionType.STEAL. Only the duplicate inline scalars moved into the existing shared owner.
+
+    Behavior is structural-only: exact scores remain 30/-50; action type, order, case handling, reason bytes,
+    adjacent CONTROL routes, GEMP reads, response format, and player-choice routing are unchanged. Focused
+    shared-policy, adapter-parity, and source-ownership tests passed 11/0/0/0; the clean full reactor passed
+    2041/0/0/26 across 283 suites; async packaging passed. Normalized mirrors, exact raw floats and trace
+    fields, one-owner call counts, source order, forbidden-symbol, AI-only scope, and diff gates passed.
+    Server jar SHA-256 is 0a88052ce2cb3e60474758d7aa9ab7c03e3643dc7e453d365d5bf1a32c17d1ac and web jar SHA-256 is
+    5e7470121f7fdf626d5b87497af7038ea2e6ae94cbbd072f0076823a5c11f78f. Clean V294 is based exactly
+    on V293 716d3efaa298649312d3fcd1aaeb77dcfadedff6. Nothing was pushed, deployed, or run in a game.
+    AI source only; no engine or player-decision changes. Revert the single V294 commit; V293 and every
+    earlier CONTROL owner remain independent.

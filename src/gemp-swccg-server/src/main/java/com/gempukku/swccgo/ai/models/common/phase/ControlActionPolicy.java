@@ -65,6 +65,18 @@ public final class ControlActionPolicy {
                 "Peek for card advantage");
     }
 
+    public static PolicyResult steal(String actionId) {
+        return one(actionId, "CONTROL-steal",
+                TraceOutputKind.ORDERING, 30.0f,
+                "Stealing is good");
+    }
+
+    public static PolicyResult dangerousCard(String actionId) {
+        return one(actionId, "CONTROL-dangerous-card",
+                TraceOutputKind.ORDERING, -50.0f,
+                "Known dangerous card");
+    }
+
     private static PolicyResult one(String actionId, String ruleId,
                                     TraceOutputKind outputKind, float delta,
                                     String reason) {

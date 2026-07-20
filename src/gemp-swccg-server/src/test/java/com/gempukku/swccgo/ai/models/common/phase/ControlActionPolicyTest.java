@@ -59,6 +59,12 @@ public class ControlActionPolicyTest {
         assertOperation(ControlActionPolicy.peekAtTop("A"),
                 "CONTROL-peek-at-top", TraceOutputKind.ORDERING,
                 30.0f, "Peek for card advantage");
+        assertOperation(ControlActionPolicy.steal("A"),
+                "CONTROL-steal", TraceOutputKind.ORDERING,
+                30.0f, "Stealing is good");
+        assertOperation(ControlActionPolicy.dangerousCard("A"),
+                "CONTROL-dangerous-card", TraceOutputKind.ORDERING,
+                -50.0f, "Known dangerous card");
     }
 
     private static void assertOperation(PolicyResult result, String ruleId,
