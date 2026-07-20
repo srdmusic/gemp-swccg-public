@@ -7836,3 +7836,17 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and web jar SHA-256 8968c5271c00b892ff312029fc0c80fc65f42ba076ec0641ba503b98496fcfa0
     contain V280. Runtime reload and live-game proof remain separate gates. Clean V280 is based on
     live V279 0c780fac5. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V281 (2026-07-19): consolidate DEPLOY character battleground preference ====
+    Shared AI-only DeployFormationSitingPolicy now also owns the mirrored V29.7 battleground
+    preference and V67ah non-battleground penalty ladder. Both CardSelectionEvaluator adapters
+    retain battleground checks, top-location scans, blueprint and side reads, opponent force-icon
+    extraction, catches, and contribution placement. A battleground remains +80; an available
+    non-battleground remains -100 with opponent force icons and -350 without them; no available
+    battleground retains the original zero-point contribution. Focused formation/source 19/0/0/0,
+    DEPLOY-named 273/0/0/0, full reactor 1898/0/0/26, exact mirror parity, policy/source boundaries,
+    AI-only scope, diff, and clean package gates passed. Server jar SHA-256
+    3d1efc3e901ff920c8db660b17488239deea70a9fb86064a934a749e7e89e4bf and web jar SHA-256
+    55bbe08c8fc2302d2febb23648069c00cd0b971ddffe01b63d848ee90cf98f05 contain V281.
+    Independent review, runtime reload, and live-game proof remain separate gates. Clean V281 is
+    based on live V280 e9f194fdf. AI source only; no GEMP engine or player-decision changes.

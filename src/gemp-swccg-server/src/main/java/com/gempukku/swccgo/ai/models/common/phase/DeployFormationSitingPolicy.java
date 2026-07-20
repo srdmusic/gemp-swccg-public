@@ -388,6 +388,34 @@ public final class DeployFormationSitingPolicy {
                 new PolicyResult(PRODUCER_ID, operations), outcome);
     }
 
+    public static PolicyResult scoreCharacterBattlegroundPreference(
+            CharacterBattlegroundPreferenceFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+
+        if (facts.battlegroundSite()) {
+            addDeploySiting(operations, facts.actionId(),
+                    "V29.7-battleground", 80.0f,
+                    "V29.7 BATTLEGROUND: Deploy to battleground site — force drains and battles!");
+        } else if (facts.anyBattlegroundExists()) {
+            if (facts.opponentForceIcons() > 0) {
+                addDeploySiting(operations, facts.actionId(),
+                        "V67ah-non-bg", -100.0f,
+                        "V67ah NON-BG (with drain): mostly useless except as drain staging — mild penalty");
+            } else {
+                addDeploySiting(operations, facts.actionId(),
+                        "V67ah-non-bg", -350.0f,
+                        "V67ah NON-BG (no drain): truly useless — no battles AND no drain potential");
+            }
+        } else {
+            addDeploySiting(operations, facts.actionId(),
+                    "V29.7-battleground", 0.0f,
+                    "V29.7 BATTLEGROUND: Non-BG but no battlegrounds on table — acceptable");
+        }
+
+        return new PolicyResult(PRODUCER_ID, operations);
+    }
+
     public enum LegacySoloOutcome {
         NONE,
         OBJECTIVE_WITH_ESCAPE,
@@ -584,6 +612,14 @@ public final class DeployFormationSitingPolicy {
         public BuddyAbilityFacts {
             Objects.requireNonNull(actionId, "actionId");
             destinationTitle = destinationTitle == null ? "" : destinationTitle;
+        }
+    }
+
+    public record CharacterBattlegroundPreferenceFacts(
+            String actionId, boolean battlegroundSite,
+            boolean anyBattlegroundExists, int opponentForceIcons) {
+        public CharacterBattlegroundPreferenceFacts {
+            Objects.requireNonNull(actionId, "actionId");
         }
     }
 

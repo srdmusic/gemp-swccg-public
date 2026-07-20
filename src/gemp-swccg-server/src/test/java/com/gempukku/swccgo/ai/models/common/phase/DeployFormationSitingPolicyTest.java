@@ -404,6 +404,35 @@ public class DeployFormationSitingPolicyTest {
                 .result().operations().isEmpty());
     }
 
+    @Test
+    public void characterBattlegroundPreferencePreservesBranchPriorityAndReasons() {
+        PolicyResult battleground = battlegroundPreference(true, true, 0);
+        assertEquals("DEPLOY_FORMATION_SITING_POLICY", battleground.producerId());
+        assertOperation(battleground.operations().get(0),
+                "V29.7-battleground", TraceDomainId.DEPLOY_SITING, 80.0f,
+                "V29.7 BATTLEGROUND: Deploy to battleground site — force drains and battles!");
+
+        PolicyResult noAlternative = battlegroundPreference(false, false, 7);
+        assertOperation(noAlternative.operations().get(0),
+                "V29.7-battleground", TraceDomainId.DEPLOY_SITING, 0.0f,
+                "V29.7 BATTLEGROUND: Non-BG but no battlegrounds on table — acceptable");
+    }
+
+    @Test
+    public void characterBattlegroundPreferenceUsesStrictPositiveDrainBoundary() {
+        PolicyResult withDrain = battlegroundPreference(false, true, 1);
+        assertOperation(withDrain.operations().get(0),
+                "V67ah-non-bg", TraceDomainId.DEPLOY_SITING, -100.0f,
+                "V67ah NON-BG (with drain): mostly useless except as drain staging — mild penalty");
+
+        PolicyResult withoutDrain = battlegroundPreference(false, true, 0);
+        assertOperation(withoutDrain.operations().get(0),
+                "V67ah-non-bg", TraceDomainId.DEPLOY_SITING, -350.0f,
+                "V67ah NON-BG (no drain): truly useless — no battles AND no drain potential");
+        assertDelta(battlegroundPreference(false, true, -1),
+                "V67ah-non-bg", -350.0f);
+    }
+
     private static PolicyResult evaluate(CharacterFormationFacts facts) {
         return DeployFormationSitingPolicy.evaluate(ACTION_ID, facts);
     }
@@ -505,6 +534,15 @@ public class DeployFormationSitingPolicyTest {
                         ACTION_ID, DESTINATION, battleground,
                         friendlyPresent, existingTitle, currentAbility,
                         deployingAbility, 7));
+    }
+
+    private static PolicyResult battlegroundPreference(
+            boolean battlegroundSite, boolean anyBattlegroundExists,
+            int opponentForceIcons) {
+        return DeployFormationSitingPolicy.scoreCharacterBattlegroundPreference(
+                new DeployFormationSitingPolicy.CharacterBattlegroundPreferenceFacts(
+                        ACTION_ID, battlegroundSite, anyBattlegroundExists,
+                        opponentForceIcons));
     }
 
     private static void assertBuddy(CharacterFormationFacts facts,

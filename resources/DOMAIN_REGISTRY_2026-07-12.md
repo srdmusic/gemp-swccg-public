@@ -163,6 +163,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V280 owner note:** `MoveVergePolicy` now also owns the mirrored V79 parsec and Scarif-destination option weights plus V103 parsec fallback arithmetic. Both `ActionTextEvaluator` adapters retain all prompt detection, permanent-card/owner/zone/orbit observations, integer/regex parsing, catches, logs, action insertion, and control flow. Rando-only V79b interception remains untouched. This is an AI-only structural extraction; no engine metadata or player-choice code moved.
 
+**V281 owner note:** `DeployFormationSitingPolicy` now also owns the mirrored V29.7 battleground preference and V67ah non-battleground penalty ladder. Both `CardSelectionEvaluator` adapters retain battleground, top-location, blueprint, side, and force-icon observations plus all catches and contribution placement. This is an AI-only structural extraction; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

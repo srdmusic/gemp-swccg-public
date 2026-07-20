@@ -3510,13 +3510,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 if (isCharacter && location != null && game != null && gameState != null) {
                                     try {
                                         boolean isBattlegroundSite = game.getModifiersQuerying().isBattleground(gameState, location, null);
-                                        if (isBattlegroundSite) {
-                                            // Strong bonus — battlegrounds are where the action happens
-                                            action.addReasoning("V29.7 BATTLEGROUND: Deploy to battleground site — force drains and battles!", 80.0f);
-                                        } else {
+                                        boolean anyBattlegroundExists = false;
+                                        int v67ahOppIcons = 0;
+                                        if (!isBattlegroundSite) {
                                             // V29.7: Check if ANY battleground sites are accessible before penalizing.
                                             // If no BG sites exist on the table, don't penalize — deploy somewhere!
-                                            boolean anyBattlegroundExists = false;
                                             try {
                                                 for (PhysicalCard bgLoc : gameState.getTopLocations()) {
                                                     if (bgLoc != null) {
@@ -3539,7 +3537,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 //     adds another -300 if a friendly is already there)
                                                 //   - Non-BG with zero opp icons (truly useless): -350
                                                 //     (no battles AND no drain — pure waste)
-                                                int v67ahOppIcons = 0;
                                                 try {
                                                     com.gempukku.swccgo.common.Side mySide67ah = context.getSide();
                                                     com.gempukku.swccgo.game.SwccgCardBlueprint locBp67ah =
@@ -3550,20 +3547,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                             : locBp67ah.getIconCount(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
                                                     }
                                                 } catch (Exception e) { /* ignore */ }
-                                                if (v67ahOppIcons > 0) {
-                                                    action.addReasoning(
-                                                        "V67ah NON-BG (with drain): mostly useless except as drain staging — mild penalty",
-                                                        -100.0f);
-                                                } else {
-                                                    action.addReasoning(
-                                                        "V67ah NON-BG (no drain): truly useless — no battles AND no drain potential",
-                                                        -350.0f);
-                                                }
-                                            } else {
-                                                // No BG on table — don't penalize, just note it
-                                                action.addReasoning("V29.7 BATTLEGROUND: Non-BG but no battlegrounds on table — acceptable", 0.0f);
                                             }
                                         }
+                                        DeployFormationSitingPolicy.CharacterBattlegroundPreferenceFacts
+                                            v281BattlegroundFacts = new DeployFormationSitingPolicy
+                                                .CharacterBattlegroundPreferenceFacts(
+                                                    action.getActionId(), isBattlegroundSite,
+                                                    anyBattlegroundExists, v67ahOppIcons);
+                                        applyDeploySitingPolicy(action,
+                                            DeployFormationSitingPolicy
+                                                .scoreCharacterBattlegroundPreference(
+                                                    v281BattlegroundFacts));
                                     } catch (Exception e) {
                                         logger.debug("V29.7 BATTLEGROUND: Error checking battleground status: {}", e.getMessage());
                                     }
