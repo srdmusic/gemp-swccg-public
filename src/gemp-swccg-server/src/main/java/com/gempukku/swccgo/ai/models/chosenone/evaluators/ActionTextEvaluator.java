@@ -724,9 +724,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             if (textLower.contains("target the main generator")) {
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v160OA = context.getObjectiveAnalyzer();
                 if (v160OA != null && v160OA.isAnalyzed() && v160OA.isShieldWillBeDown()) {
-                    action.addReasoning(
-                        "V160 PUSH TARGET THE MAIN GENERATOR: deck's flip engine — deploy/fire to enable AT-AT vs Main Power Generators",
-                        800.0f);
+                    applyDeployActionTextPolicy(action,
+                        DeployActionTextPolicy.scoreMainGenerator(
+                            new DeployActionTextFacts.MainGeneratorFacts(actionId)));
                     logger.warn("V160 SHIELD WILL BE DOWN: pushing '{}' — Target The Main Generator action (+800)", actionText);
                 }
             }
@@ -3716,16 +3716,23 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Deploy on table/location ==========
             else if (actionText.startsWith("Deploy on")) {
-                if (textLower.contains("projection") && textLower.contains("side")) {
-                    action.addReasoning("Never put projection on side of table", VERY_BAD_DELTA);
-                } else {
-                    action.addReasoning("Deploy on location/table", GOOD_DELTA);
-                }
+                DeployActionTextFacts.GenericDeployKind kind =
+                    textLower.contains("projection") && textLower.contains("side")
+                        ? DeployActionTextFacts.GenericDeployKind.PROJECTION_ON_SIDE
+                        : DeployActionTextFacts.GenericDeployKind.DEPLOY_ON;
+                applyDeployActionTextPolicy(action,
+                    DeployActionTextPolicy.scoreGenericDeploy(
+                        new DeployActionTextFacts.GenericDeployFacts(
+                            actionId, kind)));
             }
 
             // ========== Deploy unique ==========
             else if (actionText.startsWith("Deploy unique")) {
-                action.addReasoning("Special battleground deploy", GOOD_DELTA);
+                applyDeployActionTextPolicy(action,
+                    DeployActionTextPolicy.scoreGenericDeploy(
+                        new DeployActionTextFacts.GenericDeployFacts(
+                            actionId,
+                            DeployActionTextFacts.GenericDeployKind.DEPLOY_UNIQUE)));
             }
 
             // ========== USED: Peek at top ==========
@@ -4109,14 +4116,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
     private void evaluatePlayCard(EvaluatedAction action, DecisionContext context) {
         int forcePile = context.getForcePileSize();
-        if (forcePile == 0) {
-            action.addReasoning("No Force available - can't play cards!", VERY_BAD_DELTA);
-        } else if (forcePile <= 1) {
-            action.addReasoning("Very low Force (" + forcePile + ") - unlikely to afford cards", BAD_DELTA);
-        } else {
-            // V24.5: No randomness — slight positive for playing cards when force available
-            action.addReasoning("Generic play card — moderate priority", 5.0f);
-        }
+        applyDeployActionTextPolicy(action,
+            DeployActionTextPolicy.scoreGenericPlayCard(
+                new DeployActionTextFacts.PlayCardFacts(
+                    action.getActionId(), forcePile)));
     }
 
     private void evaluateSenseCancel(EvaluatedAction action, DecisionContext context,

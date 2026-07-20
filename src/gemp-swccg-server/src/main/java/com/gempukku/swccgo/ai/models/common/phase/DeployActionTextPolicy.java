@@ -218,6 +218,49 @@ public final class DeployActionTextPolicy {
                 "V22.5: Deploy pilot+ship combo - efficient!"));
     }
 
+    public static PolicyResult scoreMainGenerator(
+            DeployActionTextFacts.MainGeneratorFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        return result(operation(facts.actionId(), "V160-main-generator",
+                TraceOutputKind.ORDERING, 800.0f,
+                "V160 PUSH TARGET THE MAIN GENERATOR: deck's flip engine — deploy/fire to enable AT-AT vs Main Power Generators"));
+    }
+
+    public static PolicyResult scoreGenericDeploy(
+            DeployActionTextFacts.GenericDeployFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        return switch (facts.kind()) {
+            case PROJECTION_ON_SIDE -> result(operation(facts.actionId(),
+                    "generic-deploy-projection", TraceOutputKind.VETO,
+                    -50.0f, "Never put projection on side of table"));
+            case DEPLOY_ON -> result(operation(facts.actionId(),
+                    "generic-deploy-on", TraceOutputKind.BANDED,
+                    30.0f, "Deploy on location/table"));
+            case DEPLOY_UNIQUE -> result(operation(facts.actionId(),
+                    "generic-deploy-unique", TraceOutputKind.BANDED,
+                    30.0f, "Special battleground deploy"));
+        };
+    }
+
+    public static PolicyResult scoreGenericPlayCard(
+            DeployActionTextFacts.PlayCardFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        if (facts.forceAvailable() == 0) {
+            return result(operation(facts.actionId(),
+                    "generic-play-card-no-force", TraceOutputKind.VETO,
+                    -50.0f, "No Force available - can't play cards!"));
+        }
+        if (facts.forceAvailable() <= 1) {
+            return result(operation(facts.actionId(),
+                    "generic-play-card-low-force", TraceOutputKind.VETO,
+                    -30.0f, "Very low Force (" + facts.forceAvailable()
+                            + ") - unlikely to afford cards"));
+        }
+        return result(operation(facts.actionId(),
+                "generic-play-card", TraceOutputKind.BANDED,
+                5.0f, "Generic play card — moderate priority"));
+    }
+
     private static PolicyOperation operation(
             String actionId,
             String ruleId,

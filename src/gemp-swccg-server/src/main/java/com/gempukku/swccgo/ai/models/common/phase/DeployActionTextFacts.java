@@ -11,6 +11,12 @@ public final class DeployActionTextFacts {
         OTHER_SPECIFIC
     }
 
+    public enum GenericDeployKind {
+        DEPLOY_ON,
+        PROJECTION_ON_SIDE,
+        DEPLOY_UNIQUE
+    }
+
     private DeployActionTextFacts() {
     }
 
@@ -76,6 +82,26 @@ public final class DeployActionTextFacts {
 
     public record ActionFacts(String actionId) {
         public ActionFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record MainGeneratorFacts(String actionId) {
+        public MainGeneratorFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record GenericDeployFacts(String actionId,
+                                     GenericDeployKind kind) {
+        public GenericDeployFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            Objects.requireNonNull(kind, "kind");
+        }
+    }
+
+    public record PlayCardFacts(String actionId, int forceAvailable) {
+        public PlayCardFacts {
             Objects.requireNonNull(actionId, "actionId");
         }
     }

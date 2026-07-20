@@ -29,6 +29,18 @@ public abstract class AbstractDeployActionTextParityTest {
                 "V22.5: Deploy pilot+ship combo");
     }
 
+    @Test
+    public void genericDeployAndPlayRoutesRetainLegacyScoresAndReasons() {
+        assertScore("Deploy on location from hand", 30.0f,
+                "Deploy on location/table");
+        assertScore("Deploy on side of table Projection from hand", -50.0f,
+                "Never put projection on side of table");
+        assertScore("Deploy unique card from hand", 30.0f,
+                "Special battleground deploy");
+        assertScore("Play a card", -50.0f,
+                "No Force available - can't play cards!");
+    }
+
     private void assertScore(String actionText, float expected, String reason) {
         Score score = evaluate(actionText);
         assertEquals(Float.floatToRawIntBits(expected),

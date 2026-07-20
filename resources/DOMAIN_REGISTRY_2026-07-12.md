@@ -171,6 +171,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V284 owner note:** `ResponsePolicy` now also owns the mirrored fixed-score V184 when-deployed, V29.8 Sense redraw, V53b save-Jedi, react, cancel-own, and Houjix/Ghhhk action-text operations. Both `ActionTextEvaluator` adapters retain text recognition, all game observations, catches, action types, diagnostics, branch order, and contribution placement. The two Sense classifiers remain separate additive arms. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
+**V285 owner note:** `DeployActionTextPolicy` now also owns V160 Target The Main Generator priority, late generic Deploy-on/projection/unique scoring, and the generic Play-a-card Force baseline. The mirrored adapters retain all text and objective recognition, shield routing, action-type mutation, Force reads, logs, and the existing ordinary-Deploy skip gate. V184 remains solely `ResponsePolicy`-owned. This is an AI-only structural extraction; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |

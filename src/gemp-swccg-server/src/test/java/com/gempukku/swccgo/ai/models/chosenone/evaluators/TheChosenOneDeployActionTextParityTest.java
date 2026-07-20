@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.AbstractDeployActionTextParityTest;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -12,6 +13,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -62,6 +64,26 @@ public class TheChosenOneDeployActionTextParityTest
         verify(missingPiettOracle, times(1)).recordAmsdFailedOnTurn(1);
     }
 
+    @Test
+    public void mainGeneratorObjectiveGateStaysAdapterOwned() {
+        ObjectiveAnalyzer active = mock(ObjectiveAnalyzer.class);
+        when(active.isAnalyzed()).thenReturn(true);
+        when(active.isShieldWillBeDown()).thenReturn(true);
+        EvaluatedAction pushed = evaluateText(active,
+                "Target The Main Generator");
+        assertEquals(Float.floatToRawIntBits(800.0f),
+                Float.floatToRawIntBits(pushed.getScore()));
+        assertTrue(pushed.getReasoningString().contains(
+                "V160 PUSH TARGET THE MAIN GENERATOR"));
+
+        ObjectiveAnalyzer inactive = mock(ObjectiveAnalyzer.class);
+        when(inactive.isAnalyzed()).thenReturn(true);
+        EvaluatedAction ignored = evaluateText(inactive,
+                "Target The Main Generator");
+        assertFalse(ignored.getReasoningString().contains(
+                "V160 PUSH TARGET THE MAIN GENERATOR"));
+    }
+
     private static EvaluatedAction evaluateAmsd(
             GameState gameState, DeckOracle oracle) {
         DecisionContext context = new DecisionContext(
@@ -71,6 +93,18 @@ public class TheChosenOneDeployActionTextParityTest
         context.setActionIds(List.of("0"));
         context.setActionTexts(List.of(
                 "Reveal pilot or Star Destroyer from hand"));
+        context.setCardIds(List.of(""));
+        return new ActionTextEvaluator().evaluate(context).get(0);
+    }
+
+    private static EvaluatedAction evaluateText(
+            ObjectiveAnalyzer objectiveAnalyzer, String actionText) {
+        DecisionContext context = new DecisionContext(
+                null, "bot", "CARD_ACTION_CHOICE",
+                "Choose deploy action", "1", Phase.DEPLOY);
+        context.setObjectiveAnalyzer(objectiveAnalyzer);
+        context.setActionIds(List.of("0"));
+        context.setActionTexts(List.of(actionText));
         context.setCardIds(List.of(""));
         return new ActionTextEvaluator().evaluate(context).get(0);
     }

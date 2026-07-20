@@ -7891,3 +7891,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     contain V284. Independent review, runtime reload, and live-game proof remain separate gates.
     Clean V284 is based on live V283 92edabf5d. AI source only; no GEMP engine or player-decision
     changes.
+
+  ==== V285 (2026-07-19): consolidate remaining DEPLOY action-text scoring ====
+    Shared AI-only DeployActionTextPolicy/Facts now own V160 Target The Main Generator +800, late
+    generic Deploy-on/projection/unique +30/-50/+30, and generic Play-a-card Force 0/1/>1
+    -50/-30/+5. Both ActionTextEvaluator mirrors retain exact text and objective recognition,
+    logs, action-type mutation, shield classification/routing, Force reads, and the ordinary-
+    Deploy skip gate. V184 remains solely ResponsePolicy-owned, so V285 adds no duplicate score
+    or cross-phase owner. Focused action-text/source/mirror 27/0/0/0, DEPLOY-named 282/0/0/0,
+    full reactor 1927/0/0/26, exact mirror parity, policy and mirrored adapter-route fixtures,
+    final DEPLOY hidden-score gate, AI-only scope, forbidden-symbol scan, diff, clean package, and
+    compiled-jar gates passed. Independent review passed with no P0-P3 findings and confirmed
+    single V184 ownership. Server jar SHA-256
+    460c947a2be5c913619da0f87a95f1f457320b087046b761866fcbdeca461d58 and web jar SHA-256
+    c0caf73ab734954cd9f972f1150927191216eb2555717656357d12e209cac77a contain V285. Runtime
+    reload and live-game proof remain separate gates. Clean V285 is based on live V284 d97c1d90f.
+    Divergent 349ff34a7 was a file-scoped patch oracle only; none of its alternate ancestry or V184
+    ownership was merged. AI source only; no GEMP engine or player-decision changes.

@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -185,6 +186,62 @@ public class DeployActionTextPolicyTest {
                         new DeployActionTextFacts.ActionFacts("simultaneous")),
                 "V22.5-simultaneous-deploy", 120.0f,
                 "V22.5: Deploy pilot+ship combo - efficient!");
+    }
+
+    @Test
+    public void mainGeneratorRetainsFlipEnginePriority() {
+        PolicyResult result = DeployActionTextPolicy.scoreMainGenerator(
+                new DeployActionTextFacts.MainGeneratorFacts("generator"));
+        assertOperation(result, "V160-main-generator", 800.0f,
+                "V160 PUSH TARGET THE MAIN GENERATOR: deck's flip engine — deploy/fire to enable AT-AT vs Main Power Generators");
+        assertEquals(TraceOutputKind.ORDERING,
+                result.operations().get(0).outputKind());
+    }
+
+    @Test
+    public void genericDeployRetainsLateArmScores() {
+        PolicyResult projection = DeployActionTextPolicy.scoreGenericDeploy(
+                new DeployActionTextFacts.GenericDeployFacts(
+                        "deploy",
+                        DeployActionTextFacts.GenericDeployKind.PROJECTION_ON_SIDE));
+        assertOperation(projection, "generic-deploy-projection", -50.0f,
+                "Never put projection on side of table");
+        assertEquals(TraceOutputKind.VETO,
+                projection.operations().get(0).outputKind());
+
+        PolicyResult deployOn = DeployActionTextPolicy.scoreGenericDeploy(
+                new DeployActionTextFacts.GenericDeployFacts(
+                        "deploy",
+                        DeployActionTextFacts.GenericDeployKind.DEPLOY_ON));
+        assertOperation(deployOn, "generic-deploy-on", 30.0f,
+                "Deploy on location/table");
+        assertEquals(TraceOutputKind.BANDED,
+                deployOn.operations().get(0).outputKind());
+
+        PolicyResult unique = DeployActionTextPolicy.scoreGenericDeploy(
+                new DeployActionTextFacts.GenericDeployFacts(
+                        "deploy",
+                        DeployActionTextFacts.GenericDeployKind.DEPLOY_UNIQUE));
+        assertOperation(unique, "generic-deploy-unique", 30.0f,
+                "Special battleground deploy");
+        assertEquals(TraceOutputKind.BANDED,
+                unique.operations().get(0).outputKind());
+    }
+
+    @Test
+    public void genericPlayCardRetainsForceBoundary() {
+        assertOperation(DeployActionTextPolicy.scoreGenericPlayCard(
+                        new DeployActionTextFacts.PlayCardFacts("play", 0)),
+                "generic-play-card-no-force", -50.0f,
+                "No Force available - can't play cards!");
+        assertOperation(DeployActionTextPolicy.scoreGenericPlayCard(
+                        new DeployActionTextFacts.PlayCardFacts("play", 1)),
+                "generic-play-card-low-force", -30.0f,
+                "Very low Force (1) - unlikely to afford cards");
+        assertOperation(DeployActionTextPolicy.scoreGenericPlayCard(
+                        new DeployActionTextFacts.PlayCardFacts("play", 2)),
+                "generic-play-card", 5.0f,
+                "Generic play card — moderate priority");
     }
 
     private static DeployActionTextFacts.AmsdFacts amsd(
