@@ -25,6 +25,17 @@ public final class MoveVergePolicy {
         PRE_FLIP_HOLD
     }
 
+    public enum ParsecChoiceBranch {
+        NONE,
+        PARSEC_SEVEN,
+        ONE_HOP_FROM_SCARIF,
+        TOWARD_SCARIF,
+        WRONG_DIRECTION,
+        ORBIT_SCARIF,
+        OTHER_DESTINATION,
+        FALLBACK_PARSEC
+    }
+
     public record Contribution(boolean applies, String reason, float delta) {
         private static Contribution none() {
             return new Contribution(false, null, 0.0f);
@@ -42,6 +53,18 @@ public final class MoveVergePolicy {
             return new Evaluation(
                     Branch.NONE, Contribution.none(), null, "",
                     false, null);
+        }
+    }
+
+    public record ParsecChoiceEvaluation(
+            ParsecChoiceBranch branch,
+            Contribution contribution,
+            Integer parsec,
+            Integer distanceFromScarif) {
+        private static ParsecChoiceEvaluation none() {
+            return new ParsecChoiceEvaluation(
+                    ParsecChoiceBranch.NONE, Contribution.none(),
+                    null, null);
         }
     }
 
@@ -123,6 +146,78 @@ public final class MoveVergePolicy {
                 "V79 DEATH STAR → parsec " + destinationParsec
                         + " — WRONG DIRECTION (Scarif is at 7)",
                 -300.0f, destinationParsec, actionLower);
+    }
+
+    public static ParsecChoiceEvaluation evaluateParsecChoice(
+            Integer parsec) {
+        if (parsec == null) {
+            return ParsecChoiceEvaluation.none();
+        }
+
+        int distanceFromScarif = Math.abs(parsec - 7);
+        if (distanceFromScarif == 0) {
+            return parsecChoice(
+                    ParsecChoiceBranch.PARSEC_SEVEN,
+                    "V79 PARSEC 7 (Scarif!) — pick this",
+                    1500.0f, parsec, distanceFromScarif);
+        }
+        if (distanceFromScarif == 1) {
+            return parsecChoice(
+                    ParsecChoiceBranch.ONE_HOP_FROM_SCARIF,
+                    "V79 PARSEC " + parsec + " (1 hop from Scarif)",
+                    1200.0f, parsec, distanceFromScarif);
+        }
+        if (parsec > 4) {
+            return parsecChoice(
+                    ParsecChoiceBranch.TOWARD_SCARIF,
+                    "V79 PARSEC " + parsec + " (toward Scarif)",
+                    800.0f, parsec, distanceFromScarif);
+        }
+        return parsecChoice(
+                ParsecChoiceBranch.WRONG_DIRECTION,
+                "V79 PARSEC " + parsec + " — WRONG DIRECTION",
+                -800.0f, parsec, distanceFromScarif);
+    }
+
+    public static ParsecChoiceEvaluation evaluateDestinationChoice(
+            boolean scarifDestination) {
+        if (scarifDestination) {
+            return parsecChoice(
+                    ParsecChoiceBranch.ORBIT_SCARIF,
+                    "V79 ORBIT SCARIF — must take!",
+                    1500.0f, null, null);
+        }
+        return parsecChoice(
+                ParsecChoiceBranch.OTHER_DESTINATION,
+                "V79 destination not Scarif — avoid",
+                -200.0f, null, null);
+    }
+
+    public static ParsecChoiceEvaluation evaluateParsecFallback(
+            Integer parsec) {
+        if (parsec == null) {
+            return ParsecChoiceEvaluation.none();
+        }
+
+        int distanceFromScarif = Math.abs(parsec - 7);
+        float bonus = Math.max(0, 300 - (distanceFromScarif * 50));
+        return parsecChoice(
+                ParsecChoiceBranch.FALLBACK_PARSEC,
+                String.format(
+                        "V103 PARSEC FALLBACK: parsec %d (dist %d to Scarif) → +%.0f",
+                        parsec, distanceFromScarif, bonus),
+                bonus, parsec, distanceFromScarif);
+    }
+
+    private static ParsecChoiceEvaluation parsecChoice(
+            ParsecChoiceBranch branch,
+            String reason,
+            float delta,
+            Integer parsec,
+            Integer distanceFromScarif) {
+        return new ParsecChoiceEvaluation(
+                branch, new Contribution(true, reason, delta),
+                parsec, distanceFromScarif);
     }
 
     private static Evaluation steering(

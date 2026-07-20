@@ -18,6 +18,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
@@ -1008,28 +1009,36 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
                             }
                             if (parsec != null) {
-                                int dist = Math.abs(parsec - 7);
-                                if (dist == 0) {
-                                    action.addReasoning("V79 PARSEC 7 (Scarif!) — pick this", 1500.0f);
+                                MoveVergePolicy.ParsecChoiceEvaluation v79ParsecChoice =
+                                    MoveVergePolicy.evaluateParsecChoice(parsec);
+                                action.addReasoning(
+                                    v79ParsecChoice.contribution().reason(),
+                                    v79ParsecChoice.contribution().delta());
+                                if (v79ParsecChoice.branch()
+                                        == MoveVergePolicy.ParsecChoiceBranch.PARSEC_SEVEN) {
                                     logger.warn("V79 PARSEC CHOICE: parsec 7 (Scarif) → +1500");
-                                } else if (dist == 1) {
-                                    action.addReasoning("V79 PARSEC " + parsec + " (1 hop from Scarif)", 1200.0f);
+                                } else if (v79ParsecChoice.branch()
+                                        == MoveVergePolicy.ParsecChoiceBranch.ONE_HOP_FROM_SCARIF) {
                                     logger.warn("V79 PARSEC CHOICE: parsec {} → +1200", parsec);
-                                } else if (parsec > 4) {
-                                    action.addReasoning("V79 PARSEC " + parsec + " (toward Scarif)", 800.0f);
+                                } else if (v79ParsecChoice.branch()
+                                        == MoveVergePolicy.ParsecChoiceBranch.TOWARD_SCARIF) {
                                     logger.warn("V79 PARSEC CHOICE: parsec {} → +800", parsec);
                                 } else {
-                                    action.addReasoning("V79 PARSEC " + parsec + " — WRONG DIRECTION", -800.0f);
                                     logger.warn("V79 PARSEC CHOICE WRONG WAY: parsec {} → -800", parsec);
                                 }
                             }
                         } else if (v79IsDestChoice) {
                             // actionText is the destination — pick Scarif over deep space
-                            if (textLower.contains("scarif")) {
-                                action.addReasoning("V79 ORBIT SCARIF — must take!", 1500.0f);
+                            MoveVergePolicy.ParsecChoiceEvaluation v79DestinationChoice =
+                                MoveVergePolicy.evaluateDestinationChoice(
+                                    textLower.contains("scarif"));
+                            action.addReasoning(
+                                v79DestinationChoice.contribution().reason(),
+                                v79DestinationChoice.contribution().delta());
+                            if (v79DestinationChoice.branch()
+                                    == MoveVergePolicy.ParsecChoiceBranch.ORBIT_SCARIF) {
                                 logger.warn("V79 DESTINATION: orbit Scarif → +1500");
                             } else {
-                                action.addReasoning("V79 destination not Scarif — avoid", -200.0f);
                                 logger.warn("V79 DESTINATION: '{}' (not Scarif) → -200", actionText);
                             }
                         }
@@ -1059,13 +1068,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             }
                         }
                         if (fparsec != null) {
-                            int fdist = Math.abs(fparsec - 7);
-                            float fbonus = Math.max(0, 300 - (fdist * 50));
-                            action.addReasoning(String.format(
-                                "V103 PARSEC FALLBACK: parsec %d (dist %d to Scarif) → +%.0f",
-                                fparsec, fdist, fbonus), fbonus);
+                            MoveVergePolicy.ParsecChoiceEvaluation v103ParsecFallback =
+                                MoveVergePolicy.evaluateParsecFallback(fparsec);
+                            action.addReasoning(
+                                v103ParsecFallback.contribution().reason(),
+                                v103ParsecFallback.contribution().delta());
                             logger.warn("V103 PARSEC FALLBACK: parsec {} dist {} → +{}",
-                                fparsec, fdist, (int)fbonus);
+                                fparsec, v103ParsecFallback.distanceFromScarif(),
+                                (int)v103ParsecFallback.contribution().delta());
                             actions.add(action);
                             continue;
                         }

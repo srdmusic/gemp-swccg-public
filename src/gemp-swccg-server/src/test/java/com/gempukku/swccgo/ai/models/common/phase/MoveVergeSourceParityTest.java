@@ -105,7 +105,142 @@ public class MoveVergeSourceParityTest {
     }
 
     @Test
-    public void directParsecChoiceOwnersRemainUntouched() throws IOException {
+    public void actionTextRecognitionAndParsecWindowsStayMirrored()
+            throws IOException {
+        String rando = evaluatorSource(
+                "rando", "ActionTextEvaluator.java");
+        String chosenOne = evaluatorSource(
+                "chosenone", "ActionTextEvaluator.java");
+
+        assertEquals(normalize(canEvaluateSlice(rando)),
+                normalize(canEvaluateSlice(chosenOne)));
+        assertEquals(normalize(parsecWindow(rando)),
+                normalize(parsecWindow(chosenOne)));
+    }
+
+    @Test
+    public void actionTextAdaptersDelegateOnlyScoreArithmetic()
+            throws IOException {
+        String actionText = parsecWindow(evaluatorSource(
+                "rando", "ActionTextEvaluator.java"));
+        String policy = policySource();
+
+        assertEquals(1, countOccurrences(
+                actionText, "MoveVergePolicy.evaluateParsecChoice("));
+        assertEquals(1, countOccurrences(
+                actionText, "MoveVergePolicy.evaluateDestinationChoice("));
+        assertEquals(1, countOccurrences(
+                actionText, "MoveVergePolicy.evaluateParsecFallback("));
+        assertFalse(actionText.contains("Math.abs(parsec - 7)"));
+        assertFalse(actionText.contains("Math.abs(fparsec - 7)"));
+        assertFalse(actionText.contains("Math.max(0, 300"));
+
+        assertEquals(2, countOccurrences(
+                actionText, "Integer.parseInt(actionText.trim())"));
+        assertEquals(2, countOccurrences(
+                actionText, ".compile(\"(\\\\d+)\")"));
+        assertTrue(actionText.contains("gameState.getAllPermanentCards()"));
+        assertTrue(actionText.contains("pOwner.replace(\"~\", \"\")"));
+        assertTrue(actionText.contains("pZone == null || !pZone.isInPlay()"));
+        assertTrue(actionText.contains("pc.getSystemOrbited()"));
+        assertTrue(actionText.contains("catch (Exception e) { /* ignore */ }"));
+        assertEquals(2, countOccurrences(
+                actionText, "actions.add(action);"));
+        assertEquals(6, countOccurrences(actionText, "continue;"));
+        assertFalse(actionText.contains(".sort("));
+
+        assertTrue(policy.contains(
+                "V79 PARSEC 7 (Scarif!) — pick this"));
+        assertTrue(policy.contains(
+                "V79 ORBIT SCARIF — must take!"));
+        assertTrue(policy.contains(
+                "V79 destination not Scarif — avoid"));
+        assertTrue(policy.contains(
+                "V103 PARSEC FALLBACK: parsec %d (dist %d to Scarif) → +%.0f"));
+    }
+
+    @Test
+    public void actionTextPreservesRecognitionAndControlOrder()
+            throws IOException {
+        String source = evaluatorSource(
+                "rando", "ActionTextEvaluator.java");
+        String recognition = canEvaluateSlice(source);
+        String window = parsecWindow(source);
+
+        int multipleChoice = recognition.indexOf(
+                "\"MULTIPLE_CHOICE\".equals(decisionType)");
+        int parsecRecognition = recognition.indexOf(
+                "dtLower.contains(\"choose parsec to move to\")");
+        int destinationRecognition = recognition.indexOf(
+                "dtLower.contains(\"choose destination for\")",
+                parsecRecognition);
+        int recognitionReturn = recognition.indexOf(
+                "return true;", destinationRecognition);
+
+        int promptRead = window.indexOf("String v79DtLower =");
+        int promptClassification = window.indexOf(
+                "boolean v79IsParsecChoice", promptRead);
+        int tableScan = window.indexOf(
+                "gameState.getAllPermanentCards()", promptClassification);
+        int scanCatch = window.indexOf(
+                "catch (Exception e) { /* ignore */ }", tableScan);
+        int detectLog = window.indexOf(
+                "logger.warn(\"V103 PARSEC DETECT:", scanCatch);
+        int impliedVerge = window.indexOf(
+                "if (!v79Verge && v79HaveDeathStar)", detectLog);
+        int primaryGate = window.indexOf(
+                "if (v79Verge && !v79AtScarif)", impliedVerge);
+        int primaryParse = window.indexOf(
+                "Integer.parseInt(actionText.trim())", primaryGate);
+        int primaryCatch = window.indexOf(
+                "catch (Exception e)", primaryParse);
+        int primaryPolicy = window.indexOf(
+                "MoveVergePolicy.evaluateParsecChoice(", primaryCatch);
+        int destinationPolicy = window.indexOf(
+                "MoveVergePolicy.evaluateDestinationChoice(", primaryPolicy);
+        int primaryAdd = window.indexOf(
+                "actions.add(action);", destinationPolicy);
+        int primaryContinue = window.indexOf("continue;", primaryAdd);
+        int fallbackGate = window.indexOf(
+                "if (v79IsParsecChoice)", primaryContinue);
+        int fallbackParse = window.indexOf(
+                "Integer.parseInt(actionText.trim())", fallbackGate);
+        int fallbackCatch = window.indexOf(
+                "catch (Exception e)", fallbackParse);
+        int fallbackPolicy = window.indexOf(
+                "MoveVergePolicy.evaluateParsecFallback(", fallbackCatch);
+        int fallbackAdd = window.indexOf(
+                "actions.add(action);", fallbackPolicy);
+        int fallbackContinue = window.indexOf("continue;", fallbackAdd);
+
+        assertTrue(multipleChoice >= 0);
+        assertTrue(parsecRecognition > multipleChoice);
+        assertTrue(destinationRecognition > parsecRecognition);
+        assertTrue(recognitionReturn > destinationRecognition);
+        assertTrue(promptRead >= 0);
+        assertTrue(promptClassification > promptRead);
+        assertTrue(tableScan > promptClassification);
+        assertTrue(scanCatch > tableScan);
+        assertTrue(detectLog > scanCatch);
+        assertTrue(impliedVerge > detectLog);
+        assertTrue(primaryGate > impliedVerge);
+        assertTrue(primaryParse > primaryGate);
+        assertTrue(primaryCatch > primaryParse);
+        assertTrue(primaryPolicy > primaryCatch);
+        assertTrue(destinationPolicy > primaryPolicy);
+        assertTrue(primaryAdd > destinationPolicy);
+        assertTrue(primaryContinue > primaryAdd);
+        assertTrue(fallbackGate > primaryContinue);
+        assertTrue(fallbackParse > fallbackGate);
+        assertTrue(fallbackCatch > fallbackParse);
+        assertTrue(fallbackPolicy > fallbackCatch);
+        assertTrue(fallbackAdd > fallbackPolicy);
+        assertTrue(fallbackContinue > fallbackAdd);
+    }
+
+    @Test
+    public void randoOnlyParsecInterceptorRemainsUntouched()
+            throws IOException {
         String calAi = Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models/rando")
                 .resolve("RandoCalAi.java"));
@@ -122,7 +257,7 @@ public class MoveVergeSourceParityTest {
             assertTrue(actionText.contains(
                     "V79 PARSEC CHOICE: parsec 7 (Scarif) → +1500"));
             assertTrue(actionText.contains(
-                    "V103 PARSEC FALLBACK: parsec %d (dist %d to Scarif) → +%.0f"));
+                    "MoveVergePolicy.evaluateParsecFallback(fparsec)"));
         }
     }
 
@@ -153,6 +288,27 @@ public class MoveVergeSourceParityTest {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models/common/phase")
                 .resolve("MoveVergePolicy.java"));
+    }
+
+    private static String canEvaluateSlice(String source) {
+        int start = source.indexOf(
+                "public boolean canEvaluate(DecisionContext context)");
+        int end = source.indexOf(
+                "public List<EvaluatedAction> evaluate(DecisionContext context)",
+                start);
+        assertTrue(start >= 0);
+        assertTrue(end > start);
+        return source.substring(start, end);
+    }
+
+    private static String parsecWindow(String source) {
+        int start = source.indexOf(
+                "// V79 (Steve, 2026-05-15): VERGE");
+        int end = source.indexOf(
+                "// V67bi FORCE LIGHTNING SELF-TARGET HARD-BLOCK", start);
+        assertTrue(start >= 0);
+        assertTrue(end > start);
+        return source.substring(start, end);
     }
 
     private static Path mainJavaRoot() {

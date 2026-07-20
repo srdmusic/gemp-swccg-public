@@ -150,6 +150,90 @@ public class MoveVergePolicyTest {
                 result.hardVetoReason());
     }
 
+    @Test
+    public void nullParsecChoiceProducesNoContribution() {
+        MoveVergePolicy.ParsecChoiceEvaluation result =
+                MoveVergePolicy.evaluateParsecChoice(null);
+
+        assertEquals(MoveVergePolicy.ParsecChoiceBranch.NONE,
+                result.branch());
+        assertFalse(result.contribution().applies());
+        assertNull(result.parsec());
+        assertNull(result.distanceFromScarif());
+    }
+
+    @Test
+    public void parsecChoicePreservesExactV79Boundaries() {
+        assertParsecChoice(
+                MoveVergePolicy.evaluateParsecChoice(7),
+                MoveVergePolicy.ParsecChoiceBranch.PARSEC_SEVEN,
+                7, 0, 1500.0f,
+                "V79 PARSEC 7 (Scarif!) — pick this");
+
+        for (int parsec : new int[]{6, 8}) {
+            assertParsecChoice(
+                    MoveVergePolicy.evaluateParsecChoice(parsec),
+                    MoveVergePolicy.ParsecChoiceBranch.ONE_HOP_FROM_SCARIF,
+                    parsec, 1, 1200.0f,
+                    "V79 PARSEC " + parsec + " (1 hop from Scarif)");
+        }
+
+        for (int parsec : new int[]{5, 9}) {
+            assertParsecChoice(
+                    MoveVergePolicy.evaluateParsecChoice(parsec),
+                    MoveVergePolicy.ParsecChoiceBranch.TOWARD_SCARIF,
+                    parsec, Math.abs(parsec - 7), 800.0f,
+                    "V79 PARSEC " + parsec + " (toward Scarif)");
+        }
+
+        for (int parsec : new int[]{0, 4}) {
+            assertParsecChoice(
+                    MoveVergePolicy.evaluateParsecChoice(parsec),
+                    MoveVergePolicy.ParsecChoiceBranch.WRONG_DIRECTION,
+                    parsec, Math.abs(parsec - 7), -800.0f,
+                    "V79 PARSEC " + parsec + " — WRONG DIRECTION");
+        }
+    }
+
+    @Test
+    public void destinationChoicePreservesExactV79ScoresAndReasons() {
+        assertParsecChoice(
+                MoveVergePolicy.evaluateDestinationChoice(true),
+                MoveVergePolicy.ParsecChoiceBranch.ORBIT_SCARIF,
+                null, null, 1500.0f,
+                "V79 ORBIT SCARIF — must take!");
+        assertParsecChoice(
+                MoveVergePolicy.evaluateDestinationChoice(false),
+                MoveVergePolicy.ParsecChoiceBranch.OTHER_DESTINATION,
+                null, null, -200.0f,
+                "V79 destination not Scarif — avoid");
+    }
+
+    @Test
+    public void fallbackChoicePreservesV103FloorAndReasonFormatting() {
+        assertParsecChoice(
+                MoveVergePolicy.evaluateParsecFallback(7),
+                MoveVergePolicy.ParsecChoiceBranch.FALLBACK_PARSEC,
+                7, 0, 300.0f,
+                "V103 PARSEC FALLBACK: parsec 7 (dist 0 to Scarif) → +300");
+        assertParsecChoice(
+                MoveVergePolicy.evaluateParsecFallback(2),
+                MoveVergePolicy.ParsecChoiceBranch.FALLBACK_PARSEC,
+                2, 5, 50.0f,
+                "V103 PARSEC FALLBACK: parsec 2 (dist 5 to Scarif) → +50");
+        assertParsecChoice(
+                MoveVergePolicy.evaluateParsecFallback(1),
+                MoveVergePolicy.ParsecChoiceBranch.FALLBACK_PARSEC,
+                1, 6, 0.0f,
+                "V103 PARSEC FALLBACK: parsec 1 (dist 6 to Scarif) → +0");
+
+        MoveVergePolicy.ParsecChoiceEvaluation none =
+                MoveVergePolicy.evaluateParsecFallback(null);
+        assertEquals(MoveVergePolicy.ParsecChoiceBranch.NONE,
+                none.branch());
+        assertFalse(none.contribution().applies());
+    }
+
     private static void assertContribution(
             MoveVergePolicy.Evaluation result,
             MoveVergePolicy.Branch branch,
@@ -160,5 +244,20 @@ public class MoveVergePolicyTest {
         assertEquals(delta, result.contribution().delta(), 0.0f);
         assertEquals(reason, result.contribution().reason());
         assertFalse(result.hardVeto());
+    }
+
+    private static void assertParsecChoice(
+            MoveVergePolicy.ParsecChoiceEvaluation result,
+            MoveVergePolicy.ParsecChoiceBranch branch,
+            Integer parsec,
+            Integer distanceFromScarif,
+            float delta,
+            String reason) {
+        assertEquals(branch, result.branch());
+        assertTrue(result.contribution().applies());
+        assertEquals(parsec, result.parsec());
+        assertEquals(distanceFromScarif, result.distanceFromScarif());
+        assertEquals(delta, result.contribution().delta(), 0.0f);
+        assertEquals(reason, result.contribution().reason());
     }
 }

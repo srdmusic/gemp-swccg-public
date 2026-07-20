@@ -7822,3 +7822,17 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Independent review, runtime reload, and live-game proof remain separate gates.
     Clean V279 is based on live V278 4d1b825a2. Quarantined references f1278bb48 and fe06e20da were
     file-scoped patch oracles only; none of their ancestry will be merged.
+
+  ==== V280 (2026-07-19): consolidate MOVE parsec-choice scoring ====
+    Shared AI-only MoveVergePolicy now also owns V79 parsec and Scarif-destination option weights
+    plus the V103 parsec fallback distance weight. Both ActionTextEvaluator mirrors retain prompt
+    recognition, permanent-card/owner/zone scans, Verge/Death Star/orbit observations, integer and
+    regex parsing, catches, logs, actions.add, and continue control. Parsec 7 remains +1500, one hop
+    +1200, other values above 4 +800, wrong direction -800, Scarif +1500, other destinations -200,
+    and V103 fallback max(0, 300 - 50*distance). Rando-only V79b interception is untouched. Focused MOVE
+    policy/source 25/0/0/0, MOVE-named 437/0/0/0, full reactor 1893/0/0/26, exact mirror parity,
+    boundary/parsing/control gates, AI-only scope, forbidden-symbol scan, diff, and clean package
+    gates passed. Server jar SHA-256 8904208ed1af0cb6339a45a80533179f31d2a21d0aeb0290acd596c3e16482ed
+    and web jar SHA-256 8968c5271c00b892ff312029fc0c80fc65f42ba076ec0641ba503b98496fcfa0
+    contain V280. Runtime reload and live-game proof remain separate gates. Clean V280 is based on
+    live V279 0c780fac5. AI source only; no GEMP engine or player-decision changes.

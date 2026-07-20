@@ -161,6 +161,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V279 owner note:** `DeployObjectiveSitingPolicy` now also owns V22.7 objective-system contesting, V29.7 ISB agent priority, Hunt Down character priority, Cloud City ability spread, Lando destination/safety, and the final objective/TDIGWATT siting tail. Both mirrored adapters retain every GameState, blueprint, ObjectiveAnalyzer, battleground, hand, character, power, opponent, and objective read plus all catches, scans, breaks, diagnostics, and contribution positions. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
+**V280 owner note:** `MoveVergePolicy` now also owns the mirrored V79 parsec and Scarif-destination option weights plus V103 parsec fallback arithmetic. Both `ActionTextEvaluator` adapters retain all prompt detection, permanent-card/owner/zone/orbit observations, integer/regex parsing, catches, logs, action insertion, and control flow. Rando-only V79b interception remains untouched. This is an AI-only structural extraction; no engine metadata or player-choice code moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |
