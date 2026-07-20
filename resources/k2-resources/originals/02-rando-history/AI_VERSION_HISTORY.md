@@ -7863,3 +7863,17 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     d08703349113f147895c308166291f7652e9bc1df248298101b47e22caac5924 contain V282.
     Independent review, runtime reload, and live-game proof remain separate gates. Clean V282 is
     based on live V281 a09099cbd. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V283 (2026-07-19): consolidate BATTLE legacy fallback scoring ====
+    Shared AI-only BattleActionTextPolicy and BattleWeaponsPolicy now also own the mirrored
+    top-level BATTLE initiation, board-fallback, and fire-weapon arithmetic. RandoCalAi and
+    TheChosenOneAi retain action recognition, guarded location and board observations, title
+    matching, first-match control, fallback gating, battle-state reads, and contribution order.
+    Favorable, danger, middle, contested-winning, board fallback, and +50 fire-weapon values and
+    boundaries are unchanged. Focused BATTLE owner/fallback/source 29/0/0/0, BATTLE-named
+    114/0/0/0, full reactor 1911/0/0/26, exact fallback mirror parity, policy/source/order gates,
+    AI-only scope, diff, and clean package gates passed. Server jar SHA-256
+    e08f3ab3e31bdc6c3cc052a71e86cce7076169a88be404adb8fd3c03fbcb002f and web jar SHA-256
+    7ed42e9b1eedf9a39bdd7d8fb6b7badb8f9331ee1be19128da20fa643e013901 contain V283.
+    Independent review, runtime reload, and live-game proof remain separate gates. Clean V283 is
+    based on V282 candidate 1c8d0ffaa. AI source only; no GEMP engine or player-decision changes.

@@ -15,6 +15,12 @@ public final class BattleActionTextPolicy {
 
     private static final float ABILITY_POWER_EQUIVALENT = 2.5f;
     private static final int MINIMUM_BATTLE_RESERVE = 3;
+    private static final int LEGACY_BIG_POWER_ADVANTAGE = 8;
+    private static final int LEGACY_BIG_POWER_BONUS = 20;
+    private static final int LEGACY_BATTLEGROUND_BONUS = 10;
+    private static final int LEGACY_DANGER_PENALTY = 60;
+    private static final int LEGACY_CLOSE_BATTLE_BONUS = 20;
+    private static final int LEGACY_CONTESTED_WINNING_BONUS = 25;
     private static final String WEAPONS_PRODUCER = "BATTLE_ACTION_TEXT_POLICY";
 
     private BattleActionTextPolicy() {
@@ -27,6 +33,51 @@ public final class BattleActionTextPolicy {
             float theirAbility) {
         return ourPower - theirPower
                 + ((ourAbility - theirAbility) * ABILITY_POWER_EQUIVALENT);
+    }
+
+    /** Pure arithmetic for a resolved location in the top-level legacy fallback. */
+    public static int scoreLegacyFallbackLocation(
+            int initiateBattleScore,
+            int favorableThreshold,
+            int dangerThreshold,
+            float powerAdvantage,
+            boolean battleground,
+            boolean contestedWinning) {
+        int score = 0;
+
+        if (powerAdvantage >= favorableThreshold) {
+            score += initiateBattleScore;
+            if (powerAdvantage >= LEGACY_BIG_POWER_ADVANTAGE) {
+                score += LEGACY_BIG_POWER_BONUS;
+            }
+            if (battleground) {
+                score += LEGACY_BATTLEGROUND_BONUS;
+            }
+        } else if (powerAdvantage <= dangerThreshold) {
+            score -= LEGACY_DANGER_PENALTY;
+        } else {
+            score += LEGACY_CLOSE_BATTLE_BONUS;
+        }
+
+        if (contestedWinning) {
+            score += LEGACY_CONTESTED_WINNING_BONUS;
+        }
+        return score;
+    }
+
+    /** Pure arithmetic for the top-level legacy board fallback. */
+    public static int scoreLegacyFallbackBoard(
+            int initiateBattleScore,
+            int favorableThreshold,
+            int dangerThreshold,
+            float boardAdvantage) {
+        int score = 0;
+        if (boardAdvantage >= favorableThreshold) {
+            score += initiateBattleScore;
+        } else if (boardAdvantage <= dangerThreshold) {
+            score -= LEGACY_DANGER_PENALTY;
+        }
+        return score;
     }
 
     public static PolicyResult scoreInitiation(

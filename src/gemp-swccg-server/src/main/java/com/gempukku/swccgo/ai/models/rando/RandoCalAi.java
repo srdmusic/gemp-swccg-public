@@ -15,6 +15,8 @@ import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
+import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
@@ -1838,30 +1840,13 @@ public class RandoCalAi extends HeuristicAiBase {
 
                     // Use LocationAnalysis to determine if battle is favorable
                     float powerAdvantage = loc.getPowerAdvantage();
-
-                    if (powerAdvantage >= RandoConfig.BATTLE_FAVORABLE_THRESHOLD) {
-                        score += RandoConfig.SCORE_INITIATE_BATTLE;
-
-                        // Extra bonus for big power advantage (likely to win)
-                        if (powerAdvantage >= 8) {
-                            score += 20;
-                        }
-
-                        // Battlegrounds are more valuable to fight at
-                        if (loc.isBattleground) {
-                            score += 10;
-                        }
-                    } else if (powerAdvantage <= RandoConfig.BATTLE_DANGER_THRESHOLD) {
-                        score -= 60;  // Avoid unfavorable battles
-                    } else {
-                        // Close battle - moderate bonus
-                        score += 20;
-                    }
-
-                    // If contested and we're winning, definitely fight
-                    if (loc.isContested() && loc.status == ContestStatus.WINNING) {
-                        score += 25;
-                    }
+                    score += BattleActionTextPolicy.scoreLegacyFallbackLocation(
+                        RandoConfig.SCORE_INITIATE_BATTLE,
+                        RandoConfig.BATTLE_FAVORABLE_THRESHOLD,
+                        RandoConfig.BATTLE_DANGER_THRESHOLD,
+                        powerAdvantage,
+                        loc.isBattleground,
+                        loc.isContested() && loc.status == ContestStatus.WINNING);
                     break;
                 }
 
@@ -1869,19 +1854,18 @@ public class RandoCalAi extends HeuristicAiBase {
                 if (score == 0) {
                     float boardAdvantage = AiBoardAnalyzer.calculateBoardAdvantage(
                         currentGame, context.playerId, context.opponentId, mySide);
-
-                    if (boardAdvantage >= RandoConfig.BATTLE_FAVORABLE_THRESHOLD) {
-                        score += RandoConfig.SCORE_INITIATE_BATTLE;
-                    } else if (boardAdvantage <= RandoConfig.BATTLE_DANGER_THRESHOLD) {
-                        score -= 60;  // Avoid unfavorable battles
-                    }
+                    score += BattleActionTextPolicy.scoreLegacyFallbackBoard(
+                        RandoConfig.SCORE_INITIATE_BATTLE,
+                        RandoConfig.BATTLE_FAVORABLE_THRESHOLD,
+                        RandoConfig.BATTLE_DANGER_THRESHOLD,
+                        boardAdvantage);
                 }
             }
         }
 
         // Weapon firing
         if (actionText.contains("fire") && actionText.contains("weapon")) {
-            score += 50;
+            score += BattleWeaponsPolicy.scoreLegacyFallbackFireWeapon();
         }
 
         return score;

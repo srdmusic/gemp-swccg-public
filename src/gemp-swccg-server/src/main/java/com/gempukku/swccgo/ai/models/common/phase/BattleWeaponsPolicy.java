@@ -14,8 +14,14 @@ import java.util.Objects;
 public final class BattleWeaponsPolicy {
 
     private static final float FAVORABLE_CANCEL_THRESHOLD = 5.0f;
+    private static final int LEGACY_FIRE_WEAPON_SCORE = 50;
 
     private BattleWeaponsPolicy() {
+    }
+
+    /** Pure score for the top-level legacy fire-weapon fallback. */
+    public static int scoreLegacyFallbackFireWeapon() {
+        return LEGACY_FIRE_WEAPON_SCORE;
     }
 
     public static PolicyResult scoreActionText(BattleWeaponsFacts.ActionTextFacts facts) {

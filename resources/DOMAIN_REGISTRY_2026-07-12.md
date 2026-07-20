@@ -167,6 +167,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V282 owner note:** `ControlDrainAssessment` now also owns the mirrored top-level CONTROL fallback arithmetic: the adapter-supplied force-drain base plus `+20` per controlled battleground. Both bot coordinators retain phase/action recognition, guarded board observation, counting, exception behavior, and contribution placement. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
+**V283 owner note:** `BattleActionTextPolicy` and `BattleWeaponsPolicy` now also own the mirrored top-level BATTLE initiation, board-fallback, and fire-weapon score bands. Both bot coordinators retain phase/action recognition, guarded location and board observations, title matching, first-match control, fallback gating, and contribution placement. This is an AI-only structural extraction; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |
