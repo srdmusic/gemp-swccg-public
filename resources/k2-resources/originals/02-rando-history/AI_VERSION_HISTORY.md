@@ -7803,3 +7803,22 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     and web jar SHA-256 2262feb19b209bbd60b4da235d7368d2dce65033c822476226daea17c5e27d10
     contain V278. Runtime reload and live-game proof remain separate gates. Clean V278 is based on
     live V277 ebb679cb5. AI source only; no GEMP engine or player-decision changes.
+
+  ==== V279 (2026-07-19): consolidate objective-aware DEPLOY siting ====
+    Shared AI-only DeployObjectiveSitingPolicy now also owns V22.7 objective-system contesting,
+    V29.7 ISB agent deployment, Hunt Down character priority, Cloud City ability spread, Lando
+    destination and safety, and the final objective/TDIGWATT siting tail. Both CardSelectionEvaluator
+    mirrors retain every GameState, blueprint, ObjectiveAnalyzer, battleground, hand, character,
+    power, opponent, location, and objective read plus all catches, scans, breaks, diagnostics, and
+    contribution positions. Score magnitudes, branch precedence, fail-open behavior, and additive
+    ordering are unchanged. Production scope is AI source only; no GEMP engine, decision metadata,
+    card, action, mediator, serializer, client, database, deck-library, playbook-data, or player-choice
+    source changed. Focused combined tactical/objective/source/parity 65/0/0/0, DEPLOY-named
+    268/0/0/0, full reactor 1886/0/0/26, exact mirror parity, pre-scan TDIGWATT failure semantics,
+    cross-phase source characterization, policy/source/control gates, AI-only scope,
+    forbidden-symbol scan, diff, and clean package gates passed. Server jar SHA-256
+    8274b29172eefc5dab55047120e0bb1f389afc9b7beed2d708edc88d4fd1e019 and web jar SHA-256
+    00de4969c004049b40bc40d90e75783300a2baecddf86b920a12450d8cbd858f contain V279.
+    Independent review, runtime reload, and live-game proof remain separate gates.
+    Clean V279 is based on live V278 4d1b825a2. Quarantined references f1278bb48 and fe06e20da were
+    file-scoped patch oracles only; none of their ancestry will be merged.

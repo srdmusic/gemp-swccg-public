@@ -8,6 +8,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /** Shared pure owner of objective-specific DEPLOY-2 destination scores. */
@@ -122,6 +123,290 @@ public final class DeployObjectiveSitingPolicy {
                 add(facts.actionId(), "V24.1", TraceOutputKind.BANDED,
                         150.0f,
                         "V24.1 GHERANT: Deploys an Executor site — free location + force generation!"));
+    }
+
+    public static MustContestEvaluation evaluateMustContest(
+            MustContestFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        if (facts.opponentPower() > 0.0f
+                && facts.ourPower() < facts.opponentPower()) {
+            PolicyOperation operation = add(facts.actionId(),
+                    "V22.7-MUST-CONTEST", TraceOutputKind.BANDED, 300.0f,
+                    "V22.7 MUST CONTEST: Opponent controls objective-critical "
+                            + facts.locationTitle()
+                            + "! Deploy ship to contest!");
+            return new MustContestEvaluation(
+                    single("DEPLOY_MUST_CONTEST_POLICY", operation),
+                    MustContestOutcome.MUST_CONTEST);
+        }
+        return new MustContestEvaluation(
+                new PolicyResult("DEPLOY_MUST_CONTEST_POLICY", List.of()),
+                MustContestOutcome.NONE);
+    }
+
+    public static IsbAgentEvaluation evaluateIsbAgent(IsbAgentFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        if (!facts.isbAgent()) {
+            return new IsbAgentEvaluation(
+                    new PolicyResult("DEPLOY_ISB_AGENT_POLICY", List.of()),
+                    IsbAgentOutcome.NON_ISB, 0, 0);
+        }
+
+        boolean needMoreAgents = facts.preFlip()
+                && facts.agentsOnTable() < facts.agentsNeeded();
+        int agentsStillNeeded = facts.agentsNeeded() - facts.agentsOnTable();
+        float score;
+        if (needMoreAgents) {
+            score = 200.0f + (4 - agentsStillNeeded) * 30.0f;
+        } else if (facts.preFlip()) {
+            score = 100.0f;
+        } else {
+            score = 80.0f;
+        }
+        if (facts.battleground()) {
+            score += 60.0f;
+        }
+        if (facts.ability() >= 5.0f) {
+            score += 40.0f;
+        } else if (facts.ability() >= 3.0f) {
+            score += 15.0f;
+        }
+
+        String reason = "V29.7 ISB AGENT: Deploy ISB agent (ability "
+                + String.format("%.0f", facts.ability()) + ", "
+                + facts.agentsOnTable() + "/" + facts.agentsNeeded()
+                + " on table)"
+                + (facts.battleground() ? " to BATTLEGROUND" : "")
+                + (needMoreAgents
+                        ? " — NEED " + agentsStillNeeded + " MORE FOR FLIP!"
+                        : "");
+        PolicyOperation operation = add(facts.actionId(), "V29.7-ISB",
+                TraceOutputKind.BANDED, score, reason);
+        return new IsbAgentEvaluation(
+                single("DEPLOY_ISB_AGENT_POLICY", operation),
+                IsbAgentOutcome.ISB_AGENT, score, agentsStillNeeded);
+    }
+
+    public static HuntDownEvaluation evaluateHuntDownCharacter(
+            HuntDownFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        PolicyOperation operation = null;
+        HuntDownOutcome outcome = HuntDownOutcome.NONE;
+
+        if (facts.vader()) {
+            float score = facts.battleground() ? 400.0f : 300.0f;
+            operation = add(facts.actionId(), "V25-HUNT-DOWN-VADER",
+                    TraceOutputKind.BANDED, score,
+                    "V25 HUNT DOWN: DEPLOY VADER! Critical for flip!"
+                            + (facts.battleground()
+                                    ? " BATTLEGROUND = CAN FLIP!" : ""));
+            outcome = HuntDownOutcome.VADER;
+        } else if (!facts.vaderOnTable() && facts.preFlip()) {
+            if (facts.inquisitor()) {
+                operation = add(facts.actionId(), "V25-HUNT-DOWN-INQUISITOR",
+                        TraceOutputKind.BANDED, -80.0f,
+                        "V25 HUNT DOWN: Inquisitor OK but save Force for Vader first!");
+                outcome = HuntDownOutcome.INQUISITOR;
+            } else {
+                operation = add(facts.actionId(), "V25-HUNT-DOWN-SAVE",
+                        TraceOutputKind.BANDED, -200.0f,
+                        "V25 HUNT DOWN: SAVE FORCE FOR VADER! He must be deployed first!");
+                outcome = HuntDownOutcome.SAVE_FOR_VADER;
+            }
+        }
+
+        PolicyResult result = operation == null
+                ? new PolicyResult("DEPLOY_HUNT_DOWN_POLICY", List.of())
+                : single("DEPLOY_HUNT_DOWN_POLICY", operation);
+        return new HuntDownEvaluation(result, outcome);
+    }
+
+    public static CloudCitySpreadEvaluation evaluateCloudCitySpread(
+            CloudCitySpreadFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        PolicyOperation operation;
+        CloudCitySpreadOutcome outcome;
+
+        if (facts.landoAlone()) {
+            operation = add(facts.actionId(), "V24.13-LANDO-SUPPORT",
+                    TraceOutputKind.BANDED, 250.0f,
+                    "V24.13 LANDO SUPPORT: Lando is ALONE here — MUST reinforce!");
+            outcome = CloudCitySpreadOutcome.LANDO_SUPPORT;
+        } else if (facts.abilityHere() > 0.0f
+                && facts.abilityHere() < 6.0f) {
+            float score = 100.0f + (6.0f - facts.abilityHere()) * 15.0f;
+            operation = add(facts.actionId(), "V25-CC-REINFORCE",
+                    TraceOutputKind.BANDED, score,
+                    "V25 REINFORCE: Site has ability "
+                            + String.format("%.0f", facts.abilityHere())
+                            + " — need 6 to hold!");
+            outcome = CloudCitySpreadOutcome.REINFORCE;
+        } else if (facts.abilityHere() <= 0.0f) {
+            if (facts.insecureLocations() > 0) {
+                operation = add(facts.actionId(), "V25-CC-SPREAD-DEFER",
+                        TraceOutputKind.BANDED, 40.0f,
+                        "V25 SPREAD: New CC location but "
+                                + facts.insecureLocations()
+                                + " site(s) need more ability first");
+                outcome = CloudCitySpreadOutcome.SPREAD_DEFER;
+            } else {
+                operation = add(facts.actionId(), "V25-CC-SPREAD",
+                        TraceOutputKind.BANDED, 120.0f,
+                        "V25 SPREAD: All held sites have 6+ ability — spread for more occupation damage!");
+                outcome = CloudCitySpreadOutcome.SPREAD;
+            }
+        } else if (facts.insecureLocations() > 0
+                || facts.emptyLocations() > 0) {
+            operation = add(facts.actionId(), "V25-CC-SECURE-REDIRECT",
+                    TraceOutputKind.BANDED, -40.0f,
+                    "V25 SECURE: Site already has "
+                            + String.format("%.0f", facts.abilityHere())
+                            + " ability — other sites need help");
+            outcome = CloudCitySpreadOutcome.SECURE_REDIRECT;
+        } else {
+            operation = add(facts.actionId(), "V25-CC-SECURE",
+                    TraceOutputKind.BANDED, 20.0f,
+                    "V25 SECURE: All CC sites have 6+ ability — extra defense OK");
+            outcome = CloudCitySpreadOutcome.SECURE;
+        }
+        return new CloudCitySpreadEvaluation(
+                single("DEPLOY_CLOUD_CITY_SPREAD_POLICY", operation), outcome);
+    }
+
+    public static LandoSafetyEvaluation evaluateLandoSafety(
+            LandoSafetyFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        PolicyOperation operation = null;
+        LandoSafetyOutcome outcome = LandoSafetyOutcome.NONE;
+
+        if (facts.lando()) {
+            if (facts.opponentCharactersHere() > 0
+                    && facts.friendlyCharactersHere() == 0) {
+                operation = add(facts.actionId(), "V41-LANDO-INTO-ENEMY",
+                        TraceOutputKind.VETO, -9999.0f,
+                        "V41 LANDO INTO ENEMY: " + facts.opponentCharactersHere()
+                                + " opponents at " + facts.locationTitle()
+                                + " — Lando dies instantly! BLOCKED!");
+                outcome = LandoSafetyOutcome.BLOCKED_ENEMY;
+            } else if (facts.friendlyCharactersHere() > 0) {
+                outcome = LandoSafetyOutcome.SAFE_FRIENDLY;
+            } else if (facts.charactersInHand() < 1) {
+                operation = add(facts.actionId(), "V47-LANDO-ALONE",
+                        TraceOutputKind.VETO, -9999.0f,
+                        "V47 LANDO ALONE BLOCK: No protection at "
+                                + facts.locationTitle()
+                                + " and no characters in hand — Lando dies alone!");
+                outcome = LandoSafetyOutcome.BLOCKED_ALONE;
+            } else if (facts.opponentThreatensCloudCity()) {
+                operation = add(facts.actionId(), "V41-LANDO-CAUTION",
+                        TraceOutputKind.BANDED, -400.0f,
+                        "V41 LANDO CAUTION: Alone at " + facts.locationTitle()
+                                + " — opponent at CC sites! Deploy protector first!");
+                outcome = LandoSafetyOutcome.CAUTION;
+            } else {
+                outcome = LandoSafetyOutcome.SAFE_HAND;
+            }
+        }
+
+        PolicyResult result = operation == null
+                ? new PolicyResult("DEPLOY_LANDO_SAFETY_POLICY", List.of())
+                : single("DEPLOY_LANDO_SAFETY_POLICY", operation);
+        return new LandoSafetyEvaluation(result, outcome);
+    }
+
+    public static TdgwattOffObjectiveEvaluation evaluateTdgwattOffObjective(
+            TdgwattOffObjectiveFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>();
+        boolean tdgwattBlocked = false;
+        boolean opponentPlanet = false;
+
+        if (facts.character() && facts.needsBespinPresence()) {
+            operations.add(add(facts.actionId(), "V29-TDIGWATT-OFF-OBJECTIVE",
+                    TraceOutputKind.BANDED, -500.0f,
+                    "V29 TDIGWATT: Do NOT deploy characters to non-Cloud City locations!"));
+            tdgwattBlocked = true;
+            if (facts.opponentPlanet()) {
+                operations.add(add(facts.actionId(), "V29-OPPONENT-PLANET",
+                        TraceOutputKind.BANDED, -300.0f,
+                        "V29 OPPONENT PLANET: This is the opponent's territory!"));
+                opponentPlanet = true;
+            }
+        }
+
+        return new TdgwattOffObjectiveEvaluation(
+                new PolicyResult("DEPLOY_TDIGWATT_OFF_OBJECTIVE_POLICY",
+                        operations), tdgwattBlocked, opponentPlanet);
+    }
+
+    public static ObjectiveTailEvaluation evaluateObjectiveTail(
+            ObjectiveTailFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>();
+        boolean fortificationNeeded = false;
+        boolean postFlipProtected = false;
+
+        if (!facts.objectiveLocation() && !facts.flipBackLocation()) {
+            if (facts.objectiveLocationNeedsHelp()) {
+                float score = facts.flipped() ? -180.0f : -120.0f;
+                if (facts.worstDeficit() > 6.0f) {
+                    score -= 40.0f;
+                }
+                operations.add(add(facts.actionId(), "V22.2-OBJECTIVE-HELP",
+                        TraceOutputKind.BANDED, score,
+                        "V22.2: Objective locations need fortifying"
+                                + (facts.flipped()
+                                        ? " (POST-FLIP CRITICAL)" : "")
+                                + " - don't deploy elsewhere"));
+                fortificationNeeded = true;
+            } else {
+                operations.add(add(facts.actionId(), "V22-NON-OBJECTIVE",
+                        TraceOutputKind.BANDED,
+                        facts.flipped() ? -60.0f : -40.0f,
+                        "V22: Non-objective location - prefer own locations"));
+            }
+        } else if (facts.flipped() && facts.flipBackLocation()) {
+            operations.add(add(facts.actionId(), "V22.2-POST-FLIP-PROTECT",
+                    TraceOutputKind.BANDED, 60.0f,
+                    "V22.2 POST-FLIP: Deploying to protect flipped objective!"));
+            postFlipProtected = true;
+        }
+
+        return new ObjectiveTailEvaluation(
+                new PolicyResult("DEPLOY_OBJECTIVE_TAIL_POLICY", operations),
+                fortificationNeeded, postFlipProtected);
+    }
+
+    public static LandoDestinationEvaluation evaluateLandoDestination(
+            LandoDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        PolicyOperation operation = null;
+        LandoDestinationOutcome outcome = LandoDestinationOutcome.NONE;
+
+        if (facts.landoCharacter()) {
+            String locationTitle = facts.locationTitle().toLowerCase(Locale.ROOT);
+            if (locationTitle.contains("dining room")) {
+                operation = add(facts.actionId(), "V24.10-LANDO-DINING",
+                        TraceOutputKind.BANDED, 300.0f,
+                        "V24.10 LANDO TO DINING ROOM: Optimal deploy — establishes occupation, can move to other sites!");
+                outcome = LandoDestinationOutcome.DINING_ROOM;
+            } else if (locationTitle.contains("cloud city")
+                    || locationTitle.contains("upper walkway")
+                    || locationTitle.contains("carbonite")
+                    || locationTitle.contains("security tower")
+                    || locationTitle.contains("platform")
+                    || locationTitle.contains("lower corridor")) {
+                operation = add(facts.actionId(), "V24.10-LANDO-CC",
+                        TraceOutputKind.BANDED, -50.0f,
+                        "V24.10 LANDO: CC site but not Dining Room — Lando can move here later, deploy to Dining Room first!");
+                outcome = LandoDestinationOutcome.OTHER_CLOUD_CITY_SITE;
+            }
+        }
+
+        PolicyResult result = operation == null
+                ? new PolicyResult("DEPLOY_LANDO_DESTINATION_POLICY", List.of())
+                : single("DEPLOY_LANDO_DESTINATION_POLICY", operation);
+        return new LandoDestinationEvaluation(result, outcome);
     }
 
     public static LandoLobotEvaluation evaluateLandoLobot(
@@ -275,6 +560,187 @@ public final class DeployObjectiveSitingPolicy {
         public GherantFacts {
             Objects.requireNonNull(actionId, "actionId");
         }
+    }
+
+    public record MustContestFacts(String actionId, String locationTitle,
+                                   float ourPower, float opponentPower) {
+        public MustContestFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record MustContestEvaluation(
+            PolicyResult result, MustContestOutcome outcome) {
+        public MustContestEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum MustContestOutcome {
+        NONE,
+        MUST_CONTEST
+    }
+
+    public record IsbAgentFacts(String actionId, boolean isbAgent,
+                                float ability, int agentsOnTable,
+                                int agentsNeeded, boolean preFlip,
+                                boolean battleground) {
+        public IsbAgentFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record IsbAgentEvaluation(PolicyResult result,
+                                     IsbAgentOutcome outcome,
+                                     float score,
+                                     int agentsStillNeeded) {
+        public IsbAgentEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum IsbAgentOutcome {
+        NON_ISB,
+        ISB_AGENT
+    }
+
+    public record HuntDownFacts(String actionId, boolean vader,
+                                boolean inquisitor, boolean vaderOnTable,
+                                boolean preFlip, boolean battleground) {
+        public HuntDownFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record HuntDownEvaluation(PolicyResult result,
+                                     HuntDownOutcome outcome) {
+        public HuntDownEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum HuntDownOutcome {
+        NONE,
+        VADER,
+        INQUISITOR,
+        SAVE_FOR_VADER
+    }
+
+    public record CloudCitySpreadFacts(String actionId, float abilityHere,
+                                       boolean landoAlone,
+                                       int emptyLocations,
+                                       int insecureLocations,
+                                       int secureLocations) {
+        public CloudCitySpreadFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record CloudCitySpreadEvaluation(PolicyResult result,
+                                            CloudCitySpreadOutcome outcome) {
+        public CloudCitySpreadEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum CloudCitySpreadOutcome {
+        LANDO_SUPPORT,
+        REINFORCE,
+        SPREAD_DEFER,
+        SPREAD,
+        SECURE_REDIRECT,
+        SECURE
+    }
+
+    public record LandoSafetyFacts(String actionId, boolean lando,
+                                   String locationTitle,
+                                   int friendlyCharactersHere,
+                                   int opponentCharactersHere,
+                                   int charactersInHand,
+                                   boolean opponentThreatensCloudCity) {
+        public LandoSafetyFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record LandoSafetyEvaluation(PolicyResult result,
+                                        LandoSafetyOutcome outcome) {
+        public LandoSafetyEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum LandoSafetyOutcome {
+        NONE,
+        BLOCKED_ENEMY,
+        SAFE_FRIENDLY,
+        BLOCKED_ALONE,
+        CAUTION,
+        SAFE_HAND
+    }
+
+    public record TdgwattOffObjectiveFacts(String actionId, boolean character,
+                                            boolean needsBespinPresence,
+                                            boolean opponentPlanet) {
+        public TdgwattOffObjectiveFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record TdgwattOffObjectiveEvaluation(
+            PolicyResult result, boolean tdgwattBlocked,
+            boolean opponentPlanet) {
+        public TdgwattOffObjectiveEvaluation {
+            Objects.requireNonNull(result, "result");
+        }
+    }
+
+    public record ObjectiveTailFacts(String actionId, boolean flipped,
+                                     boolean objectiveLocation,
+                                     boolean flipBackLocation,
+                                     boolean objectiveLocationNeedsHelp,
+                                     float worstDeficit) {
+        public ObjectiveTailFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record ObjectiveTailEvaluation(
+            PolicyResult result, boolean fortificationNeeded,
+            boolean postFlipProtected) {
+        public ObjectiveTailEvaluation {
+            Objects.requireNonNull(result, "result");
+        }
+    }
+
+    public record LandoDestinationFacts(String actionId,
+                                        boolean landoCharacter,
+                                        String locationTitle) {
+        public LandoDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record LandoDestinationEvaluation(
+            PolicyResult result, LandoDestinationOutcome outcome) {
+        public LandoDestinationEvaluation {
+            Objects.requireNonNull(result, "result");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+    }
+
+    public enum LandoDestinationOutcome {
+        NONE,
+        DINING_ROOM,
+        OTHER_CLOUD_CITY_SITE
     }
 
     public record LandoLobotFacts(String actionId, boolean landoDeploy,

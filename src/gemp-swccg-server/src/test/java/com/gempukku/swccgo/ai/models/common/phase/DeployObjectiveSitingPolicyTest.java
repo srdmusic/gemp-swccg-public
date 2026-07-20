@@ -1,6 +1,9 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import java.util.List;
@@ -136,6 +139,110 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void objectiveCriticalSystemContestKeepsStrictPowerGate() {
+        DeployObjectiveSitingPolicy.MustContestEvaluation evaluation =
+                DeployObjectiveSitingPolicy.evaluateMustContest(
+                        new DeployObjectiveSitingPolicy.MustContestFacts(
+                                "a", "Bespin", 1.0f, 1.25f));
+
+        assertEquals(DeployObjectiveSitingPolicy.MustContestOutcome.MUST_CONTEST,
+                evaluation.outcome());
+        assertEquals("DEPLOY_MUST_CONTEST_POLICY",
+                evaluation.result().producerId());
+        PolicyOperation operation = evaluation.result().operations().get(0);
+        assertEquals("a", operation.actionId());
+        assertOperation(operation, "V22.7-MUST-CONTEST", 300.0f);
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(TraceDomainId.DEPLOY_SITING, operation.domainId());
+        assertEquals(TraceOutputKind.BANDED, operation.outputKind());
+        assertEquals(
+                "V22.7 MUST CONTEST: Opponent controls objective-critical Bespin! Deploy ship to contest!",
+                operation.reason());
+    }
+
+    @Test
+    public void objectiveCriticalContestStaysSilentWithoutEnemyControl() {
+        for (DeployObjectiveSitingPolicy.MustContestFacts facts :
+                new DeployObjectiveSitingPolicy.MustContestFacts[]{
+                        new DeployObjectiveSitingPolicy.MustContestFacts(
+                                "a", "Bespin", 0.0f, 0.0f),
+                        new DeployObjectiveSitingPolicy.MustContestFacts(
+                                "a", "Bespin", 0.0f, -1.0f),
+                        new DeployObjectiveSitingPolicy.MustContestFacts(
+                                "a", "Bespin", 3.0f, 3.0f),
+                        new DeployObjectiveSitingPolicy.MustContestFacts(
+                                "a", "Bespin", 4.0f, 3.0f)}) {
+            DeployObjectiveSitingPolicy.MustContestEvaluation evaluation =
+                    DeployObjectiveSitingPolicy.evaluateMustContest(facts);
+            assertEquals(DeployObjectiveSitingPolicy.MustContestOutcome.NONE,
+                    evaluation.outcome());
+            assertTrue(evaluation.result().operations().isEmpty());
+        }
+    }
+
+    @Test
+    public void landoDiningRoomKeepsLegacyPreferenceAndPrecedence() {
+        DeployObjectiveSitingPolicy.LandoDestinationEvaluation evaluation =
+                DeployObjectiveSitingPolicy.evaluateLandoDestination(
+                        new DeployObjectiveSitingPolicy.LandoDestinationFacts(
+                                "a", true, "Cloud City: Dining Room"));
+
+        assertEquals(DeployObjectiveSitingPolicy.LandoDestinationOutcome.DINING_ROOM,
+                evaluation.outcome());
+        assertEquals("DEPLOY_LANDO_DESTINATION_POLICY",
+                evaluation.result().producerId());
+        assertEquals(1, evaluation.result().operations().size());
+        PolicyOperation operation = evaluation.result().operations().get(0);
+        assertEquals("a", operation.actionId());
+        assertOperation(operation, "V24.10-LANDO-DINING", 300.0f);
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(TraceDomainId.DEPLOY_SITING, operation.domainId());
+        assertEquals(TraceOutputKind.BANDED, operation.outputKind());
+        assertEquals(
+                "V24.10 LANDO TO DINING ROOM: Optimal deploy — establishes occupation, can move to other sites!",
+                operation.reason());
+    }
+
+    @Test
+    public void landoOtherCloudCitySitesKeepMildPenalty() {
+        for (String title : new String[]{
+                "Cloud City: Downtown Plaza", "Upper Walkway",
+                "Carbonite Chamber", "Security Tower",
+                "East Platform", "Lower Corridor"}) {
+            DeployObjectiveSitingPolicy.LandoDestinationEvaluation evaluation =
+                    DeployObjectiveSitingPolicy.evaluateLandoDestination(
+                            new DeployObjectiveSitingPolicy.LandoDestinationFacts(
+                                    "a", true, title));
+            assertEquals(title,
+                    DeployObjectiveSitingPolicy.LandoDestinationOutcome.OTHER_CLOUD_CITY_SITE,
+                    evaluation.outcome());
+            PolicyOperation operation = evaluation.result().operations().get(0);
+            assertOperation(operation, "V24.10-LANDO-CC", -50.0f);
+            assertEquals(
+                    "V24.10 LANDO: CC site but not Dining Room — Lando can move here later, deploy to Dining Room first!",
+                    operation.reason());
+        }
+    }
+
+    @Test
+    public void landoDestinationNoMatchAndNonLandoStaySilent() {
+        for (DeployObjectiveSitingPolicy.LandoDestinationFacts facts :
+                new DeployObjectiveSitingPolicy.LandoDestinationFacts[]{
+                        new DeployObjectiveSitingPolicy.LandoDestinationFacts(
+                                "a", false, "Cloud City: Dining Room"),
+                        new DeployObjectiveSitingPolicy.LandoDestinationFacts(
+                                "a", true, "Tatooine: Cantina"),
+                        new DeployObjectiveSitingPolicy.LandoDestinationFacts(
+                                "a", true, null)}) {
+            DeployObjectiveSitingPolicy.LandoDestinationEvaluation evaluation =
+                    DeployObjectiveSitingPolicy.evaluateLandoDestination(facts);
+            assertEquals(DeployObjectiveSitingPolicy.LandoDestinationOutcome.NONE,
+                    evaluation.outcome());
+            assertTrue(evaluation.result().operations().isEmpty());
+        }
+    }
+
+    @Test
     public void landoWinsLegacyPrecedenceWhenBothNamesAppear() {
         DeployObjectiveSitingPolicy.LandoLobotEvaluation safe =
                 DeployObjectiveSitingPolicy.evaluateLandoLobot(
@@ -219,6 +326,162 @@ public class DeployObjectiveSitingPolicyTest {
                 "V40-POSTFLIP", 0.0f);
     }
 
+    @Test
+    public void isbAgentKeepsPreFlipUrgencyAndAbilityBands() {
+        DeployObjectiveSitingPolicy.IsbAgentEvaluation first =
+                DeployObjectiveSitingPolicy.evaluateIsbAgent(
+                        new DeployObjectiveSitingPolicy.IsbAgentFacts(
+                                "a", true, 2.0f, 0, 4, true, false));
+        DeployObjectiveSitingPolicy.IsbAgentEvaluation thirdAtBattleground =
+                DeployObjectiveSitingPolicy.evaluateIsbAgent(
+                        new DeployObjectiveSitingPolicy.IsbAgentFacts(
+                                "a", true, 5.0f, 3, 4, true, true));
+        DeployObjectiveSitingPolicy.IsbAgentEvaluation thresholdMet =
+                DeployObjectiveSitingPolicy.evaluateIsbAgent(
+                        new DeployObjectiveSitingPolicy.IsbAgentFacts(
+                                "a", true, 3.0f, 4, 4, true, false));
+
+        assertOperation(first.result().operations().get(0), "V29.7-ISB", 200.0f);
+        assertOperation(thirdAtBattleground.result().operations().get(0),
+                "V29.7-ISB", 390.0f);
+        assertOperation(thresholdMet.result().operations().get(0),
+                "V29.7-ISB", 115.0f);
+        assertEquals(1, thirdAtBattleground.agentsStillNeeded());
+        assertTrue(thirdAtBattleground.result().operations().get(0).reason()
+                .contains("NEED 1 MORE FOR FLIP!"));
+    }
+
+    @Test
+    public void isbPostFlipAndNonAgentStayExact() {
+        DeployObjectiveSitingPolicy.IsbAgentEvaluation postFlip =
+                DeployObjectiveSitingPolicy.evaluateIsbAgent(
+                        new DeployObjectiveSitingPolicy.IsbAgentFacts(
+                                "a", true, 3.0f, 2, 4, false, true));
+        DeployObjectiveSitingPolicy.IsbAgentEvaluation nonAgent =
+                DeployObjectiveSitingPolicy.evaluateIsbAgent(
+                        new DeployObjectiveSitingPolicy.IsbAgentFacts(
+                                "a", false, 7.0f, 0, 4, true, true));
+
+        assertOperation(postFlip.result().operations().get(0),
+                "V29.7-ISB", 155.0f);
+        assertEquals(DeployObjectiveSitingPolicy.IsbAgentOutcome.NON_ISB,
+                nonAgent.outcome());
+        assertTrue(nonAgent.result().operations().isEmpty());
+    }
+
+    @Test
+    public void huntDownKeepsVaderAndSaveForceLadder() {
+        assertHuntDown(DeployObjectiveSitingPolicy.HuntDownOutcome.VADER,
+                400.0f, true, false, false, true, true);
+        assertHuntDown(DeployObjectiveSitingPolicy.HuntDownOutcome.VADER,
+                300.0f, true, false, true, false, false);
+        assertHuntDown(DeployObjectiveSitingPolicy.HuntDownOutcome.INQUISITOR,
+                -80.0f, false, true, false, true, false);
+        assertHuntDown(DeployObjectiveSitingPolicy.HuntDownOutcome.SAVE_FOR_VADER,
+                -200.0f, false, false, false, true, false);
+
+        DeployObjectiveSitingPolicy.HuntDownEvaluation postFlipNonVader =
+                DeployObjectiveSitingPolicy.evaluateHuntDownCharacter(
+                        new DeployObjectiveSitingPolicy.HuntDownFacts(
+                                "a", false, false, false, false, true));
+        assertEquals(DeployObjectiveSitingPolicy.HuntDownOutcome.NONE,
+                postFlipNonVader.outcome());
+        assertTrue(postFlipNonVader.result().operations().isEmpty());
+    }
+
+    @Test
+    public void cloudCitySpreadKeepsAllSixExclusiveOutcomes() {
+        assertCloudCitySpread(DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.LANDO_SUPPORT,
+                250.0f, 0.0f, true, 2, 1, 0);
+        assertCloudCitySpread(DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.REINFORCE,
+                145.0f, 3.0f, false, 1, 1, 0);
+        assertCloudCitySpread(DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.SPREAD_DEFER,
+                40.0f, 0.0f, false, 1, 2, 0);
+        assertCloudCitySpread(DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.SPREAD,
+                120.0f, 0.0f, false, 1, 0, 2);
+        assertCloudCitySpread(DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.SECURE_REDIRECT,
+                -40.0f, 6.0f, false, 1, 0, 1);
+        assertCloudCitySpread(DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.SECURE,
+                20.0f, 7.0f, false, 0, 0, 2);
+    }
+
+    @Test
+    public void landoSafetyKeepsHardBlocksAndCaution() {
+        assertLandoSafety(DeployObjectiveSitingPolicy.LandoSafetyOutcome.BLOCKED_ENEMY,
+                -9999.0f, 0, 2, 3, true);
+        assertLandoSafety(DeployObjectiveSitingPolicy.LandoSafetyOutcome.BLOCKED_ALONE,
+                -9999.0f, 0, 0, 0, false);
+        assertLandoSafety(DeployObjectiveSitingPolicy.LandoSafetyOutcome.CAUTION,
+                -400.0f, 0, 0, 1, true);
+
+        DeployObjectiveSitingPolicy.LandoSafetyEvaluation safe =
+                DeployObjectiveSitingPolicy.evaluateLandoSafety(
+                        new DeployObjectiveSitingPolicy.LandoSafetyFacts(
+                                "a", true, "Dining Room", 1, 3, 0, true));
+        assertEquals(DeployObjectiveSitingPolicy.LandoSafetyOutcome.SAFE_FRIENDLY,
+                safe.outcome());
+        assertTrue(safe.result().operations().isEmpty());
+    }
+
+    @Test
+    public void tdgwattTailKeepsAdditiveOrder() {
+        DeployObjectiveSitingPolicy.TdgwattOffObjectiveEvaluation tdgwatt =
+                DeployObjectiveSitingPolicy.evaluateTdgwattOffObjective(
+                        new DeployObjectiveSitingPolicy.TdgwattOffObjectiveFacts(
+                                "a", true, true, true));
+
+        assertEquals(2, tdgwatt.result().operations().size());
+        assertOperation(tdgwatt.result().operations().get(0),
+                "V29-TDIGWATT-OFF-OBJECTIVE", -500.0f);
+        assertOperation(tdgwatt.result().operations().get(1),
+                "V29-OPPONENT-PLANET", -300.0f);
+        assertTrue(tdgwatt.tdgwattBlocked());
+        assertTrue(tdgwatt.opponentPlanet());
+    }
+
+    @Test
+    public void objectiveTailKeepsDeficitBoundary() {
+        DeployObjectiveSitingPolicy.ObjectiveTailEvaluation exactSix =
+                DeployObjectiveSitingPolicy.evaluateObjectiveTail(
+                        new DeployObjectiveSitingPolicy.ObjectiveTailFacts(
+                                "a", false, false, false, true, 6.0f));
+        DeployObjectiveSitingPolicy.ObjectiveTailEvaluation overSix =
+                DeployObjectiveSitingPolicy.evaluateObjectiveTail(
+                        new DeployObjectiveSitingPolicy.ObjectiveTailFacts(
+                                "a", false, false, false, true,
+                                Math.nextUp(6.0f)));
+
+        assertEquals(1, exactSix.result().operations().size());
+        assertOperation(exactSix.result().operations().get(0),
+                "V22.2-OBJECTIVE-HELP", -120.0f);
+        assertOperation(overSix.result().operations().get(0),
+                "V22.2-OBJECTIVE-HELP", -160.0f);
+    }
+
+    @Test
+    public void objectiveTailKeepsPostFlipBandsAndProtection() {
+        DeployObjectiveSitingPolicy.ObjectiveTailEvaluation mild =
+                DeployObjectiveSitingPolicy.evaluateObjectiveTail(
+                        new DeployObjectiveSitingPolicy.ObjectiveTailFacts(
+                                "a", true, false, false, false, 0.0f));
+        DeployObjectiveSitingPolicy.ObjectiveTailEvaluation help =
+                DeployObjectiveSitingPolicy.evaluateObjectiveTail(
+                        new DeployObjectiveSitingPolicy.ObjectiveTailFacts(
+                                "a", true, false, false, true, 7.0f));
+        DeployObjectiveSitingPolicy.ObjectiveTailEvaluation protect =
+                DeployObjectiveSitingPolicy.evaluateObjectiveTail(
+                        new DeployObjectiveSitingPolicy.ObjectiveTailFacts(
+                                "a", true, true, true, false, 0.0f));
+
+        assertOperation(mild.result().operations().get(0),
+                "V22-NON-OBJECTIVE", -60.0f);
+        assertOperation(help.result().operations().get(0),
+                "V22.2-OBJECTIVE-HELP", -220.0f);
+        assertOperation(protect.result().operations().get(0),
+                "V22.2-POST-FLIP-PROTECT", 60.0f);
+        assertTrue(protect.postFlipProtected());
+    }
+
     private static List<PolicyOperation> evaluate(DeployObjectiveSitingPolicy.Facts facts) {
         return DeployObjectiveSitingPolicy.evaluate(facts).operations();
     }
@@ -234,6 +497,49 @@ public class DeployObjectiveSitingPolicyTest {
                 evaluation.outcome());
         assertOperation(evaluation.result().operations().get(0),
                 "V36", expected);
+    }
+
+    private static void assertHuntDown(
+            DeployObjectiveSitingPolicy.HuntDownOutcome expectedOutcome,
+            float expectedScore, boolean vader, boolean inquisitor,
+            boolean vaderOnTable, boolean preFlip, boolean battleground) {
+        DeployObjectiveSitingPolicy.HuntDownEvaluation evaluation =
+                DeployObjectiveSitingPolicy.evaluateHuntDownCharacter(
+                        new DeployObjectiveSitingPolicy.HuntDownFacts(
+                                "a", vader, inquisitor, vaderOnTable,
+                                preFlip, battleground));
+        assertEquals(expectedOutcome, evaluation.outcome());
+        assertEquals(expectedScore,
+                evaluation.result().operations().get(0).delta(), 0.0f);
+    }
+
+    private static void assertCloudCitySpread(
+            DeployObjectiveSitingPolicy.CloudCitySpreadOutcome expectedOutcome,
+            float expectedScore, float abilityHere, boolean landoAlone,
+            int empty, int insecure, int secure) {
+        DeployObjectiveSitingPolicy.CloudCitySpreadEvaluation evaluation =
+                DeployObjectiveSitingPolicy.evaluateCloudCitySpread(
+                        new DeployObjectiveSitingPolicy.CloudCitySpreadFacts(
+                                "a", abilityHere, landoAlone,
+                                empty, insecure, secure));
+        assertEquals(expectedOutcome, evaluation.outcome());
+        assertEquals(expectedScore,
+                evaluation.result().operations().get(0).delta(), 0.0f);
+    }
+
+    private static void assertLandoSafety(
+            DeployObjectiveSitingPolicy.LandoSafetyOutcome expectedOutcome,
+            float expectedScore, int friendlyHere, int opponentHere,
+            int charactersInHand, boolean opponentThreatens) {
+        DeployObjectiveSitingPolicy.LandoSafetyEvaluation evaluation =
+                DeployObjectiveSitingPolicy.evaluateLandoSafety(
+                        new DeployObjectiveSitingPolicy.LandoSafetyFacts(
+                                "a", true, "Dining Room", friendlyHere,
+                                opponentHere, charactersInHand,
+                                opponentThreatens));
+        assertEquals(expectedOutcome, evaluation.outcome());
+        assertEquals(expectedScore,
+                evaluation.result().operations().get(0).delta(), 0.0f);
     }
 
     private static void assertOperation(PolicyOperation operation,

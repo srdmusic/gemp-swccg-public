@@ -76,11 +76,13 @@ public class DeployTacticalResidualSourceParityTest {
         String tail = adapter.substring(adapter.indexOf(
                 "} else if (!isObjLocation && !isFlipBackLocation) {",
                 adapter.indexOf("DeployTacticalPolicy.evaluateV2414BFallbackSpy(")));
-        assertTrue(tail.contains("action.addReasoning(\"V29 TDIGWATT:"));
+        assertTrue(tail.contains(
+                "DeployObjectiveSitingPolicy.evaluateTdgwattOffObjective("));
+        assertFalse(tail.contains("action.addReasoning(\"V29 TDIGWATT:"));
 
         String v243b = slice(adapter,
                 "// === V24.3B: DR. EVAZAN WEAPON COMBO — DEPLOY LOCATION PREFERENCE ===",
-                "// === V24.10: LANDO DEPLOY LOCATION — PREFER DINING ROOM ===");
+                "boolean v279LandoDeploy =");
         assertOrdered(v243b,
                 "boolean deployingEvazan = decisionText.contains(\"evazan\")",
                 "gameState.getCardsAtLocation(location)",
@@ -118,7 +120,7 @@ public class DeployTacticalResidualSourceParityTest {
                 + fallbackSlice(source)
                 + slice(source,
                 "// === V24.3B: DR. EVAZAN WEAPON COMBO — DEPLOY LOCATION PREFERENCE ===",
-                "// === V24.10: LANDO DEPLOY LOCATION — PREFER DINING ROOM ===");
+                "boolean v279LandoDeploy =");
     }
 
     private static String fallbackSlice(String source) {

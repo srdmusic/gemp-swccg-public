@@ -2769,11 +2769,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 String opp = game.getOpponent(playerId);
                                 float theirP = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     game.getGameState(), location, opp, false, false);
-                                if (theirP > 0 && ourP < theirP) {
-                                    // Opponent controls our objective-critical system!
-                                    // Strong override to ensure we deploy here despite contest penalty.
-                                    action.addReasoning("V22.7 MUST CONTEST: Opponent controls objective-critical " +
-                                        title + "! Deploy ship to contest!", 300.0f);
+                                DeployObjectiveSitingPolicy.MustContestEvaluation v279MustContest =
+                                    DeployObjectiveSitingPolicy.evaluateMustContest(
+                                        new DeployObjectiveSitingPolicy.MustContestFacts(
+                                            action.getActionId(), title, ourP, theirP));
+                                applyDeploySitingPolicy(action, v279MustContest.result());
+                                if (v279MustContest.outcome()
+                                        == DeployObjectiveSitingPolicy.MustContestOutcome.MUST_CONTEST) {
                                     logger.warn("V22.7 MUST CONTEST: {} — opponent has {} power, we have {} — MUST deploy ship here!",
                                         title, (int)theirP, (int)ourP);
                                 }
@@ -2895,8 +2897,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 int isbOnTable = locObjAnalyzer.countISBAgentsOnTable(gameState, playerId);
                                 int isbNeeded = locObjAnalyzer.getISBFlipAgentCount();
                                 boolean preFlip = !locObjAnalyzer.isFlipped();
-                                boolean needMoreAgents = preFlip && isbOnTable < isbNeeded;
-                                int agentsStillNeeded = isbNeeded - isbOnTable;
 
                                 // Check if this location is a battleground site (use real API)
                                 boolean isBattleground = false;
@@ -2914,35 +2914,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 }
 
-                                if (deployingIsISBAgent) {
-                                    // V29.7: ISB agent — STRONG bonus pre-flip, scales with urgency
-                                    float isbBonus;
-                                    if (needMoreAgents) {
-                                        // Pre-flip: massive priority. More urgency as we get closer to 4.
-                                        isbBonus = 200.0f + (4 - agentsStillNeeded) * 30.0f;
-                                    } else if (preFlip) {
-                                        // Have enough for flip (should auto-flip), but still value ISB agents
-                                        isbBonus = 100.0f;
-                                    } else {
-                                        // Post-flip: ISB agents at BG sites give drain bonuses
-                                        isbBonus = 80.0f;
-                                    }
-                                    if (isBattleground) {
-                                        isbBonus += 60.0f;  // BG = drain bonus after flip, good control spot
-                                    }
-                                    // V29.7: Ability bonus — higher ability ISB agents help control locations
-                                    if (deployAbility >= 5) {
-                                        isbBonus += 40.0f;  // High ability = strong presence
-                                    } else if (deployAbility >= 3) {
-                                        isbBonus += 15.0f;
-                                    }
-                                    action.addReasoning("V29.7 ISB AGENT: Deploy ISB agent (ability " +
-                                        String.format("%.0f", deployAbility) + ", " + isbOnTable +
-                                        "/" + isbNeeded + " on table)" +
-                                        (isBattleground ? " to BATTLEGROUND" : "") +
-                                        (needMoreAgents ? " — NEED " + agentsStillNeeded + " MORE FOR FLIP!" : ""), isbBonus);
+                                DeployObjectiveSitingPolicy.IsbAgentEvaluation v279Isb =
+                                    DeployObjectiveSitingPolicy.evaluateIsbAgent(
+                                        new DeployObjectiveSitingPolicy.IsbAgentFacts(
+                                            action.getActionId(), deployingIsISBAgent,
+                                            deployAbility, isbOnTable, isbNeeded,
+                                            preFlip, isBattleground));
+                                applyDeploySitingPolicy(action, v279Isb.result());
+                                if (v279Isb.outcome()
+                                        == DeployObjectiveSitingPolicy.IsbAgentOutcome.ISB_AGENT) {
                                     logger.warn("V29.7 ISB: {} is ISB agent (ability {}) at {} ({}/{} on table, bg={}, +{})",
-                                        decisionText, (int)deployAbility, title, isbOnTable, isbNeeded, isBattleground, (int)isbBonus);
+                                        decisionText, (int)deployAbility, title, isbOnTable, isbNeeded,
+                                        isBattleground, (int)v279Isb.score());
                                 } else {
                                     // V29.7: Non-ISB character — no penalty, just no ISB bonus.
                                     // ISB agents naturally win via their +200 bonus. Non-ISB still deployable
@@ -3009,36 +2992,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 }
 
-                                if (deployingIsVader) {
-                                    // VADER — massive bonus, especially to battleground sites
-                                    float vaderBonus = 300.0f;
-                                    // Check if this is a battleground site (needed for flip)
-                                    boolean isBattleground = false;
-                                    if (blueprint != null) {
-                                        isBattleground = blueprint.hasIcon(com.gempukku.swccgo.common.Icon.DARK_FORCE)
+                                boolean v279HuntDownBattleground = false;
+                                if (deployingIsVader && blueprint != null) {
+                                    v279HuntDownBattleground =
+                                        blueprint.hasIcon(com.gempukku.swccgo.common.Icon.DARK_FORCE)
                                             && blueprint.hasIcon(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
-                                    }
-                                    if (isBattleground) {
-                                        vaderBonus += 100.0f;  // Extra bonus for battleground — enables flip!
-                                    }
-                                    action.addReasoning("V25 HUNT DOWN: DEPLOY VADER! Critical for flip!" +
-                                        (isBattleground ? " BATTLEGROUND = CAN FLIP!" : ""), vaderBonus);
+                                }
+                                DeployObjectiveSitingPolicy.HuntDownEvaluation v279HuntDown =
+                                    DeployObjectiveSitingPolicy.evaluateHuntDownCharacter(
+                                        new DeployObjectiveSitingPolicy.HuntDownFacts(
+                                            action.getActionId(), deployingIsVader,
+                                            deployingIsInquisitor, vaderOnTable, preFlip,
+                                            v279HuntDownBattleground));
+                                applyDeploySitingPolicy(action, v279HuntDown.result());
+                                if (v279HuntDown.outcome()
+                                        == DeployObjectiveSitingPolicy.HuntDownOutcome.VADER) {
                                     logger.warn("V25 HUNT DOWN: Vader deploy to {} — MASSIVE PRIORITY (+{})",
-                                        title, (int)vaderBonus);
-                                } else if (!vaderOnTable && preFlip) {
-                                    // Non-Vader character when Vader isn't on table yet
-                                    // Inquisitors get a lighter penalty since they help with battle destiny
-                                    if (deployingIsInquisitor) {
-                                        float inqPenalty = -80.0f;
-                                        action.addReasoning("V25 HUNT DOWN: Inquisitor OK but save Force for Vader first!", inqPenalty);
+                                        title, v279HuntDownBattleground ? 400 : 300);
+                                } else if (v279HuntDown.outcome()
+                                        == DeployObjectiveSitingPolicy.HuntDownOutcome.INQUISITOR) {
                                         logger.warn("V25 HUNT DOWN: {} is Inquisitor — mild penalty while Vader not on table",
                                             decisionText);
-                                    } else {
-                                        float nonVaderPenalty = -200.0f;
-                                        action.addReasoning("V25 HUNT DOWN: SAVE FORCE FOR VADER! He must be deployed first!", nonVaderPenalty);
+                                } else if (v279HuntDown.outcome()
+                                        == DeployObjectiveSitingPolicy.HuntDownOutcome.SAVE_FOR_VADER) {
                                         logger.warn("V25 HUNT DOWN: {} is NOT Vader — heavy penalty (-200) to save Force for Vader",
                                             decisionText);
-                                    }
                                 }
                             } catch (Exception e) {
                                 logger.debug("V25 HUNT DOWN: Error in Hunt Down scoring: {}", e.getMessage());
@@ -3104,42 +3082,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 }
 
-                                // Apply ability-based spread scoring
-                                if (landoAloneHere) {
-                                    // V24.13: LANDO IS ALONE — critical priority to reinforce!
-                                    action.addReasoning("V24.13 LANDO SUPPORT: Lando is ALONE here — MUST reinforce!", 250.0f);
+                                DeployObjectiveSitingPolicy.CloudCitySpreadEvaluation v279CcSpread =
+                                    DeployObjectiveSitingPolicy.evaluateCloudCitySpread(
+                                        new DeployObjectiveSitingPolicy.CloudCitySpreadFacts(
+                                            action.getActionId(), ourAbilityHere, landoAloneHere,
+                                            locsEmpty, locsInsecure, locsSecure));
+                                applyDeploySitingPolicy(action, v279CcSpread.result());
+                                if (v279CcSpread.outcome()
+                                        == DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.LANDO_SUPPORT) {
                                     logger.warn("V24.13 LANDO ALONE: {} — Lando needs backup! (+250)", title);
-                                } else if (ourAbilityHere > 0 && ourAbilityHere < ABILITY_SECURE_THRESHOLD) {
-                                    // REINFORCE: This location has presence but isn't secure yet
+                                } else if (v279CcSpread.outcome()
+                                        == DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.REINFORCE) {
                                     float deficit = ABILITY_SECURE_THRESHOLD - ourAbilityHere;
                                     float reinforceBonus = 100.0f + (deficit * 15.0f);
-                                    action.addReasoning("V25 REINFORCE: Site has ability " + String.format("%.0f", ourAbilityHere)
-                                        + " — need " + String.format("%.0f", ABILITY_SECURE_THRESHOLD) + " to hold!", reinforceBonus);
                                     logger.warn("V25 ABILITY: {} has ability {} (need {}) — REINFORCE (+{})",
                                         title, String.format("%.0f", ourAbilityHere), String.format("%.0f", ABILITY_SECURE_THRESHOLD), (int)reinforceBonus);
-                                } else if (ourAbilityHere <= 0) {
-                                    // EMPTY: New unoccupied CC location — only spread if other locations are secure
-                                    if (locsInsecure > 0) {
-                                        // Other locations need ability reinforcement first
-                                        action.addReasoning("V25 SPREAD: New CC location but " + locsInsecure + " site(s) need more ability first", 40.0f);
+                                } else if (v279CcSpread.outcome()
+                                        == DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.SPREAD_DEFER) {
                                         logger.info("V25 ABILITY: {} unoccupied but {} sites insecure — moderate priority", title, locsInsecure);
-                                    } else {
-                                        // All occupied locations are secure — spread to new!
-                                        action.addReasoning("V25 SPREAD: All held sites have 6+ ability — spread for more occupation damage!", 120.0f);
+                                } else if (v279CcSpread.outcome()
+                                        == DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.SPREAD) {
                                         logger.warn("V25 ABILITY: {} unoccupied, all {} sites secure — SPREAD (+120)", title, locsSecure);
-                                    }
-                                } else {
-                                    // SECURE: This location already has 6+ ability
-                                    if (locsInsecure > 0 || locsEmpty > 0) {
-                                        // Other locations need attention — mild penalty for over-stacking
-                                        action.addReasoning("V25 SECURE: Site already has " + String.format("%.0f", ourAbilityHere)
-                                            + " ability — other sites need help", -40.0f);
+                                } else if (v279CcSpread.outcome()
+                                        == DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.SECURE_REDIRECT) {
                                         logger.info("V25 ABILITY: {} has ability {} (secure), {} sites need attention", title,
                                             String.format("%.0f", ourAbilityHere), (locsInsecure + locsEmpty));
-                                    } else {
-                                        // ALL locations are secure — extra stacking OK
-                                        action.addReasoning("V25 SECURE: All CC sites have 6+ ability — extra defense OK", 20.0f);
-                                    }
                                 }
                             } catch (Exception e) {
                                 logger.debug("V25: Could not evaluate CC ability spread: {}", e.getMessage());
@@ -3660,23 +3627,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 }
 
-                                // === V24.10: LANDO DEPLOY LOCATION — PREFER DINING ROOM ===
-                                // Dining Room is Lando's optimal deploy site:
-                                // - I'm Sorry pulls Dining Room which chain-pulls Lando
-                                // - Lando at Dining Room establishes occupation for TDIGWATT engine
-                                // - Lando can then MOVE to other CC sites at start of control phase
-                                if (isCharacter && decisionText != null && decisionText.contains("lando")) {
-                                    String locTitleLower = title != null ? title.toLowerCase(java.util.Locale.ROOT) : "";
-                                    if (locTitleLower.contains("dining room")) {
-                                        action.addReasoning("V24.10 LANDO TO DINING ROOM: Optimal deploy — establishes occupation, can move to other sites!", 300.0f);
-                                        logger.warn("V24.10 LANDO: Dining Room +300 — ideal deploy location for Lando!");
-                                    } else if (locTitleLower.contains("cloud city") || locTitleLower.contains("upper walkway")
-                                               || locTitleLower.contains("carbonite") || locTitleLower.contains("security tower")
-                                               || locTitleLower.contains("platform") || locTitleLower.contains("lower corridor")) {
-                                        // Other CC sites are OK but not ideal — Lando can move here later
-                                        action.addReasoning("V24.10 LANDO: CC site but not Dining Room — Lando can move here later, deploy to Dining Room first!", -50.0f);
-                                        logger.warn("V24.10 LANDO: {} is CC but not Dining Room — mild penalty (-50)", title);
-                                    }
+                                boolean v279LandoDeploy = isCharacter && decisionText != null
+                                    && decisionText.contains("lando");
+                                DeployObjectiveSitingPolicy.LandoDestinationEvaluation v279LandoDestination =
+                                    DeployObjectiveSitingPolicy.evaluateLandoDestination(
+                                        new DeployObjectiveSitingPolicy.LandoDestinationFacts(
+                                            action.getActionId(), v279LandoDeploy, title));
+                                applyDeploySitingPolicy(action, v279LandoDestination.result());
+                                if (v279LandoDestination.outcome()
+                                        == DeployObjectiveSitingPolicy.LandoDestinationOutcome.DINING_ROOM) {
+                                    logger.warn("V24.10 LANDO: Dining Room +300 — ideal deploy location for Lando!");
+                                } else if (v279LandoDestination.outcome()
+                                        == DeployObjectiveSitingPolicy.LandoDestinationOutcome.OTHER_CLOUD_CITY_SITE) {
+                                    logger.warn("V24.10 LANDO: {} is CC but not Dining Room — mild penalty (-50)", title);
+                                }
+
+                                if (v279LandoDeploy) {
 
                                     // === V25: LANDO ALONE PROTECTION ===
                                     // NEVER deploy Lando to a CC site where he'd be alone and unprotected.
@@ -3745,34 +3711,30 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 }
                                             }
 
-                                            boolean hasProtection = friendlyCharsAtSite > 0;
-                                            boolean canDeployProtector = charsInHand >= 1;
-                                            boolean opponentAtThisSite = opponentCharsAtThisSite > 0;
                                             boolean opponentThreatens = (opponentCharsAtAnyCCSite + opponentCharsAtThisSite) > 0;
-
-                                            if (opponentAtThisSite && !hasProtection) {
-                                                // V41: HARD BLOCK — opponent characters AT THIS SITE and no friendlies!
-                                                // Lando deployed alone into Luke+Rey = instant death.
-                                                action.addReasoning("V41 LANDO INTO ENEMY: " + opponentCharsAtThisSite
-                                                    + " opponents at " + title + " — Lando dies instantly! BLOCKED!", -9999.0f);
+                                            DeployObjectiveSitingPolicy.LandoSafetyEvaluation v279LandoSafety =
+                                                DeployObjectiveSitingPolicy.evaluateLandoSafety(
+                                                    new DeployObjectiveSitingPolicy.LandoSafetyFacts(
+                                                        action.getActionId(), true, title,
+                                                        friendlyCharsAtSite, opponentCharsAtThisSite,
+                                                        charsInHand, opponentThreatens));
+                                            applyDeploySitingPolicy(action, v279LandoSafety.result());
+                                            if (v279LandoSafety.outcome()
+                                                    == DeployObjectiveSitingPolicy.LandoSafetyOutcome.BLOCKED_ENEMY) {
                                                 logger.warn("V41 LANDO INTO ENEMY: {} opponents at {} — HARD BLOCK! Lando would die!",
                                                     opponentCharsAtThisSite, title);
-                                            } else if (hasProtection) {
-                                                // Friendlies at site — Lando is safe
+                                            } else if (v279LandoSafety.outcome()
+                                                    == DeployObjectiveSitingPolicy.LandoSafetyOutcome.SAFE_FRIENDLY) {
                                                 logger.info("V25 LANDO: {} — {} friendlies here — safe to deploy", title, friendlyCharsAtSite);
-                                            } else if (!canDeployProtector) {
-                                                action.addReasoning("V47 LANDO ALONE BLOCK: No protection at " + title
-                                                    + " and no characters in hand — Lando dies alone!", -9999.0f);
+                                            } else if (v279LandoSafety.outcome()
+                                                    == DeployObjectiveSitingPolicy.LandoSafetyOutcome.BLOCKED_ALONE) {
                                                 logger.warn("V47 LANDO ALONE: {} — no friendlies, no hand chars — HARD BLOCK!", title);
-                                            } else if (opponentThreatens) {
-                                                // V41: Stronger penalty — opponent nearby can easily kill Lando
-                                                action.addReasoning("V41 LANDO CAUTION: Alone at " + title
-                                                    + " — opponent at CC sites! Deploy protector first!", -400.0f);
+                                            } else if (v279LandoSafety.outcome()
+                                                    == DeployObjectiveSitingPolicy.LandoSafetyOutcome.CAUTION) {
                                                 logger.warn("V25 LANDO: {} — alone + opponent at CC, but {} chars in hand (-100)",
                                                     title, charsInHand);
-                                            } else {
-                                                // Lando alone, no opponent at CC, but we have chars in hand
-                                                // OK to deploy — we can protect him and opponent hasn't arrived yet
+                                            } else if (v279LandoSafety.outcome()
+                                                    == DeployObjectiveSitingPolicy.LandoSafetyOutcome.SAFE_HAND) {
                                                 logger.info("V25 LANDO: {} — alone but {} chars in hand and no CC threats — OK", title, charsInHand);
                                             }
                                         } catch (Exception e) {
@@ -3920,22 +3882,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             logger.warn("V24.14B SPY: {} — empty CC site, spy wastes potential drain (-300)", title);
                                         }
                                     } else if (!isObjLocation && !isFlipBackLocation) {
-                                        if (isCharacter && deployObjAnalyzer.needsBespinSystemPresence()) {
-                                            // V29: TDIGWATT-specific hard block for non-objective character deploys (non-spies only)
-                                            // Increased from -250 to -500 because Rando was still deploying Mara Jade
-                                            // and Admiral Chiraneau to Tatooine: Mos Eisley instead of Cloud City sites.
-                                            action.addReasoning("V29 TDIGWATT: Do NOT deploy characters to non-Cloud City locations!", -500.0f);
+                                        boolean v279NeedsBespin = isCharacter
+                                            && deployObjAnalyzer.needsBespinSystemPresence();
+                                        String v279TitleLower = title.toLowerCase(java.util.Locale.ROOT);
+                                        boolean v279OpponentPlanet = v279NeedsBespin
+                                            && (v279TitleLower.contains("tatooine")
+                                                || v279TitleLower.contains("endor")
+                                                || v279TitleLower.contains("dagobah")
+                                                || v279TitleLower.contains("naboo")
+                                                || v279TitleLower.contains("yavin")
+                                                || v279TitleLower.contains("hoth")
+                                                || v279TitleLower.contains("jakku")
+                                                || v279TitleLower.contains("chandrila"));
+                                        DeployObjectiveSitingPolicy.TdgwattOffObjectiveEvaluation v279Tdgwatt =
+                                            DeployObjectiveSitingPolicy.evaluateTdgwattOffObjective(
+                                                new DeployObjectiveSitingPolicy.TdgwattOffObjectiveFacts(
+                                                    action.getActionId(), isCharacter,
+                                                    v279NeedsBespin, v279OpponentPlanet));
+                                        applyDeploySitingPolicy(action, v279Tdgwatt.result());
+                                        if (v279Tdgwatt.tdgwattBlocked()) {
                                             logger.warn("V29 TDIGWATT: Blocking character deploy to non-objective location {} (-500)", title);
-
-                                            // Extra penalty for opponent's planet — even worse than a random non-CC location
-                                            String titleCheck = title.toLowerCase(java.util.Locale.ROOT);
-                                            if (titleCheck.contains("tatooine") || titleCheck.contains("endor")
-                                                || titleCheck.contains("dagobah") || titleCheck.contains("naboo")
-                                                || titleCheck.contains("yavin") || titleCheck.contains("hoth")
-                                                || titleCheck.contains("jakku") || titleCheck.contains("chandrila")) {
-                                                action.addReasoning("V29 OPPONENT PLANET: This is the opponent's territory!", -300.0f);
-                                                logger.warn("V29 OPPONENT PLANET: {} is opponent's territory — extra -300", title);
-                                            }
+                                        }
+                                        if (v279Tdgwatt.opponentPlanet()) {
+                                            logger.warn("V29 OPPONENT PLANET: {} is opponent's territory — extra -300", title);
                                         }
                                         // Non-objective location: penalize, scale by urgency
                                         boolean objLocationNeedsHelp = false;
@@ -3965,25 +3934,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 if (deficit > worstDeficit) worstDeficit = deficit;
                                             }
                                         }
-                                        if (objLocationNeedsHelp) {
-                                            // V22.2: Penalty scales with how badly we need reinforcements
-                                            // Post-flip penalty is MUCH stronger — losing locations = losing objective
+                                        DeployObjectiveSitingPolicy.ObjectiveTailEvaluation v279ObjectiveTail =
+                                            DeployObjectiveSitingPolicy.evaluateObjectiveTail(
+                                                new DeployObjectiveSitingPolicy.ObjectiveTailFacts(
+                                                    action.getActionId(), objectiveIsFlipped,
+                                                    false, false,
+                                                    objLocationNeedsHelp, worstDeficit));
+                                        applyDeploySitingPolicy(action, v279ObjectiveTail.result());
+                                        if (v279ObjectiveTail.fortificationNeeded()) {
                                             float penalty = objectiveIsFlipped ? -180.0f : -120.0f;
-                                            if (worstDeficit > 6) penalty -= 40.0f;  // Extra urgency if severely outgunned
-                                            action.addReasoning("V22.2: Objective locations need fortifying" +
-                                                (objectiveIsFlipped ? " (POST-FLIP CRITICAL)" : "") +
-                                                " - don't deploy elsewhere", penalty);
+                                            if (worstDeficit > 6) penalty -= 40.0f;
                                             logger.warn("V22.2 DEPLOY: Penalizing {} ({}), obj locs need +{} power{}",
                                                 title, penalty, (int)worstDeficit,
                                                 objectiveIsFlipped ? " [FLIPPED - PROTECT!]" : "");
-                                        } else {
-                                            float mildPenalty = objectiveIsFlipped ? -60.0f : -40.0f;
-                                            action.addReasoning("V22: Non-objective location - prefer own locations", mildPenalty);
                                         }
                                     } else if (objectiveIsFlipped && isFlipBackLocation) {
-                                        // V22.2: BONUS for deploying to flip-back protection locations post-flip
-                                        action.addReasoning("V22.2 POST-FLIP: Deploying to protect flipped objective!", 60.0f);
-                                        logger.warn("V22.2 PROTECT: {} is flip-back protection location - bonus for deploying here", title);
+                                        DeployObjectiveSitingPolicy.ObjectiveTailEvaluation v279ObjectiveTail =
+                                            DeployObjectiveSitingPolicy.evaluateObjectiveTail(
+                                                new DeployObjectiveSitingPolicy.ObjectiveTailFacts(
+                                                    action.getActionId(), true,
+                                                    isObjLocation, true,
+                                                    false, 0.0f));
+                                        applyDeploySitingPolicy(action, v279ObjectiveTail.result());
+                                        if (v279ObjectiveTail.postFlipProtected()) {
+                                            logger.warn("V22.2 PROTECT: {} is flip-back protection location - bonus for deploying here", title);
+                                        }
                                     }
                                 }
                             } catch (Exception e) {

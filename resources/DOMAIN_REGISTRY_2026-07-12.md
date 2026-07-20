@@ -159,6 +159,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V278 owner note:** `DeployTacticalPolicy` now also owns V24.15 zero/effective-drain siting, V59 universal spy siting, V22.3 contest scoring, V24.14B fallback-spy siting, and V24.3B destination partner scoring. The mirrored adapters retain all GEMP reads, lazy exemptions, nested catches, scans, first-found breaks, fallback state, logs, and contribution positions. TDIGWATT and the V22 objective tail remain adapter-owned. This is an AI-only structural extraction; no engine metadata or candidate control moved.
 
+**V279 owner note:** `DeployObjectiveSitingPolicy` now also owns V22.7 objective-system contesting, V29.7 ISB agent priority, Hunt Down character priority, Cloud City ability spread, Lando destination/safety, and the final objective/TDIGWATT siting tail. Both mirrored adapters retain every GameState, blueprint, ObjectiveAnalyzer, battleground, hand, character, power, opponent, and objective read plus all catches, scans, breaks, diagnostics, and contribution positions. This is an AI-only structural extraction; no engine metadata or candidate control moved.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V24.14B-weapon-space | V24.14B | DEPLOY-2 | CSE:1601 | BANDED | -300 | Armed character (permanent weapon) deploying to a space system: weapons cannot fire at systems | LIVE (manifest gap — added batch 0) |
