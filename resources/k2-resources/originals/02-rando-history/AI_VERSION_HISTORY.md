@@ -8156,3 +8156,22 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     b87e7db1596d8a606d7facdd908c850c3f730f57585f0e4f8fa429f8afdc771c. Runtime reload and live-game
     proof are separate gates. No engine, card, action, decision metadata, objective data, player-choice,
     database, client, or deck-library source changed. Revert the single V296 commit.
+
+  ==== V297 (2026-07-21): require a supported Invasion Throne Room formation ====
+    An unflipped actor-gated objective now builds one exact formation at its exact control site. For
+    Invasion, Rando must deploy a Neimoidian to Naboo: Theed Palace Throne Room with an existing friendly
+    character or a second exact affordable planned character. An unsupported Neimoidian no longer receives
+    the V193 objective steer. A complete formation receives the existing +1600 Invasion playbook weight and
+    survives the early-game hold check. After the actor arrives or the objective flips, the planner maintains
+    at least two friendly characters there and reinforces again when it still does not control the site.
+
+    Endor's existing one-body Bunker behavior remains unchanged. Unsupported actor-only plans retain V201
+    solo safety, while direct and destination V193 scores require the same support fact. Focused tests passed;
+    the clean full reactor passed 2055/0/0/26 across 284 suites; normalized bot parity, exact target, funded
+    buddy, existing buddy, actor-only rejection, post-flip reinforcement, early-hold, diff, and AI-only scope
+    gates passed. Async packaging and deployment passed. Deployed server jar SHA-256 is
+    37091a8e6710947bdf1a5cbc22d3527d292d1f1e2813f763d09a0d0614bc347b and deployed web jar SHA-256 is
+    4796c60c562248128dc4a9e8078ea0098f09d8600c43c68bc6633fbe7e926cde. A fresh container loaded the jar
+    after its build timestamp and returned HTTP 200. No engine, card, action,
+    decision metadata, objective data, player-choice, database, client, or deck-library source changed.
+    Revert the single V297 commit; V296 and all earlier AI-only behavior remain independent.

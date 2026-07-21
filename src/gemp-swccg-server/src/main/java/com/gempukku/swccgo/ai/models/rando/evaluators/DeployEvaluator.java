@@ -1132,6 +1132,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     String v212SitingSiteTitle = "";
                     float v212V136Score = 0.0f;
                     boolean v212V193Eligible = false;
+                    boolean v212V193FormationSupported = true;
                     float v212V193Weight = 400.0f;
                     String v212V193GateCard = "";
                     boolean v212V96Applicable = false;
@@ -1271,6 +1272,40 @@ public class DeployEvaluator extends ActionEvaluator {
                                     boolean v193ActorGateCandidate =
                                         v136Obj.advancesUnfilledFlipGateActorRequirement(
                                             game, playerId, card, v136Candidate);
+                                    if (v136Obj.hasFlipGateActorRequirement()) {
+                                        int v193FriendlyCharacters = com.gempukku.swccgo.ai.models.common.strategy
+                                            .FormationSafety.countFriendlyNonUndercoverCharacters(
+                                                gameState.getCardsAtLocation(v136Candidate), playerId);
+                                        Float v193ThisCost = blueprint.getDeployCost();
+                                        Float v193BuddyCost = null;
+                                        if (plan != null) {
+                                            DeploymentInstruction v193Instruction =
+                                                plan.getInstructionForPhysicalCard(
+                                                    card.getPermanentCardId(), card.getCardId(),
+                                                    card.getBlueprintId(true));
+                                            if (v193Instruction != null) {
+                                                java.util.Set<Integer> v193CharacterIdsInHand =
+                                                    new java.util.HashSet<>();
+                                                for (PhysicalCard v193HandCard : gameState.getHand(playerId)) {
+                                                    if (v193HandCard != null && v193HandCard.getBlueprint() != null
+                                                            && v193HandCard.getBlueprint().getCardCategory()
+                                                                == CardCategory.CHARACTER) {
+                                                        v193CharacterIdsInHand.add(
+                                                            v193HandCard.getPermanentCardId());
+                                                    }
+                                                }
+                                                v193BuddyCost = plan.getCheapestPlannedCharacterBuddyCost(
+                                                    v193Instruction,
+                                                    String.valueOf(v136Candidate.getCardId()),
+                                                    v193CharacterIdsInHand);
+                                            }
+                                        }
+                                        boolean v193FundedBuddy = v193BuddyCost != null
+                                            && v193ThisCost != null
+                                            && v193ThisCost + v193BuddyCost <= v136ForceAvail;
+                                        v212V193FormationSupported =
+                                            v193FriendlyCharacters > 0 || v193FundedBuddy;
+                                    }
                                     boolean v193AlreadyControls =
                                         com.gempukku.swccgo.cards.GameConditions.controls(
                                             game, playerId, v136Candidate);
@@ -1305,10 +1340,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                         }
                                     }
                                     boolean v193CanAdvanceGate =
-                                        v193HoldsGateCard || v193ActorGateCandidate;
-                                    // V276 Invasion boundary: profile weight 1600 - V121 1500 = +100
-                                    // on the direct route. The actor/site/pre-flip/unfilled guards make
-                                    // that intentional dominance self-closing once a Neimoidian arrives.
+                                        (v193HoldsGateCard || v193ActorGateCandidate)
+                                            && v212V193FormationSupported;
+                                    // V297: actor-gated objectives receive the objective score only
+                                    // when an exact buddy is funded or already present at the gate.
                                     if ((!v193AlreadyControls || v193ActorGateCandidate)
                                             && v193CanAdvanceGate) {
                                         // ObjectivePlaybook consolidation (2026-07-07): the +400 magnitude
@@ -1391,7 +1426,8 @@ public class DeployEvaluator extends ActionEvaluator {
                     DeploySitingPolicy.Facts v212SitingFacts = new DeploySitingPolicy.Facts(
                         actionId, card.getTitle(), v212SitingSiteTitle,
                         v212EvazanWithoutArmedFriend, DeploySitingPolicy.FormationState.ALLOW, "",
-                        v212V136Score, v212V193Eligible, v212V193Weight,
+                        v212V136Score, v212V193Eligible, v212V193FormationSupported,
+                        v212V193Weight,
                         v212V193GateCard, v212V96Applicable,
                         v212V96FriendlyPower, v212V96OpponentPower);
                     PolicyContributionLedger v212SitingLedger = new PolicyContributionLedger(

@@ -263,7 +263,9 @@ public class DeployPhasePlanner {
 
         // === EARLY GAME HOLD-BACK CHECK (at the END, like Python) ===
         if (currentTurn <= RandoConfig.DEPLOY_EARLY_GAME_TURNS && bestPlan != null) {
-            float planScore = scorePlan(bestPlan, allLocations, currentTurn);
+            float planScore = isObjectiveFlipGateFormationPlan(bestPlan)
+                ? scoreObjectiveFlipGateFormationPlan(bestPlan, allLocations, currentTurn)
+                : scorePlan(bestPlan, allLocations, currentTurn);
             if (planScore < RandoConfig.DEPLOY_EARLY_GAME_THRESHOLD) {
                 LOG.info("📋 EARLY GAME HOLD: plan score {} < threshold {} - holding back",
                     (int)planScore, RandoConfig.DEPLOY_EARLY_GAME_THRESHOLD);
@@ -676,6 +678,17 @@ public class DeployPhasePlanner {
             return plans;
         }
 
+        // V297: A control-gated actor objective needs a formation, not a sacrificial
+        // one-body score. Build the exact actor-plus-buddy plan before generic siting.
+        DeploymentPlan flipGateFormation = generateFlipGateFormationPlan(
+            characters, allLocations, forceAvailable);
+        if (flipGateFormation != null && !flipGateFormation.getInstructions().isEmpty()) {
+            float score = scoreObjectiveFlipGateFormationPlan(
+                flipGateFormation, allLocations, turn);
+            plans.add(new ScoredPlan(
+                flipGateFormation, score, "ground_objective_flip_gate_formation"));
+        }
+
         // Plan 1: Stop bleeding (highest priority if losing drain war)
         if (drainGap.isLosing() && !categories.bleedLocations.isEmpty()) {
             DeploymentPlan bleedPlan = generateStopBleedingPlan(
@@ -729,6 +742,130 @@ public class DeployPhasePlanner {
         }
 
         return plans;
+    }
+
+    /**
+     * V297: create a defensible objective-gate formation. Pre-flip actor gates
+     * require the named actor plus an existing or funded buddy. Post-flip, keep
+     * two characters at the gate so a single battle cannot immediately undo it.
+     */
+    private DeploymentPlan generateFlipGateFormationPlan(
+            List<CardInfo> characters,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations,
+            int forceAvailable) {
+        if (objectiveAnalyzer == null || !objectiveAnalyzer.isAnalyzed()
+                || !objectiveAnalyzer.hasFlipGateActorRequirement()
+                || currentGame == null || currentPlayerId == null
+                || forceAvailable <= 0 || characters.isEmpty()) {
+            return null;
+        }
+
+        String gateTitle = objectiveAnalyzer.getFlipCriticalControlSite();
+        if (gateTitle == null) return null;
+
+        AiBoardAnalyzer.LocationAnalysis gate = allLocations.stream()
+            .filter(loc -> loc != null && loc.isGround()
+                && loc.location != null && loc.location.getTitle() != null
+                && gateTitle.equalsIgnoreCase(loc.location.getTitle()))
+            .findFirst().orElse(null);
+        if (gate == null) return null;
+
+        List<CardInfo> deployable = filterDeployableCards(characters, gate.location);
+        if (deployable.isEmpty()) return null;
+
+        int friendlyCharacters = com.gempukku.swccgo.ai.models.common.strategy
+            .FormationSafety.countFriendlyNonUndercoverCharacters(
+                currentGame.getGameState().getCardsAtLocation(gate.location),
+                currentPlayerId);
+        boolean actorRequired = !objectiveAnalyzer.isFlipped();
+        boolean actorPresent = objectiveAnalyzer.hasFlipGateActorAtLocation(
+            currentGame, currentPlayerId, gate.location);
+        boolean controlsGate = gate.weControl();
+        List<CardInfo> selected = new ArrayList<>(2);
+
+        if (actorRequired && !actorPresent) {
+            List<CardInfo> actorCandidates = deployable.stream()
+                .filter(card -> objectiveAnalyzer.matchesFlipGateActorRequirement(
+                    currentGame, currentPlayerId, card.card, gate.location))
+                .collect(Collectors.toList());
+            if (actorCandidates.isEmpty()) return null;
+
+            if (friendlyCharacters == 0) {
+                selected.addAll(selectBestFormationPair(
+                    actorCandidates, deployable, forceAvailable));
+                if (selected.size() != 2) return null;
+            } else {
+                CardInfo actor = selectBestFormationCard(
+                    actorCandidates, forceAvailable);
+                if (actor == null) return null;
+                selected.add(actor);
+            }
+        } else {
+            int bodiesNeeded = Math.max(0, 2 - friendlyCharacters);
+            if (bodiesNeeded == 0 && !controlsGate) bodiesNeeded = 1;
+            if (bodiesNeeded == 0) return null;
+            if (bodiesNeeded == 1) {
+                CardInfo buddy = selectBestFormationCard(
+                    deployable, forceAvailable);
+                if (buddy == null) return null;
+                selected.add(buddy);
+            } else {
+                selected.addAll(selectBestFormationPair(
+                    deployable, deployable, forceAvailable));
+                if (selected.size() != 2) return null;
+            }
+        }
+
+        DeploymentPlan plan = new DeploymentPlan(DeployStrategy.REINFORCE,
+            "V297 objective flip-gate formation at " + gateTitle);
+        int priority = 1;
+        for (CardInfo card : selected) {
+            addCardToPlan(plan, card.card, gate, priority++,
+                "V297 secure objective gate with actor-and-buddy formation");
+            plan.getInstructions().get(plan.getInstructions().size() - 1)
+                .setAbilityContribution(card.ability);
+        }
+        LOG.warn("V297 OBJECTIVE FORMATION: {} -> {} with {} funded character(s), {} already present",
+            selected.stream().map(card -> card.name).collect(Collectors.joining(" + ")),
+            gateTitle, selected.size(), friendlyCharacters);
+        return plan;
+    }
+
+    private List<CardInfo> selectBestFormationPair(
+            List<CardInfo> firstCandidates, List<CardInfo> allCandidates,
+            int budget) {
+        CardInfo bestFirst = null;
+        CardInfo bestSecond = null;
+        int bestScore = Integer.MIN_VALUE;
+        for (CardInfo first : firstCandidates) {
+            for (CardInfo second : allCandidates) {
+                if (first.card == second.card || first.cost + second.cost > budget) continue;
+                int combinedAbility = first.ability + second.ability;
+                int combinedPower = first.power + second.power;
+                int score = (combinedAbility >= 4 ? 100000 : 0)
+                    + combinedPower * 100 + combinedAbility * 25
+                    - first.cost - second.cost;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestFirst = first;
+                    bestSecond = second;
+                }
+            }
+        }
+        return bestFirst == null
+            ? Collections.emptyList() : List.of(bestFirst, bestSecond);
+    }
+
+    private CardInfo selectBestFormationCard(
+            List<CardInfo> candidates, int budget) {
+        return candidates.stream()
+            .filter(card -> card.cost <= budget)
+            .max(Comparator
+                .comparingInt((CardInfo card) -> card.ability >= 4 ? 1 : 0)
+                .thenComparingInt(card -> card.power + card.ability)
+                .thenComparingDouble(CardInfo::getValueRatio)
+                .thenComparingInt(card -> -card.cost))
+            .orElse(null);
     }
 
     /**
@@ -1469,6 +1606,26 @@ public class DeployPhasePlanner {
             DeployPlanRankingPolicy.evaluateAdjunct(
                 new DeployPlanRankingPolicy.AdjunctFacts(
                     "objective-capital-bespin", true)));
+    }
+
+    private float scoreObjectiveFlipGateFormationPlan(
+            DeploymentPlan plan,
+            List<AiBoardAnalyzer.LocationAnalysis> locations,
+            int turn) {
+        float score = scorePlan(plan, locations, turn);
+        ObjectiveAnalyzer.ObjectivePlaybook playbook =
+            objectiveAnalyzer != null ? objectiveAnalyzer.getActivePlaybook() : null;
+        float objectiveBonus = playbook != null
+            ? playbook.weights.deployFlipGateSite : 0.0f;
+        return DeployPlanRankingPolicy.apply(score,
+            DeployPlanRankingPolicy.evaluateFlipGateFormation(
+                new DeployPlanRankingPolicy.FlipGateFormationFacts(
+                    "objective-flip-gate-formation", true, objectiveBonus)));
+    }
+
+    private boolean isObjectiveFlipGateFormationPlan(DeploymentPlan plan) {
+        return plan != null && plan.getReason() != null
+            && plan.getReason().startsWith("V297 objective flip-gate formation");
     }
 
     /**

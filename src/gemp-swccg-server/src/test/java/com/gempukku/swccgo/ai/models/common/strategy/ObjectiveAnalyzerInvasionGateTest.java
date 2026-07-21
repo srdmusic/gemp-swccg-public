@@ -36,6 +36,10 @@ public class ObjectiveAnalyzerInvasionGateTest {
             assertTrue(analyzer.hasFlipGateActorRequirement());
             assertEquals("Neimoidian at naboo: theed palace throne room",
                     analyzer.getFlipGateActorRequirementLabel());
+            assertTrue(analyzer.matchesFlipGateActorRequirement(
+                    fixture.game, PLAYER_ID, fixture.candidate, fixture.throneRoom));
+            assertFalse(analyzer.hasFlipGateActorAtLocation(
+                    fixture.game, PLAYER_ID, fixture.throneRoom));
             assertTrue(analyzer.advancesUnfilledFlipGateActorRequirement(
                     fixture.game, PLAYER_ID, fixture.candidate, fixture.throneRoom));
         }
@@ -46,7 +50,13 @@ public class ObjectiveAnalyzerInvasionGateTest {
         ObjectiveAnalyzer analyzer =
                 new com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer();
         Fixture fixture = fixture(analyzer, false, true);
+        PhysicalCard wrongLocation = mock(PhysicalCard.class);
+        when(wrongLocation.getTitles()).thenReturn(List.of("Naboo: Swamp"));
 
+        assertTrue(analyzer.hasFlipGateActorAtLocation(
+                fixture.game, PLAYER_ID, fixture.throneRoom));
+        assertFalse(analyzer.hasFlipGateActorAtLocation(
+                fixture.game, PLAYER_ID, wrongLocation));
         assertFalse(analyzer.advancesUnfilledFlipGateActorRequirement(
                 fixture.game, PLAYER_ID, fixture.candidate, fixture.throneRoom));
     }
@@ -61,6 +71,8 @@ public class ObjectiveAnalyzerInvasionGateTest {
         when(wrongDestination.getTitles()).thenReturn(List.of("Naboo: Swamp"));
 
         assertFalse(analyzer.advancesUnfilledFlipGateActorRequirement(
+                fixture.game, PLAYER_ID, wrongActor, fixture.throneRoom));
+        assertFalse(analyzer.matchesFlipGateActorRequirement(
                 fixture.game, PLAYER_ID, wrongActor, fixture.throneRoom));
         assertFalse(analyzer.advancesUnfilledFlipGateActorRequirement(
                 fixture.game, PLAYER_ID, fixture.candidate, wrongDestination));

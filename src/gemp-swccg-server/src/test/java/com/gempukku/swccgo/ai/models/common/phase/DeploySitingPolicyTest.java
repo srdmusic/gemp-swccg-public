@@ -102,20 +102,32 @@ public class DeploySitingPolicyTest {
     }
 
     @Test
-    public void invasionFlipGateWeightDominatesV121AndEvenAConservativeV201Stack() {
-        PolicyResult direct = DeploySitingPolicy.evaluateDirect(directFacts(
-                false, 0.0f, true, 1600.0f,
-                false, 0.0f, 0.0f));
-        PolicyResult destination = DeploySitingPolicy.evaluateDestination(destinationFacts(
+    public void invasionFlipGateWeightRequiresExistingOrFundedBuddy() {
+        DeploySitingPolicy.Facts unsupported = new DeploySitingPolicy.Facts(
+                "action-1", "Neimoidian", "Naboo: Theed Palace Throne Room",
                 false, DeploySitingPolicy.FormationState.DEFER_UNSUPPORTED_SOLO,
-                "no exact same-site buddy plan", 0.0f, true, 1600.0f));
+                "no exact same-site buddy plan", 0.0f,
+                true, false, 1600.0f, "Neimoidian at Throne Room",
+                false, 0.0f, 0.0f);
+        PolicyResult unsupportedDirect =
+                DeploySitingPolicy.evaluateDirect(unsupported);
+        PolicyResult unsupportedDestination =
+                DeploySitingPolicy.evaluateDestination(unsupported);
 
-        assertEquals(1600.0f, direct.operations().get(0).delta(), 0.0f);
-        assertEquals(3200.0f, destination.operations().get(1).delta(), 0.0f);
-        assertEquals(100.0f, -1500.0f + direct.operations().get(0).delta(), 0.0f);
-        assertEquals(900.0f, -1500.0f
-                + destination.operations().get(0).delta()
-                + destination.operations().get(1).delta(), 0.0f);
+        assertTrue(unsupportedDirect.operations().isEmpty());
+        assertOperations(unsupportedDestination.operations(),
+                new String[]{"V201-deploy-siting"}, new float[]{-800.0f},
+                new PolicyOperationKind[]{PolicyOperationKind.DEFER});
+
+        DeploySitingPolicy.Facts supported = new DeploySitingPolicy.Facts(
+                "action-1", "Neimoidian", "Naboo: Theed Palace Throne Room",
+                false, DeploySitingPolicy.FormationState.ALLOW, "", 0.0f,
+                true, true, 1600.0f, "Neimoidian at Throne Room",
+                false, 0.0f, 0.0f);
+        assertEquals(1600.0f, DeploySitingPolicy.evaluateDirect(supported)
+                .operations().get(0).delta(), 0.0f);
+        assertEquals(3200.0f, DeploySitingPolicy.evaluateDestination(supported)
+                .operations().get(0).delta(), 0.0f);
     }
 
     @Test
@@ -175,7 +187,7 @@ public class DeploySitingPolicyTest {
         DeploySitingPolicy.Facts facts = new DeploySitingPolicy.Facts(
                 "action-1", "Character", "Site", false,
                 DeploySitingPolicy.FormationState.HARD_BLOCK, "direct ignores formation",
-                0.0f, false, 400.0f, "Gate Card",
+                0.0f, false, true, 400.0f, "Gate Card",
                 true, 10.0f, 10.0f);
 
         PolicyResult direct = DeploySitingPolicy.evaluateDirect(facts);
@@ -380,7 +392,7 @@ public class DeploySitingPolicyTest {
         return new DeploySitingPolicy.Facts(
                 "action-1", "Dr. Evazan", "Endor: Bunker",
                 evazanWithoutArmedFriend, DeploySitingPolicy.FormationState.ALLOW, "", v136Score,
-                v193Eligible, v193PlaybookWeight, "Establish Secret Base",
+                v193Eligible, true, v193PlaybookWeight, "Establish Secret Base",
                 v96Applicable, friendlyPower, opponentPower);
     }
 
@@ -392,7 +404,7 @@ public class DeploySitingPolicyTest {
         return new DeploySitingPolicy.Facts(
                 "action-1", "Dr. Evazan", "Endor: Bunker",
                 evazanWithoutArmedFriend, formationState, formationReason,
-                v136Score, v193Eligible, v193PlaybookWeight,
+                v136Score, v193Eligible, true, v193PlaybookWeight,
                 "Establish Secret Base", false, 0.0f, 0.0f);
     }
 

@@ -36,8 +36,12 @@ public class DeployPlanRankingSourceOwnershipTest {
                 "LOG.warn(\"V22 PLAN SCORE: {} is objective-relevant, +{} to plan score\", locTitle, objBonus);",
                 "DeployPlanRankingPolicy.evaluate(",
                 "DeployPlanRankingPolicy.evaluateAdjunct(",
+                "DeployPlanRankingPolicy.evaluateFlipGateFormation(",
                 "DeployPlanRankingPolicy.apply(",
-                "float planScore = scorePlan(bestPlan, allLocations, currentTurn)",
+                "generateFlipGateFormationPlan(",
+                "matchesFlipGateActorRequirement(",
+                "hasFlipGateActorAtLocation(",
+                "float planScore = isObjectiveFlipGateFormationPlan(bestPlan)",
                 "float score = scoreObjectiveCapitalPlan(executorPlan, allLocations, turn)"};
         String[] extracted = {
                 "score += inst.getPowerContribution() * 2",
@@ -57,7 +61,8 @@ public class DeployPlanRankingSourceOwnershipTest {
                 "Can draw destiny",
                 "Vulnerable",
                 "EMPTY/ESTABLISH LOCATION",
-                "V22 objective capital ship priority for Bespin"};
+                "V22 objective capital ship priority for Bespin",
+                "V297 objective flip-gate actor and buddy formation"};
 
         for (String bot : new String[]{"rando", "chosenone"}) {
             String planner = plannerSource(bot);

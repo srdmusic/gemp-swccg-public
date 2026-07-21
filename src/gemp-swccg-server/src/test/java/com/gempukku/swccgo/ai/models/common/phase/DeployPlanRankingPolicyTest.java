@@ -114,6 +114,24 @@ public class DeployPlanRankingPolicyTest {
     }
 
     @Test
+    public void flipGateBonusRequiresCompleteActorAndBuddyFormation() {
+        PolicyResult incomplete = DeployPlanRankingPolicy.evaluateFlipGateFormation(
+                new DeployPlanRankingPolicy.FlipGateFormationFacts(
+                        "flip-gate", false, 1600.0f));
+        assertEquals(0, incomplete.operations().size());
+
+        PolicyResult complete = DeployPlanRankingPolicy.evaluateFlipGateFormation(
+                new DeployPlanRankingPolicy.FlipGateFormationFacts(
+                        "flip-gate", true, 1600.0f));
+        assertOperations(complete.operations(),
+                new String[]{"flip-gate"},
+                new String[]{"V297-plan-ranking-flip-gate-formation"},
+                new float[]{1600.0f},
+                new String[]{"V297 objective flip-gate actor and buddy formation"});
+        assertBits(1700.0f, DeployPlanRankingPolicy.apply(100.0f, complete));
+    }
+
+    @Test
     public void rejectsDuplicateContributionIdsBeforeLedgerRegistration() {
         assertThrows(IllegalArgumentException.class, () ->
                 DeployPlanRankingPolicy.evaluate(

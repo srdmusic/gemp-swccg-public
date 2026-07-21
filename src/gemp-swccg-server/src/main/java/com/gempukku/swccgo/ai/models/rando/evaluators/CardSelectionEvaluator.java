@@ -2451,7 +2451,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         DeploySitingPolicy.Facts v212EvazanCsFacts = new DeploySitingPolicy.Facts(
                             action.getActionId(), deployingCardName, v212EvazanCsSiteTitle,
                             v212EvazanCsWithoutArmedFriend, DeploySitingPolicy.FormationState.ALLOW, "",
-                            0.0f, false, 400.0f, "", false, 0.0f, 0.0f);
+                            0.0f, false, true, 400.0f, "", false, 0.0f, 0.0f);
                         PolicyContributionLedger v212EvazanCsLedger = new PolicyContributionLedger(
                             "deploy-siting-v89-cs-" + action.getActionId());
                         v212EvazanCsLedger.register(
@@ -2568,6 +2568,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         float v212V136CsScore = 0.0f;
                                         boolean v212V193CsEligible = false;
                                         boolean v212V193ActorGateCandidate = false;
+                                        boolean v212V193FormationSupported = true;
                                         float v212V193CsWeight = 400.0f;
                                         String v212V193CsGateCard = "";
 
@@ -2608,7 +2609,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                         fsObj.advancesUnfilledFlipGateActorRequirement(
                                                             context.getGame(), context.getPlayerId(),
                                                             v136DeployingCard, location);
-                                                    if (!v212V193ActorGateCandidate) fsFlipGate = null;
+                                                    int fsFriendlyCharacters = com.gempukku.swccgo.ai.models.common.strategy
+                                                        .FormationSafety.countFriendlyNonUndercoverCharacters(
+                                                            gameState.getCardsAtLocation(location),
+                                                            context.getPlayerId());
+                                                    boolean fsFundedBuddy = fsBuddyCost != null
+                                                        && fsThisCost != null
+                                                        && fsThisCost + fsBuddyCost <= fsForce;
+                                                    v212V193FormationSupported =
+                                                        fsFriendlyCharacters > 0 || fsFundedBuddy;
+                                                    if (!v212V193ActorGateCandidate
+                                                            || !v212V193FormationSupported) {
+                                                        fsFlipGate = null;
+                                                    }
+                                                } else {
+                                                    v212V193FormationSupported = true;
                                                 }
                                                 com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployVerdict fsVerdict =
                                                     com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
@@ -2734,11 +2749,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                         }
                                                     }
                                                     boolean v193csCanAdvanceGate =
-                                                        v193csHoldsGate || v193csActorGateCandidate;
-                                                    // V276 Invasion boundary: this exact actor/gate match exempts
-                                                    // V201 above, then 1600 profile + 1600 CS offset -1500 V121
-                                                    // leaves +1700. Even if a future adapter preserves V201's -800,
-                                                    // the same narrow gate still closes the replay deficit by +900.
+                                                        (v193csHoldsGate || v193csActorGateCandidate)
+                                                            && v212V193FormationSupported;
+                                                    // V297: Invasion's actor bonus is valid only when this exact
+                                                    // phase plan also funds a Throne Room buddy, or one is present.
                                                     if ((!v193csControls || v193csActorGateCandidate)
                                                             && v193csCanAdvanceGate) {
                                                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.ObjectivePlaybook
@@ -2766,6 +2780,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 action.getActionId(), v136DeployingCard.getTitle(), title,
                                                 false, v212FormationState, v212FormationReason,
                                                 v212V136CsScore, v212V193CsEligible,
+                                                v212V193FormationSupported,
                                                 v212V193CsWeight, v212V193CsGateCard,
                                                 false, 0.0f, 0.0f);
                                         PolicyContributionLedger v212SitingCsLedger =

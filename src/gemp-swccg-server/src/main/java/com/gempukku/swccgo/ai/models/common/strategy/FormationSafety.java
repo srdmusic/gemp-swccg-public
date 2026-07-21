@@ -27,7 +27,8 @@ import java.util.Locale;
 //
 // EXEMPTIONS (explicit, testable — from Steve's rulings):
 //  - SOLO DOMINANCE (Steve 2026-07-11): >=2x weapon-adjusted power, characters only.
-//  - Objective flip-gate one-body steer (V193-class): caller passes flipGateSiteTitle.
+//  - Objective flip-gate steer (V193-class): caller passes flipGateSiteTitle only
+//    for a one-body objective or when an actor-gated deploy has funded support.
 //  - Undercover spies (solo by design).
 //  - Destiny-eligible strong solo (ability >= 4) at an UNCONTESTED location.
 //  - Survival retreat from a doomed origin (gap >= 6 weapon-adjusted; V33 standard).
@@ -221,6 +222,8 @@ public final class FormationSafety {
      * when the AI deployment plan contains another exact physical character at
      * this same destination. Movement is deliberately not an exemption because
      * the current AI has no exact move-mode, cost, and Force-reservation proof.
+     * For actor-gated objectives, callers may pass flipGateSiteTitle only when
+     * this exact support proof already exists; Endor's one-body gate is unchanged.
      */
     public static DeployVerdict assessCharacterDeploy(SwccgGame game, GameState gs, String playerId,
                                                        PhysicalCard cardBeingDeployed,

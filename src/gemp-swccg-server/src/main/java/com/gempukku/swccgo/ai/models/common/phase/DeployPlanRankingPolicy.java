@@ -120,6 +120,20 @@ public final class DeployPlanRankingPolicy {
         return new PolicyResult(PRODUCER, operations);
     }
 
+    /** Objective gate bonus for a complete actor-plus-support formation plan. */
+    public static PolicyResult evaluateFlipGateFormation(
+            FlipGateFormationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.completeFormation()) {
+            add(operations, facts.contributionId(),
+                    "V297-plan-ranking-flip-gate-formation",
+                    facts.objectiveBonus(),
+                    "V297 objective flip-gate actor and buddy formation");
+        }
+        return new PolicyResult(PRODUCER, operations);
+    }
+
     /** Applies ranking contributions without emitting action reasoning or logger output. */
     public static float apply(float initialScore, PolicyResult result) {
         Objects.requireNonNull(result, "result");
@@ -175,6 +189,19 @@ public final class DeployPlanRankingPolicy {
         public AdjunctFacts {
             contributionId = requireNonBlank(
                     contributionId, "contributionId");
+        }
+    }
+
+    public record FlipGateFormationFacts(String contributionId,
+                                         boolean completeFormation,
+                                         float objectiveBonus) {
+        public FlipGateFormationFacts {
+            contributionId = requireNonBlank(
+                    contributionId, "contributionId");
+            if (!Float.isFinite(objectiveBonus) || objectiveBonus < 0.0f) {
+                throw new IllegalArgumentException(
+                        "objectiveBonus must be finite and nonnegative");
+            }
         }
     }
 

@@ -55,6 +55,7 @@ public final class DeploySitingPolicy {
             String formationReason,
             float v136Score,
             boolean v193Eligible,
+            boolean v193FormationSupported,
             float v193PlaybookWeight,
             String v193GateCardTitle,
             boolean v96Applicable,
@@ -92,7 +93,7 @@ public final class DeploySitingPolicy {
         addV136(operations, facts.actionId(), "V136", facts.siteTitle(),
                 facts.v136Score(), false);
 
-        if (facts.v193Eligible()) {
+        if (facts.v193Eligible() && facts.v193FormationSupported()) {
             operations.add(addSiting(facts.actionId(), "V193", TraceOutputKind.BANDED,
                     facts.v193PlaybookWeight(),
                     "V193 FLIP-GATE CONTROL: steer one body to '" + facts.siteTitle()
@@ -121,7 +122,7 @@ public final class DeploySitingPolicy {
         addV136(operations, facts.actionId(), "V136-CS", facts.siteTitle(),
                 facts.v136Score(), true);
 
-        if (facts.v193Eligible()) {
+        if (facts.v193Eligible() && facts.v193FormationSupported()) {
             operations.add(addSiting(facts.actionId(), "V193-CS", TraceOutputKind.BANDED,
                     facts.v193PlaybookWeight() + V193_DESTINATION_OFFSET,
                     "V193 (CS) FLIP-GATE CONTROL: steer one ability body to '"
