@@ -693,6 +693,24 @@ public class TriggerConditions {
 
 
     /**
+     * Determine if a card accepted by the card to stack filter was just stacked as a race destiny on a card accepted by the stacked on filter.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param cardToStackFilter the card to stack filter
+     * @param stackedOnFilter the stacked on filter
+     * @return true or false
+     */
+    public static boolean justStackedRaceDestinyOn(SwccgGame game, EffectResult effectResult, Filterable cardToStackFilter, Filterable stackedOnFilter) {
+        if (effectResult.getType() == EffectResult.Type.RACE_DESTINY_STACKED) {
+            RaceDestinyStackedResult raceDestinyStackedResult = (RaceDestinyStackedResult) effectResult;
+            return Filters.and(cardToStackFilter).accepts(game, raceDestinyStackedResult.getCard())
+                    && Filters.and(stackedOnFilter).accepts(game, raceDestinyStackedResult.getStackedOn());
+        }
+        return false;
+    }
+
+
+    /**
      * Determine if a card accepted by the filter was just deployed (and is still in play).
      * @param game the game
      * @param effectResult the effect result

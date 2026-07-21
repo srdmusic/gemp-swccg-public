@@ -5743,6 +5743,10 @@ public class GameConditions {
         return game.getModifiersQuerying().isSenateInSession();
     }
 
+    public static boolean isShootUsedByTuskenRaiderThisTurn(SwccgGame game) {
+        return game.getModifiersQuerying().isShootUsedByTuskenRaiderThisTurn();
+    }
+
     public static int countSpeciesOnTable(SwccgGame game, String playerId) {
         int numSpecies = 0;
         for (Species species : Species.values()) {

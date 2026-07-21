@@ -149,6 +149,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersState, Mod
     private boolean _bluffCardStacked;
     private boolean _deathStarPowerShutDown;
     private boolean _senateIsInSession;
+    private boolean _shootUsedByTuskenRaider;
     private Set<String> _usedCombatCard = new HashSet<String>();
     private Map<Integer, List<PhysicalCard>> _targetedByWeaponsMap = new HashMap<Integer, List<PhysicalCard>>();
     private Map<Integer, List<SwccgBuiltInCardBlueprint>> _targetedByPermanentWeaponsMap = new HashMap<Integer, List<SwccgBuiltInCardBlueprint>>();
@@ -501,6 +502,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersState, Mod
         snapshot._bluffCardStacked = _bluffCardStacked;
         snapshot._deathStarPowerShutDown = _deathStarPowerShutDown;
         snapshot._senateIsInSession = _senateIsInSession;
+        snapshot._shootUsedByTuskenRaider = _shootUsedByTuskenRaider;
 
         snapshot._usedCombatCard.addAll(_usedCombatCard);
         for (Integer cardId : _targetedByWeaponsMap.keySet()) {
@@ -1186,6 +1188,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersState, Mod
         _startOfPhaseLimitCounters.clear();
         _endOfPhaseLimitCounters.clear();
         _bluffCardStacked = false;
+        _shootUsedByTuskenRaider = false;
         _usedCombatCard.clear();
         _cardPlayedThisTurn.clear();
         _cardWithAbilityDeployedThisTurn.clear();
@@ -1588,6 +1591,21 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersState, Mod
         return _senateIsInSession;
     }
 
+
+    /**
+     * Records that a 'shoot' action was taken by a Tusken Raider.
+     */
+    public void shootUsedByTuskenRaider() {
+        _shootUsedByTuskenRaider = true;
+    }
+
+    /**
+     * Determines if a 'shoot' action was taken by a Tusken Raider this turn.
+     * @return true or false
+     */
+    public boolean isShootUsedByTuskenRaiderThisTurn() {
+        return _shootUsedByTuskenRaider;
+    }
 
     /**
      * Records that the specified card being played (or being deployed).
