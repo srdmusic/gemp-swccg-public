@@ -178,7 +178,7 @@ public class Card_6_036_Tests {
 
 	@Test
 	public void R_kik_D_necMayAddToJawaWeaponTotalWeaponDestiny() {
-		//test1: may choose optional action when firing jawa weapon
+		//test1: may choose optional action when firing jawa weapon, after destiny is drawn
 		//test2: if optional action taken, may choose how much to add (1, 2, or 3)
 		//test3: added amount applies to total weapon destiny
 		var scn = GetScenario();
@@ -210,11 +210,27 @@ public class Card_6_036_Tests {
 		scn.LSPass();
 
 		scn.DSPass(); //Fire Jawa Ion Gun - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //DESTINY_DRAWN - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //COMPLETE_DESTINY_DRAW - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //DRAWING_DESTINY_COMPLETE - Optional responses
 		assertTrue(scn.LSCardActionAvailable(rkik, "Add")); //test1
 		scn.LSUseCardAction(rkik, "Add");
 		assertTrue(scn.LSDecisionAvailable("Choose amount")); //test2
 		scn.LSDecided(1); //test2
 
+		scn.LSPass();
 		//ion gun should exclude trooper if total destiny (0 + 1) = defense value (1)
 
 		scn.PassAllResponses();
@@ -253,6 +269,72 @@ public class Card_6_036_Tests {
 		scn.LSPass();
 
 		scn.DSPass(); //Fire Blaster - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //DESTINY_DRAWN - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //COMPLETE_DESTINY_DRAW - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //DRAWING_DESTINY_COMPLETE - Optional responses
+		assertFalse(scn.LSCardActionAvailable(rkik, "Add")); //test1
+	}
+
+	@Test
+	public void R_kik_D_necMayNotAddToTotalWeaponDestinyIfNotFiring() {
+		//test1: may not choose optional action when another character fires a jawa weapon
+		var scn = GetScenario();
+
+		var rkik = scn.GetLSCard("rkik");
+		var jawa = scn.GetLSCard("jawa");
+		var ion = scn.GetLSCard("ion");
+
+		var trooper = scn.GetDSFiller(1);
+		var site = scn.GetDSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, rkik, jawa, trooper);
+		scn.AttachCardsTo(jawa, ion);
+
+		scn.SkipToPhase(Phase.BATTLE);
+		scn.DSInitiateBattle(site);
+
+		scn.LSActivateForceCheat(1); //enough to fire ion gun
+		scn.PrepareLSDestiny(0);
+
+		scn.PassAllResponses();
+		scn.DSPass();
+		assertTrue(scn.AwaitingLSWeaponsSegmentActions());
+		scn.LSUseCardAction(ion, "Fire");
+		scn.LSChooseCard(trooper);
+
+		scn.DSPass(); //Use 1 Force - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //Fire Jawa Ion Gun - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //DESTINY_DRAWN - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //COMPLETE_DESTINY_DRAW - Optional responses
+		scn.LSPass();
+
+		scn.DSPass(); //DRAWING_DESTINY_COMPLETE - Optional responses
 		assertFalse(scn.LSCardActionAvailable(rkik, "Add")); //test1
 	}
 

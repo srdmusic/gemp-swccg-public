@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set6.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.DuringSabaccCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -18,12 +19,12 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.ModifyTotalWeaponDestinyBeforeDrawingDestinyEffect;
+import com.gempukku.swccgo.logic.effects.ModifyTotalWeaponDestinyEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.WinsDoubleAtSabaccModifier;
-import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -59,9 +60,11 @@ public class Card6_036 extends AbstractAlien {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggers(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+
         // Check condition(s)
-        if (TriggerConditions.isFiringWeapon(game, effect, Filters.Jawa_weapon, self)) {
+        if (TriggerConditions.isAboutToCompleteWeaponDestinyDraw(game, effectResult)
+                && GameConditions.isDuringWeaponFiringAtTarget(game, Filters.and(Filters.Jawa_weapon, Filters.weaponBeingFiredBy(self)), Filters.any)) {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Add up to 3 to total weapon destiny");
 
@@ -70,9 +73,9 @@ public class Card6_036 extends AbstractAlien {
                     new PlayoutDecisionEffect(action, playerId,
                             new IntegerAwaitingDecision("Choose amount to add to total weapon destiny", 1, 3, 3) {
                                 @Override
-                                public void decisionMade(int result) throws DecisionResultInvalidException {
+                                public void decisionMade(final int result) throws DecisionResultInvalidException {
                                     action.appendEffect(
-                                            new ModifyTotalWeaponDestinyBeforeDrawingDestinyEffect(action, result));
+                                            new ModifyTotalWeaponDestinyEffect(action, result));
                                 }
                             }
                     )
