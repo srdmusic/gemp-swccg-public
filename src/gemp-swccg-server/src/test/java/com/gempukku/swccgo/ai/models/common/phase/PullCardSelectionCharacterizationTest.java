@@ -147,6 +147,52 @@ public class PullCardSelectionCharacterizationTest {
     }
 
     @Test
+    public void v297ReplayPullChoosesThroneRoomOverGeneratorInBothAdapters() {
+        GameState gameState = gameState(1);
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isActiveFlipGateLocationTitle(
+                "Naboo: Theed Palace Throne Room")).thenReturn(true);
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isActiveFlipGateLocationTitle(
+                "Naboo: Theed Palace Throne Room")).thenReturn(true);
+
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, PLAYER, "ARBITRARY_CARDS",
+                "Choose card to deploy from Reserve Deck",
+                "v297.2-rando", Phase.DEPLOY);
+        randoContext.setCardIds(List.of("temp6", "temp12"));
+        randoContext.setBlueprints(List.of("13_76", "12_174"));
+        randoContext.setSelectable(List.of(true, true));
+        randoContext.setObjectiveAnalyzer(randoObjective);
+
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, PLAYER, "ARBITRARY_CARDS",
+                "Choose card to deploy from Reserve Deck",
+                "v297.2-chosen", Phase.DEPLOY);
+        chosenContext.setCardIds(List.of("temp6", "temp12"));
+        chosenContext.setBlueprints(List.of("13_76", "12_174"));
+        chosenContext.setSelectable(List.of(true, true));
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertEquals(List.of("temp6", "temp12"),
+                rando.stream().map(action -> action.getActionId()).toList());
+        assertEquals(List.of(
+                        "Naboo: Theed Palace Generator",
+                        "Naboo: Theed Palace Throne Room"),
+                rando.stream().map(action -> action.getCardName()).toList());
+        assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
+                40.0f, 340.0f);
+        assertMirrored(rando, chosen);
+    }
+
+    @Test
     public void unknownCloudCityPullPreservesExactAdapterScoreAndParity() {
         GameState gameState = gameState(3);
         PhysicalCard carbonite = card(

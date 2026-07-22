@@ -68,6 +68,11 @@ public final class PullSelectionCandidatePolicy {
                     TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 200.0f,
                     "V25 HUNT DOWN: LIGHTSABER — critical for deck engine!"));
         }
+        if (facts.gainDecision() && facts.activeObjectiveFlipGate()) {
+            operations.add(add(facts.actionId(), "PULL.OBJECTIVE.FLIP_GATE_SITE",
+                    TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 300.0f,
+                    "Pull the exact pre-flip objective control site"));
+        }
 
         addCloudCityUnknown(operations, facts);
 

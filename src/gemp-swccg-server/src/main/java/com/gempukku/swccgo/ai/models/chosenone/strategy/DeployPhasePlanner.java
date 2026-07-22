@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.chosenone.strategy;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.models.chosenone.RandoLogger;
 import com.gempukku.swccgo.common.CardCategory;
@@ -813,6 +814,35 @@ public class DeployPhasePlanner {
                 selected.addAll(selectBestFormationPair(
                     deployable, deployable, forceAvailable));
                 if (selected.size() != 2) return null;
+            }
+        }
+
+        int selectedPower = selected.stream().mapToInt(card -> card.power).sum();
+        int selectedAbility = selected.stream().mapToInt(card -> card.ability).sum();
+        float projectedAbility = gate.ourAbility + selectedAbility;
+        boolean opponentPresent = gate.theirCardCount > 0
+            || gate.theirPower > 0.0f || gate.theirAbility > 0.0f;
+        if (opponentPresent) {
+            CardInfo lead = selected.get(0);
+            int formationBodies = selected.size() + friendlyCharacters;
+            DeployTacticalPolicy.ContactAssessment contact =
+                DeployTacticalPolicy.assessV171V172Contact(
+                    new DeployTacticalPolicy.ContactFacts(
+                        "objective-formation-plan", gateTitle,
+                        true, true, formationBodies, gate.ourPower,
+                        lead.power, selectedPower - lead.power,
+                        Math.max(0, formationBodies - 1), 0.0f,
+                        gate.theirPower,
+                        selected.stream().mapToInt(card -> card.power).max().orElse(0),
+                        0));
+            if (!contact.viable() || projectedAbility < 4.0f) {
+                LOG.warn("OBJECTIVE FORMATION REJECTED: {} at {} projects power {}/ability {} "
+                        + "into power {}/ability {} (V171/V172 contact={}, battle destiny={})",
+                    selected.stream().map(card -> card.name).collect(Collectors.joining(" + ")),
+                    gateTitle, contact.projectedPower(), projectedAbility,
+                    gate.theirPower, gate.theirAbility,
+                    contact.viable(), projectedAbility >= 4.0f);
+                return null;
             }
         }
 

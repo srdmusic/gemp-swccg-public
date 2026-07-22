@@ -384,6 +384,14 @@ public class ObjectiveAnalyzer {
         return rule != null ? rule.actorFilterKey + " at " + flipCriticalControlSite : null;
     }
 
+    /** True only for the exact, still-open actor-gated objective control site. */
+    public boolean isActiveFlipGateLocationTitle(String candidateTitle) {
+        return analyzed && !isFlipped && candidateTitle != null
+                && findFlipGateActorRule() != null
+                && flipCriticalControlSite != null
+                && flipCriticalControlSite.equalsIgnoreCase(candidateTitle.trim());
+    }
+
     /** True when this physical card satisfies the active flip-gate actor filter. */
     public boolean matchesFlipGateActorRequirement(
             SwccgGame game, String playerId, PhysicalCard candidate) {

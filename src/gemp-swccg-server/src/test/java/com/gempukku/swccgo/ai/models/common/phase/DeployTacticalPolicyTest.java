@@ -9,6 +9,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class DeployTacticalPolicyTest {
@@ -109,6 +110,26 @@ public class DeployTacticalPolicyTest {
         assertEquals("DEPLOY_V171_V172_CONTACT_POLICY", result.producerId());
         assertEquals(1, result.operations().size());
         assertEquals("V172", result.operations().get(0).ruleArmId().id());
+    }
+
+    @Test
+    public void v171AssessmentRejectsTheReplayFivePowerWaveIntoNine() {
+        DeployTacticalPolicy.ContactAssessment replay =
+                DeployTacticalPolicy.assessV171V172Contact(
+                        new DeployTacticalPolicy.ContactFacts(
+                                "objective-plan", "Naboo: Theed Palace Throne Room",
+                                true, true, 2, 0.0f, 3.0f, 2.0f,
+                                1.0f, 0.0f, 9.0f, 3.0f, 0));
+        assertFalse(replay.viable());
+        assertEquals(5.0f, replay.projectedPower(), 0.0f);
+
+        DeployTacticalPolicy.ContactAssessment nearParity =
+                DeployTacticalPolicy.assessV171V172Contact(
+                        new DeployTacticalPolicy.ContactFacts(
+                                "objective-plan", "Naboo: Theed Palace Throne Room",
+                                true, true, 2, 0.0f, 4.0f, 3.0f,
+                                1.0f, 0.0f, 9.0f, 4.0f, 0));
+        assertTrue(nearParity.waveViable());
     }
 
     @Test

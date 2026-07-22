@@ -42,7 +42,7 @@ public class DeployBudgetPolicyTest {
         DeployBudgetPolicy.FutureObligationFacts facts =
                 new DeployBudgetPolicy.FutureObligationFacts(
                         "a", 3, 3, 1, 3, 1,
-                        true, 1, true, true);
+                        true, 1, true, true, 0);
         List<PolicyOperation> operations =
                 DeployBudgetPolicy.futureObligations(facts).result().operations();
         assertEquals(5, operations.size());
@@ -58,9 +58,31 @@ public class DeployBudgetPolicyTest {
         DeployBudgetPolicy.FutureObligationFacts facts =
                 new DeployBudgetPolicy.FutureObligationFacts(
                         "a", 0, 0, 1, 3, 1,
-                        true, 1, true, true);
+                        true, 1, true, true, 3);
         assertEquals(0, DeployBudgetPolicy.futureObligations(facts)
                 .result().operations().size());
+    }
+
+    @Test
+    public void objectiveFormationReservePenalizesOnlyBudgetBreakingDeploys() {
+        DeployBudgetPolicy.Evaluation breaking =
+                DeployBudgetPolicy.futureObligations(
+                        new DeployBudgetPolicy.FutureObligationFacts(
+                                "maul", 5, 4, 0, 0, 0,
+                                false, 0, false, false, 3));
+        assertEquals(DeployBudgetPolicy.AdapterStep.FALL_THROUGH,
+                breaking.adapterStep());
+        assertSingle(breaking.result().operations(),
+                "DEPLOY.BUDGET.OBJECTIVE_FORMATION_RESERVE", -500.0f);
+
+        DeployBudgetPolicy.Evaluation affordable =
+                DeployBudgetPolicy.futureObligations(
+                        new DeployBudgetPolicy.FutureObligationFacts(
+                                "cheap", 5, 2, 0, 0, 0,
+                                false, 0, false, false, 3));
+        assertEquals(DeployBudgetPolicy.AdapterStep.FALL_THROUGH,
+                affordable.adapterStep());
+        assertEquals(0, affordable.result().operations().size());
     }
 
     private static List<PolicyOperation> newMaintenance(int totalForce, int cost,

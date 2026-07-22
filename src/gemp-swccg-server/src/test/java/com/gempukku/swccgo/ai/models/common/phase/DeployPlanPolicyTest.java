@@ -36,7 +36,7 @@ public class DeployPlanPolicyTest {
     public void turnOneNonTdigwattLocationPlanFallsThrough() {
         DeployPlanPolicy.Evaluation evaluation = DeployPlanPolicy.evaluate(
                 new DeployPlanPolicy.Facts(
-                        "a", true, true, false, 99,
+                        "a", true, true, false, false, 99,
                         false, false, true, false,
                         false, 1, 6, false, 0,
                         false, "locations"));
@@ -104,13 +104,42 @@ public class DeployPlanPolicyTest {
         assertEquals(PolicyOperationKind.ADD, unavailableOther.get(0).kind());
     }
 
+    @Test
+    public void objectiveFormationTieBreakAddsOnlyTwentyFiveToPlannedCard() {
+        DeployPlanPolicy.Evaluation offPlan = DeployPlanPolicy.evaluate(
+                new DeployPlanPolicy.Facts(
+                        "maul", true, true, false, true,
+                        Integer.MAX_VALUE, false, false, false, false,
+                        false, 5, 8, false, 0, false, "reinforce"));
+        assertEquals(DeployPlanPolicy.AdapterStep.FALL_THROUGH,
+                offPlan.adapterStep());
+        assertEquals(1, offPlan.result().operations().size());
+        assertEquals("V40-plan-off-plan",
+                offPlan.result().operations().get(0).ruleArmId().id());
+        assertEquals(PolicyOperationKind.ADD,
+                offPlan.result().operations().get(0).kind());
+
+        DeployPlanPolicy.Evaluation buddy = DeployPlanPolicy.evaluate(
+                new DeployPlanPolicy.Facts(
+                        "buddy", true, true, true, true,
+                        2, false, false, false, false,
+                        false, 5, 8, false, 0, false, "reinforce"));
+        assertEquals(DeployPlanPolicy.AdapterStep.FALL_THROUGH,
+                buddy.adapterStep());
+        assertOperations(buddy.result().operations(),
+                new String[]{"deploy-plan-membership", "deploy-plan-priority",
+                        "DEPLOY.FORMATION.OBJECTIVE_TIE_BREAK"},
+                new float[]{100.0f, 25.0f, 25.0f});
+    }
+
     private static DeployPlanPolicy.Facts facts(
             boolean hasPlan, boolean pending, boolean planned, int priority,
             boolean allowExtras, boolean waiting, boolean locationStrategy,
             boolean locationCard, int turn, int force, boolean complete,
             int extraBudget, boolean holdBack) {
         return new DeployPlanPolicy.Facts(
-                "a", hasPlan, pending, planned, priority, allowExtras, waiting,
+                "a", hasPlan, pending, planned, false,
+                priority, allowExtras, waiting,
                 locationStrategy, locationCard, locationStrategy,
                 turn, force, complete, extraBudget, holdBack, "locations");
     }

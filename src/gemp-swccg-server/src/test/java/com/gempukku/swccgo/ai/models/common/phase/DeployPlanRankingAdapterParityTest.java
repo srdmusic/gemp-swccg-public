@@ -183,6 +183,51 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
+    public void bothBotsRejectTheReplayUnderpoweredThroneRoomRecovery()
+            throws Exception {
+        FormationFixture base = formationFixture();
+        PhysicalCard dofine = character(
+                "14_76", "Captain Daultay Dofine", 105, 3, 3, 3);
+        PhysicalCard infantry = character(
+                "14_80", "Infantry Battle Droid", 106, 2, 0, 3);
+        AiBoardAnalyzer.LocationAnalysis occupiedGate =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        base.location(), 0.0f, 9.0f, 0.0f, 6.0f,
+                        2, 1, 0, 2,
+                        AiBoardAnalyzer.ContestStatus.LOSING, true);
+        FormationFixture fixture = new FormationFixture(
+                base.game(), base.location(), dofine, infantry,
+                List.of(occupiedGate));
+
+        var randoPlanner = newRandoPlanner();
+        var randoAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        configureFormationAnalyzer(randoAnalyzer, fixture);
+        randoPlanner.setObjectiveAnalyzer(randoAnalyzer);
+        configurePlannerState(randoPlanner, fixture.game());
+
+        var chosenPlanner = newChosenPlanner();
+        var chosenAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        configureFormationAnalyzer(chosenAnalyzer, fixture);
+        chosenPlanner.setObjectiveAnalyzer(chosenAnalyzer);
+        configurePlannerState(chosenPlanner, fixture.game());
+
+        assertNull(invokeFormationPlan(randoPlanner,
+                List.of(
+                        new com.gempukku.swccgo.ai.models.rando.strategy.CardInfo(
+                                fixture.actor()),
+                        new com.gempukku.swccgo.ai.models.rando.strategy.CardInfo(
+                                fixture.buddy())), fixture.locations()));
+        assertNull(invokeFormationPlan(chosenPlanner,
+                List.of(
+                        new com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo(
+                                fixture.actor()),
+                        new com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo(
+                                fixture.buddy())), fixture.locations()));
+    }
+
+    @Test
     public void existingBuddyAllowsTheExactActorToJoinAloneInBothBots()
             throws Exception {
         FormationFixture fixture = formationFixture();

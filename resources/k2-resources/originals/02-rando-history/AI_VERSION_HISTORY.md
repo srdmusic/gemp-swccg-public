@@ -8226,3 +8226,32 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     action, decision metadata, objective data, client, database, deck-library, routing, or player-choice
     source changed. No game was run. Packaging, jar presence, JVM load, deployment, and live firing remain
     separate gates. Revert the single V297.1 commit; V297 and all earlier behavior remain independent.
+
+  ==== V297.2 (2026-07-22): secure and recover the Invasion Throne Room ====
+    Replay `qf9cikuy6byt1m5v` exposed three remaining boundaries. Naboo: Theed Palace Generator and
+    Naboo: Theed Palace Throne Room tied at the generic Reserve Deck pull score of 40. A Daultay
+    Dofine plus Battle Droid Infantry recovery plan projected only power 5 and ability 3 into opposing
+    power 9 and ability 6. After Dofine deployed, Infantry then tied Maul In Scimitar at 775; stable
+    ordering spent the Force on Maul and made the remaining buddy unaffordable.
+
+    The exact, still-open actor-gated objective site now receives a shared +300 pull contribution, so
+    the replay scores Generator 40 and Throne Room 340. This decisively breaks the generic tie while
+    remaining below explicit +400 setup pulls. Opponent-occupied gate recovery plans now reuse the
+    existing V171/V172 contact assessment and require projected ability at least 4; the replay's 5/3
+    wave is rejected. Unopposed V297 formations and Endor's non-actor-gated one-body rule are unchanged.
+
+    An offered objective-formation member receives a new +25 tie-break, so this packet cannot overturn
+    a score gap greater than 25. The pre-existing high-priority plan arm may also contribute its unchanged
+    +25; that older score is not new V297.2 influence. Shared future-obligation policy adds -500 to an
+    off-plan deploy only when it would leave less Force than the currently offered remaining formation
+    needs. This selects Infantry over the equal-scoring Maul without globally suppressing better
+    deployments or creating a new veto.
+
+    Replay-shaped and policy tests passed 79/0/0/0; source ownership/parity passed; the clean full reactor
+    passed 2080/0/0/26 across 287 suites; async packaging passed; and all V297.2 markers are present in
+    web.jar. Packaged server jar SHA-256 is
+    dabe713c03ade21ae03114173cebc394bd4d8abab26b6c198c64d64735cbd945 and packaged web jar SHA-256 is
+    f3d3fbf038e5d66fd8331d6df5a5ffb5bad647feb0cb546f40884e4eea19314e. Production scope is AI-only;
+    no engine, game, card, action, decision metadata, objective data, client, database, deck-library,
+    routing, or player-choice source changed. JVM load, deployment, and live firing remain separate gates.
+    Revert the single V297.2 commit; V297.1 and all earlier behavior remain independent.

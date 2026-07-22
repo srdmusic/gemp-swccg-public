@@ -122,6 +122,8 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         assertEquals("Endor Operations", endor.getActivePlaybook().label);
         assertTrue(endor.getRequiredCardsOnTable().contains("ominous rumors"));
         assertTrue(endor.getRequiredCardsOnTable().contains("establish secret base"));
+        assertFalse(endor.hasFlipGateActorRequirement());
+        assertFalse(endor.isActiveFlipGateLocationTitle("Endor: Bunker"));
 
         assertTrue(iwtm.isWantThatMap());
         assertTrue(iwtm.getIwtmSystemBpIds().contains("208_51"));

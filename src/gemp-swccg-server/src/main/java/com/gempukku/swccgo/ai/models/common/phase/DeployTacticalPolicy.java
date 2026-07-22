@@ -83,34 +83,45 @@ public final class DeployTacticalPolicy {
             return new PolicyResult("DEPLOY_V171_V172_CONTACT_POLICY", operations);
         }
 
+        ContactAssessment assessment = assessV171V172Contact(facts);
+
+        if (assessment.soloDominant()) {
+            add(operations, facts.actionId(), "V172", 600.0f, String.format(
+                    "V172 SOLO DOMINANCE: %s \u2014 this body alone overpowers them (%.0f vs %.0f eff, 2x) \u2014 deploy and battle",
+                    facts.locationTitle(), facts.ourPower() + facts.deployingPower(),
+                    facts.opponentEffectivePower()));
+        } else if (assessment.waveViable()) {
+            add(operations, facts.actionId(), "V171", 600.0f, String.format(
+                    "V171 DEPLOY TO CONTACT: %s opponent-occupied, affordable wave projects %.0f (hit-adj %.0f) vs %.0f eff (reserves held: %.0f) \u2014 deploy directly, battle THIS turn",
+                    facts.locationTitle(), assessment.projectedPower(),
+                    assessment.hitAdjustedPower(),
+                    facts.opponentEffectivePower(), facts.reservedForce()));
+        }
+
+        return new PolicyResult("DEPLOY_V171_V172_CONTACT_POLICY", operations);
+    }
+
+    /** Shared V171/V172 contact math for action scoring and funded plan checks. */
+    public static ContactAssessment assessV171V172Contact(ContactFacts facts) {
+        Objects.requireNonNull(facts, "facts");
         float projectedPower = facts.ourPower() + facts.deployingPower()
                 + facts.affordableWavePower();
         float biggestBody = Math.max(facts.deployingPower(),
                 facts.maxHandCharacterPower());
         float hitDiscount = Math.min(facts.armedOpponentCount(),
                 (int) facts.affordableBuddyCount() + 1) * biggestBody;
-        boolean soloDominant = facts.deployingPower() > 0.0f
+        float hitAdjustedPower = projectedPower - hitDiscount;
+        boolean eligible = facts.opponentPresent() && facts.deployingCharacter();
+        boolean soloDominant = eligible && facts.deployingPower() > 0.0f
                 && facts.opponentEffectivePower() > 0.0f
                 && facts.ourPower() + facts.deployingPower()
                 >= 2.0f * facts.opponentEffectivePower();
-
-        if (soloDominant) {
-            add(operations, facts.actionId(), "V172", 600.0f, String.format(
-                    "V172 SOLO DOMINANCE: %s \u2014 this body alone overpowers them (%.0f vs %.0f eff, 2x) \u2014 deploy and battle",
-                    facts.locationTitle(), facts.ourPower() + facts.deployingPower(),
-                    facts.opponentEffectivePower()));
-        } else if (facts.handCharacterCount() >= 2
+        boolean waveViable = eligible && !soloDominant
+                && facts.handCharacterCount() >= 2
                 && facts.affordableBuddyCount() >= 1.0f
-                && projectedPower - hitDiscount
-                >= facts.opponentEffectivePower() - 2.0f) {
-            add(operations, facts.actionId(), "V171", 600.0f, String.format(
-                    "V171 DEPLOY TO CONTACT: %s opponent-occupied, affordable wave projects %.0f (hit-adj %.0f) vs %.0f eff (reserves held: %.0f) \u2014 deploy directly, battle THIS turn",
-                    facts.locationTitle(), projectedPower,
-                    projectedPower - hitDiscount,
-                    facts.opponentEffectivePower(), facts.reservedForce()));
-        }
-
-        return new PolicyResult("DEPLOY_V171_V172_CONTACT_POLICY", operations);
+                && hitAdjustedPower >= facts.opponentEffectivePower() - 2.0f;
+        return new ContactAssessment(projectedPower, hitAdjustedPower,
+                soloDominant, waveViable);
     }
 
     public static DrainContestEvaluation evaluateV53V51Drain(
@@ -736,6 +747,15 @@ public final class DeployTacticalPolicy {
         public ContactFacts {
             Objects.requireNonNull(actionId, "actionId");
             locationTitle = locationTitle == null ? "" : locationTitle;
+        }
+    }
+
+    public record ContactAssessment(float projectedPower,
+                                    float hitAdjustedPower,
+                                    boolean soloDominant,
+                                    boolean waveViable) {
+        public boolean viable() {
+            return soloDominant || waveViable;
         }
     }
 

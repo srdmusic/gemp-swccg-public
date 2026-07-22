@@ -444,11 +444,12 @@ public class DeployEvaluator extends ActionEvaluator {
                 side == null ? "side " : "");
         }
 
+        boolean plannedDeployActionOffered = false;
+
         // === STALE PLAN DETECTION ===
         // Check if available deploy actions match the plan
         // If none match and we have deploy actions, check WHY before marking stale
         if (plan != null && !plan.getInstructions().isEmpty() && !plan.isPlanComplete()) {
-            boolean planCardsAvailable = false;
             boolean planCardsStillInHand = false;
             List<String> cardIdList = context.getCardIds();
             List<String> blueprintList = context.getBlueprints();
@@ -526,13 +527,13 @@ public class DeployEvaluator extends ActionEvaluator {
                         actionCard.getPermanentCardId(), actionCard.getCardId(), bpId)
                     : bpId != null ? plan.getInstructionForCard(bpId) : null;
                 if (matchingInstruction != null) {
-                    planCardsAvailable = true;
+                    plannedDeployActionOffered = true;
                     LOG.debug("   Found plan card {} in action: {}", bpId, actionText.substring(0, Math.min(60, actionText.length())));
                     break;
                 }
             }
 
-            if (!planCardsAvailable) {
+            if (!plannedDeployActionOffered) {
                 if (planCardsStillInHand) {
                     // Plan cards are in hand but not deployable - probably can't afford them
                     // Set flag so we apply HUGE penalty to non-plan deploys
@@ -1448,11 +1449,24 @@ public class DeployEvaluator extends ActionEvaluator {
                     boolean tdigwattPlan = context.getObjectiveAnalyzer() != null
                         && context.getObjectiveAnalyzer().isAnalyzed()
                         && context.getObjectiveAnalyzer().isTdigwatt();
+                    boolean objectiveFormationPlan = plan != null
+                        && plan.getReason() != null
+                        && plan.getReason().startsWith(
+                            "V297 objective flip-gate formation");
+                    int objectiveFormationReserve = 0;
+                    if (objectiveFormationPlan && plannedDeployActionOffered) {
+                        for (DeploymentInstruction instruction : plan.getInstructions()) {
+                            if (instruction != plannedInstruction) {
+                                objectiveFormationReserve += instruction.getDeployCost();
+                            }
+                        }
+                    }
                     DeployPlanPolicy.Evaluation planEvaluation = DeployPlanPolicy.evaluate(
                         new DeployPlanPolicy.Facts(
                             actionId, plan != null,
                             plan != null && !plan.getInstructions().isEmpty(),
                             plannedInstruction != null,
+                            objectiveFormationPlan,
                             plannedInstruction != null
                                 ? plannedInstruction.getPriority() : Integer.MAX_VALUE,
                             plan != null && plan.isForceAllowExtras(),
@@ -1605,7 +1619,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                 v67zTransitReserve, v79VergeMoveReserve,
                                 obligationMaintenance, obligationMaintenanceCost,
                                 gameState != null && context.getForceReserveFacts().dtfActive,
-                                gameState != null && context.getForceReserveFacts().grabberUnused));
+                                gameState != null && context.getForceReserveFacts().grabberUnused,
+                                objectiveFormationReserve));
                     PolicyContributionLedger futureObligationLedger = new PolicyContributionLedger(
                         (decisionId == null || decisionId.isBlank()
                             ? "deploy-future-obligation"

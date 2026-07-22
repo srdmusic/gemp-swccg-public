@@ -51,6 +51,7 @@ public final class PullSelectionCandidateFacts {
     public record UnknownPull(String actionId, String title,
                               CardCategory category, boolean gainDecision,
                               boolean huntDownLightsaber,
+                              boolean activeObjectiveFlipGate,
                               CloudCityMode cloudCityMode,
                               CloudCitySite cloudCitySite,
                               Integer priorityProtectionScore,

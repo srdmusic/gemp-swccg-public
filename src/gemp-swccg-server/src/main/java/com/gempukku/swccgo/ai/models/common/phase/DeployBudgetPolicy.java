@@ -104,6 +104,13 @@ public final class DeployBudgetPolicy {
                     AdapterStep.FALL_THROUGH);
         }
         int forceAfterDeploy = facts.availableForce() - facts.deployCost();
+        if (facts.objectiveFormationReserve() > 0
+                && forceAfterDeploy < facts.objectiveFormationReserve()) {
+            operations.add(add(facts.actionId(),
+                    "DEPLOY.BUDGET.OBJECTIVE_FORMATION_RESERVE", -500.0f,
+                    String.format("Off-plan deploy leaves %d Force; offered objective formation needs %d",
+                            forceAfterDeploy, facts.objectiveFormationReserve())));
+        }
         if (facts.vaderMoveReserve() > 0
                 && forceAfterDeploy < facts.vaderMoveReserve()) {
             operations.add(add(facts.actionId(), "V48", -500.0f,
@@ -162,7 +169,8 @@ public final class DeployBudgetPolicy {
                                         boolean maintenanceCard,
                                         int maintenanceCost,
                                         boolean dtfActive,
-                                        boolean grabberUnused) {
+                                        boolean grabberUnused,
+                                        int objectiveFormationReserve) {
         public FutureObligationFacts {
             Objects.requireNonNull(actionId, "actionId");
         }

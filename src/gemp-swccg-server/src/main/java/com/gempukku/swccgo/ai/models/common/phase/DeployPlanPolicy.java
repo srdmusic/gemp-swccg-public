@@ -42,6 +42,11 @@ public final class DeployPlanPolicy {
                     operations.add(add(facts.actionId(), "deploy-plan-priority", 25.0f,
                             "High priority deployment"));
                 }
+                if (facts.objectiveFormationPlan()) {
+                    operations.add(add(facts.actionId(),
+                            "DEPLOY.FORMATION.OBJECTIVE_TIE_BREAK", 25.0f,
+                            "Objective formation plan wins deploy ties within 25 points"));
+                }
             } else if (!facts.forceAllowExtras()) {
                 if (facts.locationStrategy()) {
                     if (facts.locationCard()) {
@@ -130,6 +135,7 @@ public final class DeployPlanPolicy {
 
     public record Facts(String actionId, boolean hasPlan,
                         boolean hasPendingInstructions, boolean plannedCard,
+                        boolean objectiveFormationPlan,
                         int instructionPriority, boolean forceAllowExtras,
                         boolean waitingForPlannedCards, boolean locationStrategy,
                         boolean locationCard, boolean tdigwatt,

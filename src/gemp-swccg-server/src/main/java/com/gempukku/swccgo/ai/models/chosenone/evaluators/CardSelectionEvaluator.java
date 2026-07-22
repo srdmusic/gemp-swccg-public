@@ -271,12 +271,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             boolean blueprintKnown, boolean lossDecision, String decisionLower) {
         String titleLower = cardTitle != null
                 ? cardTitle.toLowerCase(Locale.ROOT) : "";
+        var objective = context.getObjectiveAnalyzer();
         boolean huntDownLightsaber = false;
         if (!lossDecision && titleLower.contains("lightsaber")) {
-            var objective = context.getObjectiveAnalyzer();
             huntDownLightsaber = objective != null && objective.isAnalyzed()
                     && objective.isHuntDownV();
         }
+        boolean activeObjectiveFlipGate = !lossDecision
+                && objective != null
+                && objective.isActiveFlipGateLocationTitle(cardTitle);
 
         PullSelectionCandidateFacts.CloudCityMode cloudCityMode =
                 PullSelectionCandidateFacts.CloudCityMode.NONE;
@@ -319,12 +322,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             PullSelectionCandidatePolicy.scoreUnknownPull(
                 new PullSelectionCandidateFacts.UnknownPull(
                     action.getActionId(), cardTitle, category, !lossDecision,
-                    huntDownLightsaber, cloudCityMode,
+                    huntDownLightsaber, activeObjectiveFlipGate, cloudCityMode,
                     pullCloudCitySite(titleLower), priorityProtectionScore,
                     amsdState)));
 
         if (huntDownLightsaber) {
             logger.warn("V25 HUNT DOWN UNKNOWN-GAIN: {} is a lightsaber — PRIORITY (+200)", cardTitle);
+        }
+        if (activeObjectiveFlipGate) {
+            logger.warn("OBJECTIVE GATE PULL: {} is the exact open flip site (+300)", cardTitle);
         }
         if (cloudCityMode == PullSelectionCandidateFacts.CloudCityMode.SLIP_SLIDING
                 && titleLower.contains("dining room")) {

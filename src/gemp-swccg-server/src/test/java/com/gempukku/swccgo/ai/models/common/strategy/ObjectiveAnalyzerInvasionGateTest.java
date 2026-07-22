@@ -34,6 +34,10 @@ public class ObjectiveAnalyzerInvasionGateTest {
             assertEquals(1600.0f,
                     analyzer.getActivePlaybook().weights.deployFlipGateSite, 0.0f);
             assertTrue(analyzer.hasFlipGateActorRequirement());
+            assertTrue(analyzer.isActiveFlipGateLocationTitle(
+                    "Naboo: Theed Palace Throne Room"));
+            assertFalse(analyzer.isActiveFlipGateLocationTitle(
+                    "Naboo: Theed Palace Generator"));
             assertEquals("Neimoidian at naboo: theed palace throne room",
                     analyzer.getFlipGateActorRequirementLabel());
             assertTrue(analyzer.matchesFlipGateActorRequirement(
@@ -95,6 +99,8 @@ public class ObjectiveAnalyzerInvasionGateTest {
         assertFalse(flipped.advancesUnfilledFlipGateActorRequirement(
                 flippedFixture.game, PLAYER_ID,
                 flippedFixture.candidate, flippedFixture.throneRoom));
+        assertFalse(flipped.isActiveFlipGateLocationTitle(
+                "Naboo: Theed Palace Throne Room"));
     }
 
     private static Fixture fixture(

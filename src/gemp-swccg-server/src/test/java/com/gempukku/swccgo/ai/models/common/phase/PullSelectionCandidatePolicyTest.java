@@ -36,7 +36,7 @@ public class PullSelectionCandidatePolicyTest {
         PolicyResult result = PullSelectionCandidatePolicy.scoreUnknownPull(
                 new PullSelectionCandidateFacts.UnknownPull(
                         ACTION_ID, "Cloud City: Carbonite Chamber",
-                        CardCategory.LOCATION, true, true,
+                        CardCategory.LOCATION, true, true, false,
                         PullSelectionCandidateFacts.CloudCityMode.IM_SORRY,
                         PullSelectionCandidateFacts.CloudCitySite.CARBONITE_CHAMBER,
                         100,
@@ -59,7 +59,7 @@ public class PullSelectionCandidatePolicyTest {
         PolicyResult result = PullSelectionCandidatePolicy.scoreUnknownPull(
                 new PullSelectionCandidateFacts.UnknownPull(
                         ACTION_ID, "Cloud City: Dining Room",
-                        CardCategory.LOCATION, false, false,
+                        CardCategory.LOCATION, false, false, false,
                         PullSelectionCandidateFacts.CloudCityMode.SLIP_SLIDING,
                         PullSelectionCandidateFacts.CloudCitySite.DINING_ROOM,
                         null, PullSelectionCandidateFacts.UnknownAmsdState.NONE));
@@ -75,7 +75,7 @@ public class PullSelectionCandidatePolicyTest {
         PolicyResult result = PullSelectionCandidatePolicy.scoreUnknownPull(
                 new PullSelectionCandidateFacts.UnknownPull(
                         ACTION_ID, "Protected card", CardCategory.EFFECT,
-                        false, false,
+                        false, false, false,
                         PullSelectionCandidateFacts.CloudCityMode.NONE,
                         PullSelectionCandidateFacts.CloudCitySite.OTHER,
                         100, PullSelectionCandidateFacts.UnknownAmsdState.NONE));
@@ -84,6 +84,25 @@ public class PullSelectionCandidatePolicyTest {
         assertDomains(result, TraceDomainId.FORCE_LOSS_PAYMENT);
         assertKinds(result, TraceOutputKind.BANDED);
         assertDeltas(result, 30.000002f);
+    }
+
+    @Test
+    public void exactOpenObjectiveGateDominatesGenericLocationTie() {
+        PolicyResult result = PullSelectionCandidatePolicy.scoreUnknownPull(
+                new PullSelectionCandidateFacts.UnknownPull(
+                        ACTION_ID, "Naboo: Theed Palace Throne Room",
+                        CardCategory.LOCATION, true, false, true,
+                        PullSelectionCandidateFacts.CloudCityMode.NONE,
+                        PullSelectionCandidateFacts.CloudCitySite.OTHER,
+                        null, PullSelectionCandidateFacts.UnknownAmsdState.NONE));
+
+        assertIds(result, "pull-unknown-location",
+                "PULL.OBJECTIVE.FLIP_GATE_SITE");
+        assertDomains(result, TraceDomainId.PULL_SEARCH,
+                TraceDomainId.DECK_PLAYBOOK);
+        assertKinds(result, TraceOutputKind.ORDERING,
+                TraceOutputKind.BANDED);
+        assertDeltas(result, 10.0f, 300.0f);
     }
 
     @Test
