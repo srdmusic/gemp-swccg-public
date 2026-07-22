@@ -8203,3 +8203,26 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     jar hash, started after the build, and returned HTTP 200. Fresh live-game branch firing remains a
     separate gate. No engine, card, action, decision metadata, objective data, player-choice,
     database, client, or deck-library source changed. Revert this V297 follow-up commit independently.
+
+  ==== V297.1 (2026-07-22): Hunt Down destiny, spy-target, and draw-bank repair ====
+    The Hunt Down replay `replays/asdf/5fc1htlk4hzuwaeb.xml.gz` exposed four independent AI-only
+    regressions. Activation emptied an 11-card Reserve because the three-card buffer depended on a
+    contested-location snapshot. A non-spy move into an opponent-undercover-only site still won because
+    positive contest and drain terms totaled +445 while V67f contributed only -100. The exact deploy-plan
+    target at that same dead-drain site received V136 -1000, but V201 still deferred every useful Coruscant
+    alternative merely because the exact target was selectable. V182 then banked 13 Force for Lord Vader
+    even though the deploy planner had correctly classified that hand card as a dead persona.
+
+    V297.1 preserves four Reserve cards regardless of the pre-deploy battle snapshot; the replay boundary
+    becomes 7 of 11 activated. Existing V67f becomes -1500, so the exact replay move becomes
+    +445 -1500 = -1055 and loses to Pass. Mirrored move adapters reject rank-two doctrine on that
+    non-spy dead-drain destination, but preserve real opposing combat, spy movers, and rank-three survival.
+    A spy-blocked exact plan target is treated as unavailable for V201 sequencing, so existing Coruscant
+    Hunt/contest weights can select a viable attack. V182 now ignores characters whose persona is already
+    deployed, while retaining its existing behavior for a live deployable army.
+
+    Focused replay, policy, adapter, and source-parity tests passed 143/0/0/0. The clean full reactor passed
+    2062/0/0/26. Production scope is AI-only, mirrored between Rando and Chosen One; no engine, game, card,
+    action, decision metadata, objective data, client, database, deck-library, routing, or player-choice
+    source changed. No game was run. Packaging, jar presence, JVM load, deployment, and live firing remain
+    separate gates. Revert the single V297.1 commit; V297 and all earlier behavior remain independent.

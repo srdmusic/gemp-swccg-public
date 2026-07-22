@@ -1487,13 +1487,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             int plannedTargetIndex = context.getCardIds().indexOf(plannedTargetId);
                             boolean plannedTargetOffered = plannedTargetIndex >= 0
                                 && isCardSelectable(context, plannedTargetIndex);
-                            applyDeployPlanDestinationPolicy(action,
-                                DeployPlanPolicy.evaluateDestinationTarget(
-                                    new DeployPlanPolicy.DestinationTargetFacts(
-                                        action.getActionId(), isPlannedTarget,
-                                        plannedTargetOffered,
-                                        plannedTargetName)));
-                            if (isPlannedTarget) {
+                            boolean plannedTargetSpyBlocked = plannedTargetOffered
+                                && isOpponentUndercoverOnlyTarget(context, plannedTargetId);
+                            if (!isPlannedTarget || !plannedTargetSpyBlocked) {
+                                applyDeployPlanDestinationPolicy(action,
+                                    DeployPlanPolicy.evaluateDestinationTarget(
+                                        new DeployPlanPolicy.DestinationTargetFacts(
+                                            action.getActionId(), isPlannedTarget,
+                                            plannedTargetOffered && !plannedTargetSpyBlocked,
+                                            plannedTargetName)));
+                            }
+                            if (isPlannedTarget && plannedTargetSpyBlocked) {
+                                logger.warn("V297.1 PLAN FALLBACK: {} is blocked only by an opponent undercover spy; release alternate destinations",
+                                    title);
+                            } else if (isPlannedTarget) {
                                 logger.info("✅ {} is the PLANNED target (+200)", title);
                             }
                         }
@@ -7186,6 +7193,34 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
         Boolean isSelectable = selectable.get(index);
         return isSelectable == null || isSelectable;
+    }
+
+    private boolean isOpponentUndercoverOnlyTarget(DecisionContext context, String targetCardId) {
+        try {
+            if (context.getGameState() == null || context.getGame() == null
+                    || context.getPlayerId() == null) {
+                return false;
+            }
+            PhysicalCard target = context.getGameState().findCardById(Integer.parseInt(targetCardId));
+            String opponentId = context.getGameState().getOpponent(context.getPlayerId());
+            if (target == null || opponentId == null) {
+                return false;
+            }
+            boolean opponentUndercover = false;
+            for (PhysicalCard card : context.getGameState().getCardsAtLocation(target)) {
+                if (card != null && opponentId.equals(card.getOwner())
+                        && card.isUndercover()) {
+                    opponentUndercover = true;
+                    break;
+                }
+            }
+            return opponentUndercover
+                    && context.getGame().getModifiersQuerying().getTotalPowerAtLocation(
+                            context.getGameState(), target, opponentId,
+                            false, false) <= 0.0f;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     /**

@@ -253,22 +253,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
-            // ACTIVATE action choice: shared policy owns the V168/V61c boundary. The same
-            // battle-plausible fact also feeds the amount chooser and zero-activation confirmation.
+            // ACTIVATE action choice: shared policy owns the V168/V61c four-card floor.
             if (textLower.contains("activate force")) {
                 int v61cReserve = context.getReserveDeckSize();
-                boolean v61cBattlePlausible = context.isBattlePlausibleThisTurn();
                 ActivateActionPolicy.Evaluation activation = ActivateActionPolicy.topLevel(
-                        actionId, v61cReserve, v61cBattlePlausible);
+                        actionId, v61cReserve);
                 activateTopLevelLedger.register(activation.result());
                 PolicyOperationAdapter.apply(action, activateTopLevelLedger);
                 switch (activation.mode()) {
-                    case TOP_LEVEL_ACTIVATE_WITHOUT_BATTLE -> {
-                        logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
-                        logger.warn("V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
-                    }
                     case TOP_LEVEL_KEEP_BUFFER -> logger.warn(
-                            "V61c DESTINY BUFFER: reserve={} <= 3 — passing activation (no V168 +5000) on '{}'",
+                            "V61c DESTINY BUFFER: reserve={} <= 4; passing activation (no V168 +5000) on '{}'",
                             v61cReserve, actionText);
                     case TOP_LEVEL_ACTIVATE -> logger.warn(
                             "V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
@@ -1141,19 +1135,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     ? context.getDecisionText().toLowerCase() : "";
                 if (decisionTextCheck.contains("not activated force") || decisionTextCheck.contains("have not activated")) {
                     int v38cReserve = context.getReserveDeckSize();
-                    boolean v38cBattlePlausible = context.isBattlePlausibleThisTurn();
                     ActivateActionPolicy.Evaluation activation = ActivateActionPolicy.zeroConfirmation(
-                            actionId, textLower, v38cReserve, v38cBattlePlausible);
+                            actionId, textLower, v38cReserve);
                     activateConfirmationLedger.register(activation.result());
                     PolicyOperationAdapter.apply(action, activateConfirmationLedger);
                     switch (activation.mode()) {
                         case CONFIRM_KEEP_BUFFER -> logger.warn(
-                                "V61c DESTINY BUFFER: reserve={} <= 3 — confirming pass (skip activation)",
+                                "V61c DESTINY BUFFER: reserve={} <= 4; confirming pass (skip activation)",
                                 v38cReserve);
-                        case CONFIRM_REACTIVATION_WITHOUT_BATTLE -> {
-                            logger.warn("V61c BATTLE-INTENT: no contested location — activating full");
-                            logger.warn("V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
-                        }
+                        case REJECT_BUFFER_REACTIVATION -> logger.warn(
+                                "V61c DESTINY BUFFER: rejecting reactivation with reserve={}",
+                                v38cReserve);
                         case CONFIRM_REACTIVATION -> logger.warn(
                                 "V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
                         case REJECT_SKIP -> logger.warn(

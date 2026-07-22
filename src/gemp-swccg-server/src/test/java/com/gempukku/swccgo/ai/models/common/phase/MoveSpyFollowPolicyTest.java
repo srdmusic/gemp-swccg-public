@@ -186,6 +186,39 @@ public class MoveSpyFollowPolicyTest {
                 false, false, "Sith Temple").applies());
     }
 
+    @Test
+    public void opponentSpyOnlyDestinationPenalizesOnlyNonSpyMovers() {
+        MoveSpyFollowPolicy.Contribution blocked =
+                MoveSpyFollowPolicy.opponentSpyOnlyDestination(
+                        true, false, false, "Upper Chamber");
+
+        assertTrue(blocked.applies());
+        assertFloat(-1500.0f, blocked.delta());
+        assertFalse(MoveSpyFollowPolicy.opponentSpyOnlyDestination(
+                true, true, false, "Upper Chamber").applies());
+        assertFalse(MoveSpyFollowPolicy.opponentSpyOnlyDestination(
+                true, false, true, "Upper Chamber").applies());
+        assertFalse(MoveSpyFollowPolicy.opponentSpyOnlyDestination(
+                false, false, false, "Upper Chamber").applies());
+    }
+
+    @Test
+    public void destinationResolutionSkipsTheMoversSource() {
+        Harness harness = new Harness();
+        PhysicalCard source = location("Source");
+        PhysicalCard destination = location("Destination");
+        PhysicalCard spy = spyAt(source);
+        harness.locations(source, destination);
+        harness.power(source, 0.0f);
+        harness.power(destination, 3.0f);
+
+        MoveSpyFollowPolicy.Evaluation result =
+                harness.evaluate(spy, "move from source to destination");
+
+        assertEquals(MoveSpyFollowPolicy.Branch.FOLLOW, result.branch());
+        assertSame(destination, result.destination());
+    }
+
     private static PhysicalCard location(String title) {
         PhysicalCard location = mock(PhysicalCard.class);
         when(location.getTitle()).thenReturn(title);
@@ -215,7 +248,7 @@ public class MoveSpyFollowPolicyTest {
         }
 
         private void locations(PhysicalCard... locations) {
-            when(gameState.getTopLocations())
+            when(gameState.getLocationsInOrder())
                     .thenReturn(List.of(locations));
         }
 

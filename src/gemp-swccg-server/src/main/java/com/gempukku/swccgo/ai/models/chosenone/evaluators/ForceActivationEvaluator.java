@@ -11,10 +11,10 @@ import java.util.List;
 // ═══════════════════════════════════════════════════════════
 // ═══ SECTION: ACTIVATE (reorg 2026-07-06) ═══
 // Owns: how MUCH Force to activate (INTEGER amount): V57 economy curve, V67at tuning, V42 pacing,
-// V43 floor, V61c keep-3 destiny cap. Hub: none. KIND mix (ACTIVATE overall): 4 VETO / 3 ORDERING;
+// V43 floor, V297.1 unconditional keep-4 destiny cap. Hub: none. KIND mix (ACTIVATE overall): 4 VETO / 3 ORDERING;
 // key magnitudes live in ActionTextEvaluator: the V61c -6000 / V168 +5000 / V38.3 +500 triangle is ONE boundary.
-// V61c battle-intent gate uses the shared predicate DecisionContext.isBattlePlausibleThisTurn() —
-// THREE sites must agree: the keep-3 cap here, ATE's V168/V61c activate block, ATE's V38.3 confirm carve-out.
+// THREE sites share the same four-card floor: the amount cap here, ATE's V168/V61c activate block,
+// and ATE's V38.3 confirmation choice. The pre-deploy contested-location snapshot cannot bypass it.
 // Absorbs (dead, commented below/nearby — revert path, do not delete): none in this file.
 // Cross-refs: ACTIVATE region in ActionTextEvaluator (whether/interleave), PULL-ENGINE (V97: pulls fire
 // BEFORE activating), BATTLE-1 (V61b shares the battle-plausible scan). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
@@ -163,28 +163,20 @@ public class ForceActivationEvaluator extends ActionEvaluator {
      *       amount = min(amount, max(1, 6 - currentForce))
      *       → Same catastrophic under-activation in late game.
      *
-     * Steve's philosophy is explicit: activate ALL force every turn, deploy
-     * everything, draw the rest into hand. Hoarding force pile or "saving"
-     * reserve deck just makes Rando die passively instead of fighting.
-     *
-     * V43 still guarantees minimum 1 (prevents engine loops). If reserve
-     * deck truly runs out, the normal loss condition takes over — but we
-     * don't artificially hobble ourselves on the way there.
+     * Activate the maximum legal amount while preserving four Reserve Deck
+     * cards for future weapon and battle destinies. V43 still guarantees a
+     * minimum of one when an amount choice is mandatory.
      */
     private int calculateActivationAmount(DecisionContext context, int maxAvailable) {
         int reserveDeck = context.getReserveDeckSize();
         int lifeForce = context.getLifeForce();
-        boolean battlePlausible = context.isBattlePlausibleThisTurn();
         ActivateAmountPolicy.Result result = ActivateAmountPolicy.assess(
             new ActivateAmountPolicy.Input(
-                context.getMin(), maxAvailable, reserveDeck, lifeForce, battlePlausible));
+                context.getMin(), maxAvailable, reserveDeck, lifeForce));
 
-        if (!battlePlausible && reserveDeck - 3 < maxAvailable) {
-            logger.warn("V61c BATTLE-INTENT: no contested location, activating full");
-        }
         String mode = switch (result.mode()) {
             case ACTIVATE_FULL -> "V57 ACTIVATE FULL";
-            case KEEP_THREE_FOR_BATTLE -> "V61c DESTINY BUFFER (keep 3 in reserve)";
+            case KEEP_FOUR_FOR_DESTINY -> "V61c DESTINY BUFFER (keep 4 in reserve)";
             case KEEP_TWO_AT_LOW_LIFE -> "V67at END-GAME RESERVE-2 (lifeForce <= 10)";
         };
         logger.warn("{}: activating {} of {} (reserve={}, forcePile={}, hand={}, lifeForce={})",

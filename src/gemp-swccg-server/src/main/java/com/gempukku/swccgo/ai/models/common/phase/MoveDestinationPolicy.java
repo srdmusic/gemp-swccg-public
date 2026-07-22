@@ -411,7 +411,7 @@ public final class MoveDestinationPolicy {
                                     + " has only opponent spy ("
                                     + opponentSpies
                                     + ") — drain blocked, prefer draining elsewhere",
-                            -100.0f));
+                            -1500.0f));
         }
         return new SpyAwareContest(
                 ContestDisposition.NONE, Contribution.none());

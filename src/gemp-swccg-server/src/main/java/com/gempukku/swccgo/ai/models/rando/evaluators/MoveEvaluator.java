@@ -115,6 +115,7 @@ public class MoveEvaluator extends ActionEvaluator {
     private boolean ladderWrongDirVeto;        // V38.3 wrong-direction — deferred so the transit carve-out can suppress it
     private String ladderWrongDirVetoReason;
     private boolean ladderRankMoveRan;         // rankMoveFromLocation executed (gates the finalizer's default -50)
+    private boolean ladderSpyBlockedDestination;
 
     // Track cards we've already tried moving this turn
     private Set<String> pendingMoveCardIds = new HashSet<>();
@@ -144,6 +145,7 @@ public class MoveEvaluator extends ActionEvaluator {
         ladderWrongDirVeto = false;
         ladderWrongDirVetoReason = null;
         ladderRankMoveRan = false;
+        ladderSpyBlockedDestination = false;
     }
 
     /** R4 claim — MANDATORY TRANSIT. Keyed claim identity (V53b arms only) also arms the V38.3 carve-out (ruling L3). */
@@ -167,6 +169,10 @@ public class MoveEvaluator extends ActionEvaluator {
      * @return true if the claim was accepted
      */
     private boolean ladderClaimR2(String tag, float ownFine, float drainDelta, boolean battleSeeking) {
+        if (ladderSpyBlockedDestination) {
+            logger.info("LADDER: R2 claim by {} REJECTED: destination contains only an opponent undercover spy", tag);
+            return false;
+        }
         MoveLadderPolicy.RankTwoClaim claim = MoveLadderPolicy.claimR2(
             ladderRank, ladderBattleSeekingClaim, ownFine, drainDelta, battleSeeking);
         ladderRank = claim.rank();
@@ -448,6 +454,53 @@ public class MoveEvaluator extends ActionEvaluator {
                     cardToMove = gameState.findCardById(cardId);
                 } catch (Exception e) {
                     logger.debug("[MoveEvaluator] Could not find card: {}", e.getMessage());
+                }
+            }
+
+            // A lone opponent undercover spy prevents our drain but is not a battle target.
+            // Keep survival moves available, while blocking doctrine claims that would send
+            // an ordinary character into that dead position instead of contesting elsewhere.
+            if (cardToMove != null && gameState != null && game != null
+                    && playerId != null) {
+                try {
+                    PhysicalCard spyDestination = MoveSpyFollowPolicy.resolveDestination(
+                            gameState, cardToMove.getAtLocation(), actionLower);
+                    if (spyDestination != null) {
+                        String opponentId = gameState.getOpponent(playerId);
+                        boolean opponentUndercover = false;
+                        List<PhysicalCard> destinationCards =
+                                gameState.getCardsAtLocation(spyDestination);
+                        if (opponentId != null && destinationCards != null) {
+                            for (PhysicalCard card : destinationCards) {
+                                if (card != null && opponentId.equals(card.getOwner())
+                                        && card.isUndercover()) {
+                                    opponentUndercover = true;
+                                    break;
+                                }
+                            }
+                        }
+                        boolean opponentHasCombatPresence = opponentId != null
+                                && game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, spyDestination, opponentId,
+                                        false, false) > 0.0f;
+                        boolean moverSpy = cardToMove.getBlueprint() != null
+                                && cardToMove.getBlueprint().hasKeyword(
+                                        com.gempukku.swccgo.common.Keyword.SPY);
+                        MoveSpyFollowPolicy.Contribution spyBlocked =
+                                MoveSpyFollowPolicy.opponentSpyOnlyDestination(
+                                        opponentUndercover,
+                                        opponentHasCombatPresence,
+                                        moverSpy,
+                                        spyDestination.getTitle());
+                        if (spyBlocked.applies()) {
+                            action.addReasoning(spyBlocked.reason(), spyBlocked.delta());
+                            ladderSpyBlockedDestination = true;
+                            logger.warn("V297.1 SPY-BLOCKED DESTINATION: {} will not move to {} while only an opponent undercover spy is there",
+                                    cardToMove.getTitle(), spyDestination.getTitle());
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.debug("V297.1 spy-blocked destination check error: {}", e.getMessage());
                 }
             }
 

@@ -36,6 +36,23 @@ public class MoveSpyFollowSourceParityTest {
     }
 
     @Test
+    public void opponentSpyOnlyDestinationUsesSharedFactsAndKeepsLadderOwnership()
+            throws IOException {
+        String move = evaluatorSource("rando");
+        String policy = policySource();
+
+        assertEquals(1, countOccurrences(
+                move, "MoveSpyFollowPolicy.opponentSpyOnlyDestination("));
+        assertEquals(1, countOccurrences(
+                move, "MoveSpyFollowPolicy.resolveDestination("));
+        assertTrue(move.contains("ladderSpyBlockedDestination = true"));
+        assertTrue(move.contains("if (ladderSpyBlockedDestination)"));
+        assertTrue(policy.contains(
+                "public static Contribution opponentSpyOnlyDestination("));
+        assertTrue(policy.contains("-1500.0f, false"));
+    }
+
+    @Test
     public void adapterRetainsGateScoreLogCatchAndLadderOwnership()
             throws IOException {
         String move = evaluatorSource("rando");

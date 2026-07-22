@@ -9,7 +9,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ActivateActionTextPolicyParityTest {
     @Test
-    public void unknownBattleFactsKeepTheLegacyV61cPlusV383SumForBothBots() {
+    public void fourCardFloorKeepsTheV61cPlusV383SumForBothBots() {
         var randoContext = randoContext("ACTION_CHOICE", "Choose action",
                 List.of("activate"), List.of("Activate Force"));
         var chosenContext = chosenContext("ACTION_CHOICE", "Choose action",

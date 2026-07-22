@@ -12,12 +12,14 @@ import java.util.List;
 public final class ActivateActionPolicy {
     public enum Mode {
         TOP_LEVEL_ACTIVATE,
-        TOP_LEVEL_ACTIVATE_WITHOUT_BATTLE,
+        // V297.1 RETIRED (battlePlausible bypass removed):
+        // TOP_LEVEL_ACTIVATE_WITHOUT_BATTLE,
         TOP_LEVEL_KEEP_BUFFER,
         CONFIRM_KEEP_BUFFER,
         REJECT_BUFFER_REACTIVATION,
         CONFIRM_REACTIVATION,
-        CONFIRM_REACTIVATION_WITHOUT_BATTLE,
+        // V297.1 RETIRED (battlePlausible bypass removed):
+        // CONFIRM_REACTIVATION_WITHOUT_BATTLE,
         REJECT_SKIP,
         ALWAYS_ACTIVATE,
         NONE
@@ -29,17 +31,14 @@ public final class ActivateActionPolicy {
     private ActivateActionPolicy() {
     }
 
-    public static Evaluation topLevel(String actionId, int reserveDeckSize,
-                                      boolean battlePlausible) {
-        if (reserveDeckSize <= 3 && battlePlausible) {
+    public static Evaluation topLevel(String actionId, int reserveDeckSize) {
+        if (reserveDeckSize <= 4) {
             return one(actionId, "V61c-activate-choice", TraceOutputKind.VETO,
                     -6000.0f,
-                    "V61c DESTINY BUFFER: reserve <= 3 — pass activation, keep 3 for destiny",
+                    "V61c DESTINY BUFFER: reserve <= 4; pass activation, keep 4 for destiny",
                     Mode.TOP_LEVEL_KEEP_BUFFER);
         }
-        Mode mode = reserveDeckSize <= 3
-                ? Mode.TOP_LEVEL_ACTIVATE_WITHOUT_BATTLE
-                : Mode.TOP_LEVEL_ACTIVATE;
+        Mode mode = Mode.TOP_LEVEL_ACTIVATE;
         return one(actionId, "V168-activate-choice", TraceOutputKind.ORDERING,
                 5000.0f,
                 "V168 ALWAYS ACTIVATE: never pass Force activation while Force can be activated",
@@ -47,28 +46,26 @@ public final class ActivateActionPolicy {
     }
 
     public static Evaluation zeroConfirmation(String actionId, String actionTextLower,
-                                              int reserveDeckSize,
-                                              boolean battlePlausible) {
-        if (reserveDeckSize <= 3 && battlePlausible) {
+                                              int reserveDeckSize) {
+        // See topLevel: a later deploy or move can create the battle.
+        if (reserveDeckSize <= 4) {
             if ("yes".equals(actionTextLower)) {
                 return one(actionId, "V61c-confirm-pass", TraceOutputKind.VETO,
                         9999.0f,
-                        "V61c DESTINY BUFFER: reserve <= 3 — confirm pass, keep 3 for destiny",
+                        "V61c DESTINY BUFFER: reserve <= 4; confirm pass, keep 4 for destiny",
                         Mode.CONFIRM_KEEP_BUFFER);
             }
             if ("no".equals(actionTextLower)) {
                 return one(actionId, "V61c-reject-reactivation", TraceOutputKind.VETO,
                         -9999.0f,
-                        "V61c DESTINY BUFFER: reserve <= 3 — do not go back and activate",
+                        "V61c DESTINY BUFFER: reserve <= 4; do not go back and activate",
                         Mode.REJECT_BUFFER_REACTIVATION);
             }
             return none();
         }
 
         if ("no".equals(actionTextLower)) {
-            Mode mode = reserveDeckSize <= 3
-                    ? Mode.CONFIRM_REACTIVATION_WITHOUT_BATTLE
-                    : Mode.CONFIRM_REACTIVATION;
+            Mode mode = Mode.CONFIRM_REACTIVATION;
             return one(actionId, "V38.3-confirm-reactivation", TraceOutputKind.VETO,
                     9999.0f,
                     "V38.3 MUST ACTIVATE: Go back and activate Force!",

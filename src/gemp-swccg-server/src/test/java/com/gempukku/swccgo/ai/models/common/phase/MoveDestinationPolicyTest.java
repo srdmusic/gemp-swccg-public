@@ -562,7 +562,7 @@ public class MoveDestinationPolicyTest {
                         "Mos Eisley", 0.0f, 2, 0.0f, false);
         assertEquals(MoveDestinationPolicy.ContestDisposition.SPY_ONLY,
                 spyOnly.disposition());
-        assertFloat(-100.0f, spyOnly.contribution().delta());
+        assertFloat(-1500.0f, spyOnly.contribution().delta());
         assertEquals(
                 "V67f SPY-ONLY: Mos Eisley has only opponent spy (2) — drain blocked, prefer draining elsewhere",
                 spyOnly.contribution().reason());
@@ -571,6 +571,18 @@ public class MoveDestinationPolicyTest {
                 MoveDestinationPolicy.spyAwareContest(
                         "Empty", 0.0f, 0, 0.0f, false)
                         .disposition());
+    }
+
+    @Test
+    public void replaySpyOnlyPenaltyDominatesFalseContestAndDrainBonuses() {
+        float replayScore = 15.0f + 15.0f + 350.0f + 15.0f
+                + 10.0f + 40.0f
+                + MoveDestinationPolicy.spyAwareContest(
+                        "Malachor: Sith Temple Upper Chamber",
+                        0.0f, 1, 18.0f, false)
+                        .contribution().delta();
+
+        assertFloat(-1055.0f, replayScore);
     }
 
     @Test

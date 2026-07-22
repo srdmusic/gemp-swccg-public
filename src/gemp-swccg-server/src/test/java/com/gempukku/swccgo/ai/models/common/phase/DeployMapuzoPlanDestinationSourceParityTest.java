@@ -25,6 +25,12 @@ public class DeployMapuzoPlanDestinationSourceParityTest {
         assertTrue(source.contains("DeploySitingPolicy.evaluateMapuzoDestination("));
         assertTrue(source.contains("DeployPlanPolicy.evaluateDestinationTarget("));
         assertTrue(source.contains("isCardSelectable(context, plannedTargetIndex)"));
+        assertTrue(source.contains(
+                "isOpponentUndercoverOnlyTarget(context, plannedTargetId)"));
+        assertTrue(source.contains(
+                "if (!isPlannedTarget || !plannedTargetSpyBlocked)"));
+        assertTrue(source.contains(
+                "plannedTargetOffered && !plannedTargetSpyBlocked"));
         for (String retired : new String[]{
                 "action.addReasoning(\"V64 MAPUZO DEFENSE:",
                 "action.addReasoning(\"V64 MAPUZO TRAP:",

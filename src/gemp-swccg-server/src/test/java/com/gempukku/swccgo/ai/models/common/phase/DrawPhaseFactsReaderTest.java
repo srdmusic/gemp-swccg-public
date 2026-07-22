@@ -1,17 +1,28 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PhysicalCardVisitor;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Test;
 
 import java.lang.reflect.Proxy;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class DrawPhaseFactsReaderTest {
 
@@ -62,6 +73,77 @@ public class DrawPhaseFactsReaderTest {
         assertFalse(expensive.expensiveCardInHand());
         assertEquals(0, starved.deployablePower());
         assertEquals(999, starved.minCostForThresholdPower());
+    }
+
+    @Test
+    public void offensiveBankIgnoresACharacterWhosePersonaIsAlreadyDeployed() {
+        SwccgGame game = mock(SwccgGame.class);
+        GameState gameState = mock(GameState.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard location = mock(PhysicalCard.class);
+        PhysicalCard handVader = mock(PhysicalCard.class);
+        PhysicalCard tableVader = mock(PhysicalCard.class);
+        SwccgCardBlueprint handBlueprint = mock(SwccgCardBlueprint.class);
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(game.getOpponent("dark")).thenReturn("light");
+        when(gameState.getLocationsInOrder()).thenReturn(List.of(location));
+        when(handVader.getBlueprint()).thenReturn(handBlueprint);
+        when(handVader.getCardId()).thenReturn(1);
+        when(handBlueprint.getCardCategory()).thenReturn(CardCategory.CHARACTER);
+        when(handBlueprint.hasPowerAttribute()).thenReturn(true);
+        when(handBlueprint.getPower()).thenReturn(6.0f);
+        when(handBlueprint.getDeployCost()).thenReturn(13.0f);
+        when(handBlueprint.getPersonas()).thenReturn(Set.of(Persona.VADER));
+        when(tableVader.getOwner()).thenReturn("dark");
+        when(tableVader.getCardId()).thenReturn(2);
+        when(modifiers.hasPersona(gameState, tableVader, Persona.VADER))
+                .thenReturn(true);
+        doAnswer(invocation -> {
+            PhysicalCardVisitor visitor = invocation.getArgument(0);
+            visitor.visitPhysicalCard(tableVader);
+            return false;
+        }).when(gameState).iterateAllCardsOnTable(
+                any(PhysicalCardVisitor.class), eq(false), eq(false), eq(false));
+        when(modifiers.getTotalPowerAtLocation(
+                gameState, location, "light", false, false)).thenReturn(6.0f);
+        when(modifiers.getTotalPowerAtLocation(
+                gameState, location, "dark", false, false)).thenReturn(0.0f);
+        when(modifiers.isBattleground(gameState, location, null)).thenReturn(true);
+
+        assertEquals(0, DrawPhaseFactsReader.computeOffensiveBank(
+                game, gameState, "dark", List.of(handVader),
+                11, 14, LogManager.getLogger(getClass())));
+    }
+
+    @Test
+    public void offensiveBankStillCountsADeployableCharacter() {
+        SwccgGame game = mock(SwccgGame.class);
+        GameState gameState = mock(GameState.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard location = mock(PhysicalCard.class);
+        PhysicalCard character = mock(PhysicalCard.class);
+        SwccgCardBlueprint blueprint = mock(SwccgCardBlueprint.class);
+
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(game.getOpponent("dark")).thenReturn("light");
+        when(gameState.getLocationsInOrder()).thenReturn(List.of(location));
+        when(character.getBlueprint()).thenReturn(blueprint);
+        when(blueprint.getCardCategory()).thenReturn(CardCategory.CHARACTER);
+        when(blueprint.hasPowerAttribute()).thenReturn(true);
+        when(blueprint.getPower()).thenReturn(6.0f);
+        when(blueprint.getDeployCost()).thenReturn(13.0f);
+        when(blueprint.getPersonas()).thenReturn(Set.of());
+        when(modifiers.getTotalPowerAtLocation(
+                gameState, location, "light", false, false)).thenReturn(6.0f);
+        when(modifiers.getTotalPowerAtLocation(
+                gameState, location, "dark", false, false)).thenReturn(0.0f);
+        when(modifiers.isBattleground(gameState, location, null)).thenReturn(true);
+
+        assertEquals(13, DrawPhaseFactsReader.computeOffensiveBank(
+                game, gameState, "dark", List.of(character),
+                11, 14, LogManager.getLogger(getClass())));
     }
 
     private static PhysicalCard card(CardCategory category, float power,

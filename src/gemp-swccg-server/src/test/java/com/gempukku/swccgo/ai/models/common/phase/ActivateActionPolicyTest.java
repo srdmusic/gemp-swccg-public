@@ -8,40 +8,40 @@ import static org.junit.Assert.assertEquals;
 
 public class ActivateActionPolicyTest {
     @Test
-    public void topLevelKeepsTheThreeCardBattleBuffer() {
-        assertEvaluation(ActivateActionPolicy.topLevel("A", 3, true),
+    public void topLevelKeepsTheFourCardDestinyBuffer() {
+        assertEvaluation(ActivateActionPolicy.topLevel("A", 4),
                 ActivateActionPolicy.Mode.TOP_LEVEL_KEEP_BUFFER,
                 "V61c-activate-choice", TraceOutputKind.VETO, -6000.0f,
-                "V61c DESTINY BUFFER: reserve <= 3 — pass activation, keep 3 for destiny");
+                "V61c DESTINY BUFFER: reserve <= 4; pass activation, keep 4 for destiny");
     }
 
     @Test
-    public void topLevelActivatesWhenNoBattleIsPlausible() {
-        assertEvaluation(ActivateActionPolicy.topLevel("A", 3, false),
-                ActivateActionPolicy.Mode.TOP_LEVEL_ACTIVATE_WITHOUT_BATTLE,
+    public void topLevelActivatesAboveTheDestinyBuffer() {
+        assertEvaluation(ActivateActionPolicy.topLevel("A", 5),
+                ActivateActionPolicy.Mode.TOP_LEVEL_ACTIVATE,
                 "V168-activate-choice", TraceOutputKind.ORDERING, 5000.0f,
                 "V168 ALWAYS ACTIVATE: never pass Force activation while Force can be activated");
     }
 
     @Test
-    public void zeroConfirmationHonorsTheBattleBuffer() {
-        assertEvaluation(ActivateActionPolicy.zeroConfirmation("Y", "yes", 3, true),
+    public void zeroConfirmationHonorsTheDestinyBuffer() {
+        assertEvaluation(ActivateActionPolicy.zeroConfirmation("Y", "yes", 4),
                 ActivateActionPolicy.Mode.CONFIRM_KEEP_BUFFER,
                 "V61c-confirm-pass", TraceOutputKind.VETO, 9999.0f,
-                "V61c DESTINY BUFFER: reserve <= 3 — confirm pass, keep 3 for destiny");
-        assertEvaluation(ActivateActionPolicy.zeroConfirmation("N", "no", 3, true),
+                "V61c DESTINY BUFFER: reserve <= 4; confirm pass, keep 4 for destiny");
+        assertEvaluation(ActivateActionPolicy.zeroConfirmation("N", "no", 4),
                 ActivateActionPolicy.Mode.REJECT_BUFFER_REACTIVATION,
                 "V61c-reject-reactivation", TraceOutputKind.VETO, -9999.0f,
-                "V61c DESTINY BUFFER: reserve <= 3 — do not go back and activate");
+                "V61c DESTINY BUFFER: reserve <= 4; do not go back and activate");
     }
 
     @Test
-    public void zeroConfirmationReturnsToActivationWithoutABattle() {
-        assertEvaluation(ActivateActionPolicy.zeroConfirmation("N", "no", 3, false),
-                ActivateActionPolicy.Mode.CONFIRM_REACTIVATION_WITHOUT_BATTLE,
+    public void zeroConfirmationReturnsToActivationAboveTheBuffer() {
+        assertEvaluation(ActivateActionPolicy.zeroConfirmation("N", "no", 5),
+                ActivateActionPolicy.Mode.CONFIRM_REACTIVATION,
                 "V38.3-confirm-reactivation", TraceOutputKind.VETO, 9999.0f,
                 "V38.3 MUST ACTIVATE: Go back and activate Force!");
-        assertEvaluation(ActivateActionPolicy.zeroConfirmation("Y", "yes", 3, false),
+        assertEvaluation(ActivateActionPolicy.zeroConfirmation("Y", "yes", 5),
                 ActivateActionPolicy.Mode.REJECT_SKIP,
                 "V38.3-reject-skip", TraceOutputKind.VETO, -9999.0f,
                 "V38.3 NEVER SKIP ACTIVATION: Do not pass without activating!");

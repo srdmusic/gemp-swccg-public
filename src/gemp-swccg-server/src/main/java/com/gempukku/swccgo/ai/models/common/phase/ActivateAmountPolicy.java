@@ -5,15 +5,14 @@ public final class ActivateAmountPolicy {
 
     public enum Mode {
         ACTIVATE_FULL,
-        KEEP_THREE_FOR_BATTLE,
+        KEEP_FOUR_FOR_DESTINY,
         KEEP_TWO_AT_LOW_LIFE
     }
 
     public record Input(int rawMinimum,
                         int rawMaximum,
                         int reserveDeckSize,
-                        int lifeForce,
-                        boolean battlePlausible) {
+                        int lifeForce) {
         public Input {
             if (rawMinimum < 0 || rawMaximum <= 0 || rawMaximum < rawMinimum) {
                 throw new IllegalArgumentException("activation bounds must satisfy 0 <= min <= max and max > 0");
@@ -31,13 +30,13 @@ public final class ActivateAmountPolicy {
         int amount = input.rawMaximum();
         Mode mode = Mode.ACTIVATE_FULL;
 
-        if (input.battlePlausible()) {
-            int keepThree = Math.max(1,
-                    Math.min(input.rawMaximum(), input.reserveDeckSize() - 3));
-            if (keepThree < amount) {
-                amount = keepThree;
-                mode = Mode.KEEP_THREE_FOR_BATTLE;
-            }
+        // A battle may become available after activation, so preserve destiny
+        // independently of the board's current contested-location snapshot.
+        int keepFour = Math.max(1,
+                Math.min(input.rawMaximum(), input.reserveDeckSize() - 4));
+        if (keepFour < amount) {
+            amount = keepFour;
+            mode = Mode.KEEP_FOUR_FOR_DESTINY;
         }
 
         if (input.lifeForce() <= 10) {

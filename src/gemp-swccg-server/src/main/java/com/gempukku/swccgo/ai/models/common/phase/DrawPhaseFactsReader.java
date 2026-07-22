@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -85,6 +86,9 @@ public final class DrawPhaseFactsReader {
         List<float[]> handCharacters = new ArrayList<>();
         for (PhysicalCard card : hand) {
             if (card == null || card.getBlueprint() == null) {
+                continue;
+            }
+            if (AiCardHelper.isDeadCard(card, game, playerId)) {
                 continue;
             }
             if (card.getBlueprint().getCardCategory() != CardCategory.CHARACTER

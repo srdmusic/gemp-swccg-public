@@ -62,25 +62,16 @@ public final class MoveSpyFollowPolicy {
         }
 
         boolean destinationHasOpponent = false;
-        PhysicalCard destination = null;
-        for (PhysicalCard location : gameState.getTopLocations()) {
-            if (location == null || location.getTitle() == null) {
-                continue;
-            }
-            String destinationTitle = location.getTitle()
-                    .toLowerCase(Locale.ROOT);
-            if (!actionLower.contains(destinationTitle)) {
-                continue;
-            }
+        PhysicalCard destination = resolveDestination(
+                gameState, sourceLocation, actionLower);
+        if (destination != null) {
             float opponentPowerAtDestination =
                     game.getModifiersQuerying().getTotalPowerAtLocation(
-                            gameState, location, opponentId,
+                            gameState, destination, opponentId,
                             false, false);
             if (opponentPowerAtDestination > 0.0f) {
                 destinationHasOpponent = true;
             }
-            destination = location;
-            break;
         }
 
         if (opponentPowerAtSource == 0.0f
@@ -119,6 +110,14 @@ public final class MoveSpyFollowPolicy {
         return Evaluation.none(
                 opponentPowerAtSource,
                 destinationHasOpponent, destination);
+    }
+
+    public static PhysicalCard resolveDestination(
+            GameState gameState,
+            PhysicalCard source,
+            String actionLower) {
+        return MoveDestinationPolicy.resolveDestination(
+                gameState, source, actionLower);
     }
 
     public static Contribution breakCover(
@@ -165,6 +164,21 @@ public final class MoveSpyFollowPolicy {
                             + " — moving a non-spy here wastes the spy's drain-blocking!",
                     -1500.0f,
                     false);
+        }
+        return Contribution.none();
+    }
+
+    public static Contribution opponentSpyOnlyDestination(
+            boolean opponentUndercoverAtDestination,
+            boolean opponentHasCombatPresence,
+            boolean moverSpy,
+            String destinationTitle) {
+        if (opponentUndercoverAtDestination && !opponentHasCombatPresence
+                && !moverSpy) {
+            return new Contribution(true,
+                    "V297.1 SPY-BLOCKED DESTINATION: opponent undercover blocks "
+                            + destinationTitle + "; do not move a non-spy into a dead drain",
+                    -1500.0f, false);
         }
         return Contribution.none();
     }
