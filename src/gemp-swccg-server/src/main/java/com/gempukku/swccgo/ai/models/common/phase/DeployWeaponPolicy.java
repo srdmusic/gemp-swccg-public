@@ -77,6 +77,21 @@ public final class DeployWeaponPolicy {
         return new PolicyResult("DEPLOY_LIGHTSABER_DESTINATION_POLICY", operations);
     }
 
+    public static PolicyResult evaluateObjectiveGateTarget(
+            ObjectiveGateTargetFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.activePreFlipActorGate()
+                && facts.targetAtExactGate()
+                && facts.requiredActorAtGate()) {
+            add(operations, facts.actionId(), "V297-objective-gate-weapon",
+                    TraceOutputKind.BANDED, 250.0f,
+                    "V297 OBJECTIVE GATE ARMAMENT: equip the actor formation");
+        }
+        return new PolicyResult(
+                "DEPLOY_OBJECTIVE_GATE_WEAPON_POLICY", operations);
+    }
+
     public static PolicyResult evaluateNamedPriority(NamedPriorityFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
@@ -161,6 +176,15 @@ public final class DeployWeaponPolicy {
                                              boolean targetHasLightsaber,
                                              boolean huntDownV) {
         public LightsaberDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record ObjectiveGateTargetFacts(String actionId,
+                                           boolean activePreFlipActorGate,
+                                           boolean targetAtExactGate,
+                                           boolean requiredActorAtGate) {
+        public ObjectiveGateTargetFacts {
             Objects.requireNonNull(actionId, "actionId");
         }
     }

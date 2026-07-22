@@ -266,6 +266,55 @@ public class ForceLossCardSelectionPolicyParityTest {
                 "V25 HUNT DOWN: PROTECT LIGHTSABER from loss! (-300.0)");
     }
 
+    @Test
+    public void preFlipActorFilterProtectsDuplicateNuteWithBotParity() {
+        PhysicalCard handNute = card("Nute Gunray", Zone.HAND,
+                CardCategory.CHARACTER);
+        PhysicalCard tableNute = card("Nute Gunray", Zone.AT_LOCATION,
+                CardCategory.CHARACTER);
+        List<PhysicalCard> hand = List.of(
+                handNute,
+                card("Hand Two", Zone.HAND, CardCategory.EFFECT),
+                card("Hand Three", Zone.HAND, CardCategory.EFFECT),
+                card("Hand Four", Zone.HAND, CardCategory.EFFECT),
+                card("Hand Five", Zone.HAND, CardCategory.EFFECT));
+        GameState gameState = gameState(
+                Map.of(27, handNute), hand, List.of(), 11, 0, 4);
+        when(gameState.getAllPermanentCards()).thenReturn(List.of(tableNute));
+        SwccgGame game = mock(SwccgGame.class);
+        when(game.getGameState()).thenReturn(gameState);
+        gameStateWithGame(gameState, game);
+
+        var randoContext = randoContext(gameState, "Choose Force to lose",
+                List.of("27"), Phase.CONTROL);
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.matchesFlipGateActorRequirement(
+                game, "tester", handNute)).thenReturn(true);
+        randoContext.setObjectiveAnalyzer(randoObjective);
+
+        var chosenContext = chosenContext(gameState, "Choose Force to lose",
+                List.of("27"), Phase.CONTROL);
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.matchesFlipGateActorRequirement(
+                game, "tester", handNute)).thenReturn(true);
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertActionParity(rando, chosen);
+        assertBits(-8949.0f, rando.get(0).getScore());
+        assertReasons(rando.get(0).getReasoning(),
+                "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+1000.0)",
+                "OBJECTIVE CRITICAL IN HAND - NEVER LOSE! (-9999.0)");
+    }
+
     private static void assertCombinedDamageTier(int damageRemaining,
                                                  float expectedPenalty,
                                                  String damageText) {

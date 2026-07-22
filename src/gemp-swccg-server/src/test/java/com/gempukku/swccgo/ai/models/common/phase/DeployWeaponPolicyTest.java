@@ -72,6 +72,24 @@ public class DeployWeaponPolicyTest {
     }
 
     @Test
+    public void objectiveGateWeaponBonusRequiresTheCompleteActorGate() {
+        assertOne(DeployWeaponPolicy.evaluateObjectiveGateTarget(
+                        new DeployWeaponPolicy.ObjectiveGateTargetFacts(
+                                "a", true, true, true)).operations(),
+                "V297-objective-gate-weapon", 250.0f,
+                TraceOutputKind.BANDED);
+        assertTrue(DeployWeaponPolicy.evaluateObjectiveGateTarget(
+                new DeployWeaponPolicy.ObjectiveGateTargetFacts(
+                        "a", false, true, true)).operations().isEmpty());
+        assertTrue(DeployWeaponPolicy.evaluateObjectiveGateTarget(
+                new DeployWeaponPolicy.ObjectiveGateTargetFacts(
+                        "a", true, false, true)).operations().isEmpty());
+        assertTrue(DeployWeaponPolicy.evaluateObjectiveGateTarget(
+                new DeployWeaponPolicy.ObjectiveGateTargetFacts(
+                        "a", true, true, false)).operations().isEmpty());
+    }
+
+    @Test
     public void secondLightsaberRetainsBothAdditiveHardBlocks() {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
                 "second-lightsaber");

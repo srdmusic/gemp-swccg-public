@@ -25,6 +25,8 @@ public class DeployWeaponDestinationSourceParityTest {
             throws IOException {
         String source = weaponSlice(evaluatorSource("rando"));
         assertTrue(source.contains("DeployWeaponPolicy.evaluateDestinationSlot("));
+        assertEquals(1, count(source,
+                "DeployWeaponPolicy.evaluateObjectiveGateTarget("));
         assertEquals(2, count(source,
                 "DeployWeaponPolicy.evaluateLightsaberDestination("));
 

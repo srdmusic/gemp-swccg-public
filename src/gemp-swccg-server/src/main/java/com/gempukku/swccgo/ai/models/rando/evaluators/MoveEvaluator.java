@@ -11,6 +11,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveHuntTargetPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandoStayPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLadderPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveOpportunityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePostFlipConsolidationPolicy;
@@ -696,6 +697,78 @@ public class MoveEvaluator extends ActionEvaluator {
                 PhysicalCard currentLocation = cardToMove.getAtLocation();
 
                 if (currentLocation != null) {
+                    // V297 addendum: the deploy planner built an actor-and-buddy formation at
+                    // the exact flip gate. MOVE must not dismantle that same formation with
+                    // generic drain-routing or per-card retreat scores. A defensible contested
+                    // gate holds as a group; an uncontested gate retains its last actor+buddy.
+                    // A power gap greater than six remains retreatable.
+                    try {
+                        var gateAnalyzer = context.getObjectiveAnalyzer();
+                        boolean activeActorGate = gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && !gateAnalyzer.isFlipped()
+                                && gateAnalyzer.hasFlipGateActorRequirement();
+                        boolean moverAtGate = activeActorGate
+                                && gateAnalyzer.isFlipGateLocation(
+                                        game, playerId, currentLocation);
+                        int actorsAtGate = moverAtGate
+                                ? gateAnalyzer.countFlipGateActorsAtLocation(
+                                        game, playerId, currentLocation) : 0;
+                        boolean moverIsCharacter = cardToMove.getBlueprint() != null
+                                && cardToMove.getBlueprint().getCardCategory()
+                                        == CardCategory.CHARACTER;
+                        boolean moverIsActor = moverAtGate
+                                && gateAnalyzer.matchesFlipGateActorRequirement(
+                                        game, playerId, cardToMove);
+                        int friendlyCharactersAtGate = 0;
+                        if (moverAtGate) {
+                            for (PhysicalCard card : gameState.getCardsAtLocation(
+                                    currentLocation)) {
+                                if (card != null && playerId.equals(card.getOwner())
+                                        && card.getBlueprint() != null
+                                        && card.getBlueprint().getCardCategory()
+                                                == CardCategory.CHARACTER) {
+                                    friendlyCharactersAtGate++;
+                                }
+                            }
+                        }
+                        float friendlyPowerAtGate = moverAtGate
+                                ? game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, currentLocation, playerId, false, false)
+                                : 0.0f;
+                        String gateOpponent = gameState.getOpponent(playerId);
+                        float opponentPowerAtGate = moverAtGate
+                                ? game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        gateOpponent, false, false)
+                                        + oppWeaponBonusAt(
+                                                gameState, currentLocation, gateOpponent)
+                                : 0.0f;
+                        MoveObjectiveGateHoldPolicy.Evaluation gateHold =
+                                MoveObjectiveGateHoldPolicy.evaluate(
+                                        activeActorGate,
+                                        moverIsCharacter,
+                                        moverAtGate,
+                                        moverIsActor,
+                                        actorsAtGate,
+                                        friendlyCharactersAtGate,
+                                        friendlyPowerAtGate,
+                                        opponentPowerAtGate);
+                        if (gateHold.hardVeto()) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason = gateHold.reason();
+                            logger.warn("V297 OBJECTIVE GATE HOLD: {} at {} vetoed ({}, actors={}, chars={}, power={}/{})",
+                                    cardToMove.getTitle(), currentLocation.getTitle(),
+                                    gateHold.branch(), actorsAtGate,
+                                    friendlyCharactersAtGate,
+                                    (int) friendlyPowerAtGate,
+                                    (int) opponentPowerAtGate);
+                        }
+                    } catch (Exception e) {
+                        logger.debug("V297 objective gate hold failed open: {}",
+                                e.getMessage());
+                    }
+
                     // Analyze if we should move FROM this location
                     rankMoveFromLocation(action, gameState, game, playerId, mySide,
                                         cardToMove, currentLocation);

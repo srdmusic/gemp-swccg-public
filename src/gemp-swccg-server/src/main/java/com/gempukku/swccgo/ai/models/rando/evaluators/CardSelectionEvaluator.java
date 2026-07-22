@@ -1648,6 +1648,35 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 logger.warn("⚠️ V25 HARD BLOCK: {} already has weapon '{}' - NEVER deploy second weapon!",
                                     title, existingWeaponName);
                             }
+
+                            try {
+                                var gateAnalyzer = context.getObjectiveAnalyzer();
+                                boolean activeActorGate = gateAnalyzer != null
+                                        && gateAnalyzer.isAnalyzed()
+                                        && !gateAnalyzer.isFlipped()
+                                        && gateAnalyzer.hasFlipGateActorRequirement();
+                                PhysicalCard targetLocation = activeActorGate
+                                        ? game.getModifiersQuerying()
+                                                .getLocationThatCardIsPresentAt(
+                                                        gameState, targetCharacter)
+                                        : null;
+                                boolean targetAtGate = targetLocation != null
+                                        && gateAnalyzer.isFlipGateLocation(
+                                                game, playerId, targetLocation);
+                                boolean actorAtGate = targetAtGate
+                                        && gateAnalyzer.hasFlipGateActorAtLocation(
+                                                game, playerId, targetLocation);
+                                applyDeployWeaponPolicy(action,
+                                        DeployWeaponPolicy.evaluateObjectiveGateTarget(
+                                                new DeployWeaponPolicy.ObjectiveGateTargetFacts(
+                                                        action.getActionId(),
+                                                        activeActorGate,
+                                                        targetAtGate,
+                                                        actorAtGate)));
+                            } catch (Exception e) {
+                                logger.debug("V297 objective gate weapon target failed open: {}",
+                                        e.getMessage());
+                            }
                         }
 
                         // =====================================================
@@ -4095,7 +4124,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 ForceLossPolicy.Route.STANDALONE,
                                 decisionFacts,
                                 candidate,
-                                forceLossObjectiveFlags(context, candidate,
+                                forceLossObjectiveFlags(context, card, candidate,
                                         ForceLossPolicy.Route.STANDALONE)));
                         PolicyOperationAdapter.apply(action, forceLossLedger);
                     }
@@ -4110,6 +4139,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
     private ForceLossPolicy.ObjectiveFlags forceLossObjectiveFlags(
             DecisionContext context,
+            PhysicalCard physicalCard,
             ForceLossFacts.CandidateFacts candidate,
             ForceLossPolicy.Route route) {
         var objectiveAnalyzer = context.getObjectiveAnalyzer();
@@ -4122,11 +4152,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         boolean huntDown;
         boolean required;
         boolean pullable;
+        boolean requiredActor = !objectiveAnalyzer.isFlipped()
+                && context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer.matchesFlipGateActorRequirement(
+                        context.getGame(), context.getPlayerId(), physicalCard);
         if (route == ForceLossPolicy.Route.STANDALONE) {
             myLord = objectiveAnalyzer.getObjectiveTitle() != null
                     && objectiveAnalyzer.isMyLord();
             required = candidate.fromHand() && title != null
-                    && objectiveAnalyzer.isRequiredCardForFlip(title);
+                    && (objectiveAnalyzer.isRequiredCardForFlip(title)
+                            || requiredActor);
             pullable = candidate.fromHand() && title != null && !required
                     && objectiveAnalyzer.isPullableCard(title);
             huntDown = candidate.fromHand() && title != null
@@ -4134,7 +4171,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } else {
             huntDown = title != null && objectiveAnalyzer.isHuntDownV();
             required = title != null
-                    && objectiveAnalyzer.isRequiredCardForFlip(title);
+                    && (objectiveAnalyzer.isRequiredCardForFlip(title)
+                            || requiredActor);
             pullable = title != null && !required
                     && objectiveAnalyzer.isPullableCard(title);
         }
@@ -4613,7 +4651,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     ForceLossPolicy.Route.COMBINED_BATTLE,
                                     forceLossDecision,
                                     candidate,
-                                    forceLossObjectiveFlags(context, candidate,
+                                    forceLossObjectiveFlags(context, lossCard, candidate,
                                             ForceLossPolicy.Route.COMBINED_BATTLE)));
                             PolicyOperationAdapter.apply(action, forceLossLedger);
                         }

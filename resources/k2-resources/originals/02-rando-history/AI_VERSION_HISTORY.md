@@ -8175,3 +8175,31 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     after its build timestamp and returned HTTP 200. No engine, card, action,
     decision metadata, objective data, player-choice, database, client, or deck-library source changed.
     Revert the single V297 commit; V296 and all earlier AI-only behavior remain independent.
+
+  ==== V297 follow-up (2026-07-22): keep and recover the Invasion gate formation ====
+    Replay ew2j3ds3qnkx55ks showed the original V297 deploy contract working: Nute Gunray, Darth Sidious,
+    and two droids reached Naboo: Theed Palace Throne Room. MOVE then evacuated that formation one card at
+    a time because survival +12000, consolidation +600, and drain routing +150 did not preserve the shared
+    objective plan. Later force-loss choices discarded backup Neimoidians, and an equal weapon-target tie
+    sent the rifle away from the Throne Room formation.
+
+    A new shared MOVE gate-hold policy keeps a defensible contested exact actor gate together while the
+    objective is unflipped. An uncontested gate keeps its last required actor and that actor's last buddy.
+    Opposing effective power more than 6 above friendly power, including the existing weapon heuristic,
+    still permits retreat. The ladder hard veto resolves to -100000, so the replay's +12000/+600/+150
+    contributions cannot dismantle a formation the objective planner deliberately built.
+
+    ObjectiveAnalyzer now exposes actor-only, exact-gate, and actor-count facts from the same V297 filter.
+    Both CardSelection mirrors use the physical loss candidate, so the existing V21 -9999 objective-critical
+    protection dominates duplicate-zone +1000 and produces -8949 with the unchanged base. Legal weapon
+    targets at the active exact gate receive a shared +250 tie-break when the required actor is present.
+    The bonus cannot bypass weapon legality or second-weapon protection.
+
+    Focused policy, adapter, objective-gate, force-loss, deploy-weapon, and parity suites passed. The isolated
+    clean full reactor passed 2064/0/0/26 across 286 suites; diff and async packaging passed; and the shared
+    policy plus both mirrored adapters are present in web.jar. Built server jar SHA-256 is
+    176e8473289474c3ae396201e2fd0260d6c3117fc22073da4542e933f0ff740a and deployed web jar SHA-256 is
+    98b5f946fbd2eafc1e41058fda1f01725292b14c83310b656da23fe8e1adf83b. A fresh container matched the host
+    jar hash, started after the build, and returned HTTP 200. Fresh live-game branch firing remains a
+    separate gate. No engine, card, action, decision metadata, objective data, player-choice,
+    database, client, or deck-library source changed. Revert this V297 follow-up commit independently.

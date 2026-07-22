@@ -37,7 +37,13 @@ public class ObjectiveAnalyzerInvasionGateTest {
             assertEquals("Neimoidian at naboo: theed palace throne room",
                     analyzer.getFlipGateActorRequirementLabel());
             assertTrue(analyzer.matchesFlipGateActorRequirement(
+                    fixture.game, PLAYER_ID, fixture.candidate));
+            assertTrue(analyzer.isFlipGateLocation(
+                    fixture.game, PLAYER_ID, fixture.throneRoom));
+            assertTrue(analyzer.matchesFlipGateActorRequirement(
                     fixture.game, PLAYER_ID, fixture.candidate, fixture.throneRoom));
+            assertEquals(0, analyzer.countFlipGateActorsAtLocation(
+                    fixture.game, PLAYER_ID, fixture.throneRoom));
             assertFalse(analyzer.hasFlipGateActorAtLocation(
                     fixture.game, PLAYER_ID, fixture.throneRoom));
             assertTrue(analyzer.advancesUnfilledFlipGateActorRequirement(
@@ -54,6 +60,8 @@ public class ObjectiveAnalyzerInvasionGateTest {
         when(wrongLocation.getTitles()).thenReturn(List.of("Naboo: Swamp"));
 
         assertTrue(analyzer.hasFlipGateActorAtLocation(
+                fixture.game, PLAYER_ID, fixture.throneRoom));
+        assertEquals(1, analyzer.countFlipGateActorsAtLocation(
                 fixture.game, PLAYER_ID, fixture.throneRoom));
         assertFalse(analyzer.hasFlipGateActorAtLocation(
                 fixture.game, PLAYER_ID, wrongLocation));
@@ -73,7 +81,11 @@ public class ObjectiveAnalyzerInvasionGateTest {
         assertFalse(analyzer.advancesUnfilledFlipGateActorRequirement(
                 fixture.game, PLAYER_ID, wrongActor, fixture.throneRoom));
         assertFalse(analyzer.matchesFlipGateActorRequirement(
+                fixture.game, PLAYER_ID, wrongActor));
+        assertFalse(analyzer.matchesFlipGateActorRequirement(
                 fixture.game, PLAYER_ID, wrongActor, fixture.throneRoom));
+        assertFalse(analyzer.isFlipGateLocation(
+                fixture.game, PLAYER_ID, wrongDestination));
         assertFalse(analyzer.advancesUnfilledFlipGateActorRequirement(
                 fixture.game, PLAYER_ID, fixture.candidate, wrongDestination));
 

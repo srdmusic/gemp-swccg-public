@@ -384,12 +384,12 @@ public class ObjectiveAnalyzer {
         return rule != null ? rule.actorFilterKey + " at " + flipCriticalControlSite : null;
     }
 
-    /** True when the exact card and destination satisfy the active actor-at-gate rule. */
+    /** True when this physical card satisfies the active flip-gate actor filter. */
     public boolean matchesFlipGateActorRequirement(
-            SwccgGame game, String playerId, PhysicalCard candidate,
-            PhysicalCard destination) {
-        if (!analyzed || game == null || playerId == null
-                || candidate == null || destination == null) return false;
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!analyzed || game == null || playerId == null || candidate == null) {
+            return false;
+        }
 
         ActorLocationRule rule = findFlipGateActorRule();
         if (rule == null) return false;
@@ -399,54 +399,73 @@ public class ObjectiveAnalyzer {
             if (gameState == null || game.getModifiersQuerying() == null) return false;
             com.gempukku.swccgo.filters.Filter actorFilter =
                     resolveFilter(rule.actorFilterKey);
-            com.gempukku.swccgo.filters.Filter locationFilter =
-                    resolveLocationFilter(rule.locationFilterKey, playerId);
-            return actorFilter != null && locationFilter != null
-                    && actorFilter.accepts(
-                            gameState, game.getModifiersQuerying(), candidate)
-                    && locationFilter.accepts(
-                            gameState, game.getModifiersQuerying(), destination);
+            return actorFilter != null && actorFilter.accepts(
+                    gameState, game.getModifiersQuerying(), candidate);
         } catch (Exception e) {
-            LOG.debug("V297 flip-gate actor match failed: {}", e.getMessage());
+            LOG.debug("V297 flip-gate actor-only match failed: {}", e.getMessage());
             return false;
         }
+    }
+
+    /** True when this physical location satisfies the active flip-gate location filter. */
+    public boolean isFlipGateLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || game == null || playerId == null || location == null) {
+            return false;
+        }
+
+        ActorLocationRule rule = findFlipGateActorRule();
+        if (rule == null) return false;
+
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null) return false;
+            com.gempukku.swccgo.filters.Filter locationFilter =
+                    resolveLocationFilter(rule.locationFilterKey, playerId);
+            return locationFilter != null && locationFilter.accepts(
+                    gameState, game.getModifiersQuerying(), location);
+        } catch (Exception e) {
+            LOG.debug("V297 flip-gate location match failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /** True when the exact card and destination satisfy the active actor-at-gate rule. */
+    public boolean matchesFlipGateActorRequirement(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard destination) {
+        return matchesFlipGateActorRequirement(game, playerId, candidate)
+                && isFlipGateLocation(game, playerId, destination);
+    }
+
+    /** Count qualifying friendly actors present at this exact flip gate. */
+    public int countFlipGateActorsAtLocation(
+            SwccgGame game, String playerId, PhysicalCard destination) {
+        if (!isFlipGateLocation(game, playerId, destination)) return 0;
+
+        int actorsAtGate = 0;
+        try {
+            GameState gameState = game.getGameState();
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null || !playerId.equals(card.getOwner())
+                        || !matchesFlipGateActorRequirement(game, playerId, card)) {
+                    continue;
+                }
+                PhysicalCard actorLocation = game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(gameState, card);
+                if (samePhysicalLocation(actorLocation, destination)) actorsAtGate++;
+            }
+        } catch (Exception e) {
+            LOG.debug("V297 flip-gate actor count failed: {}", e.getMessage());
+            return 0;
+        }
+        return actorsAtGate;
     }
 
     /** True when a qualifying objective actor is already present at the exact gate. */
     public boolean hasFlipGateActorAtLocation(
             SwccgGame game, String playerId, PhysicalCard destination) {
-        if (!analyzed || game == null || playerId == null
-                || destination == null) return false;
-
-        ActorLocationRule rule = findFlipGateActorRule();
-        if (rule == null) return false;
-
-        try {
-            GameState gameState = game.getGameState();
-            if (gameState == null || game.getModifiersQuerying() == null) return false;
-            com.gempukku.swccgo.filters.Filter actorFilter =
-                    resolveFilter(rule.actorFilterKey);
-            com.gempukku.swccgo.filters.Filter locationFilter =
-                    resolveLocationFilter(rule.locationFilterKey, playerId);
-            if (actorFilter == null || locationFilter == null
-                    || !locationFilter.accepts(
-                            gameState, game.getModifiersQuerying(), destination)) {
-                return false;
-            }
-            for (PhysicalCard card : gameState.getAllPermanentCards()) {
-                if (card == null || !playerId.equals(card.getOwner())
-                        || !actorFilter.accepts(
-                                gameState, game.getModifiersQuerying(), card)) {
-                    continue;
-                }
-                PhysicalCard actorLocation = game.getModifiersQuerying()
-                        .getLocationThatCardIsPresentAt(gameState, card);
-                if (samePhysicalLocation(actorLocation, destination)) return true;
-            }
-        } catch (Exception e) {
-            LOG.debug("V297 flip-gate actor presence failed: {}", e.getMessage());
-        }
-        return false;
+        return countFlipGateActorsAtLocation(game, playerId, destination) > 0;
     }
 
     /**
@@ -466,23 +485,12 @@ public class ObjectiveAnalyzer {
         try {
             GameState gameState = game.getGameState();
             if (gameState == null || game.getModifiersQuerying() == null) return false;
-            com.gempukku.swccgo.filters.Filter actorFilter = resolveFilter(rule.actorFilterKey);
-            if (actorFilter == null
-                    || !matchesFlipGateActorRequirement(
+            if (!matchesFlipGateActorRequirement(
                             game, playerId, candidate, destination)) {
                 return false;
             }
-
-            int actorsAtGate = 0;
-            for (PhysicalCard card : gameState.getAllPermanentCards()) {
-                if (card == null || !playerId.equals(card.getOwner())
-                        || !actorFilter.accepts(gameState, game.getModifiersQuerying(), card)) {
-                    continue;
-                }
-                PhysicalCard actorLocation = game.getModifiersQuerying()
-                        .getLocationThatCardIsPresentAt(gameState, card);
-                if (samePhysicalLocation(actorLocation, destination)) actorsAtGate++;
-            }
+            int actorsAtGate = countFlipGateActorsAtLocation(
+                    game, playerId, destination);
             int required = rule.count != null && rule.count.value != null
                     ? rule.count.value : 1;
             return actorsAtGate < Math.max(1, required);
