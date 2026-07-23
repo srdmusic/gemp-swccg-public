@@ -40,7 +40,7 @@ public class Card501_019 extends AbstractObjective {
     public Card501_019() {
         super(Side.DARK, 0, "More Systems Will Rally To Our Cause", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Separatist] Geonosis system, a [Clone Army] system, Invisible Hand: Bridge, and Droid Racks. Stack six (••• •••) cards from outside your deck on here. For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. If your [Episode I] system was just converted, raise it to the top. Your (••• •••) cards stacked on Droid Racks may deploy as if from hand. Once per turn, may [download] Separatist Command Center (or a battleground site related to your [Clone Army] or [Separatist] system). Flip this card if no [Clone Army] systems are on table.");
+        setGameText("Deploy [Separatist] Geonosis system, a [Clone Army] system, Invisible Hand: Bridge, and Droid Racks. Stack six (••• •••) cards from outside your deck on here. For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. If your [Episode I] system was just converted, raise it to the top. Your (••• •••) cards stacked on Droid Racks may deploy as if from hand. Once per turn, may [download] Separatist Command Center (or a battleground site related to your [Clone Army] or [Separatist] system). Flip this card at the end of turn if no [Clone Army] systems are on table.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
         setTestingText("More Systems Will Rally To Our Cause");
     }
@@ -129,7 +129,7 @@ public class Card501_019 extends AbstractObjective {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
+        if (TriggerConditions.isEndOfEachTurn(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
                 && !GameConditions.canSpot(game, self, 1, Filters.and(Icon.CLONE_ARMY, Filters.system))) {
 
