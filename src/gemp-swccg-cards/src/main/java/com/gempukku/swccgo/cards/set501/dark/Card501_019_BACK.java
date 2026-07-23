@@ -178,7 +178,7 @@ public class Card501_019_BACK extends AbstractObjective {
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_4; //Force loss after a losing battle
         // Check condition(s)
         if (TriggerConditions.lostBattle(game, effectResult, playerId)
-                && GameConditions.canSpot(game, self, Filters.restricted_6)) {
+                && GameConditions.canSpot(game, self, Filters.and(Filters.restricted_6, Filters.participatingInBattle))) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
             // Perform result(s)
