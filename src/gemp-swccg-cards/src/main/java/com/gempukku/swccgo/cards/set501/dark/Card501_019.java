@@ -115,7 +115,7 @@ public class Card501_019 extends AbstractObjective {
                         new OncePerTurnEffect(action));
                 // Perform result(s)
                 action.appendEffect(
-                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Invisible_Hand_Bridge, Filters.Separatist_Command_Center, Filters.and(Filters.site, siteFilter)), Filters.or(Filters.Separatist_Command_Center, Filters.battleground), true));
+                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Invisible_Hand_Bridge, Filters.Separatist_Command_Center, Filters.and(Filters.site, siteFilter)), Filters.or(Filters.Invisible_Hand_Bridge, Filters.Separatist_Command_Center, Filters.battleground), true));
                 return Collections.singletonList(action);
             }
         }
