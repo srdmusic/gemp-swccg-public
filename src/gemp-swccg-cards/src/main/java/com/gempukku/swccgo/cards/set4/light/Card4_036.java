@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set4.light;
 
 import com.gempukku.swccgo.cards.AbstractUtinniEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.ClearForRemainderOfGameDataEffect;
 import com.gempukku.swccgo.cards.evaluators.CalculateCardVariableEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -19,6 +20,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.ForRemainderOfGameData;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.GameUtils;
@@ -130,6 +132,9 @@ public class Card4_036 extends AbstractUtinniEffect {
                             @Override
                             protected void doPlayEffect(SwccgGame game) {
                                 self.setUtinniEffectStatus(UtinniEffectStatus.COMPLETED);
+                                if(GameConditions.hasGameTextModification(game, self, ModifyGameTextType.RYCARS_RUN__RETRIEVE_FORCE_INTO_HAND))
+                                    //record at time of completion and evaluate later during retrieval
+                                    self.setForRemainderOfGameData(self.getCardId(), new ForRemainderOfGameData());
                             }
                         }
                 );
@@ -146,9 +151,11 @@ public class Card4_036 extends AbstractUtinniEffect {
                             }
                             @Override
                             public boolean mayBeTakenIntoHand() {
-                                return GameConditions.hasGameTextModification(game, self, ModifyGameTextType.RYCARS_RUN__RETRIEVE_FORCE_INTO_HAND);
+                                return GameConditions.cardHasAnyForRemainderOfGameDataSet(self);
                             }
                         });
+                action.appendEffect(
+                        new ClearForRemainderOfGameDataEffect(action, self, true));
                 return Collections.singletonList(action);
             }
         }

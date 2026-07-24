@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class Card_1_052_Tests {
@@ -61,7 +60,7 @@ public class Card_1_052_Tests {
 		 * Type: Effect
 		 * Subtype: Utinni
 		 * Destiny: 5
-		 * Icons: Hoth
+		 * Icons:
 		 * Game Text: Deploy on Kessel. Target one of your smugglers at another system. X = parsec distance between
 		 * 		the two systems. When target reaches Kessel, opponent draws destiny. If = 0, starship lost.
 		 * 		Otherwise, by returning to first system, 'retrieve' X Lost Force.
