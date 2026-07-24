@@ -48,7 +48,7 @@ import java.util.List;
 public class Card501_019_BACK extends AbstractObjective {
     public Card501_019_BACK() {
         super(Side.DARK, 7, "The Galaxy Torn Apart", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May immediately retrieve up to 2 Force. While this side up, during your control phase, opponent loses X Force, where X = number of systems you control (limit 3). Once per turn, may deploy a (••• •••) card stacked here as if from hand. If you just lost a battle involving a (••• •••) card, opponent loses 1 Force. If your unique (•) character was just lost, may [upload] a unique (•) character. Flip this card at the end of turn if a [Clone Army] system is on table.");
+        setGameText("May immediately retrieve up to 2 Force. While this side up, during your control phase, opponent loses X Force, where X = number of systems you control (limit 3). Once per turn, may deploy a (••• •••) card stacked here as if from hand. If you just lost a battle involving a (••• •••) card, opponent loses 1 Force. If your unique (•) character was just lost, may [upload] a unique (•) character. Flip this card at the end of turn if your [Clone Army] system is on table.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
         setTestingText("The Galaxy Torn Apart");
     }
@@ -191,7 +191,7 @@ public class Card501_019_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isEndOfEachTurn(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.canSpot(game, self, 1, Filters.and(Icon.CLONE_ARMY, Filters.system))) {
+                && GameConditions.canSpot(game, self, 1, Filters.and(Filters.your(playerId), Icon.CLONE_ARMY, Filters.system))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setSingletonTrigger(true);
