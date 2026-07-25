@@ -1,11 +1,15 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.game.state.GameState;
 import org.junit.Test;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ActivateActionTextPolicyParityTest {
     @Test
@@ -79,10 +83,62 @@ public class ActivateActionTextPolicyParityTest {
         assertEquals(rando.get(0).getReasoning(), chosen.get(0).getReasoning());
     }
 
+    @Test
+    public void objectiveActivateOneForceBeatsPassDuringMoveForBothBots() {
+        GameState gameState = mock(GameState.class);
+        when(gameState.getReserveDeckSize("tester")).thenReturn(10);
+        when(gameState.getPlayersLatestTurnNumber("tester")).thenReturn(1);
+        when(gameState.getCurrentPlayerId()).thenReturn("tester");
+
+        List<String> ids = List.of("activate-one", "pass");
+        List<String> labels = List.of("Activate 1 Force", "Pass");
+        var randoContext = randoContext(
+                gameState, Phase.MOVE, "ACTION_CHOICE",
+                "Choose action", ids, labels);
+        var chosenContext = chosenContext(
+                gameState, Phase.MOVE, "ACTION_CHOICE",
+                "Choose action", ids, labels);
+
+        var rando =
+                new com.gempukku.swccgo.ai.models.rando.evaluators
+                        .ActionTextEvaluator()
+                        .evaluate(randoContext);
+        var chosen =
+                new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                        .ActionTextEvaluator()
+                        .evaluate(chosenContext);
+
+        assertEquals(2, rando.size());
+        assertEquals(2, chosen.size());
+        assertEquals(Float.floatToRawIntBits(5500.0f),
+                Float.floatToRawIntBits(rando.get(0).getScore()));
+        assertTrue(rando.get(0).getScore() > rando.get(1).getScore());
+        assertTrue(rando.get(0).getReasoning().stream().anyMatch(
+                reason -> reason.contains("V168 ALWAYS ACTIVATE")));
+        assertTrue(rando.get(0).getReasoning().stream().anyMatch(
+                reason -> reason.contains("V38.3 ALWAYS ACTIVATE")));
+        for (int i = 0; i < rando.size(); i++) {
+            assertEquals(Float.floatToRawIntBits(rando.get(i).getScore()),
+                    Float.floatToRawIntBits(chosen.get(i).getScore()));
+            assertEquals(rando.get(i).getReasoning(),
+                    chosen.get(i).getReasoning());
+        }
+    }
+
     private static com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext randoContext(
             String type, String text, List<String> ids, List<String> labels) {
-        var context = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
-                null, "tester", type, text, "activate-policy", Phase.ACTIVATE);
+        return randoContext(
+                null, Phase.ACTIVATE, type, text, ids, labels);
+    }
+
+    private static com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext randoContext(
+            GameState gameState, Phase phase, String type, String text,
+            List<String> ids, List<String> labels) {
+        var context =
+                new com.gempukku.swccgo.ai.models.rando.evaluators
+                        .DecisionContext(
+                        gameState, "tester", type, text,
+                        "activate-policy", phase);
         context.setActionIds(ids);
         context.setActionTexts(labels);
         context.setCardIds(ids.stream().map(ignored -> "").toList());
@@ -91,8 +147,18 @@ public class ActivateActionTextPolicyParityTest {
 
     private static com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext chosenContext(
             String type, String text, List<String> ids, List<String> labels) {
-        var context = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
-                null, "tester", type, text, "activate-policy", Phase.ACTIVATE);
+        return chosenContext(
+                null, Phase.ACTIVATE, type, text, ids, labels);
+    }
+
+    private static com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext chosenContext(
+            GameState gameState, Phase phase, String type, String text,
+            List<String> ids, List<String> labels) {
+        var context =
+                new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                        .DecisionContext(
+                        gameState, "tester", type, text,
+                        "activate-policy", phase);
         context.setActionIds(ids);
         context.setActionTexts(labels);
         context.setCardIds(ids.stream().map(ignored -> "").toList());

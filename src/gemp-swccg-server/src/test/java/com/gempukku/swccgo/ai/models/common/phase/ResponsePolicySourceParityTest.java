@@ -154,7 +154,7 @@ public class ResponsePolicySourceParityTest {
                 "ResponsePolicy.scoreSenseRedraw(actionId, false, true)",
                 "// ========== V29.7: UNIVERSAL RESERVE DECK PULL VALIDATION");
         assertInOrder(source,
-                "if (actionText.equals(\"Activate Force\"))",
+                "if (ActivateActionPolicy.isActivationChoiceText(actionText))",
                 "ResponsePolicy.scoreSaveJedi(actionId)",
                 "// ========== V53: BLOCK WOKLING EFFECT SEARCH");
         assertInOrder(source,

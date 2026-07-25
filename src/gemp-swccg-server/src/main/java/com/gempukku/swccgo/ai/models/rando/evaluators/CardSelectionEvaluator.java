@@ -418,6 +418,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 context.getGame(),
                                 context.getPlayerId(),
                                 candidate);
+        boolean dedicatedFlipGateLocation = candidate != null
+                && candidate.getTitle() != null
+                && context.getObjectiveAnalyzer()
+                        .isActiveFlipGateLocationTitle(
+                                candidate.getTitle());
         applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
                         action.getActionId(),
@@ -428,7 +433,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         role == com.gempukku.swccgo.ai.models.common.strategy
                                 .ObjectiveAnalyzer
                                 .ObjectiveProgressCandidateRole
-                                .REQUIRED_LOCATION));
+                                .REQUIRED_LOCATION
+                                && !dedicatedFlipGateLocation));
     }
 
     /**
@@ -2888,6 +2894,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         v212SitingCsLedger.register(
                                             DeploySitingPolicy.evaluateDestination(v212SitingCsFacts));
                                         PolicyOperationAdapter.apply(action, v212SitingCsLedger);
+
+                                        boolean v212ActorRouteStaging =
+                                            v136Obj != null
+                                            && v136Obj.isAnalyzed()
+                                            && v136Obj.stagesPreFlipActorRoute(
+                                                context.getGame(),
+                                                context.getPlayerId(),
+                                                v136DeployingCard, location);
+                                        applyDeploySitingPolicy(
+                                            action,
+                                            DeployObjectiveSitingPolicy
+                                                .scoreActorRouteStaging(
+                                                    action.getActionId(),
+                                                    v212ActorRouteStaging,
+                                                    v136DeployingCard.getTitle(),
+                                                    title));
+                                        if (v212ActorRouteStaging) {
+                                            logger.warn(
+                                                "OBJECTIVE ACTOR STAGING: {} to {} +1000",
+                                                v136DeployingCard.getTitle(),
+                                                title);
+                                        }
                                     }
                                 }
                             } catch (Exception e) {
@@ -5549,6 +5577,41 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
+                        boolean objectiveActorRouteDestination = false;
+                        if (fsMover != null && fsOrigin != null
+                                && game != null && playerId != null) {
+                            try {
+                                com.gempukku.swccgo.ai.models.rando.strategy
+                                    .ObjectiveAnalyzer routeAnalyzer =
+                                        context.getObjectiveAnalyzer();
+                                objectiveActorRouteDestination =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .advancesPreFlipActorRoute(
+                                            game, playerId, fsMover,
+                                            location);
+                                MoveDestinationPolicy.Contribution
+                                    objectiveRoute =
+                                        MoveDestinationPolicy
+                                            .objectiveActorRouteDestination(
+                                                objectiveActorRouteDestination,
+                                                fsMover.getTitle(), title);
+                                if (objectiveRoute.applies()) {
+                                    action.addReasoning(
+                                        objectiveRoute.reason(),
+                                        objectiveRoute.delta());
+                                    logger.warn(
+                                        "OBJECTIVE ACTOR ROUTE DEST: {} to {} +1000",
+                                        fsMover.getTitle(), title);
+                                }
+                            } catch (Exception e) {
+                                logger.debug(
+                                    "Objective actor-route destination assessment failed: {}",
+                                    e.getMessage());
+                            }
+                        }
+
                         // Get power at destination
                         float ourPower = 0;
                         float theirPower = 0;
@@ -6292,7 +6355,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 opponentsElsewhere, title, worstDrainLoc,
                                                 v67zNonMapuzoBG || v67zTransitHub,
                                                 MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat),
-                                                v156JoinMode && v156DestFriendlyChars > 0);
+                                                v156JoinMode && v156DestFriendlyChars > 0,
+                                                objectiveActorRouteDestination);
                                         if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.HIDDEN_PATH_EXEMPT) {
                                             logger.info("V67z HIDDEN PATH {} EXEMPT: {} on Hidden Path — V41 WRONG DIRECTION skipped",
@@ -6305,6 +6369,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.JOIN_GROUP_EXEMPT) {
                                             logger.warn("V156 JOIN-GROUP EXEMPT: {} has {} friendly character(s) — V41 wrong-direction skipped (weak solo joining from {})",
                                                 title, v156DestFriendlyChars, v156FromTitle);
+                                        } else if (v41Direction.disposition()
+                                                == MoveDestinationPolicy.WrongDirectionDisposition.OBJECTIVE_ROUTE_EXEMPT) {
+                                            logger.warn("OBJECTIVE ACTOR ROUTE EXEMPT: {} advances the exact flip gate — V41 wrong-direction skipped",
+                                                title);
                                         } else if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.VETO) {
                                             action.addReasoning(

@@ -1145,6 +1145,7 @@
     },
     {
       "label": "We Have A Plan",
+      "loaderEnabled": true,
       "blueprintIds": [
         "14_52",
         "14_52_BACK"
@@ -1156,14 +1157,108 @@
       "locationFragments": [],
       "requiredCardsOnTable": [],
       "pullableCards": [],
-      "flipGateSite": null,
+      "flipGateSite": "naboo: theed palace throne room",
       "flipGateCardIds": [],
-      "startingLocations": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "12_83",
+            "12_174"
+          ],
+          "titleFragments": [
+            "naboo: theed palace throne room"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "14_51",
+            "14_112",
+            "201_17"
+          ],
+          "titleFragments": [
+            "naboo: theed palace hallway"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "12_81",
+            "12_172"
+          ],
+          "titleFragments": [
+            "naboo: theed palace courtyard"
+          ]
+        }
+      ],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "we-have-a-plan-front-throne-control",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Theed_Palace_Throne_Room",
+              "locationFragments": [
+                "naboo: theed palace throne room"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Amidala",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipGate",
+              "sourceText": "control Theed Palace Throne Room with Amidala there"
+            }
+          ]
+        },
+        {
+          "id": "we-have-a-plan-back-throne-control",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Theed_Palace_Throne_Room",
+              "locationFragments": [
+                "naboo: theed palace throne room"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls Theed Palace Throne Room"
+            }
+          ]
+        }
+      ],
+      "actorLocationRules": [
+        {
+          "id": "we-have-a-plan-amidala-throne-room",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "relation": "controlsWith",
+          "actorFilterKey": "Amidala",
+          "locationFilterKey": "Theed_Palace_Throne_Room",
+          "count": {
+            "comparator": ">=",
+            "value": 1
+          },
+          "scoreRole": "actorToSite",
+          "sourceText": "control Theed Palace Throne Room with Amidala there"
+        }
+      ],
       "frontBp": "14_52",
       "backBp": "14_52_BACK",
       "abbreviation": "WHAP",

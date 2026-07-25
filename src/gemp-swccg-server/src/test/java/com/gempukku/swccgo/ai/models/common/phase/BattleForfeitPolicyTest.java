@@ -35,6 +35,12 @@ public class BattleForfeitPolicyTest {
                     ObjectiveAnalyzer.FlipGateFormationRole
                         .LAST_REQUIRED_BUDDY,
                     true);
+        PolicyResult flipBackBlocker = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_FLIP_BACK_BLOCKER,
+                    true);
         PolicyResult surplus = BattleForfeitPolicy
                 .scoreFlipGateFormationProtection(
                     ACTION_ID,
@@ -56,6 +62,11 @@ public class BattleForfeitPolicyTest {
                 op("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
                     -9999.0f,
                     "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the required actor's last buddy while another legal loss exists",
+                    TraceOutputKind.VETO));
+        assertOperations(flipBackBlocker,
+                op("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
+                    -9999.0f,
+                    "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the sole flip-back blocker while another legal loss exists",
                     TraceOutputKind.VETO));
         assertOperations(surplus);
         assertOperations(unavoidable);

@@ -148,6 +148,27 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void typedActorStagingDominatesCountedProgressButNotDirectGate() {
+        PolicyOperation staging =
+                DeployObjectiveSitingPolicy.scoreActorRouteStaging(
+                        "a", true, "Padme Naberrie",
+                        "Naboo: Theed Palace Courtyard")
+                        .operations().get(0);
+        PolicyResult neutral =
+                DeployObjectiveSitingPolicy.scoreActorRouteStaging(
+                        "a", false, "Captain Panaka",
+                        "Naboo: Theed Palace Courtyard");
+        float counted =
+                DeployObjectiveSitingPolicy.scoreCountedObjectiveProgress(
+                        "a", true).operations().get(0).delta();
+
+        assertOperation(staging,
+                "DEPLOY.OBJECTIVE.ACTOR_ROUTE_STAGING", 1000.0f);
+        assertTrue(staging.delta() > counted);
+        assertTrue(neutral.operations().isEmpty());
+    }
+
+    @Test
     public void cloudCityEnginePreservesBlockedPriorityAndSafeBranches() {
         DeployObjectiveSitingPolicy.CloudCityEngineEvaluation blocked =
                 DeployObjectiveSitingPolicy.evaluateCloudCityEngine(

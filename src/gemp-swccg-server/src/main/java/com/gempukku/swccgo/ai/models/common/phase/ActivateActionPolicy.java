@@ -7,6 +7,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 
 import java.util.List;
+import java.util.Locale;
 
 /** Shared owner of ACTIVATE action-choice and zero-activation confirmation scores. */
 public final class ActivateActionPolicy {
@@ -29,6 +30,20 @@ public final class ActivateActionPolicy {
     }
 
     private ActivateActionPolicy() {
+    }
+
+    public static boolean isActivationChoiceText(String actionText) {
+        if (actionText == null) return false;
+        String normalized = actionText.trim().toLowerCase(Locale.ROOT);
+        return normalized.contains("activate force")
+                || normalized.equals("activate 1 force");
+    }
+
+    public static boolean isSimpleActivationActionText(String actionText) {
+        if (actionText == null) return false;
+        String normalized = actionText.trim().toLowerCase(Locale.ROOT);
+        return normalized.equals("activate force")
+                || normalized.equals("activate 1 force");
     }
 
     public static Evaluation topLevel(String actionId, int reserveDeckSize) {

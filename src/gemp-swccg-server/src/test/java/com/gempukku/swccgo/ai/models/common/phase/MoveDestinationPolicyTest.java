@@ -636,6 +636,53 @@ public class MoveDestinationPolicyTest {
     }
 
     @Test
+    public void objectiveActorRouteHasBoundedParentAndDestinationScores() {
+        MoveDestinationPolicy.Contribution parent =
+                MoveDestinationPolicy.objectiveActorRouteStart(
+                        true, "Padme Naberrie");
+        MoveDestinationPolicy.Contribution destination =
+                MoveDestinationPolicy.objectiveActorRouteDestination(
+                        true, "Padme Naberrie",
+                        "Naboo: Theed Palace Hallway");
+        MoveDestinationPolicy.Contribution none =
+                MoveDestinationPolicy.objectiveActorRouteDestination(
+                        false, "Padme Naberrie",
+                        "Naboo: Theed Palace Courtyard");
+
+        assertTrue(parent.applies());
+        assertFloat(600.0f, parent.delta());
+        assertTrue(parent.reason().startsWith(
+                "MOVE.OBJECTIVE.ACTOR_ROUTE_START:"));
+        assertTrue(destination.applies());
+        assertFloat(1000.0f, destination.delta());
+        assertTrue(destination.reason().startsWith(
+                "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION:"));
+        assertFalse(none.applies());
+    }
+
+    @Test
+    public void objectiveActorRouteExemptsOnlyItsCloserHopFromWrongDirection() {
+        MoveDestinationPolicy.WrongDirectionEvaluation objectiveRoute =
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Hallway", "Swamp",
+                        false, false, false, true);
+        MoveDestinationPolicy.WrongDirectionEvaluation ordinary =
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Courtyard", "Swamp",
+                        false, false, false);
+
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition
+                        .OBJECTIVE_ROUTE_EXEMPT,
+                objectiveRoute.disposition());
+        assertFalse(objectiveRoute.contribution().applies());
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition.VETO,
+                ordinary.disposition());
+        assertFloat(-9999.0f, ordinary.contribution().delta());
+    }
+
+    @Test
     public void castleRetreatPreservesExactTitleGateAndVeto() {
         assertTrue(MoveDestinationPolicy.isCastleDestination(
                 "Mustafar: Vader's Castle"));

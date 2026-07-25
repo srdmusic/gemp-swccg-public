@@ -91,6 +91,8 @@ public class ObjectiveAnalyzerSharedGoldenTest {
                 "Deploy Galactic Senate. Flip this card if you have 3 senators at Galactic Senate.");
         ObjectiveAnalyzer invasion = analyzed("14_113", "Invasion",
                 "Deploy Naboo system. Flip this card if you control Theed Palace Throne Room and Naboo system.");
+        ObjectiveAnalyzer weHaveAPlan = analyzed("14_52", "We Have A Plan",
+                "Flip this card if you control Theed Palace Throne Room with Amidala there.");
         ObjectiveAnalyzer endor = analyzed("8_167", "Endor Operations",
                 "Deploy Endor system, Bunker and Landing Platform. Flip this card if Ominous Rumors and Establish Secret Base are both on table.");
         ObjectiveAnalyzer iwtm = analyzed("208_057", "I Want That Map",
@@ -118,6 +120,11 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         assertEquals("Invasion", invasion.getActivePlaybook().label);
         assertTrue(invasion.isInvasion());
         assertTrue(invasion.getFlipConditionText().contains("Theed Palace Throne Room"));
+
+        assertEquals("We Have A Plan",
+                weHaveAPlan.getActivePlaybook().label);
+        assertTrue(weHaveAPlan.hasFlipGateActorRequirement());
+        assertFalse(weHaveAPlan.hasCountedPreFlipActorRule());
 
         assertEquals("Endor Operations", endor.getActivePlaybook().label);
         assertTrue(endor.getRequiredCardsOnTable().contains("ominous rumors"));
@@ -191,8 +198,8 @@ public class ObjectiveAnalyzerSharedGoldenTest {
             loaderEnabled.setAccessible(true);
             if (Boolean.TRUE.equals(loaderEnabled.get(profile))) enabled++;
         }
-        assertEquals(15, enabled);
-        assertEquals(43, profiles.size() - enabled);
+        assertEquals(16, enabled);
+        assertEquals(42, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

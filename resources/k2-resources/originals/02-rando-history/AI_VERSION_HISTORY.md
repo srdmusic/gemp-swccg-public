@@ -8332,3 +8332,48 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     changed. The JVM was not restarted, nothing was deployed or pushed, and no fresh live game was
     claimed. Revert the single regional counted-objective Batch One commit; Invasion Batch Zero and
     the source-audit commit remain independent.
+
+  ==== We Have A Plan objective behavior Batch Two (2026-07-24) ====
+    Card source starts exact Theed Palace Throne Room, Hallway, and Courtyard. While front,
+    Light Side characters cannot deploy to interior Naboo sites, and the objective offers
+    Activate 1 Force once per turn. The front flips only when Light Side controls exact Throne
+    Room with an Amidala persona there, including excluded-from-battle cards. The back flips
+    only when Dark Side controls exact Throne Room. Amidala leaving alone does not flip it back,
+    and Panaka is not part of the front flip law.
+
+    Approved profile 14_52 now records the exact setup identities, structured front controlsWith
+    rule, structured opponent-control back rule, and typed Amidala route. Shared analysis scores a
+    missing actor, legal exterior staging, legal progress toward the exact gate, and the sole
+    post-flip presence source preventing immediate opponent control. Parent deploy doctrine requires
+    a destination the engine actually offers. Movement intersects the engine landspeed legality
+    filter with Filters.toward, so ordinary Courtyard to Hallway to Throne and a legal boosted direct
+    Courtyard-to-Throne move both count. A missing ground-route actor remains useful when another
+    matching actor is aboard a starship.
+
+    Both public CombinedEvaluator facades choose the legal Padme deploy over Pass, Courtyard over a
+    legal exterior distraction, each safe forward move over legal wrong-way movement, and a legal
+    top-level landspeed action over Pass. A prohibited closer site receives no parent doctrine
+    score. Formation Safety still dominates an objectively useful but doomed route. The activation
+    matcher recognizes both Activate Force and the card's exact Activate 1 Force text.
+
+    Pre-flip Force loss and battle forfeit preserve the last required Amidala only when another
+    legal loss exists. Post-flip movement and forfeit protect any sole friendly presence source at
+    contested Throne Room, because the source back law cares about opponent control rather than
+    Amidala. The hold releases when opponent effective power leads by more than six. The Invasion
+    exact gate pull remains 340 because generic count-one location scoring no longer double-stacks
+    its dedicated gate contribution.
+
+    An unchanged-engine scenario deploys Padme legally to exterior Courtyard for two Force, rejects
+    both interior deploys, uses the objective's one-Force activation action to fund each move, reaches
+    exact Throne Room, and fires the real front flip. Vader then battles Padme away, controls the
+    Throne Room, and fires the real flip-back trigger.
+
+    Independent verification passed. Focused WHAP and impacted shared, Invasion, and regional suites
+    passed 199/0/0/0 across 19 suites. The full reactor passed 2187/0/0/26 across 296 suites.
+    Objective-resource bytes match source, server jar, and web jar. Compiled shared classes, semantic
+    markers, and both bot adapters are present. Packaged server jar SHA-256 is
+    590ad075751aac3ee55b00153c93c770ca25dc7cf53d7b2e43fb76ae09552673 and packaged web jar
+    SHA-256 is 7ab1ba9c58b60c5ec2960ff16593a8fc17b1e5353699a0ed8fff89f245039334.
+    No engine or card Java changed. The JVM was not restarted, nothing was deployed or pushed, and
+    no fresh live game was claimed. Revert the single We Have A Plan Batch Two commit; Regional
+    Batch One, Invasion Batch Zero, and the objective source-audit commit remain independent.

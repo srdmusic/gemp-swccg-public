@@ -62,18 +62,26 @@ public class InvasionObjectiveFullChainBehaviorTest {
     };
 
     private VirtualTableScenario scenario() {
+        return scenario(false);
+    }
+
+    private VirtualTableScenario scenario(boolean includeExtraPilot) {
+        HashMap<String, String> darkCards = new HashMap<>() {{
+            put("throne", "12_174");
+            put("nute", "12_112");
+            put("sidious", "208_35");
+            put("securityDroid", "12_118");
+            put("blaster", "1_317");
+        }};
+        if (includeExtraPilot) {
+            darkCards.put("pilot", "12_111");
+        }
         return new VirtualTableScenario(
                 new HashMap<>() {{
                     put("xwing", "1_146");
                     put("trooper", "1_28");
                 }},
-                new HashMap<>() {{
-                    put("throne", "12_174");
-                    put("nute", "12_112");
-                    put("sidious", "208_35");
-                    put("securityDroid", "12_118");
-                    put("blaster", "1_317");
-                }},
+                darkCards,
                 20,
                 20,
                 StartingSetup.DefaultLSGroundLocation,
@@ -110,6 +118,27 @@ public class InvasionObjectiveFullChainBehaviorTest {
                 operation(throne, "PULL.OBJECTIVE.FLIP_GATE_SITE");
         assertEquals(300.0f, objectivePull.delta(), 0.0f);
         assertEquals(PolicyOperationKind.ADD, objectivePull.kind());
+    }
+
+    @Test
+    public void neimoidianAboardFlagshipDoesNotSuppressAThroneActorPull() {
+        var scn = scenario(true);
+        var flagship = scn.GetDSCard("flagship");
+        var throne = scn.GetDSCard("throne");
+        var nute = scn.GetDSCard("nute");
+        var pilot = scn.GetDSCard("pilot");
+
+        scn.StartGame();
+        scn.MoveLocationToTable(throne);
+        scn.AttachCardsTo(flagship, nute);
+
+        ObjectiveAnalyzer analyzer = analyzeRando(scn);
+        assertSame(flagship, nute.getAttachedTo());
+        assertEquals(
+                ObjectiveAnalyzer.ObjectiveProgressCandidateRole
+                        .REQUIRED_ACTOR,
+                analyzer.classifyPreFlipProgressCandidate(
+                        scn.game(), DS, pilot));
     }
 
     @Test

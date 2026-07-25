@@ -153,19 +153,40 @@ public class PullCardSelectionCharacterizationTest {
     @Test
     public void v297ReplayPullChoosesThroneRoomOverGeneratorInBothAdapters() {
         GameState gameState = gameState(1);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard generator = card(
+                "Naboo: Theed Palace Generator", 0.0f,
+                CardCategory.LOCATION);
+        PhysicalCard throne = card(
+                "Naboo: Theed Palace Throne Room", 0.0f,
+                CardCategory.LOCATION);
+        when(generator.getBlueprintId(true)).thenReturn("13_76");
+        when(throne.getBlueprintId(true)).thenReturn("12_174");
+        when(game.getGameState()).thenReturn(gameState);
+        when(gameState.getCardPile(PLAYER, Zone.RESERVE_DECK))
+                .thenReturn(List.of(generator, throne));
+        when(gameState.getHand(PLAYER)).thenReturn(List.of());
+
         var randoObjective = mock(
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
         when(randoObjective.isActiveFlipGateLocationTitle(
                 "Naboo: Theed Palace Throne Room")).thenReturn(true);
+        when(randoObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, throne)).thenReturn(REQUIRED_LOCATION);
         var chosenObjective = mock(
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
         when(chosenObjective.isActiveFlipGateLocationTitle(
                 "Naboo: Theed Palace Throne Room")).thenReturn(true);
+        when(chosenObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, throne)).thenReturn(REQUIRED_LOCATION);
 
         var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
                 gameState, PLAYER, "ARBITRARY_CARDS",
                 "Choose card to deploy from Reserve Deck",
                 "v297.2-rando", Phase.DEPLOY);
+        randoContext.setGame(game);
         randoContext.setCardIds(List.of("temp6", "temp12"));
         randoContext.setBlueprints(List.of("13_76", "12_174"));
         randoContext.setSelectable(List.of(true, true));
@@ -175,6 +196,7 @@ public class PullCardSelectionCharacterizationTest {
                 gameState, PLAYER, "ARBITRARY_CARDS",
                 "Choose card to deploy from Reserve Deck",
                 "v297.2-chosen", Phase.DEPLOY);
+        chosenContext.setGame(game);
         chosenContext.setCardIds(List.of("temp6", "temp12"));
         chosenContext.setBlueprints(List.of("13_76", "12_174"));
         chosenContext.setSelectable(List.of(true, true));

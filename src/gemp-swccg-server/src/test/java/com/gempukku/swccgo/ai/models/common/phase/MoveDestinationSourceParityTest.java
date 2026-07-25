@@ -200,6 +200,69 @@ public class MoveDestinationSourceParityTest {
     }
 
     @Test
+    public void objectiveActorRouteUsesOneAnalyzerFactAndSharedScores()
+            throws IOException {
+        String move = evaluatorSource("rando");
+        String destination = moveDestinationBlock(
+                cardSelectionSource("rando"));
+        String policy = policySource();
+
+        assertEquals(1, countOccurrences(
+                move, ".advancesPreFlipActorRoute("));
+        assertEquals(1, countOccurrences(
+                destination, ".advancesPreFlipActorRoute("));
+        assertEquals(1, countOccurrences(
+                move,
+                "MoveDestinationPolicy.objectiveActorRouteStart("));
+        assertEquals(1, countOccurrences(
+                destination,
+                ".objectiveActorRouteDestination("));
+        assertTrue(policy.contains(
+                "public static Contribution objectiveActorRouteStart("));
+        assertTrue(policy.contains(
+                "public static Contribution objectiveActorRouteDestination("));
+        assertTrue(policy.contains("OBJECTIVE_ROUTE_EXEMPT"));
+    }
+
+    @Test
+    public void objectiveActorRouteKeepsFormationSafetyAheadOfScoring()
+            throws IOException {
+        String move = evaluatorSource("rando");
+        int parentFact = move.indexOf(
+                ".advancesPreFlipActorRoute(");
+        int parentDestinationVeto = move.indexOf(
+                ".vetoMoveDestination(", parentFact);
+        int parentOriginVeto = move.indexOf(
+                ".vetoMoveOrigin(", parentDestinationVeto);
+        int parentScore = move.indexOf(
+                "MoveDestinationPolicy.objectiveActorRouteStart(",
+                parentOriginVeto);
+        int parentClaim = move.indexOf(
+                "ladderClaimR2(", parentScore);
+
+        assertTrue(parentFact >= 0);
+        assertTrue(parentDestinationVeto > parentFact);
+        assertTrue(parentOriginVeto > parentDestinationVeto);
+        assertTrue(parentScore > parentOriginVeto);
+        assertTrue(parentClaim > parentScore);
+
+        String destination = moveDestinationBlock(
+                cardSelectionSource("rando"));
+        int childHardVeto = destination.indexOf("action.hardVeto(");
+        int childFact = destination.indexOf(
+                ".advancesPreFlipActorRoute(", childHardVeto);
+        int childScore = destination.indexOf(
+                ".objectiveActorRouteDestination(", childFact);
+        int wrongDirection = destination.indexOf(
+                "MoveDestinationPolicy.wrongDirection(", childScore);
+
+        assertTrue(childHardVeto >= 0);
+        assertTrue(childFact > childHardVeto);
+        assertTrue(childScore > childFact);
+        assertTrue(wrongDirection > childScore);
+    }
+
+    @Test
     public void hiddenPathSuicideStillStopsBeforeContestScoring()
             throws IOException {
         String block = moveDestinationBlock(cardSelectionSource("rando"));

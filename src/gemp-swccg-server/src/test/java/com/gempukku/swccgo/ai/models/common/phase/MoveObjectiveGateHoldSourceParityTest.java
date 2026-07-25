@@ -25,6 +25,10 @@ public class MoveObjectiveGateHoldSourceParityTest {
                 rando, "MoveObjectiveGateHoldPolicy.evaluateRequiredControl("));
         assertEquals(1, countOccurrences(
                 chosen, "MoveObjectiveGateHoldPolicy.evaluateRequiredControl("));
+        assertEquals(1, countOccurrences(
+                rando, ".evaluatePostFlipBlocker("));
+        assertEquals(1, countOccurrences(
+                chosen, ".evaluatePostFlipBlocker("));
         assertTrue(rando.contains(
                 "isPreFlipPlainControlRequirementLocation("));
         assertTrue(chosen.contains(
@@ -33,6 +37,8 @@ public class MoveObjectiveGateHoldSourceParityTest {
                 "isSoleControlSourceAtRequiredLocation("));
         assertTrue(chosen.contains(
                 "isSoleControlSourceAtRequiredLocation("));
+        assertTrue(rando.contains("wouldDepartureTriggerFlipBack("));
+        assertTrue(chosen.contains("wouldDepartureTriggerFlipBack("));
         assertTrue(rando.contains("ladderVetoHard = true;"));
         assertTrue(chosen.contains("ladderVetoHard = true;"));
         assertTrue(rando.contains("+ oppWeaponBonusAt("));
@@ -45,13 +51,17 @@ public class MoveObjectiveGateHoldSourceParityTest {
         int gateHold = move.indexOf("MoveObjectiveGateHoldPolicy.evaluate(");
         int requiredControlHold = move.indexOf(
                 "MoveObjectiveGateHoldPolicy.evaluateRequiredControl(");
+        int postFlipBlockerHold = move.indexOf(
+                ".evaluatePostFlipBlocker(");
         int genericMoveScoring = move.indexOf(
                 "rankMoveFromLocation(action", gateHold);
 
         assertTrue(gateHold >= 0);
         assertTrue(requiredControlHold >= 0);
+        assertTrue(postFlipBlockerHold >= 0);
         assertTrue(genericMoveScoring > gateHold);
         assertTrue(genericMoveScoring > requiredControlHold);
+        assertTrue(genericMoveScoring > postFlipBlockerHold);
     }
 
     private static String evaluatorSource(String bot) throws IOException {

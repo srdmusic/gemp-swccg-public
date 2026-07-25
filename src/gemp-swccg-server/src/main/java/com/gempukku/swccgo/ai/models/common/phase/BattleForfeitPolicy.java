@@ -95,9 +95,8 @@ public final class BattleForfeitPolicy {
     }
 
     /**
-     * Preserves the exact unflipped Invasion actor-and-buddy formation only
-     * when another legal loss can be selected. Mandatory unavoidable losses
-     * remain neutral.
+     * Preserves a structured objective formation only when another legal loss
+     * can be selected. Mandatory unavoidable losses remain neutral.
      */
     public static PolicyResult scoreFlipGateFormationProtection(
             String actionId,
@@ -111,10 +110,18 @@ public final class BattleForfeitPolicy {
         }
 
         String reason;
-        if (role == ObjectiveAnalyzer.FlipGateFormationRole.LAST_REQUIRED_ACTOR) {
-            reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the last required actor while another legal loss exists";
-        } else {
-            reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the required actor's last buddy while another legal loss exists";
+        switch (role) {
+            case LAST_REQUIRED_ACTOR:
+                reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the last required actor while another legal loss exists";
+                break;
+            case LAST_REQUIRED_BUDDY:
+                reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the required actor's last buddy while another legal loss exists";
+                break;
+            case LAST_FLIP_BACK_BLOCKER:
+                reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the sole flip-back blocker while another legal loss exists";
+                break;
+            default:
+                return result(operations);
         }
         add(operations, actionId,
                 "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",

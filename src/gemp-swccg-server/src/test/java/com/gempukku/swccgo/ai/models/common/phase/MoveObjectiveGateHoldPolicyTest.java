@@ -75,7 +75,34 @@ public class MoveObjectiveGateHoldPolicyTest {
         assertNeutralCountedFormation(
                 false, FlipGateFormationRole.LAST_REQUIRED_ACTOR);
         assertNeutralCountedFormation(true, FlipGateFormationRole.NONE);
+        assertNeutralCountedFormation(
+                true, FlipGateFormationRole.LAST_FLIP_BACK_BLOCKER);
         assertNeutralCountedFormation(true, null);
+    }
+
+    @Test
+    public void postFlipBlockerHoldsDefensibleContestButAllowsDoomedRetreat() {
+        MoveObjectiveGateHoldPolicy.Evaluation defensible =
+                MoveObjectiveGateHoldPolicy.evaluatePostFlipBlocker(
+                        true, 8.0f, 14.0f);
+        MoveObjectiveGateHoldPolicy.Evaluation doomed =
+                MoveObjectiveGateHoldPolicy.evaluatePostFlipBlocker(
+                        true, 8.0f, 15.0f);
+        MoveObjectiveGateHoldPolicy.Evaluation unrelated =
+                MoveObjectiveGateHoldPolicy.evaluatePostFlipBlocker(
+                        false, 8.0f, 14.0f);
+
+        assertEquals(
+                MoveObjectiveGateHoldPolicy.Branch
+                        .HOLD_FLIP_BACK_BLOCKER,
+                defensible.branch());
+        assertTrue(defensible.hardVeto());
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.NONE,
+                doomed.branch());
+        assertFalse(doomed.hardVeto());
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.NONE,
+                unrelated.branch());
+        assertFalse(unrelated.hardVeto());
     }
 
     @Test

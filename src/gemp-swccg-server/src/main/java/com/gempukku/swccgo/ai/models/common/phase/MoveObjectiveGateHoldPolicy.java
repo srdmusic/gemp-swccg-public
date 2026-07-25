@@ -12,7 +12,8 @@ public final class MoveObjectiveGateHoldPolicy {
         HOLD_DEFENSIBLE_CONTEST,
         HOLD_LAST_ACTOR,
         HOLD_LAST_BUDDY,
-        HOLD_LAST_CONTROL_SOURCE
+        HOLD_LAST_CONTROL_SOURCE,
+        HOLD_FLIP_BACK_BLOCKER
     }
 
     public record Evaluation(Branch branch, boolean hardVeto, String reason) {
@@ -61,7 +62,9 @@ public final class MoveObjectiveGateHoldPolicy {
             float opponentPowerAtLocation) {
         if (!activePreFlipCountedFormation
                 || formationRole == null
-                || formationRole == FlipGateFormationRole.NONE) {
+                || (formationRole != FlipGateFormationRole.LAST_REQUIRED_ACTOR
+                    && formationRole
+                        != FlipGateFormationRole.LAST_REQUIRED_BUDDY)) {
             return Evaluation.none();
         }
 
@@ -88,6 +91,26 @@ public final class MoveObjectiveGateHoldPolicy {
                 Branch.HOLD_LAST_BUDDY,
                 true,
                 "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: preserve the required actor's last buddy");
+    }
+
+    /**
+     * Keeps a sole post-flip presence source in place when its departure would
+     * immediately satisfy the objective's flip-back predicate. A deficit
+     * greater than six permits ordinary retreat policy to take over.
+     */
+    public static Evaluation evaluatePostFlipBlocker(
+            boolean departureTriggersFlipBack,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation) {
+        if (!departureTriggersFlipBack
+                || opponentPowerAtLocation
+                    > friendlyPowerAtLocation + RETREATABLE_POWER_GAP) {
+            return Evaluation.none();
+        }
+        return new Evaluation(
+                Branch.HOLD_FLIP_BACK_BLOCKER,
+                true,
+                "MOVE.OBJECTIVE.FLIP_BACK_BLOCKER_HOLD: keep the sole blocker preventing immediate flip-back");
     }
 
     public static Evaluation evaluate(

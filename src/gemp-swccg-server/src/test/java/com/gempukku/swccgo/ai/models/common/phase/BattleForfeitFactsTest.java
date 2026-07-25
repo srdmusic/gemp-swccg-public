@@ -57,6 +57,32 @@ public class BattleForfeitFactsTest {
     }
 
     @Test
+    public void postFlipBlockerRoleIsCarriedIntoForfeitFacts() {
+        GameState gameState = mock(GameState.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+        PhysicalCard blocker = mock(PhysicalCard.class);
+        PhysicalCard alternative = mock(PhysicalCard.class);
+        when(gameState.findCardById(1)).thenReturn(blocker);
+        when(gameState.findCardById(2)).thenReturn(alternative);
+        when(analyzer.classifyGateFormationPieceIfRemoved(
+                null, "player", blocker)).thenReturn(
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_FLIP_BACK_BLOCKER);
+        when(analyzer.classifyGateFormationPieceIfRemoved(
+                null, "player", alternative)).thenReturn(
+                    ObjectiveAnalyzer.FlipGateFormationRole.NONE);
+
+        BattleForfeitFacts.FlipGateFormationSelectionFacts facts =
+                BattleForfeitFacts.readFlipGateFormationSelection(
+                    List.of("1", "2"), gameState, null, "player",
+                    analyzer, false, 0);
+
+        assertEquals(ObjectiveAnalyzer.FlipGateFormationRole
+                .LAST_FLIP_BACK_BLOCKER, facts.roleFor("1"));
+        assertTrue(facts.hasUnprotectedLegalAlternative());
+    }
+
+    @Test
     public void candidateSetKeepsFirstLowestForfeitHitAndIndependentDeadFact() {
         BattleForfeitFacts.CandidateSetFacts facts = BattleForfeitFacts.readCandidateSet(
                 List.of(

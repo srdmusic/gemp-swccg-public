@@ -44,6 +44,20 @@ public class BattleForfeitAdapterParityTest {
     }
 
     @Test
+    public void bothBotsProtectTheSolePostFlipBlockerWhenSurplusCanBeLost() {
+        List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction>
+                actions = evaluateFormationRoles(
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_FLIP_BACK_BLOCKER,
+                    ObjectiveAnalyzer.FlipGateFormationRole.NONE);
+
+        assertBits(-9949.0f, actions.get(0).getScore());
+        assertBits(50.0f, actions.get(1).getScore());
+        assertTrue(actions.get(0).getReasoningString().contains(
+                "preserve the sole flip-back blocker while another legal loss exists"));
+    }
+
+    @Test
     public void bothBotsLeaveTheSurplusCandidateUnprotected() {
         List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction>
                 actions = evaluateFormationRoles(

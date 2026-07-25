@@ -504,6 +504,81 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
             }
 
+            // Typed actor-gate objectives may require several ordinary
+            // landspeed legs. Claim doctrine only when at least one exact
+            // closer hop survives both destination and origin safety checks.
+            if (cardToMove != null && gameState != null && game != null
+                    && playerId != null
+                    && actionLower.contains("move using landspeed")) {
+                try {
+                    com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer
+                            routeAnalyzer = context.getObjectiveAnalyzer();
+                    PhysicalCard routeOrigin = game.getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                    gameState, cardToMove);
+                    boolean safeAdvancingHop = false;
+                    if (routeAnalyzer != null && routeAnalyzer.isAnalyzed()
+                            && routeOrigin != null) {
+                        com.gempukku.swccgo.filters.Filter
+                                legalLandspeedTarget =
+                                com.gempukku.swccgo.filters.Filters
+                                    .canMoveToUsingLandspeed(
+                                        playerId, cardToMove,
+                                        false, false, false, 0.0f, null);
+                        for (PhysicalCard routeDestination
+                                : gameState.getLocationsInOrder()) {
+                            if (routeDestination == null
+                                    || !legalLandspeedTarget.accepts(
+                                        gameState,
+                                        game.getModifiersQuerying(),
+                                        routeDestination)
+                                    || !routeAnalyzer
+                                        .advancesPreFlipActorRoute(
+                                            game, playerId, cardToMove,
+                                            routeDestination)) {
+                                continue;
+                            }
+                            String routeVeto =
+                                    com.gempukku.swccgo.ai.models.common
+                                        .strategy.FormationSafety
+                                        .vetoMoveDestination(
+                                            game, gameState, playerId,
+                                            cardToMove, routeDestination);
+                            if (routeVeto == null) {
+                                routeVeto = com.gempukku.swccgo.ai.models
+                                    .common.strategy.FormationSafety
+                                    .vetoMoveOrigin(
+                                        game, gameState, playerId,
+                                        cardToMove, routeOrigin);
+                            }
+                            if (routeVeto == null) {
+                                safeAdvancingHop = true;
+                                break;
+                            }
+                        }
+                    }
+                    MoveDestinationPolicy.Contribution objectiveRoute =
+                            MoveDestinationPolicy.objectiveActorRouteStart(
+                                    safeAdvancingHop,
+                                    cardToMove.getTitle());
+                    if (objectiveRoute.applies()) {
+                        action.addReasoning(
+                                objectiveRoute.reason(),
+                                objectiveRoute.delta());
+                        ladderClaimR2(
+                                "OBJECTIVE ACTOR ROUTE",
+                                objectiveRoute.delta(), 0.0f, false);
+                        logger.warn(
+                                "OBJECTIVE ACTOR ROUTE: {} has a safe closer landspeed hop",
+                                cardToMove.getTitle());
+                    }
+                } catch (Exception e) {
+                    logger.debug(
+                            "Objective actor-route start assessment failed: {}",
+                            e.getMessage());
+                }
+            }
+
             // === V79 (Steve, 2026-05-15): VERGE OF GREATNESS — MOVE DEATH STAR TOWARD SCARIF ===
             // Rando-as-Krennic must shepherd the Death Star from parsec 4 to orbit Scarif.
             // Death Star (V) starts at parsec 4 with hyperspeed 2. Scarif is at parsec 7.
@@ -894,6 +969,49 @@ public class MoveEvaluator extends ActionEvaluator {
                                 countedHold.branch(), countedRole,
                                 (int) countedFriendlyPower,
                                 (int) countedOpponentPower);
+                        }
+                        boolean departureTriggersFlipBack =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && gateAnalyzer.isFlipped()
+                                && gateAnalyzer.wouldDepartureTriggerFlipBack(
+                                    game, playerId, cardToMove);
+                        float postFlipFriendlyPower =
+                                departureTriggersFlipBack
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        playerId, false, false)
+                                : 0.0f;
+                        String postFlipOpponent =
+                                gameState.getOpponent(playerId);
+                        float postFlipOpponentPower =
+                                departureTriggersFlipBack
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        postFlipOpponent, false, false)
+                                    + oppWeaponBonusAt(
+                                        gameState, currentLocation,
+                                        postFlipOpponent)
+                                : 0.0f;
+                        MoveObjectiveGateHoldPolicy.Evaluation
+                                postFlipBlockerHold =
+                                MoveObjectiveGateHoldPolicy
+                                    .evaluatePostFlipBlocker(
+                                        departureTriggersFlipBack,
+                                        postFlipFriendlyPower,
+                                        postFlipOpponentPower);
+                        if (postFlipBlockerHold.hardVeto()) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason =
+                                    postFlipBlockerHold.reason();
+                            logger.warn("OBJECTIVE FLIP-BACK BLOCKER HOLD: {} at {} vetoed ({}, power={}/{})",
+                                cardToMove.getTitle(),
+                                currentLocation.getTitle(),
+                                postFlipBlockerHold.branch(),
+                                (int) postFlipFriendlyPower,
+                                (int) postFlipOpponentPower);
                         }
                     } catch (Exception e) {
                         logger.debug("V297 objective gate hold failed open: {}",

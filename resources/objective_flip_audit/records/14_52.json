@@ -64,13 +64,67 @@
  ],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
+  "loaderEnabled": true,
+  "flipGateSite": "naboo: theed palace throne room",
+  "startingLocationIds": [
+   "12_83",
+   "12_174",
+   "14_51",
+   "14_112",
+   "201_17",
+   "12_81",
+   "12_172"
+  ],
+  "frontStructuredRule": "preFlip/flip allOf: self controlsWith exact Theed Palace Throne Room, actorFilterKey=Amidala, count=1, includeExcludedFromBattle=true",
+  "backStructuredRule": "postFlip/flipBack allOf: opponent controls exact Theed Palace Throne Room, count=1, includeExcludedFromBattle=true",
+  "actorRouteRule": "preFlip actorToSite: Amidala to exact Theed Palace Throne Room, count=1",
   "profileGaps": [
-   "flipGateSite is null; true flip gate location both directions is Theed Palace Throne Room (Filters.Theed_Palace_Throne_Room, present only as an unlabeled objectiveNamedLocations entry).",
-   "keyCharacterFilter is null; true flip actor is Filters.Amidala (and Filters.Panaka for the back Force-loss engine).",
-   "objectiveNamedLocations entries all have null labels and empty titleFragments/blueprintIds - filter strings only; nothing resolves to concrete card ids.",
-   "No representation that your characters cannot DEPLOY to interior Naboo sites while front-side (Amidala must move in), nor of the flip-back condition (opponent controls Throne Room)."
+   "The front-only interior Naboo deploy prohibition remains engine legality, not duplicated in objective data. AI staging uses the exact setup-site route and only scores locations the engine actually offers.",
+   "The back-side Amidala/Panaka recurring Force-loss engine is informational for this flip audit; it does not change the exact flip-back law."
   ]
  },
- "proofGate": "SOURCE_VERIFIED"
+ "missingStateCalculation": [
+  "Front is complete only when the exact Throne Room controlsWith alternative is satisfied. Control without an Amidala persona, Amidala elsewhere, a different Throne Room, or Amidala present without Light Side control remains missing.",
+  "Before flip, a typed Amidala candidate is useful only while no qualifying Amidala is already accessible or at the gate. A route move advances only when the offered destination is both legal under the engine landspeed filter and accepted by the engine's Filters.toward relation for the exact gate; boosted landspeed may legally skip Hallway.",
+  "After flip, the objective is at immediate risk only when opponent controls the exact Throne Room. A departing card is critical only when it is the sole friendly presence source blocking that control predicate."
+ ],
+ "flipPreservation": [
+  "Before flip, avoidable Force-loss and battle-forfeit choices preserve the last required Amidala persona while another legal loss exists.",
+  "Movement holds the completed pre-flip actor gate and gives no route bonus after the gate is complete or the objective is flipped.",
+  "After flip, Amidala is not independently sacred. Any sole friendly presence source at a contested Throne Room is protected from avoidable movement or forfeit because its departure would immediately permit flip-back.",
+  "A post-flip blocker may retreat when opponent effective power exceeds friendly power by more than six; objective preservation does not require a doomed stand."
+ ],
+ "runtimeOwners": [
+  "ObjectiveAnalyzer.assessFlipLocationRules and isMissingPreFlipRequirementAt own exact front/back state.",
+  "ObjectiveAnalyzer.classifyPreFlipProgressCandidate owns typed Amidala pull feasibility when an external legal pull is offered; the objective itself grants no actor pull.",
+  "ObjectiveAnalyzer.stagesPreFlipActorRoute plus DEPLOY.OBJECTIVE.ACTOR_ROUTE_STAGING own exterior route staging, but the parent deploy doctrine is available only when the engine offers at least one legal route-stage destination.",
+  "ObjectiveAnalyzer.advancesPreFlipActorRoute plus MOVE.OBJECTIVE.ACTOR_ROUTE_START and MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION own legal landspeed progress accepted by the engine's Filters.toward relation, including a boosted direct Courtyard-to-Throne move.",
+  "ActivateActionPolicy plus V168 and V38.3 recognize the objective's exact Activate 1 Force action.",
+  "ObjectiveBattlePolicy plus BATTLE.OBJECTIVE.REQUIRED_LOCATION_CONTEST owns a safe contest at the missing Throne Room.",
+  "ForceLossPolicy V21-objective and BattleForfeitPolicy BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD preserve the pre-flip actor.",
+  "ObjectiveAnalyzer.wouldDepartureTriggerFlipBack plus MOVE.OBJECTIVE.FLIP_BACK_BLOCKER_HOLD and BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD preserve the sole post-flip blocker.",
+  "Rando and Chosen One adapters call the same shared analyzers and policies."
+ ],
+ "contradictions": [
+  "Direct deployment to Hallway or Throne Room is illegal while the front is active. A deploy bonus must stage Amidala at an offered exterior setup-route site, not invent a direct deployment.",
+  "V41 wrong-direction logic may otherwise reject movement toward an empty objective site. Only a proven closer actor-route hop receives the exemption.",
+  "Formation Safety remains absolute before the parent +600 or destination +1000 route contribution. An objective bonus cannot authorize a solo charge or abandonment.",
+  "Generic deploy, drain, and consolidation scores may choose another Naboo location unless the exact actor-route contribution dominates their bounded positive scores.",
+  "Post-flip protection must follow the exact opponent-control law. Merely losing Light Side control, or Amidala leaving an uncontested Throne Room, is not a flip-back condition."
+ ],
+ "testEvidence": {
+  "positiveAndNegative": [
+   "WeHaveAPlanObjectiveBehaviorTest loads both facades, checks exact actor/site identities, front/back states, duplicates, route legs, battle target, Force loss, forfeit, and post-flip blocker boundaries.",
+   "MoveDestinationPolicyTest and DeployObjectiveSitingPolicyTest assert semantic rule IDs and score boundaries."
+  ],
+  "candidateChoice": [
+   "Production CombinedEvaluator parity coverage offers advancing deploy and movement candidates against legal distractors and asserts the exact winner for both bots.",
+   "ActivateActionTextPolicyParityTest offers Activate 1 Force against Pass and proves activation wins for both bots."
+  ],
+  "sequence": "WeHaveAPlanObjectiveEngineContractTest uses unchanged card and engine code: Padme deploys legally to exterior Courtyard, cannot deploy to either interior site, spends the exact two-Force deploy budget, uses the objective's Activate 1 Force for each adjacent move, reaches exact Throne Room, fires the real flip trigger, then flips back only after Vader battles Padme away and controls that site.",
+  "parity": "Source-ownership tests and real decision tests cover identical Rando and Chosen One scores, reasons, safety ordering, and winners.",
+  "packaged": "Package gate passed. Server jar SHA-256 590ad075751aac3ee55b00153c93c770ca25dc7cf53d7b2e43fb76ae09552673; web jar SHA-256 7ab1ba9c58b60c5ec2960ff16593a8fc17b1e5353699a0ed8fff89f245039334. Both jars contain the exact approved profile bytes, shared policies/analyzer, and both mirrored bot adapters.",
+  "replay": "No live replay claim. Deterministic engine scenario provides FLIP_OBSERVED without restarting or deploying the live JVM."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }

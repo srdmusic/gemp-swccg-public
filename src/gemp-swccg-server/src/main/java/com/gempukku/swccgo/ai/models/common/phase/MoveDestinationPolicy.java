@@ -62,6 +62,7 @@ public final class MoveDestinationPolicy {
         HIDDEN_PATH_EXEMPT,
         RETREAT_EXEMPT,
         JOIN_GROUP_EXEMPT,
+        OBJECTIVE_ROUTE_EXEMPT,
         VETO
     }
 
@@ -109,6 +110,33 @@ public final class MoveDestinationPolicy {
 
     public static Contribution missingSourceLocation() {
         return new Contribution(true, "Card not at a location", -10.0f);
+    }
+
+    public static Contribution objectiveActorRouteStart(
+            boolean hasSafeAdvancingHop,
+            String actorTitle) {
+        if (!hasSafeAdvancingHop) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.ACTOR_ROUTE_START: "
+                        + (actorTitle != null ? actorTitle : "typed actor")
+                        + " has a safe move toward the flip gate",
+                600.0f);
+    }
+
+    public static Contribution objectiveActorRouteDestination(
+            boolean advancesRoute,
+            String actorTitle,
+            String destinationTitle) {
+        if (!advancesRoute) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION: "
+                        + (actorTitle != null ? actorTitle : "typed actor")
+                        + " advances toward the flip gate via "
+                        + (destinationTitle != null
+                                ? destinationTitle : "this site"),
+                1000.0f);
     }
 
     public static IconScoring icons(int ownIcons, int opponentIcons) {
@@ -440,6 +468,19 @@ public final class MoveDestinationPolicy {
             boolean hiddenPathExempt,
             boolean retreatExempt,
             boolean joinGroupExempt) {
+        return wrongDirection(
+                opponentsElsewhere, destinationTitle, opponentLocation,
+                hiddenPathExempt, retreatExempt, joinGroupExempt, false);
+    }
+
+    public static WrongDirectionEvaluation wrongDirection(
+            boolean opponentsElsewhere,
+            String destinationTitle,
+            String opponentLocation,
+            boolean hiddenPathExempt,
+            boolean retreatExempt,
+            boolean joinGroupExempt,
+            boolean objectiveRouteExempt) {
         if (!opponentsElsewhere) {
             return new WrongDirectionEvaluation(
                     WrongDirectionDisposition.NONE,
@@ -458,6 +499,11 @@ public final class MoveDestinationPolicy {
         if (joinGroupExempt) {
             return new WrongDirectionEvaluation(
                     WrongDirectionDisposition.JOIN_GROUP_EXEMPT,
+                    Contribution.none());
+        }
+        if (objectiveRouteExempt) {
+            return new WrongDirectionEvaluation(
+                    WrongDirectionDisposition.OBJECTIVE_ROUTE_EXEMPT,
                     Contribution.none());
         }
         return new WrongDirectionEvaluation(

@@ -190,10 +190,11 @@ public class ObjectiveAnalyzer {
             Set<String> satisfiedAlternatives,
             Set<String> missingAlternatives) { }
 
-    /** Exact pre-flip Invasion formation role lost if this character leaves play. */
+    /** Structured objective role lost if this card leaves play. */
     public enum FlipGateFormationRole {
         LAST_REQUIRED_ACTOR,
         LAST_REQUIRED_BUDDY,
+        LAST_FLIP_BACK_BLOCKER,
         NONE
     }
 
@@ -427,7 +428,7 @@ public class ObjectiveAnalyzer {
                 for (FlipLocationAlternative alternative : rule.alternatives) {
                     if (alternative == null || alternative.count == null
                             || alternative.count.value == null
-                            || alternative.count.value <= 1) {
+                            || alternative.count.value <= 0) {
                         continue;
                     }
                     int required = expectedCount(
@@ -454,7 +455,14 @@ public class ObjectiveAnalyzer {
                     if (actorFilter != null
                             && actorFilter.accepts(
                                     gameState, game.getModifiersQuerying(),
-                                    candidate)) {
+                                    candidate)
+                            && (required > 1
+                                || !hasOtherMatchingActorInHand(
+                                        game, playerId, candidate,
+                                        actorFilter)
+                                    && !hasOtherMatchingActorOnPreFlipRoute(
+                                        game, playerId, candidate,
+                                        actorFilter))) {
                         List<PhysicalCard> locations =
                                 gameState.getLocationsInOrder();
                         if (locations == null) continue;
@@ -474,6 +482,82 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    private boolean hasOtherMatchingActorInHand(
+            SwccgGame game,
+            String playerId,
+            PhysicalCard candidate,
+            com.gempukku.swccgo.filters.Filter actorFilter) {
+        GameState gameState = game.getGameState();
+        if (gameState == null || actorFilter == null) return false;
+        List<PhysicalCard> hand = gameState.getHand(playerId);
+        if (hand == null) return false;
+        for (PhysicalCard card : hand) {
+            if (card != null && !samePhysicalLocation(card, candidate)
+                    && playerId.equals(card.getOwner())
+                    && actorFilter.accepts(
+                            gameState, game.getModifiersQuerying(),
+                            card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A count-one actor is already actionable only when it is in play on a
+     * site route to the exact gate. A matching pilot aboard a starship or an
+     * actor stranded in unrelated geography must not suppress another pull.
+     */
+    private boolean hasOtherMatchingActorOnPreFlipRoute(
+            SwccgGame game,
+            String playerId,
+            PhysicalCard candidate,
+            com.gempukku.swccgo.filters.Filter actorFilter) {
+        GameState gameState = game.getGameState();
+        if (gameState == null || actorFilter == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> locations = gameState.getLocationsInOrder();
+        Collection<PhysicalCard> permanents =
+                gameState.getAllPermanentCards();
+        if (locations == null || permanents == null) return false;
+
+        for (PhysicalCard gate : locations) {
+            if (gate == null || !isFlipGateLocation(
+                    game, playerId, gate)) {
+                continue;
+            }
+            for (PhysicalCard card : permanents) {
+                if (card == null || samePhysicalLocation(card, candidate)
+                        || !playerId.equals(card.getOwner())
+                        || card.getZone() == null
+                        || !card.getZone().isInPlay()
+                        || card.isCaptive()
+                        || card.isUndercover()
+                        || !actorFilter.accepts(
+                                gameState, game.getModifiersQuerying(),
+                                card)) {
+                    continue;
+                }
+                PhysicalCard actorLocation =
+                        game.getModifiersQuerying()
+                                .getLocationThatCardIsPresentAt(
+                                        gameState, card);
+                if (samePhysicalLocation(actorLocation, gate)) {
+                    return true;
+                }
+                Integer distance = actorLocation != null
+                        ? game.getModifiersQuerying()
+                                .getDistanceBetweenSites(
+                                        gameState, actorLocation, gate)
+                        : null;
+                if (distance != null && distance > 0) return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1085,7 +1169,7 @@ public class ObjectiveAnalyzer {
             FlipLocationAlternative alternative) {
         if (alternative == null || alternative.count == null
                 || alternative.count.value == null
-                || alternative.count.value <= 1
+                || alternative.count.value <= 0
                 || alternative.actorFilterKey == null
                 || candidate == null || location == null
                 || !locationMatchesAlternative(
@@ -1694,12 +1778,12 @@ public class ObjectiveAnalyzer {
     }
 
     /**
-     * Classifies one friendly card by what the active typed pre-flip formation
+     * Classifies one friendly card by what the active structured objective
      * would lose if that card left play.
      */
     public FlipGateFormationRole classifyGateFormationPieceIfRemoved(
             SwccgGame game, String playerId, PhysicalCard candidate) {
-        if (!analyzed || isFlipped || game == null
+        if (!analyzed || game == null
                 || playerId == null || candidate == null
                 || !playerId.equals(candidate.getOwner())
                 || candidate.isUndercover()
@@ -1707,11 +1791,17 @@ public class ObjectiveAnalyzer {
             return FlipGateFormationRole.NONE;
         }
 
+        if (isFlipped) {
+            return wouldDepartureTriggerFlipBack(game, playerId, candidate)
+                    ? FlipGateFormationRole.LAST_FLIP_BACK_BLOCKER
+                    : FlipGateFormationRole.NONE;
+        }
+
         if (hasCountedPreFlipActorRule()) {
             return classifyCountedGatePieceIfRemoved(
                     game, playerId, candidate);
         }
-        if (!isInvasion
+        if (!hasFlipGateActorRequirement()
                 || candidate.getBlueprint().getCardCategory()
                     != CardCategory.CHARACTER) {
             return FlipGateFormationRole.NONE;
@@ -1764,7 +1854,7 @@ public class ObjectiveAnalyzer {
                 return FlipGateFormationRole.LAST_REQUIRED_BUDDY;
             }
         } catch (Exception e) {
-            LOG.debug("Invasion flip-gate casualty classification failed: {}",
+            LOG.debug("Typed flip-gate casualty classification failed: {}",
                     e.getMessage());
         }
         return FlipGateFormationRole.NONE;
@@ -1987,6 +2077,182 @@ public class ObjectiveAnalyzer {
             return false;
         }
     }
+
+    /**
+     * True when a typed gate actor can legally be staged at one of the
+     * objective's exact setup sites with a known site path to the gate.
+     */
+    public boolean stagesPreFlipActorRoute(
+            SwccgGame game,
+            String playerId,
+            PhysicalCard actor,
+            PhysicalCard destination) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || actor == null || destination == null
+                || !playerId.equals(actor.getOwner())) {
+            return false;
+        }
+        ActorLocationRule rule = findFlipGateActorRule();
+        if (rule == null || rule.count == null
+                || rule.count.value == null
+                || rule.count.value != 1
+                || !matchesFlipGateActorRequirement(
+                        game, playerId, actor)
+                || !matchesStartingLocation(destination)) {
+            return false;
+        }
+
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null) {
+                return false;
+            }
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(rule.actorFilterKey);
+            if (actorFilter == null
+                    || hasOtherMatchingActorOnPreFlipRoute(
+                            game, playerId, actor, actorFilter)) {
+                return false;
+            }
+
+            List<PhysicalCard> locations = gameState.getLocationsInOrder();
+            if (locations == null) return false;
+            for (PhysicalCard gate : locations) {
+                if (gate == null
+                        || !isFlipGateLocation(game, playerId, gate)
+                        || samePhysicalLocation(gate, destination)
+                        || countFlipGateActorsAtLocation(
+                                game, playerId, gate) >= 1) {
+                    continue;
+                }
+                Integer distance = game.getModifiersQuerying()
+                        .getDistanceBetweenSites(
+                                gameState, destination, gate);
+                if (distance != null && distance > 0) return true;
+            }
+        } catch (Exception e) {
+            LOG.debug("Objective actor staging assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Parent deploy-action fact. Unlike the child destination fact, this must
+     * prove that at least one route stage is currently legal and affordable.
+     */
+    public boolean hasLegalPreFlipActorRouteStage(
+            SwccgGame game,
+            String playerId,
+            PhysicalCard actor) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || actor == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            List<PhysicalCard> locations = gameState.getLocationsInOrder();
+            if (locations == null) return false;
+            for (PhysicalCard location : locations) {
+                if (!stagesPreFlipActorRoute(
+                        game, playerId, actor, location)) {
+                    continue;
+                }
+                if (Filters.deployableToLocation(
+                        actor, Filters.sameCardId(location),
+                        false, 0.0f).accepts(
+                                gameState, game.getModifiersQuerying(),
+                                actor)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Objective legal actor staging assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean matchesStartingLocation(PhysicalCard destination) {
+        try {
+            String blueprintId = destination.getBlueprintId(true);
+            if (blueprintId != null
+                    && startingLocationIds.contains(blueprintId)) {
+                return true;
+            }
+            String title = destination.getTitle();
+            if (title == null) return false;
+            String titleLower = title.toLowerCase(Locale.ROOT);
+            for (String fragment : startingLocationFragments) {
+                if (fragment != null && !fragment.isEmpty()
+                        && titleLower.equals(fragment)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
+    }
+
+    /**
+     * True only when this exact typed gate actor moves along the engine's
+     * toward relation to its still-unfilled pre-flip gate.
+     */
+    public boolean advancesPreFlipActorRoute(
+            SwccgGame game,
+            String playerId,
+            PhysicalCard actor,
+            PhysicalCard destination) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || actor == null || destination == null
+                || !playerId.equals(actor.getOwner())) {
+            return false;
+        }
+
+        ActorLocationRule rule = findFlipGateActorRule();
+        if (rule == null || rule.count == null
+                || rule.count.value == null
+                || rule.count.value != 1
+                || !matchesFlipGateActorRequirement(
+                        game, playerId, actor)) {
+            return false;
+        }
+
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null) {
+                return false;
+            }
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(gameState, actor);
+            if (origin == null || samePhysicalLocation(origin, destination)) {
+                return false;
+            }
+
+            List<PhysicalCard> locations = gameState.getLocationsInOrder();
+            if (locations == null) return false;
+            for (PhysicalCard gate : locations) {
+                if (gate == null
+                        || !isFlipGateLocation(game, playerId, gate)
+                        || countFlipGateActorsAtLocation(
+                                game, playerId, gate) >= 1) {
+                    continue;
+                }
+                if (Filters.toward(origin, gate).accepts(
+                        gameState, game.getModifiersQuerying(),
+                        destination)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Objective actor-route assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
     // NEW setup slots (2026-07-08, JSON playbook) — starting cards named by the objective.
     public Set<String> getStartingLocationIds() { return Collections.unmodifiableSet(startingLocationIds); }
     public Set<String> getStartingLocationFragments() { return Collections.unmodifiableSet(startingLocationFragments); }
@@ -2532,6 +2798,7 @@ public class ObjectiveAnalyzer {
         switch (key) {
             case "senator":          return com.gempukku.swccgo.filters.Filters.senator;
             case "Neimoidian":       return com.gempukku.swccgo.filters.Filters.Neimoidian;
+            case "Amidala":          return com.gempukku.swccgo.filters.Filters.Amidala;
             case "Rebel":             return com.gempukku.swccgo.filters.Filters.Rebel;
             case "Imperial":          return com.gempukku.swccgo.filters.Filters.Imperial;
             case "Phoenix_Squadron_character":
@@ -2638,6 +2905,20 @@ public class ObjectiveAnalyzer {
                 || card == null || blueprint == null || actionText == null) return notes;
         String actionLower = actionText.toLowerCase(Locale.ROOT);
         boolean isCharacter = blueprint.getCardCategory() == CardCategory.CHARACTER;
+
+        if (analyzed && !isFlipped && isCharacter
+                && hasFlipGateActorRequirement()) {
+            boolean stagingRoute = hasLegalPreFlipActorRouteStage(
+                    game, playerId, card);
+            if (stagingRoute) {
+                notes.add(new ScoreNote(
+                        600.0f,
+                        "OBJECTIVE ACTOR STAGING: deploy '"
+                                + card.getTitle()
+                                + "' to stage its route to the flip gate"));
+            }
+        }
+
         // My Lord DEPLOY magnitudes now read from the ACTIVE playbook (JSON-built when loaderEnabled, else the
         // compiled MY_LORD_PLAYBOOK fallback). Inside the isMyLord arms activePlaybook is non-null (the ternary
         // in analyze() always yields MY_LORD_PLAYBOOK or the JSON build for My Lord); the ?: is defensive only.

@@ -228,7 +228,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         }
                     } catch (Exception ignore) { }
                 }
-                if (v167tl.contains("activate force")) {
+                if (ActivateActionPolicy.isActivationChoiceText(actionText)) {
                     action.addReasoning("BLOCKED (loop prevention) — soft (V167: Activate Force never hard-vetoed)", -200.0f);
                     logger.warn("V167: soft-block (not hard veto) on essential action: {}", actionText);
                 } else if (v169EndangeredMover) {
@@ -254,7 +254,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             }
 
             // ACTIVATE action choice: shared policy owns the V168/V61c four-card floor.
-            if (textLower.contains("activate force")) {
+            if (ActivateActionPolicy.isActivationChoiceText(actionText)) {
                 int v61cReserve = context.getReserveDeckSize();
                 ActivateActionPolicy.Evaluation activation = ActivateActionPolicy.topLevel(
                         actionId, v61cReserve);
@@ -2081,7 +2081,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             }
 
             // ========== Force Activation ==========
-            if (actionText.equals("Activate Force")) {
+            if (ActivateActionPolicy
+                    .isSimpleActivationActionText(actionText)) {
                 action.setActionType(ActionType.ACTIVATE_FORCE);
                 try {
                     ActivateActionPolicy.Evaluation activation =

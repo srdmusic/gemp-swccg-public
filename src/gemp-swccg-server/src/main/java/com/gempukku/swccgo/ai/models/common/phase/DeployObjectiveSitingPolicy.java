@@ -100,6 +100,29 @@ public final class DeployObjectiveSitingPolicy {
                         "Deploy here to advance a missing counted-objective location"));
     }
 
+    public static PolicyResult scoreActorRouteStaging(
+            String actionId,
+            boolean stagesActorRoute,
+            String actorTitle,
+            String locationTitle) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!stagesActorRoute) {
+            return new PolicyResult(
+                    "DEPLOY_ACTOR_ROUTE_STAGING_POLICY", List.of());
+        }
+        return single("DEPLOY_ACTOR_ROUTE_STAGING_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.ACTOR_ROUTE_STAGING",
+                        TraceOutputKind.BANDED, 1000.0f,
+                        "Deploy "
+                                + (actorTitle != null
+                                    ? actorTitle : "typed actor")
+                                + " to "
+                                + (locationTitle != null
+                                    ? locationTitle : "this site")
+                                + " to stage the exact flip-gate route"));
+    }
+
     public static PolicyResult scoreKeyCharacter(KeyCharacterFacts facts) {
         Objects.requireNonNull(facts, "facts");
         return single("DEPLOY_KEY_CHARACTER_POLICY",
