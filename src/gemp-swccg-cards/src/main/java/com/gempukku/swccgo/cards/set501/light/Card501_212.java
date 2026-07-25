@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -50,7 +50,7 @@ public class Card501_212 extends AbstractNormalEffect {
         String opponent = game.getOpponent(playerId);
 
         //OTHER_CARD_ACTION_1: Opponent loses 1 Force at the end of every turn (if you occupy more battlegrounds than them)
-        //OTHER_CARD_ACTION_2: Opponent loses 1 Force whenever they lose a character with ability during battle (limit once per battle)
+        //OTHER_CARD_ACTION_2: Opponent loses 1 Force whenever they lose a character with ability during battle you initiate (limit once per turn)
         //OTHER_CARD_ACTION_3: Opponent loses 1 Force whenever they lose a battle
 
         //Opponent loses 1 Force at the end of every turn (if you occupy more battlegrounds than them)
@@ -71,19 +71,19 @@ public class Card501_212 extends AbstractNormalEffect {
             }
         }
 
-        //Opponent loses 1 Force whenever they lose a character with ability during battle (limit once per battle)
+        //Opponent loses 1 Force whenever they lose a character with ability during battle you initiate (limit once per turn)
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 
         // Check condition(s)
         if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(playerId), Filters.character, Filters.hasAbility))
-                && GameConditions.isDuringBattle(game)
-                && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)) {
+                && GameConditions.isDuringBattleInitiatedBy(game, playerId)
+                && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText(opponent + " loses 1 Force");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerBattleEffect(action));
+                    new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new LoseForceEffect(action, opponent, 1));
