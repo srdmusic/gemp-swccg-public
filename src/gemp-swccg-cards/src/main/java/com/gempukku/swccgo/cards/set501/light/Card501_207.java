@@ -34,6 +34,7 @@ import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.MovesForFreeUsingLandspeedModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
@@ -63,6 +64,7 @@ public class Card501_207 extends AbstractNormalEffect {
         Filter padawansAndYoda = Filters.or(Filters.padawan, Filters.Yoda);
         modifiers.add(new ImmuneToTitleModifier(self, padawansAndYoda, Title.Imperial_Barrier));
         modifiers.add(new ImmuneToTitleModifier(self, padawansAndYoda, Title.Stunning_Leader));
+        modifiers.add(new MovesForFreeUsingLandspeedModifier(self, padawansAndYoda));
         return modifiers;
     }
 
