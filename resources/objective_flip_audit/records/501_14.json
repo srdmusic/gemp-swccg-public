@@ -1,0 +1,78 @@
+{
+ "frontBp": "501_14",
+ "backBp": "501_14_BACK",
+ "side": "LIGHT",
+ "titleFront": "I Can Bring You In Warm",
+ "titleBack": "...Or I Can Bring You In Cold",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014_BACK.java",
+ "cacheCheck": "NOT_IN_CACHE",
+ "flipToBack": {
+  "timing": "Required trigger on battle initiation; resolution is an OPPONENT CHOICE, so the flip is not guaranteed",
+  "prose": "When a battle is just initiated involving both Din and 'The Asset', a required singleton action makes the OPPONENT choose: (0) lose The Asset from table to exclude Din from the battle (and objective owner takes any one card into hand from Reserve Deck; reshuffle), or (1) flip this objective. Flip happens only if opponent picks option 1.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "timing-trigger: battle just initiated", "filter": "-", "gameConditions": "TriggerConditions.battleInitiated(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014.java:130"},
+    {"req": "battle participant", "filter": "Filters.Din", "gameConditions": "GameConditions.isDuringBattleWithParticipant(game, Filters.Din)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014.java:131"},
+    {"req": "battle participant", "filter": "Filters.The_Asset", "gameConditions": "GameConditions.isDuringBattleWithParticipant(game, Filters.The_Asset)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014.java:132"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014.java:133"},
+    {"req": "chosen-state: opponent selects 'Flip' over 'Lose The Asset to exclude Din (owner uploads any card)'", "filter": "MultipleChoiceAwaitingDecision by opponent", "gameConditions": "PlayoutDecisionEffect(action, opponent, ...) index==1 -> FlipCardEffect; index==0 -> LoseCardFromTableEffect(theAsset) + ExcludeFromBattleEffect(din) + TakeCardIntoHandFromReserveDeckEffect(self.getOwner(), true)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014.java:140-164"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014.java:127-166"]
+ },
+ "flipToFront": {
+  "timing": "Required trigger at the START of ANY move phase (either player's) - the back is inherently transient",
+  "prose": "Back flips to front automatically at the start of any move phase. On flipping TO the back, an optional trigger lets the owner immediately re-circulate and shuffle their Reserve Deck.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "timing-trigger: start of each MOVE phase", "filter": "Phase.MOVE", "gameConditions": "TriggerConditions.isStartOfEachPhase(game, effectResult, Phase.MOVE)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014_BACK.java:118"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014_BACK.java:119"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014_BACK.java:118-128"]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is a battle-initiation TIMING trigger with two participant leaves (Din AND The Asset both participating) resolved by an OPPONENT CHOICE - unique among objectives in this batch: Rando cannot force the flip, only present the dilemma; opponent flipping is the 'good for them' branch since option 0 costs them The Asset and hands the owner a free upload of ANY card.",
+  "Flip-to-front is a pure phase-boundary timing trigger (start of any move phase), no board condition at all: the back lasts at most from a battle until the next move phase starts.",
+  "BACK while-up: if The Asset is just lost or forfeited, that character is placed out of play from Lost Pile (Card501_014_BACK.java:95-108); The Asset's game text is canceled (86); dark player may not cancel your non-lightsaber weapon destiny draws while The Asset is in battle (85, via InBattleCondition on the found-first-active The Asset).",
+  "FRONT while-up: The Asset may not move away from same location as Din (MayNotMoveAwayFromLocationModifier, Card501_014.java:101).",
+  "Housekeeping both sides: when The Asset leaves table, Holopuck's while-in-play data is cleared (front 168-176; back 93-115).",
+  "This is a SET 501 PLAYTESTING card (ExpansionSet.PLAYTESTING, setTestingText); absent from card_cache.json as expected."
+ ],
+ "typedIdentities": [
+  "Filters.Din (persona; flip trigger participant; anchor for The Asset's movement lock)",
+  "Filters.The_Asset (flip trigger participant; back-side out-of-play target and game-text-cancel target)",
+  "Filters.Bounty_Hunters_Guild (setup site; Holopuck destination)",
+  "Filters.Holopuck (setup deploy to Bounty Hunter's Guild; while-in-play-data cleared when The Asset leaves table)",
+  "Filters.title(Title.Cold_Storage) (setup deploy)",
+  "Filters.Bounty_Hunting_Is_A_Dangerous_Profession (setup deploy)",
+  "Filters.Mudhorn_Location (once-per-turn download class, front; filter name as written in source)",
+  "Deploy ban (both sides, coded as while-active modifier each side): Filters.or(Filters.and(Filters.your(self), Filters.Jedi, Filters.except(Filters.or(Filters.Luke, Filters.Ahsoka))), Filters.and(Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.character))",
+  "Back: Filters.and(Filters.your(self), Filters.weapon, Filters.not(Filters.lightsaber)) (opponent may-not-cancel weapon destiny class)"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Bounty Hunter's Guild (Card501_014.java:64), Holopuck deployed to Bounty Hunter's Guild via DeployCardToTargetFromReserveDeckEffect (71), Cold Storage (78), Bounty Hunting Is A Dangerous Profession (85).",
+  "FRONT: once per turn, deploy a [Mudhorn] location from Reserve Deck; reshuffle (Card501_014.java:106-124, GameTextActionId.I_CAN_BRING_YOU_IN_WARM__DOWNLOAD_MUDHORN_LOCATION).",
+  "FLIP-DILEMMA REWARD: if opponent chooses to lose The Asset, owner takes ANY one card into hand from Reserve Deck; reshuffle (TakeCardIntoHandFromReserveDeckEffect(action, self.getOwner(), true), Card501_014.java:153-155).",
+  "ON FLIP TO BACK (optional): re-circulate and shuffle your Reserve Deck (Card501_014_BACK.java:56-76, TriggerConditions.cardFlipped)."
+ ],
+ "otherObligations": [
+  "BOTH SIDES: may not deploy your Jedi (except Luke and Ahsoka) or [Episode I]/[Episode VII] characters (front Card501_014.java:96-102; back Card501_014_BACK.java:79-88).",
+  "FRONT: 'The Asset' may not move away from same location as Din (Card501_014.java:101) - keeps the flip dilemma re-armable every battle at Din's location.",
+  "BACK: during battles involving The Asset, opponent may not cancel your non-lightsaber weapon destiny draws (Card501_014_BACK.java:85); The Asset's game text is canceled (86); if The Asset just lost/forfeited, place that character out of play (98-108).",
+  "Rando obligations: front - initiate battles with Din against The Asset to force the opponent dilemma repeatedly; each 'lose The Asset' resolution nets a free any-card upload; back - it auto-expires at the next move phase start, so exploit the weapon-destiny protection and Asset text-cancel in the battle window immediately after flipping."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": false,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "No profile exists in src/gemp-swccg-server/src/main/resources/objective_playbooks.json for frontBp 501_14 (batch metadata hasProfile=False confirmed by profiles scan).",
+   "If a profile is ever authored: flip law is opponent-choice on battle initiation with Din + The Asset (no site gate), back auto-reverts at start of any move phase, and The Asset lost-on-back goes out of play - none of the standard flipGateSite/keyCharacterFilter shapes fit without new semantics."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

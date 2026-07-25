@@ -1,0 +1,85 @@
+{
+ "frontBp": "201_39",
+ "backBp": "201_39_BACK",
+ "side": "DARK",
+ "titleFront": "Imperial Entanglements",
+ "titleBack": "No One To Stop Us This Time",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Flip if you control 3 Tatooine sites AND opponent controls fewer than 3 Tatooine sites. Plain control (no actor filter); sites only, system does not count.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java:131"},
+    {"req": "controls >=3 locations", "filter": "Filters.Tatooine_site", "gameConditions": "GameConditions.controls(game, playerId, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Tatooine_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java:132"},
+    {"op": "not", "children": [
+     {"req": "opponent controls >=3 locations", "filter": "Filters.Tatooine_site", "gameConditions": "GameConditions.controls(game, opponent, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Tatooine_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java:133"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java:125-145"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if opponent controls MORE Tatooine sites than you (strict count comparison of controlled Tatooine sites).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039_BACK.java:143"},
+    {"req": "count-comparison: opponent-controlled > player-controlled", "filter": "Filters.and(Filters.Tatooine_site, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) vs Filters.and(Filters.Tatooine_site, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))", "gameConditions": "Filters.countTopLocationsOnTable(game, Filters.and(Filters.Tatooine_site, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))) > Filters.countTopLocationsOnTable(game, Filters.and(Filters.Tatooine_site, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039_BACK.java:144-145"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039_BACK.java:137-158"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip = plain CONTROL of 3 Tatooine sites (no actor requirement) with an OPPONENT CONSTRAINT (opponent must control < 3 Tatooine sites). Both checks INCLUDE_EXCLUDED_FROM_BATTLE.",
+  "Back flip = RELATIVE COUNT: opponent strictly ahead in controlled Tatooine sites. Equal counts (including 0-0) keep the back up; back is much easier to hold than front was to flip.",
+  "No occupy semantics anywhere in the flip laws; system control is irrelevant to flipping."
+ ],
+ "typedIdentities": [
+  "Filters.Tatooine_site - flip gate locations both sides (sites, not Tatooine_location)",
+  "Filters.Tatooine_system, Filters.Devastator - setup deploys",
+  "Filters.and(Filters.Tatooine_site, Filters.battleground) - setup 3rd deploy + once-per-turn download (both sides, shared GameTextActionId.IMPERIAL_ENTANGLEMENTS__DOWNLOAD_TATOOINE_BATTLEGROUND_SITE)",
+  "Deploy bans (front, until end of game): Filters.or(Filters.Sandwhirl, Filters.Jabbas_Palace_site, Filters.and(Filters.character, Filters.not(Filters.Imperial)), Filters.and(Filters.starship, Filters.not(Filters.Imperial_starship)), Filters.system)",
+  "Filters.Admirals_Order - MayNotDeploy while-active on BOTH sides",
+  "Filters.Tatooine_Occupation - front shelters opponent from its Force loss",
+  "Filters.trooper - back draw-phase retrieval",
+  "Filters.and(Filters.opponents(self), Filters.character) + Filters.Tatooine_site - back landspeed move tax",
+  "Filters.and(Filters.Tatooine_location, Filters.occupies(playerId)) - back peek X counter (locations, occupied)"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Tatooine system from Reserve Deck. Card201_039.java:55-61",
+  "Setup (front, required): deploy Devastator to Tatooine system from Reserve Deck. Card201_039.java:62-68",
+  "Setup (front, required): deploy a Tatooine site that will be a battleground (DeployCardFromReserveDeckEffect with specialLocationConditions Filters.battleground). Card201_039.java:69-75",
+  "Front + back, once per turn: download a Tatooine battleground site from Reserve Deck (same action id both sides). Card201_039.java:103-122; Card201_039_BACK.java:105-121",
+  "Back, once during your control phase: peek at top X of Reserve Deck (X = number of Tatooine locations you occupy, capped by deck size), take one into hand, shuffle. Card201_039_BACK.java:57-87",
+  "Back, once during your draw phase: retrieve one trooper. Card201_039_BACK.java:89-103"
+ ],
+ "otherObligations": [
+  "Front (until end of game, after deployment completes): you may not deploy Sandwhirl, Jabba's Palace sites, non-Imperial characters, non-Imperial starships, or systems. Card201_039.java:80-88",
+  "Both sides (while active): you may not deploy Admiral's Orders. Card201_039.java:98; Card201_039_BACK.java:132",
+  "Front (while this side up): opponent loses no Force to Tatooine Occupation or to your Force drains at Tatooine system (drain there is zero-value while front up - flip before expecting system-drain damage). Card201_039.java:96-97",
+  "Back: opponent's characters require +1 Force to move from Tatooine sites using landspeed. Card201_039_BACK.java:131",
+  "Strategic: keep controlled-Tatooine-site count >= opponent's to stay on back; deck restricted to Imperial characters/starships and no additional systems for the rest of the game."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateSite is null; gate is Tatooine sites generally (Filters.Tatooine_site) - present only inside objectiveNamedLocations as 'Tatooine battleground site' (flip law counts ALL Tatooine sites, battleground or not)",
+   "opponent constraint (opponent controls < 3 to flip; opponent-more-than-you flips back) has no profile representation",
+   "requiredCardsOnTable empty; Devastator is a required setup deploy",
+   "keyCharacterFilter null (correct that flip needs no actor, but deploy-ban Imperial-only constraint is also unrepresented)",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

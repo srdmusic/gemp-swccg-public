@@ -1,0 +1,86 @@
+{
+ "frontBp": "222_27",
+ "backBp": "222_27_BACK",
+ "side": "LIGHT",
+ "titleFront": "The Empire Knows We're Here",
+ "titleBack": "Prepare For Ground Assault",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027_BACK.java",
+ "cacheCheck": "MISMATCH:card_cache.json entry '222_27' has title 'Alter' (light), but source Card222_027.java is the objective 'The Empire Knows We're Here' / 'Prepare For Ground Assault' - cache entry is stale/wrong for this bp id",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds. OPPONENT-DRIVEN.",
+  "prose": "Flip if opponent OCCUPIES a Hoth location that YOU own (ownership-qualified: Filters.your(playerId) on the location card).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027.java:136"},
+    {"req": "opponent occupies >=1 location (plain presence by opponent)", "filter": "Filters.and(Filters.your(playerId), Filters.Hoth_location)", "gameConditions": "GameConditions.occupies(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.Hoth_location))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027.java:137"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027.java:128-148"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if opponent does NOT occupy any of your Hoth locations - exact negation of the front condition. The card toggles with opponent presence on your Hoth locations.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027_BACK.java:219"},
+    {"op": "not", "children": [
+     {"req": "opponent occupies >=1 location (plain presence by opponent)", "filter": "Filters.and(Filters.your(playerId), Filters.Hoth_location)", "gameConditions": "GameConditions.occupies(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.Hoth_location))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027_BACK.java:220"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027_BACK.java:217-230"
+  ]
+ },
+ "requirementSemantics": [
+  "Flip both ways is OPPONENT-OCCUPY of an ownership-qualified location set: 'your Hoth location' = Hoth location card OWNED by the objective owner (Filters.your(playerId) applies to the location, not the occupants).",
+  "No control, no actor filter, no count beyond 1; INCLUDE_EXCLUDED_FROM_BATTLE both ways.",
+  "Objective owner cannot directly force the flip; it happens when the Empire shows up on your locations (and reverts the moment they are cleared - clearing opponent presence flips you back to front, losing the back-side text)."
+ ],
+ "typedIdentities": [
+  "Filters.and(Filters.your(playerId), Filters.Hoth_location) - flip gate both sides (owned Hoth locations: system + sites)",
+  "Filters.Hoth_system - setup deploy + front drain +1",
+  "Filters.Main_Power_Generators - setup deploy (the '1st Marker' of printed text = Hoth: Main Power Generators)",
+  "Filters.or(Filters.Echo_Command_Center, Filters.marker_site) - once-per-turn download both sides",
+  "Filters.and(Filters.battleground, Filters.marker_site) - front control-phase retrieval gate (occupy 2)",
+  "Filters.or(Filters.Second_Marker, Filters.Third_Marker) - may not be covered by Hoth Energy Shield (both sides)",
+  "Play/deploy ban both sides: Filters.or(Filters.Ice_Storm, Filters.system, Filters.and(Icon.SPECIAL_EDITION, Filters.Leia), Filters.and(Filters.character, Filters.abilityMoreThan(4)))",
+  "Filters.title(\"Echo Base Garrison\") - immune to Alter (both sides)",
+  "Back cancel scope: Filters.and(Filters.your(playerId), Filters.or(Filters.Admirals_Order, Filters.and(Filters.onTable, Filters.unique, Filters.character, Filters.not(Filters.or(Filters.trooper, Filters.gunner, Filters.pilot)))))",
+  "Filters.Hoth_Sentry, Filters.Sunsdown - back auto-cancels",
+  "Filters.and(Filters.your(playerId), Filters.vehicle_weapon / Filters.artillery_weapon) - back hit->no-attrition-satisfaction trigger",
+  "Filters.and(Filters.Hoth_location, Filters.battleground, Filters.occupies(playerId)) - back peek X counter"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Hoth system from Reserve Deck. Card222_027.java:57-63",
+  "Setup (front, required): deploy Main Power Generators (1st Marker) from Reserve Deck. Card222_027.java:64-70",
+  "Front + back, once per turn (shared GameTextActionId.THE_EMPIRE_KNOWS_WERE_HERE__DOWNLOAD_LOCATION): download Echo Command Center or a marker site from Reserve Deck. Card222_027.java:89-106; Card222_027_BACK.java:66-84",
+  "Back, after you initiate a battle (once per battle): peek at top X cards of Used Pile (X = Hoth battlegrounds you occupy), take one into hand, shuffle Used Pile (shuffle skipped when X exceeds Used Pile size). Card222_027_BACK.java:105-140"
+ ],
+ "otherObligations": [
+  "Both sides: Hoth Energy Shield does not extend beyond 1st Marker (2nd/3rd Markers may not be covered); you may not deploy Ice Storm, systems, [Special Edition] Leia, or characters of ability > 4; Echo Base Garrison immune to Alter. Card222_027.java:75-82; Card222_027_BACK.java:88-101",
+  "Front only: your Force drains +1 at Hoth system. Card222_027.java:81",
+  "Front (once during your control phase, top-level + end-of-phase forms): if you occupy two battleground marker sites, retrieve 1 Force (plain occupies, no spot override). Card222_027.java:109-123,150-167",
+  "Back: cancels Hoth Sentry and Sunsdown (on play and on table). Card222_027_BACK.java:143-181",
+  "Back: cancels game text of your Admiral's Orders and your unique characters except gunners, pilots, and troopers (SELF-NERF: unique non-GPT characters go blank while on back - deck must be troopers/gunners/pilots to keep text). Card222_027_BACK.java:98-99",
+  "Back: cards 'hit' by your artillery or vehicle weapons may not be used to satisfy attrition. Card222_027_BACK.java:183-215"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; gate is 'your Hoth locations' - the ownership qualifier (Filters.your on the location) appears nowhere in the profile",
+   "opponent-driven flip semantics (opponent occupies to flip; opponent absence flips back) not represented",
+   "keyCharacterFilter is null (correct that no actor is needed, but the back-side self-cancel of unique non-trooper/gunner/pilot characters, which dictates deck shape, is unrepresented)",
+   "objectiveNamedLocations covers Hoth system / Main Power Generators / Echo Command Center / marker sites but omits '2nd Marker'/'3rd Marker' shield-limit identities",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

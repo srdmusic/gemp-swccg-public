@@ -1,0 +1,111 @@
+{
+  "frontBp": "226_12",
+  "backBp": "226_12_BACK",
+  "side": "DARK",
+  "titleFront": "This Deal Is Getting Worse All The Time (V)",
+  "titleBack": "Pray I Don't Alter It Any Further (V)",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Flip if you control at least 3 Bespin locations AND opponent controls fewer than 3 Bespin locations. SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE on both control checks.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012.java:133"
+        },
+        {
+          "req": "control-count: owner controls >=3 Bespin locations",
+          "filter": "Filters.Bespin_location",
+          "gameConditions": "GameConditions.controls(game, playerId, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_location)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012.java:134"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "control-count: opponent controls >=3 Bespin locations",
+              "filter": "Filters.Bespin_location",
+              "gameConditions": "GameConditions.controls(game, opponent, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_location)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012.java:135"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012.java:131-145"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger, GameTextActionId.OTHER_CARD_ACTION_4)",
+    "prose": "Back flips to front if opponent controls MORE Bespin locations than you (strict comparative count of top locations on table).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012_BACK.java:136"
+        },
+        {
+          "req": "comparative control-count: opponent-controlled Bespin locations > owner-controlled Bespin locations",
+          "filter": "Filters.and(Filters.Bespin_location, Filters.controls(opponent|playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))",
+          "gameConditions": "Filters.countTopLocationsOnTable(game, Filters.and(Filters.Bespin_location, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))) > Filters.countTopLocationsOnTable(game, Filters.and(Filters.Bespin_location, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012_BACK.java:137-138"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012_BACK.java:134-148"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack: CONTROL-count semantics on both legs (GameConditions.controls with count 3), no 'with' actor filter, no occupy. Opponent constraint is 'fewer than 3', not zero: opponent may hold up to 2 Bespin locations and you still flip.",
+    "flipToFront: strict comparative CONTROL-count (opponent > you) via Filters.countTopLocationsOnTable, NOT a fixed threshold. Ties hold the back; parity is enough to stay flipped.",
+    "All control checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE."
+  ],
+  "typedIdentities": [
+    "Filters.Bespin_location (both directions' counted location filter)",
+    "Filters.Cloud_City_battleground_site (required start deploy)",
+    "Filters.and(Icon.CLOUD_CITY, Filters.Im_Sorry) (required start deploy)",
+    "Filters.or(Filters.Admirals_Order, Filters.and(Icon.DEATH_STAR_II, Filters.Executor)) (owner deploy ban, both sides, remainder of game)",
+    "Filters.and(Filters.your(playerId), Filters.Lando, Filters.movableAsRegularMove(...)) (control-phase free move, both sides)",
+    "Filters.or(Filters.Dark_Deal, Filters.Vaders_Bounty, Filters.and(Icon.SPECIAL_EDITION, Filters.Bespin_system)) (once-per-turn upload, both sides)",
+    "Back: Filters.or(Filters.Sense, Filters.Alter) (play ban, both players); Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.Lando, Filters.Lobot))) (drain-bonus protection); Filters.Vader at Filters.Bespin_location (Admiral's Orders text cancel); Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.participatingInBattle))) (total battle destiny +2); Filters.Lobot participatingInBattle (2x destiny tweak)"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, required): deploy a Cloud City battleground site: DeployCardFromReserveDeckEffect(Filters.Cloud_City_battleground_site, true, false) [Card226_012.java:53-59]",
+    "START OF GAME (front, required): deploy [Cloud City] I'm Sorry: DeployCardFromReserveDeckEffect(Filters.and(Icon.CLOUD_CITY, Filters.Im_Sorry), true, false) [Card226_012.java:60-66]",
+    "FRONT+BACK, once per owner's turn: take Dark Deal, Vader's Bounty, or [Special Edition] Bespin into hand from Reserve Deck; reshuffle: TakeCardIntoHandFromReserveDeckEffect(Filters.or(Filters.Dark_Deal, Filters.Vaders_Bounty, Filters.and(Icon.SPECIAL_EDITION, Filters.Bespin_system)), true), GameTextActionId.THIS_DEAL_IS_GETTING_WORSE_ALL_THE_TIME_V__UPLOAD_CARD [Card226_012.java:106-122, Card226_012_BACK.java:106-121]"
+  ],
+  "otherObligations": [
+    "FRONT+BACK, remainder of game: owner may not deploy Admiral's Orders or [Death Star II] Executor: MayNotDeployModifier [Card226_012.java:75, Card226_012_BACK.java:67]",
+    "FRONT+BACK: once during owner's control phase, your Lando may make a regular move: MoveCardAsRegularMoveEffect on Filters.and(Filters.your(playerId), Filters.Lando, Filters.movableAsRegularMove(...)) [Card226_012.java:83-104, Card226_012_BACK.java:84-104]",
+    "BACK: Sense and Alter may not be played (no player restriction: both players): MayNotPlayModifier(self, Filters.or(Filters.Sense, Filters.Alter)) [Card226_012_BACK.java:70]",
+    "BACK: your Force drain bonuses at same site as your Lando or your Lobot may not be canceled: ForceDrainBonusesMayNotBeCanceledModifier(self, Filters.your(playerId), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.Lando, Filters.Lobot)))) [Card226_012_BACK.java:71]",
+    "BACK: while Vader at a Bespin location, game text of Admiral's Orders is canceled: CancelsGameTextModifier(self, Filters.Admirals_Order, AtCondition(self, Filters.Vader, Filters.Bespin_location)) [Card226_012_BACK.java:64,72]",
+    "BACK: if your alien/Imperial pair in battle, your total battle destiny +2: TotalBattleDestinyModifier with InBattleCondition(your alien with your Imperial participating) [Card226_012_BACK.java:73-75]",
+    "BACK: once per battle involving your Lando (twice if any Lobot also participating), may add or subtract 1 from a just-drawn destiny: OptionalGameTextTriggerAction, NumTimesPerBattleEffect, ModifyDestinyEffect(+1|-1) [Card226_012_BACK.java:153-190]",
+    "No hard-lose / place-out-of-play condition on either side."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "flipGateSite is null: flip law counts Filters.Bespin_location (3 controlled); 'Bespin location' appears in objectiveNamedLocations but nothing marks it as the flip gate, and no count is encoded.",
+      "Opponent-side constraint (opponent < 3 Bespin locations to flip; opponent > you flips back) is not represented; the comparative flip-back semantics have no field.",
+      "pullableCards empty: the once-per-turn upload targets (Dark Deal, Vader's Bounty, [Special Edition] Bespin) are absent; only [SE] Bespin (223_8) appears, and only as a named location.",
+      "requiredCardsOnTable empty: start deploys (Cloud City battleground site, [Cloud City] I'm Sorry) are not represented.",
+      "keyCharacterFilter is null: Lando/Lobot power the back's toolkit (move, drain-bonus protection, destiny tweak) and Vader gates the Admiral's Orders cancel; none represented (arguably acceptable since the flip law itself is pure location control)."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

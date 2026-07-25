@@ -1,0 +1,101 @@
+{
+ "frontBp": "7_136",
+ "backBp": "7_136_BACK",
+ "side": "LIGHT",
+ "titleFront": "Hidden Base",
+ "titleBack": "Systems Will Slip Through Your Fingers",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "OPTIONAL top-level action by owner (player chooses when); enabled after a required after-trigger tracker clears while-in-play data. NOT an automatic isTableChanged flip.",
+  "prose": "Owner may flip any time once the deployed-system tracker is satisfied: the 'Hidden Base' indicator system has been deployed AND (6+ tracked system titles exist, i.e. hidden base non-battleground + 5 battlegrounds, OR the hidden base system is itself a battleground and 5+ tracked titles exist). Tracker counts titles of systems the owner justDeployed that are battleground systems or the hidden-base title; when threshold met, setWhileInPlayData(null), which enables the top-level Flip action.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "chosen-state/counter: while-in-play data cleared by deployed-system tracker",
+     "filter": "(state) self.getWhileInPlayData() == null",
+     "gameConditions": "!GameConditions.cardHasWhileInPlayDataSet(self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:94"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:95"
+    },
+    {
+     "op": "allOf",
+     "children": [
+      {
+       "req": "tracker input: owner just deployed a system (battleground or hidden-base title recorded)",
+       "filter": "Filters.system; classified via Filters.battleground_system.accepts(...) or title == stacked hidden-base title",
+       "gameConditions": "TriggerConditions.justDeployed(game, effectResult, playerId, Filters.system)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:114"
+      },
+      {
+       "req": "tracker threshold: hidden base deployed AND (size>=6 OR (hiddenBaseIsBattleground AND size>=5)) -> setWhileInPlayData(null)",
+       "filter": "systemTitlesMap.keySet().size() >= 6 || (isHiddenBaseBattleground && systemTitlesMap.keySet().size() >= 5)",
+       "gameConditions": "(inline tracker logic, not a GameConditions call)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:126-131"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:94-104",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:109-136"
+  ]
+ },
+ "flipToFront": {
+  "timing": "NEVER flips back. Back has a hard-lose instead: placed OUT OF PLAY when the 'Hidden Base' system is 'probed'.",
+  "prose": "No FlipCardEffect exists on the back. Required after-trigger: when TriggerConditions.systemProbed fires and the probed system's title equals the stacked hidden-base indicator's title, the objective is placed out of play, indicator removed, probe cards go to opponent's Used Pile, and opponent may retrieve 1 Force per Probe Droid used to probe.",
+  "expression": null,
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136_BACK.java:150-202"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack: pure deployment-count tracker (chosen-state stored in WhileInPlayData string->boolean map keyed by system title); no control/occupy check at flip time",
+  "flipToBack: flip is OPTIONAL (TopLevelGameTextAction), owner decides timing; 'any time after' per card text",
+  "hard-lose (back): event trigger systemProbed matching stacked indicator title; opponent creates probes at systems opponent OCCUPIES (Filters.occupies(opponentAsActionOwner)) during any deploy phase, one card from hand under a system not already probed",
+  "back drain-cancel: limit per turn = min(2, count of battleground systems CONTROLLED by owner (Filters.controls(playerId)))"
+ ],
+ "typedIdentities": [
+  "Filters.Rendezvous_Point (setup deploy)",
+  "Filters.and(Filters.planet_system, Filters.planetSystemInParsecRange(1, 8)) (hidden-base indicator stacked from outside deck)",
+  "Filters.system (per-deploy-phase download; tracker trigger)",
+  "Filters.battleground_system (tracker classification)",
+  "Filters.system_or_sector (front drain-loss limit)",
+  "Filters.and(Filters.system, Filters.occupies(playerId), Filters.not(Filters.hasStacked(Filters.probeCard))) (back: probe targets, playerId=opponent)",
+  "Filters.probeCard, Filters.probe_droid (back: probe accounting/retrieval)",
+  "Filters.and(Filters.battleground_system, Filters.controls(playerId)) (back: drain-cancel quota)"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy Rendezvous Point from Reserve Deck (Filters.and(Filters.Rendezvous_Point)) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:54]",
+  "On deploy: stack one planet system with parsec 1-8 from OUTSIDE deck face down on self as hidden-base indicator [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:61]",
+  "Front, once per YOUR deploy phase: deploy one system from Reserve Deck; reshuffle (Filters.system, GameTextActionId.HIDDEN_BASE__DOWNLOAD_SYSTEM) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:78-89]"
+ ],
+ "otherObligations": [
+  "Front modifier: LimitForceLossFromForceDrainModifier(self, Filters.system_or_sector, 1, opponent) - opponent loses max 1 from your drains at systems/sectors [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java:143]",
+  "Back modifier: MayNotDeployModifier(self, Filters.system, playerId) - owner may not deploy systems while back up [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136_BACK.java:64]",
+  "Back: for each battleground system you control, may cancel one opponent Force drain, limit 2/turn [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136_BACK.java:75-88]",
+  "Back: opponent must first use 1 Force to draw a card from Force Pile [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136_BACK.java:138-144]",
+  "Back hard-lose: objective placed out of play if hidden-base system probed; probe cards to opponent Used Pile; opponent may retrieve 1 per Probe Droid used [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136_BACK.java:150-201]"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite null and no profile field encodes the true flip law (deploy-5-battleground-systems + hidden-base-system tracker); no count threshold represented anywhere",
+   "pullableCards empty despite once-per-deploy-phase Filters.system download being the objective's core engine",
+   "startingLocations empty despite mandatory Rendezvous Point deploy (it appears only in objectiveNamedLocations)",
+   "requiredCardsOnTable empty; the stacked hidden-base indicator (planet system parsec 1-8) and its probe hard-lose are not represented",
+   "keyCharacterFilter null (acceptable: flip law has no character actor), weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,155 @@
+{
+  "frontBp": "109_4",
+  "backBp": "109_4_BACK",
+  "side": "LIGHT",
+  "titleFront": "Quiet Mining Colony",
+  "titleBack": "Independent Operation",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Flip if opponent controls NO Bespin locations, AND you control Bespin: Cloud City (the site), AND (you control >= 2 Cloud City sites, OR (Lando or Lobot is on Cloud City [at any Cloud City site] AND you control >= 1 Cloud City site)). All checks with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java:124"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "control: opponent controls >=1 Bespin location",
+              "filter": "Filters.Bespin_location",
+              "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_location)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java:125"
+            }
+          ]
+        },
+        {
+          "req": "control: owner controls the Bespin: Cloud City site",
+          "filter": "Filters.Bespin_Cloud_City",
+          "gameConditions": "GameConditions.controls(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_Cloud_City)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java:126"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "req": "control: owner controls >=2 Cloud City sites",
+              "filter": "Filters.Cloud_City_site",
+              "gameConditions": "GameConditions.controls(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Cloud_City_site)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java:127"
+            },
+            {
+              "op": "allOf",
+              "children": [
+                {
+                  "req": "card-on-Cloud-City: Lando or Lobot on Cloud City (Filters.on_Cloud_City = locationAndCardsAtLocation(Filters.Cloud_City_site), i.e. at ANY Cloud City site)",
+                  "filter": "Filters.or(Filters.Lando, Filters.Lobot)",
+                  "gameConditions": "GameConditions.isOnCloudCity(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.or(Filters.Lando, Filters.Lobot))",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java:128"
+                },
+                {
+                  "req": "control: owner controls >=1 Cloud City site",
+                  "filter": "Filters.Cloud_City_site",
+                  "gameConditions": "GameConditions.controls(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Cloud_City_site)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java:129"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java:122-139"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Back flips to front if opponent controls Bespin system, OR opponent controls at least 3 locations among Cloud City sites and/or Bespin cloud sectors (combined count).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004_BACK.java:106"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "req": "control: opponent controls the Bespin system",
+              "filter": "Filters.Bespin_system",
+              "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_system)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004_BACK.java:107"
+            },
+            {
+              "req": "control-count: opponent controls >=3 locations matching (Cloud City site OR Bespin cloud sector)",
+              "filter": "Filters.or(Filters.Cloud_City_site, Filters.Bespin_cloud_sector)",
+              "gameConditions": "GameConditions.controls(game, opponent, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.or(Filters.Cloud_City_site, Filters.Bespin_cloud_sector))",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004_BACK.java:108"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004_BACK.java:104-118"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack: CONTROL semantics on all location legs (opponent zero Bespin locations; owner controls Bespin: Cloud City site; owner controls 2 [or 1] Cloud City sites). No occupy, no 'with' actor filter on control legs.",
+    "Lando/Lobot leg: card-position semantics via Filters.on_Cloud_City (at any Cloud City site), NOT control and NOT restricted to the Bespin: Cloud City named site.",
+    "flipToFront: CONTROL semantics, disjunctive: opponent controls Bespin system, or a combined count of 3 across Cloud City sites and Bespin cloud sectors.",
+    "All control/spot checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE."
+  ],
+  "typedIdentities": [
+    "Filters.Bespin_location (opponent zero-control constraint, front; drain limit both legs)",
+    "Filters.Bespin_Cloud_City (the named Cloud City site owner must control)",
+    "Filters.Cloud_City_site (control-count legs, both directions)",
+    "Filters.or(Filters.Lando, Filters.Lobot) (personas easing the site count)",
+    "Filters.Bespin_system (start deploy; opponent flip-back leg)",
+    "Filters.Cloud_City_battleground_site (start deploy)",
+    "Filters.or(Filters.site, Filters.cloud_sector) to Title.Bespin (front per-turn download)",
+    "Filters.or(Filters.Cloud_City_site, Filters.Bespin_cloud_sector) (flip-back count filter)",
+    "Filters.docking_bay (back per-turn download)",
+    "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin, true)) (blown-away out-of-play, both sides)",
+    "Back: Filters.and(Filters.your(self), Filters.or(Filters.alien, Filters.cloud_car, Filters.and(Icon.INDEPENDENT, Filters.starship))); Filters.and(Filters.Bespin_location, Filters.controlsWith(playerId, self, Filters.alien))"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, required): deploy Bespin system: DeployCardFromReserveDeckEffect(Filters.Bespin_system, true, false) [Card109_004.java:53-59]",
+    "START OF GAME (front, required): deploy one Cloud City battleground site: DeployCardFromReserveDeckEffect(Filters.Cloud_City_battleground_site, true, false) [Card109_004.java:60-66]",
+    "FRONT, once per owner's deploy phase, cost 1 Force: deploy a site or cloud sector to Bespin from Reserve Deck; reshuffle: DeployCardToSystemFromReserveDeckEffect(Filters.or(Filters.site, Filters.cloud_sector), Title.Bespin, true), GameTextActionId.QUIET_MINING_COLONY__DOWNLOAD_SITE_OR_CLOUD_SECTOR [Card109_004.java:71-93]",
+    "BACK, once per owner's deploy phase (free): deploy one docking bay from Reserve Deck; reshuffle: DeployCardFromReserveDeckEffect(Filters.docking_bay, true), GameTextActionId.INDEPENDENT_OPERATION__DOWNLOAD_DOCKING_BAY [Card109_004_BACK.java:66-84]"
+  ],
+  "otherObligations": [
+    "FRONT: opponent loses no more than 1 Force from each of your Force drains at Bespin locations: LimitForceLossFromForceDrainModifier(self, Filters.Bespin_location, 1, opponent) (self-limiting drain cap while front up) [Card109_004.java:101]",
+    "FRONT+BACK hard-lose: place out of play if Bespin system 'blown away': isBlownAwayLastStep(Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin, true))) [Card109_004.java:111-120, Card109_004_BACK.java:93-102]",
+    "BACK: your aliens, cloud cars and [Independent] starships immune to attrition < 4: ImmuneToAttritionLessThanModifier [Card109_004_BACK.java:57-58]",
+    "BACK: at each Bespin location you control with an alien, your Force drains may not be modified or canceled by opponent: ForceDrainsMayNotBeModifiedModifier + ForceDrainsMayNotBeCanceledModifier on Filters.and(Filters.Bespin_location, Filters.controlsWith(playerId, self, Filters.alien)) [Card109_004_BACK.java:59-60]",
+    "BACK: your [Independent] starships deploy -1: DeployCostModifier(self, Filters.and(Filters.your(self), Icon.INDEPENDENT, Filters.starship), -1) [Card109_004_BACK.java:61]"
+  ],
+  "seedMismatches": [
+    "Seed's Lando/Lobot leg says relation ON where Filters.Bespin_Cloud_City (the named Bespin: Cloud City site); source uses GameConditions.isOnCloudCity -> Filters.on_Cloud_City = locationAndCardsAtLocation(Filters.Cloud_City_site), i.e. Lando/Lobot at ANY Cloud City site satisfies the leg, not only Bespin: Cloud City."
+  ],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": true,
+    "profileGaps": [
+      "flipGateSite is null: true anchor gate is the Bespin: Cloud City site (Filters.Bespin_Cloud_City must be controlled) plus Cloud City site counts; not named as gate.",
+      "keyCharacterFilter is null: Filters.or(Filters.Lando, Filters.Lobot) reduces the required Cloud City site count from 2 to 1; these personas are not represented anywhere in the profile.",
+      "Count thresholds not encoded: opponent 0 Bespin locations; owner 2 (or 1 with Lando/Lobot) Cloud City sites; opponent flip-back thresholds (Bespin system, or 3 CC sites/cloud sectors).",
+      "objectiveNamedLocations entries all have empty titleFragments/blueprintIds and null labels (raw filters only), so nothing maps them to concrete cards.",
+      "pullableCards empty: the front site/cloud-sector download and back docking-bay download routes are not represented."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

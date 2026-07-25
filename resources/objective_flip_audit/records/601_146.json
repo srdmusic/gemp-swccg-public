@@ -1,0 +1,128 @@
+{
+  "frontBp": "601_146",
+  "backBp": "601_146_BACK",
+  "side": "LIGHT",
+  "titleFront": "Watch Your Step (V)",
+  "titleBack": "This Place Can Be A Little Rough (V)",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips when you OCCUPY Corellia system AND CONTROL two Corellia battleground sites with Corellians.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146.java:131"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146.java:132"
+        },
+        {
+          "req": "occupy: owner occupies Corellia system (presence suffices, control not required)",
+          "filter": "Filters.Corellia_system",
+          "gameConditions": "GameConditions.occupies(game, playerId, Filters.Corellia_system)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146.java:133"
+        },
+        {
+          "req": "control WITH actor, count 2: owner controls 2 Corellia battleground sites each with a Corellian",
+          "filter": "locations: Filters.and(Filters.Corellia_site, Filters.battleground); actor: Filters.Corellian",
+          "gameConditions": "GameConditions.controlsWith(game, self, playerId, 2, Filters.and(Filters.Corellia_site, Filters.battleground), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Corellian)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146.java:134-135"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146.java:127-147"
+    ]
+  },
+  "flipToFront": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips back when you do NOT occupy two battlegrounds (any battlegrounds, not Corellia-specific). NOTE: the printed game text's exception '(unless you have completed two Kessel Runs)' is NOT implemented - no Kessel Run check exists in the code.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146_BACK.java:118"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146_BACK.java:119"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "occupy count 2: owner occupies two battlegrounds",
+              "filter": "Filters.battleground",
+              "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146_BACK.java:120"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146_BACK.java:114-132"
+    ]
+  },
+  "requirementSemantics": [
+    "Front flip mixes OCCUPY and CONTROL-WITH: occupies(Corellia_system) - presence only - AND controlsWith(2, Corellia battleground sites, Corellian) - full control of two such sites each with a Corellian there (SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE).",
+    "Back flip-back is OCCUPY count semantics on GENERIC battlegrounds: occupies(playerId, 2, INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground) - NOT Corellia-specific; any two occupied battlegrounds anywhere hold the back side.",
+    "CODE-VS-TEXT DIVERGENCE (back): printed text says 'unless you have completed two Kessel Runs' - no such exception is coded. Printed back text also describes smuggler Force generation/battle destiny/forfeit/interrupt-from-Lost-Pile/Sense-Alter-KYEO bans, none of which are implemented; the code instead implements Corellia-specific modifiers (weapon destiny -2 for non-blaster character weapons at Corellia sites, Force generation +1 at Corellia spaceport sites, combat vehicle deploy/move lockouts, Palejo Reshad game-text mod, BoShek/Corellian download, end-of-turn bottom-of-Reserve draw). Truth recorded = code.",
+    "Front's extra deploy cost ('place a card from hand on bottom of Used Pile to deploy a card with ability to Corellia') is an unimplemented TODO comment in BOTH files (front:97, BACK:62)."
+  ],
+  "typedIdentities": [
+    "Filters.Corellia_system",
+    "Filters.and(Filters.Corellia_site, Filters.battleground)",
+    "Filters.Corellian",
+    "Filters.battleground (back flip-back occupy count)",
+    "Filters.and(Filters.unpiloted, Filters.freighter)",
+    "Filters.and(Filters.Corellian, Filters.pilot)",
+    "Filters.and(Filters.uniqueness(Uniqueness.DIAMOND_1), Filters.title(\"Spaceport City\"))",
+    "Filters.and(Filters.uniqueness(Uniqueness.DIAMOND_1), Filters.site) (<> site download)",
+    "Filters.Corellia_site immune to Title.No_Escape (both sides)",
+    "Filters.or(Filters.title(\"BoShek\"), Filters.and(Filters.Corellian, Filters.abilityLessThan(3))) (back download)",
+    "Filters.and(Filters.not(Filters.blaster), Filters.character_weapon, Filters.at(Filters.Corellia_site)) (weapon destiny -2, back)",
+    "Filters.and(Filters.Corellia_site, Filters.spaceport_site) (Force generation +1, back)",
+    "Filters.and(Filters.your(self), Filters.combat_vehicle) (deploy/move lockout, back)"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Corellia system, an unpiloted freighter to Corellia system (DeploymentRestrictionsOption.allowToDeployUnpilotedToSystemOrSector), a Corellian pilot to Corellia system, and <>Spaceport City to Corellia (DeployCardToSystemFromReserveDeckEffect, Title.Corellia) (front:57-89).",
+    "Front pull: once per turn, use 1 Force to deploy a <> (DIAMOND_1) site from Reserve Deck; reshuffle (front:103-124).",
+    "Back pull: once during your deploy phase, deploy BoShek or a Corellian of ability < 3 from Reserve Deck (BACK:72-91).",
+    "Back: at end of each turn, may use 1 Force to draw bottom card of Reserve Deck into hand (optional trigger, BACK:94-111)."
+  ],
+  "otherObligations": [
+    "Both sides: Corellia sites immune to No Escape (front:96; BACK:61).",
+    "Front: you may not Force drain at Corellia system (front:98).",
+    "Back: non-blaster character weapons at Corellia sites: each weapon destiny -2 (BACK:63).",
+    "Back: your Force generation +1 at Corellia spaceport sites (BACK:64).",
+    "Back: your combat vehicles may not deploy or move except to Corellia sites where opponent has a vehicle (BACK:65-66).",
+    "Back: Palejo Reshad treats Audience Chamber as Corellia (ModifyGameTextModifier, BACK:67).",
+    "UNIMPLEMENTED (TODO in code, both sides): extra cost (place card from hand on bottom of Used Pile) for either player deploying a card with ability (except Corellian) to Corellia (front:97; BACK:62).",
+    "Strategic note from law: front flip needs Corellians parked on two CONTROLLED Corellia battleground sites plus any presence at Corellia system; after flip, only generic 2-battleground occupation must be maintained (per code - the Kessel Run escape hatch does not exist)."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": false,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "No profile exists in objective_playbooks.json for frontBp 601_146 (Legacy block-4 card, hideFromDeckBuilder; also absent from both seed facts files).",
+      "If a profile is created: flip gate = occupy Corellia system + controlsWith(2, Corellia battleground sites, Corellian); flip-back guard = keep occupying 2 battlegrounds anywhere; key actor = Filters.Corellian; note the back's printed-text-vs-code divergence (no Kessel Run exception coded) before encoding any Kessel Run logic."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

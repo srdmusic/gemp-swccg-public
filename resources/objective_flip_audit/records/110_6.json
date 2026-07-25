@@ -1,0 +1,137 @@
+{
+ "frontBp": "110_6",
+ "backBp": "110_6_BACK",
+ "side": "DARK",
+ "titleFront": "Court Of The Vile Gangster",
+ "titleBack": "I Shall Enjoy Watching You Die",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Flip if you have one captive of ability > 2 at a Jabba's Palace site, OR two captives at Jabba's Palace site(s).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006.java:136"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006.java:137"
+    },
+    {
+     "op": "anyOf",
+     "children": [
+      {
+       "req": "can-spot (count 1): captive of ability > 2 at a Jabba's Palace site",
+       "filter": "Filters.and(Filters.captive, Filters.abilityMoreThan(2), Filters.at(Filters.Jabbas_Palace_site))",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, <filter>)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006.java:138"
+      },
+      {
+       "req": "can-spot (count 2): two captives at Jabba's Palace site(s)",
+       "filter": "Filters.and(Filters.captive, Filters.at(Filters.Jabbas_Palace_site))",
+       "gameConditions": "GameConditions.canSpot(game, self, 2, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, <filter>)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006.java:139"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006.java:135-149"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Back flips to front if you have NO captives at Tatooine sites AND opponent has NO character at the same site as a Rancor.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006_BACK.java:105"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006_BACK.java:106"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "can-spot: any captive at a Tatooine site",
+       "filter": "Filters.and(Filters.captive, Filters.at(Filters.Tatooine_site))",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, <filter>)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006_BACK.java:107"
+      }
+     ]
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "can-spot: opponent character at same site as Rancor",
+       "filter": "Filters.and(Filters.opponents(self), Filters.character, Filters.at(Filters.sameSiteAs(self, Filters.Rancor)))",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, <filter>)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006_BACK.java:108"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006_BACK.java:104-118"
+  ]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is a captive-count check via can-spot AT Jabba's Palace sites (Filters.at), not control/occupy; alternatives: 2 plain captives OR 1 captive with abilityMoreThan(2).",
+  "Captive spots use SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE (captives are normally invisible to spotting).",
+  "Flip-back is a double negative: no captives at Tatooine SITES (broader than Jabba's Palace) and no opponent character co-located with a Rancor.",
+  "Front maintenance: at end of EACH player's deploy phase, that player loses 1 Force unless that player has a non-droid character AT a Tatooine battleground site (Filters.owner(currentPlayer) + Filters.at(Filters.Tatooine_battleground_site)) - applies to BOTH players (Card110_006.java:120-131)."
+ ],
+ "typedIdentities": [
+  "Filters.captive; Filters.abilityMoreThan(2); Filters.Jabbas_Palace_site; Filters.Tatooine_site; Filters.Tatooine_battleground_site",
+  "Filters.Rancor; Filters.Sarlacc; Filters.Rancor_Pit; Filters.sameSiteAs(self, Filters.Rancor)",
+  "Filters.Audience_Chamber; Filters.Great_Pit_Of_Carkoon; Filters.Dungeon (setup pulls)",
+  "Filters.docking_bay; Filters.and(Icon.INDEPENDENT, Filters.starship) (front download)",
+  "Filters.bounty_hunter; Filters.Goo_Nee_Tay; Filters.Scanning_Crew; Filters.Trap_Door; Filters.non_droid_character"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy Audience Chamber, Great Pit Of Carkoon, and Dungeon from Reserve Deck (Card110_006.java:51-75).",
+  "Front once per deploy phase (COURT_OF_THE_VILE_GANGSTER__DOWNLOAD_DOCKING_BAY_OR_INDEPENDENT_STARSHIP): deploy one docking bay or [Independent] starship from Reserve Deck; reshuffle. Narrows to docking bays only under COURT_OF_THE_VILE_GANGSTER__MAY_NOT_DEPLOY_STARSHIPS mod (Card110_006.java:78-100, filter :85-86).",
+  "Back once per deploy phase (I_SHALL_ENJOY_WATCHING_YOU_DIE__DOWNLOAD_SARLACC_RANCOR_OR_RANCOR_PIT): deploy Sarlacc, Rancor, or Rancor Pit from Reserve Deck; reshuffle (Card110_006_BACK.java:51-70)."
+ ],
+ "otherObligations": [
+  "Front: bounty hunters forfeit +2 and immune to Goo Nee Tay deploy-cost modifiers (Card110_006.java:107-108); YOU may not play Scanning Crew (:109).",
+  "Front maintenance loss: each player loses 1 Force at end of their deploy phase without a non-droid character at a Tatooine battleground site (Card110_006.java:120-131).",
+  "Back: captives targeted by Trap Door relocate to Rancor Pit without destiny draw (TRAP_DOOR__DO_NOT_DRAW_DESTINY) and Trap Door may not be canceled (Card110_006_BACK.java:75-76).",
+  "Back: opponent loses Force equal to forfeit of each opponent character eaten by Rancor/Sarlacc; eaten character placed out of play (EatenByIsPlacedOutOfPlayModifier :77; LoseForceEffect trigger :91-100).",
+  "Strategic: after flip, keep at least one captive at a Tatooine site OR keep an opponent character stuck with the Rancor, else it flips back to front.",
+  "No hard-lose/out-of-play condition on either side."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite null: gate is any Jabba's Palace site (Filters.Jabbas_Palace_site); present only as a generic named-location recipe",
+   "keyCharacterFilter null: flip requires CAPTIVES (2 plain, or 1 with ability>2) - no captive semantics anywhere in the profile",
+   "no encoding of the alternative counts or SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE",
+   "pullableCards empty: front docking-bay/[Independent]-starship download and back Sarlacc/Rancor/Rancor Pit download not represented",
+   "front end-of-deploy-phase 1-Force maintenance (non-droid character needed at a Tatooine battleground site, applies to both players) not represented",
+   "flip-back exposure (no captives at Tatooine sites AND no opponent character at Rancor's site) not represented"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

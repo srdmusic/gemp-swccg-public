@@ -1,0 +1,134 @@
+{
+ "frontBp": "12_180",
+ "backBp": "12_180_BACK",
+ "side": "DARK",
+ "titleFront": "No Money, No Parts, No Deal!",
+ "titleBack": "You're A Slave?",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flip if Watto is PRESENT AT Watto's Junkyard AND you OCCUPY Mos Espa.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:161"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:162"
+    },
+    {
+     "req": "canSpot: Watto present at Watto's Junkyard (presence, not control)",
+     "filter": "Filters.and(Filters.Watto, Filters.presentAt(Filters.Wattos_Junkyard))",
+     "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Watto, Filters.presentAt(Filters.Wattos_Junkyard)))",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:163"
+    },
+    {
+     "req": "occupies: Mos Espa",
+     "filter": "Filters.Mos_Espa",
+     "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Mos_Espa)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:164"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:157-176"
+  ]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flips back if Watto NOT present at Watto's Junkyard OR you do NOT occupy Mos Espa (exact negation of the flip law).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:223"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:224"
+    },
+    {
+     "op": "anyOf",
+     "children": [
+      {
+       "op": "not",
+       "children": [
+        {
+         "req": "canSpot: Watto present at Watto's Junkyard",
+         "filter": "Filters.and(Filters.Watto, Filters.presentAt(Filters.Wattos_Junkyard))",
+         "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Watto, Filters.presentAt(Filters.Wattos_Junkyard)))",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:225"
+        }
+       ]
+      },
+      {
+       "op": "not",
+       "children": [
+        {
+         "req": "occupies: Mos Espa",
+         "filter": "Filters.Mos_Espa",
+         "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Mos_Espa)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:226"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:219-238"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack leaf 1: PRESENCE (presentAt) of a specific character at a specific site - not control, not occupy",
+  "flipToBack leaf 2: OCCUPY Mos Espa (any of your cards) - not control",
+  "flipToFront: OR of the two negations; both conditions must be maintained to stay on back",
+  "opponent counter (both sides): opponent may use 8 Force to place Watto (at Watto's Junkyard) in Used Pile, then YOU choose to retrieve 0-4 Force - permanently threatens the Watto presence leg"
+ ],
+ "typedIdentities": [
+  "Filters.Watto (persona)",
+  "Filters.Wattos_Junkyard, Filters.Mos_Espa (site identities)",
+  "Filters.presentAt(Filters.Wattos_Junkyard) (presence semantics)",
+  "Filters.Tatooine_site (front drain-loss limit)",
+  "Filters.QuiGon (front: power +3 - benefits OPPONENT'S Qui-Gon)",
+  "Filters.and(Filters.opponents(self), Filters.non_unique, Filters.alien) (back: deploy +3)"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy Watto's Junkyard and Mos Espa from Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:62-74]",
+  "No ongoing Reserve Deck pulls on either side; the only recurring engine is the back's once-per-deploy-phase face-down-card gambit (opponent loses 2 and card to Used, or opponent uses 2 and you deploy it free; if free-deploy impossible you lose 2 Force and the card) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:129-195]"
+ ],
+ "otherObligations": [
+  "Remainder of game (front, after deployment): Watto's Junkyard immune to Revolution [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:79-85]",
+  "Front modifiers: Qui-Gon power +3 (downside); opponent loses max 1 Force from your drains at Tatooine sites [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:151-152]",
+  "Both sides: opponent action - use 8 Force, place Watto in Used Pile, you may retrieve up to 4 Force [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:88-143, src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:64-119]",
+  "Back modifier: opponent's non-unique aliens deploy +3 [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:122-126]",
+  "Back gambit may be buffed by ModifyGameTextType.YOURE_A_SLAVE__DRAW_TOP_CARD_OF_RESERVE_DECK_WHEN_PLACING_A_CARD_IN_USED_PILE [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:203-215]"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "keyCharacterFilter null: true flip actor Filters.Watto absent from entire profile",
+   "flipGateSite null: true gates Wattos_Junkyard (presence) + Mos_Espa (occupy) exist only as objectiveNamedLocations entries, not wired as flip gates",
+   "requiredCardsOnTable empty: Watto-on-table (present at Junkyard) requirement unrepresented",
+   "no representation of the opponent's 8-Force Watto-removal counter that directly un-flips the objective; weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

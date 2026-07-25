@@ -1,0 +1,79 @@
+{
+  "frontBp": "111_6",
+  "backBp": "111_6_BACK",
+  "side": "DARK",
+  "titleFront": "Set Your Course For Alderaan",
+  "titleBack": "The Ultimate Power In The Universe",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "Required trigger on blown-away completion (event timing, not standing state; no isTableChanged/canBeFlipped guard)",
+    "prose": "Flips when Alderaan (system) is 'blown away' - i.e., the Commence Primary Ignition epic event completes against Alderaan. Nothing else flips this card.",
+    "expression": {
+      "req": "timing trigger: Alderaan system blown-away last step",
+      "filter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Alderaan, true))",
+      "gameConditions": "TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Alderaan, true)))",
+      "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006.java:190"
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006.java:189-199"
+    ]
+  },
+  "flipToFront": {
+    "timing": "NEVER flips back. Back instead has a place-out-of-play (lose) trigger and a blown-away Force-loss amplifier.",
+    "prose": "The Ultimate Power In The Universe is placed out of play if Death Star (system) is 'blown away' (TriggerConditions.isBlownAwayLastStep on Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Death_Star, true)) -> PlaceCardOutOfPlayFromTableEffect). Additionally, if Yavin 4 system is blown away, adds 3 to opponent's blown-away Force loss for each opponent's Yavin 4 site (isBlownAwayCalculateForceLossStep -> AddToBlownAwayForceLossEffect).",
+    "expression": null,
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006_BACK.java:67-77",
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006_BACK.java:50-65"
+    ]
+  },
+  "requirementSemantics": [
+    "Flip is a pure EVENT-TIMING trigger (isBlownAwayLastStep), not a board-state check: no control/occupy/presence/with semantics anywhere in the flip law. The only route to flipping is executing Commence Primary Ignition against Alderaan.",
+    "Back hard-lose is the mirror event: Death Star system blown away places the objective out of play - the Death Star must be protected (Rebels' Attack Run / CPI threat).",
+    "Front's Force-drain cancel at Death Star sites is required and automatic, gated by an owner drain there: TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.Death_Star_site) - it cancels the OWNER'S OWN drains at Death Star sites (and battle damage there is prevented by NoBattleDamageModifier), with a ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES variant narrowing to your Death Star sites."
+  ],
+  "typedIdentities": [
+    "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Alderaan, true))",
+    "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Death_Star, true))",
+    "Filters.Death_Star_system",
+    "Filters.Deployable_By_SYCFA (second start-of-game location: Alderaan system or per-filter equivalents e.g. Jedha City)",
+    "Filters.Docking_Bay_327",
+    "Filters.Revolution (canceled)",
+    "Filters.Commence_Primary_Ignition may target only Filters.or(Filters.Alderaan_system, Filters.Yavin_4_system, Filters.Hoth_system, Filters.Subjugated_system) (MayNotBeTargetedByModifier on all other planet systems)",
+    "Filters.titleContains(\"Death Star\") (deploy-phase tutor)",
+    "Filters.Alderaan_system (no Force drain there)",
+    "Filters.Death_Star_site (drain/battle-damage cancel zone)",
+    "Filters.and(Filters.system, Filters.battleground) (back download)",
+    "Filters.Star_Destroyer / Filters.Victory_class_Star_Destroyer (deploy -2 / -1 to Death Star system)",
+    "Filters.and(Filters.battleground_system, Filters.sameSystemAs(self, Filters.Star_Destroyer)) drains +1; +2 variant via Filters.or(Filters.Imperial_class_Star_Destroyer, Filters.Super_class_Star_Destroyer)",
+    "Filters.and(Filters.opponents(self), Filters.Yavin_4_site, Filters.notIgnoredDuringEpicEventCalculation(true))"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Death Star system, one location matching Filters.Deployable_By_SYCFA (Alderaan system slot), and Docking Bay 327 from Reserve Deck (front:60-84).",
+    "Front tutor: once during each of your deploy phases, take one card with 'Death Star' in title into hand from Reserve Deck; reshuffle (Filters.titleContains(\"Death Star\"), front:135-154).",
+    "Back pull: once during each of your deploy phases, deploy one battleground system from Reserve Deck; reshuffle (Filters.system + Filters.battleground, BACK:81-107)."
+  ],
+  "otherObligations": [
+    "Front, remainder of game: Revolution is canceled (action proxy, front:87-126); Commence Primary Ignition may target only Alderaan/Yavin 4/Hoth/Subjugated planet systems (front:127-131).",
+    "Front: you may not Force drain at Alderaan system (front:161).",
+    "Front: at Death Star sites your Force drains are canceled (required trigger front:178-187) and battle damage against you is canceled (NoBattleDamageModifier front:162-163); a game-text modification can narrow both to YOUR Death Star sites (front:171-175).",
+    "Back: your Star Destroyers deploy -2 (Victory-class -1) to Death Star system (BACK:113).",
+    "Back: your Force drains +1 at battleground systems with your Star Destroyer (+2 if Imperial- or Super-class present) (BACK:114-115).",
+    "Back: if Yavin 4 system blown away, +3 Force lost per opponent's Yavin 4 site (BACK:51-65).",
+    "Back LOSE condition: placed out of play if Death Star is blown away (BACK:68-76) - the Death Star system must be defended for the rest of the game."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "flipGateSite null and nothing represents the true gate: an EVENT (Alderaan system 'blown away' via Commence Primary Ignition), which requires the Superlaser/CPI epic-event pipeline, not any control/occupy state.",
+      "flipGateCardIds empty; Alderaan system (1_281, listed in objectiveNamedLocations) is not wired as the gate target, and Commence Primary Ignition / Superlaser prerequisites are absent from pullableCards/requiredCardsOnTable.",
+      "Back hard-lose (Death Star system blown away => objective out of play) is not represented.",
+      "No representation of the front's own-drain cancellation at Death Star sites / no-drain-at-Alderaan restrictions that shape pre-flip play."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

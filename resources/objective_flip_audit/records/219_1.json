@@ -1,0 +1,89 @@
+{
+ "frontBp": "219_1",
+ "backBp": "219_1_BACK",
+ "side": "DARK",
+ "titleFront": "A Great Tactician Creates Plans",
+ "titleBack": "The Result Is Often Resentment",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Table-changed poll restricted to either player's DEPLOY phase",
+  "prose": "Flip during any deploy phase if Thrawn is at a battleground (any battleground, site or system) AND Thrawn's Art Collection is on table with 2+ cards stacked on it ('two or more artwork cards on table' is coded as 2+ stacked on the found-first-active Collection).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java:124"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java:125"},
+    {"req": "phase window: either player's deploy phase", "filter": "Phase.DEPLOY", "gameConditions": "GameConditions.isDuringEitherPlayersPhase(game, Phase.DEPLOY)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java:126"},
+    {"req": "presence-spot: Thrawn AT a battleground", "filter": "Filters.and(Filters.Thrawn, Filters.at(Filters.battleground))", "gameConditions": "GameConditions.canSpot(game, self, Filters.and(Filters.Thrawn, Filters.at(Filters.battleground)))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java:127"},
+    {"req": "card-on-table: Thrawn's Art Collection found active", "filter": "Filters.Thrawns_Art_Collection", "gameConditions": "Filters.findFirstActive(game, self, Filters.Thrawns_Art_Collection) != null", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java:128-129"},
+    {"req": "counter: 2+ cards stacked on the Collection", "filter": "stacked on Filters.Thrawns_Art_Collection", "gameConditions": "GameConditions.hasStackedCards(game, thrawnsArtCollection, 2)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java:129"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java:122-142"]
+ },
+ "flipToFront": {
+  "timing": "Two independent table-changed polls, any phase (route A additionally suppressed during battle)",
+  "prose": "Back flips to front if (A) Thrawn's Art Collection is on table with zero stacked cards, except during battle; OR (B) Thrawn cannot be spotted on table (any phase, battle or not). Note: if the Collection itself has left the table, route A cannot fire (it requires spotting the Collection); only route B remains.",
+  "expression": {
+   "op": "anyOf",
+   "children": [
+    {"op": "allOf", "children": [
+     {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:148"},
+     {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:149"},
+     {"req": "card-on-table: Collection spotted", "filter": "Filters.Thrawns_Art_Collection", "gameConditions": "GameConditions.canSpot(game, self, Filters.Thrawns_Art_Collection)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:150"},
+     {"op": "not", "children": [{"req": "timing state: during battle", "filter": "-", "gameConditions": "GameConditions.isDuringBattle(game)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:152"}]},
+     {"op": "not", "children": [{"req": "counter: any card stacked on the Collection", "filter": "stacked on Filters.Thrawns_Art_Collection", "gameConditions": "GameConditions.hasStackedCards(game, thrawnsArtCollection)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:152"}]}
+    ]},
+    {"op": "allOf", "children": [
+     {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:166"},
+     {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:167"},
+     {"op": "not", "children": [{"req": "card-on-table: Thrawn spotted", "filter": "Filters.Thrawn", "gameConditions": "GameConditions.canSpot(game, self, Filters.Thrawn)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:168"}]}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java:144-181"]
+ },
+ "requirementSemantics": [
+  "Flip-to-back combines: a phase window (deploy phases only, either player's), a presence-spot leaf (Thrawn AT a battleground - the AT relation over the persona, not control/occupy), a card-on-table leaf (Thrawn's Art Collection active), and a stacked-card COUNTER leaf (>= 2 stacked).",
+  "'Artwork cards on table' is implemented purely as cards stacked on Thrawn's Art Collection; there is no independent artwork-card filter in the flip law.",
+  "Flip-back route A is a counter-at-zero check gated on the Collection still being on table and NOT during battle; route B is a Thrawn-absence check with no battle exception. Losing Thrawn flips back even mid-battle.",
+  "No place-out-of-play condition on either side.",
+  "Back 'study' trigger requires battle participant Filters.or(Filters.Imperial_leader, Filters.and(Filters.TIE_Defender, Filters.or(Filters.piloted, Filters.hasPermanentPilot, Filters.hasAboard(self, Filters.character)))) and a Collection with at least one stacked card (Card219_001_BACK.java:94-96)."
+ ],
+ "typedIdentities": [
+  "Filters.Thrawn (persona; flip actor front, absence flips back)",
+  "Filters.Thrawns_Art_Collection (the counter host card; setup-required deploy)",
+  "Filters.battleground (front flip location class - any battleground, site or system)",
+  "Filters.Lothal_system, Filters.title(Title.Lothal_Advanced_Projects_Laboratory), Filters.title(Title.Lothal_Imperial_Complex) (setup deploys)",
+  "Download (both sides): Filters.or(Filters.battleground_system, Filters.and(Filters.site, Filters.deployableToSystem(self, Title.Lothal, null, false, 0)))",
+  "Play ban (both sides): Filters.or(Filters.Chiraneau, Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE)))",
+  "Front deploy discounts: Filters.and(Filters.Imperial_starship, Filters.Star_Destroyer) -1 to Filters.not(Filters.Lothal_location); to Filters.Lothal_location via CardMatchesEvaluator(PerStarDestroyerEvaluator(-1), ConstantEvaluator(-3), Filters.Chimaera)",
+  "Back study trigger participants: Filters.Imperial_leader, Filters.TIE_Defender (piloted variants)"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Lothal system (Card219_001.java:57), Lothal: Advanced Projects Laboratory (64), Lothal: Imperial Complex (71), Thrawn's Art Collection (78).",
+  "FRONT and BACK (same GameTextActionId.A_GREAT_TACTICIAN_CREATES_PLANS__DOWNLOAD_LOCATION, once per turn): deploy a battleground system, or a site deployable to Lothal, from Reserve Deck (Card219_001.java:99-119; Card219_001_BACK.java:70-90).",
+  "BACK conditional upload: if studied artwork's printed destiny is 3-4, take a card with ability into hand from Reserve Deck (Filters.hasAbilityOrHasPermanentPilotWithAbility) (Card219_001_BACK.java:121-124, GameTextActionId.THE_RESULT_IS_OFTEN_RESENTMENT__UPLOAD_CARD)."
+ ],
+ "otherObligations": [
+  "BOTH SIDES: may not play Chiraneau, or your [Episode I]/[Episode VII] cards with ability or [Presence] (front Card219_001.java:90-92; back Card219_001_BACK.java:62-64 - coded as while-active modifier on each side separately, not until-end-of-game).",
+  "FRONT: Imperial Star Destroyers deploy -1 to non-Lothal locations; to Lothal locations -1 (Chimaera -3) (Card219_001.java:93-94).",
+  "BACK: on battle initiation involving an Imperial leader or piloted TIE Defender, may 'study' one card stacked on Thrawn's Art Collection: printed destiny 0-2 cancels opponent's participants' immunity to attrition for the battle; 3-4 uploads a card with ability; 5+ adds 3 to your total power; studied card then goes to owner's Lost Pile (Card219_001_BACK.java:93-141). NOTE: each study SPENDS one stacked artwork - draining the stack to zero triggers flip-back route A outside battle.",
+  "Rando obligations: front - keep Thrawn alive and parked at a battleground during deploy phases while accumulating 2+ stacked artwork; back - protect Thrawn (his loss flips back even during battle) and do not study the stack to zero unless a battle is live (flip-back A is battle-suppressed)."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; the front flip gate location is the CLASS Filters.battleground (Thrawn at any battleground) - not encodable as a single site and not otherwise represented.",
+   "keyCharacterFilter is null; Filters.Thrawn is the single decisive character for BOTH flip directions and is absent from every profile field.",
+   "requiredCardsOnTable is empty; Thrawn's Art Collection (setup-required, hosts the flip counter) is absent - the profile has no notion of the 2+-stacked-artwork counter at all.",
+   "flipGateCardIds is empty; Thrawn printings (10_40, 207_21, 207_30 per seed) and Collection (219_20) not listed.",
+   "No representation of the deploy-phase-only flip window, nor of the flip-back hazards (Thrawn lost; artwork stack at zero outside battle)."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

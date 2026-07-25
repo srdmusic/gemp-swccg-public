@@ -1,0 +1,119 @@
+{
+ "frontBp": "7_300",
+ "backBp": "7_300_BACK",
+ "side": "DARK",
+ "titleFront": "Ralltiir Operations",
+ "titleBack": "In The Hands Of The Empire",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Flip if you control at least 3 Ralltiir sites each with an Imperial there, and opponent controls no Ralltiir locations.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300.java:109"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300.java:110"
+    },
+    {
+     "req": "control-with (count 3): you control 3 Ralltiir sites, each with an Imperial",
+     "filter": "Filters.Ralltiir_site with Filters.Imperial",
+     "gameConditions": "GameConditions.controlsWith(game, self, playerId, 3, Filters.Ralltiir_site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Imperial)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300.java:111"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "control (opponent): opponent controls any Ralltiir location",
+       "filter": "Filters.Ralltiir_location",
+       "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Ralltiir_location)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300.java:112"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300.java:109-122"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Back flips to front if opponent controls at least 2 Ralltiir locations.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300_BACK.java:106"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300_BACK.java:107"
+    },
+    {
+     "req": "control (opponent, count 2): opponent controls 2 Ralltiir locations",
+     "filter": "Filters.Ralltiir_location",
+     "gameConditions": "GameConditions.controls(game, opponent, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Ralltiir_location)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300_BACK.java:108"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300_BACK.java:106-118"
+  ]
+ },
+ "requirementSemantics": [
+  "Flip-to-back uses CONTROL-WITH: each of the 3 Ralltiir SITES must be controlled by you AND have an Imperial there (controlsWith), not merely occupied.",
+  "Opponent negative constraint uses CONTROL of Ralltiir LOCATIONS (sites or system), count 0 on front; count 2 on back flip-back.",
+  "Both flip checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+  "Site vs location asymmetry: your gate counts Ralltiir SITES; opponent constraints count Ralltiir LOCATIONS (includes the system).",
+  "Both sides carry a place-out-of-play timing trigger: TriggerConditions.isBlownAwayLastStep(Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Ralltiir, true)))."
+ ],
+ "typedIdentities": [
+  "Filters.Ralltiir_system; Filters.Ralltiir_site; Filters.Ralltiir_location; Title.Ralltiir",
+  "Filters.Imperial; Filters.and(Filters.non_unique, Filters.Imperial); Filters.Rebel",
+  "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Ralltiir, true)) (blown-away gate)",
+  "OccupiesWithEvaluator(self, playerId, Filters.Ralltiir_location, Filters.Imperial) (back battle-destiny bonus)"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy Ralltiir system from Reserve Deck (Filters.Ralltiir_system) (Card7_300.java:50-60).",
+  "Front once per deploy phase (GameTextActionId.RALLTIIR_OPERATIONS__DOWNLOAD_SITE_OR_NONUNIQUE_IMPERIAL_TO_RALLTIIR): deploy one site OR one non-unique Imperial from Reserve Deck to Ralltiir system (Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Imperial)) via DeployCardToSystemFromReserveDeckEffect to Title.Ralltiir); reshuffle (Card7_300.java:63-82).",
+  "Back once per control phase (GameTextActionId.IN_THE_HANDS_OF_THE_EMPIRE__UPLOAD_CARD): use 2 Force to take ANY one card into hand from Reserve Deck; reshuffle (Card7_300_BACK.java:63-86)."
+ ],
+ "otherObligations": [
+  "Both sides: each Rebel is deploy +2 at Ralltiir locations (DeployCostToLocationModifier) (Card7_300.java:87; Card7_300_BACK.java:57).",
+  "Back: opponent's Force drains are -1 everywhere (ForceDrainModifier Filters.any) (Card7_300_BACK.java:56).",
+  "Back: add X to your total battle destiny at all locations, X = number of Ralltiir locations your Imperials occupy (OccupiesWithEvaluator) (Card7_300_BACK.java:58).",
+  "Both sides HARD LOSE: objective placed out of play if Ralltiir system is blown away (Card7_300.java:97-106; Card7_300_BACK.java:94-103).",
+  "Strategic: hold 3 Imperial-manned Ralltiir sites to flip; after flip, keep opponent below 2 controlled Ralltiir locations or it flips back."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateSite null: true gate is 3 controlled-with-Imperial Ralltiir sites (Filters.Ralltiir_site); profile only carries a generic 'ralltiir' locationFragment",
+   "keyCharacterFilter null: flip requires Imperials (Filters.Imperial) as the controlling bodies at each gate site",
+   "no encoding of count=3 sites nor the opponentConstraint (opponent controls 0 Ralltiir locations to flip; 2 to flip back)",
+   "pullableCards empty: front site/non-unique-Imperial download to Ralltiir and back 2-Force any-card upload not represented",
+   "hard-lose (Ralltiir system blown away -> objective out of play, both sides) not represented"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,135 @@
+{
+ "frontBp": "208_57",
+ "backBp": "208_57_BACK",
+ "side": "DARK",
+ "titleFront": "I Want That Map",
+ "titleBack": "And Now You'll Give It To Me",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flip if your First Order characters CONTROL two battlegrounds (controlsWith: control + at least one First Order character there) AND no Resistance Agent is present at a battleground site.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:177"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:178"
+    },
+    {
+     "req": "controlsWith: control 2 battlegrounds with actor there",
+     "filter": "locations: Filters.battleground; actor: Filters.First_Order_character",
+     "gameConditions": "GameConditions.controlsWith(game, self, playerId, 2, Filters.battleground, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.First_Order_character)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:179"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "canSpot: Resistance Agent present at a battleground site",
+       "filter": "Filters.and(Filters.Resistance_Agent, Filters.presentAt(Filters.battleground_site))",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Resistance_Agent, Filters.presentAt(Filters.battleground_site)))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:180"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:173-192"
+  ]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flips back if you do NOT OCCUPY two battlegrounds (plain occupy - First Order characters NOT required to hold) OR a Resistance Agent IS present at a battleground site.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:156"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:157"
+    },
+    {
+     "op": "anyOf",
+     "children": [
+      {
+       "op": "not",
+       "children": [
+        {
+         "req": "occupies: 2 battlegrounds",
+         "filter": "Filters.battleground",
+         "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:158"
+        }
+       ]
+      },
+      {
+       "req": "canSpot: Resistance Agent present at a battleground site",
+       "filter": "Filters.and(Filters.Resistance_Agent, Filters.presentAt(Filters.battleground_site))",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Resistance_Agent, Filters.presentAt(Filters.battleground_site)))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:159"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:70-171"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack: CONTROL-with (2 battlegrounds, any type - sites or systems - with a First Order character there) + negative presence check (no Resistance Agent presentAt battleground SITE)",
+  "flipToFront: plain OCCUPY (2 battlegrounds, no character-type requirement) OR positive Resistance-Agent presence; asymmetric - holding the back is easier than flipping (occupy vs control-with-FO)",
+  "Resistance Agent identity is a chosen-state: opponent's revealed unique non-Luke/non-Jedi character with ability gains Keyword.RESISTANCE_AGENT via KeywordModifier on Filters.sameTitle(revealed); otherwise Luke is the agent (and loses immunity to attrition)"
+ ],
+ "typedIdentities": [
+  "Filters.battleground (both laws; NOT battleground_site-only), Filters.battleground_site (agent presence leaf)",
+  "Filters.First_Order_character (flip actor)",
+  "Filters.Resistance_Agent (keyword granted at setup); Filters.presentAt(Filters.battleground_site)",
+  "Filters.Tuanul_Village; Filters.and(Icon.EPISODE_VII, Filters.location, Filters.not(Filters.Tuanul_Village)); Filters.I_Will_Finish_What_You_Started (setup deploys)",
+  "opponent agent-reveal filter: Filters.or(Filters.and(Filters.unique, Filters.hasAbility, Filters.character, Filters.except(Filters.or(Filters.Luke, Filters.Jedi))), Filters.mayBeRevealedAsResistanceAgent)",
+  "Filters.and(Filters.Dark_Jedi, Filters.not(Icon.EPISODE_VII)) (auto-lost); Title.Set_For_Stun immunity for agents",
+  "Filters.First_Order_leader (back destiny tax); Filters.BB8_or_has_BB8_as_permanent_astromech (retrieval-cancel exception); Filters.Kylo (back Interrupt engine); Filters.Interrupt stacked on I_Will_Finish_What_You_Started"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy Tuanul Village, any other [Episode VII] location, and I Will Finish What You Started from Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:58-78]",
+  "On deploy (optional, OPPONENT): reveal one unique character with ability (except Luke or a Jedi, or mayBeRevealedAsResistanceAgent) from opponent's Reserve Deck as Resistance Agent; if declined, Luke is the agent and loses immunity to attrition [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:79-124]",
+  "No ongoing Reserve Deck pulls on either side; back engine instead stacks Interrupts from Lost Pile on I Will Finish What You Started (once/turn if Kylo on table) and plays one stacked Interrupt per turn as if from hand (then out of play) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:174-297]"
+ ],
+ "otherObligations": [
+  "Remainder of game: non-[Episode VII] Dark Jedi are LOST (required proxy trigger on isTableChanged) - deck-construction constraint Rando must respect [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:125-151]",
+  "Remainder of game: Resistance Agents immune to Set For Stun [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:152-155]",
+  "Back: where you have a First Order leader in battle, opponent must use or lose 1 Force to draw each battle destiny card (else draw fails) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:77-137]",
+  "Back: unless BB-8 on table, opponent's Force retrieval is canceled (required) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:139-151]",
+  "Back Kylo engine: stack Interrupt from Lost Pile on I Will Finish What You Started once/turn; play a stacked Interrupt once/turn as if from hand, then out of play [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:174-297]"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "keyCharacterFilter null: flip actor Filters.First_Order_character and threat actor Filters.Resistance_Agent unrepresented",
+   "requiredCardsOnTable empty: mandatory I Will Finish What You Started (also the back's Interrupt-stack anchor) absent",
+   "no representation of the NEGATIVE flip leg (no Resistance Agent present at battleground site) - the profile has no concept of keeping opponent's agent off battleground sites",
+   "flipGateSite null; flipGateCardIds empty; weights empty; the Resistance-Agent chosen-state (revealed title vs Luke) is unrepresented"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

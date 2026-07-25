@@ -1,0 +1,96 @@
+{
+ "frontBp": "210_25",
+ "backBp": "210_25_BACK",
+ "side": "LIGHT",
+ "titleFront": "The Hyperdrive Generators Gone",
+ "titleBack": "We'll Need A New One",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Flip when there are 4 or more cards stacked beneath Credits Will Do Fine (which must be active on table).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025.java:130"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025.java:131"
+    },
+    {
+     "req": "card-on-table: Credits Will Do Fine active",
+     "filter": "Filters.Credits_Will_Do_Fine",
+     "gameConditions": "Filters.findFirstActive(game, self, Filters.Credits_Will_Do_Fine) != null",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025.java:132"
+    },
+    {
+     "req": "count/counter: at least 4 cards stacked beneath Credits Will Do Fine",
+     "filter": "stacked cards on the found Credits Will Do Fine card",
+     "gameConditions": "GameConditions.hasStackedCards(game, creditsWillDoFine, 4)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025.java:133"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025.java:128-146"
+  ]
+ },
+ "flipToFront": {
+  "timing": "NONE",
+  "prose": "Back (We'll Need A New One (V)) has NO flip-to-front trigger and NO place-out-of-play condition; getGameTextRequiredAfterTriggers contains no FlipCardEffect or PlaceCardOutOfPlayFromTableEffect. Once flipped, it stays flipped.",
+  "expression": null,
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025_BACK.java:143-159"
+  ]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is a pure COUNTER condition: >= 4 cards stacked beneath the Credits Will Do Fine effect; no control/occupy/presence board requirement at all.",
+  "Credits Will Do Fine must be ACTIVE on table (Filters.findFirstActive); if it leaves table the flip can never trigger.",
+  "No flip-back and no hard-lose: the back is permanent.",
+  "Front remainder-of-game locks are applied as until-end-of-game modifiers at deployment completion, so they persist after flip (Card210_025.java:78-95)."
+ ],
+ "typedIdentities": [
+  "Filters.Credits_Will_Do_Fine (gate card; stacking driven by that card's own game text)",
+  "Setup pulls: Filters.Wattos_Junkyard; Filters.City_Outskirts; Filters.Credits_Will_Do_Fine",
+  "Deploy lock exceptions: Filters.or(Filters.and(Filters.unique, Filters.alien), Filters.Republic_character, Filters.Republic_starship, Filters.and(Icon.EPISODE_I, Filters.Jedi))",
+  "Filters.Your_Destiny (suspended); Filters.and(Filters.Objective, Icon.REFLECTIONS_II) (no Force loss from)",
+  "Filters.and(Filters.Maul, Filters.not(Filters.with(self, Filters.QuiGon))) (Maul immune to attrition unless present with Qui-Gon)",
+  "Back: Filters.and(Filters.your(self), Filters.unique, Filters.Republic_character); Filters.Queens_Royal_Starship; Filters.or(Filters.Jar_Jar, Filters.Amidala); Filters.Tatooine_location",
+  "Upload: Filters.and(Filters.system, Icon.EPISODE_I)"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy Watto's Junkyard, City Outskirts, and Credits Will Do Fine from Reserve Deck (Card210_025.java:51-75).",
+  "Front once per game (THE_HYPERDRIVE_GENERATORS_GONE__UPLOAD_EPISODE_I_SYSTEM): take an [Episode I] system into hand from Reserve Deck; reshuffle (Card210_025.java:98-117).",
+  "No downloads on the back; back economy = retrieval on battle destiny draws and QRS Force activation."
+ ],
+ "otherObligations": [
+  "Front remainder-of-game deploy lock: no cards with ability except unique aliens, Republic characters, [Republic] starships, [Episode I] Jedi; also no dejarik-rules ability deploys (Card210_025.java:82-87).",
+  "Front: Your Destiny suspended (:88-90); you lose no Force from [Reflections II] objectives (:91-93).",
+  "Front liability: Maul is immune to attrition unless present with Qui-Gon (Card210_025.java:120-125).",
+  "Back: your unique Republic characters power +1 forfeit +2 (Card210_025_BACK.java:59-60); aliens' deploy cost may not be modified to Tatooine locations (:61).",
+  "Back: on completing a non-substituted battle destiny draw, may retrieve 1 Force, may take into hand (Card210_025_BACK.java:66-93).",
+  "Back: once during opponent's turn, if Queen's Royal Starship at a system, activate up to 2 Force (Card210_025_BACK.java:101-128).",
+  "Back Force-loss engine: during your control phase opponent loses 1 Force per battleground occupied by Amidala or Jar Jar; auto-fires at end of control phase if unused (Card210_025_BACK.java:130-158, helper :161-180).",
+  "Strategic pre-flip: stack cards on Credits Will Do Fine as fast as possible; protect Credits Will Do Fine (flip is impossible without it active)."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateCardIds/requiredCardsOnTable empty: the entire flip law is 4+ cards stacked beneath Credits Will Do Fine (12_42/221_56) on table - the gate card appears nowhere in the profile",
+   "no counter semantic: GameConditions.hasStackedCards(creditsWillDoFine, 4) (COUNT_BENEATH >= 4) has no representation",
+   "flipGateSite null is technically correct (no site gates the flip) but the profile encodes no alternative gate of any kind",
+   "back engines (Amidala/Jar Jar battleground force-loss, QRS activation, battle-destiny retrieval) not represented; keyCharacterFilter null"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,47 @@
+{
+ "frontBp": "501_91",
+ "backBp": "501_91_BACK",
+ "side": "LIGHT",
+ "titleFront": "Massassi Base Operations (V)",
+ "titleBack": "One In A Million (V)",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_091.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_091_BACK.java",
+ "cacheCheck": "NOT_IN_CACHE",
+ "flipToBack": {
+  "timing": "NONE - playtesting stub with no game text implemented.",
+  "prose": "Card501_091 is an empty AbstractObjective shell: constructor only (side/title/expansion, setVirtualSuffix, setTestingText(\"Massassi Base Operations (V)\"), hideFromDeckBuilder). No getGameTextWhenDeployedAction, no triggers, no FlipCardAction anywhere in the class.",
+  "expression": null,
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_091.java:15-22"
+  ]
+ },
+ "flipToFront": {
+  "timing": "NONE - stub.",
+  "prose": "Card501_091_BACK is likewise an empty shell (constructor only, setTestingText(\"One In A Million (V)\"), hideFromDeckBuilder). No triggers, no flip, no modifiers.",
+  "expression": null,
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_091_BACK.java:15-22"
+  ]
+ },
+ "requirementSemantics": [
+  "no requirements exist: neither side implements any game text, trigger, modifier, or action"
+ ],
+ "typedIdentities": [],
+ "setupAndPullRoutes": [
+  "none - no when-deployed action and no pull/tutor routes implemented"
+ ],
+ "otherObligations": [
+  "hideFromDeckBuilder() on both sides - not selectable in deck builder; setTestingText only"
+ ],
+ "seedMismatches": [
+  "No seed row in resources/Objective_Playbook_Facts_2026-07-08.json or resources/Objective_Playbook_Facts_K2_rows40-57_WIP.json (frontBp 501_91 absent from both) - nothing to compare."
+ ],
+ "profile": {
+  "exists": false,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "no profile with frontBp 501_91 in src/gemp-swccg-server/src/main/resources/objective_playbooks.json (consistent: card is an unimplemented set-501 playtesting stub)"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

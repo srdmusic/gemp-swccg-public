@@ -1,0 +1,110 @@
+{
+ "frontBp": "213_32",
+ "backBp": "213_32_BACK",
+ "side": "DARK",
+ "titleFront": "Shadow Collective",
+ "titleBack": "You Know Who I Answer To",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-triggers, two independent routes: (A) event trigger justHitBy at any time; (B) isTableChanged gated to YOUR battle phase.",
+  "prose": "Route A: flip when a character was just 'hit' by your card (any character, any location; no canBeFlipped guard in code). Route B: flip during your battle phase when your gangsters CONTROL two battlegrounds (controlsWith). On the resulting flip, front's cardFlipped trigger makes opponent lose 1 Force if you occupy 3 battlegrounds.",
+  "expression": {
+   "op": "anyOf",
+   "children": [
+    {
+     "req": "timing trigger: character just 'hit' by your card",
+     "filter": "cardHitFilter: Filters.character; hitByCardFilter: Filters.your(playerId)",
+     "gameConditions": "TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.your(playerId))",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:137"
+    },
+    {
+     "op": "allOf",
+     "children": [
+      {
+       "req": "timing: table changed",
+       "filter": "(n/a)",
+       "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:122"
+      },
+      {
+       "req": "phase gate: your battle phase",
+       "filter": "(n/a)",
+       "gameConditions": "GameConditions.isDuringYourPhase(game, playerId, Phase.BATTLE)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:123"
+      },
+      {
+       "req": "timing: card can be flipped",
+       "filter": "(n/a)",
+       "gameConditions": "GameConditions.canBeFlipped(game, self)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:124"
+      },
+      {
+       "req": "controlsWith: control 2 battlegrounds with actor there",
+       "filter": "locations: Filters.battleground; actor: Filters.gangster",
+       "gameConditions": "GameConditions.controlsWith(game, self, playerId, 2, Filters.battleground, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.gangster)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:125"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:105-148"
+  ]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger at end of EACH turn (automatic, singleton) - the back never persists across a turn boundary.",
+  "prose": "Flips back at end of every turn (TriggerConditions.isEndOfEachTurn), unconditional (no canBeFlipped guard in code). Companion effects: on flipping (cardFlipped on back) owner MAY re-circulate and shuffle Reserve Deck; on the back-to-front flip the FRONT's cardFlipped trigger fires - if you occupy 3 battlegrounds, opponent loses 1 Force.",
+  "expression": {
+   "req": "timing trigger: end of each turn",
+   "filter": "(n/a)",
+   "gameConditions": "TriggerConditions.isEndOfEachTurn(game, effectResult)",
+   "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java:80"
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java:76-92",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java:53-73",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:110-119"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack route A: pure event trigger (your card just hit a character) - no board-state requirement, no canBeFlipped check",
+  "flipToBack route B: CONTROL-with (2 battlegrounds with a gangster there) + phase gate (your battle phase only)",
+  "flipToFront: unconditional end-of-turn timing trigger - this objective oscillates; the back is a one-turn buff window",
+  "flip riders: front cardFlipped + occupies(3, Filters.battleground) -> opponent loses 1 Force (fires when front becomes active, i.e. on the end-of-turn flip-back); back cardFlipped -> optional recirculate + reshuffle (fires when back becomes active)"
+ ],
+ "typedIdentities": [
+  "Filters.character hit by Filters.your(playerId) (route A)",
+  "Filters.battleground + Filters.gangster (route B controlsWith); Filters.battleground x3 (Force-loss rider, plain occupies)",
+  "Filters.title(Title.Dathomir_Mauls_Chambers) (setup deploy); Filters.title(Title.Massassi_Throne_Room) (setup gate); Filters.Maul (optional setup deploy to Maul's Chambers)",
+  "deploy restriction (both sides): may not deploy Filters.and(Filters.your(...), Filters.or(Filters.and(Filters.icon(Icon.EPISODE_I), Filters.droid), Filters.and(Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Filters.or(Filters.and(Icon.INDEPENDENT, Filters.starship), Filters.and(Filters.icon(Icon.EPISODE_I), Filters.bounty_hunter), Filters.assassin, Filters.gangster, Filters.or(Filters.loreContains(\"Crimson Dawn\"), Filters.loreContains(\"Black Sun\"), Filters.loreContains(\"Hutt\")))))))",
+  "download: Filters.or(Filters.and(Filters.non_unique, Filters.blaster), Filters.titleContains(\"First Light\")) (both sides)",
+  "back: Filters.and(your, Filters.leader, Filters.gangster, Filters.at(Filters.site)) + Filters.and(your, Filters.non_unique, Filters.blaster) in battle (add destiny to power); Filters.and(Filters.Maul, Filters.alone) (peek Force Pile)"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy Dathomir: Maul's Chambers from Reserve Deck; if Massassi Throne Room on table (spotted at setup), may deploy [Set 13] Maul to Maul's Chambers (0-1, DeployCardsToLocationFromReserveDeckEffect) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:61-77]",
+  "Front AND back, once per turn (shared GameTextActionId SHADOW_COLLECTIVE__DOWNLOAD_BLASTER_OR_FIRST_LIGHT_CARD): deploy a non-unique blaster or a card with 'First Light' in title from Reserve Deck; reshuffle [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:80-102, src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java:140-154]"
+ ],
+ "otherObligations": [
+  "Both sides deploy restriction: may not deploy cards with ability (or [Episode I] droids) except Black Sun/Crimson Dawn/Hutt-lore characters, assassins, gangsters, [Episode I] bounty hunters, and [Independent] starships [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:50-58, src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java:95-103]",
+  "Flip rider: opponent loses 1 Force on flip if you occupy 3 battlegrounds (front cardFlipped trigger) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java:110-119]",
+  "Back on-flip option: re-circulate and shuffle Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java:53-73]",
+  "Back: once per battle, if your gangster leader in battle at same site as your non-unique blaster, may add one destiny to total power [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java:106-125]",
+  "Back: if Maul alone, once during your draw phase may peek at your Force Pile [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java:129-138]"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "no representation of flip route A (just-'hit' a character) - the profile has no event-trigger concept; hitting characters (non-unique blasters + gangsters) is the primary flip engine",
+   "no representation of the end-of-turn auto flip-back oscillation (back is a one-turn window; strategy = re-flip every turn)",
+   "keyCharacterFilter null: Filters.gangster flip actor unrepresented (only buried in a namedLocation label string)",
+   "pullableCards empty despite the recurring non-unique blaster / 'First Light' download on both sides",
+   "flipGateSite null; the battle-phase-only gate on route B and the occupy-3-battlegrounds Force-loss rider are unrepresented; weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

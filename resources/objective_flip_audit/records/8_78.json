@@ -1,0 +1,87 @@
+{
+ "frontBp": "8_78",
+ "backBp": "8_78_BACK",
+ "side": "LIGHT",
+ "titleFront": "Rebel Strike Team",
+ "titleBack": "Garrison Destroyed",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Either: event trigger (Bunker blown-away last step, any phase) OR table-changed poll restricted to the objective owner's move phase",
+  "prose": "Flip if Bunker is 'blown away', or if during your move phase you control three exterior Endor sites each of which has two of your Rebel scouts (coded as: site is sameSiteAs a your-Rebel-scout that is 'with' another your-Rebel-scout).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"op": "anyOf", "children": [
+     {"req": "timing-trigger: blown away last step", "filter": "Filters.title(Title.Bunker, true)", "gameConditions": "TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Bunker, true))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078.java:112"},
+     {"op": "allOf", "children": [
+      {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078.java:113"},
+      {"req": "phase window: your move phase", "filter": "Phase.MOVE", "gameConditions": "GameConditions.isDuringYourPhase(game, self, Phase.MOVE)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078.java:114"},
+      {"req": "CONTROL (count 3, spotting includes excluded-from-battle) of exterior Endor sites having two of your Rebel scouts together", "filter": "Filters.and(Filters.exterior_Endor_site, Filters.sameSiteAs(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(yourRebelScout, Filters.with(self, yourRebelScout)))) where yourRebelScout = Filters.and(Filters.your(self), Filters.Rebel_scout)", "gameConditions": "GameConditions.controls(game, playerId, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, ...)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078.java:115"}
+     ]}
+    ]},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078.java:116"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078.java:112-126"]
+ },
+ "flipToFront": {
+  "timing": "Table-changed poll restricted to the OPPONENT's move phase; suppressed permanently once Bunker has been blown away",
+  "prose": "Back flips to front if (Bunker not blown away) and during opponent's move phase opponent controls the Endor system, or controls three exterior Endor sites.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java:88"},
+    {"op": "not", "children": [{"req": "state: blown away", "filter": "Filters.title(Title.Bunker, true)", "gameConditions": "GameConditions.isBlownAway(game, Filters.title(Title.Bunker, true))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java:89"}]},
+    {"req": "phase window: opponent's move phase", "filter": "Phase.MOVE", "gameConditions": "GameConditions.isDuringYourPhase(game, opponent, Phase.MOVE)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java:90"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java:91"},
+    {"op": "anyOf", "children": [
+     {"req": "opponent CONTROL (includes excluded-from-battle)", "filter": "Filters.Endor_system", "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Endor_system)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java:92"},
+     {"req": "opponent CONTROL count 3 (includes excluded-from-battle)", "filter": "Filters.exterior_Endor_site", "gameConditions": "GameConditions.controls(game, opponent, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.exterior_Endor_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java:93"}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java:88-103"]
+ },
+ "requirementSemantics": [
+  "Flip-to-back control route is CONTROL (GameConditions.controls), not occupy, of 3 exterior Endor sites; each qualifying site must additionally contain two of your Rebel scouts together ('with' semantics: a your-Rebel-scout accompanied by another your-Rebel-scout at that site). Spotting includes cards excluded from battle.",
+  "Flip-to-back control route only fires during YOUR move phase; the Bunker blow-away route is a last-step event trigger with no phase restriction.",
+  "Flip-to-front routes are opponent CONTROL checks (Endor system, count 1; or exterior Endor sites, count 3), only during OPPONENT's move phase, and permanently disabled once Bunker has been blown away (state check GameConditions.isBlownAway, not last-step).",
+  "Both sides: place out of play on Endor system blown away, event-typed via isBlownAwayLastStep with Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Endor, true)) (front Card8_078.java:129-138, back Card8_078_BACK.java:106-115)."
+ ],
+ "typedIdentities": [
+  "Filters.title(Title.Bunker, true) (flip route target; also flip-back suppressor via isBlownAway)",
+  "Filters.exterior_Endor_site (flip and flip-back control class)",
+  "Filters.and(Filters.your(self), Filters.Rebel_scout) (the 'two Rebel scouts at each' actor filter)",
+  "Filters.Endor_system (setup deploy; opponent flip-back target; blown-away = out of play, typed Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Endor, true)))",
+  "Filters.Rebel_Landing_Site (setup deploy)",
+  "Filters.or(Filters.Bunker, Filters.Deactivate_The_Shield_Generator) (front upload target)",
+  "Filters.Endor_location (front drain-loss limiter class)",
+  "Back: Filters.and(Filters.Endor_site, Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.Rebel_scout))) (drain protection sites), Filters.Rebel_scout with Filters.abilityLessThan(3) (retrieval target), ImmuneToAttritionLessThanModifier(Filters.Rebel_scout, 4)"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Endor system (Card8_078.java:55), Rebel Landing Site (Card8_078.java:62).",
+  "FRONT: once during each of your deploy phases, use 2 Force to take one Bunker or Deactivate The Shield Generator into hand from Reserve Deck; reshuffle (Card8_078.java:85-101, GameTextActionId.REBEL_STRIKE_TEAM__UPLOAD_BUNKER_OR_DEACTIVATE_THE_SHIELD_GENERATOR).",
+  "BACK: once during each of your draw phases, retrieve one Rebel scout of ability < 3 (Card8_078_BACK.java:66-77)."
+ ],
+ "otherObligations": [
+  "FRONT: opponent loses no more than 1 Force from your Force drains at Endor locations (LimitForceLossFromForceDrainModifier, Card8_078.java:76) - your own drains are weak until flipped.",
+  "BACK: at each Endor site where you have a Rebel scout, your Force drains may not be modified or canceled by opponent (Card8_078_BACK.java:53-57); Rebel scouts immune to attrition < 4 (58); your Epic Event destiny draws +2 (59).",
+  "BOTH SIDES: Endor system blown away places objective out of play (hard loss of objective).",
+  "Strategic note from code: flip-back requires opponent control during OPPONENT move phase only, and blowing away the Bunker locks the objective on the back side permanently."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateSite is null; the flip gate is a location CLASS (three exterior Endor sites) plus an event route (Bunker blown away) - neither encoded in a dedicated field.",
+   "keyCharacterFilter is null; the true flip actors are your Rebel scouts, two per site (Filters.and(Filters.your(self), Filters.Rebel_scout) with 'with' pairing).",
+   "flipGateCardIds is empty; Bunker printings (8_70, 8_160, 204_25 per profile's own objectiveNamedLocations) are a flip route but not listed as gate card ids.",
+   "pullableCards is empty; front upload (Bunker / Deactivate The Shield Generator) not represented.",
+   "No representation of the flip-back law (opponent controls Endor system or 3 exterior Endor sites during their move phase) nor of the phase windows (your move phase / opponent's move phase) on either flip."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,84 @@
+{
+ "frontBp": "7_138",
+ "backBp": "7_138_BACK",
+ "side": "LIGHT",
+ "titleFront": "Mind What You Have Learned",
+ "titleBack": "Save You It Can",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction fired on Jedi-Test-completed event (front getGameTextRequiredAfterTriggers); event trigger, not table-changed polling",
+  "prose": "Flip when Jedi Test #5 is completed by Luke (or by Leia if the Daughter Of Skywalker retarget game-text modification is active) and the objective can be flipped.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: Jedi Test #5 completed by apprentice",
+     "filter": "Filters.Jedi_Test_5; apprentice = GameConditions.hasGameTextModification(...MIND_WHAT_YOU_HAVE_LEARNED_SAVE_YOU_IT_CAN__TARGETS_LEIA_INSTEAD_OF_LUKE) ? Filters.Leia : Filters.Luke",
+     "gameConditions": "TriggerConditions.jediTestCompletedBy(game, effectResult, Filters.Jedi_Test_5, <Leia|Luke>)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138.java:148"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138.java:149"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138.java:146-160"
+  ]
+ },
+ "flipToFront": {
+  "timing": "NONE",
+  "prose": "Back never flips to front. Instead it is PLACED OUT OF PLAY (and the apprentice's Jedi Tests canceled) if you initiate a Force drain at a Dagobah location or the apprentice (Luke/Leia) is placed out of play.",
+  "expression": null,
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138_BACK.java:79-93"
+  ]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is a pure timing trigger (Jedi Test completion event); no control/occupy/presence board check on either flip direction.",
+  "Apprentice identity is chosen-state: ModifyGameTextType.MIND_WHAT_YOU_HAVE_LEARNED_SAVE_YOU_IT_CAN__TARGETS_LEIA_INSTEAD_OF_LUKE is set for remainder of game when Daughter Of Skywalker is deployed via the objective's download (Card7_138.java:113-117).",
+  "Back hard-lose leaf 1 = timing trigger: TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.Dagobah_location) - YOUR OWN drain at a Dagobah location (Card7_138_BACK.java:80).",
+  "Back hard-lose leaf 2 = timing trigger: TriggerConditions.justPlacedOutOfPlayFromTable(game, effectResult, <Luke|Leia>) (Card7_138_BACK.java:81).",
+  "Back take-into-hand action requires apprentice at a location you CONTROL: Filters.at(Filters.controls(playerId)) (Card7_138_BACK.java:101)."
+ ],
+ "typedIdentities": [
+  "Filters.Jedi_Test_5; Filters.completed_Jedi_Test; Filters.jediTestTargetingApprentice(Filters.Luke / Filters.Leia)",
+  "Filters.Luke, Filters.Leia (personas), Filters.Daughter_Of_Skywalker",
+  "Filters.Dagobah_system, Filters.Dagobah_location, Title.Dagobah, Filters.at(Title.Dagobah)",
+  "Filters.Yoda, Filters.Yodas_Hope, Filters.At_Peace, Filters.Lukes_Backpack",
+  "Filters.Sense, Filters.Alter; Filters.or(Filters.Mind_What_You_Have_Learned, Filters.Save_You_It_Can)"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy Dagobah system from Reserve Deck (Filters.Dagobah_system) (Card7_138.java:64-74); after deployment completes, Dagobah system may not be converted for rest of game (MayNotBeConvertedModifier) (Card7_138.java:77-83).",
+  "Front deploy-phase download (GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED__DOWNLOAD_CARD_TO_DAGOBAH, any number of times while available): deploy Luke, Daughter Of Skywalker, Yoda (Yoda deploys -2 via cost arg on Filters.Yoda), Yoda's Hope, At Peace, or Luke's Backpack to Dagobah system from Reserve Deck, ignoring location deployment restrictions; reshuffle (Card7_138.java:86-125; Luke-variant filter :111, Leia-variant filter :101).",
+  "Deploying Daughter Of Skywalker via this route retargets the whole objective to Leia for remainder of game (ModifyGameTextModifier) (Card7_138.java:113-117)."
+ ],
+ "otherObligations": [
+  "Front: whenever you draw training destiny, draw two and choose one (ModifierFlag.DRAW_TWO_AND_CHOOSE_ONE_FOR_TRAINING_DESTINY) (Card7_138.java:133).",
+  "Front: apprentice's completed Jedi Tests are placed on table (PlaceJediTestOnTableWhenCompletedModifier) (Card7_138.java:136-137); Jedi Test #5 stack-destiny-card game text enabled (:134-135).",
+  "Front: you may not Force drain at Dagobah locations (Card7_138.java:138); your cards at Dagobah may not contribute to Force retrieval (:139-140).",
+  "Front: +4 to each player's destiny draws for Sense and Alter (Card7_138.java:141).",
+  "Back: on flip, immediately retrieve 10 Force (Card7_138_BACK.java:66-76).",
+  "Back: once per move phase (or deploy phase with SAVE_YOU_IT_CAN__MOVE_PHASE_MAY_BE_TREATED_AS_DEPLOY_PHASE mod), use 3 Force to take apprentice into hand from a location you control; cards on him go to Used Pile (Card7_138_BACK.java:99-144).",
+  "Back: apprentice's Jedi Tests suspended (not lost) while apprentice off table (Card7_138_BACK.java:154-155); apprentice ignores location deployment restrictions (:156-157); opponent may not play Sense or Alter (:158).",
+  "Back HARD LOSE: placed out of play and apprentice's Jedi Tests canceled if you Force drain at a Dagobah location or apprentice placed out of play (Card7_138_BACK.java:79-93). After flip, NEVER Force drain at Dagobah."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateCardIds empty: the true flip gate is completion of Jedi Test #5 (Filters.Jedi_Test_5 -> 4_78/225_48); the Jedi-Test-completion gate is not encoded anywhere in the profile",
+   "keyCharacterFilter null: the flip actor is the apprentice (Filters.Luke, or Filters.Leia under Daughter Of Skywalker retarget) - not covered",
+   "pullableCards empty: front deploy-phase download suite (Luke/Daughter Of Skywalker/Yoda[-2]/Yoda's Hope/At Peace/Luke's Backpack to Dagobah) not represented",
+   "requiredCardsOnTable empty: Jedi Test #5 must reach table/completion; only Dagobah locations appear in objectiveNamedLocations",
+   "back hard-lose triggers (you Force drain at Dagobah; apprentice placed out of play) not represented"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

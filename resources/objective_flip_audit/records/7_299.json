@@ -1,0 +1,81 @@
+{
+ "frontBp": "7_299",
+ "backBp": "7_299_BACK",
+ "side": "DARK",
+ "titleFront": "ISB Operations",
+ "titleBack": "Empire's Sinister Agents",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Flip if 4 ISB agents are on table OR ISB agents control at least 2 Rebel Base locations (control-with).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:74"},
+    {"op": "anyOf", "children": [
+     {"req": "canSpot >=4 cards on table", "filter": "Filters.ISB_agent", "gameConditions": "GameConditions.canSpot(game, self, 4, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:75"},
+     {"req": "controls-with >=2 locations (you control location, with your ISB agent there)", "filter": "location: Filters.Rebel_Base_location; actor: Filters.ISB_agent", "gameConditions": "GameConditions.controlsWith(game, self, playerId, 2, Filters.Rebel_Base_location, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:76"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:69-88"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if no ISB agents are on table (cannot spot even one).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:84"},
+    {"op": "not", "children": [
+     {"req": "canSpot >=1 card on table", "filter": "Filters.ISB_agent", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:85"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:81-97"
+  ]
+ },
+ "requirementSemantics": [
+  "Front alternative A = COUNT-ON-TABLE (canSpot with count 4), not control or occupy. Undercover ISB agents still spottable; excluded-from-battle included.",
+  "Front alternative B = CONTROL-WITH: you control 2 Rebel Base locations each having an ISB agent there.",
+  "Back flip = ABSENCE: zero spottable ISB agents anywhere (loss of all agents flips you back).",
+  "ISB agent status is objective-granted: both sides add Keyword.ISB_AGENT + Keyword.SPY to your characters with 'ISB'/'Rebel'/'Rebels'/'Rebellion' in lore (KeywordModifier); Filters.ISB_agent keys off that keyword. Card7_299.java:58-66, Card7_299_BACK.java:69-74"
+ ],
+ "typedIdentities": [
+  "Filters.ISB_agent (Keyword.ISB_AGENT) - flip actor both sides",
+  "Filters.Rebel_Base_location - front flip gate locations (alternative B)",
+  "Filters.and(Filters.your(self), Filters.character, Filters.or(Filters.loreContains(\"ISB\"), Filters.loreContains(\"Rebel\"), Filters.loreContains(\"Rebels\"), Filters.loreContains(\"Rebellion\"))) - who becomes an ISB agent/spy",
+  "Filters.Coruscant_location - setup deploy",
+  "Filters.not(Filters.undercover_spy) - back drain bonus requires non-Undercover agent",
+  "Filters.battleground_site + Filters.sameOrRelatedLocationAs - back drain modifier scopes"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy any Coruscant location from Reserve Deck (Filters.Coruscant_location). Card7_299.java:45-55",
+  "Back, once during each of your draw phases: retrieve one ISB agent (RetrieveCardEffect, Filters.ISB_agent). Card7_299_BACK.java:47-62",
+  "No download/tutor of characters on the front; agents must be deployed normally (they ignore location deployment restrictions in their game text via IgnoresLocationDeploymentRestrictionsInGameTextModifier, both sides)."
+ ],
+ "otherObligations": [
+  "Both sides: your lore-matching characters are ISB agents and spies and may deploy regardless of location deployment restrictions in their game text. Card7_299.java:58-66, Card7_299_BACK.java:65-78",
+  "Back: your Force drains +1 at battleground sites where you have a non-Undercover ISB agent. Card7_299_BACK.java:68,75",
+  "Back: opponent's Force drains -1 at same and related locations of those sites. Card7_299_BACK.java:76",
+  "Strategic: keep at least one ISB agent on table at all times or the objective flips back to front."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; true gate (alternative B) is Rebel Base locations (Filters.Rebel_Base_location)",
+   "keyCharacterFilter is null; flip actor on both sides is Filters.ISB_agent (objective-granted keyword)",
+   "the 4-agents-on-table alternative (pure count, no location) has no representation in profile fields",
+   "requiredCardsOnTable empty; back-hold requires >=1 ISB agent on table",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

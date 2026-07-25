@@ -1,0 +1,93 @@
+{
+ "frontBp": "10_26",
+ "backBp": "10_26_BACK",
+ "side": "LIGHT",
+ "titleFront": "Watch Your Step",
+ "titleBack": "This Place Can Be A Little Rough",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Flip if you have completed two Kessel Runs OR you occupy two battlegrounds with smugglers (occupy-with: your smuggler at each of 2 battlegrounds).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026.java:132"},
+    {"op": "anyOf", "children": [
+     {"req": "completed Utinni Effect 2 times", "filter": "Filters.Kessel_Run", "gameConditions": "GameConditions.hasCompletedUtinniEffect(game, playerId, 2, Filters.Kessel_Run)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026.java:133"},
+     {"req": "occupies-with >=2 locations (your presence at location, with your actor-filter card there)", "filter": "location: Filters.battleground; actor: Filters.smuggler", "gameConditions": "GameConditions.occupiesWith(game, self, playerId, 2, Filters.battleground, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.smuggler)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026.java:134"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026.java:127-146"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if you have NOT completed two Kessel Runs AND you do NOT occupy two battlegrounds. NOTE: back-hold occupy check is PLAIN occupy (smugglers NOT required), weaker than the front flip requirement.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026_BACK.java:134"},
+    {"op": "not", "children": [
+     {"req": "completed Utinni Effect 2 times", "filter": "Filters.Kessel_Run", "gameConditions": "GameConditions.hasCompletedUtinniEffect(game, playerId, 2, Filters.Kessel_Run)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026_BACK.java:135"}
+    ]},
+    {"op": "not", "children": [
+     {"req": "occupies >=2 locations (plain presence, no actor requirement)", "filter": "Filters.battleground", "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026_BACK.java:136"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026_BACK.java:129-148"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip alternative A = COUNTER: two completed Kessel Run Utinni Effects (persistent game-state counter; once earned it holds both flip and back-hold forever).",
+  "Front flip alternative B = OCCUPY-WITH: your presence at 2 battlegrounds (any type, site or system) with a smuggler of yours at each.",
+  "Back hold = plain OCCUPY 2 battlegrounds (no smuggler needed) OR the 2-Kessel-Run counter; only if BOTH fail does it flip back.",
+  "Both occupancy checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE."
+ ],
+ "typedIdentities": [
+  "Filters.Kessel_Run - Utinni Effect counted by hasCompletedUtinniEffect",
+  "Filters.battleground - flip gate locations (any battleground, not just sites)",
+  "Filters.smuggler - front flip actor",
+  "Filters.Cantina, Filters.Docking_Bay_94, Filters.Tatooine_system - setup deploys",
+  "Filters.or(Filters.Corellia_system, Filters.Kessel_system) - deploy-phase upload targets",
+  "Filters.canBeConvertedByDeployment(playerId) - setup Cantina convertibility check",
+  "Filters.or(Filters.Sense, Filters.Alter, Filters.Keep_Your_Eyes_Open) - back play-ban",
+  "Filters.hasAbilityOrHasPermanentPilotWithAbility / Filters.or(Filters.Luke, Filters.smuggler, Filters.freighter, Filters.and(Icon.INDEPENDENT, Filters.starship)) - front deploy +6 tax and its exemptions",
+  "Filters.Kessel_system - opponent game text canceled there"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Cantina from Reserve Deck; EXCEPT if a Cantina is on table that cannot be converted by deployment, instead place your Cantina from Reserve Deck out of play. Card10_026.java:53-66",
+  "Setup (front, required): deploy Docking Bay 94 from Reserve Deck. Card10_026.java:67-73",
+  "Setup (front, required): deploy Tatooine system from Reserve Deck. Card10_026.java:74-80",
+  "Front, once during each of your deploy phases (GameTextActionId.WATCH_YOUR_STEP__UPLOAD_CORELLIA_OR_KESSEL): take Corellia or Kessel system into hand from Reserve Deck; reshuffle. Card10_026.java:106-124",
+  "Back, once per turn: play one Interrupt from Lost Pile as if from hand, then place it out of play (top-level + as-response before/after variants, all sharing GameTextActionId.THIS_PLACE_CAN_BE_A_LITTLE_ROUGH__PLAY_INTERRUPT_FROM_LOST_PILE). Card10_026_BACK.java:66-126"
+ ],
+ "otherObligations": [
+  "Front (until end of game, added after deployment completes): opponent activates no Force at your Cantina. Card10_026.java:89-91",
+  "Front (until end of game): your cards with ability are deploy +6 except Luke, smugglers, freighters, and [Independent] starships (plus dejarik-rules variant). Card10_026.java:92-98",
+  "Front (until end of game): opponent's game text on Kessel (system) is canceled. Card10_026.java:99-101",
+  "Back: your Force generation +1 at each system you control with a smuggler. Card10_026_BACK.java:57",
+  "Back: opponent's Force generation at non-battleground locations limited to 1. Card10_026_BACK.java:58",
+  "Back: add one battle destiny when 2+ of your smugglers in battle. Card10_026_BACK.java:59",
+  "Back: your smugglers forfeit +2. Card10_026_BACK.java:60",
+  "Back: Sense, Alter, and Keep Your Eyes Open may not be played (no player restriction - blocks both players). Card10_026_BACK.java:61"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; gate is any 2 battlegrounds (generic, not a named site) - profile has battleground filter only inside objectiveNamedLocations",
+   "keyCharacterFilter is null; front flip actor is Filters.smuggler",
+   "Kessel Run completed-Utinni-Effect alternative (counter semantics) has no representation in profile fields",
+   "front-vs-back asymmetry (occupy WITH smuggler to flip vs plain occupy to hold) not represented",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

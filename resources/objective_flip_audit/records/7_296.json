@@ -1,0 +1,100 @@
+{
+  "frontBp": "7_296",
+  "backBp": "7_296_BACK",
+  "side": "DARK",
+  "titleFront": "Carbon Chamber Testing",
+  "titleBack": "My Favorite Decoration",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "Two required routes: (A) one-shot check immediately after objective deployment completes; (B) required after-trigger fired by a movement completion (not a standing table state)",
+    "prose": "Flips if (A) after start-of-game deployment no card is imprisoned in Security Tower (no Rebel was in opponent's Reserve Deck; also sets WhileInPlayData flag), OR (B) owner just moved a character escorting a frozen captive to Audience Chamber.",
+    "expression": {
+      "op": "anyOf",
+      "children": [
+        {
+          "req": "one-shot post-deployment card-in-zone check: NO card imprisoned in Security Tower (SetWhileInPlayDataEffect flag then FlipCardEffect)",
+          "filter": "Filters.imprisonedIn(Filters.Security_Tower)",
+          "gameConditions": "!GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.imprisonedIn(Filters.Security_Tower))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296.java:120"
+        },
+        {
+          "op": "allOf",
+          "children": [
+            {
+              "req": "timing trigger: owner just moved an escort escorting a frozen captive to Audience Chamber",
+              "filter": "moved card: Filters.escorting(Filters.frozenCaptive); destination: Filters.Audience_Chamber",
+              "gameConditions": "TriggerConditions.movedToLocationBy(game, effectResult, playerId, Filters.escorting(Filters.frozenCaptive), Filters.Audience_Chamber)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296.java:171"
+            },
+            {
+              "req": "flip enabled",
+              "filter": "self",
+              "gameConditions": "GameConditions.canBeFlipped(game, self)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296.java:172"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296.java:118-133",
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296.java:167-183"
+    ]
+  },
+  "flipToFront": {
+    "timing": "NEVER flips back. Back instead has a required place-out-of-play (lose) trigger on isTableChanged.",
+    "prose": "My Favorite Decoration is placed out of play when no frozen captive can be spotted on table (SpotOverride.INCLUDE_CAPTIVE), unless the front's WhileInPlayData flag was set (i.e., unless no Rebel was in opponent's Reserve Deck at start of game). Guard: !GameConditions.cardHasWhileInPlayDataSet(self) && TriggerConditions.isTableChanged && GameConditions.canBePlacedOutOfPlay(game, self) && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE, Filters.frozenCaptive).",
+    "expression": null,
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296_BACK.java:100-112"
+    ]
+  },
+  "requirementSemantics": [
+    "Flip route B is a MOVEMENT-COMPLETION timing trigger (movedToLocationBy), not a standing state: a frozen captive merely sitting at Audience Chamber does NOT flip; the escort must complete a move there while the front is up.",
+    "Flip route A is a one-shot post-deployment card-in-zone check via canSpot(imprisonedIn(Security_Tower)) with SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE; it also stamps WhileInPlayData used later by the back's out-of-play guard.",
+    "Back survival is card-on-table semantics: canSpot(SpotOverride.INCLUDE_CAPTIVE, Filters.frozenCaptive) anywhere on table. No control/occupy/presence check appears anywhere in either side's flip or lose law.",
+    "Back's Scum And Villainy Alter-immunity and download are gated on a frozen captive AT Audience Chamber (AtCondition / Filters.at(Filters.Audience_Chamber), SpotOverride.INCLUDE_CAPTIVE)."
+  ],
+  "typedIdentities": [
+    "Filters.Carbonite_Chamber",
+    "Filters.Carbonite_Chamber_Console",
+    "Filters.Security_Tower",
+    "Filters.Jabbas_Prize",
+    "Filters.Rebel (setup imprisonment target; excludes Filters.Han / Filters.Leia / Filters.Luke when opponent's objective is You Can Either Profit By This / Rescue The Princess / There Is Good In Him respectively)",
+    "Filters.escorting(Filters.frozenCaptive)",
+    "Filters.Audience_Chamber",
+    "Filters.frozenCaptive",
+    "Filters.or(Filters.Audience_Chamber, Filters.Docking_Bay_94, Filters.East_Platform)",
+    "Filters.Scum_And_Villainy",
+    "Filters.and(Filters.your(self), Filters.or(Filters.alien, Filters.and(Icon.INDEPENDENT, Filters.starship)))",
+    "Filters.Dark_Deal"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Carbonite Chamber, Carbonite Chamber Console, and Security Tower from Reserve Deck (front:59-79).",
+    "If Jabba's Prize is in own Reserve Deck: required deploy of Jabba's Prize into Security Tower as imprisoned 'frozen' captive, ignoring location deployment restrictions (front:82-90). Otherwise: optional deploy by OPPONENT of a Rebel from opponent's Reserve Deck into Security Tower as imprisoned captive, with Han/Leia/Luke excluded under the matching Light objectives (front:91-113).",
+    "Front pull: once during each of your deploy phases, deploy from Reserve Deck one of Audience Chamber / Docking Bay 94 / East Platform; reshuffle. Filter Filters.or(Filters.Audience_Chamber, Filters.Docking_Bay_94, Filters.East_Platform) (front:136-155).",
+    "Back pull: once during each of your deploy phases, deploy Scum And Villainy from Reserve Deck (reshuffle) while a frozen captive is at Audience Chamber (BACK:77-93)."
+  ],
+  "otherObligations": [
+    "Front: owner may not deploy Dark Deal (MayNotDeployModifier, front:162).",
+    "Back: your aliens and your [Independent] starships are immune to attrition < 4 (BACK:50-51).",
+    "Back: Scum And Villainy immune to Alter while a frozen captive at Audience Chamber (ImmuneToTitleModifier + AtCondition, BACK:52-53).",
+    "Back: once during each of your control phases, retrieve 1 Force (BACK:61-75).",
+    "Back LOSE condition: placed out of play if no frozen captive on table (unless WhileInPlayData set at setup) - after flipping, Rando must keep at least one frozen captive on table permanently (BACK:100-112)."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "flipGateSite is null; the true flip gate location is Audience Chamber (a frozen captive must be MOVED there by its escort).",
+      "keyCharacterFilter is null; the flip actor is Filters.escorting(Filters.frozenCaptive) and post-flip survival depends on Filters.frozenCaptive on table - no captive concept anywhere in the profile.",
+      "No representation of the auto-flip route (no Rebel imprisoned in Security Tower after setup => immediate flip + WhileInPlayData flag).",
+      "requiredCardsOnTable is empty; the back is placed out of play when no frozen captive is on table.",
+      "Flip is a movement-completion timing trigger, not a standing control/occupy state; profile fields (flipGateSite/flipGateCardIds) cannot express this."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,146 @@
+{
+ "frontBp": "10_29",
+ "backBp": "10_29_BACK",
+ "side": "DARK",
+ "titleFront": "Agents Of Black Sun",
+ "titleBack": "Vengeance Of The Dark Prince",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Flip if Xizor (or legacy Shada under LEGACY__TREAT_XIZOR_AS_SHADA) is at a battleground site AND Luke (or Rey/Anakin under Reflections-II retarget mods) is NOT at a battleground site.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java:164"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java:165"
+    },
+    {
+     "req": "can-spot: Xizor at a battleground site",
+     "filter": "Filters.and(xizorFilter, Filters.at(Filters.battleground_site)); xizorFilter = hasGameTextModification(LEGACY__TREAT_XIZOR_AS_SHADA) ? Filters.title(\"Shada\") : Filters.Xizor",
+     "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(xizorFilter, atBattlegroundSite))",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java:166"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "can-spot: Luke-target at a battleground site",
+       "filter": "Filters.and(lukeFilter, Filters.at(Filters.battleground_site)); lukeFilter = TARGETS_REY_INSTEAD_OF_LUKE ? Filters.Rey : TARGETS_ANAKIN_INSTEAD_OF_LUKE ? Filters.Anakin : Filters.Luke",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(lukeFilter, atBattlegroundSite))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java:170"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java:158-183",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java:159",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java:161",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java:167-169"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Back flips to front if the Luke-target (Luke, or Rey/Anakin under retarget mods) is at a battleground site, OR Xizor (or legacy Shada) is not on table.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java:214"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java:215"
+    },
+    {
+     "op": "anyOf",
+     "children": [
+      {
+       "req": "can-spot: Luke-target at a battleground site",
+       "filter": "Filters.and(lukeFilter, Filters.at(Filters.battleground_site)); lukeFilter = Rey|Anakin|Luke per Reflections-II retarget mods",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(lukeFilter, Filters.at(Filters.battleground_site)))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java:219"
+      },
+      {
+       "op": "not",
+       "children": [
+        {
+         "req": "card-on-table: Xizor on table",
+         "filter": "xizorFilter = LEGACY__TREAT_XIZOR_AS_SHADA ? Filters.title(\"Shada\") : Filters.Xizor",
+         "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, xizorFilter)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java:220"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java:213-231",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java:191",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java:216-218"
+  ]
+ },
+ "requirementSemantics": [
+  "Both flip legs are can-spot AT checks (Filters.at(Filters.battleground_site)), not control or occupy; SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE on every spot.",
+  "Front flip has a positive leaf (Xizor at bg site) AND a negative leaf (Luke-target NOT at bg site).",
+  "Back flip is a disjunction: Luke-target at bg site OR Xizor missing from table (card-on-table check).",
+  "Retarget chosen-states: ModifyGameTextType.REFLECTIONS_II_OBJECTIVE__TARGETS_REY_INSTEAD_OF_LUKE -> Filters.Rey; ...TARGETS_ANAKIN_INSTEAD_OF_LUKE -> Filters.Anakin; LEGACY__TREAT_XIZOR_AS_SHADA -> Filters.title(\"Shada\")."
+ ],
+ "typedIdentities": [
+  "Filters.Xizor (persona); Filters.title(\"Shada\") legacy alternate; Filters.Luke / Filters.Rey / Filters.Anakin (personas)",
+  "Filters.battleground_site; Filters.at(Filters.battleground_site)",
+  "Filters.Imperial_City; Filters.Coruscant_system",
+  "Black Sun agents: Filters.and(Filters.your(self), Filters.or(Filters.and(Filters.alien, Filters.loreContains(\"Black Sun\")), Filters.bounty_hunter, Filters.information_broker)) -> Keyword.BLACK_SUN_AGENT",
+  "Deploy lock exception set: Filters.or(Filters.Black_Sun_agent, yourBlackSunAgents, Filters.Emperor, Filters.and(Icon.INDEPENDENT, Filters.starship))",
+  "Filters.Scanning_Crew; Filters.any_bounty; Filters.Emperor"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy Imperial City (Filters.Imperial_City) (Card10_029.java:68-74); deploy Xizor to Imperial City (Filters.Xizor -> Filters.Imperial_City) (:101-107); deploy Coruscant system (Filters.Coruscant_system) (:109-115).",
+  "Legacy branch: if reserve holds [LEGACY_BLOCK_4] No Bargain AND [LEGACY_BLOCK_4] Shada, may deploy Shada instead of Xizor and then also deploy No Bargain (V) (Card10_029.java:76-99).",
+  "No repeatable download on either side; the only ongoing special move is the bounty-hunter regular move (both sides): during your control phase each of your bounty hunters at a site may make a regular move to an adjacent site where there is a bounty (Filters.movableAsRegularMove(...Filters.and(Filters.adjacentSite(bh), Filters.sameSiteAs(self, Filters.any_bounty)))) (Card10_029.java:120-155; Card10_029_BACK.java:66-97)."
+ ],
+ "otherObligations": [
+  "Both sides deploy lock: you may not deploy cards with ability (or permanent pilots with ability) except Black Sun agents, Emperor, or [Independent] starships (Card10_029.java:59-60; Card10_029_BACK.java:179).",
+  "Both sides: your Black-Sun-lore aliens, bounty hunters, and information brokers gain Keyword.BLACK_SUN_AGENT (Card10_029.java:56-58; BACK:175-178); Scanning Crew may not be played (front bans BOTH players: MayNotPlayModifier without player arg, Card10_029.java:61; back same :180).",
+  "Back: attrition against opponent +1 per Black Sun agent in battle (AttritionModifier + InBattleEvaluator) (Card10_029_BACK.java:181).",
+  "Back: once per turn place a card from hand on Used Pile to peek at your Force Pile (Card10_029_BACK.java:102-118).",
+  "Back: once during your battle phase, peek at top X cards of any Reserve Deck, X = locations you occupy (Card10_029_BACK.java:123-147).",
+  "Back Force-loss engine: once during your control phase opponent loses 1 Force per battleground OCCUPIED-WITH Xizor or Emperor (Filters.occupiesWith(playerId, self, Filters.or(xizorFilter, Filters.Emperor))); offered as top-level action (:153-167) and auto-fires as required trigger at end of your control phase if unused (:196-211).",
+  "Strategic: keep Xizor on table and at a battleground site, and keep Luke-target off battleground sites, or the back flips to front."
+ ],
+ "seedMismatches": [
+  "Seed flipRequirements say the retargeted Luke alternatives are 'Luke/Leia/Kanan/Anakin'; source Card10_029.java:167-169 uses ModifyGameTextType.REFLECTIONS_II_OBJECTIVE__TARGETS_REY_INSTEAD_OF_LUKE -> Filters.Rey and ...TARGETS_ANAKIN_INSTEAD_OF_LUKE -> Filters.Anakin. Alternatives are Rey and Anakin, never Leia or Kanan.",
+  "Seed flipBackRequirements repeat the same wrong list ('retargeted Luke/Leia/Kanan/Anakin'); source Card10_029_BACK.java:216-218 is Rey | Anakin | Luke."
+ ],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "keyCharacterFilter null: flip actor is Filters.Xizor (10_45) at a battleground site; flipGateCardIds empty (Xizor not listed)",
+   "no encoding of the negative flip constraint (Luke/Rey/Anakin must NOT be at a battleground site) anywhere in the profile",
+   "requiredCardsOnTable empty: back flips away whenever Xizor is not on table - Xizor-on-table is a standing requirement",
+   "flipGateSite null: gate is any battleground site (dynamic); only a generic battleground-site named-location recipe exists",
+   "back Force-loss engine actors (Xizor/Emperor occupying battlegrounds) and the deploy lock exception classes not represented"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

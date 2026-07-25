@@ -1,0 +1,85 @@
+{
+ "frontBp": "301_2",
+ "backBp": "301_2_BACK",
+ "side": "LIGHT",
+ "titleFront": "City In The Clouds",
+ "titleBack": "You Truly Belong Here With Us",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Flip if (a) you control two Cloud City battleground sites, (b) you occupy Bespin system, and (c) opponent controls NO Cloud City site. Three-leg conjunction with an opponent-zero constraint.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002.java:102"},
+    {"req": "controls >=2 locations", "filter": "Filters.Cloud_City_battleground_site", "gameConditions": "GameConditions.controls(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Cloud_City_battleground_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002.java:103"},
+    {"req": "occupies >=1 location (plain presence; captives+excluded included in spot)", "filter": "Filters.Bespin_system", "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.Bespin_system)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002.java:104"},
+    {"op": "not", "children": [
+     {"req": "opponent controls >=1 location", "filter": "Filters.Cloud_City_site", "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.Cloud_City_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002.java:105"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002.java:96-117"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if opponent controls MORE Cloud City sites than you (strict count comparison; battleground not required on either count).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002_BACK.java:148"},
+    {"req": "count-comparison: opponent-controlled > player-controlled", "filter": "Filters.and(Filters.Cloud_City_site, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) vs Filters.and(Filters.Cloud_City_site, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))", "gameConditions": "Filters.countTopLocationsOnTable(game, Filters.and(Filters.Cloud_City_site, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))) > Filters.countTopLocationsOnTable(game, Filters.and(Filters.Cloud_City_site, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002_BACK.java:149-150"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002_BACK.java:142-163"
+  ]
+ },
+ "requirementSemantics": [
+  "Front leg A = plain CONTROL of 2 Cloud City BATTLEGROUND sites (Filters.Cloud_City_battleground_site).",
+  "Front leg B = plain OCCUPY Bespin system (presence only; spot override includes captives and excluded-from-battle).",
+  "Front leg C = OPPONENT-ZERO: opponent may not control even one Cloud City site (any CC site, battleground or not).",
+  "Back flip = RELATIVE COUNT on ALL Cloud City sites: opponent strictly ahead. Ties keep back up; you can hold the back with zero sites if opponent also has zero.",
+  "Spot override inconsistency in source: front uses INCLUDE_EXCLUDED_FROM_BATTLE for your controls but INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE for Bespin occupy and opponent controls; back uses INCLUDE_EXCLUDED_FROM_BATTLE on both counts."
+ ],
+ "typedIdentities": [
+  "Filters.Cloud_City_battleground_site - front control leg",
+  "Filters.Bespin_system - front occupy leg + setup deploy",
+  "Filters.Cloud_City_site - front opponent-zero leg + back count comparison",
+  "Filters.and(Filters.Cloud_City_site, Filters.battleground) - setup 2nd deploy",
+  "Filters.Cloud_City_location + specialLocationConditions Filters.battleground - front once-per-turn download target",
+  "Filters.Weather_Vane - setup optional deploy (0-1)",
+  "Filters.Cloud_City_Celebration - back once-per-game download",
+  "Filters.Interrupt - back control-phase upload",
+  "Filters.and(Filters.your(self), Filters.character, Filters.canMoveAsReactAsActionFromOtherCard(self, false, 0, false)) - back react mover"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Bespin system from Reserve Deck. Card301_002.java:46-52",
+  "Setup (front, required): deploy a Cloud City site that will be a battleground (DeployCardFromReserveDeckEffect with specialLocationConditions Filters.battleground). Card301_002.java:53-59",
+  "Setup (front, optional): deploy Weather Vane (0-1 copies) from Reserve Deck. Card301_002.java:60-65",
+  "Front, once per turn, cost 1 Force (GameTextActionId.CITY_IN_THE_CLOUDS__DOWNLOAD_CLOUD_CITY_BATTLEGROUND_SITE): download a Cloud City battleground location from Reserve Deck. NOTE front-only; the back does not repeat it. Card301_002.java:70-93",
+  "Back, once per game (GameTextActionId.YOU_TRULY_BELONG_HERE_WITH_US__DOWNLOAD_CLOUD_CITY_CELEBRATION): download Cloud City Celebration. Card301_002_BACK.java:56-71",
+  "Back, once during your control phase, cost 2 Force (GameTextActionId.YOU_TRULY_BELONG_HERE_WITH_US__UPLOAD_INTERRUPT): take an Interrupt into hand from Reserve Deck; reshuffle. Card301_002_BACK.java:73-92"
+ ],
+ "otherObligations": [
+  "Back (once per turn, optional trigger): move your character as a 'react' to a battle or Force drain initiated by opponent at a Cloud City site. Card301_002_BACK.java:98-139",
+  "No drain modifiers, no deploy bans, no hard-lose conditions on either side.",
+  "Strategic: front requires simultaneous board sweep (2 CC battleground sites + Bespin presence + opponent locked out of ALL CC sites); back only requires not falling behind on CC site control, so the flip threshold is far stricter than the hold threshold."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateSite is null; gates are Cloud City battleground sites + Bespin system (both present in objectiveNamedLocations but not designated as flip gates)",
+   "opponent-zero constraint (opponent controls no Cloud City site) and back-side relative-count law have no profile representation",
+   "keyCharacterFilter null (flip genuinely needs no actor - acceptable, but nothing marks front download as front-only/lost-after-flip)",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

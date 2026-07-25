@@ -1,0 +1,169 @@
+{
+  "frontBp": "112_1",
+  "backBp": "112_1_BACK",
+  "side": "LIGHT",
+  "titleFront": "Agents In The Court",
+  "titleBack": "No Love For The Empire",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger). PRECONDITION: a Rep must have been chosen (self.getWhileInPlayData() rep != null, else the trigger method returns null and the card can never flip).",
+    "prose": "If any non-Tatooine location is on table: flip requires you OCCUPY >= 3 battleground sites AND at least one battleground site is occupied with a non-unique alien of your Rep's species. If NO non-Tatooine location is on table: flip requires you OCCUPY >= 2 battleground sites. Occupy, not control.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java:142"
+        },
+        {
+          "req": "state guard: Rep was chosen at setup",
+          "filter": "self.getWhileInPlayData().getPhysicalCard() != null",
+          "gameConditions": "rep == null -> return null (no flip trigger exists without a Rep)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java:134-137"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "op": "allOf",
+              "children": [
+                {
+                  "req": "table-state: at least one non-Tatooine location on table",
+                  "filter": "Filters.non_Tatooine_location",
+                  "gameConditions": "GameConditions.canSpotLocation(game, Filters.non_Tatooine_location)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java:144"
+                },
+                {
+                  "req": "occupy-count: owner occupies >= 3 battleground sites",
+                  "filter": "Filters.battleground_site",
+                  "gameConditions": "GameConditions.occupies(game, playerId, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground_site)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java:145"
+                },
+                {
+                  "req": "occupy-with: owner occupies >= 1 battleground site with a non-unique alien of Rep's species",
+                  "filter": "Filters.and(Filters.non_unique, Filters.alien, Filters.species(rep.getBlueprint().getSpecies()))",
+                  "gameConditions": "GameConditions.occupiesWith(game, self, playerId, Filters.battleground_site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.non_unique, Filters.alien, Filters.species(rep.getBlueprint().getSpecies())))",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java:146"
+                }
+              ]
+            },
+            {
+              "op": "allOf",
+              "children": [
+                {
+                  "op": "not",
+                  "children": [
+                    {
+                      "req": "table-state: any non-Tatooine location on table",
+                      "filter": "Filters.non_Tatooine_location",
+                      "gameConditions": "GameConditions.canSpotLocation(game, Filters.non_Tatooine_location)",
+                      "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java:144,150"
+                    }
+                  ]
+                },
+                {
+                  "req": "occupy-count: owner occupies >= 2 battleground sites",
+                  "filter": "Filters.battleground_site",
+                  "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground_site)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java:150"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java:133-167"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger). No Rep guard on this trigger.",
+    "prose": "Back flips to front if you do NOT occupy at least 2 battleground sites.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001_BACK.java:155"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "occupy-count: owner occupies >= 2 battleground sites",
+              "filter": "Filters.battleground_site",
+              "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground_site)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001_BACK.java:156"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001_BACK.java:150-168"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack: OCCUPY semantics throughout (GameConditions.occupies / occupiesWith), NOT control. Presence at battleground sites is enough; opponent co-presence does not matter.",
+    "The 3-site branch adds an occupy-WITH requirement: at least one occupied battleground site must contain a non-unique alien matching the Rep's species (species is read dynamically from the chosen Rep's blueprint, Filters.species(rep.getBlueprint().getSpecies())).",
+    "Branch selector is a table-state check: GameConditions.canSpotLocation(game, Filters.non_Tatooine_location). Any non-Tatooine location on table (either player's) forces the harder 3-site branch.",
+    "Rep is chosen-state stored in WhileInPlayData at setup; without it the front cannot flip (trigger returns null).",
+    "flipToFront: negated occupy-count (hold 2 battleground sites or flip back).",
+    "All occupy checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE."
+  ],
+  "typedIdentities": [
+    "Filters.battleground_site (occupy targets, both directions)",
+    "Filters.non_Tatooine_location (branch selector)",
+    "Filters.and(Filters.non_unique, Filters.alien, Filters.species(rep.getBlueprint().getSpecies())) (dynamic species filter from chosen Rep)",
+    "Filters.and(Filters.unique, Filters.alien, Filters.hasSpecies) (Rep selection filter at setup)",
+    "Filters.Hutt_Trade_Route, Filters.Jabbas_Palace_site (required start deploys)",
+    "Filters.Yarna_dal_Gargan (optional start deploy; Alter immunity)",
+    "Filters.sameTitle(rep) (leader grant; stack-from-hand cancels; deploy-as-if-from-hand)",
+    "Filters.operative (owner deploy ban)",
+    "Filters.Trap_Door + Filters.Rancor at Filters.Rancor_Pit (Bo Shuda immunity condition)",
+    "Filters.Tatooine_location + Filters.and(Filters.your(self), Filters.alien) x2 (back destiny-to-power)"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, required): deploy Hutt Trade Route: DeployCardFromReserveDeckEffect(Filters.Hutt_Trade_Route, true, false) [Card112_001.java:54-60]",
+    "START OF GAME (front, required): deploy a Jabba's Palace site: DeployCardFromReserveDeckEffect(Filters.Jabbas_Palace_site, true, false) [Card112_001.java:61-67]",
+    "START OF GAME (front, required): reveal one unique alien whose lore specifies species from Reserve Deck as Rep: ChooseCardFromReserveDeckEffect(Filters.and(Filters.unique, Filters.alien, Filters.hasSpecies)); gameState.setRep + WhileInPlayData(rep) [Card112_001.java:68-83]",
+    "START OF GAME (front, optional): may deploy Yarna d'al' Gargan (0..1): DeployCardsFromReserveDeckEffect(Filters.Yarna_dal_Gargan, 0, 1, true, false) [Card112_001.java:84-89]",
+    "BACK, once per owner's control phase: retrieve a non-unique alien of Rep's species: RetrieveCardEffect(Filters.and(Filters.non_unique, Filters.alien, Filters.species(repSpecies))) [Card112_001_BACK.java:115-138]",
+    "REMAINDER OF GAME: copies of Rep stacked on this objective may deploy as if from hand: MayDeployAsIfFromHandModifier(Filters.and(Filters.stackedOn(self), Filters.your(playerId), Filters.sameTitle(rep))) [Card112_001.java:126-128]"
+  ],
+  "otherObligations": [
+    "FRONT after-deployment, REMAINDER OF GAME: your cards with Rep's title are leaders: LeaderModifier(Filters.and(Filters.your(playerId), Filters.sameTitle(rep))) [Card112_001.java:110-112]",
+    "REMAINDER OF GAME: Yarna d'al' Gargan immune to Alter: ImmuneToTitleModifier(Filters.Yarna_dal_Gargan, Title.Alter) [Card112_001.java:113-115]",
+    "REMAINDER OF GAME: owner may not deploy 'insert' cards: SpecialFlagModifier(ModifierFlag.MAY_NOT_DEPLOY_INSERT_CARDS, playerId) [Card112_001.java:116-118]",
+    "REMAINDER OF GAME: owner may not deploy operatives: MayNotDeployModifier(Filters.operative, playerId) [Card112_001.java:119-121]",
+    "REMAINDER OF GAME: while a rancor at Rancor Pit, Trap Door immune to Bo Shuda: ImmuneToTitleModifier(Filters.Trap_Door, AtCondition(Filters.Rancor, Filters.Rancor_Pit), Title.Bo_Shuda) [Card112_001.java:122-125]",
+    "BACK: once per turn may cancel a Force drain by stacking a copy of Rep from hand here: forceDrainInitiated + hasInHand(sameTitle(rep)) -> StackCardFromHandEffect + CancelForceDrainEffect [Card112_001_BACK.java:72-89]",
+    "BACK: same once-per-turn budget (shared GameTextActionId.OTHER_CARD_ACTION_1) may instead cancel a just-drawn battle destiny by stacking a Rep copy [Card112_001_BACK.java:92-109]",
+    "BACK: when two of your aliens battle at a Tatooine location, adds one destiny to total power: AddsDestinyToPowerModifier(AndCondition(DuringBattleAtCondition(Filters.Tatooine_location), DuringBattleWithParticipantCondition(2, Filters.and(Filters.your(self), Filters.alien))), 1) [Card112_001_BACK.java:144-145]",
+    "No hard-lose / place-out-of-play condition on either side."
+  ],
+  "seedMismatches": [
+    "Seed does not record the Rep-null guard: on the front, if no Rep was chosen (WhileInPlayData empty) the flip trigger method returns null and the objective can NEVER flip (Card112_001.java:134-137). Behavioral fact missing from seed.",
+    "Seed structure nests the 2-site and 3-site branches as 'alternatives' of one requirement without stating the branch selector's exclusivity: source is a strict if/else-if on canSpotLocation(non_Tatooine_location); the 2-battleground branch is ONLY evaluated when no non-Tatooine location exists on table."
+  ],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "flipGateSite is null: gate is generic battleground sites (occupy 2 or 3); nothing marks battleground_site as the flip target even though objectiveNamedLocations lists it.",
+      "keyCharacterFilter is null: the Rep and the non-unique alien of Rep's species (dynamic species filter) are the flip law's key actors; no representation.",
+      "Occupy-vs-control distinction and the counts (2 vs 3) are not encoded anywhere.",
+      "The non-Tatooine-location branch selector (harder requirement once any non-Tatooine location hits the table) has no representation.",
+      "requiredCardsOnTable empty: Rep chosen-state (mandatory for the flip to exist) is not represented.",
+      "pullableCards empty: Hutt Trade Route, Jabba's Palace site, Yarna d'al' Gargan setup deploys and back-side species retrieval are not represented."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

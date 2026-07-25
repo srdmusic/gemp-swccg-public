@@ -1,0 +1,87 @@
+{
+ "frontBp": "215_17",
+ "backBp": "215_17_BACK",
+ "side": "LIGHT",
+ "titleFront": "Rescue The Princess (V)",
+ "titleBack": "Sometimes I Amaze Even Myself (V)",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction with NO TriggerConditions.isTableChanged gate and NO singleton flag - evaluated on EVERY required-after trigger check while conditions hold",
+  "prose": "Flip if Leia occupies a Death Star site (occupy-with: you occupy a Death Star site with Leia there - imprisoned/captive Leia does NOT occupy) AND the Death Star power is 'shut down' (A Power Loss state).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017.java:143"},
+    {"req": "occupies-with (your presence at location, with actor-filter card there; no spot override, so captive Leia excluded)", "filter": "location: Filters.Death_Star_site; actor: Filters.Leia", "gameConditions": "GameConditions.occupiesWith(game, self, playerId, Filters.Death_Star_site, Filters.Leia)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017.java:144"},
+    {"req": "global chosen-state flag (Death Star power shut down)", "filter": "modifiersQuerying.isDeathStarPowerShutDown()", "gameConditions": "GameConditions.isDeathStarPowerShutDown(game)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017.java:145"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017.java:139-152"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction with NO isTableChanged gate and NO singleton flag - evaluated on every required-after trigger check",
+  "prose": "Back flips to front if Leia is not at a Death Star site. Code spot uses only INCLUDE_EXCLUDED_FROM_BATTLE (no INCLUDE_CAPTIVE), so a CAPTURED Leia is unspottable and also flips the card back to front.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017_BACK.java:197"},
+    {"op": "not", "children": [
+     {"req": "canSpot card at location (active Leia only; captives not spotted)", "filter": "Filters.and(Filters.Leia, Filters.at(Filters.Death_Star_site))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Leia, Filters.at(Filters.Death_Star_site)))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017_BACK.java:198"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017_BACK.java:197-205"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip leaf 1 = OCCUPY-WITH on persona Leia at Filters.Death_Star_site (free, active Leia providing presence; the imprisoned setup Leia cannot satisfy it until rescued).",
+  "Front flip leaf 2 = GLOBAL CHOSEN-STATE: isDeathStarPowerShutDown() - a game-state flag toggled by A Power Loss being 'shut down'; not a table-spot at all.",
+  "Back flip = CHARACTER-AT-LOCATION ABSENCE: no spottable (active) Leia at a Death Star site; capture, leaving Death Star, or leaving table all flip back to front.",
+  "Both sides run a Leia safety net: if Leia is about to leave table for ANY reason, she is instead imprisoned in Detention Block Corridor and cards on her go to Used Pile (front Card215_017.java:154-182; back Card215_017_BACK.java:157-185).",
+  "Unusual timing: neither flip trigger is gated on isTableChanged nor marked singleton."
+ ],
+ "typedIdentities": [
+  "Filters.Leia (persona) - flip actor both sides",
+  "Filters.Death_Star_site - flip gate locations both sides + Force-gen buff + download target",
+  "GameConditions.isDeathStarPowerShutDown / Filters.A_Power_Loss - flip chosen-state and its source Effect",
+  "Filters.Death_Star_Central_Core, Filters.A_Power_Loss, Filters.Trash_Compactor, Filters.Detention_Block_Corridor - setup deploys",
+  "Filters.and(Icon.A_NEW_HOPE, Filters.Leia) - setup Leia deployed as imprisoned captive",
+  "Deploy ban both sides: Filters.or(Filters.and(Filters.Luke, Filters.abilityMoreThan(4)), Filters.and(Filters.Jedi, Filters.or(Filters.icon(Icon.EPISODE_I), Filters.icon(Icon.EPISODE_VII))))",
+  "Filters.I_Cant_Believe_Hes_Gone - back auto-cancel; Filters.Set_Your_Course_For_Alderaan - back ModifyGameText immunity; Filters.ObiWan - back battle-cancel cost card; Filters.and(Filters.your(owner), Filters.blaster) - back hit trigger"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Death Star: Central Core, A Power Loss, Trash Compactor, Detention Block Corridor from Reserve Deck. Card215_017.java:63-91",
+  "Setup (front, conditional): if Detention Block Corridor was found in Reserve Deck, deploy [A New Hope] Leia to it as imprisoned captive, ignoring location deployment restrictions. Card215_017.java:93-101",
+  "Front + back, once per turn (shared GameTextActionId.RESCUE_THE_PRINCESS_V__DOWNLOAD_SITE): download a Death Star site from Reserve Deck. Card215_017.java:117-136; Card215_017_BACK.java:82-98",
+  "Back, once per turn during opponent's draw phase, if opponent initiated no battle this turn: retrieve 1 Force. Card215_017_BACK.java:101-116"
+ ],
+ "otherObligations": [
+  "Both sides: your Death Star sites generate +1 Force for you; you may not deploy Luke of ability > 4 or [Episode I]/[Episode VII] Jedi. Card215_017.java:107-114; Card215_017_BACK.java:65-73",
+  "Both sides: Leia about to leave table -> imprison her in Detention Block Corridor instead (cards on her to owner's Used Pile). Requires Detention Block Corridor on table.",
+  "Back: opponent must use +1 Force to initiate a Force drain. Card215_017_BACK.java:72",
+  "Back: your Death Star sites immune to Set Your Course For Alderaan (ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES). Card215_017_BACK.java:71",
+  "Back (once per turn): if you just 'hit' a character with your blaster, opponent loses 1 Force. Card215_017_BACK.java:207-218",
+  "Back: may place Obi-Wan out of play from a Death Star site to cancel a battle just initiated anywhere on Death Star. Card215_017_BACK.java:135-150",
+  "Back: I Can't Believe He's Gone is canceled (auto-cancel when played and when on table). Card215_017_BACK.java:121-132,187-195",
+  "Strategic: rescue Leia from Detention Block Corridor, shut down A Power Loss, keep free Leia parked at a Death Star site forever; her capture or death flips you back to front."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; gate is Death Star sites (with Detention Block Corridor as the mandatory rescue origin)",
+   "keyCharacterFilter is null; Leia (persona) is the entire flip law's actor",
+   "flipGateCardIds empty; A Power Loss (215_2) shut-down state is a hard flip precondition",
+   "requiredCardsOnTable empty; A Power Loss and Detention Block Corridor (Leia safety net) must be on table",
+   "the isDeathStarPowerShutDown chosen-state leaf has no profile representation",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

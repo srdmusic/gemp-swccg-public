@@ -1,0 +1,143 @@
+{
+ "frontBp": "109_12",
+ "backBp": "109_12_BACK",
+ "side": "DARK",
+ "titleFront": "This Deal Is Getting Worse All The Time",
+ "titleBack": "Pray I Don't Alter It Any Further",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flip if Dark Deal on table AND you occupy Bespin system AND you occupy Bespin: Cloud City. All three required.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:108"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:109"
+    },
+    {
+     "req": "card-on-table: Dark Deal",
+     "filter": "Filters.Dark_Deal",
+     "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Dark_Deal)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:110"
+    },
+    {
+     "req": "occupies: Bespin system",
+     "filter": "Filters.Bespin_system",
+     "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_system)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:111"
+    },
+    {
+     "req": "occupies: Bespin: Cloud City",
+     "filter": "Filters.Bespin_Cloud_City",
+     "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_Cloud_City)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:112"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:104-124"
+  ]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger; fires on THREE different events: Bespin blown-away last step, Dark Deal just canceled, or isTableChanged with opponent controlling Bespin system.",
+  "prose": "Flips back if Dark Deal is canceled, OR opponent CONTROLS Bespin system, OR Bespin (system) is 'blown away'. NOTE: losing your own occupation of Bespin/Cloud City does NOT flip it back; only opponent CONTROL of the system does.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:90"
+    },
+    {
+     "op": "anyOf",
+     "children": [
+      {
+       "req": "timing trigger: Bespin system blown away",
+       "filter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin, true))",
+       "gameConditions": "TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin, true)))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:86"
+      },
+      {
+       "req": "timing trigger: Dark Deal just canceled",
+       "filter": "Filters.Dark_Deal",
+       "gameConditions": "TriggerConditions.justCanceled(game, effectResult, Filters.Dark_Deal)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:87"
+      },
+      {
+       "op": "allOf",
+       "children": [
+        {
+         "req": "timing: table changed",
+         "filter": "(n/a)",
+         "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:88"
+        },
+        {
+         "req": "controls (by OPPONENT): Bespin system",
+         "filter": "Filters.Bespin_system",
+         "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_system)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:89"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:81-102"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack: card-on-table (Dark Deal, canSpot) + OCCUPY x2 (Bespin system, Bespin: Cloud City) - occupy, not control",
+  "flipToFront: event triggers (blown-away, cancel) + opponent-CONTROL check; asymmetric with the flip law (your occupation is not re-checked on the back)",
+  "back is sticky: you keep the back side even with zero Bespin presence, as long as Dark Deal stays on table, opponent does not control Bespin system, and Bespin is not blown away"
+ ],
+ "typedIdentities": [
+  "Filters.Dark_Deal (card-on-table + cancel trigger)",
+  "Filters.Bespin_system, Filters.Bespin_Cloud_City (occupy legs)",
+  "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin, true)) (blown-away leaf)",
+  "Filters.Cloud_City_battleground_site (setup deploy)",
+  "Filters.Secret_Plans, Filters.All_Wrapped_Up (optional setup Effects)",
+  "Filters.or(Filters.Bespin_system, Filters.Bespin_Cloud_City, Filters.Dark_Deal, Filters.Cloud_City_Occupation) (front upload)",
+  "Filters.and(Filters.your(self), Filters.or(Icon.CLOUD_CITY, Icon.JABBAS_PALACE, Icon.SPECIAL_EDITION), Filters.character) vs Filters.Goo_Nee_Tay at Filters.Bespin_location (front immunity)",
+  "Filters.and(Filters.Bespin_location, Filters.controlsWith(playerId, self, Filters.Imperial)) (back drain protection)",
+  "Filters.All_Too_Easy (back 8-Force loss); Filters.The_Planet_That_Its_Farthest_From targeting Filters.Bespin_system (suspend); Filters.Ugnaught / Filters.alien / Filters.Imperial (back destiny bonus)"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy one Cloud City battleground site (required); may deploy Secret Plans and/or All Wrapped Up (optional, 0-1 each) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:48-70]",
+  "Front, once per YOUR deploy phase: take Bespin system, Bespin: Cloud City, Dark Deal, or Cloud City Occupation INTO HAND from Reserve Deck; reshuffle (THIS_DEAL_IS_GETTING_WORSE_ALL_THE_TIME__UPLOAD_CARD) - an upload, not a table deploy [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:73-92]"
+ ],
+ "otherObligations": [
+  "Front modifier: your [Cloud City]/[Jabba's Palace]/[Special Edition] characters immune to Goo Nee Tay deploy-cost mods to Bespin locations [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:95-101]",
+  "Back modifiers: Dark Deal immune to Surreptitious Glance; The Planet That It's Farthest From suspended if targeting Bespin; your drains not modifiable by opponent at Bespin locations you control with an Imperial; total battle destiny +2 with alien/Imperial pair in battle (+4 if the alien is an Ugnaught) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:47-60]",
+  "Back: opponent loses 8 Force when you play All Too Easy (required before-trigger) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:63-78]",
+  "Strategic note (source-derived): maintaining Dark Deal on table and denying opponent control of Bespin system are the ONLY ongoing holds; Bespin blow-away is an external hard flip-back"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "requiredCardsOnTable empty: Dark Deal on table IS a flip-law leg and is not listed",
+   "flipGateCardIds empty: no Dark Deal blueprint ids (e.g. 5_115/223_9 per WIP seed) recorded",
+   "flipGateSite null: true gates Bespin_system + Bespin_Cloud_City only present as objectiveNamedLocations",
+   "pullableCards empty despite the once-per-deploy-phase 4-way upload route",
+   "keyCharacterFilter null: back drain-protection actor Filters.Imperial unrepresented; weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,137 @@
+{
+  "frontBp": "12_179",
+  "backBp": "12_179_BACK",
+  "side": "DARK",
+  "titleFront": "My Lord, Is That Legal?",
+  "titleBack": "I Will Make It Legal",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Collect your senators AT Galactic Senate (Filters.filterActive with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE). Flip if that collection has >= 3 senators, OR >= 2 senators with at least one of them having a blockade agenda.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179.java:168"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "req": "count of your senators at location: >= 3 cards in Filters.filterActive(...) collection",
+              "filter": "Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate))",
+              "gameConditions": "Filters.filterActive(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate))).size() >= 3",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179.java:169-171"
+            },
+            {
+              "op": "allOf",
+              "children": [
+                {
+                  "req": "count of your senators at location: >= 2",
+                  "filter": "Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate))",
+                  "gameConditions": "yourSenatorsAtGalacticSenate.size() >= 2",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179.java:172"
+                },
+                {
+                  "req": "agenda-state within that senator collection: at least one has a blockade agenda",
+                  "filter": "Filters.blockade_agenda",
+                  "gameConditions": "Filters.canSpot(yourSenatorsAtGalacticSenate, game, Filters.blockade_agenda)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179.java:172"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179.java:165-185"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Back flips to front if you have FEWER than 2 senators at Galactic Senate (cannot spot 2 of your senators at Galactic Senate; spot includes battle-excluded).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179_BACK.java:170"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "count-spot: at least 2 of your senators at Galactic Senate",
+              "filter": "Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate))",
+              "gameConditions": "GameConditions.canSpot(game, self, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate)))",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179_BACK.java:171"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179_BACK.java:167-183"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack: 'with <actor> there' presence-count semantics: Filters.at(Filters.Galactic_Senate) presence of YOUR cards matching Filters.senator; NOT control or occupy of the location. Opponent presence at the Senate is irrelevant to the flip.",
+    "Alternative branch: same presence-count at 2 plus an agenda-state check (Filters.blockade_agenda spotted among those senators).",
+    "flipToFront: negated count-spot: fewer than 2 your senators at Galactic Senate. Maintaining 2+ senators there holds the back.",
+    "Both directions use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+    "NOTE: engine filter is Filters.senator; project memory says only 29 of 35 senator cards carry Keyword.SENATOR (others say 'senator' only in lore). Whether Filters.senator covers lore-only senators is an engine-filter question that matters for AI planning against this law."
+  ],
+  "typedIdentities": [
+    "Filters.Galactic_Senate (flip gate site, both directions)",
+    "Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate)) (flip actor set)",
+    "Filters.blockade_agenda (2-senator alternative); Filters.ambition_agenda (back destiny bonus)",
+    "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate)) (second start deploy)",
+    "Filters.and(Filters.or(Filters.Rebel, Filters.Imperial), Filters.leader, Filters.abilityLessThan(4)) (politics +2)",
+    "Filters.or(Filters.Counter_Assault, Filters.Surprise_Assault) (auto-cancel)",
+    "Filters.and(Filters.your(self), Filters.Republic_character) + Filters.Goo_Nee_Tay (deploy-cost immunity)",
+    "Filters.stackedOn(self, Filters.and(Filters.your(self), Filters.Political_Effect)) (may deploy as if from hand)",
+    "Filters.and(Filters.creature, Filters.at(Filters.Galactic_Senate)) (creatures lost)",
+    "Filters.and(active, Filters.character, Filters.not(Filters.Republic_character), Filters.at(Filters.Galactic_Senate)) (game text canceled)",
+    "Filters.Political_Effect (back-side Reserve Deck tutor)"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, required): deploy Galactic Senate from Reserve Deck: DeployCardFromReserveDeckEffect(Filters.Galactic_Senate, true, false) [Card12_179.java:61-67]",
+    "START OF GAME (front, required): deploy any other [Episode I] location: DeployCardFromReserveDeckEffect(Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate)), true, false) [Card12_179.java:68-74]",
+    "BACK, once per turn: take a Political Effect into hand from Reserve Deck; reshuffle: TakeCardIntoHandFromReserveDeckEffect(Filters.Political_Effect, true), GameTextActionId.I_WILL_MAKE_IT_LEGAL__UPLOAD_POLITICAL_EFFECT [Card12_179_BACK.java:106-122]"
+  ],
+  "otherObligations": [
+    "FRONT after-deployment, REMAINDER OF GAME (all AddUntilEndOfGame*, persist after flip): Rebel/Imperial leaders of ability < 4 are politics +2: PoliticsModifier [Card12_179.java:83-85]",
+    "REMAINDER OF GAME: Counter Assault and Surprise Assault are auto-canceled when played (action proxy + CancelCardActionBuilder) [Card12_179.java:87-107]",
+    "REMAINDER OF GAME: your Republic characters immune to Goo Nee Tay deploy-cost modifiers: ImmuneToDeployCostModifiersToLocationModifier [Card12_179.java:108-110]",
+    "REMAINDER OF GAME: cards stacked on your Political Effects may deploy as if from hand: MayDeployAsIfFromHandModifier [Card12_179.java:111-113]",
+    "REMAINDER OF GAME: each weapon destiny draw at Galactic Senate is -6: EachWeaponDestinyModifier(self, atGalacticSenate, -6) [Card12_179.java:114-116]",
+    "REMAINDER OF GAME: creatures at Galactic Senate are lost (required trigger on table change) [Card12_179.java:117-143]",
+    "REMAINDER OF GAME: game text of active non-Republic characters at Galactic Senate is canceled: CancelsGameTextModifier [Card12_179.java:145-160]",
+    "BACK: once per control phase, use 3 Force to place up to two random cards from opponent's hand in Used Pile [Card12_179_BACK.java:63-104]",
+    "BACK: your senators are +2 (or +3 with ambition agenda) when drawn for weapon or battle destiny: DestinyWhenDrawnForWeaponDestinyModifier / DestinyWhenDrawnForBattleDestinyModifier [Card12_179_BACK.java:128-137]",
+    "BACK: at end of any turn may use 2 Force to place all cards on your Political Effects in Used Pile (OptionalGameTextTriggerAction) [Card12_179_BACK.java:141-163]"
+  ],
+  "seedMismatches": [
+    "Terminology only: seed calls both directions' relation PRESENT; source uses Filters.at(Filters.Galactic_Senate) inside filterActive/canSpot ('at' semantics, spot-based counting). Thresholds, actors, and site all match source."
+  ],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": true,
+    "profileGaps": [
+      "flipGateSite is null even though the flip law has a single unambiguous gate site (Galactic Senate); keySiteFilter='Galactic_Senate' partially compensates.",
+      "Count thresholds not encoded: 3 senators, or 2 senators when one has a blockade agenda; the blockade-agenda alternative has no representation (keyCharacterFilter is just 'senator').",
+      "flipGateCardIds empty: Galactic Senate blueprint ids (12_167, 12_75) exist only inside objectiveNamedLocations.",
+      "Back-side hold requirement (keep >= 2 senators at Senate or flip back) is only implicitly covered by the keyChar/keySite weights; the numeric threshold is absent.",
+      "Back-side Political Effect Reserve-Deck tutor is not in pullableCards (empty)."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

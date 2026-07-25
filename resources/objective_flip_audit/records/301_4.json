@@ -1,0 +1,129 @@
+{
+ "frontBp": "301_4",
+ "backBp": "301_4_BACK",
+ "side": "DARK",
+ "titleFront": "Twin Suns Of Tatooine",
+ "titleBack": "Well Trained In The Jedi Arts",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Flip if you control two Tatooine battleground sites (at least one controlled with a Dark Jedi), occupy Tatooine system, and opponent controls no Tatooine sites.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java:105"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java:106"
+    },
+    {
+     "req": "control (count 2): you control 2 Tatooine battleground sites",
+     "filter": "Filters.Tatooine_battleground_site",
+     "gameConditions": "GameConditions.controls(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Tatooine_battleground_site)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java:107"
+    },
+    {
+     "req": "control-with: at least one Tatooine battleground site controlled with a Dark Jedi",
+     "filter": "Filters.Tatooine_battleground_site with Filters.Dark_Jedi",
+     "gameConditions": "GameConditions.controlsWith(game, self, playerId, Filters.Tatooine_battleground_site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Dark_Jedi)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java:108"
+    },
+    {
+     "req": "occupy: you occupy Tatooine system",
+     "filter": "Filters.Tatooine_system",
+     "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.Tatooine_system)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java:109"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "control (opponent): opponent controls any Tatooine site",
+       "filter": "Filters.Tatooine_site",
+       "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.Tatooine_site)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java:110"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java:100-122"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Back flips to front if opponent controls MORE Tatooine sites than you (strict count comparison).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004_BACK.java:102"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004_BACK.java:103"
+    },
+    {
+     "req": "count comparison: opponent-controlled Tatooine sites > your controlled Tatooine sites",
+     "filter": "Filters.and(Filters.Tatooine_site, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) vs Filters.and(Filters.Tatooine_site, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))",
+     "gameConditions": "Filters.countTopLocationsOnTable(game, <opponent-controls filter>) > Filters.countTopLocationsOnTable(game, <you-control filter>)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004_BACK.java:104-105"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004_BACK.java:97-118"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip mixes CONTROL (2 Tatooine battleground sites), CONTROL-WITH (>=1 of them with a Dark Jedi there), OCCUPY (Tatooine system - presence suffices, control not needed), and an opponent CONTROL-zero constraint on the broader class Tatooine sites (not just battlegrounds).",
+  "SpotOverrides differ per leaf: site controls use INCLUDE_EXCLUDED_FROM_BATTLE; the system occupy and the opponent-control check use INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE.",
+  "Flip-back is a strict COUNT COMPARISON (opponent > you) over controlled Tatooine sites, not a fixed threshold: ties are safe.",
+  "No hard-lose/out-of-play condition on either side."
+ ],
+ "typedIdentities": [
+  "Filters.Tatooine_battleground_site; Filters.Tatooine_site; Filters.Tatooine_system; Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site))",
+  "Filters.Dark_Jedi (flip control-with actor); Filters.and(Filters.your(self), Filters.Dark_Jedi) (back move-cost anchor)",
+  "Filters.or(Filters.Jabbas_Palace_site, Filters.Sandwhirl) (remainder-of-game deploy ban)",
+  "Filters.Tatooine_Occupation (back once-per-game download); Filters.and(Filters.Tatooine_site, Filters.battleground) via DeployCardFromReserveDeckEffect(Filters.Tatooine_site, Filters.battleground, true) (front download)",
+  "Filters.and(Filters.opponents(self), Filters.or(Filters.character, Filters.vehicle)) (back move-cost subjects)"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy Tatooine system (Filters.Tatooine_system) and one non-Jabba's-Palace Tatooine site (Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site))) from Reserve Deck (Card301_004.java:45-62).",
+  "Front once per turn (TWIN_SUNS_OF_TATOOINE__DOWNLOAD_TATOOINE_BATTLEGROUND_SITE): use 1 Force to deploy a Tatooine battleground site from Reserve Deck (Card301_004.java:74-97).",
+  "Back once per game (WELL_TRAINED_IN_THE_JEDI_ARTS__DOWNLOAD_TATOOINE_OCCUPATION): deploy Tatooine Occupation from Reserve Deck (Card301_004_BACK.java:52-65).",
+  "Back once during your control phase: peek at top 2 cards of your Reserve Deck, take one into hand, shuffle (Card301_004_BACK.java:69-84)."
+ ],
+ "otherObligations": [
+  "Front remainder-of-game deploy ban: you may not deploy Jabba's Palace sites or Sandwhirl (Card301_004.java:65-71).",
+  "Back: opponent needs +1 Force to move a character or vehicle from a site shared with your Dark Jedi (MoveCostFromLocationModifier) (Card301_004_BACK.java:90-94).",
+  "Strategic: front needs a Dark Jedi parked on a controlled Tatooine battleground site plus system occupation plus a fully evicted opponent (zero controlled Tatooine sites); after flip, never let opponent out-control you on Tatooine sites."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateSite null: gates are 2 controlled Tatooine battleground sites plus occupied Tatooine system; present only as generic named-location recipes with no control/occupy semantics",
+   "keyCharacterFilter null: at least one gate site must be controlled WITH a Dark Jedi (Filters.Dark_Jedi)",
+   "no encoding of count=2, the control-vs-occupy split (control the sites, merely occupy the system), or the opponentConstraint (opponent controls 0 Tatooine sites; flips back when opponent controls more than you)",
+   "pullableCards empty: front 1-Force Tatooine-battleground-site download and back once-per-game Tatooine Occupation download not represented"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

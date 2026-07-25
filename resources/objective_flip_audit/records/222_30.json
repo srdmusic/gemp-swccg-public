@@ -1,0 +1,84 @@
+{
+ "frontBp": "222_30",
+ "backBp": "222_30_BACK",
+ "side": "DARK",
+ "titleFront": "The Shield Will Be Down In Moments",
+ "titleBack": "Imperial Troops Have Entered The Base!",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on blown-away-last-step event (event trigger, not table-changed polling)",
+  "prose": "Flip when Main Power Generators is 'blown away' (your own 1st Marker site; the win path is Target The Main Generator + AT-AT Cannon).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030.java:141"
+    },
+    {
+     "req": "timing trigger: Main Power Generators blown away (last step)",
+     "filter": "Filters.title(Title.Main_Power_Generators, true)",
+     "gameConditions": "TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true))",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030.java:142"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030.java:137-153"
+  ]
+ },
+ "flipToFront": {
+  "timing": "NONE",
+  "prose": "Back never flips to front. Instead it is PLACED OUT OF PLAY on any table change if you do not occupy a Hoth site with a piloted AT-AT, an Imperial leader, or a snowtrooper.",
+  "expression": null,
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030_BACK.java:128-146"
+  ]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is a BLOWN_AWAY event trigger on a title filter (any Main Power Generators copy, exact-title match with true flag), not a board-control condition.",
+  "Back hard-lose is OCCUPIES-WITH: canSpot a Hoth SITE matching Filters.occupiesWith(playerId, self, <piloted AT-AT | Imperial leader | snowtrooper>); you must both occupy the site and have a qualifying unit there (Card222_030_BACK.java:134).",
+  "Back hard-lose is gated by GameConditions.canBePlacedOutOfPlay (Card222_030_BACK.java:133), not canBeFlipped.",
+  "Front flip check does NOT require isTableChanged; it keys directly off the blow-away effect result."
+ ],
+ "typedIdentities": [
+  "Filters.title(Title.Main_Power_Generators, true) (flip gate); Filters.First_Marker (setup pull for the same site)",
+  "Filters.Fifth_Marker; Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker); Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack) (setup pulls)",
+  "Filters.Hoth_location (download); Filters.Hoth_site (hard-lose site class)",
+  "Hard-lose occupiers: Filters.or(Filters.and(Filters.AT_AT, Filters.piloted), Filters.Imperial_leader, Filters.snowtrooper)",
+  "Filters.and(Filters.your(self), Filters.AT_AT_Cannon) (may not fire during your control phase)",
+  "Deploy ban: Filters.or(Filters.Rebel_Base_Occupation, Filters.Sunsdown, Filters.and(Filters.Dark_Jedi, Filters.not(Filters.Vader)))",
+  "Filters.title(\"Echo Base Sensors\") (canceled); Filters.You_May_Start_Your_Landing (loss capped at 1); Filters.or(Filters.title(\"Rebel Leadership\"), Filters.Were_Doomed) (made Lost Interrupts); Filters.snowtrooper; Filters.Imperial_leader"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy 5th Marker, [Set 17] 4th Marker, 1st Marker (= Main Power Generators), and [Set 9] Prepare For A Surface Attack from Reserve Deck (Card222_030.java:55-88).",
+  "Front once per turn (THE_SHIELD_WILL_BE_DOWN_IN_MOMENTS__DOWNLOAD_HOTH_LOCATION): deploy a Hoth location from Reserve Deck (Card222_030.java:116-134).",
+  "Back once per turn (IMPERIAL_TROOPS_HAVE_ENTERED_THE_BASE__DEPLOY_SNOWTROOPER): deploy a snowtrooper from Reserve Deck; reshuffle (Card222_030_BACK.java:107-122).",
+  "Back once during your control phase (shared action id, choose one): retrieve bottom card of Lost Pile into hand (:71-84) OR peek at top X cards of opponent's Reserve Deck and replace in any order, X = Hoth locations you control (Filters.and(Filters.Hoth_location, Filters.controls(playerId))) (:87-103)."
+ ],
+ "otherObligations": [
+  "Front remainder-of-game: your AT-AT Cannons may not fire during your control phase (Card222_030.java:94-95); may not deploy Rebel Base Occupation, Sunsdown, or Dark Jedi except Vader (:97-98); Echo Base Sensors' game text is canceled (:100-101).",
+  "Front: opponent loses no more than 1 Force to You May Start Your Landing (Card222_030.java:110-112).",
+  "Back: attrition against opponent +1 for each Imperial leader in battle (OnTableEvaluator on participatingInBattle Imperial leaders) (Card222_030_BACK.java:59).",
+  "Back: Rebel Leadership and We're Doomed are Lost Interrupts (:58).",
+  "Back HARD LOSE: out of play if you do not occupy a Hoth site with piloted AT-AT / Imperial leader / snowtrooper (:128-146). Maintain a durable Hoth-site occupier forever.",
+  "Strategic: the flip is your own epic-event win path (blow away Main Power Generators); Rando must drive Target The Main Generator + AT-AT Cannon, and the flip gate dies if Main Power Generators never reaches table."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite null / flipGateCardIds empty: flip gate is own Main Power Generators site blown away (Filters.title(Title.Main_Power_Generators, true); 222_9) - no BLOWN_AWAY semantics anywhere in the profile",
+   "keyCharacterFilter null: back survival actors (piloted AT-AT, Imperial leader, snowtrooper occupying a Hoth site) exist only as a raw recipe string in objectiveNamedLocations",
+   "requiredCardsOnTable empty: 1st Marker / Main Power Generators must reach and stay on table for the blow-away path; Target The Main Generator epic event dependency not encoded",
+   "pullableCards empty: front Hoth-location download and back snowtrooper download not represented",
+   "profile does not distinguish that the back has NO flip-back, only a hard-lose"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

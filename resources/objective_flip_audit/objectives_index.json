@@ -1,0 +1,666 @@
+{
+ "generatedBy": "K-2 Phase A inventory 2026-07-24",
+ "baselineHead": "192abf72d",
+ "rows": [
+  {
+   "frontBp": "7_135",
+   "title": "Dantooine Base Operations",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Dantooine Base Operations"
+  },
+  {
+   "frontBp": "7_136",
+   "title": "Hidden Base",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_136_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Hidden Base"
+  },
+  {
+   "frontBp": "7_137",
+   "title": "Local Uprising",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Local Uprising"
+  },
+  {
+   "frontBp": "7_138",
+   "title": "Mind What You Have Learned",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_138_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Mind What You Have Learned"
+  },
+  {
+   "frontBp": "7_139",
+   "title": "Rescue The Princess",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Rescue The Princess"
+  },
+  {
+   "frontBp": "7_296",
+   "title": "Carbon Chamber Testing",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_296_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Carbon Chamber Testing"
+  },
+  {
+   "frontBp": "7_297",
+   "title": "Hunt Down And Destroy The Jedi",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_297.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_297_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Hunt Down And Destroy The Jedi"
+  },
+  {
+   "frontBp": "7_298",
+   "title": "Imperial Occupation",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Imperial Occupation"
+  },
+  {
+   "frontBp": "7_299",
+   "title": "ISB Operations",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "ISB Operations"
+  },
+  {
+   "frontBp": "7_300",
+   "title": "Ralltiir Operations",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_300_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Ralltiir Operations"
+  },
+  {
+   "frontBp": "8_78",
+   "title": "Rebel Strike Team",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/light/Card8_078_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Rebel Strike Team"
+  },
+  {
+   "frontBp": "8_167",
+   "title": "Endor Operations",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Endor Operations"
+  },
+  {
+   "frontBp": "9_61",
+   "title": "There Is Good In Him",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "There Is Good In Him"
+  },
+  {
+   "frontBp": "9_151",
+   "title": "Bring Him Before Me",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Bring Him Before Me"
+  },
+  {
+   "frontBp": "10_26",
+   "title": "Watch Your Step",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/light/Card10_026_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Watch Your Step"
+  },
+  {
+   "frontBp": "10_29",
+   "title": "Agents Of Black Sun",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set10/dark/Card10_029_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Agents Of Black Sun"
+  },
+  {
+   "frontBp": "12_88",
+   "title": "Plead My Case To The Senate",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Plead My Case To The Senate"
+  },
+  {
+   "frontBp": "12_89",
+   "title": "The Hyperdrive Generators Gone",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "The Hyperdrive Generator's Gone"
+  },
+  {
+   "frontBp": "12_179",
+   "title": "My Lord Is That Legal",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_179_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "My Lord, Is That Legal?"
+  },
+  {
+   "frontBp": "12_180",
+   "title": "No Money No Parts No Deal",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "No Money, No Parts, No Deal!"
+  },
+  {
+   "frontBp": "13_46",
+   "title": "Well Handle This",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "We'll Handle This"
+  },
+  {
+   "frontBp": "13_73",
+   "title": "Let Them Make The First Move",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/dark/Card13_073.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/dark/Card13_073_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Let Them Make The First Move"
+  },
+  {
+   "frontBp": "14_52",
+   "title": "We Have A Plan",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "We Have A Plan"
+  },
+  {
+   "frontBp": "14_113",
+   "title": "Invasion",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Invasion"
+  },
+  {
+   "frontBp": "109_4",
+   "title": "Quiet Mining Colony",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/light/Card109_004_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Quiet Mining Colony"
+  },
+  {
+   "frontBp": "109_12",
+   "title": "This Deal Is Getting Worse All The Time",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "This Deal Is Getting Worse All The Time"
+  },
+  {
+   "frontBp": "110_4",
+   "title": "You Can Either Profit By This",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "You Can Either Profit By This..."
+  },
+  {
+   "frontBp": "110_6",
+   "title": "Court Of The Vile Gangster",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/dark/Card110_006_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Court Of The Vile Gangster"
+  },
+  {
+   "frontBp": "111_4",
+   "title": "Massassi Base Operations",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Massassi Base Operations"
+  },
+  {
+   "frontBp": "111_6",
+   "title": "Set Your Course For Alderaan",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/dark/Card111_006_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Set Your Course For Alderaan"
+  },
+  {
+   "frontBp": "112_1",
+   "title": "Agents In The Court",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/light/Card112_001_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Agents In The Court"
+  },
+  {
+   "frontBp": "112_15",
+   "title": "My Kind Of Scum",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "My Kind Of Scum"
+  },
+  {
+   "frontBp": "201_39",
+   "title": "Imperial Entanglements",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Imperial Entanglements"
+  },
+  {
+   "frontBp": "203_19",
+   "title": "Diplomatic Mission To Alderaan",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Diplomatic Mission To Alderaan"
+  },
+  {
+   "frontBp": "204_32",
+   "title": "Old Allies",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Old Allies"
+  },
+  {
+   "frontBp": "208_25",
+   "title": "He Is The Chosen One",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "He Is The Chosen One"
+  },
+  {
+   "frontBp": "208_26",
+   "title": "Yavin 4 Base Operations",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Yavin 4 Base Operations"
+  },
+  {
+   "frontBp": "208_57",
+   "title": "I Want That Map",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "I Want That Map"
+  },
+  {
+   "frontBp": "209_29",
+   "title": "They Have No Idea Were Coming",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "They Have No Idea We're Coming"
+  },
+  {
+   "frontBp": "210_25",
+   "title": "The Hyperdrive Generators Gone",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set210/light/Card210_025_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "The Hyperdrive Generator's Gone"
+  },
+  {
+   "frontBp": "211_26",
+   "title": "A Stunning Move",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "A Stunning Move"
+  },
+  {
+   "frontBp": "211_36",
+   "title": "The Galaxy May Need A Legend",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "The Galaxy May Need A Legend"
+  },
+  {
+   "frontBp": "213_31",
+   "title": "Hunt Down And Destroy The Jedi",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Hunt Down And Destroy The Jedi"
+  },
+  {
+   "frontBp": "213_32",
+   "title": "Shadow Collective",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_032_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Shadow Collective"
+  },
+  {
+   "frontBp": "215_17",
+   "title": "Rescue The Princess",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set215/light/Card215_017_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Rescue The Princess"
+  },
+  {
+   "frontBp": "216_11",
+   "title": "On The Verge Of Greatness",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "On The Verge Of Greatness"
+  },
+  {
+   "frontBp": "219_1",
+   "title": "A Great Tactician Creates Plans",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/dark/Card219_001_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "A Great Tactician Creates Plans"
+  },
+  {
+   "frontBp": "219_48",
+   "title": "Zero Hour",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Zero Hour"
+  },
+  {
+   "frontBp": "221_67",
+   "title": "Hunt For The Droid General",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Hunt For The Droid General"
+  },
+  {
+   "frontBp": "222_14",
+   "title": "The Shield Will Be Down In Moments",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_014.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_014_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "The Shield Will Be Down in Moments"
+  },
+  {
+   "frontBp": "222_27",
+   "title": "Alter",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/light/Card222_027_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "The Empire Knows We're Here"
+  },
+  {
+   "frontBp": "222_30",
+   "title": "The Shield Will Be Down In Moments",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_030_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "The Shield Will Be Down in Moments"
+  },
+  {
+   "frontBp": "225_32",
+   "title": "The First Order Reigns",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "The First Order Reigns"
+  },
+  {
+   "frontBp": "225_53",
+   "title": "Mind What You Have Learned",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "Mind What You Have Learned"
+  },
+  {
+   "frontBp": "226_12",
+   "title": "This Deal Is Getting Worse All The Time",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/dark/Card226_012_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "This Deal Is Getting Worse All The Time"
+  },
+  {
+   "frontBp": "226_28",
+   "title": "The Hidden Path",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": false,
+   "profileLabel": "The Hidden Path"
+  },
+  {
+   "frontBp": "301_2",
+   "title": "City In The Clouds",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/light/Card301_002_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "City In The Clouds"
+  },
+  {
+   "frontBp": "301_4",
+   "title": "Twin Suns Of Tatooine",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set301/dark/Card301_004_BACK.java",
+   "hasProfile": true,
+   "loaderEnabled": true,
+   "profileLabel": "Twin Suns Of Tatooine"
+  },
+  {
+   "frontBp": "501_14",
+   "title": "?NOT IN CACHE?",
+   "side": "?",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_014_BACK.java",
+   "hasProfile": false,
+   "loaderEnabled": false,
+   "profileLabel": null
+  },
+  {
+   "frontBp": "501_19",
+   "title": "?NOT IN CACHE?",
+   "side": "?",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_019.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_019_BACK.java",
+   "hasProfile": false,
+   "loaderEnabled": false,
+   "profileLabel": null
+  },
+  {
+   "frontBp": "501_60",
+   "title": "?NOT IN CACHE?",
+   "side": "?",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060_BACK.java",
+   "hasProfile": false,
+   "loaderEnabled": false,
+   "profileLabel": null
+  },
+  {
+   "frontBp": "501_91",
+   "title": "?NOT IN CACHE?",
+   "side": "?",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_091.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_091_BACK.java",
+   "hasProfile": false,
+   "loaderEnabled": false,
+   "profileLabel": null
+  },
+  {
+   "frontBp": "501_94",
+   "title": "?NOT IN CACHE?",
+   "side": "?",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094_BACK.java",
+   "hasProfile": false,
+   "loaderEnabled": false,
+   "profileLabel": null
+  },
+  {
+   "frontBp": "601_29",
+   "title": "Wookiee Slaving Operation",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029_BACK.java",
+   "hasProfile": false,
+   "loaderEnabled": false,
+   "profileLabel": null
+  },
+  {
+   "frontBp": "601_87",
+   "title": "Hunt Down And Destroy The Jedi",
+   "side": "dark",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087_BACK.java",
+   "hasProfile": false,
+   "loaderEnabled": false,
+   "profileLabel": null
+  },
+  {
+   "frontBp": "601_146",
+   "title": "Watch Your Step",
+   "side": "light",
+   "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146.java",
+   "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/light/Card601_146_BACK.java",
+   "hasProfile": false,
+   "loaderEnabled": false,
+   "profileLabel": null
+  }
+ ]
+}

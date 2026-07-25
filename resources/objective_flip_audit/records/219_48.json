@@ -1,0 +1,134 @@
+{
+  "frontBp": "219_48",
+  "backBp": "219_48_BACK",
+  "side": "LIGHT",
+  "titleFront": "Zero Hour",
+  "titleBack": "Liberation of Lothal",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips when (Rebels control three Lothal locations OR you occupy three Lothal locations with Phoenix Squadron characters) AND opponent controls no Lothal location.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java:173"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java:174"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "req": "control WITH actor, count 3: owner controls 3 Lothal locations each with a Rebel",
+              "filter": "locations: Filters.Lothal_location; actor: Filters.Rebel; count: 3",
+              "gameConditions": "GameConditions.controlsWith(game, self, playerId, 3, Filters.Lothal_location, Filters.Rebel)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java:175"
+            },
+            {
+              "req": "occupy WITH actor, count 3: owner occupies 3 Lothal locations with Phoenix Squadron characters",
+              "filter": "locations: Filters.Lothal_location; actor: Filters.Phoenix_Squadron_character; count: 3",
+              "gameConditions": "GameConditions.occupiesWith(game, self, playerId, 3, Filters.Lothal_location, Filters.Phoenix_Squadron_character)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java:176"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "opponent control blocker: opponent controls any Lothal location",
+              "filter": "Filters.Lothal_location",
+              "gameConditions": "GameConditions.controls(game, opponent, Filters.Lothal_location)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java:177"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048.java:172-189"
+    ]
+  },
+  "flipToFront": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips back when opponent controls MORE Lothal locations than you (strict count comparison of controlled Lothal locations).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048_BACK.java:130"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048_BACK.java:131"
+        },
+        {
+          "req": "count comparison: opponent-controlled Lothal locations > owner-controlled Lothal locations",
+          "filter": "Filters.and(Filters.Lothal_location, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) vs Filters.and(Filters.Lothal_location, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))",
+          "gameConditions": "Filters.countTopLocationsOnTable(game, Filters.and(Filters.Lothal_location, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))) > Filters.countTopLocationsOnTable(game, Filters.and(Filters.Lothal_location, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048_BACK.java:132-133"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set219/light/Card219_048_BACK.java:129-143"
+    ]
+  },
+  "requirementSemantics": [
+    "Front flip leg A is CONTROL-WITH count semantics: controlsWith(3, Lothal_location, Rebel) - three controlled Lothal locations that each also have a Rebel. Leg B is OCCUPY-WITH count semantics: occupiesWith(3, Lothal_location, Phoenix_Squadron_character) - occupation (presence) suffices, control not needed, but the occupier set must include Phoenix Squadron characters.",
+    "Front blocker is opponent CONTROL: GameConditions.controls(game, opponent, Filters.Lothal_location) with NO SpotOverride argument - any single opponent-controlled Lothal location blocks the flip.",
+    "Back flip-back is a strict COUNT COMPARISON of controlled Lothal locations (opponent > you), using Filters.controls with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE on both sides; ties do NOT flip back.",
+    "Phoenix Squadron membership is partially objective-granted: the front's deployment-completed action adds Keyword.PHOENIX_SQUADRON to Chopper, Ezra, Hera, Kanan, Sabine, and Zeb for remainder of game.",
+    "Both sides track 'you Force drained this turn' in WhileInPlayData (front: any forceDrainCompleted by owner, front:163-165; back: forceDrainCompleted at Filters.battleground, BACK:120-122; both reset at end of each turn) - the back's drain +1 modifier reads this flag via InPlayDataEqualsCondition."
+  ],
+  "typedIdentities": [
+    "Filters.Lothal_location",
+    "Filters.Lothal_system",
+    "Filters.Lothal_site",
+    "Filters.Rebel",
+    "Filters.Phoenix_Squadron_character (keyword granted to Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Kanan, Filters.Sabine, Filters.Zeb via KeywordModifier Keyword.PHOENIX_SQUADRON)",
+    "Filters.or(Filters.Harc, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Ahsoka, Filters.Kanan))), Filters.and(Filters.your(playerId), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.hasAbilityOrHasPermanentPilotWithAbility)) (deploy +2)",
+    "Filters.title(Title.Menace_Fades) / Filters.title(Title.Projection_Of_A_Skywalker) (canceled)",
+    "Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.Phoenix_Squadron_character)) (back destiny mod X)",
+    "Filters.battleground (back drain +1 when drained-this-turn flag set)"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Lothal system and a Lothal site from Reserve Deck (front:55-72).",
+    "Shared pull (same GameTextActionId.ZERO_HOUR__DEPLOY_LOCATION on both sides): once per turn, deploy a Lothal site from Reserve Deck (Filters.Lothal_site) (front:136-155; BACK:58-77)."
+  ],
+  "otherObligations": [
+    "Front, remainder of game: Menace Fades and Projection Of A Skywalker are canceled (action proxy, front:85-131).",
+    "Front, remainder of game: Harc, Jedi (except Ahsoka and Kanan), and your [Episode I]/[Episode VII] cards with ability are deploy +2 (front:77-80).",
+    "Back: if you Force drained at a battleground this turn, your other Force drains at battlegrounds are +1 (ForceDrainModifier + InPlayDataEqualsCondition, BACK:52).",
+    "Back: once per turn during battle, may add or subtract X from a just-drawn battle destiny (or opponent's weapon destiny), X = battlegrounds you occupy with Phoenix Squadron characters (BACK:80-111).",
+    "Back: at Lothal system, number of battle destiny draws may not be limited for either player (BACK:53).",
+    "Strategic note from law: staying flipped only requires not falling behind on controlled-Lothal-location count; the 3-location threshold is not re-checked after flipping."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": true,
+    "profileGaps": [
+      "flipGateSite null and no field carries the COUNT (3 Lothal locations); locationFragments ['lothal'] names the family but not the threshold.",
+      "keyCharacterFilter null; the two flip legs have distinct actors - Rebel (control leg) vs Phoenix Squadron character (occupy leg) - and the control-vs-occupy distinction between the legs is not encoded anywhere.",
+      "No representation of the front blocker (opponent controls ANY Lothal location prevents flip) or of the back's strict count comparator (opponent controls MORE Lothal locations than you flips back).",
+      "No representation that Phoenix Squadron membership is objective-granted to Chopper/Ezra/Hera/Kanan/Sabine/Zeb (profile cannot resolve Phoenix_Squadron_character without it)."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

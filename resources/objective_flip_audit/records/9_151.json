@@ -1,0 +1,150 @@
+{
+ "frontBp": "9_151",
+ "backBp": "9_151_BACK",
+ "side": "DARK",
+ "titleFront": "Bring Him Before Me",
+ "titleBack": "Take Your Father's Place",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton). Three mutually exclusive branches by retarget state (default = Luke; ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_LEIA_INSTEAD_OF_LUKE / TARGETS_KANAN_INSTEAD_OF_LUKE).",
+  "prose": "Flip if the target character (Luke by default; Leia or Kanan if retargeted) is a CAPTIVE - spotted anywhere with INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE. No requirement that Vader captured or escorts the captive; any capture qualifies.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:373"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:374"
+    },
+    {
+     "op": "anyOf",
+     "children": [
+      {
+       "req": "canSpot: target captive (default branch)",
+       "filter": "Filters.and(Filters.Luke, Filters.captive)",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Luke, Filters.captive))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:375"
+      },
+      {
+       "req": "canSpot: target captive (Leia retarget branch)",
+       "filter": "Filters.and(Filters.Leia, Filters.captive)",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Leia, Filters.captive))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:343"
+      },
+      {
+       "req": "canSpot: target captive (Kanan retarget branch)",
+       "filter": "Filters.and(Filters.Kanan, Filters.captive)",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Kanan, Filters.captive))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:359"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:335-388"
+  ]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton). Same three retarget branches.",
+  "prose": "Flips back if the target (Luke default / Leia / Kanan) can NOT be spotted as (captive OR presentWith Vader) - i.e. target is neither a captive nor present with Vader (or has left the table).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:117"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:118"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "op": "anyOf",
+       "children": [
+        {
+         "req": "canSpot: target captive-or-with-Vader (default branch)",
+         "filter": "Filters.and(Filters.Luke, Filters.or(Filters.captive, Filters.presentWith(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader)))",
+         "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Luke, Filters.or(Filters.captive, Filters.presentWith(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader))))",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:119-120"
+        },
+        {
+         "req": "canSpot: Leia retarget branch",
+         "filter": "Filters.and(Filters.Leia, Filters.or(Filters.captive, Filters.presentWith(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader)))",
+         "gameConditions": "GameConditions.canSpot(..., SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, ...)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:83-84"
+        },
+        {
+         "req": "canSpot: Kanan retarget branch",
+         "filter": "Filters.and(Filters.Kanan, Filters.or(Filters.captive, Filters.presentWith(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader)))",
+         "gameConditions": "GameConditions.canSpot(..., SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, ...)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:101-102"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:60-133"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack: card-state check (canSpot captive target) - not control/occupy; capture by ANY means suffices; capturer identity is NOT checked",
+  "flipToFront: negated canSpot of (captive OR presentWith Vader) - keeping the back requires target captive or physically present with Vader",
+  "auto-capture engine (front, via end-of-game action proxy): isTableChanged + target not captive + canBeTargetedBy(TO_BE_CAPTURED) + Vader presentWith target, Vader not leaving table and not escorting anyone -> CaptureWithSeizureEffect (required trigger)",
+  "retarget chosen-state: deploying 'Kanan, Rebel Infiltrator' via the objective's Luke download sets TARGETS_KANAN_INSTEAD_OF_LUKE for remainder of game"
+ ],
+ "typedIdentities": [
+  "Filters.Luke / Filters.Leia / Filters.Kanan (personas; branch by ModifyGameTextType)",
+  "Filters.captive; Filters.presentWith(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader)",
+  "Filters.Vader (auto-capture actor; MayNotBeTransferred escort)",
+  "Filters.Throne_Room, Filters.Insignificant_Rebellion, Filters.Your_Destiny (setup deploys)",
+  "Persona.SIDIOUS / Filters.Emperor (your download); Persona.LUKE / LEIA / KANAN (opponent downloads)",
+  "Filters.Scanning_Crew (may not be played); Filters.presentAt(Filters.Throne_Room) + Filters.not(Filters.frozenCaptive) (back duel gate)"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy Throne Room, Insignificant Rebellion, Your Destiny from Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:62-82]",
+  "Front+Back, your route: may deploy Emperor from Reserve Deck (deploy -2; Persona.SIDIOUS; BRING_HIM_BEFORE_ME__DOWNLOAD_EMPEROR) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:213-227, src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:141-152]",
+  "Front+Back, OPPONENT route: may deploy Luke (or retargeted Leia/Kanan) from Reserve Deck (deploy -2; reshuffle) or from Lost Pile (BRING_HIM_BEFORE_ME__DOWNLOAD_LUKE / _FROM_LOST_PILE); front Reserve route also accepts Filters.grantedMayBeTargetedBy(self) and Kanan, Rebel Infiltrator triggers the Kanan retarget [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:230-332, src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:513-600]"
+ ],
+ "otherObligations": [
+  "Remainder of game (front, after deployment): Scanning Crew may not be played [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:94-96]",
+  "Remainder of game: opponent's cards that place a character out of play may not target Luke (except We Need Luke Skywalker) / Leia / Kanan per retarget state [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:97-105]",
+  "Remainder of game: auto capture-and-seize by Vader when present with non-captive target (required, includes DisembarkEffect if aboard full open vehicle) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:106-199]",
+  "Remainder of game: Vader may not transfer the escorted target (MayNotBeTransferredModifier) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151.java:200-208]",
+  "Back: LOSE 1 FORCE at end of each of your turns (required) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:69-77]",
+  "Back: once per turn, when Vader, target (even non-frozen captive) and Emperor all present at your Throne Room, may initiate duel: 2 destiny each + ability; Vader wins -> opponent loses 3; target wins -> shuffle, draw destiny, crossover total > 12 -> target crosses to Dark Side and opponent's Life Force totally depleted [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/dark/Card9_151_BACK.java:136-510]"
+ ],
+ "seedMismatches": [
+  "Seed flip claims byWhom=Filters.Vader ('CAPTURED ... byWhom Vader'). Source flip law has NO Vader requirement: it is canSpot(target AND Filters.captive) regardless of who captured or whether Vader escorts (Card9_151.java:343/359/375). Vader is only the auto-capture MECHANISM, not part of the flip condition."
+ ],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "requiredCardsOnTable empty: mandatory Insignificant Rebellion and Your Destiny start cards absent (only Throne Room appears, in objectiveNamedLocations)",
+   "keyCharacterFilter null: true actors Luke (target), Vader (capturer/duelist), Emperor (duel gate) unrepresented",
+   "flipGateSite null: no site gates the flip (captive-state), but back duel requires Throne_Room presence - no field encodes that",
+   "no representation of the Luke-captured chosen-state flip law, the retarget variants, or the end-of-your-turn 1-Force upkeep on the back; weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

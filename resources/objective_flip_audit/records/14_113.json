@@ -1,0 +1,123 @@
+{
+  "frontBp": "14_113",
+  "backBp": "14_113_BACK",
+  "side": "DARK",
+  "titleFront": "Invasion",
+  "titleBack": "In Complete Control",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips when owner CONTROLS Theed Palace Throne Room with a Neimoidian there AND CONTROLS Naboo system.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113.java:176"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113.java:177"
+        },
+        {
+          "req": "control WITH actor: owner controls Theed Palace Throne Room with a Neimoidian there",
+          "filter": "location: Filters.Theed_Palace_Throne_Room; actor: Filters.Neimoidian",
+          "gameConditions": "GameConditions.controlsWith(game, self, playerId, Filters.Theed_Palace_Throne_Room, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Neimoidian)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113.java:178"
+        },
+        {
+          "req": "control: owner controls Naboo system",
+          "filter": "Filters.Naboo_system",
+          "gameConditions": "GameConditions.controls(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Naboo_system)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113.java:179"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113.java:172-191"
+    ]
+  },
+  "flipToFront": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips back to front when OPPONENT controls Naboo system OR Theed Palace Throne Room.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113_BACK.java:96"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113_BACK.java:97"
+        },
+        {
+          "req": "control by OPPONENT of either key location",
+          "filter": "Filters.or(Filters.Naboo_system, Filters.Theed_Palace_Throne_Room)",
+          "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.or(Filters.Naboo_system, Filters.Theed_Palace_Throne_Room))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113_BACK.java:98"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/dark/Card14_113_BACK.java:91-110"
+    ]
+  },
+  "requirementSemantics": [
+    "Front flip leg 1 is CONTROL-WITH: controlsWith(Theed_Palace_Throne_Room, Neimoidian) = owner controls the site AND a Neimoidian of owner's is there (SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE). Occupation is not enough; opponent presence at the Throne Room breaks control.",
+    "Front flip leg 2 is plain CONTROL of Naboo system (controls, not occupies): requires owner presence and zero opponent presence at the system.",
+    "Back flip is opponent CONTROL (not mere presence) of EITHER Naboo system OR Theed Palace Throne Room: opponent presence alongside owner's does NOT flip it back; opponent must control outright.",
+    "Both checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, so battle-excluded cards still count for control/with."
+  ],
+  "typedIdentities": [
+    "Filters.Theed_Palace_Throne_Room",
+    "Filters.Neimoidian",
+    "Filters.Naboo_system",
+    "Filters.Naboo_site",
+    "Filters.Naboo_Swamp",
+    "Filters.Blockade_Flagship",
+    "Filters.Droid_Racks",
+    "Filters.and(Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Filters.or(Filters.and(Icon.TRADE_FEDERATION, Filters.starship), Filters.and(Filters.character, Filters.loreContains(\"Trade Federation\")))))",
+    "Filters.Civil_Disorder",
+    "Filters.and(Filters.your(self), Filters.battle_droid)",
+    "Filters.and(Filters.your(self), Icon.PRESENCE, Filters.droid)",
+    "Filters.and(Filters.your(self), Filters.droid_starfighter)"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Naboo system with Blockade Flagship there (DeployCardToLocationFromReserveDeckEffect to Filters.Naboo_system), Naboo: Swamp, and Droid Racks from Reserve Deck (front:55-86).",
+    "Front pull: once during your deploy phase, deploy a Naboo site (Filters.Naboo_site) from Reserve Deck; reshuffle (front:141-160).",
+    "No pulls/tutors coded on the back."
+  ],
+  "otherObligations": [
+    "Front, remainder of game: may not deploy cards with ability except [Trade Federation] starships and characters with 'Trade Federation' in lore; no Dejarik-rules deploys (front:89-98).",
+    "Front, remainder of game: Civil Disorder is canceled (action proxy cancels on play and on table, front:100-136).",
+    "Front, while this side up: opponent's Force icons at Naboo system are canceled (CancelForceIconsModifier, front:163-169).",
+    "Back: you lose no more than 2 Force to any Force drain (LimitForceLossFromForceDrainModifier, BACK:55).",
+    "Back: your battle droids deploy -1 (BACK:56).",
+    "Back: draws two battle destiny if unable to otherwise during a battle at a site with two differently-titled [Presence] droids (or a [Presence] droid + a Neimoidian) (BACK:57-60).",
+    "Back: your droid starfighters immune to attrition < 3 (BACK:61).",
+    "Back: once per battle, if opponent just drew an Interrupt for battle destiny, may place that destiny card out of play (optional trigger, BACK:66-88).",
+    "Strategic note from law: after flipping, owner must DENY opponent control of both Naboo system and Theed Palace Throne Room; the Neimoidian is only needed to flip forward, not to stay flipped."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": true,
+    "profileGaps": [
+      "keyCharacterFilter is null; the Neimoidian requirement lives only in flipLocationRules/actorLocationRules (actorFilterKey 'Neimoidian'), so any consumer reading keyCharacterFilter alone misses the flip actor.",
+      "All flipLocationRules/actorLocationRules are phase 'preFlip'; there is no postFlip rule expressing the back's hold requirement (flip-back if opponent CONTROLS Naboo system OR Theed Palace Throne Room).",
+      "No representation that back-flip is opponent-CONTROL (not presence) - the guard semantics for defending the two locations after flip are absent."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

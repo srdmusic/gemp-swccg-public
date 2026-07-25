@@ -1,0 +1,128 @@
+{
+  "frontBp": "208_26",
+  "backBp": "208_26_BACK",
+  "side": "LIGHT",
+  "titleFront": "Yavin 4 Base Operations",
+  "titleBack": "The Time To Fight Is Now",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Flip if 4 Rebels are on table (anywhere), OR owner controls at least 2 battleground systems with a Rebel among the controlling presence. SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE on both legs.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026.java:102"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "req": "count-spot on table: at least 4 Rebels anywhere on table",
+              "filter": "Filters.Rebel",
+              "gameConditions": "GameConditions.canSpot(game, self, 4, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Rebel)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026.java:103"
+            },
+            {
+              "req": "control-with: owner controls >=2 battleground systems with Rebel present",
+              "filter": "Filters.battleground_system (with cardFilter Filters.Rebel)",
+              "gameConditions": "GameConditions.controlsWith(game, self, playerId, 2, Filters.battleground_system, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Rebel)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026.java:104"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026.java:101-114"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Back flips to front if FEWER than 4 Rebels are on table AND owner does NOT occupy at least 2 battlegrounds (any battleground: site or system). Four Rebels on table alone holds the back regardless of occupation.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026_BACK.java:87"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "count-spot: at least 4 Rebels on table",
+              "filter": "Filters.Rebel",
+              "gameConditions": "GameConditions.canSpot(game, self, 4, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Rebel)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026_BACK.java:88"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "occupy-count: owner occupies >=2 battlegrounds (sites or systems)",
+              "filter": "Filters.battleground",
+              "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026_BACK.java:89"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_026_BACK.java:86-99"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack leg 1: on-table count semantics (canSpot 4 x Filters.Rebel), no location requirement whatsoever.",
+    "flipToBack leg 2: CONTROL-WITH semantics: owner controls >=2 battleground SYSTEMS with at least a Rebel there (cardFilter Filters.Rebel). Control, not occupy; systems, not sites.",
+    "flipToFront: conjunction of two negations: NOT (4 Rebels on table) AND NOT (owner OCCUPIES 2 battlegrounds). Note the asymmetry: front requires CONTROL of battleground SYSTEMS (or 4 Rebels); back is held by OCCUPYING any 2 battlegrounds (sites count too) or by keeping 4 Rebels.",
+    "All checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE."
+  ],
+  "typedIdentities": [
+    "Filters.Rebel (both directions, count 4; and controlsWith cardFilter)",
+    "Filters.battleground_system (front control-with leg)",
+    "Filters.battleground (back occupy leg; sites AND systems)",
+    "Filters.Yavin_4_system, Filters.Massassi_War_Room (required start deploys)",
+    "Filters.Restore_Freedom_To_The_Galaxy (optional start deploy)",
+    "Filters.system + Filters.battleground (once-per-turn download filter pair in DeployCardFromReserveDeckEffect(action, Filters.system, Filters.battleground, true))",
+    "Back: Filters.and(Filters.snub_fighter, Filters.unique, Filters.piloted); Filters.relatedSiteTo(self, Filters.and(Filters.system, Filters.occupies(playerId))); Filters.liberated_system"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, required): deploy Yavin 4 system: DeployCardFromReserveDeckEffect(Filters.Yavin_4_system, true, false) [Card208_026.java:46-52]",
+    "START OF GAME (front, required): deploy Massassi War Room: DeployCardFromReserveDeckEffect(Filters.Massassi_War_Room, true, false) [Card208_026.java:53-59]",
+    "START OF GAME (front, optional): may deploy Restore Freedom To The Galaxy (0..1): DeployCardsFromReserveDeckEffect(Filters.Restore_Freedom_To_The_Galaxy, 0, 1, true, false) [Card208_026.java:60-66]",
+    "FRONT, once per turn, cost 1 Force: deploy a battleground system from Reserve Deck: DeployCardFromReserveDeckEffect(action, Filters.system, Filters.battleground, true), GameTextActionId.YAVIN_4_BASE_OPERATIONS__DOWNLOAD_BATTLEGROUND_SYSTEM [Card208_026.java:71-93]",
+    "BACK: no Reserve Deck pulls (draw-phase action places a Lost Pile card out of play to retrieve 1 Force)."
+  ],
+  "otherObligations": [
+    "BACK: during battle at sites related to systems owner occupies, total power +2 for each piloted unique snub fighter present at that system: TotalPowerModifier(Filters.and(Filters.battleLocation, Filters.relatedSiteTo(self, Filters.and(Filters.system, Filters.occupies(playerId)))), MultiplyEvaluator(2, PresentAtRelatedSystemToAffectedCardEvaluator(Filters.and(Filters.snub_fighter, Filters.unique, Filters.piloted)))) [Card208_026_BACK.java:51-52]",
+    "BACK: once during owner's draw phase, if a 'liberated' system on table (Filters.liberated_system) and Lost Pile non-empty: place a card from Lost Pile out of play to retrieve 1 Force [Card208_026_BACK.java:57-79]",
+    "No hard-lose / place-out-of-play condition on either side."
+  ],
+  "seedMismatches": [
+    "Seed omits SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE on all legs (both directions).",
+    "Seed flipBack comparator 'LESS_THAN_UNLESS_FOUR_REBELS_ON_TABLE' compresses the law correctly but does not state the occupy filter is Filters.battleground (any battleground, sites included) while the FRONT leg is Filters.battleground_system only; the asymmetry (control systems to flip vs occupy any battlegrounds to hold) is a strategic fact absent from the seed."
+  ],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "flipGateSite is null: true flip gate is battleground systems (control 2 with Rebel); objectiveNamedLocations lists 'Battleground system' generically but nothing marks it as the gate.",
+      "keyCharacterFilter is null: Filters.Rebel is the flip law's actor (both the 4-count and the controlsWith cardFilter); not represented.",
+      "Counts not encoded: 4 Rebels on table; 2 battleground systems; back-hold threshold 2 battlegrounds.",
+      "Front-vs-back asymmetry (control battleground_system to flip; occupy any battleground to hold) is not representable/represented.",
+      "pullableCards empty: once-per-turn battleground-system download and optional Restore Freedom To The Galaxy start deploy not represented."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

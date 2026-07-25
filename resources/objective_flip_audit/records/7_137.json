@@ -1,0 +1,79 @@
+{
+ "frontBp": "7_137",
+ "backBp": "7_137_BACK",
+ "side": "LIGHT",
+ "titleFront": "Local Uprising",
+ "titleBack": "Liberation",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Flip if your matching operatives control at least 3 battleground sites related to the Subjugated planet (control-with: you control the site AND at least one of your matching operatives is there; spotting includes cards excluded from battle).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java:109"},
+    {"req": "controls-with >=3 locations (you control location, with your actor-filter card there)", "filter": "location: Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location); actor: Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet)", "gameConditions": "GameConditions.controlsWith(game, self, playerId, 3, Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java:110-111"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java:108-120"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if you do NOT occupy at least 2 battleground sites related to the Subjugated planet. Plain occupy (any of your active cards provides presence, operatives NOT required), includes excluded-from-battle.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java:127"},
+    {"op": "not", "children": [
+     {"req": "occupies >=2 locations", "filter": "Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)", "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java:128"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java:122-140"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip = CONTROL-WITH: player controls 3 distinct battleground Subjugated-planet sites, each requiring at least one of YOUR matching operatives there (actor-gated control).",
+  "Back flip = plain OCCUPY 2 (presence by any of your active cards; matching operatives NOT required to hold the back). Asymmetry: harder to flip than to hold.",
+  "Both flip checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+  "'Subjugated planet' is runtime state: gameState.setSubjugatedPlanet(systemName) chosen at objective deployment (Card7_137.java:54-55); Filters.Subjugated_planet_location resolves against it."
+ ],
+ "typedIdentities": [
+  "Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location) - flip gate locations (both sides)",
+  "Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet) - front flip actors",
+  "Filters.planet_system - setup: choose Subjugated planet",
+  "Filters.and(Filters.generic, Filters.site) - setup + per-deploy-phase download site",
+  "Filters.or(Filters.Imperial, Filters.AT_AT) - back power +2 trigger companions",
+  "Filters.on(subjugatedPlanet) - back operative-buff scope"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy any planet system from Reserve Deck (Filters.planet_system); its systemName becomes the Subjugated planet (gameState.setSubjugatedPlanet). Card7_137.java:46-56",
+  "Setup (front, required, chained): deploy one generic site (Filters.and(Filters.generic, Filters.site)) to that system from Reserve Deck. Card7_137.java:58-64",
+  "Front, once during each of your deploy phases (GameTextActionId.LOCAL_UPRISING__DOWNLOAD_SITE): deploy one generic site to the Subjugated planet from Reserve Deck; reshuffle. Card7_137.java:83-99"
+ ],
+ "otherObligations": [
+  "Back: opponent's Force drains are -1 everywhere (ForceDrainModifier(self, Filters.any, -1, opponent)). Card7_137_BACK.java:66",
+  "Back: your matching operatives on the Subjugated planet are forfeit +2. Card7_137_BACK.java:67",
+  "Back: those operatives are power +2 when at same site as an Imperial or AT-AT. Card7_137_BACK.java:68-69",
+  "Back (optional trigger): retrieve 1 Force whenever you deploy a matching operative to a Subjugated planet location. Card7_137_BACK.java:74-94",
+  "Back (once per battle): add one battle destiny when your matching operative participates in a battle on the Subjugated planet. Card7_137_BACK.java:97-119"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; true gate is battleground sites of the runtime-selected Subjugated planet (Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)) - only expressed inside objectiveNamedLocations, not as the flip gate",
+   "keyCharacterFilter is null; front flip requires Filters.matchingOperativeToSubjugatedPlanet actors",
+   "flipGateCardIds empty (unavoidably runtime-dependent, but no marker of the runtime dependency exists at profile top level)",
+   "weights empty",
+   "control-vs-occupy asymmetry (front CONTROLS_WITH 3 / back holds with plain OCCUPY 2) not represented anywhere in profile"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

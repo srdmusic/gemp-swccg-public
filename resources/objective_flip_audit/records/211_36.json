@@ -1,0 +1,98 @@
+{
+  "frontBp": "211_36",
+  "backBp": "211_36_BACK",
+  "side": "LIGHT",
+  "titleFront": "The Galaxy May Need A Legend",
+  "titleBack": "We Need Luke Skywalker",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "OPTIONAL trigger (OptionalGameTextTriggerAction, player may decline) fired when a battle is just initiated - battle-event timing, not standing state",
+    "prose": "MAY flip when a battle was just initiated involving a Resistance character, while Luke is on Ahch-To. Flipping immediately places Luke out of play and prevents all weapon firing for remainder of that battle (coded on the back's cardFlipped trigger).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "timing trigger: battle just initiated",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.battleInitiated(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036.java:142"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036.java:143"
+        },
+        {
+          "req": "battle participant: a Resistance character is in the just-initiated battle",
+          "filter": "Filters.Resistance_character",
+          "gameConditions": "GameConditions.isDuringBattleWithParticipant(game, Filters.Resistance_character)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036.java:144"
+        },
+        {
+          "req": "presence (card-on-planet): Luke on Ahch-To",
+          "filter": "Filters.and(Filters.Luke, Filters.on(Title.Ahch_To))",
+          "gameConditions": "GameConditions.canSpot(game, self, Filters.and(Filters.Luke, Filters.on(Title.Ahch_To)))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036.java:145"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036.java:138-157"
+    ]
+  },
+  "flipToFront": {
+    "timing": "NEVER. Back has no flip trigger and no lose/out-of-play condition. Instead, on the flip itself (cardFlipped) a REQUIRED trigger fires.",
+    "prose": "On cardFlipped: required action places Luke out of play (PlaceCardOutOfPlayFromTableEffect on Filters.findFirstActive(game, self, Filters.Luke); comment notes immunity to Bring Him Before Me restrictions) and adds MayNotBeFiredModifier(Filters.any) until end of battle - no weapons may be fired for remainder of that battle.",
+    "expression": null,
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/light/Card211_036_BACK.java:51-73"
+    ]
+  },
+  "requirementSemantics": [
+    "Flip is OPTIONAL and event-timed: only available in the trigger window right after a battle initiation with a Resistance character participating; Rando must actively choose it - no automatic table-state flip exists.",
+    "Luke leg is presence-on-planet semantics: Filters.on(Title.Ahch_To) (anywhere on the Ahch-To planet), not control/occupy of a specific site.",
+    "Flip COST (in effect): Luke is placed out of play by the back's required cardFlipped trigger - flipping trades Luke permanently for the back-side engine.",
+    "The once-per-game Force Pile upload is shared across both sides via GameTextActionId.THE_GALAXY_MAY_NEED_A_LEGEND_FORCE_PILE_UPLOAD; on the back it is additionally gated by self.getWhileInPlayData() == null, and both sides stamp WhileInPlayData(true) after use."
+  ],
+  "typedIdentities": [
+    "Filters.and(Filters.Luke, Filters.on(Title.Ahch_To))",
+    "Filters.Resistance_character",
+    "Filters.AhchTo_Saddle",
+    "Filters.and(Filters.battleground, Icon.EPISODE_VII)",
+    "Filters.AhchTo_location",
+    "Filters.on(Title.Ahch_To) (no Force drain there, front)",
+    "Filters.or(Filters.and(Filters.location, Icon.EPISODE_I), Filters.and(Filters.not(Icon.EPISODE_VII), Filters.character, Filters.abilityMoreThan(4))) (may not deploy)",
+    "Filters.Luke may deploy only to Filters.AhchTo_location (MayNotDeployToLocationModifier with Filters.not(Filters.AhchTo_location))",
+    "Filters.and(Filters.unique, Filters.Resistance_character, Filters.your(self)) (back drain +1 pairs; destiny-cancel needs 2 participating)",
+    "Filters.opponents(self) immunity to attrition limited to < 6 (back)"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Ahch-To: Saddle and any [Episode VII] battleground (Filters.and(Filters.battleground, Icon.EPISODE_VII)) from Reserve Deck (front:55-72).",
+    "Front pull: once per turn (deploy phase check isOnceDuringYourPhase DEPLOY), deploy an Ahch-To location or [Episode VII] battleground from Reserve Deck: Filters.or(Filters.AhchTo_location, Filters.and(Filters.battleground, Icon.EPISODE_VII)) (front:119-133).",
+    "Shared once-per-game: take any one card into hand from Force Pile; reshuffle (front:96-117; also available on back if WhileInPlayData not set, BACK:81-103).",
+    "Back: once during your turn, peek at top card of Force Pile and Reserve Deck, return both (any order) to top of one of those piles (BACK:105-122)."
+  ],
+  "otherObligations": [
+    "Front, remainder of game: Luke deploys only to Ahch-To; you may not Force drain on Ahch-To; may not deploy [Episode I] locations or non-[Episode VII] characters of ability > 4 (front:74-87).",
+    "Back, on flip: Luke placed out of play; weapons may not be fired for remainder of battle (BACK:51-73).",
+    "Back: opponent's immunity to attrition limited to < 6 (BACK:132).",
+    "Back: your Force drains +1 where you have two of your unique Resistance characters together (ForceDrainModifier via Filters.sameLocationAs pairs, BACK:133).",
+    "Back: once per turn during battle with 2+ of your unique Resistance characters participating, may cancel an opponent's just-drawn destiny to cause a redraw (BACK:138-160).",
+    "Strategic note from law: the flip is a one-way trade of Luke for the Resistance engine; Rando should only flip when Luke has finished his front-side job (drain denial is on Ahch-To anyway) and 2+ unique Resistance characters can be paired for drains/destiny control."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "keyCharacterFilter is null; the flip requires Luke on Ahch-To AND a Resistance character participating in a just-initiated battle - neither actor is encoded.",
+      "No representation that the flip is OPTIONAL and battle-initiation-timed (no table-state flip exists); profile fields assume standing-state gates.",
+      "No representation of the flip consequence: Luke is placed out of play immediately on flip (Rando must value-check Luke before choosing to flip).",
+      "flipGateSite null; the gate 'location' is the whole Ahch-To planet (Filters.on(Title.Ahch_To)), plus any battleground for the battle leg - not expressible via current fields but objectiveNamedLocations only lists Saddle/Ahch-To location/Ep7 battleground without flip tagging."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

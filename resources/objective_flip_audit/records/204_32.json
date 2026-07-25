@@ -1,0 +1,91 @@
+{
+ "frontBp": "204_32",
+ "backBp": "204_32_BACK",
+ "side": "LIGHT",
+ "titleFront": "Old Allies",
+ "titleBack": "We Need Your Help",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Flip if (you CONTROL Jakku system AND OCCUPY two Jakku battleground sites) OR (you OCCUPY Jakku system AND CONTROL two Jakku battleground sites).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java:130"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java:131"},
+    {"op": "anyOf", "children": [
+     {"op": "allOf", "children": [
+      {"req": "owner CONTROL (includes excluded-from-battle)", "filter": "Filters.Jakku_system", "gameConditions": "GameConditions.controls(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jakku_system)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java:132"},
+      {"req": "owner OCCUPY count 2 (includes excluded-from-battle)", "filter": "Filters.Jakku_battleground_site", "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jakku_battleground_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java:133"}
+     ]},
+     {"op": "allOf", "children": [
+      {"req": "owner OCCUPY (includes excluded-from-battle)", "filter": "Filters.Jakku_system", "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jakku_system)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java:134"},
+      {"req": "owner CONTROL count 2 (includes excluded-from-battle)", "filter": "Filters.Jakku_battleground_site", "gameConditions": "GameConditions.controls(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jakku_battleground_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java:135"}
+     ]}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032.java:126-147"]
+ },
+ "flipToFront": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Back flips to front if you do NOT occupy two battlegrounds (ANY battlegrounds anywhere, not just Jakku; sites and systems both count - Filters.battleground).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032_BACK.java:125"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032_BACK.java:126"},
+    {"op": "not", "children": [
+     {"req": "owner OCCUPY count 2 (includes excluded-from-battle)", "filter": "Filters.battleground", "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032_BACK.java:127"}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set204/light/Card204_032_BACK.java:120-139"]
+ },
+ "requirementSemantics": [
+  "Flip-to-back mixes CONTROL and OCCUPY explicitly in a symmetric either-way pair: (control system + occupy 2 battleground sites) OR (occupy system + control 2 battleground sites). The distinction is live: one branch only needs presence at the system, the other only needs presence at the sites.",
+  "System leaf class is Filters.Jakku_system (system itself, battleground status not required by the filter); site leaf class is Filters.Jakku_battleground_site (battleground sites on Jakku only).",
+  "Flip-back is OCCUPY (presence), count 2, over ALL battlegrounds anywhere (Filters.battleground includes battleground systems and sites) - much looser than the flip condition; keeping any two battlegrounds occupied anywhere holds the back.",
+  "No place-out-of-play condition on either side.",
+  "Back reduce-Force-loss action uses CONTROL count 2 of Filters.Jakku_battleground (no SpotOverride) - control, not occupy (Card204_032_BACK.java:80)."
+ ],
+ "typedIdentities": [
+  "Filters.Jakku_system (setup deploy; flip leaf)",
+  "Filters.Jakku_battleground_site (flip leaf, count 2)",
+  "Filters.battleground (flip-back occupy class, count 2)",
+  "Filters.Niima_Outpost_Shipyard (setup deploy site; Falcon destination)",
+  "Filters.and(Icon.EPISODE_VII, Filters.Falcon) (setup deploy to Niima Outpost Shipyard, DeploymentRestrictionsOption.allowToDeployLandedToExteriorSites())",
+  "Filters.Graveyard_Of_Giants (optional setup deploy, 0-1)",
+  "Filters.Jakku_location (once-per-turn download class, both sides, shared GameTextActionId.OLD_ALLIES__DOWNLOAD_JAKKU_LOCATION)",
+  "Deploy ban (remainder of game): Filters.or(Filters.Luke, Filters.Jedi, Filters.Harc, Filters.title(Title.Combined_Fleet_Action))",
+  "Filters.Your_Destiny (suspended); Filters.and(Filters.opponents(self), Filters.Objective, Icon.REFLECTIONS_II) gets ModifyGameTextType.REFLECTIONS_II_OBJECTIVE__TARGETS_REY_INSTEAD_OF_LUKE; Filters.Visage_Of_The_Emperor suspended while AtCondition(self, Filters.Rey, Filters.battleground_site)",
+  "Back: Filters.Jakku_battleground (control 2 for loss-reduction); Filters.and(Filters.your(self), Filters.Resistance_character) (destiny -2 battle window); Filters.and(Filters.your(self), Icon.EPISODE_VII, Filters.or(Filters.character, Filters.starship), Filters.with(self, Filters.Han)) (defense value +2)"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Jakku system (Card204_032.java:56), Niima Outpost Shipyard (Card204_032.java:63), [Episode VII] Falcon to Niima Outpost Shipyard, allowed to deploy landed to exterior sites (Card204_032.java:70).",
+  "Start of game (OPTIONAL, 0-1, from Reserve Deck): Graveyard Of Giants (Card204_032.java:76-81).",
+  "FRONT and BACK (same once-per-turn budget, shared action id): deploy a Jakku location from Reserve Deck; reshuffle (Card204_032.java:104-123; Card204_032_BACK.java:48-67)."
+ ],
+ "otherObligations": [
+  "FOR REMAINDER OF GAME (granted after deployment completes, Card204_032.java:86-101): may not deploy Combined Fleet Action, Harc Seff, Luke, or Jedi; Your Destiny suspended; opponent's [Reflections II] objective targets Rey instead of Luke; Visage Of The Emperor suspended while Rey at a battleground site (keep Rey on a battleground site to keep Visage off).",
+  "BACK: once during opponent's control phase, if you control two Jakku battlegrounds and are about to lose more than 1 Force (except to a Force drain at a Jakku location), may reduce that loss to 1 (Card204_032_BACK.java:76-91).",
+  "BACK: once per turn during battle involving your Resistance character, may subtract 2 from a just-drawn destiny (Card204_032_BACK.java:96-109).",
+  "BACK: your [Episode VII] characters and starships with Han are defense value +2 (Card204_032_BACK.java:116).",
+  "Rando obligation implied by flip-back: while on back, ALWAYS keep at least two battlegrounds occupied (anywhere); losing that flips back to front and re-imposes nothing new but loses all back-side benefits."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateSite is null; the flip gate is the Jakku system + two Jakku battleground sites combination - the count-2 requirement and the control/occupy either-way pairing are not represented.",
+   "flipGateCardIds is empty although the profile's own objectiveNamedLocations resolves Jakku system to [204_26, 204_51] and Niima Outpost Shipyard to [204_27].",
+   "requiredCardsOnTable is empty; [Episode VII] Falcon is a REQUIRED setup deploy (and its home site Niima Outpost Shipyard is one of the two obvious Jakku battleground sites) - unrepresented.",
+   "keyCharacterFilter is null; no flip actor exists (acceptable), but Rey (Visage suspension) and Han (defense bonus) obligations have no representation.",
+   "Flip-back hazard (must occupy 2 battlegrounds ANYWHERE) appears only as a generic 'Battleground' fragment with no count or occupy semantics."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

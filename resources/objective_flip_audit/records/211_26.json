@@ -1,0 +1,83 @@
+{
+ "frontBp": "211_26",
+ "backBp": "211_26_BACK",
+ "side": "DARK",
+ "titleFront": "A Stunning Move",
+ "titleBack": "A Valuable Hostage",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Flip if the Insidious Prisoner card (found via Filters.findFirstActive) is attached to an Invisible Hand site. Card-attached-to-location semantics, not control/occupy.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026.java:100"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026.java:101"},
+    {"req": "card-attached-to-location: Insidious Prisoner (first active) attached to Invisible Hand site", "filter": "Filters.Insidious_Prisoner attached to Filters.Invisible_Hand_site", "gameConditions": "GameConditions.isAttachedTo(game, insidiousPrisoner, Filters.Invisible_Hand_site) where insidiousPrisoner = Filters.findFirstActive(game, self, Filters.Insidious_Prisoner)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026.java:98,102"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026.java:96-113"]
+ },
+ "flipToFront": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Back flips to front if Insidious Prisoner exists on table (non-null) and is NOT attached to an Invisible Hand site. If Insidious Prisoner has left the table entirely, the back does NOT flip (null guard).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026_BACK.java:186"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026_BACK.java:187"},
+    {"op": "not", "children": [
+     {"req": "card-attached-to-location", "filter": "Filters.Insidious_Prisoner attached to Filters.Invisible_Hand_site", "gameConditions": "GameConditions.isAttachedTo(game, insidiousPrisoner, Filters.Invisible_Hand_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026_BACK.java:188"}
+    ]},
+    {"req": "card-on-table: Insidious Prisoner exists (null guard)", "filter": "Filters.Insidious_Prisoner", "gameConditions": "insidiousPrisoner != null (from Filters.findFirstActive(game, self, Filters.Insidious_Prisoner))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026_BACK.java:184,189"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set211/dark/Card211_026_BACK.java:184-198"]
+ },
+ "requirementSemantics": [
+  "Both flip laws are pure card-attachment checks on the Insidious Prisoner card: attached / not-attached to a site of the Invisible Hand. No control, no occupy, no presence requirement for either flip.",
+  "The FLIP check uses Filters.Invisible_Hand_site; the front's DOWNLOAD action instead builds Filters.siteOfStarshipOrVehicle(Persona.INVISIBLE_HAND, true) inline (Card211_026.java:75). Two different filter expressions for the same concept - record as-is.",
+  "Back flip-back has an explicit null guard: Insidious Prisoner gone from table = back is frozen (does not flip back).",
+  "No place-out-of-play condition on either side; front source comment at Card211_026.java:71-73 explicitly notes the once-per-turn action is front text coded on both sides because there is no place-out-of-play condition.",
+  "Back control-phase Force loss requires your [Separatist] CHARACTER at the location where Insidious Prisoner is attached: Filters.and(your, character, Icon.SEPARATIST) at Filters.at(Filters.hasAttached(Filters.Insidious_Prisoner)) (Card211_026_BACK.java:65-68)."
+ ],
+ "typedIdentities": [
+  "Filters.Insidious_Prisoner (the flip token card; deployed to 500 Republica at setup)",
+  "Filters.Invisible_Hand_site (flip gate class, both directions)",
+  "Filters.siteOfStarshipOrVehicle(Persona.INVISIBLE_HAND, true) (download-action variant of the same class)",
+  "Filters._500_Republica (setup site; Insidious Prisoner start location)",
+  "Filters.Private_Platform (setup site)",
+  "Filters.and(Icon.SEPARATIST, Filters.droid) (download alternative; NOTE: code omits Filters.non_unique despite card text and action message saying 'non-unique [Separatist] droid' - Card211_026.java:76, Card211_026_BACK.java:79)",
+  "Deploy ban (remainder of game): Filters.and(Filters.or(Filters.Sidious, Filters.First_Order_character, Filters.Imperial))",
+  "Filters.Grievous (immunity to attrition +2, remainder of game)",
+  "Back: Filters.and(Filters.opponents(self.getOwner()), Filters.or(Filters.Jedi, Filters.starship, Filters.vehicle)) with Filters.immunityToAttritionMoreThan(5) limited to 5; Filters.and(Filters.your(playerId), Filters.character, Icon.SEPARATIST) at Filters.at(Filters.hasAttached(Filters.Insidious_Prisoner))"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): 500 Republica (Card211_026.java:50), Insidious Prisoner deployed to 500 Republica (Card211_026.java:51), Private Platform (Card211_026.java:52).",
+  "FRONT and BACK (same GameTextActionId.A_STUNNING_MOVE__DOWNLOAD_SITE_OR_NONUNIQUE_SEPARATIST_DROID, once during your deploy phase): deploy an Invisible Hand site OR a [Separatist] droid from Reserve Deck (Filters.or(Filters.siteOfStarshipOrVehicle(Persona.INVISIBLE_HAND, true), Filters.and(Icon.SEPARATIST, Filters.droid))) (Card211_026.java:70-94; Card211_026_BACK.java:74-95). Code does not enforce non-unique on the droid despite the printed text.",
+  "BACK: once during your turn, search your Force Pile, reveal one card; opponent chooses: lose 2 Force to put it on bottom of your Used Pile, or you take it into hand; reshuffle (Card211_026_BACK.java:114-158, GameTextActionId.A_STUNNING_MOVE__REVEAL_CARD_FROM_FORCE_PILE)."
+ ],
+ "otherObligations": [
+  "FOR REMAINDER OF GAME (granted after deployment completes, Card211_026.java:57-67): you may not deploy Sidious, First Order characters, or Imperials; Grievous immunity to attrition +2.",
+  "BACK: immunity to attrition of opponent's Jedi, starships, and vehicles limited to < 5 (Card211_026_BACK.java:55-63).",
+  "BACK: during your control phase, if your [Separatist] character is with Insidious Prisoner (at the location it is attached to), opponent loses 1 Force - offered as top-level (Card211_026_BACK.java:97-112) and FORCED at end of your control phase if unused (166-182).",
+  "Rando obligations: front - get an Invisible Hand site out (download) and move/relocate Insidious Prisoner there; back - keep the prisoner at the Invisible Hand site AND garrison a Separatist character there for the drain-1 engine; protect Insidious Prisoner (its loss freezes the back but kills the Force-loss engine)."
+ ],
+ "seedMismatches": [
+  "Seed K2 rows40-57 WIP (entry 211_26, 'characters' item) claims the [Separatist] droid pull is 'non-unique enforced at deploy'; the actual filter in both front and back java is Filters.and(Icon.SEPARATIST, Filters.droid) with NO Filters.non_unique term (Card211_026.java:76, Card211_026_BACK.java:79). Card text and setActionMsg say non-unique, but the coded filter does not enforce it."
+ ],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; the true flip gate is the dynamic Invisible Hand site class (persona-derived, no fixed blueprint id) - it appears in objectiveNamedLocations as a filter-string entry but no field marks it as the gate.",
+   "flipGateCardIds and requiredCardsOnTable are empty; Insidious Prisoner (211_11, the card whose attachment IS the flip law) is entirely absent from the profile.",
+   "keyCharacterFilter is null; back-side engine needs a your-[Separatist]-character escort at the prisoner's location - unrepresented.",
+   "pullableCards is empty; the Invisible Hand site / Separatist droid download (the flip enabler) is unrepresented.",
+   "No representation of the flip-back hazard (prisoner not at an Invisible Hand site flips back; prisoner lost freezes the back)."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

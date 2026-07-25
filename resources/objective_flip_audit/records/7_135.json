@@ -1,0 +1,113 @@
+{
+  "frontBp": "7_135",
+  "backBp": "7_135_BACK",
+  "side": "LIGHT",
+  "titleFront": "Dantooine Base Operations",
+  "titleBack": "More Dangerous Than You Realize",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Flip if owner controls at least 3 Dantooine sites each with a Rebel contributing to control, AND opponent controls zero Dantooine locations. Both checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135.java:110"
+        },
+        {
+          "req": "control-with: owner controls >=3 locations matching filter, with cardFilter (Rebel) cards among the controlling presence",
+          "filter": "Filters.Dantooine_site (with cardFilter Filters.Rebel)",
+          "gameConditions": "GameConditions.controlsWith(game, self, playerId, 3, Filters.Dantooine_site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Rebel)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135.java:111"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "control: opponent controls >=1 location matching filter",
+              "filter": "Filters.Dantooine_location",
+              "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Dantooine_location)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135.java:112"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135.java:109-122"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Back flips to front if opponent controls at least 2 Dantooine locations (count becomes 3 when legacy game-text modification LEGACY__MORE_DANGEROUS_THAN_YOU_REALIZE__REQUIRES_THREE_SITES_TO_FLIP_BACK is active). SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135_BACK.java:93"
+        },
+        {
+          "req": "control: opponent controls >=N Dantooine locations, N=2 normally, N=3 if legacy game-text modification is active",
+          "filter": "Filters.Dantooine_location",
+          "gameConditions": "GameConditions.controls(game, opponent, (hasGameTextModification(ModifyGameTextType.LEGACY__MORE_DANGEROUS_THAN_YOU_REALIZE__REQUIRES_THREE_SITES_TO_FLIP_BACK) ? 3 : 2), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Dantooine_location)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135_BACK.java:94"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_135_BACK.java:92-104"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack leaf 1: CONTROL-WITH semantics (GameConditions.controlsWith = player controls at least count locations matching locationFilter with at least one card matching cardFilter there): 3x Dantooine site controlled with Rebel. NOT mere occupation; control required, and a Rebel must be among the presence.",
+    "flipToBack leaf 2: CONTROL semantics negated: opponent must control ZERO Dantooine locations (any Dantooine location, sites AND system).",
+    "flipToFront leaf: CONTROL semantics: opponent controls >=2 (or 3 under legacy mod) Dantooine locations. Location scope is Dantooine_location (system included), broader than the front's site-only owner requirement.",
+    "All control checks pass SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, so cards excluded from battle still count for control."
+  ],
+  "typedIdentities": [
+    "Filters.Dantooine_site (flip gate locations, owner side)",
+    "Filters.Dantooine_location (opponent constraint on front; opponent flip-back locations on back)",
+    "Filters.Rebel (controlsWith card filter)",
+    "Filters.Dantooine_system / Filters.and(Filters.Dantooine_system) (start-of-game deploy)",
+    "Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Rebel)) (per-turn Reserve Deck deploy to Title.Dantooine)",
+    "Filters.Imperial + Filters.Dantooine_location (deploy cost modifier, both sides)",
+    "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dantooine, true)) (blown-away place-out-of-play, both sides)",
+    "Back only: Filters.and(Filters.your(self), Filters.squadron); Filters.wherePresent(self, yourSquadrons)"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, required): deploy Dantooine system from Reserve Deck: DeployCardFromReserveDeckEffect(Filters.and(Filters.Dantooine_system), true, false) [Card7_135.java:50-59]",
+    "FRONT, once per owner's deploy phase: deploy from Reserve Deck to system Title.Dantooine one card matching Filters.or(Filters.site, Filters.and(Filters.non_unique, Filters.Rebel)); reshuffle. Gated by GameConditions.isOnceDuringYourPhase(Phase.DEPLOY) + canDeployCardFromReserveDeck. GameTextActionId.DANTOOINE_BASE_OPERATIONS__DOWNLOAD_SITE_OR_NONUNIQUE_REBEL_TO_DANTOOINE [Card7_135.java:63-79]",
+    "BACK: no pulls/tutors."
+  ],
+  "otherObligations": [
+    "FRONT+BACK: each Imperial is deploy +2 at Dantooine locations: DeployCostToLocationModifier(self, Filters.Imperial, 2, Filters.Dantooine_location) [Card7_135.java:87, Card7_135_BACK.java:60]",
+    "FRONT+BACK hard-lose: place Objective out of play if Dantooine system is 'blown away': TriggerConditions.isBlownAwayLastStep(Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dantooine, true))) -> PlaceCardOutOfPlayFromTableEffect [Card7_135.java:97-106, Card7_135_BACK.java:80-89]",
+    "BACK: opponent's Force drains are -1 everywhere: ForceDrainModifier(self, Filters.any, -1, opponent) [Card7_135_BACK.java:59]",
+    "BACK: your squadrons may deploy to Dantooine system: MayDeployToSystemModifier(self, yourSquadrons, Title.Dantooine) [Card7_135_BACK.java:61]",
+    "BACK: squadron deploy cost = power - 3: UseCalculationForDeployCostModifier(yourSquadrons, SubtractEvaluator(PowerEvaluator(), 3)) [Card7_135_BACK.java:62-67]",
+    "BACK: your squadrons immune to attrition < 4: ImmuneToAttritionLessThanModifier(self, yourSquadrons, 4) [Card7_135_BACK.java:68]",
+    "BACK: your squadrons may draw one battle destiny if unable otherwise: DrawsBattleDestinyIfUnableToOtherwiseModifier(self, yourSquadrons, 1) [Card7_135_BACK.java:69]",
+    "BACK: your Force drains +1 at systems where you have a squadron present: ForceDrainModifier(self, Filters.wherePresent(self, yourSquadrons), 1, playerId) [Card7_135_BACK.java:70]"
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": true,
+    "profileGaps": [
+      "flipGateSite is null: true flip gate is Dantooine sites (Filters.Dantooine_site, need 3 Rebel-controlled) and no gate location is named.",
+      "keyCharacterFilter is null: flip law requires Filters.Rebel as the controlling actor (controlsWith cardFilter); Rebel is not covered anywhere in the profile.",
+      "Opponent-side constraint (opponent controls ZERO Filters.Dantooine_location) is not represented in any profile field.",
+      "Flip count threshold (3 sites) is not represented; flipGateCardIds and requiredCardsOnTable are empty and weights are empty.",
+      "objectiveNamedLocations does cover Filters.Dantooine_system/site/location filters, but only as untyped named locations with no flip-gate role."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

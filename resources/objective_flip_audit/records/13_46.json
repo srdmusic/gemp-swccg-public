@@ -1,0 +1,79 @@
+{
+ "frontBp": "13_46",
+ "backBp": "13_46_BACK",
+ "side": "LIGHT",
+ "titleFront": "We'll Handle This",
+ "titleBack": "Duel Of The Fates",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds. OPPONENT-DRIVEN: fires when opponent's Dark Jedi shows up.",
+  "prose": "Flip if an opponent's Dark Jedi is PRESENT at an interior Naboo battleground site (presentAt = actual presence at the site, spotting includes excluded-from-battle).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046.java:147"},
+    {"req": "canSpot card (presence-at-location)", "filter": "Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.presentAt(Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.presentAt(Filters.and(Filters.interior_Naboo_site, Filters.battleground_site))))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046.java:148-149"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046.java:143-161"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds. Flip is accompanied by retrieve 1 Force.",
+  "prose": "Back flips to front (and owner retrieves 1 Force) if opponent has NO Dark Jedi present at any interior Naboo battleground site - exact negation of the front flip spot.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046_BACK.java:181"},
+    {"op": "not", "children": [
+     {"req": "canSpot card (presence-at-location)", "filter": "Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.presentAt(Filters.and(Filters.interior_Naboo_site, Filters.battleground_site)))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.presentAt(Filters.and(Filters.interior_Naboo_site, Filters.battleground_site))))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046_BACK.java:182-183"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set13/light/Card13_046_BACK.java:176-197"
+  ]
+ },
+ "requirementSemantics": [
+  "Flip trigger both ways is OPPONENT PRESENCE (Filters.presentAt), not control and not occupy: a single opponent Dark Jedi present at an interior Naboo battleground site flips front->back; zero such Dark Jedi flips back->front (+1 Force retrieval).",
+  "The objective's own side never flips it forward by board development; it toggles purely on opponent's Dark Jedi positioning. Both spots use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+  "Back->front retrieval: FlipCardEffect followed by RetrieveForceEffect(playerId, 1) in the same required action. Card13_046_BACK.java:189-193"
+ ],
+ "typedIdentities": [
+  "Filters.and(Filters.opponents(self), Filters.Dark_Jedi) - flip actor (opponent's)",
+  "Filters.and(Filters.interior_Naboo_site, Filters.battleground_site) - flip gate locations",
+  "Filters.Theed_Palace_Generator_Core, Filters.Theed_Palace_Generator, Filters.Inner_Strength - setup deploys",
+  "Filters.interior_Theed_Palace_site - front lost-target action scope",
+  "Filters.and(Filters.your(self), Filters.Jedi) - front drain-protection + targeting enabler; back drain/battle self-ban scope",
+  "Filters.or(Filters.undercover_spy, Filters._5D6RA7) and Filters.or(Filters.spy, Filters.droid) - errata'd target restrictions via ModifyGameTextType.WELL_HANDLE_THIS__ONLY_TARGET_UNDERCOVER_SPIES_AND_5D6RA7 / LEGACY__WELL_HANDLE_THIS__ONLY_TARGET_DROIDS_AND_SPIES"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Theed Palace Generator Core from Reserve Deck. Card13_046.java:57-63",
+  "Setup (front, required): deploy Theed Palace Generator from Reserve Deck. Card13_046.java:64-70",
+  "Setup (front, required): deploy Inner Strength (Effect) from Reserve Deck. Card13_046.java:71-77",
+  "No download/tutor actions on either side after setup."
+ ],
+ "otherObligations": [
+  "Front: opponent may not Force drain at same location as opponent's Dark Jedi. Card13_046.java:87",
+  "Front: your Force drains at Naboo sites where you have a Jedi may not be canceled. Card13_046.java:88",
+  "Front (once during your control phase): target one opponent character present with your Jedi at an interior Theed Palace site; target is lost (target set can be narrowed by ModifyGameTextType errata). Card13_046.java:93-141",
+  "Back: you may NOT Force drain or initiate battle at any location where you have a Jedi (self-restriction Rando must play around). Card13_046_BACK.java:60-68",
+  "Back (once during your move phase): your Jedi may initiate lightsaber combat vs opponent's Dark Jedi present: each draws 2 destiny, loser loses 2 Force (cannot be reduced); if difference >=5, loss comes from Reserve Deck and losing character is lost. Card13_046_BACK.java:71-173"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; true gate is interior Naboo battleground sites (Filters.and(Filters.interior_Naboo_site, Filters.battleground_site))",
+   "keyCharacterFilter is null; flip actor is OPPONENT'S Dark Jedi (Filters.Dark_Jedi) - opponent-driven flip has no representation",
+   "all objectiveNamedLocations entries have null labels and empty titleFragments/blueprintIds (filter strings only)",
+   "requiredCardsOnTable empty; setup requires Inner Strength on table",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

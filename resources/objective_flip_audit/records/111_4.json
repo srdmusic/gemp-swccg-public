@@ -1,0 +1,70 @@
+{
+ "frontBp": "111_4",
+ "backBp": "111_4_BACK",
+ "side": "LIGHT",
+ "titleFront": "Massassi Base Operations",
+ "titleBack": "One In A Million",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Flip if you CONTROL three Yavin 4 sites AND opponent does NOT control three Yavin 4 sites.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004.java:134"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004.java:135"},
+    {"req": "owner CONTROL count 3 (includes excluded-from-battle)", "filter": "Filters.Yavin_4_site", "gameConditions": "GameConditions.controls(game, playerId, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Yavin_4_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004.java:136"},
+    {"op": "not", "children": [
+     {"req": "opponent CONTROL count 3 (includes excluded-from-battle)", "filter": "Filters.Yavin_4_site", "gameConditions": "GameConditions.controls(game, opponent, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Yavin_4_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004.java:137"}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004.java:133-147"]
+ },
+ "flipToFront": {
+  "timing": "NONE",
+  "prose": "The back (One In A Million) has no flip-back trigger of any kind; once flipped, it stays on the back for the rest of the game. Verified: Card111_004_BACK.java contains no FlipCardEffect.",
+  "expression": null,
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set111/light/Card111_004_BACK.java:87-102"]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is CONTROL (GameConditions.controls), count 3, over the location class Filters.Yavin_4_site - not occupy, no named individual site, no character requirement.",
+  "The negative leaf is opponent CONTROL count 3 of the same class ('opponent controls fewer than three Yavin 4 sites' coded as NOT controls-3).",
+  "Place out of play (FRONT ONLY): event trigger TriggerConditions.isBlownAwayLastStep on Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Yavin_4, true)) (Card111_004.java:122-131). The BACK java has NO out-of-play trigger - once flipped, Yavin 4 being blown away no longer kills the objective.",
+  "Back is permanent: no maintenance obligation to keep the 3-site control after flipping."
+ ],
+ "typedIdentities": [
+  "Filters.Yavin_4_site (flip control class; front download target; front force-generation limit class)",
+  "Filters.Yavin_4_system (setup deploy; front blown-away out-of-play target as Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Yavin_4, true)))",
+  "Filters.Yavin_4_Docking_Bay (setup deploy)",
+  "Filters.or(Filters.Yavin_4_site, Filters.Yavin_4_sector) (front: you may not Force drain there, remainder of game)",
+  "Filters.Revolution (may not play, remainder of game)",
+  "Filters.Imperial deploy +2 to Filters.Yavin_4_location (front)",
+  "Back: Filters.or(Filters.Rebel_Tech, Filters.Death_Star_system, Filters.Attack_Run, Filters.Proton_Torpedoes) (upload); Filters.and(Filters.your(self), Filters.Death_Star_system) with ModifyGameTextType.DEATH_STAR__MAY_DEPLOY_WITHOUT_COMPLETING_DEATH_STAR_PLANS; Filters.and(Filters.system, Filters.battleLocation) total power +3; drain +2 at Filters.and(Filters.battleground_system, Filters.wherePresent(self, Filters.and(Filters.your(self), Filters.starfighter, Filters.hasAboard(self, Filters.pilot_character)))) conditioned on BlownAwayCondition(Death Star system); +3 Force loss per Filters.and(Filters.opponents(self), Filters.Death_Star_site, Filters.notIgnoredDuringEpicEventCalculation(true)) at Death Star blown-away calc step"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Yavin 4 system (Card111_004.java:56), Yavin 4: Docking Bay (Card111_004.java:63).",
+  "FRONT: once during each of your deploy phases, deploy one Yavin 4 site from Reserve Deck; reshuffle (Card111_004.java:95-114, GameTextActionId.MASSASSI_BASE_OPERATIONS__DOWNLOAD_YAVIN_4_SITE) - this is the engine for reaching the 3-site flip threshold.",
+  "BACK: once during each of your deploy phases, take one Rebel Tech, Death Star system, Attack Run, or Proton Torpedoes into hand from Reserve Deck; reshuffle (Card111_004_BACK.java:63-83, GameTextActionId.ONE_IN_A_MILLION__UPLOAD_CARD)."
+ ],
+ "otherObligations": [
+  "FOR REMAINDER OF GAME (granted after deployment completes, Card111_004.java:73-82): you may not play Revolution; you may not Force drain at Yavin 4 sites or sectors (your own drain economy on Yavin is dead - the win path is Attack Run, not drains).",
+  "FRONT: you generate no more than 1 Force from each Yavin 4 site (Card111_004.java:89); each Imperial is deploy +2 to Yavin 4 locations (90).",
+  "FRONT: Yavin 4 system blown away = objective placed out of play (Card111_004.java:122-131). This hazard disappears after the flip (no such trigger in back java).",
+  "BACK: may deploy Death Star system without completing Death Star Plans (Card111_004_BACK.java:54); your total power +3 in battles at systems (55); if Death Star blown away: +3 to blown-away Force loss per opponent's Death Star site (89-98) and, for remainder of game, your Force drains +2 at battleground systems where you have a starfighter with a pilot character aboard (56-58)."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateSite is null; the flip gate is the location CLASS Filters.Yavin_4_site with count 3 plus an opponent-fewer-than-3 constraint - the count and the opponent constraint are not representable/represented anywhere in the profile.",
+   "objectiveNamedLocations entries carry null labels and empty titleFragments (filter strings only); one entry has blueprintIds [2_143, 7_117, 216_7] (Death Star system) with no label or filter.",
+   "pullableCards is empty; front Yavin-4-site download (the flip engine) and back upload package (Rebel Tech / Death Star system / Attack Run / Proton Torpedoes) are unrepresented.",
+   "No representation that the front cannot Force drain at Yavin 4 sites/sectors (changes what 'control' is worth) nor that the out-of-play hazard (Yavin 4 blown away) exists on the front only."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

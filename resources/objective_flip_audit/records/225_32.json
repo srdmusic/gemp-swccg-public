@@ -1,0 +1,74 @@
+{
+ "frontBp": "225_32",
+ "backBp": "225_32_BACK",
+ "side": "DARK",
+ "titleFront": "The First Order Reigns",
+ "titleBack": "The Resistance Is Doomed",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Table-changed poll against a persistent state check (GameConditions.isBlownAway, NOT isBlownAwayLastStep) - fires on the first table change once Tracked Fleet has been 'annihilated'",
+  "prose": "Flip if Tracked Fleet is 'annihilated' - coded as the blown-away state of Filters.Tracked_Fleet.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032.java:127"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032.java:128"},
+    {"req": "state: blown away ('annihilated')", "filter": "Filters.Tracked_Fleet", "gameConditions": "GameConditions.isBlownAway(game, Filters.Tracked_Fleet)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032.java:129"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032.java:124-140"]
+ },
+ "flipToFront": {
+  "timing": "NONE",
+  "prose": "The back (The Resistance Is Doomed) has no flip-back trigger; verified no FlipCardEffect anywhere in Card225_032_BACK.java. Instead the back carries a place-out-of-play hazard: if Kylo was just forfeited to Lost Pile from Salt Plateau during a battle you lost there with Han, Leia, or Luke present, the objective is placed out of play (Card225_032_BACK.java:98-111).",
+  "expression": null,
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/dark/Card225_032_BACK.java:91-126"]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is a persistent STATE leaf (isBlownAway), not an event leaf: any table change after the annihilation flips it, even if the annihilation event itself was missed. The 'annihilated' game term is implemented as blown-away.",
+  "This is a self-inflicted downgrade gate for the opponent to trigger? No - Tracked Fleet is YOUR setup card; its annihilation (via Epic Event mechanics) is the flip driver. No control/occupy anywhere in the flip law.",
+  "Back place-out-of-play uses an event leaf: TriggerConditions.justForfeitedToLostPileFromLocation(Filters.Kylo, Filters.and(Filters.Crait_Salt_Plateau, Filters.wherePresent(self, Filters.or(Filters.Han, Filters.Leia, Filters.Luke)))) AND GameConditions.isDuringBattleLostBy(game, playerId) (Card225_032_BACK.java:98-102). 'Present' semantics via Filters.wherePresent.",
+  "Back drain bonus condition: OccupiesWithCondition(self, playerId, Filters.Crait_location, Filters.Kylo) - Kylo OCCUPIES a Crait location (Card225_032_BACK.java:135); drain-lock/retrieval-cancel condition: ControlsWithCondition(self, playerId, Filters.Crait_Salt_Plateau, Filters.Kylo) - Kylo CONTROLS Salt Plateau (Card225_032_BACK.java:140) and GameConditions.controlsWith(game, self, playerId, Filters.Crait_Salt_Plateau, Filters.Kylo) for retrieval cancel (114-115). The occupy-vs-control split between the two Kylo conditions is explicit in source.",
+  "Back may-not-drain modifier as coded: MayNotForceDrainAtLocationModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.sameLocationAs(self, Filters.and(Filters.opponents(self), Filters.characterOrPermanentPilotAlone)))), kyloControlsSaltPlateau, opponent) - a double-wrapped sameLocationAs expression (Card225_032_BACK.java:141-142); recorded exactly as written."
+ ],
+ "typedIdentities": [
+  "Filters.Tracked_Fleet (setup deploy; flip trigger card via blown-away state)",
+  "Filters.Dqar_system, Filters.Crait_system, Filters.Crait_Salt_Plateau (setup deploys)",
+  "Filters.Kylo (persona; back engines and out-of-play hazard)",
+  "Filters.or(Filters.Han, Filters.Leia, Filters.Luke) (personas; out-of-play hazard arming, via Filters.wherePresent at Salt Plateau)",
+  "Filters.Crait_location (back drain +1 enabling condition class)",
+  "Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.and(Filters.First_Order_character, Filters.with(self, Filters.First_Order_character)))) (back drain +1 target class: battlegrounds with two co-located First Order characters)",
+  "Deploy ban (remainder of game): Filters.or(Filters.Bow_To_The_First_Order, Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Icon.EPISODE_VII)))",
+  "Download (both sides): Filters.or(Filters.titleContains(\"Supremacy\"), Filters.and(Icon.EPISODE_VII, Filters.battleground))",
+  "Front: LimitForceLossFromForceDrainModifier(Filters.system, 1, opponent); ResetDeployCostToLocationModifier(Filters.Supremacy, 7, Filters.and(Icon.EPISODE_VII, Filters.system))",
+  "Back Lost Pile deploy: Filters.or(Filters.and(Filters.non_unique, Filters.trooper), Filters.and(Filters.non_unique, Icon.FIRST_ORDER, Filters.vehicle))",
+  "Filters.characterOrPermanentPilotAlone (opponent's lone-drainer lock target)"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): D'Qar system (Card225_032.java:49), Crait system (56), Salt Plateau (63), Tracked Fleet (70).",
+  "FRONT and BACK (same GameTextActionId.THE_FIRST_ORDER_REIGNS__DOWNLOAD_EPISODE_7_BATTLEGROUND, once per turn): deploy a card with 'Supremacy' in title or an [Episode VII] battleground from Reserve Deck (Card225_032.java:90-110; Card225_032_BACK.java:50-65).",
+  "BACK: once per turn, deploy a non-unique trooper or non-unique [First Order] vehicle from LOST PILE (Card225_032_BACK.java:67-86, GameTextActionId.THE_RESISTANCE_IS_DOOMED__DOWNLOAD_FIRST_ORDER_VEHICLE_OR_TROOPER)."
+ ],
+ "otherObligations": [
+  "FOR REMAINDER OF GAME (granted after deployment completes, Card225_032.java:80-87): may not deploy Bow To The First Order or your cards with ability except [Episode VII] cards.",
+  "FRONT: opponent loses no more than 1 Force to your Force drains at systems (Card225_032.java:118); Supremacy deploy = 7 to [Episode VII] systems (119).",
+  "BACK: while Kylo occupies a Crait location, your drains at battlegrounds with two First Order characters are +1 (Card225_032_BACK.java:134-137); while Kylo controls Salt Plateau, opponent may not Force drain where their character or permanent pilot is alone (139-142) and opponent's Force retrieval is canceled (RequiredGameTextTriggerAction CancelForceRetrievalEffect, 113-123).",
+  "BACK HAZARD: objective placed OUT OF PLAY if Kylo just forfeited from a battle you lost at Salt Plateau with Han, Leia, or Luke present (Card225_032_BACK.java:96-111).",
+  "Rando obligations: front - engineer Tracked Fleet's annihilation to flip; back - park Kylo on Salt Plateau (control) for the retrieval-lock and drain-lock, but NEVER forfeit Kylo in a losing battle there while Han/Leia/Luke is present."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null and correctly has no site answer - the flip gate is a card EVENT/STATE (Tracked Fleet annihilated), but no profile field encodes it; flipGateCardIds is empty though Tracked Fleet resolves to 225_34 (per profile's own seed data absence - id appears only in seed, not profile).",
+   "requiredCardsOnTable is empty; Tracked Fleet (setup-required and the flip trigger) is unrepresented.",
+   "keyCharacterFilter is null; Filters.Kylo drives every back-side engine and the out-of-play hazard - unrepresented.",
+   "pullableCards is empty; Supremacy/[EPVII]-battleground download and the back Lost-Pile trooper/vehicle deploy are unrepresented.",
+   "No representation of the back out-of-play hazard (Kylo forfeited at Salt Plateau vs Han/Leia/Luke) nor that the back never flips back."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,102 @@
+{
+  "frontBp": "12_89",
+  "backBp": "12_89_BACK",
+  "side": "LIGHT",
+  "titleFront": "The Hyperdrive Generator's Gone",
+  "titleBack": "We'll Need A New One",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips when Credits Will Do Fine is active on table and has 4 or more cards stacked beneath it. Pure counter-on-card check; no control/occupy/presence requirement.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089.java:127"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089.java:128"
+        },
+        {
+          "req": "card-on-table: Credits Will Do Fine active",
+          "filter": "Filters.Credits_Will_Do_Fine",
+          "gameConditions": "Filters.findFirstActive(game, self, Filters.Credits_Will_Do_Fine) != null",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089.java:129-130"
+        },
+        {
+          "req": "count/counter: 4+ cards stacked on Credits Will Do Fine",
+          "filter": "stacked cards on Filters.Credits_Will_Do_Fine",
+          "gameConditions": "GameConditions.hasStackedCards(game, creditsWillDoFine, 4)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089.java:130"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089.java:125-143"
+    ]
+  },
+  "flipToFront": {
+    "timing": "NEVER. Back has no flip trigger, no lose condition, and no place-out-of-play condition; the flip is one-way permanent.",
+    "prose": "Card12_089_BACK contains no FlipCardEffect and no PlaceCardOutOfPlayFromTableEffect anywhere; getGameTextRequiredAfterTriggers only implements the end-of-control-phase senator Force-loss enforcement.",
+    "expression": null,
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_089_BACK.java:154-177"
+    ]
+  },
+  "requirementSemantics": [
+    "Flip is COUNT/COUNTER semantics: hasStackedCards(CreditsWillDoFine, 4). Cards get stacked on Credits Will Do Fine by that Effect's own game text; the objective only reads the count.",
+    "Requires Credits Will Do Fine to be ACTIVE (findFirstActive) - if the Effect is gone, the flip can never fire regardless of prior stacking.",
+    "Back's per-control-phase Force loss uses occupiesWith semantics: Filters.countTopLocationsOnTable(game, Filters.and(Filters.battleground_site, Filters.occupiesWith(playerId, self, Filters.senator))) - occupy WITH a senator, not control.",
+    "Back's opponent-control-phase activation is card-at-location: canSpot(Filters.and(Filters.Queens_Royal_Starship, Filters.at(Filters.planet_system)))."
+  ],
+  "typedIdentities": [
+    "Filters.Credits_Will_Do_Fine",
+    "Filters.Wattos_Junkyard",
+    "Filters.City_Outskirts",
+    "Filters.Coruscant_system",
+    "Filters.Tatooine_system",
+    "Filters.and(Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Filters.or(Filters.and(Filters.unique, Filters.alien), Filters.Republic_character, Filters.Republic_starship, Filters.and(Icon.EPISODE_I, Filters.Jedi))))",
+    "Filters.Your_Destiny (suspended)",
+    "Filters.system (may not deploy)",
+    "Filters.Maul (immune to attrition - benefits opponent's Maul)",
+    "Filters.and(Filters.your(self), Filters.unique, Filters.Republic_character)",
+    "Filters.alien (may not have deploy cost modified)",
+    "Filters.Imperial deploy +1 to Filters.Tatooine_site",
+    "Filters.Queens_Royal_Starship at Filters.planet_system",
+    "Filters.and(Filters.battleground_site, Filters.occupiesWith(playerId, self, Filters.senator))"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Watto's Junkyard, City Outskirts, and Credits Will Do Fine from Reserve Deck (front:49-73).",
+    "Front tutor: once per game, take Coruscant system and/or Tatooine system into hand from Reserve Deck; reshuffle (TakeCardAndOrCardIntoHandFromReserveDeckEffect, front:93-112).",
+    "No pulls/tutors coded on the back."
+  ],
+  "otherObligations": [
+    "Front, remainder of game: may not deploy cards with ability except unique aliens, Republic characters, Republic starships, and [Episode I] Jedi; may not deploy using Dejarik rules; Your Destiny suspended (front:76-90).",
+    "Front, while this side up: may not deploy any systems; opponent's Maul is immune to attrition (front:115-122).",
+    "Back: your unique Republic characters power +1 and forfeit +2; aliens may not have deploy cost modified; Imperials deploy +1 to Tatooine sites (BACK:54-63).",
+    "Back: whenever you draw battle destiny (destiny card not null), may retrieve 1 Force, may be taken into hand (BACK:66-92).",
+    "Back: while Queen's Royal Starship at a planet system, once during each of opponent's control phases may activate up to 2 Force (BACK:99-129).",
+    "Back: once during each of your control phases, opponent loses 1 Force per battleground site you occupy with a senator; auto-enforced at end of your control phase if not yet performed (BACK:131-148, 154-177)."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "flipGateSite null and no profile field expresses the true gate: a stacked-card COUNTER (4+ cards stacked on Credits Will Do Fine).",
+      "requiredCardsOnTable is empty; Credits Will Do Fine must be active on table for the flip to ever fire.",
+      "flipGateCardIds is empty; Credits Will Do Fine blueprint ids (12_42, 221_56 per seed namedCards) are not wired as the gate card.",
+      "No representation that the flip is one-way (back never flips back and has no lose condition).",
+      "objectiveNamedLocations conflates non-locations ('Battleground site with senator' back-side drain rule) with setup locations; no senator keyCharacterFilter for the back-side Force-loss engine."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,116 @@
+{
+  "frontBp": "9_61",
+  "backBp": "9_61_BACK",
+  "side": "LIGHT",
+  "titleFront": "There Is Good In Him",
+  "titleBack": "I Can Save Him",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Flip if Luke can be spotted as a captive (anywhere; spot includes captives and battle-excluded cards). The capture itself is engineered by a separate front trigger: when any Imperial that can escort is at Luke's site, Luke is captured and seized (required trigger).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061.java:152"
+        },
+        {
+          "req": "chosen-state spot: Luke is a captive (captured-state condition, not location-based)",
+          "filter": "Filters.and(Filters.Luke, Filters.captive)",
+          "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Luke, Filters.captive))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061.java:153"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061.java:151-163",
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061.java:124-148 (auto-capture trigger that produces the flip state)"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Back flips to front if Luke can NOT be spotted as (captive OR present with Vader). I.e., flips back when Luke is free and away from Vader; also flips back if Luke is no longer on table at all (spot fails entirely).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061_BACK.java:73"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "chosen-state spot: Luke either captive or present-with Vader (presence semantics via Filters.presentWith)",
+              "filter": "Filters.and(Filters.Luke, Filters.or(Filters.captive, Filters.presentWith(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader)))",
+              "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Luke, Filters.or(Filters.captive, Filters.presentWith(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader))))",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061_BACK.java:74-75"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_061_BACK.java:72-85"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack: chosen-state (captured-state) semantics via canSpot with INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE. No control, occupy, or location requirement at all.",
+    "Capture engine (front): timing trigger on isTableChanged; Filters.findFirstActive(Luke at site) then canSpot Imperial with Filters.atSameSite(luke) AND Filters.canEscortCaptive(luke, true); opponent chooses the seizing Imperial; CaptureWithSeizureEffect. This is the mechanism that creates the flip state.",
+    "flipToFront: negated chosen-state/presence disjunction: Luke captive OR Luke presentWith Vader; if neither spotable (including Luke gone from table), back flips to front.",
+    "Back Force-loss clock: timing trigger isEndOfOpponentsTurn + NOT canSpot(Filters.and(Filters.Vader, Filters.escorting(Filters.Luke))): opponent loses 2 Force. Escort-state semantics.",
+    "Back crossover: once per owner's turn, requires Vader presentWith Luke (SpotOverride.INCLUDE_CAPTIVE), i.e. presence-with semantics including captive Luke."
+  ],
+  "typedIdentities": [
+    "Filters.Luke (persona; flip subject)",
+    "Filters.Vader (persona; back-side co-actor)",
+    "Filters.captive / Filters.presentWith(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader) (flip states)",
+    "Filters.Chief_Chirpas_Hut, Filters.Landing_Platform (setup locations)",
+    "Filters.and(Icon.DEATH_STAR_II, Filters.Luke) ([Death Star II] Luke setup deploy)",
+    "Filters.Lukes_Lightsaber, Filters.I_Feel_The_Conflict (setup deploys)",
+    "Filters.and(Filters.Imperial, Filters.atSameSite(luke), Filters.canEscortCaptive(luke, true)) (auto-capture actor)",
+    "Filters.or(Filters.Alter, Filters.Strangle, Filters.Captive_Fury) (owner's remainder-of-game play ban)",
+    "Filters.sameSiteAs(self, Filters.Luke) / Filters.sameLocationAs(self, Filters.Luke) (Force gen +2; drain/generation locks)",
+    "Filters.Imperial at Filters.Landing_Platform (AtCondition gating the locks)",
+    "Back: Filters.escorting(Filters.Luke), Filters.escortedBy(self, Filters.and(Filters.Imperial, Filters.except(Filters.Vader))), Filters.canEscortCaptive(captiveLuke)"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, all required): deploy Chief Chirpa's Hut (Filters.Chief_Chirpas_Hut) [Card9_061.java:56-62]; deploy [Death Star II] Luke to Chief Chirpa's Hut (Filters.and(Icon.DEATH_STAR_II, Filters.Luke) -> Filters.Chief_Chirpas_Hut) [Card9_061.java:63-69]; deploy Luke's Lightsaber to Chief Chirpa's Hut (Filters.Lukes_Lightsaber) [Card9_061.java:70-76]; deploy Endor: Landing Platform (Filters.Landing_Platform) [Card9_061.java:77-83]; deploy I Feel The Conflict (Filters.I_Feel_The_Conflict) [Card9_061.java:84-90]",
+    "No mid-game Reserve Deck pulls on either side (back's once-per-turn action shuffles Reserve Deck and draws destiny but takes nothing from it)."
+  ],
+  "otherObligations": [
+    "FRONT (after deployment, remainder of game): owner may not play Alter, Strangle, or Captive Fury: AddUntilEndOfGameModifierEffect(MayNotPlayModifier(self, Filters.or(Filters.Alter, Filters.Strangle, Filters.Captive_Fury), playerId)) [Card9_061.java:95-101]",
+    "FRONT: owner's Force generation +2 at Luke's site: ForceGenerationModifier(self, Filters.sameSiteAs(self, Filters.Luke), 2, playerId) [Card9_061.java:110]",
+    "FRONT: while an Imperial at Landing Platform, owner may not Force drain at Luke's location: MayNotForceDrainAtLocationModifier(self, sameLocationAs(Luke), AtCondition(Imperial, Landing_Platform), playerId) [Card9_061.java:111]",
+    "FRONT: while an Imperial at Landing Platform, owner generates no Force at Luke's location: GenerateNoForceModifier [Card9_061.java:112]",
+    "FRONT auto-capture trap: on table change, if Luke at a site and a capture-capable Imperial is at same site, Luke is captured with seizure; opponent picks the escort [Card9_061.java:124-148]",
+    "BACK: at end of each opponent's turn, opponent loses 2 Force unless Vader is escorting Luke: isEndOfOpponentsTurn + !canSpot(Vader escorting Luke) -> LoseForceEffect(opponent, 2) [Card9_061_BACK.java:60-68]",
+    "BACK (opponent action): an Imperial (except Vader) escorting Luke may transfer Luke to Vader if Vader presentWith and can escort [Card9_061_BACK.java:90-113]",
+    "BACK: Luke may not be transferred while escorted by Vader: MayNotBeTransferredModifier(self, Filters.and(Filters.Luke, Filters.escortedBy(self, Filters.Vader))) [Card9_061_BACK.java:169]",
+    "BACK win route: once per owner's turn, if Vader presentWith Luke (INCLUDE_CAPTIVE), shuffle Reserve Deck, draw destiny; if getCrossoverAttemptTotal(vader, totalDestiny) > 14: CrossOverCharacterEffect(vader) + DepleteLifeForceEffect(opponent) (owner wins) [Card9_061_BACK.java:116-164]"
+  ],
+  "seedMismatches": [
+    "Seed labels the back-side crossover route 'hardLose' with condition CROSSOVER_DESTINY_GT_14; in source it is a WIN condition for the objective owner (Vader crosses to Light Side and OPPONENT's Life Force is depleted), a TopLevelGameTextAction the owner chooses, not a loss or a required trigger. Category error in the seed.",
+    "Seed does not record that the crossover destiny total is modifier-adjusted via modifiersQuerying.getCrossoverAttemptTotal(vader, totalDestiny) before the > 14 comparison (Card9_061_BACK.java:145-147)."
+  ],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "keyCharacterFilter is null: flip law's subject is Filters.Luke (and Filters.Vader drives back-side value); neither is represented.",
+      "Flip law is a captured-state condition (Luke captive), not a location condition; no profile field encodes it. flipGateSite null and flipGateCardIds empty are inherently unable to express this law.",
+      "requiredCardsOnTable empty: Luke on table (and later captive/with Vader) is the state the whole objective revolves around; not encoded.",
+      "pullableCards empty: five required start-of-game deploys (Chief Chirpa's Hut, [DSII] Luke, Luke's Lightsaber, Endor: Landing Platform, I Feel The Conflict) are not listed as pullable/required cards; only the two locations appear as objectiveNamedLocations.",
+      "The Imperial-at-Landing-Platform drain/generation lock and the auto-capture trap at Luke's site (the actual flip mechanism) have no representation.",
+      "Back-side obligations (opponent loses 2 Force per turn unless Vader escorts Luke; transfer-to-Vader route; destiny>14 crossover win) have no representation."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

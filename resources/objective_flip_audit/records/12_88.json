@@ -1,0 +1,88 @@
+{
+ "frontBp": "12_88",
+ "backBp": "12_88_BACK",
+ "side": "LIGHT",
+ "titleFront": "Plead My Case To The Senate",
+ "titleBack": "Sanity And Compassion",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Flip if you have 3+ of your senators AT Galactic Senate, or 2+ of your senators AT Galactic Senate at least one of which has a peace agenda. Count is a filterActive collection size, spotting includes excluded-from-battle. Neither control nor occupation of the site is required.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088.java:163"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088.java:164"},
+    {"op": "anyOf", "children": [
+     {"req": "card-count >= 3 of your senators AT the site (filterActive size, INCLUDE_EXCLUDED_FROM_BATTLE)", "filter": "Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate))", "gameConditions": "Filters.filterActive(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, ...).size() >= 3", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088.java:165-167"},
+     {"op": "allOf", "children": [
+      {"req": "card-count >= 2 of your senators AT the site", "filter": "Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate))", "gameConditions": "yourSenatorsAtGalacticSenate.size() >= 2", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088.java:168"},
+      {"req": "chosen-state: at least one of those senators has peace agenda", "filter": "Filters.peace_agenda", "gameConditions": "Filters.canSpot(yourSenatorsAtGalacticSenate, game, Filters.peace_agenda)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088.java:168"}
+     ]}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088.java:161-181"]
+ },
+ "flipToFront": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Back flips to front if you have fewer than two of your senators AT Galactic Senate.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088_BACK.java:169"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088_BACK.java:170"},
+    {"op": "not", "children": [
+     {"req": "card-count >= 2 of your senators AT Galactic Senate (canSpot with count 2, INCLUDE_EXCLUDED_FROM_BATTLE)", "filter": "Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate))", "gameConditions": "GameConditions.canSpot(game, self, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, ...)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088_BACK.java:171"}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/light/Card12_088_BACK.java:167-183"]
+ },
+ "requirementSemantics": [
+  "Both flip laws are pure card-count checks over Filters.at(Filters.Galactic_Senate) - the AT relation, NOT control, NOT occupy, NOT 'present at'. Opponent's presence at the Senate is irrelevant to both flips.",
+  "'Senator' is checked via Filters.senator (see standing rule: senator detection combines Keyword.SENATOR and lore scan in the engine filter).",
+  "'Peace agenda' is a per-card agenda state (Filters.peace_agenda) checked only within the already-collected senators at the Senate.",
+  "No place-out-of-play condition on either side.",
+  "The back flips back the moment you drop below 2 senators at the Senate - a maintenance obligation, no phase restriction."
+ ],
+ "typedIdentities": [
+  "Filters.Galactic_Senate (setup deploy; flip gate location both directions)",
+  "Filters.and(Filters.your(self), Filters.senator, Filters.at(Filters.Galactic_Senate)) (flip actor collection)",
+  "Filters.peace_agenda (2-senator alternative qualifier); Filters.order_agenda (back destiny modifiers exclusion/inclusion)",
+  "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate)) (setup second location)",
+  "Filters.or(Filters.Counter_Assault, Filters.Surprise_Assault) (auto-cancel targets)",
+  "Filters.and(Filters.or(Filters.Rebel, Filters.Imperial), Filters.leader, Filters.abilityLessThan(4)) (politics +2)",
+  "Filters.Political_Effect (stacked-card deploy enabler; back once-per-turn upload)",
+  "Filters.and(active, Filters.character, Filters.not(Filters.Republic_character), Filters.at(Filters.Galactic_Senate)) (game text canceled; 'active' is an inline CardState.ACTIVE filter)",
+  "Filters.and(Filters.creature, Filters.at(Filters.Galactic_Senate)) (creatures lost)"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Galactic Senate (Card12_088.java:61), any other [Episode I] location = Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate)) (Card12_088.java:68).",
+  "BACK: once per turn, take a Political Effect into hand from Reserve Deck; reshuffle (Card12_088_BACK.java:109-122, GameTextActionId.SANITY_AND_COMPASSION__UPLOAD_POLITICAL_EFFECT).",
+  "FRONT (remainder of game, granted after deployment completes): may deploy cards stacked on your Political Effects as if from hand (MayDeployAsIfFromHandModifier, Card12_088.java:107-109)."
+ ],
+ "otherObligations": [
+  "FOR REMAINDER OF GAME (survive flips, granted via AddUntilEndOfGameModifierEffect at deployment completion, Card12_088.java:78-157): Rebel and Imperial leaders of ability < 4 are politics +2; Counter Assault and Surprise Assault are auto-canceled; weapon destiny draws at Galactic Senate are -6; creatures at Galactic Senate are lost (required singleton trigger); game text of active non-Republic characters at Galactic Senate is canceled.",
+  "BACK: once during your control phase, use 3 Force to place up to two random cards from opponent's hand into their Used Pile (Card12_088_BACK.java:64-104).",
+  "BACK: your senators are +2 (characters with order agenda +3) when drawn for battle or weapon destiny (Card12_088_BACK.java:128-138).",
+  "BACK: at end of turn, may use 2 Force to place all cards on your Political Effects into Used Pile (Card12_088_BACK.java:141-164).",
+  "Rando obligation implied by flip-back: keep >= 2 (ideally 3) senators physically at Galactic Senate at all times while on back."
+ ],
+ "seedMismatches": [
+  "Seed (Objective_Playbook_Facts_2026-07-08.json entry 12_88) labels both flip relations as 'PRESENT'; source checks Filters.at(Filters.Galactic_Senate) - the AT relation, which is broader than 'present at' in SWCCG semantics. Filters are otherwise quoted correctly by the seed, so this is a relation-label inaccuracy only."
+ ],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; true flip gate location both directions is Galactic Senate (Filters.Galactic_Senate).",
+   "keyCharacterFilter is null; true flip actors are your senators (count 3, or 2 with a peace agenda) - no senator/peace-agenda representation anywhere in the profile.",
+   "requiredCardsOnTable and pullableCards empty; Political Effect upload engine (back) not represented.",
+   "No representation of the flip-back threshold (fewer than 2 senators at the Senate flips back to front)."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

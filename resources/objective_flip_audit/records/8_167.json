@@ -1,0 +1,138 @@
+{
+  "frontBp": "8_167",
+  "backBp": "8_167_BACK",
+  "side": "DARK",
+  "titleFront": "Endor Operations",
+  "titleBack": "Imperial Outpost",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips when both Effects Ominous Rumors AND Establish Secret Base can be spotted on table. Pure card-on-table check; no location control/occupy involved.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167.java:97"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167.java:98"
+        },
+        {
+          "req": "card-on-table: Ominous Rumors spottable",
+          "filter": "Filters.Ominous_Rumors",
+          "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Ominous_Rumors)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167.java:99"
+        },
+        {
+          "req": "card-on-table: Establish Secret Base spottable",
+          "filter": "Filters.Establish_Secret_Base",
+          "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Establish_Secret_Base)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167.java:100"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167.java:95-111"
+    ]
+  },
+  "flipToFront": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips back to front when Ominous Rumors and Establish Secret Base are NOT both on table (either one missing).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167_BACK.java:83"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167_BACK.java:84"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "op": "not",
+              "children": [
+                {
+                  "req": "card-on-table: Ominous Rumors spottable",
+                  "filter": "Filters.Ominous_Rumors",
+                  "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Ominous_Rumors)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167_BACK.java:85"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "children": [
+                {
+                  "req": "card-on-table: Establish Secret Base spottable",
+                  "filter": "Filters.Establish_Secret_Base",
+                  "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Establish_Secret_Base)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167_BACK.java:86"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set8/dark/Card8_167_BACK.java:81-96"
+    ]
+  },
+  "requirementSemantics": [
+    "Flip both ways is card-on-table semantics (canSpot with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE) on two specific Effects; NO control, occupy, or presence requirement exists in either flip law.",
+    "Both sides also carry a hard-lose timing trigger: objective placed out of play if an Endor location is 'blown away' (TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.Endor_location)).",
+    "Back's drain protection is site-scoped with-actor semantics: Endor sites sameSiteAs your biker scout OR your piloted AT-ST (Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.biker_scout, Filters.and(Filters.piloted, Filters.AT_ST)))))."
+  ],
+  "typedIdentities": [
+    "Filters.Ominous_Rumors",
+    "Filters.Establish_Secret_Base",
+    "Filters.Endor_system",
+    "Filters.Bunker",
+    "Filters.Landing_Platform",
+    "Filters.Endor_location",
+    "Filters.Endor_site",
+    "Filters.biker_scout",
+    "Filters.and(Filters.piloted, Filters.AT_ST)",
+    "Filters.and(Filters.your(self), Filters.AT_ST)"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Endor system, Bunker, and Landing Platform from Reserve Deck (front:46-70).",
+    "Front tutor: once during each of your control phases, take one Ominous Rumors OR Establish Secret Base into hand from Reserve Deck; reshuffle. Filter Filters.or(Filters.Ominous_Rumors, Filters.Establish_Secret_Base) (front:73-92).",
+    "Back retrieval: once during each of your draw phases, retrieve one biker scout (Filters.biker_scout) (BACK:63-78)."
+  ],
+  "otherObligations": [
+    "Both sides: place objective out of play if an Endor location is 'blown away' (front:113-122; BACK:99-108). Rando must protect Endor locations from blow-away on both sides.",
+    "Back: at each Endor site where you have a biker scout or a piloted AT-ST, your Force drains may not be modified or canceled by opponent (ForceDrainsMayNotBeModifiedModifier + ForceDrainsMayNotBeCanceledModifier, BACK:52-56).",
+    "Back: opponent may not draw more than 1 battle destiny in each battle (MayNotDrawMoreThanBattleDestinyModifier, BACK:57).",
+    "Back: your AT-STs immune to attrition < 3 (BACK:58).",
+    "Strategic note from law: flipping back to front happens the moment EITHER Effect leaves the table, so both Effects must be defended (e.g., from Alter) to stay on Imperial Outpost."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": true,
+    "profileGaps": [
+      "flipGateSite 'endor: bunker' is a proxy: the true flip law never checks Bunker (or any location) - it is card-on-table of Ominous Rumors AND Establish Secret Base only. Bunker matters solely as Ominous Rumors' deploy target.",
+      "flipGateCardIds lists only Establish Secret Base ids (207_25/207_025/601_260); Ominous Rumors ids are missing even though the flip law requires BOTH Effects (requiredCardsOnTable names both by fragment only).",
+      "keyCharacterFilter 'biker_scout' is a back-side drain/retrieval actor; the flip law itself has no actor requirement - risk of Rando treating biker scouts as a flip prerequisite.",
+      "Hard-lose (place out of play if an Endor location is blown away, active on BOTH sides) is not represented anywhere in the profile."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

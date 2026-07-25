@@ -1,0 +1,153 @@
+{
+ "frontBp": "203_19",
+ "backBp": "203_19_BACK",
+ "side": "LIGHT",
+ "titleFront": "Diplomatic Mission To Alderaan",
+ "titleBack": "A Weakness Can Be Found",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Flip if Stolen Data Tapes are 'delivered' AND you control a battleground site with a Rebel AND you control a battleground system with a Rebel.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java:163"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java:164"
+    },
+    {
+     "req": "card-on-table (state): delivered Stolen Data Tapes",
+     "filter": "Filters.delivered_Stolen_Data_Tapes",
+     "gameConditions": "GameConditions.canSpot(game, self, Filters.delivered_Stolen_Data_Tapes)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java:165"
+    },
+    {
+     "req": "control-with: you control a battleground SITE with a Rebel",
+     "filter": "Filters.battleground_site with Filters.Rebel",
+     "gameConditions": "GameConditions.controlsWith(game, self, playerId, Filters.battleground_site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Rebel)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java:166"
+    },
+    {
+     "req": "control-with: you control a battleground SYSTEM with a Rebel",
+     "filter": "Filters.battleground_system with Filters.Rebel",
+     "gameConditions": "GameConditions.controlsWith(game, self, playerId, Filters.battleground_system, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Rebel)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java:167"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019.java:159-179"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Back flips to front if you do not occupy a battleground site, OR do not occupy a battleground system, OR do not control any location.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java:102"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java:103"
+    },
+    {
+     "op": "anyOf",
+     "children": [
+      {
+       "op": "not",
+       "children": [
+        {
+         "req": "occupy: you occupy a battleground site",
+         "filter": "Filters.battleground_site",
+         "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground_site)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java:104"
+        }
+       ]
+      },
+      {
+       "op": "not",
+       "children": [
+        {
+         "req": "occupy: you occupy a battleground system",
+         "filter": "Filters.battleground_system",
+         "gameConditions": "GameConditions.occupies(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground_system)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java:105"
+        }
+       ]
+      },
+      {
+       "op": "not",
+       "children": [
+        {
+         "req": "control: you control any location",
+         "filter": "Filters.location",
+         "gameConditions": "GameConditions.controls(game, playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.location)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java:106"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set203/light/Card203_019_BACK.java:98-118"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip mixes card-STATE (delivered Stolen Data Tapes, a keyword-state filter, not just on-table) with two CONTROL-WITH legs: the site and system must each be controlled AND have a Rebel there.",
+  "Back flip-back downgrades to OCCUPY for the site/system legs (mere presence suffices to stay flipped) but its third leg is CONTROL of any location.",
+  "Asymmetry to exploit: flipping forward needs Rebel control of bg site+system; staying on back only needs OCCUPATION of bg site+system plus control of at least one location anywhere.",
+  "All checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE."
+ ],
+ "typedIdentities": [
+  "Filters.delivered_Stolen_Data_Tapes (state filter); Filters.Stolen_Data_Tapes (card 203_14)",
+  "Filters.battleground_site; Filters.battleground_system; Filters.location; Filters.Rebel",
+  "Filters.Tatooine_system; Filters.Tantive_IV; Filters.and(Filters.R2D2, Filters.not(Icon.REFLECTIONS_II)); Filters.Dune_Sea",
+  "Filters.or(Filters.Alderaan_system, Filters.Tatooine_site) with target-filter Filters.or(Filters.Alderaan_system, Filters.battleground) (download)",
+  "Deploy ban: Filters.or(Filters.Sandwhirl, Filters.Strike_Planning, Filters.Admirals_Order, Filters.and(Icon.EPISODE_I, Filters.Jedi))",
+  "Back destiny evaluator: OccupiesWithEvaluator(self, playerId, Filters.battleground, Filters.and(Filters.Rebel, Filters.abilityLessThan(4)))"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy Tatooine system; deploy Tantive IV, non-[Reflections II] R2-D2, and Stolen Data Tapes to Tatooine system; deploy Dune Sea (Card203_019.java:52-90).",
+  "Both sides once per turn (DIPLOMATIC_MISSION_TO_ALDERAAN__DOWNLOAD_ALDERAAN_OR_TATOOINE_BATTLEGROUND_SITE, shared usage id): deploy Alderaan system or a Tatooine battleground site from Reserve Deck (DeployCardFromReserveDeckEffect(Filters.or(Filters.Alderaan_system, Filters.Tatooine_site), Filters.or(Filters.Alderaan_system, Filters.battleground), true)) (Card203_019.java:111-130; Card203_019_BACK.java:55-74)."
+ ],
+ "otherObligations": [
+  "Front remainder-of-game deploy ban: you may not deploy Sandwhirl, Strike Planning, Admiral's Orders, or [Episode I] Jedi (Card203_019.java:93-99).",
+  "Front: your Force drains at Tatooine system are -2 (Card203_019.java:106).",
+  "Front: until start of your first turn, Tantive IV may be forfeited to satisfy ALL battle damage against you (OptionalGameTextTriggerAction) (Card203_019.java:133-156).",
+  "Back: your total battle destiny +X, X = battlegrounds occupied by Rebels of ability < 4 (Card203_019_BACK.java:50).",
+  "Back: once per turn, if you just won a battle, may retrieve 1 Force (Card203_019_BACK.java:77-95).",
+  "No hard-lose/out-of-play condition on either side.",
+  "Strategic: 'delivered' Stolen Data Tapes state is the bottleneck; then hold Rebel control of one bg site + one bg system; after flip, never simultaneously lose occupation of bg site/system or control of all locations."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateCardIds/requiredCardsOnTable empty: the central gate card-state 'delivered Stolen Data Tapes' (Filters.delivered_Stolen_Data_Tapes, card 203_14) is not encoded",
+   "keyCharacterFilter null: both control legs require Rebels (Filters.Rebel) at the controlled battleground site and system",
+   "flipGateSite null: gates are generic battleground site + battleground system controlled WITH a Rebel; present only as generic named-location recipes with no control/occupy semantics",
+   "flip-back exposure (lose occupation of bg site or bg system, or control zero locations) not represented"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

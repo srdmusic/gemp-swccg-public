@@ -1,0 +1,150 @@
+{
+  "frontBp": "208_25",
+  "backBp": "208_25_BACK",
+  "side": "LIGHT",
+  "titleFront": "He Is The Chosen One",
+  "titleBack": "He Will Bring Balance",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "Required singleton trigger on isTableChanged (standing state)",
+    "prose": "Flips when Luke or a Jedi is at a battleground site, UNLESS an opponent's character of ability > 4 is at (any) battleground site.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025.java:126"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025.java:127"
+        },
+        {
+          "req": "presence (card-at-location): Luke or a Jedi at a battleground site",
+          "filter": "Filters.and(Filters.or(Filters.Luke, Filters.Jedi), Filters.at(Filters.battleground_site))",
+          "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.or(Filters.Luke, Filters.Jedi), Filters.at(Filters.battleground_site)))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025.java:128"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "blocker presence: opponent character of ability > 4 at a battleground site",
+              "filter": "Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4), Filters.at(Filters.battleground_site))",
+              "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4), Filters.at(Filters.battleground_site)))",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025.java:129"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025.java:124-141"
+    ]
+  },
+  "flipToFront": {
+    "timing": "Required singleton trigger on isTableChanged (standing state), suppressed permanently if Vader has crossed over",
+    "prose": "Flips back (unless Vader crossed over) if an opponent character of ability > 4 is at a battleground site OR you no longer have Luke or a Jedi at a battleground site.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "state trigger",
+          "filter": "n/a",
+          "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java:166"
+        },
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java:167"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "chosen-state exception: Vader crossed over (suppresses flip-back for rest of game)",
+              "filter": "Persona.VADER",
+              "gameConditions": "GameConditions.isCrossedOver(game, Persona.VADER)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java:168"
+            }
+          ]
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "req": "blocker presence: opponent character of ability > 4 at a battleground site",
+              "filter": "Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4), Filters.at(Filters.battleground_site))",
+              "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4), Filters.at(Filters.battleground_site)))",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java:169"
+            },
+            {
+              "op": "not",
+              "children": [
+                {
+                  "req": "presence: Luke or a Jedi at a battleground site",
+                  "filter": "Filters.and(Filters.or(Filters.Luke, Filters.Jedi), Filters.at(Filters.battleground_site))",
+                  "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.or(Filters.Luke, Filters.Jedi), Filters.at(Filters.battleground_site)))",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java:170"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/light/Card208_025_BACK.java:164-182"
+    ]
+  },
+  "requirementSemantics": [
+    "Flip both ways is PRESENCE (card-at-location canSpot) semantics, never control/occupy: 'Luke or a Jedi AT a battleground site' and 'opponent ability>4 character AT a battleground site'. The two sides' battleground sites need not be the same site.",
+    "The opponent blocker is global: ANY opponent character of ability > 4 at ANY battleground site blocks the flip forward and forces the flip back.",
+    "Back flip-back has a persona-state exception: once Vader is crossed over (isCrossedOver(Persona.VADER)), the back never flips back regardless of board state.",
+    "The canSpot filters are NOT owner-restricted on the Luke/Jedi leg (Filters.or(Filters.Luke, Filters.Jedi) without Filters.your) - any spottable Luke/Jedi at a battleground site satisfies it; the blocker leg IS opponent-restricted via Filters.opponents(self)."
+  ],
+  "typedIdentities": [
+    "Filters.or(Filters.Luke, Filters.Jedi)",
+    "Filters.battleground_site",
+    "Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4), Filters.at(Filters.battleground_site))",
+    "Persona.VADER (isCrossedOver)",
+    "Filters.title(Title.Anakins_Funeral_Pyre)",
+    "Filters.Prophecy_Of_The_Force",
+    "Filters.Ewok_Village",
+    "Filters.I_Feel_The_Conflict",
+    "Filters.and(Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.and(Filters.character, Filters.except(Filters.or(Filters.ObiWan, Filters.Yoda))), Filters.and(Filters.location, Filters.except(Filters.Lars_Moisture_Farm))))",
+    "Filters.Emperors_Power (deploy-cost immunity at Filters.battleground)",
+    "Filters.Luke (wonBattle recirculate trigger, both sides)"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Anakin's Funeral Pyre (with Prophecy Of The Force deployed onto it), Ewok Village, and I Feel The Conflict from Reserve Deck (front:52-83).",
+    "No reserve-deck pulls/tutors coded on either side. Back card-flow engines instead: once per control phase peek at top X of Reserve Deck (X = battlegrounds you occupy, uses Filters.occupies(playerId)), take one into hand, shuffle (BACK:60-90); once per draw phase retrieve ANY one card, but opponent may stack a hand card face-down on I Feel The Conflict to place the retrieved card out of play instead (BACK:92-141)."
+  ],
+  "otherObligations": [
+    "Front, remainder of game: may not deploy [Episode I] or [Episode VII] characters or locations except Obi-Wan, Yoda, and Lars' Moisture Farm (front:86-90).",
+    "Front, remainder of game: Emperor's Power does not increase deploy costs at battlegrounds (ImmuneToDeployCostModifiersToLocationModifier, front:91-93).",
+    "Front, while this side up: you may initiate battles for free (MayInitiateBattlesForFreeModifier, front:98-103).",
+    "Both sides: if Luke just won a battle, may re-circulate and shuffle Reserve Deck (optional trigger, front:106-121; BACK:146-161).",
+    "Strategic note from law: to flip AND stay flipped, keep Luke/a Jedi parked at a battleground site and either kill/avoid opponent ability>4 characters at battleground sites or achieve Vader crossover to lock the back permanently."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "keyCharacterFilter is null; the flip actor is Filters.or(Filters.Luke, Filters.Jedi) at a battleground site.",
+      "No representation of the global blocker (opponent character of ability > 4 at any battleground site blocks flip and triggers flip-back) - the single most important tactical fact for this objective.",
+      "No representation of the Vader-crossed-over exception that permanently locks the back side.",
+      "flipGateSite null is acceptable (gate is 'any battleground site'), but no profile field encodes that abstraction either; requiredCardsOnTable empty despite I Feel The Conflict being both a setup card and the opponent's counter-tool against the back's retrieval."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

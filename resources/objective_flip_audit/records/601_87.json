@@ -1,0 +1,87 @@
+{
+ "frontBp": "601_87",
+ "backBp": "601_87_BACK",
+ "side": "DARK",
+ "titleFront": "Hunt Down And Destroy The Jedi (V)",
+ "titleBack": "Their Fire Has Gone Out Of The Universe (V)",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Flip if Galen or Vader is AT a battleground site AND opponent has NO unique character of ability > 3 AT a battleground site. Coded as AT (Filters.at), although printed text says 'present at' for the opponent clause.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087.java:121"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087.java:122"},
+    {"req": "presence-spot (includes excluded-from-battle): Galen or Vader AT a battleground site", "filter": "Filters.and(Filters.or(Filters.Galen, Filters.Vader), Filters.at(Filters.battleground_site))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, ...)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087.java:123"},
+    {"op": "not", "children": [
+     {"req": "presence-spot (includes excluded-from-battle): opponent's unique character of ability > 3 AT a battleground site", "filter": "Filters.and(Filters.opponents(self), Filters.unique, Filters.character, Filters.abilityMoreThan(3), Filters.at(Filters.battleground_site))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, ...)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087.java:124"}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087.java:118-134"]
+ },
+ "flipToFront": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Back flips to front if opponent has a unique character of ability > 3 AT a battleground site, OR if NEITHER Vader NOR Galen can be spotted on table. The second route (Vader and Galen both gone) is NOT in the printed back game text - source adds it.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087_BACK.java:109"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087_BACK.java:110"},
+    {"op": "anyOf", "children": [
+     {"req": "presence-spot (includes excluded-from-battle): opponent's unique character ability > 3 AT battleground site", "filter": "Filters.and(Filters.opponents(self), Filters.unique, Filters.character, Filters.abilityMoreThan(3), Filters.at(Filters.battleground_site))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, ...)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087_BACK.java:111"},
+     {"op": "allOf", "children": [
+      {"op": "not", "children": [{"req": "card-on-table spot", "filter": "Filters.Vader", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087_BACK.java:112"}]},
+      {"op": "not", "children": [{"req": "card-on-table spot", "filter": "Filters.Galen", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Galen)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087_BACK.java:113"}]}
+     ]}
+    ]}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_087_BACK.java:106-123"]
+ },
+ "requirementSemantics": [
+  "Both flip laws are presence-SPOT checks (GameConditions.canSpot with Filters.at) - not control, not occupy, not 'present at' in the strict SWCCG sense: code uses Filters.at(Filters.battleground_site) even though the printed text says 'present at a battleground site'.",
+  "The flip is symmetric around one predicate: 'opponent has a unique character of ability > 3 at a battleground site' - absent flips front->back, present flips back->front. Rando must clear (or avoid) big unique enemy characters at battleground sites to flip and stay flipped.",
+  "SOURCE-vs-TEXT DIVERGENCE (back): printed back text has only the opponent-big-character flip-back; source adds an OR route flipping back when both Vader and Galen are off-table (Card601_087_BACK.java:112-113).",
+  "No place-out-of-play condition on either side.",
+  "This is a LEGACY (Block 4) virtual card: setAsLegacy(true), Icon.LEGACY_BLOCK_4, setVirtualSuffix(true) on both sides."
+ ],
+ "typedIdentities": [
+  "Filters.Galen, Filters.Vader (personas; front flip actors; their joint absence flips the back to front)",
+  "Filters.and(Filters.opponents(self), Filters.unique, Filters.character, Filters.abilityMoreThan(3), Filters.at(Filters.battleground_site)) (the pivot predicate both directions)",
+  "Filters.battleground_site (location class in every flip leaf)",
+  "Setup: Filters.Coruscant_system, Filters.Imperial_City, Filters.title(Title.A_Siths_Plans); optional Filters.If_The_Trace_Was_Correct (0-1)",
+  "Filters.title(Title.Rogue_Shadow) (front upload)",
+  "Play ban (both sides, per-side modifier): Filters.and(Icon.EPISODE_I, Filters.Dark_Jedi)",
+  "Persona.GALENS_LIGHTSABER, Persona.VADERS_LIGHTSABER (hit-tracking triggers, both sides): TriggerConditions.justHitBy(Filters.and(Filters.opponents(self), Filters.character), Filters.or(...)) then leaves-table same turn -> opponent loses 2 Force",
+  "Front: ImmunityToAttritionChangeModifier(Filters.Galen, TrueCondition, MultiplyEvaluator(2, PresentWhereAffectedCardIsAtEvaluator(self, Filters.Jedi))) - Galen ITA +2 per Jedi present at his location",
+  "Back: CancelOpponentsForceDrainBonusesModifier (TrueCondition); ForceDrainsMayNotBeCanceledModifier(Filters.battleground, playerId); upload target Filters.not(Filters.hasAbilityOrHasPermanentPilotWithAbility)"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Coruscant system (Card601_087.java:63), Imperial City (70), A Sith's Plans (77). OPTIONAL (0-1): If The Trace Was Correct (84-88).",
+  "FRONT: may take Rogue Shadow into hand from Reserve Deck; reshuffle - NOTE: no once-per-turn/phase usage limit is coded; the only guard is GameConditions.canTakeCardsIntoHandFromReserveDeck (Card601_087.java:93-107, GameTextActionId.LEGACY__HUNT_DOWN_V__UPLOAD_ROGUE_SHADOW).",
+  "BACK: once during your control phase, use 2 Force to take any one card WITHOUT ability into hand from Reserve Deck; reshuffle (Card601_087_BACK.java:86-100, GameTextActionId.LEGACY__THEIR_FIRE_HAS_GONE_OUT_OF_THE_UNIVERSE_V__UPLOAD_CARD).",
+  "BACK: once during your control phase, retrieve 1 Force (requires non-empty Lost Pile) (Card601_087_BACK.java:74-84)."
+ ],
+ "otherObligations": [
+  "BOTH SIDES: may not deploy (MayNotPlayModifier) [Episode I] Dark Jedi (front Card601_087.java:112; back Card601_087_BACK.java:61).",
+  "BOTH SIDES: whenever an opponent character hit by Galen's Lightsaber or Vader's Lightsaber leaves table (same turn, via until-end-of-turn action proxy), opponent loses 2 Force (front Card601_087.java:137-175; back Card601_087_BACK.java:125-163).",
+  "FRONT: Galen's immunity to attrition +2 for each Jedi present where he is (Card601_087.java:113).",
+  "BACK: opponent's Force drain bonuses canceled; your Force drains at battlegrounds may not be canceled (Card601_087_BACK.java:63-64).",
+  "BACK NOT IMPLEMENTED (source fact): '+2 to destiny draw if targeting a vehicle or starship with Lightsaber Parry, Tarkin's Orders, or There Is No Conflict' exists only as a TODO comment (Card601_087_BACK.java:65) - no modifier is coded.",
+  "Rando obligations: keep Galen and/or Vader parked at battleground sites; hunt down opponent's unique ability>3 characters at battleground sites (their mere presence at any battleground site reverts the objective); use the lightsabers for hit-then-dies 2-Force bleed."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": false,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "No profile exists in src/gemp-swccg-server/src/main/resources/objective_playbooks.json for frontBp 601_87 (batch metadata hasProfile=False confirmed by profiles scan).",
+   "If a profile is ever authored: no site gate exists (class Filters.battleground_site); key characters are Galen/Vader; the pivot is the opponent's unique ability>3 character at a battleground site, needed as a NEGATIVE condition - plus the uncoded back TODO and the unlimited Rogue Shadow upload are behavioral quirks to encode."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

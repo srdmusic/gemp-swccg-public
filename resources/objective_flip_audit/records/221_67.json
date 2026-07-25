@@ -1,0 +1,159 @@
+{
+  "frontBp": "221_67",
+  "backBp": "221_67_BACK",
+  "side": "LIGHT",
+  "titleFront": "Hunt For The Droid General",
+  "titleBack": "He's A Coward",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Flip if the Effect 'Grievous Will Run And Hide' is attached to this Objective ('here'), UNLESS Grievous is alone at a battleground. The alone-exception is double-checked: it only blocks the flip when Grievous is alone even when counting battle-excluded characters (isAlone with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067.java:129"
+        },
+        {
+          "req": "card-attached-to-objective: Grievous Will Run And Hide attached to self",
+          "filter": "Filters.Grievous_Will_Run_And_Hide",
+          "gameConditions": "GameConditions.hasAttached(game, self, Filters.Grievous_Will_Run_And_Hide)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067.java:130"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "op": "allOf",
+              "children": [
+                {
+                  "req": "card-spot: Grievous alone at a battleground (any battleground location, not just sites)",
+                  "filter": "Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground))",
+                  "gameConditions": "Filters.findFirstActive(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground))) != null",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067.java:133"
+                },
+                {
+                  "req": "alone verified including battle-excluded cards",
+                  "filter": "(grievous)",
+                  "gameConditions": "game.getModifiersQuerying().isAlone(game.getGameState(), grievous, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067.java:134"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067.java:128-145"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Back flips to front if Grievous Will Run And Hide is NOT attached to this Objective (wherever it went, including off-table), OR if Grievous is alone at a battleground (alone verified including battle-excluded).",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067_BACK.java:172"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "op": "not",
+              "children": [
+                {
+                  "req": "card-attached-to-objective: Grievous Will Run And Hide attached to self",
+                  "filter": "Filters.Grievous_Will_Run_And_Hide",
+                  "gameConditions": "GameConditions.hasAttached(game, self, Filters.Grievous_Will_Run_And_Hide)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067_BACK.java:175"
+                }
+              ]
+            },
+            {
+              "op": "allOf",
+              "children": [
+                {
+                  "req": "card-spot: Grievous alone at a battleground",
+                  "filter": "Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground))",
+                  "gameConditions": "Filters.findFirstActive(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground))) != null",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067_BACK.java:179"
+                },
+                {
+                  "req": "alone verified including battle-excluded cards",
+                  "filter": "(grievous)",
+                  "gameConditions": "game.getModifiersQuerying().isAlone(game.getGameState(), grievous, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067_BACK.java:180"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set221/light/Card221_067_BACK.java:169-196"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack: card-attached-to-objective semantics (GameConditions.hasAttached on self), a card-on-table/attachment state, NOT control/occupy/presence of any location.",
+    "Exception clause: opponent-persona state (Grievous alone at a battleground). Filters.battleground = any battleground location (site or system), not battleground_site. 'Alone' is re-verified with modifiersQuerying.isAlone(INCLUDE_EXCLUDED_FROM_BATTLE) so companions excluded from battle still break 'alone'.",
+    "flipToFront leg 1: NOT hasAttached(self, GWRAH). The code checks attachment to the Objective, NOT 'GWRAH at a battleground' as the card text reads; if GWRAH leaves the objective for any reason (moved to a battleground, or gone), the back flips to front.",
+    "flipToFront leg 2: same Grievous-alone-at-battleground state that blocks the front flip also actively flips the back to front.",
+    "Both sides' obligations use occupy-count comparisons (Filters.occupies(playerId)) for the end-of-opponent's-turn Force loss clock; the back's X uses occupiesWith [Clone Army]-icon cards."
+  ],
+  "typedIdentities": [
+    "Filters.Grievous_Will_Run_And_Hide (the tracked Effect; attachment to self is the flip state)",
+    "Filters.Grievous (persona, exception actor; opponent's card)",
+    "Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)) (exception state)",
+    "Filters.and(Icon.CLONE_ARMY, Filters.battleground, Filters.location) (required start deploy)",
+    "Filters.Clone_Command_Center (deployed to same system as the chosen [Clone Army] battleground)",
+    "Filters.Cloning_Cylinders (required start deploy)",
+    "Filters.and(Filters.not(Icon.EPISODE_I), Filters.hasAbilityOrHasPermanentPilotWithAbility) (owner deploy ban, both sides)",
+    "Filters.Your_Destiny (suspended, both sides)",
+    "Filters.and(Icon.REFLECTIONS_II, Filters.Objective) + ModifyGameTextType.REFLECTIONS_II_OBJECTIVE__TARGETS_ANAKIN_INSTEAD_OF_LUKE",
+    "Filters.and(Filters.your(self), Filters.Jedi) + Icon.PILOT (icon grant, both sides)",
+    "Filters.and(Filters.your(self), Icon.EPISODE_I, Filters.site) immune to Title.No_Escape (both sides)",
+    "Back: Filters.and(Filters.your(self), Filters.clone, Filters.with(self, Filters.or(Filters.Jedi, Filters.padawan))) (drain +1); Filters.icon(Icon.CLONE_ARMY) (X count and retrieval); Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.icon(Icon.CLONE_ARMY))) (X definition)"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, required, chained): deploy a [Clone Army] battleground (Filters.and(Icon.CLONE_ARMY, Filters.battleground, Filters.location)); then in its cardDeployed callback deploy Clone Command Center to that battleground's SAME system (DeployCardToSystemFromReserveDeckEffect(Filters.Clone_Command_Center, systemName)); then deploy Cloning Cylinders (Filters.Cloning_Cylinders); then deploy Grievous Will Run And Hide (Filters.Grievous_Will_Run_And_Hide) [Card221_067.java:51-92]",
+    "BACK, on each battle YOU initiate: peek at top card of your Reserve Deck or Used Pile, optionally take into hand or bottom of Reserve Deck; then if X > 1 retrieve a [Clone Army] card into hand (RetrieveCardIntoHandEffect(Filters.icon(Icon.CLONE_ARMY)), isDueToInitiatingBattle=true); then if X > 2 may move one clone as a regular move using landspeed for free to the battle location. X = count of battlegrounds you occupy with [Clone Army]-icon cards (Variable.X adjustable) [Card221_067_BACK.java:94-165]",
+    "No generic Reserve Deck location/character downloads outside setup."
+  ],
+  "otherObligations": [
+    "FRONT+BACK: owner may not deploy non-[Episode I] cards with ability: MayNotDeployModifier(Filters.and(Filters.not(Icon.EPISODE_I), Filters.hasAbilityOrHasPermanentPilotWithAbility), owner) [Card221_067.java:97, Card221_067_BACK.java:63]",
+    "FRONT+BACK: Your Destiny is suspended: SuspendsCardModifier(self, Filters.Your_Destiny) [Card221_067.java:98, Card221_067_BACK.java:64]",
+    "FRONT+BACK: [Reflections II] objectives target Anakin instead of Luke: ModifyGameTextModifier [Card221_067.java:99, Card221_067_BACK.java:65]",
+    "FRONT+BACK: your Jedi gain [Pilot] icon: IconModifier(Filters.and(Filters.your(self), Filters.Jedi), Icon.PILOT) [Card221_067.java:100, Card221_067_BACK.java:66]",
+    "FRONT+BACK: your [Episode I] sites immune to No Escape: ImmuneToTitleModifier [Card221_067.java:101, Card221_067_BACK.java:67]",
+    "FRONT+BACK Force-loss clock: at end of opponent's turn, if count of battlegrounds you occupy > count opponent occupies (Filters.filterTopLocationsOnTable(Filters.and(Filters.battleground, Filters.occupies(...)))), opponent loses 1 Force [Card221_067.java:112-123, Card221_067_BACK.java:79-90]",
+    "BACK: your Force drains +1 where you have a clone with a Jedi or Padawan: ForceDrainModifier(Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.clone, Filters.with(self, Filters.or(Filters.Jedi, Filters.padawan)))), 1, owner) [Card221_067_BACK.java:68]",
+    "No hard-lose / place-out-of-play condition on either side."
+  ],
+  "seedMismatches": [
+    "Seed flipBack leg 1 claims relation PRESENT 'Grievous Will Run And Hide at a battleground'; source checks !GameConditions.hasAttached(game, self, Filters.Grievous_Will_Run_And_Hide) (Card221_067_BACK.java:175): the back flips to front whenever GWRAH is no longer attached to the Objective, regardless of whether it is at a battleground. Code is strictly broader than the seed/card-text phrasing.",
+    "Seed omits the alone re-verification guard on both directions: Grievous only counts as 'alone' if modifiersQuerying.isAlone(..., SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE) also holds (companions excluded from battle still break 'alone')."
+  ],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "requiredCardsOnTable and flipGateCardIds empty: the flip law's pivot is the Grievous Will Run And Hide Effect and its attachment location (on the Objective vs elsewhere); entirely unrepresented.",
+      "keyCharacterFilter is null: Filters.Grievous (opponent persona whose alone-at-battleground state blocks/reverses the flip) is unrepresented.",
+      "flipGateSite is null: correct in the sense the law has no gate site, but the profile also lacks any encoding of the attachment-state gate that replaces it.",
+      "pullableCards empty: the chained setup (Clone Army battleground -> Clone Command Center same planet -> Cloning Cylinders -> GWRAH) is not represented; only two locations appear as objectiveNamedLocations.",
+      "The deploy ban (non-[Episode I] cards with ability), the end-of-turn battleground-majority Force-loss clock, and the back's battle-initiation package (peek/retrieve/move keyed to X) have no representation."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,116 @@
+{
+ "frontBp": "601_29",
+ "backBp": "601_29_BACK",
+ "side": "DARK",
+ "titleFront": "Wookiee Slaving Operation",
+ "titleBack": "Indentured To The Empire",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Flip if your slavers control two Kashyyyk battlegrounds (each controlled with a slaver there) and opponent controls no Kashyyyk locations.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029.java:103"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029.java:104"
+    },
+    {
+     "req": "control-with (count 2): you control 2 Kashyyyk battleground locations, each with a slaver",
+     "filter": "Filters.and(Filters.Kashyyyk_location, Filters.battleground) with Filters.slaver",
+     "gameConditions": "GameConditions.controlsWith(game, self, playerId, 2, Filters.and(Filters.Kashyyyk_location, Filters.battleground), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.slaver)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029.java:105-106"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "control (opponent): opponent controls any Kashyyyk location",
+       "filter": "Filters.Kashyyyk_location",
+       "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Kashyyyk_location)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029.java:107"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029.java:96-119"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Back flips to front if opponent controls two Kashyyyk battlegrounds.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029_BACK.java:83"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029_BACK.java:84"
+    },
+    {
+     "req": "control (opponent, count 2): opponent controls 2 Kashyyyk battleground locations",
+     "filter": "Filters.and(Filters.Kashyyyk_location, Filters.battleground)",
+     "gameConditions": "GameConditions.controls(game, opponent, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Kashyyyk_location, Filters.battleground))",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029_BACK.java:85"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set601/dark/Card601_029_BACK.java:81-95"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip uses CONTROL-WITH: 2 Kashyyyk battleground LOCATIONS (system counts, not just sites) each controlled by you with a slaver there; slaver is a keyword granted dynamically (your Trandoshans are slavers via KeywordModifier).",
+  "Opponent negative constraint: CONTROL zero Kashyyyk locations (any, battleground or not).",
+  "Flip-back: opponent CONTROLS 2 Kashyyyk battlegrounds; note asymmetry - opponent needs battlegrounds to flip you back, while any controlled Kashyyyk location blocks your forward flip.",
+  "All flip checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+  "No hard-lose/out-of-play condition on either side."
+ ],
+ "typedIdentities": [
+  "Filters.and(Filters.Kashyyyk_location, Filters.battleground); Filters.Kashyyyk_location; Filters.Kashyyyk_system",
+  "Filters.slaver (Keyword.SLAVER); Filters.species(Species.TRANDOSHAN) granted Keyword.SLAVER by both sides",
+  "Filters.title(Title.Slaving_Camp_Headquarters) / Filters.Slaving_Camp_Headquarters; Filters.and(Icon.LEGACY_BLOCK_8, Filters.Special_Delivery)",
+  "Filters.Scum_And_Villainy (may deploy on Slaving Camp HQ; uncancelable while you occupy it - OccupiesCondition)",
+  "Filters.and(Filters.your(self), Filters.non_unique, Filters.slaver) immune to Title.Grimtaash while CardsInHandFewerThanCondition(owner, 13)",
+  "Back retrieval-to-hand classes: Filters.or(Filters.slaver, Filters.starship, Filters.vehicle)"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy Kashyyyk system (Filters.Kashyyyk_system), Slaving Camp Headquarters (Filters.title(Title.Slaving_Camp_Headquarters)), and [Block 8] Special Delivery (Filters.and(Icon.LEGACY_BLOCK_8, Filters.Special_Delivery)) from Reserve Deck (Card601_029.java:52-76).",
+  "No repeatable downloads/pulls on either side; back economy is destiny manipulation and retrieval-to-hand (below)."
+ ],
+ "otherObligations": [
+  "Both sides: your Trandoshans are slavers (Card601_029.java:84; Card601_029_BACK.java:62); Scum And Villainy may deploy on Slaving Camp HQ and may not be canceled while you OCCUPY that site (front :86-88; back :64-66); your non-unique slavers immune to Grimtaash while you have <13 cards in hand (front :90-91; back :68-69).",
+  "Back: whenever you 'enslave' a character (TriggerConditions.characterEnslavedBy), opponent must use 2 Force or lose 1 Force (forced lose 1 if they cannot use 2) (Card601_029_BACK.java:98-126).",
+  "Back: once per turn during battle, add or subtract up to X from your just-drawn destiny, X = Kashyyyk locations you control with a slaver (Filters.controlsWith(playerId, self, Filters.slaver)) (Card601_029_BACK.java:136-178).",
+  "Back: once per turn, if you just retrieved Force during battle and the retrieved card is a slaver/starship/vehicle, may take it into hand (Card601_029_BACK.java:180-195).",
+  "Strategic: hold 2 slaver-manned Kashyyyk battlegrounds and evict opponent from all Kashyyyk locations to flip; after flip, never let opponent control 2 Kashyyyk battlegrounds."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": false,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "no profile exists in src/gemp-swccg-server/src/main/resources/objective_playbooks.json for frontBp 601_29 (Wookiee Slaving Operation); the full flip law (control-with 2 Kashyyyk battlegrounds via slavers + opponent controls 0 Kashyyyk locations), the flip-back exposure (opponent controls 2 Kashyyyk battlegrounds), the slaver keyword grant, and the setup pulls (Kashyyyk system, Slaving Camp Headquarters, [Block 8] Special Delivery) are entirely unencoded"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

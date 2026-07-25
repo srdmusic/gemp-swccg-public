@@ -1,0 +1,136 @@
+{
+  "frontBp": "213_31",
+  "backBp": "213_31_BACK",
+  "side": "DARK",
+  "titleFront": "Hunt Down And Destroy The Jedi (V)",
+  "titleBack": "Their Fire Has Gone Out Of The Universe (V)",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Flip if Vader can be spotted at a battleground site AND no opponent Jedi, Padawan, or Luke can be spotted at a battleground site. Both spots use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE. Differs from 7_297 by adding Filters.padawan to the blocker set.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031.java:161"
+        },
+        {
+          "req": "card-spot: Vader at a battleground site",
+          "filter": "Filters.and(Filters.Vader, Filters.at(Filters.battleground_site))",
+          "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Vader, Filters.at(Filters.battleground_site)))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031.java:162"
+        },
+        {
+          "op": "not",
+          "children": [
+            {
+              "req": "card-spot: any opponent Jedi, Padawan, or Luke at a battleground site",
+              "filter": "Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.padawan, Filters.Luke), Filters.at(Filters.battleground_site))",
+              "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.padawan, Filters.Luke), Filters.at(Filters.battleground_site)))",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031.java:163"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031.java:160-173"
+    ]
+  },
+  "flipToFront": {
+    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic, singleton trigger)",
+    "prose": "Back flips to front if Vader is not on table, OR opponent has Luke, a Jedi, or a Padawan at a battleground site. A once-per-game consolation is mechanized on the FRONT class: on cardFlipped, if a site you control with Vader exists, may take Vader (and cards on him) into hand.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped guard",
+          "filter": "(self)",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031_BACK.java:67"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "op": "not",
+              "children": [
+                {
+                  "req": "card-spot: Vader anywhere on table",
+                  "filter": "Filters.Vader",
+                  "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Vader)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031_BACK.java:68"
+                }
+              ]
+            },
+            {
+              "req": "card-spot: opponent Jedi, Padawan, or Luke at a battleground site",
+              "filter": "Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.padawan, Filters.Luke), Filters.at(Filters.battleground_site))",
+              "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.padawan, Filters.Luke), Filters.at(Filters.battleground_site)))",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031_BACK.java:69"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set213/dark/Card213_031_BACK.java:66-79"
+    ]
+  },
+  "requirementSemantics": [
+    "flipToBack: canSpot presence semantics ('actor at location-type'), no control/occupy. Vader must be AT a battleground site (any, either player's).",
+    "Blocker: canSpot of opponent Jedi OR Padawan OR Luke at ANY battleground site prevents flip / forces flip-back. This V-version adds Filters.padawan versus the original 7_297 (Jedi|Luke only).",
+    "flipToFront: disjunction of Vader-off-table (NOT canSpot Vader) and blocker-arrival.",
+    "Once-per-game rescue: on the FRONT class, OptionalGameTextTriggerAction on TriggerConditions.cardFlipped(game, effectResult, self) gated by GameConditions.canSpot(game, self, Filters.and(Filters.site, Filters.controlsWith(playerId, self, Filters.Vader))): control-with semantics (a site you control with Vader); ReturnCardToHandFromTableEffect(targetedCard, Zone.HAND, Zone.LOST_PILE) [Card213_031.java:121-155].",
+    "All spots use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE."
+  ],
+  "typedIdentities": [
+    "Filters.Vader (persona, flip actor)",
+    "Filters.battleground_site (flip gate location type)",
+    "Filters.and(Filters.opponents(self), Filters.or(Filters.Jedi, Filters.padawan, Filters.Luke), Filters.at(Filters.battleground_site)) (blocker set, INCLUDES padawan)",
+    "Filters.title(Title.Vaders_Castle) (required start deploy)",
+    "Filters.and(Filters.Visage_Of_The_Emperor, Filters.icon(Icon.VIRTUAL_SET_13)) ([Set 13] Visage required start deploy)",
+    "Filters.and(Icon.CLOUD_CITY, Filters.site, Filters.iconCount(Icon.DARK_FORCE, 1)) (required start deploy site)",
+    "Filters.and(Filters.battleground_site, Filters.or(Filters.partOfSystem(Title.Malachor), Filters.icon(Icon.CLOUD_CITY))) (once-per-deploy-phase download)",
+    "Filters.and(Filters.character, Filters.not(Filters.or(Filters.droid, Filters.Imperial, Filters.bounty_hunter))) (owner deploy ban, both sides)",
+    "Filters.inquisitor (destiny +1; total battle destiny +1/+2)",
+    "Filters.hasStacked(Filters.hatredCard) ('Hatred' card condition)",
+    "Back: Filters.and(Filters.Vader, Filters.armedWith(Filters.lightsaber)) (drain-bonus cancel condition); Filters.Visage_Of_The_Emperor (no Force loss)"
+  ],
+  "setupAndPullRoutes": [
+    "START OF GAME (front, required): deploy Vader's Castle: DeployCardFromReserveDeckEffect(Filters.title(Title.Vaders_Castle), true, false) [Card213_031.java:65-71]",
+    "START OF GAME (front, required): deploy [Set 13] Visage Of The Emperor: DeployCardFromReserveDeckEffect(Filters.and(Filters.Visage_Of_The_Emperor, Filters.icon(Icon.VIRTUAL_SET_13)), true, false) [Card213_031.java:72-78]",
+    "START OF GAME (front, required): deploy a [Cloud City] site with exactly one [Dark Side] icon: DeployCardFromReserveDeckEffect(Filters.and(Icon.CLOUD_CITY, Filters.site, Filters.iconCount(Icon.DARK_FORCE, 1)), true, false) [Card213_031.java:79-86]",
+    "FRONT, once per owner's deploy phase (free): download a [Cloud City] or Malachor battleground site: DeployCardFromReserveDeckEffect(Filters.and(Filters.battleground_site, Filters.or(Filters.partOfSystem(Title.Malachor), Filters.icon(Icon.CLOUD_CITY))), true), GameTextActionId.HUNT_DOWN_V__DOWNLOAD_LOCATION [Card213_031.java:91-108]",
+    "FRONT (fires on flip), once per game: take Vader into hand from a site you control (cards on him: yours to hand, per ReturnCardToHandFromTableEffect(..., Zone.HAND, Zone.LOST_PILE)), GameTextActionId.HUNT_DOWN_V__TAKE_VADER_INTO_HAND [Card213_031.java:121-155]"
+  ],
+  "otherObligations": [
+    "FRONT+BACK: owner may not deploy characters except bounty hunters, droids, and Imperials: MayNotPlayModifier(Filters.and(Filters.character, Filters.not(Filters.or(Filters.droid, Filters.Imperial, Filters.bounty_hunter))), owner) [Card213_031.java:114, Card213_031_BACK.java:57]",
+    "FRONT+BACK: Inquisitors are destiny +1: DestinyModifier(self, Filters.inquisitor, 1) [Card213_031.java:115, Card213_031_BACK.java:58]",
+    "FRONT+BACK: where you have an Inquisitor, your total battle destiny +1 (+2 if battle at/with a card with a stacked 'Hatred' card): TotalBattleDestinyModifier(Filters.sameLocationAs(self, Filters.inquisitor), ConditionEvaluator(1, 2, OrCondition(DuringBattleAtCondition(Filters.hasStacked(Filters.hatredCard)), DuringBattleWithParticipantCondition(Filters.hasStacked(Filters.hatredCard))))) [Card213_031.java:116, Card213_031_BACK.java:59]",
+    "BACK: you lose no Force from Visage Of The Emperor: NoForceLossFromCardModifier(self, Filters.Visage_Of_The_Emperor, playerId) [Card213_031_BACK.java:55]",
+    "BACK: while Vader armed with a lightsaber on table, opponent's Force drain bonuses are canceled: CancelOpponentsForceDrainBonusesModifier(self, OnTableCondition(Filters.and(Filters.Vader, Filters.armedWith(Filters.lightsaber)))) [Card213_031_BACK.java:52,56]",
+    "No hard-lose / place-out-of-play condition on either side (unlike 7_297: no Scanning Crew / duel / Executor-site drain landmines)."
+  ],
+  "seedMismatches": [
+    "2026-07-08 seed omits the once-per-game take-Vader-into-hand rider (front class, cardFlipped trigger, requires a site you control with Vader); the K2 rows40-57 WIP seed does record it. No substantive mismatches in either seed's flip/flipBack laws."
+  ],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "keyCharacterFilter is null: Filters.Vader is the single flip actor; not represented.",
+      "flipGateSite is null and flipGateCardIds empty: gate is any battleground site; 'Battleground site' appears in objectiveNamedLocations but has no gate role.",
+      "Blocker set (opponent Jedi/Padawan/Luke at a battleground site) not represented anywhere; padawan inclusion (the delta vs 7_297) is invisible to the profile.",
+      "requiredCardsOnTable empty: Vader-on-table is required to hold the back (flip-back on Vader leaving).",
+      "pullableCards empty: three required start deploys and the once-per-turn CC/Malachor battleground-site download are not represented (locations appear only as objectiveNamedLocations).",
+      "Deploy ban (only bounty hunters, droids, Imperials) and the Inquisitor/Hatred destiny package are not represented as obligations."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}

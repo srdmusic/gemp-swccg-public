@@ -1,0 +1,76 @@
+{
+ "frontBp": "14_52",
+ "backBp": "14_52_BACK",
+ "side": "LIGHT",
+ "titleFront": "We Have A Plan",
+ "titleBack": "They Will Be Lost And Confused",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Flip if you CONTROL Theed Palace Throne Room WITH Amidala there (controlsWith: you control the location and Amidala is spotted there, spotting includes excluded-from-battle).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052.java:130"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052.java:131"},
+    {"req": "CONTROL-WITH: owner controls location with actor there", "filter": "location=Filters.Theed_Palace_Throne_Room, actor=Filters.Amidala", "gameConditions": "GameConditions.controlsWith(game, self, playerId, Filters.Theed_Palace_Throne_Room, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Amidala)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052.java:132"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052.java:126-144"]
+ },
+ "flipToFront": {
+  "timing": "Table-changed poll, any phase",
+  "prose": "Back flips to front if OPPONENT controls Theed Palace Throne Room (plain control; Amidala irrelevant).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052_BACK.java:137"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052_BACK.java:138"},
+    {"req": "opponent CONTROL (includes excluded-from-battle)", "filter": "Filters.Theed_Palace_Throne_Room", "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Theed_Palace_Throne_Room)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052_BACK.java:139"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set14/light/Card14_052_BACK.java:136-149"]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is CONTROL + WITH-actor: GameConditions.controlsWith - owner must control Theed Palace Throne Room AND Amidala must be there. Not occupy, not presence-only.",
+  "Flip-to-front is opponent plain CONTROL of the same site - so merely losing your own control does NOT flip back; opponent must take control.",
+  "No place-out-of-play condition on either side.",
+  "Back Force-loss engine also keys off controlsWith semantics: Filters.controlsWith(playerId, self, Filters.or(Filters.Amidala, Filters.Panaka)) applied per battleground site (Card14_052_BACK.java:93,121)."
+ ],
+ "typedIdentities": [
+  "Filters.Theed_Palace_Throne_Room (setup deploy; flip gate location both directions)",
+  "Filters.Amidala (persona; flip actor and back drain-loss actor), Filters.Panaka (persona; back drain-loss actor only)",
+  "Filters.Theed_Palace_Hallway, Filters.Theed_Palace_Courtyard (setup deploys)",
+  "Filters.interior_Naboo_site (front: your characters may not deploy there)",
+  "Deploy ban (remainder of game): Filters.and(Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Filters.or(Filters.and(Icon.EPISODE_I, Filters.Jedi), Filters.alien, Filters.and(Icon.EPISODE_I, Filters.vehicle), Filters.Republic_character, Filters.and(Icon.REPUBLIC, Filters.starship))))",
+  "Filters.Your_Destiny (suspended for remainder of game), Filters.Vengeance_Of_The_Dark_Prince (no Force loss from it)",
+  "Back: Filters.and(Filters.your(self), Icon.REPUBLIC, Filters.starship) power +2; Filters.and(Icon.TRADE_FEDERATION, Filters.starship) immunity to attrition canceled"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Theed Palace Throne Room (Card14_052.java:54), Theed Palace Hallway (Card14_052.java:61), Theed Palace Courtyard (Card14_052.java:68).",
+  "No objective-granted pulls/tutors after setup on either side.",
+  "FRONT: once per turn, may activate 1 Force (Card14_052.java:105-123) - the only Force-economy relief while front-side deploy restrictions apply."
+ ],
+ "otherObligations": [
+  "FOR REMAINDER OF GAME (granted after deployment completes, survive flips, Card14_052.java:78-95): may not deploy cards with ability except [Episode I] Jedi, aliens, [Episode I] vehicles, Republic characters, and [Republic] starships; may not deploy cards with ability using Dejarik rules; Your Destiny is suspended; you lose no Force to Vengeance Of The Dark Prince.",
+  "FRONT ONLY: your characters may not deploy to interior Naboo sites (Card14_052.java:100) - directly constrains how Amidala can reach the Throne Room (an interior site): she must MOVE there, not deploy there.",
+  "BACK: you lose no more than 2 Force to any Force drain (Card14_052_BACK.java:53); your [Republic] starships power +2 (54); [Trade Federation] starships' immunity to attrition canceled (55); may pay 1 Force to cancel an opponent battle destiny > 3 (66-79); once during your control phase opponent loses 2 Force per battleground site you control with Amidala or Panaka - offered as a top-level action (92-105) and FORCED as a required trigger at end of your control phase if unused (119-133).",
+  "Rando obligations: front - walk Amidala into the Throne Room and take control; back - hold Throne Room control against opponent, and spread Amidala/Panaka across controlled battleground sites for the recurring 2-Force-loss engine."
+ ],
+ "seedMismatches": [
+  "Seed (Objective_Playbook_Facts_2026-07-08.json entry 14_52) cites sourceEvidence 'front Java getGameTextWhileActiveInPlay' / 'back Java getGameTextWhileActiveInPlay' for both flip laws; the flip triggers actually live in getGameTextRequiredAfterTriggers on both sides. Relations and filters in the seed are otherwise correct."
+ ],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; true flip gate location both directions is Theed Palace Throne Room (Filters.Theed_Palace_Throne_Room, present only as an unlabeled objectiveNamedLocations entry).",
+   "keyCharacterFilter is null; true flip actor is Filters.Amidala (and Filters.Panaka for the back Force-loss engine).",
+   "objectiveNamedLocations entries all have null labels and empty titleFragments/blueprintIds - filter strings only; nothing resolves to concrete card ids.",
+   "No representation that your characters cannot DEPLOY to interior Naboo sites while front-side (Amidala must move in), nor of the flip-back condition (opponent controls Throne Room)."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,86 @@
+{
+ "frontBp": "209_29",
+ "backBp": "209_29_BACK",
+ "side": "LIGHT",
+ "titleFront": "They Have No Idea We're Coming",
+ "titleBack": "Until We Win, Or The Chances Are Spent",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Flip if you CONTROL two Scarif locations (any Scarif locations - system or sites; plain control, no actor filter).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029.java:143"},
+    {"req": "controls >=2 locations", "filter": "Filters.Scarif_location", "gameConditions": "GameConditions.controls(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Scarif_location)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029.java:144"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029.java:138-156"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if you do NOT OCCUPY two Scarif locations, UNLESS Rogue One is at a Scarif site you occupy (spot exception).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029_BACK.java:183"},
+    {"op": "not", "children": [
+     {"req": "occupies >=2 locations (plain presence)", "filter": "Filters.Scarif_location", "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Scarif_location)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029_BACK.java:184"}
+    ]},
+    {"op": "not", "children": [
+     {"req": "canSpot card at qualifying location (starship exception)", "filter": "Filters.and(Filters.Rogue_One, Filters.at(Filters.and(Filters.site, Filters.Scarif_location, Filters.occupies(self.getOwner()))))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Rogue_One, atScarifSiteYouOccupy))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029_BACK.java:179,185"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/light/Card209_029_BACK.java:176-197"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip = plain CONTROL 2 Scarif locations; back hold = weaker plain OCCUPY 2 Scarif locations (control-vs-occupy asymmetry favors staying on back).",
+  "Back-hold exception = CARD-AT-LOCATION spot: Rogue One (starship, landed at a site) at a Scarif SITE you occupy keeps the back up alone.",
+  "All checks INCLUDE_EXCLUDED_FROM_BATTLE; no captive override (captives do not occupy)."
+ ],
+ "typedIdentities": [
+  "Filters.Scarif_location - flip gate both sides (locations: system + sites)",
+  "Filters.and(Filters.site, Filters.Scarif_location, Filters.occupies(self.getOwner())) - back exception site scope",
+  "Filters.Rogue_One - back exception card (persona starship)",
+  "Filters.Scarif_system, Filters.DataVault, Filters.Stardust, Filters.Massassi_War_Room - setup deploys",
+  "Filters.or(Filters.Rogue_One, Filters.corvette, Filters.Scarif_site) - front once-per-turn download",
+  "Filters.or(Filters.Chirrut, Filters.Baze) and Filters.and(Filters.Rebel, Filters.trooper) - granted Keyword.SPY for remainder of game",
+  "Filters.or(Filters.Jedi, Filters.title(Title.Taking_Them_With_Us)) - deploy ban for remainder of game",
+  "Filters.and(Filters.your(self), Filters.spy) - back buff scope; Filters.hasAttached(Filters.Stardust) - back drain-protect enabler; Filters.and(Filters.Rebel, Filters.spy, Filters.not(Filters.undercover_spy)) - back weapon-targeting cancel scope"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Scarif system from Reserve Deck. Card209_029.java:53-59",
+  "Setup (front, required): deploy Data Vault from Reserve Deck (Filters.DataVault). Card209_029.java:60-66",
+  "Setup (front, required): deploy Stardust from Reserve Deck (per printed text, to Data Vault). Card209_029.java:67-73",
+  "Setup (front, required): deploy Massassi War Room from Reserve Deck. Card209_029.java:74-80",
+  "Front only, once per turn (GameTextActionId.THEY_HAVE_NO_IDEA_WERE_COMING__DOWNLOAD_SITE_OR_STARSHIP): download Rogue One, a corvette, or a Scarif site from Reserve Deck. NOTE: this download does NOT exist on the back - pull Rogue One BEFORE flipping. Card209_029.java:109-135"
+ ],
+ "otherObligations": [
+  "For remainder of game (front, after deployment completes): Baze, Chirrut, and Rebel troopers are spies; you may not deploy Jedi or Taking Them With Us. Card209_029.java:85-105",
+  "Back: your spies are defense value +2, power +1 if with Stardust, immune to Undercover. Card209_029_BACK.java:69-72",
+  "Back: while Stardust is ON one of your spies (hasAttached), opponent may not cancel your Force drains at battlegrounds. Card209_029_BACK.java:75-77",
+  "Back, once per turn (shared action id): place a Rebel from Lost Pile out of play to EITHER make a regular move with your Rebel spy during your control phase OR cancel an attempt to target your non-Undercover Rebel spy with a weapon. Card209_029_BACK.java:84-173",
+  "Strategic: front download is the only objective route for Rogue One/corvette/Scarif sites; back survival can rest entirely on Rogue One parked at an occupied Scarif site."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "flipGateSite is null; gate is Scarif locations (Filters.Scarif_location) - present in objectiveNamedLocations but not as the flip gate",
+   "flipGateCardIds empty; Rogue One (206_7) is a load-bearing back-hold exception card",
+   "keyCharacterFilter is null; spies (Baze/Chirrut/Rebel troopers) and Rogue One drive the strategy",
+   "requiredCardsOnTable empty; Stardust and Rogue One placement materially change the flip/hold law",
+   "front-only nature of the Rogue One/corvette/Scarif-site download (lost after flipping) not represented",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

@@ -1,0 +1,80 @@
+{
+ "frontBp": "501_94",
+ "backBp": "501_94_BACK",
+ "side": "LIGHT",
+ "titleFront": "Rebel Strike Team (V)",
+ "titleBack": "Garrison Destroyed (V)",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094_BACK.java",
+ "cacheCheck": "NOT_IN_CACHE",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isBlownAwayLastStep - EVENT trigger (Bunker 'blown away' completes), NOT a table-state condition; will not retro-fire if missed",
+  "prose": "Flip when the Bunker is 'blown away' (blown-away last step for a card titled Bunker). No control/occupy component at all.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "timing trigger: blown-away last step of card", "filter": "Filters.title(Title.Bunker, true)", "gameConditions": "TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Bunker, true))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094.java:119"},
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094.java:120"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094.java:116-132"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if OPPONENT CONTROLS the Bunker (plain control of a location matching Filters.Bunker).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094_BACK.java:124"},
+    {"req": "opponent controls >=1 location", "filter": "Filters.Bunker", "gameConditions": "GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bunker)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094_BACK.java:125"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/light/Card501_094_BACK.java:117-135"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip = pure TIMING TRIGGER: the Bunker blown-away event (Epic Event chain), no board-count semantics.",
+  "Back flip = OPPONENT CONTROL of the Bunker location (plain control, INCLUDE_EXCLUDED_FROM_BATTLE); asymmetric with the front (event vs state).",
+  "Back Force-drain protection is a 'with <actor> there' modifier: locations same-as your scout or Ewok (Filters.sameLocationAs), not control-based.",
+  "Back Force-loss engine gated on chosen-state GameConditions.isBlownAway(game, Filters.Bunker); the draw-phase [Endor] Rebel retrieval in code is NOT gated on Bunker-blown-away despite the printed sentence attaching it to 'If bunker blown away' (Card501_094_BACK.java:81-93 has no isBlownAway check) - source divergence worth flagging for playtest text."
+ ],
+ "typedIdentities": [
+  "Filters.title(Title.Bunker, true) - front flip trigger card; Filters.Bunker - back flip gate + isBlownAway checks",
+  "Filters.Endor_system, Filters.Rebel_Landing_Site - setup deploys",
+  "Filters.or(Filters.Explosive_Charge, Filters.and(Filters.icon(Icon.ENDOR), Filters.Epic_Event)) to Filters.Bunker - front deploy-phase download (GameTextActionId.REBEL_STRIKE_TEAM__DOWNLOAD_EXPLOSIVE_CHARGE_OR_ENDOR_EPIC_EVENT)",
+  "Both-sides deploy ban: Filters.and(Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Filters.or(Filters.Rebel, Filters.Ewok, Filters.and(Icon.REBEL, Filters.starship))))",
+  "Both-sides activation shelter: GenerateNoForceModifier on Filters.Endor_system (code applies to any Endor system, NOT ownership-qualified despite printed 'your Endor system') with NotCondition(OnTableCondition(Filters.and(Filters.opponents(self), Icon.ENDOR, Filters.Objective)))",
+  "Front drain self-ban scope: Filters.and(Filters.on(Title.Endor), Filters.not(Filters.wherePresent(self, Filters.or(Filters.and(Filters.icon(Icon.ENDOR), Filters.Han), Filters.Ewok))))",
+  "Back drain protection scope: Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.or(Filters.scout, Filters.Ewok)))",
+  "Filters.scout - back immune to attrition < 4",
+  "Back Force-loss counters: Filters.and(Filters.Endor_site, Filters.occupiesWith(playerId, self, Filters.and(Filters.icon(Icon.ENDOR), Filters.or(Filters.Han, Filters.Leia, Filters.Chewie))))",
+  "Back retrieval: Filters.and(Icon.ENDOR, Filters.Rebel)"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Endor system from Reserve Deck. Card501_094.java:59-65",
+  "Setup (front, required): deploy Rebel Landing Site from Reserve Deck. Card501_094.java:66-72",
+  "Front, once during your deploy phase: deploy one Explosive Charge or [Endor] Epic Event to Bunker from Reserve Deck; reshuffle. Card501_094.java:92-113",
+  "Back, once during your draw phase: retrieve an [Endor] Rebel. Card501_094_BACK.java:81-93 (code does NOT gate this on Bunker blown away)"
+ ],
+ "otherObligations": [
+  "Both sides: opponent activates no Force at Endor system unless their [Endor] objective on table. Card501_094.java:82-83; Card501_094_BACK.java:64-65",
+  "Both sides: you may not deploy cards with ability except Rebels, Ewoks, and [Rebel] starships. Card501_094.java:84-85; Card501_094_BACK.java:66-67",
+  "Front: you may not Force drain on Endor except where your Ewok or [Endor] Han is present (self-restriction). Card501_094.java:86-87",
+  "Back: Force drains where you have a scout or Ewok may not be modified or canceled by opponent. Card501_094_BACK.java:68-69",
+  "Back: scouts are immune to attrition < 4. Card501_094_BACK.java:70",
+  "Back (once during your control phase, top-level + end-of-phase forms, gated on Bunker blown away): opponent loses 1 Force for each Endor site you occupy with [Endor] Han, [Endor] Leia, or [Endor] Chewie. Card501_094_BACK.java:95-113,137-158",
+  "Strategic: front's job is to blow the Bunker (deliver Explosive Charge / [Endor] Epic Event via the download); after flipping, keep opponent from controlling the Bunker or you revert."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": false,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "no profile exists for frontBp 501_94 in src/gemp-swccg-server/src/main/resources/objective_playbooks.json (58 profiles checked)"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

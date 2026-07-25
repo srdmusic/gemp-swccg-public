@@ -1,0 +1,167 @@
+{
+ "frontBp": "112_15",
+ "backBp": "112_15_BACK",
+ "side": "DARK",
+ "titleFront": "My Kind Of Scum",
+ "titleBack": "Fearless And Inventive",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton). Branches on whether any non-Tatooine location is on table.",
+  "prose": "If a non-Tatooine location is on table: flip requires you OCCUPY 3 battleground sites AND you occupy at least one battleground site with a non-unique alien of your Rep's species (the species alien may be at any occupied battleground site, not necessarily a distinct third). If NO non-Tatooine location is on table: flip requires you OCCUPY 2 battleground sites. Rep is the unique alien with species revealed at setup (stored in WhileInPlayData; no flip possible if Rep unset).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:152"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:153"
+    },
+    {
+     "req": "chosen-state: Rep must be set",
+     "filter": "(state) self.getWhileInPlayData().getPhysicalCard() != null",
+     "gameConditions": "(guard: rep == null -> return null)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:145-148"
+    },
+    {
+     "op": "anyOf",
+     "children": [
+      {
+       "op": "allOf",
+       "children": [
+        {
+         "req": "branch gate: non-Tatooine location on table",
+         "filter": "Filters.non_Tatooine_location",
+         "gameConditions": "GameConditions.canSpotLocation(game, Filters.non_Tatooine_location)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:155"
+        },
+        {
+         "req": "occupies: 3 battleground sites",
+         "filter": "Filters.battleground_site",
+         "gameConditions": "GameConditions.occupies(game, playerId, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground_site)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:156"
+        },
+        {
+         "req": "occupiesWith: >=1 battleground site occupied with non-unique alien of Rep's species",
+         "filter": "location: Filters.battleground_site; actor: Filters.and(Filters.non_unique, Filters.alien, Filters.species(rep.getBlueprint().getSpecies()))",
+         "gameConditions": "GameConditions.occupiesWith(game, self, playerId, Filters.battleground_site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.non_unique, Filters.alien, Filters.species(rep.getBlueprint().getSpecies())))",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:157"
+        }
+       ]
+      },
+      {
+       "op": "allOf",
+       "children": [
+        {
+         "op": "not",
+         "children": [
+          {
+           "req": "branch gate: non-Tatooine location on table",
+           "filter": "Filters.non_Tatooine_location",
+           "gameConditions": "GameConditions.canSpotLocation(game, Filters.non_Tatooine_location)",
+           "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:155"
+          }
+         ]
+        },
+        {
+         "req": "occupies: 2 battleground sites",
+         "filter": "Filters.battleground_site",
+         "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground_site)",
+         "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:161"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:144-178"
+  ]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flips back if you do NOT occupy 2 battleground sites. NOTE asymmetry: the back never re-checks the species-alien / 3-site branch; 2 occupied battleground sites always suffice to hold the back, even with non-Tatooine locations on table.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java:160"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java:161"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "occupies: 2 battleground sites",
+       "filter": "Filters.battleground_site",
+       "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.battleground_site)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java:162"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java:156-174"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack: OCCUPY counts (2 or 3 battleground sites) - occupy, not control; INCLUDE_EXCLUDED_FROM_BATTLE",
+  "flipToBack conditional branch: presence of ANY non-Tatooine location on table raises the bar and adds the occupiesWith species-alien leg (occupiesWith without count = at least one such site)",
+  "flipToFront: NOT occupy 2 battleground sites - the 3-site/species branch is NOT re-checked on the back",
+  "chosen-state: Rep (unique alien whose lore specifies species) chosen from Reserve Deck at setup, stored in WhileInPlayData and as gameState Rep"
+ ],
+ "typedIdentities": [
+  "Filters.battleground_site (both flip laws)",
+  "Filters.non_Tatooine_location (branch gate; also back forfeit condition via UnlessCondition)",
+  "Filters.and(Filters.non_unique, Filters.alien, Filters.species(rep.getBlueprint().getSpecies())) (species actor - dynamic per chosen Rep)",
+  "Filters.and(Filters.unique, Filters.alien, Filters.hasSpecies) (Rep selection filter)",
+  "Filters.Desert_Heart, Filters.Jabbas_Palace_site (setup deploys)",
+  "Filters.Well_Guarded (optional setup; immune to Alter)",
+  "Filters.operative (may not deploy); ModifierFlag.MAY_NOT_DEPLOY_INSERT_CARDS",
+  "Filters.and(Filters.frozenCaptive, Filters.Han) (frozen Han condition); Filters.Rebel immune to No_Bargain / Bad_Feeling_Have_I",
+  "Filters.Jabba, Filters.Bib (back battle-destiny +2 condition); Filters.Wounded_Wookiee (destiny +3); Filters.sameTitle(rep) (drain/destiny cancel cost + deploy-as-if-from-hand)"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy Desert Heart and a Jabba's Palace site from Reserve Deck; choose Rep = one unique alien with species from Reserve Deck (revealed, stays in deck; stored as Rep); optionally deploy Well Guarded [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:54-93]",
+  "Remainder of game: copies of your Rep stacked on this objective may deploy as if from hand (MayDeployAsIfFromHandModifier on Filters.and(Filters.stackedOn(self), Filters.your(playerId), Filters.sameTitle(rep))) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:137-140]",
+  "Back, once per YOUR control phase: RETRIEVE a non-unique alien of Rep's species [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java:117-140]"
+ ],
+ "otherObligations": [
+  "Remainder of game: your Rep is a leader; Well Guarded immune to Alter; you may NOT deploy 'insert' cards or operatives [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:109-121]",
+  "Remainder of game: while frozen Han on table, Rebels immune to No Bargain and Bad Feeling Have I (incl. deploy-cost immunity) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015.java:122-136]",
+  "Back: once per turn may cancel a Force drain OR a just-drawn battle destiny by stacking a copy of Rep from hand on this objective [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java:65-114]",
+  "Back modifiers: your battle destiny draws +2 while Jabba AND Bib on table; Wounded Wookiee destiny +3; your aliens forfeit +2 unless a non-Tatooine location on table [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set112/dark/Card112_015_BACK.java:143-153]"
+ ],
+ "seedMismatches": [
+  "Seed structures the 3-site branch as OCCUPIES count 3 'byWhom' rep-species alien, conflating two separate checks. Source is: occupies(3, battleground_site) AND separately occupiesWith(battleground_site, rep-species non-unique alien) with no count - the species alien needs to be at only ONE occupied battleground site, and the other two legs need no particular occupier (Card112_015.java:156-157)."
+ ],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "no representation of the Rep chosen-state or the rep-species non-unique alien actor anywhere in the profile (keyCharacterFilter null)",
+   "no representation of the non-Tatooine-location branch (2-site vs 3-site+species thresholds); weights empty",
+   "flipGateSite null (gate = any battleground sites; acceptable) but requiredCardsOnTable empty despite Rep/Well Guarded strategic anchors",
+   "pullableCards empty despite Rep deploy-from-stack route and back species-alien retrieval engine"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

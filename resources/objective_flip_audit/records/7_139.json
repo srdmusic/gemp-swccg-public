@@ -1,0 +1,74 @@
+{
+ "frontBp": "7_139",
+ "backBp": "7_139_BACK",
+ "side": "LIGHT",
+ "titleFront": "Rescue The Princess",
+ "titleBack": "Sometimes I Amaze Even Myself",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-trigger on the move event itself (TriggerConditions.movedToLocationBy), not a table-state poll",
+  "prose": "Flip when the objective owner moves Leia to Yavin 4: War Room (move performed by playerId; any Leia, no ability constraint on the move trigger).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "timing-trigger: card just moved to location by owner", "filter": "Filters.Leia -> Filters.Yavin_4_War_Room", "gameConditions": "TriggerConditions.movedToLocationBy(game, effectResult, playerId, Filters.Leia, Filters.Yavin_4_War_Room)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139.java:126"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139.java:127"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139.java:126-135"]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger on capture event",
+  "prose": "Back flips to front if Leia is captured.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "timing-trigger: just captured", "filter": "Filters.Leia", "gameConditions": "TriggerConditions.captured(game, effectResult, Filters.Leia)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139_BACK.java:128"},
+    {"req": "objective flippable", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139_BACK.java:129"}
+   ]
+  },
+  "citations": ["src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_139_BACK.java:128-137"]
+ },
+ "requirementSemantics": [
+  "Flip-to-back is an EVENT trigger (movedToLocationBy), not control/occupy: the move must be performed by the objective owner (playerId argument); Leia arriving via opponent action or via other means matching a different trigger type does not fire this exact condition.",
+  "Flip-to-front is an EVENT trigger (captured): fires on Leia being captured, regardless of location.",
+  "No control/occupy leaf exists anywhere in either flip law.",
+  "Both sides carry a place-out-of-play hazard: TriggerConditions.justLost(Filters.Leia) with escape hatch GameConditions.hasGameTextModification(RESCUE_THE_PRINCESS__CANNOT_BE_PLACED_OUT_OF_PLAY) and GameConditions.canBePlacedOutOfPlay (front Card7_139.java:109-122, back Card7_139_BACK.java:114-125). Front version also adds until-end-of-game MayNotDeployModifier(Filters.Death_Star_Plans) before going out of play (Card7_139.java:117-119)."
+ ],
+ "typedIdentities": [
+  "Filters.Leia (persona; flip actor, capture target, and out-of-play hazard)",
+  "Filters.Yavin_4_War_Room (flip destination location)",
+  "Filters.Detention_Block_Corridor, Filters.Docking_Bay_327, Filters.Yavin_4_Docking_Bay (setup locations)",
+  "Filters.and(Filters.Leia, Filters.abilityLessThan(4)) (setup: Leia deployed as imprisoned captive)",
+  "Filters.and(Filters.your(self), Filters.or(Filters.spy, Filters._8D8, Filters.Revolution, Filters.Death_Star_Plans)) vs Filters.Death_Star_location (front deploy ban)",
+  "Filters.Detention_Block_Control_Room (front MayNotDeploy)",
+  "Filters.canReleaseCaptives (front ImmuneToTitle Sense/Alter)",
+  "Filters.Nabrun_Leids (front MayNotPlay)",
+  "Back: Filters.or(Filters.Imperial, Filters.Dark_Jedi, Filters.Imperial_starship) (lose all immunity to attrition during battle), Filters.and(Filters.opponents(self), Filters.unique, Filters.or(Filters.character, Filters.vehicle, Filters.starship)) (lost during battle -> out of play)"
+ ],
+ "setupAndPullRoutes": [
+  "Start of game (required, from Reserve Deck): Detention Block Corridor (Card7_139.java:53), Leia of ability < 4 deployed to Detention Block Corridor as imprisoned captive via DeployCardToTargetFromReserveDeckEffect with DeployAsCaptiveOption.deployAsImprisonedCaptive() (Card7_139.java:60), Docking Bay 327 (Card7_139.java:67), Yavin 4: Docking Bay (Card7_139.java:74), Yavin 4: War Room (Card7_139.java:81).",
+  "No objective-granted pulls/tutors on either side after setup."
+ ],
+ "otherObligations": [
+  "FRONT: your spies/8D8/Revolution/Death Star Plans may not deploy to Death Star locations (Card7_139.java:95-96); Detention Block Control Room may not deploy (97); cards that release captives immune to Sense and Alter (98-99); may not play Nabrun Leids (100).",
+  "FRONT+BACK: if Leia lost from table, objective placed out of play (loss condition Rando must prevent); front adds permanent may-not-deploy Death Star Plans on the way out (Card7_139.java:109-122; Card7_139_BACK.java:114-125).",
+  "BACK: opponent must use +1 Force to initiate Force drains (InitiateForceDrainCostModifier, Card7_139_BACK.java:60); Leia participating adds one battle destiny (61); attrition against opponent +2 during battle (62); Imperials/Dark Jedi/Imperial starships lose all immunity to attrition during battle (63); opponent's unique characters/vehicles/starships lost during battle are placed out of play (97-110).",
+  "BACK ANOMALY (source fact): Card7_139_BACK.java:68-90 contains a TopLevelGameTextAction referencing game.getGameState().getSubjugatedPlanet() and Filters.matchingOperativeToSubjugatedPlanet (once-per-battle add one battle destiny). This matches no clause of the printed back game text and appears to be copy-paste from an operative objective; it is dead unless a subjugated planet exists."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; true flip gate location is Yavin 4: War Room (Filters.Yavin_4_War_Room), which appears only inside objectiveNamedLocations.",
+   "keyCharacterFilter is null; the flip law's sole actor is Filters.Leia (must be MOVED by owner to the War Room), and Leia lost = objective out of play. No profile field encodes Leia.",
+   "flipGateCardIds is empty; no representation that the flip requires a move EVENT (movedToLocationBy) rather than standing control/occupancy.",
+   "requiredCardsOnTable is empty; imprisoned Leia (setup-required, and the loss hazard) is not represented.",
+   "No representation of the flip-back risk (Leia captured flips back to front) or the out-of-play hazard (Leia lost)."
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

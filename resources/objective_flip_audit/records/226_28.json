@@ -1,0 +1,114 @@
+{
+ "frontBp": "226_28",
+ "backBp": "226_28_BACK",
+ "side": "LIGHT",
+ "titleFront": "The Hidden Path",
+ "titleBack": "Gather Allies And Train",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flip if Jedi OCCUPY two non-Mapuzo sites (occupiesWith count 2: two sites, each occupied by owner and having a Jedi there).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:149"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:150"
+    },
+    {
+     "req": "occupiesWith: 2 locations occupied with actor there",
+     "filter": "locations: Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site); actor: Filters.Jedi",
+     "gameConditions": "GameConditions.occupiesWith(game, self, playerId, 2, Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:151"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:145-163"
+  ]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flips back if Jedi do NOT occupy two non-Mapuzo sites (exact negation, same occupiesWith call).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:122"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:123"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "occupiesWith: 2 locations occupied with actor there",
+       "filter": "locations: Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site); actor: Filters.Jedi",
+       "gameConditions": "GameConditions.occupiesWith(game, self, playerId, 2, Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:124"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:121-134"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack and flipToFront: symmetric OCCUPY-WITH law - 2 sites that are not Mapuzo locations (any site type, battleground NOT required), owner occupies each, and a Jedi (Filters.Jedi - includes Jedi survivors) is at each",
+  "note: deploy restriction bans Jedi EXCEPT Jedi survivors, so in practice the occupying Jedi are Jedi survivors, but the flip check itself is plain Filters.Jedi",
+  "back Force-loss rider uses a DIFFERENT location filter: end of opponent's turn + Jedi occupy two BATTLEGROUND sites (Filters.battleground_site, no spot override) -> opponent loses 1 Force"
+ ],
+ "typedIdentities": [
+  "Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site) + Filters.Jedi (flip law both directions)",
+  "setup: Filters.Mining_Village, Filters.Safehouse, Filters.Underground_Corridor, Filters.Fallen_Order",
+  "restrictions (both sides): may not deploy Filters.and(Filters.generic, Filters.location), Filters.Anakin, Filters.and(Filters.Jedi, Filters.not(Filters.Jedi_Survivor)); may not play Filters.A_Jedis_Resilience; ModifyGameTextType.WEAPON_LEVITATION_MAY_NOT_STEAL_WEAPONS on Filters.Weapon_Levitation",
+  "front-only: may not play Filters.Nabrun_Leids; ForceDrainModifier(Filters.Mapuzo_site, -1, playerId) (your drains at Mapuzo sites -1)",
+  "downloads: Filters.Jabiim_location (both sides); Filters.holocron (front only)",
+  "back: Filters.Jedi_Survivor deploy -1; Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4)) total battle destiny -1; Filters.and(Filters.your(playerId), Filters.holocron) about to leave table -> Used Pile; relocate Filters.Jedi between Filters.Jabiim_site and Filters.battleground_site for 2 Force"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order from Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:50-81]",
+  "Front+Back, once per turn: deploy a Jabiim location from Reserve Deck (THE_HIDDEN_PATH__DOWNLOAD_LOCATION, shared id) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:106-122, src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:143-159]",
+  "Front only, once per turn: deploy a holocron from Reserve Deck (THE_HIDDEN_PATH__DOWNLOAD_HOLOCRON) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:124-139]"
+ ],
+ "otherObligations": [
+  "Remainder of game (both sides): may not deploy generic locations, Anakin, or Jedi except Jedi survivors; may not play A Jedi's Resilience; Weapon Levitation may not steal weapons [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:84-100, src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:61-80]",
+  "Front: may not play Nabrun Leids; your Force drains at Mapuzo sites are -1 [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028.java:97-99]",
+  "Back: Jedi survivors deploy -1; opponent's total battle destiny -1 where they have a character of ability > 4 [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:76-77]",
+  "Back: your holocron about to leave table is placed in Used Pile instead (required) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:88-106]",
+  "Back: end of opponent's turn, if Jedi occupy two battleground sites, opponent loses 1 Force [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:109-119]",
+  "Back: during your move phase, may use 2 Force to relocate a Jedi between a Jabiim site and a battleground site as a regular move [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set226/light/Card226_028_BACK.java:161-225]"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "keyCharacterFilter null: flip actor Filters.Jedi unrepresented as a character filter (only inside a namedLocation label)",
+   "requiredCardsOnTable empty: mandatory Fallen Order start Effect absent",
+   "startingLocations empty despite 3 mandatory Mapuzo sites (present only as objectiveNamedLocations)",
+   "pullableCards empty despite Jabiim-location and holocron downloads (holocron also back-side protected asset)",
+   "flipGateSite null (gate = any 2 non-Mapuzo sites; filter exists in objectiveNamedLocations but is not wired); count threshold 2 and the site-vs-battleground distinction between flip law and Force-loss rider unrepresented; weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

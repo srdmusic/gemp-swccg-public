@@ -1,0 +1,111 @@
+{
+ "frontBp": "7_298",
+ "backBp": "7_298_BACK",
+ "side": "DARK",
+ "titleFront": "Imperial Occupation",
+ "titleBack": "Imperial Control",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flips when your matching operatives CONTROL at least 3 battleground sites related to the Renegade planet (controlsWith: you control the site AND at least one of your matchingOperativeToRenegadePlanet is there; spot override includes excluded-from-battle).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:108"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:109"
+    },
+    {
+     "req": "controlsWith: control 3 locations with actor there",
+     "filter": "locations: Filters.and(Filters.battleground_site, Filters.Renegade_planet_location); actor: Filters.and(Filters.your(self), Filters.matchingOperativeToRenegadePlanet)",
+     "gameConditions": "GameConditions.controlsWith(game, self, playerId, 3, Filters.and(Filters.battleground_site, Filters.Renegade_planet_location), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(self), Filters.matchingOperativeToRenegadePlanet))",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:110-111"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:104-123"
+  ]
+ },
+ "flipToFront": {
+  "timing": "Required after-trigger on isTableChanged (automatic, singleton).",
+  "prose": "Flips back when you do NOT OCCUPY at least 2 battleground sites related to the Renegade planet (plain occupies, no operative requirement).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing: table changed",
+     "filter": "(n/a)",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:126"
+    },
+    {
+     "req": "timing: card can be flipped",
+     "filter": "(n/a)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:127"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "occupies: 2 locations",
+       "filter": "Filters.and(Filters.battleground_site, Filters.Renegade_planet_location)",
+       "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.battleground_site, Filters.Renegade_planet_location))",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:128"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:122-139"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack: CONTROL (controlsWith) 3 Renegade-planet battleground sites, each with at least one of YOUR matching operatives there; control-with, not mere occupy",
+  "flipToFront: NOT OCCUPY 2 Renegade-planet battleground sites; plain occupy (any of your cards), operatives NOT required to hold the back",
+  "asymmetry: flip needs operatives at controlled sites; staying flipped only needs occupation by anything of yours"
+ ],
+ "typedIdentities": [
+  "Filters.and(Filters.battleground_site, Filters.Renegade_planet_location) (both flip laws)",
+  "Filters.and(Filters.your(self), Filters.matchingOperativeToRenegadePlanet) (flip actor)",
+  "Filters.planet_system (setup: choose Renegade planet; sets gameState.setRenegadePlanet(systemName))",
+  "Filters.and(Filters.generic, Filters.site) (setup site + per-deploy-phase download, both to Renegade planet system)",
+  "Filters.matchingOperativeToRenegadePlanet + Filters.on(renegadePlanet) (back modifiers)",
+  "Filters.Rebel (back: power +2 when operative at same site as a Rebel)"
+ ],
+ "setupAndPullRoutes": [
+  "On deploy: deploy any planet system from Reserve Deck (Filters.planet_system); that system becomes the Renegade planet via gameState.setRenegadePlanet [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:47-56]",
+  "On deploy: then deploy one generic site to that system (Filters.and(Filters.generic, Filters.site)) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:58-64]",
+  "Front, once per YOUR deploy phase: deploy one generic site to the Renegade planet from Reserve Deck; reshuffle (GameTextActionId.IMPERIAL_OCCUPATION__DOWNLOAD_SITE) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:86-98]"
+ ],
+ "otherObligations": [
+  "Back modifier: opponent's Force drains are -1 everywhere (ForceDrainModifier(self, Filters.any, -1, opponent)) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:66]",
+  "Back: may retrieve 1 Force whenever you deploy a matching operative to the Renegade planet (optional trigger) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:74-93]",
+  "Back modifiers: your matching operatives on Renegade planet are forfeit +2; power +2 when at same site as a Rebel [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:67-69]",
+  "Back: once per battle, when your matching operative in battle on Renegade planet, may add one battle destiny [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:103-116]"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite null; true gate = Filters.and(Filters.battleground_site, Filters.Renegade_planet_location) (dynamic, present in objectiveNamedLocations but not wired as flip gate)",
+   "keyCharacterFilter null; true flip actor Filters.matchingOperativeToRenegadePlanet is nowhere in the profile",
+   "no count thresholds (3 to flip / hold 2 to stay) represented; weights empty",
+   "pullableCards empty despite per-deploy-phase generic-site download"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

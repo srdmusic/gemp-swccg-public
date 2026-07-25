@@ -1,0 +1,122 @@
+{
+ "frontBp": "216_11",
+ "backBp": "216_11_BACK",
+ "side": "DARK",
+ "titleFront": "On The Verge Of Greatness",
+ "titleBack": "Taking Control Of The Weapon",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on any table change (NOT flagged singleton in source)",
+  "prose": "Flip if Krennic or Tarkin is at a Scarif battleground site AND a Death Star system is orbiting Scarif.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011.java:119"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011.java:120"
+    },
+    {
+     "req": "can-spot (at): Krennic or Tarkin at a Scarif battleground site",
+     "filter": "Filters.and(Filters.at(Filters.Scarif_battleground_site), Filters.or(Filters.Krennic, Filters.Tarkin))",
+     "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, <filter>)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011.java:121"
+    },
+    {
+     "req": "card-state (orbit): Death Star system orbiting Scarif",
+     "filter": "Filters.and(Filters.Death_Star_system, Filters.isOrbiting(Title.Scarif))",
+     "gameConditions": "GameConditions.canSpot(game, self, <filter>)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011.java:122"
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011.java:117-133"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction on any table change (singleton)",
+  "prose": "Back flips to front if you do NOT have a leader at a Scarif battleground site. Separately (checked first), back is PLACED OUT OF PLAY if Death Star system or Shield Gate is not on table.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "timing trigger: table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011_BACK.java:171"
+    },
+    {
+     "req": "card-state: objective flippable",
+     "filter": "self",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011_BACK.java:172"
+    },
+    {
+     "op": "not",
+     "children": [
+      {
+       "req": "can-spot (at): your leader at a Scarif battleground site",
+       "filter": "Filters.and(Filters.your(self), Filters.leader, Filters.at(Filters.Scarif_battleground_site))",
+       "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, <filter>)",
+       "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011_BACK.java:173"
+      }
+     ]
+    }
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set216/dark/Card216_011_BACK.java:170-183"
+  ]
+ },
+ "requirementSemantics": [
+  "Front flip: can-spot AT (Filters.at) a Scarif battleground SITE for Krennic/Tarkin - persona presence at site class, not control or occupy; plus an orbit-state check on the Death Star system (Filters.isOrbiting(Title.Scarif)).",
+  "Back flip-back: absence of ANY of your leaders (Filters.leader keyword) at a Scarif battleground site; Krennic/Tarkin count as leaders but any leader holds it.",
+  "Back HARD LOSE is separate and stronger: out of play if no Death Star system on table OR no Shield Gate on table (plain canSpot, no SpotOverride, no canBeFlipped gate) (Card216_011_BACK.java:155-168).",
+  "Note: back hard-lose checks broad Filters.Death_Star_system (any printing), not the [Set 16] icon-gated version used for the setup pull."
+ ],
+ "typedIdentities": [
+  "Filters.Krennic; Filters.Tarkin (personas); Filters.and(Filters.your(self), Filters.leader)",
+  "Filters.Scarif_battleground_site; Filters.and(Filters.Scarif_location, Filters.battleground)",
+  "Filters.and(Icon.VIRTUAL_SET_16, Filters.Death_Star_system) (setup); Filters.Death_Star_system (hard-lose check); Filters.isOrbiting(Title.Scarif)",
+  "Filters.Scarif_system; Filters.title(Title.Scarif_Citadel_Tower); Filters.Shield_Gate",
+  "Deploy ban: Filters.or(Filters.Endor_Shield, Filters.and(Filters.character, Filters.not(Filters.Imperial)), Filters.and(Filters.starship, Filters.not(Filters.Imperial_starship)))",
+  "Back destiny locations: Filters.or(Filters.Death_Star_system, Filters.isOrbitedBy(Filters.Death_Star_system)) plus related sites via Filters.relatedSiteTo(self, ...)"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (required on objective deploy): deploy [Set 16] Death Star system (Icon.VIRTUAL_SET_16 + Filters.Death_Star_system), Scarif system, Citadel Tower (Filters.title(Title.Scarif_Citadel_Tower)), and Shield Gate from Reserve Deck (Card216_011.java:46-77).",
+  "Both sides once per turn (ON_THE_VERGE_OF_GREATNESS__DEPLOY_SCARIF_BATTLEGROUND, shared id): deploy a Scarif battleground (Filters.and(Filters.Scarif_location, Filters.battleground)) from Reserve Deck (Card216_011.java:80-99; Card216_011_BACK.java:118-134).",
+  "Back once during your draw phase (TAKING_CONTROL_OF_THE_WEAPON__RETRIEVE_NON_UNIQUE_CARD_WITH_ABILITY): retrieve a non-unique card with ability (Card216_011_BACK.java:136-150)."
+ ],
+ "otherObligations": [
+  "Front remainder-of-game deploy ban: no Endor Shield, non-Imperial characters, or non-Imperial starships (Card216_011.java:104-106).",
+  "Front: your non-unique Imperials/vehicles/capital starships deploy -1 (-2 for Star Destroyers) (:107-109); non-unique Imperials forfeit +1 (:110-112).",
+  "Back: A Bright Center To The Universe cancels opponent's Force drain modifiers everywhere (ModifyGameText) (Card216_011_BACK.java:65).",
+  "Back: +1 total battle destiny (+2 with your non-unique ability card in battle) at Death Star, orbited system, and related sites (:66-67).",
+  "Back: Vader may make a regular move to a just-initiated battle (OptionalGameTextTriggerAction) (:72-112).",
+  "Back HARD LOSE: placed out of play if Death Star system or Shield Gate not on table (:155-168). Protect Shield Gate (a DEVICE) and the Death Star system at all costs after flip.",
+  "Flip-back exposure: always keep a leader at a Scarif battleground site after flip."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite null: gate location is a Scarif battleground site (Filters.Scarif_battleground_site); present only as a named-location recipe",
+   "keyCharacterFilter null and flipGateCardIds empty: flip actors Krennic (209_36) / Tarkin (102_11, 204_45) not listed",
+   "orbit condition (Death Star system isOrbiting Scarif) exists only as a recipe string in objectiveNamedLocations, with no structured gate semantics",
+   "requiredCardsOnTable empty: back hard-loses if Death Star system or Shield Gate (216_18) leaves table",
+   "flip-back exposure (need your leader at a Scarif battleground site) not represented"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

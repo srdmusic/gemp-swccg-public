@@ -1,0 +1,89 @@
+{
+ "frontBp": "110_4",
+ "backBp": "110_4_BACK",
+ "side": "LIGHT",
+ "titleFront": "You Can Either Profit By This...",
+ "titleBack": "Or Be Destroyed",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004_BACK.java",
+ "cacheCheck": "OK",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Flip if Han is on Tatooine and not a captive (spot Han with on(Tatooine) and not(captive); includes excluded-from-battle but NOT captives, so frozen/imprisoned Han never satisfies it).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004.java:141"},
+    {"req": "canSpot card-on-table in state", "filter": "Filters.and(Filters.Han, Filters.on(Title.Tatooine), Filters.not(Filters.captive))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Han, Filters.on(Title.Tatooine), Filters.not(Filters.captive)))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004.java:142"}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004.java:139-152"
+  ]
+ },
+ "flipToFront": {
+  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
+  "prose": "Back flips to front if Han is captured or not on table (cannot spot a non-captive Han anywhere).",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004_BACK.java:99"},
+    {"op": "not", "children": [
+     {"req": "canSpot card-on-table in state", "filter": "Filters.and(Filters.Han, Filters.not(Filters.captive))", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Han, Filters.not(Filters.captive)))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004_BACK.java:100"}
+    ]}
+   ]
+  },
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set110/light/Card110_004_BACK.java:97-110"
+  ]
+ },
+ "requirementSemantics": [
+  "Flip both ways is CHARACTER-STATE spotting on the persona Han: front needs free (non-captive) Han located on planet Tatooine; back holds while a free Han exists ANYWHERE (back check drops the on-Tatooine requirement).",
+  "Neither side checks control or occupy for the flip.",
+  "HARD-LOSE both sides: if Tatooine system is 'blown away' (isBlownAwayLastStep), objective is placed out of play. Front Card110_004.java:126-137; back Card110_004_BACK.java:56-67",
+  "One-shot on flip to back (cardFlipped trigger, once per game GameTextActionId.OR_BE_DESTROYED__RETRIEVE_FORCE): retrieve 5 Force, or 10 if Han's power < 4. Card110_004_BACK.java:69-95"
+ ],
+ "typedIdentities": [
+  "Filters.Han (persona) - flip actor both sides",
+  "Filters.on(Title.Tatooine) - front flip location scope (whole planet: sites + system aboardness semantics of on())",
+  "Filters.not(Filters.captive) - flip state qualifier",
+  "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Tatooine, true)) - blown-away hard-lose trigger",
+  "Filters.Jabbas_Palace, Filters.Audience_Chamber - setup sites",
+  "Filters.alien - opponent's optional setup deploys (up to 2) to Audience Chamber",
+  "Filters.or(Filters.and(Filters.Luke, Filters.not(Filters.Master_Luke)), Filters.R2D2, Filters.C3PO) - front deploy -2 at Jabba's Palace sites; Filters.Master_Luke deploys free there",
+  "Filters.or(Filters.Han, Filters.Luke, Filters.Leia, Filters.Chewie, Filters.Lando) - back control-phase Force-loss counters",
+  "Filters.Frozen_Assets - front self play-ban; Filters.Bad_Feeling_Have_I - back game text cancel",
+  "Filters.and(Filters.your(self), Filters.unpiloted, Filters.starfighter) + Filters.exterior_Tatooine_site - back landed-deploy grant"
+ ],
+ "setupAndPullRoutes": [
+  "Setup (front, required): deploy Tatooine: Jabba's Palace from Reserve Deck. Card110_004.java:59-65",
+  "Setup (front, required): deploy Audience Chamber from Reserve Deck. Card110_004.java:66-72",
+  "Setup (front, required unless ModifyGameTextType.YOU_CAN_EITHER_PROFIT_BY_THIS__DO_NOT_DEPLOY_HAN_AT_START_OF_GAME): deploy Han from Reserve Deck to Audience Chamber as unattended 'frozen' captive (DeployAsCaptiveOption.deployAsUnattendedFrozenCaptive). Card110_004.java:73-85",
+  "Setup (front, optional, OPPONENT'S): opponent may deploy up to two aliens from Reserve Deck to Audience Chamber. Card110_004.java:86-92",
+  "After deployment completes: until end of game, frozen Han may not move (MayNotMoveModifier on Han+frozenCaptive). Card110_004.java:100-108",
+  "No download/tutor actions on either side after setup."
+ ],
+ "otherObligations": [
+  "Front: opponent may not Force drain at Audience Chamber; YOU may not Force drain at any Tatooine location (self-restriction). Card110_004.java:116-117",
+  "Front: you may not play Frozen Assets. Card110_004.java:118",
+  "Front: Luke (non-Master), R2-D2, C-3PO deploy -2 at Jabba's Palace sites; Master Luke deploys free there. Card110_004.java:119-121",
+  "Back (once per game on flip): retrieve 5 Force (10 if Han power < 4). Card110_004_BACK.java:69-95",
+  "Back: cancels game text of Bad Feeling Have I; your unpiloted starfighters may deploy landed to exterior Tatooine sites (code filter is exterior_Tatooine_site though printed text says 'locations'). Card110_004_BACK.java:150-156",
+  "Back (once during your control phase, top-level and end-of-phase required forms): opponent loses 1 Force per battleground location occupied by Han/Luke/Leia/Chewie/Lando; ModifyGameTextType.OR_BE_DESTROYED__FORCE_LOSS_MAY_NOT_EXCEED_THREE_OR_BE_REDUCED caps at 3 non-reducible; LEGACY__OR_BE_DESTROYED__FORCE_LOSS makes it Reserve-Deck loss floored at 2. Card110_004_BACK.java:112-145,159-194",
+  "Strategic: rescue Han from the frozen captive start and keep him free on Tatooine to flip; keep him free (anywhere) to stay on back; protect Tatooine system from blown-away."
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": false,
+  "profileGaps": [
+   "flipGateSite is null; flip gate is character-state 'free Han on Tatooine', with Audience Chamber as the de-facto rescue site - no representation",
+   "keyCharacterFilter is null; Han (persona) IS the entire flip law",
+   "requiredCardsOnTable empty; Han must remain on table (free) to hold the back",
+   "hard-lose (Tatooine system blown away -> objective out of play) not represented",
+   "all objectiveNamedLocations entries have null labels/empty ids (filter strings only)",
+   "weights empty"
+  ]
+ },
+ "proofGate": "SOURCE_VERIFIED"
+}

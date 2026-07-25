@@ -1,0 +1,98 @@
+{
+  "frontBp": "225_53",
+  "backBp": "225_53_BACK",
+  "side": "LIGHT",
+  "titleFront": "Mind What You Have Learned (V)",
+  "titleBack": "Save You It Can (V)",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "VOLUNTARY top-level action (TopLevelGameTextAction, player-chosen, not a trigger), usable only during your turn; no once-per limit coded",
+    "prose": "MAY flip during your turn if Luke is on Dagobah. Implemented as a top-level game-text action, not a table-changed trigger - Rando must actively take the action.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "flip enabled",
+          "filter": "self",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053.java:180"
+        },
+        {
+          "req": "presence (card-on-planet, targetable): Luke on Dagobah",
+          "filter": "Filters.and(Filters.Luke, Filters.On_Dagobah)",
+          "gameConditions": "GameConditions.canTarget(game, self, Filters.and(Filters.Luke, Filters.On_Dagobah))",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053.java:181"
+        },
+        {
+          "req": "timing: during your turn",
+          "filter": "n/a",
+          "gameConditions": "GameConditions.isDuringYourTurn(game, playerId)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053.java:182"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053.java:178-191"
+    ]
+  },
+  "flipToFront": {
+    "timing": "NEVER. Back has no flip trigger and no lose condition. On the flip itself (cardFlipped), a REQUIRED trigger fires.",
+    "prose": "On cardFlipped: required action returns Luke and any cards on him to owner's hand (ReturnCardToHandFromTableEffect on Filters.findFirstActive(game, self, Filters.Luke), Zone.HAND for attached cards too), if Luke is on table.",
+    "expression": null,
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set225/light/Card225_053_BACK.java:59-79"
+    ]
+  },
+  "requirementSemantics": [
+    "Flip is a VOLUNTARY top-level action with turn-timing (isDuringYourTurn) - no automatic state-based flip exists; if Rando never takes the action, the card never flips.",
+    "Luke leg is presence-on-planet + targetability semantics: canTarget(Filters.and(Filters.Luke, Filters.On_Dagobah)) - Luke anywhere on Dagobah; no control/occupy requirement.",
+    "Flip consequence (back cardFlipped required trigger): Luke and all cards on him return to owner's HAND - the flip 'spends' Luke's board position, and the back then re-deploys Luke as a 'react' at -3.",
+    "The front's character purge is a required continuous enforcement, not a one-shot: on every table change, ALL your non-[Dagobah] characters of ability > 4 (except Ahsoka) currently active are lost (Filters.filterActive on Filters.and(Filters.your(playerId), Filters.not(Icon.DAGOBAH), Filters.abilityMoreThan(4), Filters.not(Filters.Ahsoka))). This modifier lives in an until-end-of-game action proxy, so it persists on the BACK side too."
+  ],
+  "typedIdentities": [
+    "Filters.and(Filters.Luke, Filters.On_Dagobah)",
+    "Filters.Beldons_Corridor",
+    "Filters.Yodas_Hut",
+    "Filters.and(Icon.DAGOBAH, Filters.Yoda)",
+    "Filters.and(Icon.CLOUD_CITY, Filters.No_Disintegrations)",
+    "Filters.Patience",
+    "Filters.and(Filters.your(playerId), Filters.not(Icon.DAGOBAH), Filters.abilityMoreThan(4), Filters.not(Filters.Ahsoka)) (continuously lost)",
+    "Filters.and(Filters.character, Filters.at(Filters.non_battleground_location)) may not be targeted by Filters.Sense (both sides)",
+    "Filters.Dagobah_location (no Force drain, both sides)",
+    "Filters.or(Filters.Bespin_system, Filters.Cloud_City_site)",
+    "Filters.or(Filters.Wise_Advice, Filters.Yodas_Hope)",
+    "Filters.completed_Jedi_Test (SpotOverride.INCLUDE_SUSPENDED)",
+    "Filters.and(Icon.CLOUD_CITY, Filters.Rebel)",
+    "Filters.weapon on Filters.Luke ('react' deploy)"
+  ],
+  "setupAndPullRoutes": [
+    "Start of game deploys Beldon's Corridor, Yoda's Hut with [Dagobah] Yoda there (DeployCardToLocationFromReserveDeckEffect), [Cloud City] No Disintegrations!, and Patience! from Reserve Deck (front:52-90).",
+    "Front + back shared (same GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_BESPIN_LOCATION): once per turn, deploy Bespin system or a Cloud City site from Reserve Deck (front:132-147; BACK:110-125).",
+    "Front only: may deploy Wise Advice or Yoda's Hope from Reserve Deck (no once-per-turn usage limit coded; gated only by canDeployCardFromReserveDeck) (front:149-160).",
+    "Front only: once per turn, deploy a Dagobah location from Reserve Deck (front:162-176).",
+    "Back: may place a completed Jedi Test (even if suspended) out of play to take a [Cloud City] Rebel into hand from Lost Pile (BACK:127-152)."
+  ],
+  "otherObligations": [
+    "Both sides, remainder-of-game equivalents (modifiers repeated on both cards): Sense may not target characters at non-battlegrounds; you may not Force drain on Dagobah (front:202-203; BACK:88-89).",
+    "Continuous purge (until end of game, set by front's deployment-completed proxy): your non-[Dagobah] characters of ability > 4 (except Ahsoka) are lost on every table change (front:93-126).",
+    "Back, on flip: Luke and cards on him return to owner's hand (BACK:59-79).",
+    "Back: may deploy Luke (deploy -3) and/or a weapon on him as a 'react' (BACK:92-93).",
+    "Back: when your [Cloud City] Rebel Force drains at a battleground site, unless a captive on table, opponent's lost Force must come from top of Reserve Deck if possible (SpecialFlagModifier FORCE_DRAIN_LOST_FROM_RESERVE_DECK with DuringForceDrainAtCondition(sameSiteAs [Cloud City] Rebel battleground site) AND UnlessCondition(OnTableCondition INCLUDE_CAPTIVE Filters.captive), BACK:95-101).",
+    "Strategic note from law: flip is free of board-state risk (no flip-back), but returns Luke to hand - flip when Luke's Dagobah training job is done and the Cloud City drain engine is ready."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": false,
+    "profileGaps": [
+      "keyCharacterFilter null; the flip requires Luke on Dagobah (Filters.and(Filters.Luke, Filters.On_Dagobah)).",
+      "No representation that the flip is a VOLUNTARY top-level action during your turn (no automatic trigger) - Rando must be taught to take it.",
+      "No representation of the flip consequence (Luke and cards on him return to hand) or the back's react-redeploy compensation.",
+      "flipGateSite null; the gate is the Dagobah planet (any Dagobah location), and objectiveNamedLocations lists Yoda's Hut/Dagobah location without flip tagging.",
+      "No representation of the continuous ability>4 non-[Dagobah] character purge that constrains which characters Rando may deploy for the whole game."
+    ]
+  },
+  "proofGate": "SOURCE_VERIFIED"
+}
