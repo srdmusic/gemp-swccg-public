@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.models.common.phase.ObjectiveSideBlueprints;
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
@@ -176,6 +177,24 @@ public class ObjectiveAnalyzer {
     private static final Pattern UPLOAD_FROM_RESERVE_PATTERN = Pattern.compile(
         "may \\[upload\\]\\s+([^.;]+?)(?=\\.|;|$)", Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Runtime truth for one structured location rule from objective_playbooks.json.
+     * Alternative ids are stable within a rule and identify which branch is met or missing.
+     */
+    public record FlipLocationRuleState(
+            String ruleId,
+            String mode,
+            boolean conditionSatisfied,
+            Set<String> satisfiedAlternatives,
+            Set<String> missingAlternatives) { }
+
+    /** Exact pre-flip Invasion formation role lost if this character leaves play. */
+    public enum FlipGateFormationRole {
+        LAST_REQUIRED_ACTOR,
+        LAST_REQUIRED_BUDDY,
+        NONE
+    }
+
     public void analyze(SwccgGame game, String playerId, Side side) {
         LOG.warn("[ObjectiveAnalyzer] analyze() CALLED - game={}, player={}, side={}", game != null, playerId, side);
         if (game == null || playerId == null) return;
@@ -269,6 +288,10 @@ public class ObjectiveAnalyzer {
         if (!analyzed || locationTitle == null) return false;
         String titleLower = locationTitle.toLowerCase(Locale.ROOT);
 
+        Boolean structuredMatch = exactStructuredTitleMatch(
+                titleLower, "preFlip", "flip");
+        if (structuredMatch != null) return structuredMatch;
+
         if (flipConditionLocations.contains(titleLower)) return true;
 
         for (String fragment : flipConditionLocationFragments) {
@@ -276,6 +299,399 @@ public class ObjectiveAnalyzer {
         }
 
         return false;
+    }
+
+    /**
+     * Evaluates typed objective location conditions against current table state.
+     * Unknown relations and filters fail closed.
+     */
+    public List<FlipLocationRuleState> assessFlipLocationRules(
+            SwccgGame game, String playerId, String phase, String purpose) {
+        if (!analyzed || game == null || playerId == null
+                || phase == null || purpose == null
+                || activeFlipLocationRules == null) {
+            return Collections.emptyList();
+        }
+
+        List<FlipLocationRuleState> states = new ArrayList<>();
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !phase.equals(rule.phase)
+                    || !purpose.equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+
+            Set<String> satisfied = new LinkedHashSet<>();
+            Set<String> missing = new LinkedHashSet<>();
+            for (int i = 0; i < rule.alternatives.size(); i++) {
+                FlipLocationAlternative alternative = rule.alternatives.get(i);
+                String alternativeId = rule.id + ":" + (i + 1);
+                if (isFlipLocationAlternativeSatisfied(
+                        game, playerId, alternative)) {
+                    satisfied.add(alternativeId);
+                } else {
+                    missing.add(alternativeId);
+                }
+            }
+
+            boolean anyOf = "anyOf".equals(rule.mode);
+            boolean conditionSatisfied = anyOf
+                    ? !satisfied.isEmpty()
+                    : missing.isEmpty() && !rule.alternatives.isEmpty();
+            states.add(new FlipLocationRuleState(
+                    rule.id,
+                    rule.mode,
+                    conditionSatisfied,
+                    Collections.unmodifiableSet(satisfied),
+                    Collections.unmodifiableSet(missing)));
+        }
+        return Collections.unmodifiableList(states);
+    }
+
+    /**
+     * True when this exact location owns an unmet structured pre-flip condition.
+     */
+    public boolean isMissingPreFlipRequirementAt(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null
+                || playerId == null || location == null
+                || activeFlipLocationRules == null) {
+            return false;
+        }
+
+        GameState gameState = game.getGameState();
+        if (gameState == null || game.getModifiersQuerying() == null) return false;
+
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !"preFlip".equals(rule.phase)
+                    || !"flip".equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (alternative == null
+                        || !locationMatchesAlternative(
+                                gameState, game, playerId, location, alternative)) {
+                    continue;
+                }
+                if (!isFlipLocationAlternativeSatisfied(
+                        game, playerId, alternative)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * True only for an exact typed pre-flip location whose relation is plain
+     * self control. Actor-gated controlWith locations are handled separately.
+     */
+    public boolean isPreFlipPlainControlRequirementLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        return matchesStructuredRequirementLocation(
+                game, playerId, location,
+                "preFlip", "flip", "control", "self");
+    }
+
+    /**
+     * True for any exact typed location named by the active pre-flip rule.
+     */
+    public boolean isPreFlipFlipRequirementLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        return matchesStructuredRequirementLocation(
+                game, playerId, location,
+                "preFlip", "flip", null, null);
+    }
+
+    public boolean hasStructuredFlipBackLocationRules() {
+        if (!analyzed || activeFlipLocationRules == null) return false;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule != null && "postFlip".equals(rule.phase)
+                    && "flipBack".equals(rule.purpose)
+                    && rule.alternatives != null
+                    && !rule.alternatives.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Physical-card overload for exact post-flip protection. Structured rules
+     * own the answer when present; parser fragments remain the legacy fallback.
+     */
+    public boolean isFlipBackProtectionLocation(
+            PhysicalCard location, SwccgGame game, String playerId) {
+        if (!analyzed || location == null) return false;
+        if (hasStructuredFlipBackLocationRules()) {
+            return matchesStructuredRequirementLocation(
+                    game, playerId, location,
+                    "postFlip", "flipBack", null, null);
+        }
+        return isFlipBackProtectionLocation(location.getTitle());
+    }
+
+    /**
+     * Counterfactual fact for moving a card from a required-control location.
+     * It returns true only when the mover is a proven presence source and no
+     * independent friendly presence source remains.
+     */
+    public boolean isSoleControlSourceAtRequiredLocation(
+            SwccgGame game, String playerId, PhysicalCard mover,
+            PhysicalCard location) {
+        if (!isPreFlipPlainControlRequirementLocation(
+                    game, playerId, location)
+                || mover == null || game == null) {
+            return false;
+        }
+
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null) {
+                return false;
+            }
+            com.gempukku.swccgo.filters.Filter presenceSource =
+                com.gempukku.swccgo.filters.Filters.or(
+                    com.gempukku.swccgo.filters.Filters
+                        .hasAbilityOrHasPermanentPilotWithAbility,
+                    com.gempukku.swccgo.common.Icon.PRESENCE);
+            if (!playerId.equals(mover.getOwner())
+                    || mover.isUndercover()
+                    || !presenceSource.accepts(
+                        gameState, game.getModifiersQuerying(), mover)) {
+                return false;
+            }
+            PhysicalCard moverLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(gameState, mover);
+            if (!samePhysicalLocation(moverLocation, location)) return false;
+
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents == null) return false;
+            for (PhysicalCard card : permanents) {
+                if (card == null || card == mover
+                        || !playerId.equals(card.getOwner())
+                        || card.isUndercover()
+                        || attachedToOrAboard(card, mover)
+                        || !presenceSource.accepts(
+                            gameState, game.getModifiersQuerying(), card)) {
+                    continue;
+                }
+                PhysicalCard cardLocation = game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(gameState, card);
+                if (samePhysicalLocation(cardLocation, location)) return false;
+            }
+            return true;
+        } catch (Exception e) {
+            LOG.debug("Objective required-control source assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean matchesStructuredRequirementLocation(
+            SwccgGame game, String playerId, PhysicalCard location,
+            String phase, String purpose, String relation,
+            String controller) {
+        if (!analyzed || game == null || playerId == null || location == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !phase.equals(rule.phase)
+                    || !purpose.equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (alternative == null
+                        || relation != null
+                            && !relation.equals(alternative.relation)
+                        || controller != null
+                            && !controller.equals(alternative.controller)) {
+                    continue;
+                }
+                if (locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean attachedToOrAboard(
+            PhysicalCard card, PhysicalCard possibleHost) {
+        PhysicalCard host = card.getAttachedTo();
+        Set<PhysicalCard> seen = Collections.newSetFromMap(
+                new IdentityHashMap<>());
+        while (host != null && seen.add(host)) {
+            if (host == possibleHost) return true;
+            host = host.getAttachedTo();
+        }
+        return false;
+    }
+
+    private boolean isFlipLocationAlternativeSatisfied(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative) {
+        if (alternative == null || alternative.locationFilterKey == null) {
+            return false;
+        }
+
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null) {
+                return false;
+            }
+
+            String controller = "opponent".equals(alternative.controller)
+                    ? gameState.getOpponent(playerId) : playerId;
+            if (controller == null) return false;
+
+            int matchingLocations = 0;
+            List<PhysicalCard> locations = gameState.getLocationsInOrder();
+            if (locations == null) return false;
+            for (PhysicalCard location : locations) {
+                if (!locationMatchesAlternative(
+                        gameState, game, playerId, location, alternative)) {
+                    continue;
+                }
+
+                String relation = alternative.relation;
+                boolean relationSatisfied;
+                if ("control".equals(relation) || "controlWith".equals(relation)) {
+                    relationSatisfied = game.getModifiersQuerying().controlsLocation(
+                            gameState, location, controller,
+                            SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE);
+                } else if ("occupy".equals(relation)
+                        || "occupyWith".equals(relation)) {
+                    relationSatisfied = game.getModifiersQuerying().occupiesLocation(
+                            gameState, location, controller,
+                            SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE);
+                } else if ("presentAt".equals(relation)) {
+                    relationSatisfied = true;
+                } else {
+                    return false;
+                }
+
+                if (relationSatisfied
+                        && relation.endsWith("With")) {
+                    relationSatisfied = hasMatchingActorAtLocation(
+                            game, controller, location,
+                            alternative.actorFilterKey);
+                } else if (relationSatisfied
+                        && "presentAt".equals(relation)) {
+                    relationSatisfied = hasMatchingActorAtLocation(
+                            game, controller, location,
+                            alternative.actorFilterKey);
+                }
+
+                if (relationSatisfied) matchingLocations++;
+            }
+            return countMatches(matchingLocations, alternative.count);
+        } catch (Exception e) {
+            LOG.debug("Structured objective location assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean locationMatchesAlternative(
+            GameState gameState, SwccgGame game, String playerId,
+            PhysicalCard location, FlipLocationAlternative alternative) {
+        if (location == null || alternative == null) return false;
+        com.gempukku.swccgo.filters.Filter filter =
+                resolveLocationFilter(alternative.locationFilterKey, playerId);
+        return filter != null && filter.accepts(
+                gameState, game.getModifiersQuerying(), location);
+    }
+
+    private boolean hasMatchingActorAtLocation(
+            SwccgGame game, String controller, PhysicalCard location,
+            String actorFilterKey) {
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(actorFilterKey);
+        if (actorFilter == null) return false;
+
+        GameState gameState = game.getGameState();
+        Collection<PhysicalCard> cards = gameState.getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card == null || !controller.equals(card.getOwner())
+                    || card.isUndercover()
+                    || !actorFilter.accepts(
+                            gameState, game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard actorLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(gameState, card);
+            if (samePhysicalLocation(actorLocation, location)) return true;
+        }
+        return false;
+    }
+
+    private static boolean countMatches(int actual, RuleCount count) {
+        int expected = count != null && count.value != null ? count.value : 1;
+        String comparator = count != null && count.comparator != null
+                ? count.comparator : ">=";
+        return switch (comparator) {
+            case ">" -> actual > expected;
+            case "<" -> actual < expected;
+            case "<=" -> actual <= expected;
+            case "=", "==" -> actual == expected;
+            default -> actual >= expected;
+        };
+    }
+
+    /**
+     * Exact named typed rules override the legacy substring parser. null means
+     * the rule set is not exact-title authoritative and legacy matching applies.
+     */
+    private Boolean exactStructuredTitleMatch(
+            String titleLower, String phase, String purpose) {
+        if (activeFlipLocationRules == null) return null;
+
+        boolean foundRule = false;
+        boolean matched = false;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !phase.equals(rule.phase)
+                    || !purpose.equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            foundRule = true;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (alternative == null
+                        || !isExactNamedLocationFilter(
+                                alternative.locationFilterKey)
+                        || alternative.locationFragments == null
+                        || alternative.locationFragments.isEmpty()) {
+                    return null;
+                }
+                for (String fragment : alternative.locationFragments) {
+                    if (fragment != null
+                            && titleLower.equals(
+                                    fragment.toLowerCase(Locale.ROOT).trim())) {
+                        matched = true;
+                    }
+                }
+            }
+        }
+        return foundRule ? matched : null;
+    }
+
+    private static boolean isExactNamedLocationFilter(String key) {
+        return "Bunker".equals(key)
+                || "Bespin_system".equals(key)
+                || "Theed_Palace_Throne_Room".equals(key)
+                || "Naboo_system".equals(key)
+                || "Galactic_Senate".equals(key)
+                || "Wattos_Junkyard".equals(key);
     }
 
     // Loader-extension step 3b (2026-07-10): FILTER-based objective-relevance. Returns true if the location
@@ -415,6 +831,80 @@ public class ObjectiveAnalyzer {
         }
     }
 
+    /**
+     * Returns the cheapest typed gate actor a free enabler can upload from
+     * Reserve Deck, or null when the card does not provide a proven path.
+     */
+    public Integer getFlipGateActorEnablerFutureDeployCost(
+            SwccgGame game, String playerId, PhysicalCard enabler) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || enabler == null || enabler.getBlueprint() == null
+                || findFlipGateActorRule() == null) {
+            return null;
+        }
+
+        ActorLocationRule rule = findFlipGateActorRule();
+        String actorToken = rule.actorFilterKey == null ? null
+                : rule.actorFilterKey.replace('_', ' ')
+                    .toLowerCase(Locale.ROOT);
+        String gameText = enabler.getBlueprint().getGameText();
+        if (actorToken == null || gameText == null) return null;
+        String gameTextLower = gameText.toLowerCase(Locale.ROOT);
+        if (!gameTextLower.contains("[upload]")
+                || !gameTextLower.contains(actorToken)
+                || gameTextLower.matches(
+                    "(?s).*use\\s+\\d+\\s+force[^.]*\\[upload\\].*")) {
+            return null;
+        }
+
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null) return null;
+            for (PhysicalCard location : gameState.getLocationsInOrder()) {
+                if (isFlipGateLocation(game, playerId, location)
+                        && hasFlipGateActorAtLocation(
+                            game, playerId, location)) {
+                    return null;
+                }
+            }
+
+            Integer cheapest = null;
+            List<PhysicalCard> reserve = gameState.getReserveDeck(playerId);
+            if (reserve == null) return null;
+            for (PhysicalCard candidate : reserve) {
+                if (candidate == null || candidate.getBlueprint() == null
+                        || !matchesFlipGateActorRequirement(
+                            game, playerId, candidate)) {
+                    continue;
+                }
+                Float deployCost = candidate.getBlueprint().getDeployCost();
+                if (deployCost == null) continue;
+                int cost = Math.max(0, deployCost.intValue());
+                if (cheapest == null || cost < cheapest) cheapest = cost;
+            }
+            return cheapest;
+        } catch (Exception e) {
+            LOG.debug("Objective gate actor enabler assessment failed: {}",
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Narrow DPS exception for a free into-hand action that fetches the
+     * still-missing typed flip-gate actor.
+     */
+    public boolean isFlipGateActorUploadIntoHandAction(
+            SwccgGame game, String playerId, PhysicalCard sourceCard,
+            String actionText) {
+        if (actionText == null
+                || !actionText.toLowerCase(Locale.ROOT).contains("into hand")) {
+            return false;
+        }
+        return getFlipGateActorEnablerFutureDeployCost(
+                game, playerId, sourceCard) != null;
+    }
+
     /** True when this physical location satisfies the active flip-gate location filter. */
     public boolean isFlipGateLocation(
             SwccgGame game, String playerId, PhysicalCard location) {
@@ -474,6 +964,75 @@ public class ObjectiveAnalyzer {
     public boolean hasFlipGateActorAtLocation(
             SwccgGame game, String playerId, PhysicalCard destination) {
         return countFlipGateActorsAtLocation(game, playerId, destination) > 0;
+    }
+
+    /**
+     * Classifies one friendly character by what the exact unflipped Invasion
+     * formation would lose if that card left the typed Throne Room gate.
+     */
+    public FlipGateFormationRole classifyGateFormationPieceIfRemoved(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!analyzed || isFlipped || !isInvasion || game == null
+                || playerId == null || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.isUndercover()
+                || candidate.getBlueprint() == null
+                || candidate.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER) {
+            return FlipGateFormationRole.NONE;
+        }
+
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null) {
+                return FlipGateFormationRole.NONE;
+            }
+            PhysicalCard gate = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(gameState, candidate);
+            if (!isFlipGateLocation(game, playerId, gate)) {
+                return FlipGateFormationRole.NONE;
+            }
+
+            int friendlyCharacters = 0;
+            int actorsAtGate = 0;
+            boolean candidateSeen = false;
+            boolean candidateIsActor = matchesFlipGateActorRequirement(
+                    game, playerId, candidate);
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null || !playerId.equals(card.getOwner())
+                        || card.isUndercover() || card.getBlueprint() == null
+                        || card.getBlueprint().getCardCategory()
+                            != CardCategory.CHARACTER) {
+                    continue;
+                }
+                PhysicalCard cardLocation = game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(gameState, card);
+                if (!samePhysicalLocation(cardLocation, gate)) continue;
+
+                friendlyCharacters++;
+                if (card == candidate) candidateSeen = true;
+                if (matchesFlipGateActorRequirement(game, playerId, card)) {
+                    actorsAtGate++;
+                }
+            }
+
+            if (!candidateSeen || actorsAtGate < 1) {
+                return FlipGateFormationRole.NONE;
+            }
+            if (candidateIsActor && actorsAtGate == 1) {
+                return FlipGateFormationRole.LAST_REQUIRED_ACTOR;
+            }
+
+            int remainingCharacters = friendlyCharacters - 1;
+            int remainingActors = actorsAtGate - (candidateIsActor ? 1 : 0);
+            if (remainingActors >= 1 && remainingCharacters < 2) {
+                return FlipGateFormationRole.LAST_REQUIRED_BUDDY;
+            }
+        } catch (Exception e) {
+            LOG.debug("Invasion flip-gate casualty classification failed: {}",
+                    e.getMessage());
+        }
+        return FlipGateFormationRole.NONE;
     }
 
     /**
@@ -2148,6 +2707,10 @@ public class ObjectiveAnalyzer {
     public boolean isFlipBackProtectionLocation(String locationTitle) {
         if (!analyzed || locationTitle == null) return false;
         String titleLower = locationTitle.toLowerCase(Locale.ROOT);
+
+        Boolean structuredMatch = exactStructuredTitleMatch(
+                titleLower, "postFlip", "flipBack");
+        if (structuredMatch != null) return structuredMatch;
 
         if (flipBackLocations.contains(titleLower)) return true;
 

@@ -6,7 +6,11 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -312,6 +316,33 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void exactStructuredPostFlipHoldLocationsIgnoreRelativePower() {
+        Set<String> exact = new LinkedHashSet<>(List.of(
+                "Naboo",
+                "Naboo: Theed Palace Throne Room"));
+        Map<String, Float> powers = linkedPowers(
+                "Naboo: Swamp", 20.0f,
+                "Naboo", 2.0f,
+                "Naboo: Theed Palace Throne Room", 1.0f);
+
+        assertEquals(exact,
+                DeployObjectiveSitingPolicy.selectPostFlipHoldLocations(
+                        exact, powers));
+    }
+
+    @Test
+    public void emptyStructuredSetPreservesLegacyStrongestTwoSelection() {
+        Map<String, Float> powers = linkedPowers(
+                "Site A", 6.0f,
+                "Site B", 6.0f,
+                "Site C", 9.0f);
+
+        assertEquals(new LinkedHashSet<>(List.of("Site C", "Site A")),
+                DeployObjectiveSitingPolicy.selectPostFlipHoldLocations(
+                        Set.of(), powers));
+    }
+
+    @Test
     public void postFlipThirdObjectiveLocationStaysNeutral() {
         DeployObjectiveSitingPolicy.FlipSitingEvaluation neutral =
                 DeployObjectiveSitingPolicy.evaluateFlipSiting(
@@ -484,6 +515,14 @@ public class DeployObjectiveSitingPolicyTest {
 
     private static List<PolicyOperation> evaluate(DeployObjectiveSitingPolicy.Facts facts) {
         return DeployObjectiveSitingPolicy.evaluate(facts).operations();
+    }
+
+    private static Map<String, Float> linkedPowers(Object... entries) {
+        Map<String, Float> result = new LinkedHashMap<>();
+        for (int index = 0; index < entries.length; index += 2) {
+            result.put((String) entries[index], (Float) entries[index + 1]);
+        }
+        return result;
     }
 
     private static void assertFlipScore(float expected, int turnNumber,

@@ -150,7 +150,7 @@ public abstract class DeployPhaseScript {
 
             String cidStr = (cardIds != null && i < cardIds.length) ? cardIds[i] : null;
             Set<Step> steps = resolveSteps(txt, cidStr, gameState, game, playerId,
-                                            keyCharTokens);
+                                            keyCharTokens, objectiveAnalyzer);
             if (steps != null && !steps.isEmpty()) {
                 for (Step s : steps) byStep.get(s).add(aid);
                 classifiedCount++;
@@ -232,16 +232,30 @@ public abstract class DeployPhaseScript {
     private Set<Step> resolveSteps(String actionText, String cardIdStr,
                                     GameState gameState, SwccgGame game, String playerId,
                                     Set<String> keyCharTokens) {
+        return resolveSteps(actionText, cardIdStr, gameState, game, playerId,
+                keyCharTokens, null);
+    }
+
+    private Set<Step> resolveSteps(String actionText, String cardIdStr,
+                                    GameState gameState, SwccgGame game, String playerId,
+                                    Set<String> keyCharTokens,
+                                    ObjectiveAnalyzer objectiveAnalyzer) {
         EnumSet<Step> steps = EnumSet.noneOf(Step.class);
         if (actionText == null) return steps;
         String txt = actionText.toLowerCase(Locale.ROOT).trim();
 
         // EXCLUDE pulls that go INTO HAND / pile, not to table — these are not
-        // deploy-step actions even though they're useful (we don't want them to
-        // satisfy any step and block real deploys).
+        // deploy-step actions. The narrow exception is an upload that fetches a
+        // still-missing typed objective actor needed by this phase's formation.
         if (txt.contains("into hand") || txt.contains("into your hand")
                 || txt.contains("into used pile") || txt.contains("into reserve")
                 || txt.contains("into force pile")) {
+            PhysicalCard sourceCard = findCardByIdSafe(gameState, cardIdStr);
+            if (objectiveAnalyzer != null
+                    && objectiveAnalyzer.isFlipGateActorUploadIntoHandAction(
+                        game, playerId, sourceCard, actionText)) {
+                steps.add(Step.KEY_CHARACTERS);
+            }
             return steps;
         }
 

@@ -7,6 +7,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -479,6 +480,8 @@ public final class BattleDecisionPolicy {
 
                                 if (ourPower > 0 && theirPower > 0) {
                                     foundAnyContestedLocation = true;
+                                    boolean formationSafetyVeto = false;
+                                    boolean predictorSafe = false;
 
                                     // FORMATION SAFETY (2026-07-11c): L2 — never voluntarily battle with
                                     // zero normal battle-destiny draws (engine truth: total ability >= 4;
@@ -487,6 +490,7 @@ public final class BattleDecisionPolicy {
                                     String fsL2 = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
                                         .vetoInitiateBattle(game, gameState, playerId, targetLocation);
                                     if (fsL2 != null) {
+                                        formationSafetyVeto = true;
                                         action.hardVeto(fsL2);
                                         logger.warn("FORMATION SAFETY (battle): {}", fsL2);
                                     }
@@ -537,9 +541,11 @@ public final class BattleDecisionPolicy {
                                                 targetLocation.getTitle(),
                                                 v76Outcome.winProbability,
                                                 v76Outcome.expectedDamageTaken);
+                                        predictorSafe = prediction.branch()
+                                                == BattleInitiationPolicy.PredictionBranch.NONE;
                                         action.apply(prediction.contribution());
                                         if (prediction.branch()
-                                                == BattleInitiationPolicy.PredictionBranch.PROBABLE_DEFEAT) {
+                                            == BattleInitiationPolicy.PredictionBranch.PROBABLE_DEFEAT) {
                                             logger.warn("V76 BATTLE BLOCK: predicted defeat at {} (winRate {})",
                                                 targetLocation.getTitle(), String.format("%.2f", v76Outcome.winProbability));
                                         } else if (prediction.branch()
@@ -564,6 +570,46 @@ public final class BattleDecisionPolicy {
                                             lukeHere,
                                             hasIHYN);
                                     action.apply(specificBattle.contribution());
+
+                                    boolean exactStructuredPreFlipTarget = false;
+                                    boolean missingSelfControl = false;
+                                    try {
+                                        ObjectiveAnalyzer objectiveAnalyzer =
+                                                context.getObjectiveAnalyzer();
+                                        exactStructuredPreFlipTarget =
+                                                objectiveAnalyzer != null
+                                                && objectiveAnalyzer
+                                                    .isMissingPreFlipRequirementAt(
+                                                        game, playerId,
+                                                        targetLocation);
+                                        if (exactStructuredPreFlipTarget) {
+                                            missingSelfControl =
+                                                !game.getModifiersQuerying()
+                                                    .controlsLocation(
+                                                        gameState,
+                                                        targetLocation,
+                                                        playerId,
+                                                        SpotOverride
+                                                            .INCLUDE_EXCLUDED_FROM_BATTLE);
+                                        }
+                                    } catch (Exception objectiveBattleEx) {
+                                        logger.debug(
+                                            "Objective battle fact read failed: {}",
+                                            objectiveBattleEx.getMessage());
+                                    }
+                                    action.apply(ObjectiveBattlePolicy.evaluate(
+                                        new ObjectiveBattlePolicy.Facts(
+                                            actionId,
+                                            exactStructuredPreFlipTarget,
+                                            missingSelfControl,
+                                            true,
+                                            formationSafetyVeto,
+                                            predictorSafe,
+                                            weaponEffectiveDiff,
+                                            reserveDeck,
+                                            ourPower,
+                                            theirPower)));
+
                                     if (specificBattle.favorable()) {
                                         foundFavorableBattle = true;
                                     }

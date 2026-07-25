@@ -9,6 +9,28 @@ import static org.junit.Assert.assertTrue;
 public class MoveObjectiveGateHoldPolicyTest {
 
     @Test
+    public void soleControlSourceAtExactRequiredLocationIsHeld() {
+        MoveObjectiveGateHoldPolicy.Evaluation result =
+                MoveObjectiveGateHoldPolicy.evaluateRequiredControl(
+                        true, true, true, true);
+
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.HOLD_LAST_CONTROL_SOURCE,
+                result.branch());
+        assertTrue(result.hardVeto());
+        assertEquals(
+                "MOVE.OBJECTIVE.REQUIRED_CONTROL_HOLD: keep the sole control source at the required location",
+                result.reason());
+    }
+
+    @Test
+    public void requiredControlHoldFailsClosedWithoutEveryProvenFact() {
+        assertNeutralRequiredControl(false, true, true, true);
+        assertNeutralRequiredControl(true, false, true, true);
+        assertNeutralRequiredControl(true, true, false, true);
+        assertNeutralRequiredControl(true, true, true, false);
+    }
+
+    @Test
     public void replayFormationHoldsAtTenPowerAgainstTwelve() {
         MoveObjectiveGateHoldPolicy.Evaluation result = evaluate(
                 true, true, true, true, 1, 4, 10.0f, 12.0f);
@@ -78,5 +100,22 @@ public class MoveObjectiveGateHoldPolicyTest {
                 friendlyCharactersAtGate,
                 friendlyPowerAtGate,
                 opponentPowerAtGate);
+    }
+
+    private static void assertNeutralRequiredControl(
+            boolean activePreFlipRequiredControl,
+            boolean moverAtExactRequiredLocation,
+            boolean currentlyControlsLocation,
+            boolean soleControlSourceProven) {
+        MoveObjectiveGateHoldPolicy.Evaluation result =
+                MoveObjectiveGateHoldPolicy.evaluateRequiredControl(
+                        activePreFlipRequiredControl,
+                        moverAtExactRequiredLocation,
+                        currentlyControlsLocation,
+                        soleControlSourceProven);
+
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.NONE, result.branch());
+        assertFalse(result.hardVeto());
+        assertEquals(null, result.reason());
     }
 }

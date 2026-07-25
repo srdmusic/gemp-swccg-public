@@ -49,6 +49,9 @@ public class MovePostFlipConsolidationSourceParityTest {
                 "moveConsolidateAnalyzer.isFlipped()"));
         assertTrue(block.contains(
                 "moveConsolidateAnalyzer.getFlipConditionLocationFragments()"));
+        assertTrue(block.contains(
+                "moveConsolidateAnalyzer.isFlipBackProtectionLocation("));
+        assertTrue(block.contains("currentLocationMustBeHeld"));
         assertTrue(block.contains("gameState.getTopLocations()"));
         assertTrue(block.contains(
                 "getTotalPowerAtLocation(\n                                        gameState, loc, playerId"));

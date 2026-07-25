@@ -43,7 +43,21 @@ public final class MovePostFlipConsolidationPolicy {
             String currentLocationTitle,
             boolean atObjectiveLocation,
             Map<String, Float> occupiedObjectivePower) {
-        if (occupiedObjectivePower.size() < 3 || !atObjectiveLocation) {
+        return evaluate(
+                currentLocationTitle,
+                atObjectiveLocation,
+                false,
+                occupiedObjectivePower);
+    }
+
+    public static Evaluation evaluate(
+            String currentLocationTitle,
+            boolean atObjectiveLocation,
+            boolean currentLocationMustBeHeld,
+            Map<String, Float> occupiedObjectivePower) {
+        if (currentLocationMustBeHeld
+                || occupiedObjectivePower.size() < 3
+                || !atObjectiveLocation) {
             return Evaluation.none();
         }
 

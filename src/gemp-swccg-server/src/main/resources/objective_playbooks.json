@@ -3985,6 +3985,42 @@
               "sourceText": "control Naboo system"
             }
           ]
+        },
+        {
+          "id": "invasion-back-flip-control",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Naboo_system",
+              "locationFragments": [
+                "naboo"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls Naboo system"
+            },
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Theed_Palace_Throne_Room",
+              "locationFragments": [
+                "naboo: theed palace throne room"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls Theed Palace Throne Room"
+            }
+          ]
         }
       ],
       "actorLocationRules": [

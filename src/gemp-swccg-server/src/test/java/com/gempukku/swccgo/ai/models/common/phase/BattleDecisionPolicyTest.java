@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
@@ -77,6 +78,144 @@ public class BattleDecisionPolicyTest {
     }
 
     @Test
+    public void exactMissingPreFlipTargetAddsObjectiveContestAfterSpecificBattle() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard location = mock(PhysicalCard.class);
+        ObjectiveAnalyzer objectiveAnalyzer = mock(ObjectiveAnalyzer.class);
+        AtomicInteger predictions = new AtomicInteger();
+
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getOpponent("bot")).thenReturn("opponent");
+        when(gameState.getTopLocations()).thenReturn(List.of(location));
+        when(gameState.getCardsAtLocation(location)).thenReturn(List.of());
+        when(gameState.getAllPermanentCards()).thenReturn(List.of());
+        when(location.getCardId()).thenReturn(7);
+        when(location.getTitle())
+                .thenReturn("Naboo: Theed Palace Throne Room");
+        when(modifiers.getTotalPowerAtLocation(
+                any(), any(), anyString(), anyBoolean(), anyBoolean()))
+                .thenReturn(8.0f);
+        when(modifiers.getTotalAbilityAtLocation(any(), anyString(), any()))
+                .thenReturn(4.0f);
+        when(modifiers.controlsLocation(
+                gameState, location, "bot",
+                SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))
+                .thenReturn(false);
+        when(objectiveAnalyzer.isMissingPreFlipRequirementAt(
+                game, "bot", location)).thenReturn(true);
+
+        BattleDecisionPolicy.Context base = context(
+                gameState, game, List.of("battle"),
+                List.of("Initiate battle"), List.of("7"), predictions);
+        BattleDecisionPolicy.Context context = new DelegatingContext(base) {
+            @Override
+            public ObjectiveAnalyzer getObjectiveAnalyzer() {
+                return objectiveAnalyzer;
+            }
+        };
+
+        BattleDecisionPolicy.ScoredAction result =
+                BattleDecisionPolicy.evaluate(context).get(0);
+        int specificIndex = contributionIndexByReason(
+                result.contributions(), "V29: UNFAVORABLE");
+        int objectiveIndex = contributionIndexByRule(
+                result.contributions(),
+                ObjectiveBattlePolicy.REQUIRED_LOCATION_CONTEST_RULE_ID);
+
+        assertTrue(specificIndex >= 0);
+        assertTrue(objectiveIndex > specificIndex);
+        assertEquals(
+                ObjectiveBattlePolicy.REQUIRED_LOCATION_CONTEST_BONUS,
+                result.contributions().get(objectiveIndex).delta(), 0.0f);
+        assertEquals(1, predictions.get());
+    }
+
+    @Test
+    public void objectiveContestFactChangesSafeRankingButCannotLiftUnsafeBattle() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard distractor = mock(PhysicalCard.class);
+        PhysicalCard throne = mock(PhysicalCard.class);
+        ObjectiveAnalyzer objectiveAnalyzer = mock(ObjectiveAnalyzer.class);
+
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getOpponent("bot")).thenReturn("opponent");
+        when(gameState.getTopLocations())
+                .thenReturn(List.of(distractor, throne));
+        when(gameState.getCardsAtLocation(distractor)).thenReturn(List.of());
+        when(gameState.getCardsAtLocation(throne)).thenReturn(List.of());
+        when(gameState.getAllPermanentCards()).thenReturn(List.of());
+        when(distractor.getCardId()).thenReturn(7);
+        when(distractor.getTitle()).thenReturn("Naboo: Swamp");
+        when(throne.getCardId()).thenReturn(8);
+        when(throne.getTitle())
+                .thenReturn("Naboo: Theed Palace Throne Room");
+        when(modifiers.getTotalPowerAtLocation(
+                any(), any(), anyString(), anyBoolean(), anyBoolean()))
+                .thenReturn(8.0f);
+        when(modifiers.getTotalAbilityAtLocation(any(), anyString(), any()))
+                .thenReturn(4.0f);
+        when(modifiers.controlsLocation(
+                gameState, throne, "bot",
+                SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))
+                .thenReturn(false);
+
+        BattleDecisionPolicy.Context base = context(
+                gameState, game,
+                List.of("distractor", "throne"),
+                List.of("Initiate battle", "Initiate battle"),
+                List.of("7", "8"), new AtomicInteger());
+        BattleDecisionPolicy.Context objectiveContext =
+                new DelegatingContext(base) {
+                    @Override
+                    public ObjectiveAnalyzer getObjectiveAnalyzer() {
+                        return objectiveAnalyzer;
+                    }
+                };
+
+        when(objectiveAnalyzer.isMissingPreFlipRequirementAt(
+                game, "bot", throne)).thenReturn(false);
+        List<BattleDecisionPolicy.ScoredAction> baseline =
+                BattleDecisionPolicy.evaluate(objectiveContext);
+        assertEquals(score(action(baseline, "distractor")),
+                score(action(baseline, "throne")), 0.0f);
+        assertEquals("distractor", highestRanked(baseline).actionId());
+
+        when(objectiveAnalyzer.isMissingPreFlipRequirementAt(
+                game, "bot", throne)).thenReturn(true);
+        List<BattleDecisionPolicy.ScoredAction> objectiveAware =
+                BattleDecisionPolicy.evaluate(objectiveContext);
+        assertEquals(
+                ObjectiveBattlePolicy.REQUIRED_LOCATION_CONTEST_BONUS,
+                score(action(objectiveAware, "throne"))
+                        - score(action(objectiveAware, "distractor")),
+                0.0f);
+        assertEquals("throne", highestRanked(objectiveAware).actionId());
+
+        BattleDecisionPolicy.Context unsafeContext =
+                new DelegatingContext(objectiveContext) {
+                    @Override
+                    public BattleDecisionPolicy.Prediction predictBattle(
+                            int myPower, int myDestinyDraws,
+                            int opponentPower, int opponentDestinyDraws) {
+                        return new BattleDecisionPolicy.Prediction(
+                                0.20f, 3.0f, 1.0f);
+                    }
+                };
+        List<BattleDecisionPolicy.ScoredAction> unsafe =
+                BattleDecisionPolicy.evaluate(unsafeContext);
+        assertEquals(score(action(unsafe, "distractor")),
+                score(action(unsafe, "throne")), 0.0f);
+        assertEquals(-1, contributionIndexByRule(
+                action(unsafe, "throne").contributions(),
+                ObjectiveBattlePolicy.REQUIRED_LOCATION_CONTEST_RULE_ID));
+        assertEquals("distractor", highestRanked(unsafe).actionId());
+    }
+
+    @Test
     public void routingMatchesBattleDecisionContract() {
         AtomicInteger predictions = new AtomicInteger();
         assertTrue(BattleDecisionPolicy.canEvaluate(context(
@@ -95,6 +234,69 @@ public class BattleDecisionPolicyTest {
                 return "Choose an action";
             }
         }));
+    }
+
+    private static BattleDecisionPolicy.ScoredAction action(
+            List<BattleDecisionPolicy.ScoredAction> actions,
+            String actionId) {
+        for (BattleDecisionPolicy.ScoredAction action : actions) {
+            if (actionId.equals(action.actionId())) {
+                return action;
+            }
+        }
+        throw new AssertionError("Missing action " + actionId);
+    }
+
+    private static BattleDecisionPolicy.ScoredAction highestRanked(
+            List<BattleDecisionPolicy.ScoredAction> actions) {
+        BattleDecisionPolicy.ScoredAction best = actions.get(0);
+        for (int index = 1; index < actions.size(); index++) {
+            BattleDecisionPolicy.ScoredAction candidate = actions.get(index);
+            if (score(candidate) > score(best)) {
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    private static float score(BattleDecisionPolicy.ScoredAction action) {
+        for (BattleDecisionPolicy.Contribution contribution
+                : action.contributions()) {
+            if (contribution.hardVeto()) {
+                return Float.NEGATIVE_INFINITY;
+            }
+        }
+        float score = action.baseScore();
+        for (BattleDecisionPolicy.Contribution contribution
+                : action.contributions()) {
+            score += contribution.delta();
+        }
+        return score;
+    }
+
+    private static int contributionIndexByReason(
+            List<BattleDecisionPolicy.Contribution> contributions,
+            String reasonPrefix) {
+        for (int index = 0; index < contributions.size(); index++) {
+            String reason = contributions.get(index).reason();
+            if (reason != null && reason.startsWith(reasonPrefix)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private static int contributionIndexByRule(
+            List<BattleDecisionPolicy.Contribution> contributions,
+            String ruleId) {
+        for (int index = 0; index < contributions.size(); index++) {
+            if (contributions.get(index).ruleArmId() != null
+                    && ruleId.equals(
+                            contributions.get(index).ruleArmId().id())) {
+                return index;
+            }
+        }
+        return -1;
     }
 
     private static BattleDecisionPolicy.Context context(

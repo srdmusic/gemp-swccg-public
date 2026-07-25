@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -10,7 +11,10 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -120,7 +124,74 @@ public final class BattleForfeitFacts {
         }
     }
 
+    public record FlipGateFormationSelectionFacts(
+            Map<String, ObjectiveAnalyzer.FlipGateFormationRole> rolesByActionId,
+            boolean hasUnprotectedLegalAlternative) {
+        public FlipGateFormationSelectionFacts {
+            Objects.requireNonNull(rolesByActionId, "rolesByActionId");
+            rolesByActionId = Collections.unmodifiableMap(
+                    new LinkedHashMap<>(rolesByActionId));
+        }
+
+        public ObjectiveAnalyzer.FlipGateFormationRole roleFor(
+                String actionId) {
+            return rolesByActionId.getOrDefault(actionId,
+                    ObjectiveAnalyzer.FlipGateFormationRole.NONE);
+        }
+    }
+
     private BattleForfeitFacts() {
+    }
+
+    /**
+     * Reads the exact Invasion formation role for every offered loss. An
+     * optional pass is an alternative. A Force-loss card is an alternative
+     * only when no attrition remains, because Force loss cannot satisfy attrition.
+     */
+    public static FlipGateFormationSelectionFacts readFlipGateFormationSelection(
+            List<String> actionIds,
+            GameState gameState,
+            SwccgGame game,
+            String playerId,
+            ObjectiveAnalyzer objectiveAnalyzer,
+            boolean passLegal,
+            int attritionRemaining) {
+        Map<String, ObjectiveAnalyzer.FlipGateFormationRole> roles =
+                new LinkedHashMap<>();
+        boolean hasAlternative = passLegal;
+        if (actionIds == null || gameState == null) {
+            return new FlipGateFormationSelectionFacts(
+                    roles, hasAlternative);
+        }
+
+        for (String actionId : actionIds) {
+            if (actionId == null || actionId.isBlank()) continue;
+            ObjectiveAnalyzer.FlipGateFormationRole role =
+                    ObjectiveAnalyzer.FlipGateFormationRole.NONE;
+            PhysicalCard card = null;
+            try {
+                card = gameState.findCardById(Integer.parseInt(actionId));
+                if (card != null && objectiveAnalyzer != null) {
+                    role = objectiveAnalyzer
+                            .classifyGateFormationPieceIfRemoved(
+                                    game, playerId, card);
+                    if (role == null) {
+                        role = ObjectiveAnalyzer.FlipGateFormationRole.NONE;
+                    }
+                }
+            } catch (Exception ignored) {
+                // Unknown candidates cannot prove a safe alternative.
+            }
+            roles.put(actionId, role);
+
+            if (card != null
+                    && role == ObjectiveAnalyzer.FlipGateFormationRole.NONE
+                    && (!ForceLossFacts.isForceLossZone(card)
+                        || attritionRemaining <= 0)) {
+                hasAlternative = true;
+            }
+        }
+        return new FlipGateFormationSelectionFacts(roles, hasAlternative);
     }
 
     /** Reads one offered physical candidate without changing engine state. */

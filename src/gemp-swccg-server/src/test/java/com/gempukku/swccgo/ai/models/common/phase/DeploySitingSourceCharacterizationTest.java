@@ -71,6 +71,7 @@ public class DeploySitingSourceCharacterizationTest {
                 "DeployObjectiveSitingPolicy.evaluateCloudCityEngine(",
                 "DeployObjectiveSitingPolicy.scoreGherant(",
                 "DeployObjectiveSitingPolicy.evaluateLandoLobot(",
+                "DeployObjectiveSitingPolicy.selectPostFlipHoldLocations(",
                 "DeployObjectiveSitingPolicy.evaluateFlipSiting(",
                 "DeployFormationSitingPolicy.evaluateAbilityThreshold(",
                 "DeployFormationSitingPolicy.evaluateBuddyAbility(",

@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.common.CardCategory;
@@ -19,6 +20,46 @@ import static org.junit.Assert.assertTrue;
 public class BattleForfeitPolicyTest {
 
     private static final String ACTION_ID = "card-1";
+
+    @Test
+    public void flipGateFormationProtectionRequiresAnUnprotectedAlternative() {
+        PolicyResult actor = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_REQUIRED_ACTOR,
+                    true);
+        PolicyResult buddy = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_REQUIRED_BUDDY,
+                    true);
+        PolicyResult surplus = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole.NONE,
+                    true);
+        PolicyResult unavoidable = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_REQUIRED_ACTOR,
+                    false);
+
+        assertOperations(actor,
+                op("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
+                    -9999.0f,
+                    "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the last required actor while another legal loss exists",
+                    TraceOutputKind.VETO));
+        assertOperations(buddy,
+                op("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
+                    -9999.0f,
+                    "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the required actor's last buddy while another legal loss exists",
+                    TraceOutputKind.VETO));
+        assertOperations(surplus);
+        assertOperations(unavoidable);
+    }
 
     @Test
     public void optionalNoDamageEmitsMinusFiveHundredThenContinuesToLegalPass() {

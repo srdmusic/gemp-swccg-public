@@ -7,9 +7,13 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /** Shared pure owner of objective-specific DEPLOY-2 destination scores. */
 public final class DeployObjectiveSitingPolicy {
@@ -443,6 +447,45 @@ public final class DeployObjectiveSitingPolicy {
                 ? new PolicyResult("DEPLOY_LANDO_LOBOT_POLICY", List.of())
                 : single("DEPLOY_LANDO_LOBOT_POLICY", operation);
         return new LandoLobotEvaluation(result, outcome);
+    }
+
+    /**
+     * Selects post-flip locations to reinforce. Exact structured requirements
+     * are authoritative when present; otherwise this preserves the legacy
+     * strongest-two selection and strict insertion-order tie behavior.
+     */
+    public static Set<String> selectPostFlipHoldLocations(
+            Set<String> exactStructuredHoldLocations,
+            Map<String, Float> occupiedObjectivePower) {
+        Objects.requireNonNull(exactStructuredHoldLocations,
+                "exactStructuredHoldLocations");
+        Objects.requireNonNull(occupiedObjectivePower,
+                "occupiedObjectivePower");
+
+        if (!exactStructuredHoldLocations.isEmpty()) {
+            return Collections.unmodifiableSet(
+                    new LinkedHashSet<>(exactStructuredHoldLocations));
+        }
+
+        Set<String> holdLocations = new LinkedHashSet<>();
+        for (int holdIndex = 0;
+                holdIndex < 2 && holdIndex < occupiedObjectivePower.size();
+                holdIndex++) {
+            String bestLocation = null;
+            float bestPower = -1.0f;
+            for (Map.Entry<String, Float> entry
+                    : occupiedObjectivePower.entrySet()) {
+                if (!holdLocations.contains(entry.getKey())
+                        && entry.getValue() > bestPower) {
+                    bestPower = entry.getValue();
+                    bestLocation = entry.getKey();
+                }
+            }
+            if (bestLocation != null) {
+                holdLocations.add(bestLocation);
+            }
+        }
+        return Collections.unmodifiableSet(holdLocations);
     }
 
     public static FlipSitingEvaluation evaluateFlipSiting(

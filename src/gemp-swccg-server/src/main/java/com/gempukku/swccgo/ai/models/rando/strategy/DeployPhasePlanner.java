@@ -60,6 +60,8 @@ public class DeployPhasePlanner {
     // Current plan (cached)
     private DeploymentPlan currentPlan;
     private int lastPlanTurn = -1;
+    private boolean lastPlanHadActiveFlipGate = false;
+    private boolean lastPlanHadFlipGateActorInHand = false;
 
     // Board state reference for scoring
     private SwccgGame currentGame;
@@ -84,6 +86,8 @@ public class DeployPhasePlanner {
     public void reset() {
         currentPlan = null;
         lastPlanTurn = -1;
+        lastPlanHadActiveFlipGate = false;
+        lastPlanHadFlipGateActorInHand = false;
         currentGame = null;
         currentPlayerId = null;
     }
@@ -124,12 +128,27 @@ public class DeployPhasePlanner {
 
         int currentTurn = gameState.getPlayersLatestTurnNumber(playerId);
         String opponentId = gameState.getOpponent(playerId);
+        boolean hasActiveFlipGate = hasActiveFlipGateLocation(
+                game, playerId);
+        boolean hasFlipGateActorInHand = hasFlipGateActorInHand(
+                game, playerId);
 
         // If we already have a plan for this turn, return it
         if (currentPlan != null && lastPlanTurn == currentTurn) {
-            LOG.debug("📋 Returning cached plan for turn {} ({} instructions remaining)",
-                currentTurn, currentPlan.getInstructions().size());
-            return currentPlan;
+            if (!lastPlanHadActiveFlipGate && hasActiveFlipGate) {
+                LOG.warn("OBJECTIVE.DEPLOY.REPLAN_GATE_APPEARED: refreshing turn {} plan "
+                        + "because the exact pre-flip actor gate entered play",
+                    currentTurn);
+            } else if (!lastPlanHadFlipGateActorInHand
+                    && hasFlipGateActorInHand) {
+                LOG.warn("OBJECTIVE.DEPLOY.REPLAN_ACTOR_ARRIVED: refreshing turn {} plan "
+                        + "because the missing flip-gate actor entered hand",
+                    currentTurn);
+            } else {
+                LOG.debug("📋 Returning cached plan for turn {} ({} instructions remaining)",
+                    currentTurn, currentPlan.getInstructions().size());
+                return currentPlan;
+            }
         }
 
         LOG.info("📋 ═══════════════════════════════════════════════════════════════");
@@ -237,13 +256,17 @@ public class DeployPhasePlanner {
         // Track location deploys (apply to all plans)
         List<CardInfo> locationDeploys = planLocationDeploys(locations, effectiveForce);
         int forceAfterLocations = effectiveForce;
+        int objectiveFormationForceAfterLocations =
+                forceAvailable - maintenanceReserve;
         for (CardInfo loc : locationDeploys) {
             forceAfterLocations -= loc.cost;
+            objectiveFormationForceAfterLocations -= loc.cost;
         }
 
         // Generate ground plans
         List<ScoredPlan> groundPlans = generateGroundPlans(
-            characters, vehicles, categories, forceAfterLocations, groundThreshold,
+            characters, vehicles, categories, forceAfterLocations,
+            Math.max(0, objectiveFormationForceAfterLocations), groundThreshold,
             allLocations, currentTurn, drainGap);
         allPlans.addAll(groundPlans);
 
@@ -282,9 +305,50 @@ public class DeployPhasePlanner {
 
         currentPlan = bestPlan;
         lastPlanTurn = currentTurn;
+        lastPlanHadActiveFlipGate = hasActiveFlipGate;
+        lastPlanHadFlipGateActorInHand = hasFlipGateActorInHand;
         logFinalPlan(bestPlan);
 
         return currentPlan;
+    }
+
+    private boolean hasActiveFlipGateLocation(
+            SwccgGame game, String playerId) {
+        if (objectiveAnalyzer == null || !objectiveAnalyzer.isAnalyzed()
+                || objectiveAnalyzer.isFlipped()
+                || !objectiveAnalyzer.hasFlipGateActorRequirement()
+                || game == null || game.getGameState() == null) {
+            return false;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard location : locations) {
+            if (location != null && objectiveAnalyzer.isFlipGateLocation(
+                    game, playerId, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasFlipGateActorInHand(
+            SwccgGame game, String playerId) {
+        if (objectiveAnalyzer == null || !objectiveAnalyzer.isAnalyzed()
+                || objectiveAnalyzer.isFlipped()
+                || !objectiveAnalyzer.hasFlipGateActorRequirement()
+                || game == null || game.getGameState() == null) {
+            return false;
+        }
+        List<PhysicalCard> hand = game.getGameState().getHand(playerId);
+        if (hand == null) return false;
+        for (PhysicalCard card : hand) {
+            if (objectiveAnalyzer.matchesFlipGateActorRequirement(
+                    game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // =========================================================================
@@ -667,6 +731,7 @@ public class DeployPhasePlanner {
      */
     private List<ScoredPlan> generateGroundPlans(List<CardInfo> characters, List<CardInfo> vehicles,
                                                   LocationCategories categories, int forceAvailable,
+                                                  int objectiveFormationForceAvailable,
                                                   int threshold, List<AiBoardAnalyzer.LocationAnalysis> allLocations,
                                                   int turn, DrainGapResult drainGap) {
         List<ScoredPlan> plans = new ArrayList<>();
@@ -682,7 +747,7 @@ public class DeployPhasePlanner {
         // V297: A control-gated actor objective needs a formation, not a sacrificial
         // one-body score. Build the exact actor-plus-buddy plan before generic siting.
         DeploymentPlan flipGateFormation = generateFlipGateFormationPlan(
-            characters, allLocations, forceAvailable);
+            characters, allLocations, objectiveFormationForceAvailable);
         if (flipGateFormation != null && !flipGateFormation.getInstructions().isEmpty()) {
             float score = scoreObjectiveFlipGateFormationPlan(
                 flipGateFormation, allLocations, turn);
@@ -789,9 +854,25 @@ public class DeployPhasePlanner {
                 .filter(card -> objectiveAnalyzer.matchesFlipGateActorRequirement(
                     currentGame, currentPlayerId, card.card, gate.location))
                 .collect(Collectors.toList());
-            if (actorCandidates.isEmpty()) return null;
-
-            if (friendlyCharacters == 0) {
+            if (actorCandidates.isEmpty()) {
+                CardInfo enabler = deployable.stream()
+                    .filter(card -> {
+                        Integer futureActorCost =
+                            objectiveAnalyzer.getFlipGateActorEnablerFutureDeployCost(
+                                currentGame, currentPlayerId, card.card);
+                        return futureActorCost != null
+                            && card.cost + futureActorCost <= forceAvailable;
+                    })
+                    .max(Comparator
+                        .comparingInt((CardInfo card) -> card.power + card.ability)
+                        .thenComparingDouble(CardInfo::getValueRatio)
+                        .thenComparingInt(card -> -card.cost))
+                    .orElse(null);
+                if (enabler == null) return null;
+                selected.add(enabler);
+                LOG.warn("OBJECTIVE.DEPLOY.ENABLER_PLAN: {} -> {} with future actor funded",
+                    enabler.name, gateTitle);
+            } else if (friendlyCharacters == 0) {
                 selected.addAll(selectBestFormationPair(
                     actorCandidates, deployable, forceAvailable));
                 if (selected.size() != 2) return null;

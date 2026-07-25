@@ -3356,8 +3356,15 @@ public class DeployEvaluator extends ActionEvaluator {
                                     // Find the 2 strongest objective locations and reinforce those.
                                     java.util.List<PhysicalCard> occupiedObjLocCards = new java.util.ArrayList<>();
                                     java.util.Map<String, Float> objLocPower = new java.util.LinkedHashMap<>();
+                                    java.util.Set<String> exactStructuredHoldLocations =
+                                        new java.util.LinkedHashSet<>();
                                     for (PhysicalCard loc : gameState.getTopLocations()) {
                                         if (loc == null || loc.getTitle() == null) continue;
+                                        if (flipObjAnalyzer.hasStructuredFlipBackLocationRules()
+                                                && flipObjAnalyzer.isFlipBackProtectionLocation(
+                                                    loc, game, flipPlayerId)) {
+                                            exactStructuredHoldLocations.add(loc.getTitle());
+                                        }
                                         String locLower = loc.getTitle().toLowerCase(Locale.ROOT);
                                         boolean isObjLoc = false;
                                         for (String frag : objLocFragments) {
@@ -3375,22 +3382,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                         }
                                     }
 
-                                    // Find the 2 locations with most power (these are the ones to hold)
-                                    java.util.Set<String> holdLocations = new java.util.HashSet<>();
-                                    for (int holdIdx = 0; holdIdx < 2 && !objLocPower.isEmpty(); holdIdx++) {
-                                        String bestLoc = null;
-                                        float bestPwr = -1;
-                                        for (java.util.Map.Entry<String, Float> e : objLocPower.entrySet()) {
-                                            if (e.getValue() > bestPwr) {
-                                                bestPwr = e.getValue();
-                                                bestLoc = e.getKey();
-                                            }
-                                        }
-                                        if (bestLoc != null) {
-                                            holdLocations.add(bestLoc);
-                                            objLocPower.remove(bestLoc);
-                                        }
-                                    }
+                                    java.util.Set<String> holdLocations =
+                                        DeployObjectiveSitingPolicy.selectPostFlipHoldLocations(
+                                            exactStructuredHoldLocations, objLocPower);
 
                                     // Check if deploy target is one of the hold locations
                                     boolean deploysToHoldLoc = false;

@@ -1,9 +1,12 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import org.junit.Test;
 
 import java.util.List;
@@ -15,6 +18,43 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class BattleForfeitFactsTest {
+
+    @Test
+    public void formationAlternativesRespectOptionalPassAndAttrition() {
+        GameState gameState = mock(GameState.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+        PhysicalCard actor = mock(PhysicalCard.class);
+        PhysicalCard forceLoss = mock(PhysicalCard.class);
+        when(gameState.findCardById(1)).thenReturn(actor);
+        when(gameState.findCardById(2)).thenReturn(forceLoss);
+        when(forceLoss.getZone()).thenReturn(Zone.RESERVE_DECK);
+        when(analyzer.classifyGateFormationPieceIfRemoved(
+                null, "player", actor)).thenReturn(
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_REQUIRED_ACTOR);
+        when(analyzer.classifyGateFormationPieceIfRemoved(
+                null, "player", forceLoss)).thenReturn(
+                    ObjectiveAnalyzer.FlipGateFormationRole.NONE);
+
+        BattleForfeitFacts.FlipGateFormationSelectionFacts attrition =
+                BattleForfeitFacts.readFlipGateFormationSelection(
+                    List.of("1", "2"), gameState, null, "player",
+                    analyzer, false, 3);
+        BattleForfeitFacts.FlipGateFormationSelectionFacts pureDamage =
+                BattleForfeitFacts.readFlipGateFormationSelection(
+                    List.of("1", "2"), gameState, null, "player",
+                    analyzer, false, 0);
+        BattleForfeitFacts.FlipGateFormationSelectionFacts optional =
+                BattleForfeitFacts.readFlipGateFormationSelection(
+                    List.of("1"), gameState, null, "player",
+                    analyzer, true, 3);
+
+        assertEquals(ObjectiveAnalyzer.FlipGateFormationRole
+                .LAST_REQUIRED_ACTOR, attrition.roleFor("1"));
+        assertFalse(attrition.hasUnprotectedLegalAlternative());
+        assertTrue(pureDamage.hasUnprotectedLegalAlternative());
+        assertTrue(optional.hasUnprotectedLegalAlternative());
+    }
 
     @Test
     public void candidateSetKeepsFirstLowestForfeitHitAndIndependentDeadFact() {

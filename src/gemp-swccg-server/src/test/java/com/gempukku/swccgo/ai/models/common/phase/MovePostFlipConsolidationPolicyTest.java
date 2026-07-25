@@ -105,6 +105,40 @@ public class MovePostFlipConsolidationPolicyTest {
                 result.reason());
     }
 
+    @Test
+    public void exactFlipBackLocationCannotBeEvacuatedByV31() {
+        Map<String, Float> powers = linkedPowers(
+                "Naboo: Theed Palace Throne Room", 3.0f,
+                "Naboo", 8.0f,
+                "Naboo: Swamp", 6.0f);
+
+        assertNone(MovePostFlipConsolidationPolicy.evaluate(
+                "Naboo: Theed Palace Throne Room",
+                true,
+                true,
+                powers));
+    }
+
+    @Test
+    public void surplusThirdLocationStillGetsExactR2Contribution() {
+        Map<String, Float> powers = linkedPowers(
+                "Naboo", 8.0f,
+                "Naboo: Theed Palace Throne Room", 6.0f,
+                "Naboo: Swamp", 3.0f);
+
+        MovePostFlipConsolidationPolicy.Evaluation result =
+                MovePostFlipConsolidationPolicy.evaluate(
+                        "Naboo: Swamp",
+                        true,
+                        false,
+                        powers);
+
+        assertTrue(result.applies());
+        assertEquals("Naboo: Swamp", result.weakestLocationTitle());
+        assertEquals(200.0f, result.delta(), 0.0f);
+        assertTrue(result.claimDoctrine());
+    }
+
     private static Map<String, Float> linkedPowers(Object... entries) {
         Map<String, Float> result = new LinkedHashMap<>();
         for (int index = 0; index < entries.length; index += 2) {

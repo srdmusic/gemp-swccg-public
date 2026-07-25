@@ -2,10 +2,15 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PhysicalCardVisitor;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -13,11 +18,17 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -180,6 +191,181 @@ public class DeployPlanRankingAdapterParityTest {
         assertNull(invokeFormationPlan(chosenPlanner,
                 List.of(new com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo(
                         fixture.actor())), fixture.locations()));
+    }
+
+    @Test
+    public void bothBotsPlanAFreeActorEnablerOnlyWhenTheFutureActorIsFunded()
+            throws Exception {
+        FormationFixture fixture = formationFixture();
+        PhysicalCard sidious = character(
+                "208_35", "Lord Sidious", 120, 5, 7, 6);
+
+        var randoPlanner = newRandoPlanner();
+        var randoAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        configureFormationAnalyzer(randoAnalyzer, fixture);
+        when(randoAnalyzer.getFlipGateActorEnablerFutureDeployCost(
+                fixture.game(), "player", sidious)).thenReturn(3);
+        randoPlanner.setObjectiveAnalyzer(randoAnalyzer);
+        configurePlannerState(randoPlanner, fixture.game());
+
+        var chosenPlanner = newChosenPlanner();
+        var chosenAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        configureFormationAnalyzer(chosenAnalyzer, fixture);
+        when(chosenAnalyzer.getFlipGateActorEnablerFutureDeployCost(
+                fixture.game(), "player", sidious)).thenReturn(3);
+        chosenPlanner.setObjectiveAnalyzer(chosenAnalyzer);
+        configurePlannerState(chosenPlanner, fixture.game());
+
+        assertNull(invokeFormationPlan(randoPlanner,
+                List.of(new com.gempukku.swccgo.ai.models.rando.strategy.CardInfo(
+                        sidious)), fixture.locations(), 8));
+        assertNull(invokeFormationPlan(chosenPlanner,
+                List.of(new com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo(
+                        sidious)), fixture.locations(), 8));
+
+        var randoPlan =
+                (com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan)
+                invokeFormationPlan(randoPlanner,
+                        List.of(new com.gempukku.swccgo.ai.models.rando.strategy.CardInfo(
+                                sidious)), fixture.locations(), 9);
+        var chosenPlan =
+                (com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan)
+                invokeFormationPlan(chosenPlanner,
+                        List.of(new com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo(
+                                sidious)), fixture.locations(), 9);
+
+        assertNotNull(randoPlan);
+        assertNotNull(chosenPlan);
+        assertEquals(1, randoPlan.getInstructions().size());
+        assertEquals(1, chosenPlan.getInstructions().size());
+        assertEquals("Lord Sidious",
+                randoPlan.getInstructions().get(0).getCardName());
+        assertEquals("Lord Sidious",
+                chosenPlan.getInstructions().get(0).getCardName());
+        assertEquals("293",
+                randoPlan.getInstructions().get(0).getTargetLocationId());
+        assertEquals("293",
+                chosenPlan.getInstructions().get(0).getTargetLocationId());
+    }
+
+    @Test
+    public void bothBotsRefreshTheSameTurnSwampPlanWhenThePulledGateAppears()
+            throws Exception {
+        PlanRefreshFixture fixture = planRefreshFixture();
+
+        var randoPlanner = newRandoPlanner();
+        var randoAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(randoAnalyzer, fixture);
+        randoPlanner.setObjectiveAnalyzer(randoAnalyzer);
+        var randoBefore = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+        fixture.locations().set(List.of(fixture.swamp(), fixture.throneRoom()));
+        var randoAfter = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        fixture.locations().set(List.of(fixture.swamp()));
+        var chosenPlanner = newChosenPlanner();
+        var chosenAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(chosenAnalyzer, fixture);
+        chosenPlanner.setObjectiveAnalyzer(chosenAnalyzer);
+        var chosenBefore = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+        fixture.locations().set(List.of(fixture.swamp(), fixture.throneRoom()));
+        var chosenAfter = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        assertEquals("178", randoBefore.getInstructions().get(0).getTargetLocationId());
+        assertEquals("178", chosenBefore.getInstructions().get(0).getTargetLocationId());
+        assertNotSame(randoBefore, randoAfter);
+        assertNotSame(chosenBefore, chosenAfter);
+        assertEquals(2, randoAfter.getInstructions().size());
+        assertEquals(2, chosenAfter.getInstructions().size());
+        assertTrue(randoAfter.getReason().startsWith(
+                "V297 objective flip-gate formation"));
+        assertEquals(randoAfter.getReason(), chosenAfter.getReason());
+        for (var instruction : randoAfter.getInstructions()) {
+            assertEquals("293", instruction.getTargetLocationId());
+        }
+        for (var instruction : chosenAfter.getInstructions()) {
+            assertEquals("293", instruction.getTargetLocationId());
+        }
+    }
+
+    @Test
+    public void bothBotsKeepTheCachedPlanWhenTheGateTopologyDoesNotChange() {
+        PlanRefreshFixture fixture = planRefreshFixture();
+
+        var randoPlanner = newRandoPlanner();
+        var randoAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(randoAnalyzer, fixture);
+        randoPlanner.setObjectiveAnalyzer(randoAnalyzer);
+        var randoBefore = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+        var randoAfter = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        var chosenPlanner = newChosenPlanner();
+        var chosenAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(chosenAnalyzer, fixture);
+        chosenPlanner.setObjectiveAnalyzer(chosenAnalyzer);
+        var chosenBefore = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+        var chosenAfter = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        assertSame(randoBefore, randoAfter);
+        assertSame(chosenBefore, chosenAfter);
+    }
+
+    @Test
+    public void bothBotsSpendTheBattleReserveToCompleteTheExactFlipFormation() {
+        PlanRefreshFixture fixture = planRefreshFixture();
+        fixture.locations().set(List.of(fixture.swamp(), fixture.throneRoom()));
+        GameState gameState = fixture.game().getGameState();
+        PhysicalCard existingBuddy = character(
+                "208_35", "Lord Sidious", 130, 5, 7, 6);
+        when(existingBuddy.getOwner()).thenReturn("player");
+        when(gameState.getForcePileSize("player")).thenReturn(3);
+        when(gameState.getHand("player")).thenReturn(List.of(fixture.actor()));
+        when(gameState.getCardsAtLocation(fixture.throneRoom()))
+                .thenReturn(List.of(existingBuddy));
+
+        var randoPlanner = newRandoPlanner();
+        var randoAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(randoAnalyzer, fixture);
+        randoPlanner.setObjectiveAnalyzer(randoAnalyzer);
+        var randoPlan = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        var chosenPlanner = newChosenPlanner();
+        var chosenAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(chosenAnalyzer, fixture);
+        chosenPlanner.setObjectiveAnalyzer(chosenAnalyzer);
+        var chosenPlan = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        assertTrue(randoPlan.getReason().startsWith(
+                "V297 objective flip-gate formation"));
+        assertTrue(chosenPlan.getReason().startsWith(
+                "V297 objective flip-gate formation"));
+        assertEquals(1, randoPlan.getInstructions().size());
+        assertEquals(1, chosenPlan.getInstructions().size());
+        assertEquals("Neimoidian",
+                randoPlan.getInstructions().get(0).getCardName());
+        assertEquals("Neimoidian",
+                chosenPlan.getInstructions().get(0).getCardName());
+        assertEquals(3,
+                randoPlan.getInstructions().get(0).getDeployCost());
+        assertEquals(3,
+                chosenPlan.getInstructions().get(0).getDeployCost());
     }
 
     @Test
@@ -396,6 +582,58 @@ public class DeployPlanRankingAdapterParityTest {
         when(analyzer.getActivePlaybook()).thenReturn(flipGatePlaybook());
     }
 
+    private static void configureRefreshAnalyzer(
+            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer analyzer,
+            PlanRefreshFixture fixture) {
+        when(analyzer.isAnalyzed()).thenReturn(true);
+        when(analyzer.hasFlipGateActorRequirement()).thenReturn(true);
+        when(analyzer.getFlipCriticalControlSite()).thenReturn(
+                "Naboo: Theed Palace Throne Room");
+        when(analyzer.isFlipped()).thenReturn(false);
+        when(analyzer.isFlipGateLocation(
+                fixture.game(), "player", fixture.swamp())).thenReturn(false);
+        when(analyzer.isFlipGateLocation(
+                fixture.game(), "player", fixture.throneRoom())).thenReturn(true);
+        when(analyzer.hasFlipGateActorAtLocation(
+                fixture.game(), "player", fixture.throneRoom())).thenReturn(false);
+        when(analyzer.matchesFlipGateActorRequirement(
+                fixture.game(), "player",
+                fixture.actor(), fixture.throneRoom())).thenReturn(true);
+        when(analyzer.matchesFlipGateActorRequirement(
+                fixture.game(), "player", fixture.actor())).thenReturn(true);
+        when(analyzer.isObjectiveRelevantLocation(
+                "Naboo: Theed Palace Throne Room")).thenReturn(true);
+        when(analyzer.getLocationObjectiveBonus(
+                "Naboo: Theed Palace Throne Room")).thenReturn(150.0f);
+        when(analyzer.getActivePlaybook()).thenReturn(flipGatePlaybook());
+    }
+
+    private static void configureRefreshAnalyzer(
+            com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer analyzer,
+            PlanRefreshFixture fixture) {
+        when(analyzer.isAnalyzed()).thenReturn(true);
+        when(analyzer.hasFlipGateActorRequirement()).thenReturn(true);
+        when(analyzer.getFlipCriticalControlSite()).thenReturn(
+                "Naboo: Theed Palace Throne Room");
+        when(analyzer.isFlipped()).thenReturn(false);
+        when(analyzer.isFlipGateLocation(
+                fixture.game(), "player", fixture.swamp())).thenReturn(false);
+        when(analyzer.isFlipGateLocation(
+                fixture.game(), "player", fixture.throneRoom())).thenReturn(true);
+        when(analyzer.hasFlipGateActorAtLocation(
+                fixture.game(), "player", fixture.throneRoom())).thenReturn(false);
+        when(analyzer.matchesFlipGateActorRequirement(
+                fixture.game(), "player",
+                fixture.actor(), fixture.throneRoom())).thenReturn(true);
+        when(analyzer.matchesFlipGateActorRequirement(
+                fixture.game(), "player", fixture.actor())).thenReturn(true);
+        when(analyzer.isObjectiveRelevantLocation(
+                "Naboo: Theed Palace Throne Room")).thenReturn(true);
+        when(analyzer.getLocationObjectiveBonus(
+                "Naboo: Theed Palace Throne Room")).thenReturn(150.0f);
+        when(analyzer.getActivePlaybook()).thenReturn(flipGatePlaybook());
+    }
+
     private static com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer.ObjectivePlaybook
     flipGatePlaybook() {
         return new com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer.ObjectivePlaybook(
@@ -417,10 +655,17 @@ public class DeployPlanRankingAdapterParityTest {
     private static Object invokeFormationPlan(
             Object planner, List<?> characters,
             List<AiBoardAnalyzer.LocationAnalysis> locations) throws Exception {
+        return invokeFormationPlan(planner, characters, locations, 8);
+    }
+
+    private static Object invokeFormationPlan(
+            Object planner, List<?> characters,
+            List<AiBoardAnalyzer.LocationAnalysis> locations,
+            int forceAvailable) throws Exception {
         Method method = planner.getClass().getDeclaredMethod(
                 "generateFlipGateFormationPlan", List.class, List.class, int.class);
         method.setAccessible(true);
-        return method.invoke(planner, characters, locations, 8);
+        return method.invoke(planner, characters, locations, forceAvailable);
     }
 
     private static FormationFixture formationFixture() {
@@ -444,6 +689,86 @@ public class DeployPlanRankingAdapterParityTest {
                         AiBoardAnalyzer.ContestStatus.UNCONTESTED, true);
         return new FormationFixture(
                 game, location, actor, buddy, List.of(analysis));
+    }
+
+    private static PlanRefreshFixture planRefreshFixture() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard swamp = locationCard(
+                "12_171", "Naboo: Swamp", 178, CardSubtype.SITE);
+        PhysicalCard throneRoom = locationCard(
+                "12_174", "Naboo: Theed Palace Throne Room",
+                LOCATION_ID, CardSubtype.SITE);
+        PhysicalCard actor = character(
+                "14_76", "Neimoidian", 101, 6, 2, 3);
+        PhysicalCard buddy = character(
+                "12_118", "Buddy", 102, 5, 2, 3);
+        AtomicReference<List<PhysicalCard>> locations =
+                new AtomicReference<>(List.of(swamp));
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(game.getOpponent("player")).thenReturn("opponent");
+        when(gameState.getGame()).thenReturn(game);
+        when(gameState.getOpponent("player")).thenReturn("opponent");
+        when(gameState.getPlayersLatestTurnNumber("player")).thenReturn(2);
+        when(gameState.getForcePileSize("player")).thenReturn(8);
+        when(gameState.getPlayerLifeForce("player")).thenReturn(30);
+        when(gameState.getPlayerLifeForce("opponent")).thenReturn(30);
+        when(gameState.getHand("player")).thenReturn(List.of(actor, buddy));
+        when(gameState.getAllPermanentCards()).thenReturn(List.of());
+        when(gameState.getLocationsInOrder()).thenAnswer(
+                ignored -> locations.get());
+        when(gameState.getCardsAtLocation(any(PhysicalCard.class)))
+                .thenReturn(List.of());
+        doAnswer(invocation -> {
+            PhysicalCardVisitor visitor = invocation.getArgument(0);
+            for (PhysicalCard location : locations.get()) {
+                if (visitor.visitPhysicalCard(location)) return true;
+            }
+            return false;
+        }).when(gameState).iterateLocationsOnTable(
+                any(PhysicalCardVisitor.class), anyBoolean());
+        when(modifiers.getTotalAbilityAtLocation(
+                gameState, "player", swamp)).thenReturn(0.0f);
+        when(modifiers.getTotalAbilityAtLocation(
+                gameState, "opponent", swamp)).thenReturn(0.0f);
+        when(modifiers.getTotalAbilityAtLocation(
+                gameState, "player", throneRoom)).thenReturn(0.0f);
+        when(modifiers.getTotalAbilityAtLocation(
+                gameState, "opponent", throneRoom)).thenReturn(0.0f);
+        when(modifiers.getIconCount(
+                gameState, swamp, Icon.DARK_FORCE)).thenReturn(1);
+        when(modifiers.getIconCount(
+                gameState, swamp, Icon.LIGHT_FORCE)).thenReturn(1);
+        when(modifiers.getIconCount(
+                gameState, throneRoom, Icon.DARK_FORCE)).thenReturn(1);
+        when(modifiers.getIconCount(
+                gameState, throneRoom, Icon.LIGHT_FORCE)).thenReturn(1);
+        when(modifiers.isBattleground(
+                gameState, swamp, null)).thenReturn(true);
+        when(modifiers.isBattleground(
+                gameState, throneRoom, null)).thenReturn(true);
+
+        return new PlanRefreshFixture(
+                game, locations, swamp, throneRoom, actor);
+    }
+
+    private static PhysicalCard locationCard(
+            String blueprintId, String title, int cardId,
+            CardSubtype subtype) {
+        PhysicalCard location = mock(PhysicalCard.class);
+        SwccgCardBlueprint blueprint = mock(SwccgCardBlueprint.class);
+        when(location.getBlueprint()).thenReturn(blueprint);
+        when(location.getBlueprintId(true)).thenReturn(blueprintId);
+        when(location.getCardId()).thenReturn(cardId);
+        when(location.getPermanentCardId()).thenReturn(cardId);
+        when(location.getTitle()).thenReturn(title);
+        when(location.getTitles()).thenReturn(List.of(title));
+        when(blueprint.getCardCategory()).thenReturn(CardCategory.LOCATION);
+        when(blueprint.getCardSubtype()).thenReturn(subtype);
+        return location;
     }
 
     private static PhysicalCard character(
@@ -614,5 +939,13 @@ public class DeployPlanRankingAdapterParityTest {
             SwccgGame game, PhysicalCard location, PhysicalCard actor,
             PhysicalCard buddy,
             List<AiBoardAnalyzer.LocationAnalysis> locations) {
+    }
+
+    private record PlanRefreshFixture(
+            SwccgGame game,
+            AtomicReference<List<PhysicalCard>> locations,
+            PhysicalCard swamp,
+            PhysicalCard throneRoom,
+            PhysicalCard actor) {
     }
 }

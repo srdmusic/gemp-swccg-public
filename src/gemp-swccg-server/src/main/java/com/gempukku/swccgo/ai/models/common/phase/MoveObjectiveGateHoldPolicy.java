@@ -9,7 +9,8 @@ public final class MoveObjectiveGateHoldPolicy {
         NONE,
         HOLD_DEFENSIBLE_CONTEST,
         HOLD_LAST_ACTOR,
-        HOLD_LAST_BUDDY
+        HOLD_LAST_BUDDY,
+        HOLD_LAST_CONTROL_SOURCE
     }
 
     public record Evaluation(Branch branch, boolean hardVeto, String reason) {
@@ -21,6 +22,29 @@ public final class MoveObjectiveGateHoldPolicy {
     private static final float RETREATABLE_POWER_GAP = 6.0f;
 
     private MoveObjectiveGateHoldPolicy() {
+    }
+
+    /**
+     * Keeps the sole proven control source at an exact structured pre-flip
+     * requirement. Every input is positive evidence; an unknown or missing fact
+     * must be passed as false and leaves the move neutral.
+     */
+    public static Evaluation evaluateRequiredControl(
+            boolean activePreFlipRequiredControl,
+            boolean moverAtExactRequiredLocation,
+            boolean currentlyControlsLocation,
+            boolean soleControlSourceProven) {
+        if (!activePreFlipRequiredControl
+                || !moverAtExactRequiredLocation
+                || !currentlyControlsLocation
+                || !soleControlSourceProven) {
+            return Evaluation.none();
+        }
+
+        return new Evaluation(
+                Branch.HOLD_LAST_CONTROL_SOURCE,
+                true,
+                "MOVE.OBJECTIVE.REQUIRED_CONTROL_HOLD: keep the sole control source at the required location");
     }
 
     public static Evaluation evaluate(

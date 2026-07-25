@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
@@ -91,6 +92,34 @@ public final class BattleForfeitPolicy {
     }
 
     private BattleForfeitPolicy() {
+    }
+
+    /**
+     * Preserves the exact unflipped Invasion actor-and-buddy formation only
+     * when another legal loss can be selected. Mandatory unavoidable losses
+     * remain neutral.
+     */
+    public static PolicyResult scoreFlipGateFormationProtection(
+            String actionId,
+            ObjectiveAnalyzer.FlipGateFormationRole role,
+            boolean hasUnprotectedLegalAlternative) {
+        Objects.requireNonNull(actionId, "actionId");
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (!hasUnprotectedLegalAlternative || role == null
+                || role == ObjectiveAnalyzer.FlipGateFormationRole.NONE) {
+            return result(operations);
+        }
+
+        String reason;
+        if (role == ObjectiveAnalyzer.FlipGateFormationRole.LAST_REQUIRED_ACTOR) {
+            reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the last required actor while another legal loss exists";
+        } else {
+            reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the required actor's last buddy while another legal loss exists";
+        }
+        add(operations, actionId,
+                "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
+                TraceOutputKind.VETO, -9999.0f, reason);
+        return result(operations);
     }
 
     public static Evaluation evaluateOptional(

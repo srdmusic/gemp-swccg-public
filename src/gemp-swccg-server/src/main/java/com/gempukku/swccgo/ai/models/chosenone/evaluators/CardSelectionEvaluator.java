@@ -4249,6 +4249,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             optionalForfeitDecisionId == null || optionalForfeitDecisionId.isBlank()
                 ? "optional-battle-forfeit-decision"
                 : optionalForfeitDecisionId + "-optional-battle-forfeit");
+        BattleForfeitFacts.FlipGateFormationSelectionFacts
+            flipGateFormationSelection =
+                BattleForfeitFacts.readFlipGateFormationSelection(
+                    context.getCardIds(), gameState, context.getGame(),
+                    context.getPlayerId(), context.getObjectiveAnalyzer(),
+                    isOptional, optionalAttritionRemaining);
+        PolicyContributionLedger flipGateFormationLedger =
+            new PolicyContributionLedger(
+                optionalForfeitDecisionId == null
+                        || optionalForfeitDecisionId.isBlank()
+                    ? "battle-forfeit-flip-gate-formation"
+                    : optionalForfeitDecisionId
+                        + "-battle-forfeit-flip-gate-formation");
 
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
@@ -4257,6 +4270,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 50.0f,
                 "Forfeit card " + cardId
             );
+            flipGateFormationLedger.register(
+                BattleForfeitPolicy.scoreFlipGateFormationProtection(
+                    cardId, flipGateFormationSelection.roleFor(cardId),
+                    flipGateFormationSelection
+                        .hasUnprotectedLegalAlternative()));
+            PolicyOperationAdapter.apply(action, flipGateFormationLedger);
 
             // V22.4: Optional forfeit handling — COMPLETELY REWORKED
             // Old bug: ALL optional forfeits were avoided (-150). This meant Rando would
@@ -4577,6 +4596,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         BattleForfeitFacts.DecisionFacts battleForfeitDecision =
             new BattleForfeitFacts.DecisionFacts(
                 attritionRemaining, damageRemaining, battleCandidateSet);
+        BattleForfeitFacts.FlipGateFormationSelectionFacts
+            flipGateFormationSelection =
+                BattleForfeitFacts.readFlipGateFormationSelection(
+                    context.getCardIds(), gameState, game, playerId,
+                    context.getObjectiveAnalyzer(), false,
+                    attritionRemaining);
+        PolicyContributionLedger flipGateFormationLedger =
+            new PolicyContributionLedger(
+                forceLossDecisionId == null || forceLossDecisionId.isBlank()
+                    ? "combined-battle-forfeit-flip-gate-formation"
+                    : forceLossDecisionId
+                        + "-combined-battle-forfeit-flip-gate-formation");
 
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
@@ -4585,6 +4616,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 50.0f,
                 "Choose " + cardId
             );
+            flipGateFormationLedger.register(
+                BattleForfeitPolicy.scoreFlipGateFormationProtection(
+                    cardId, flipGateFormationSelection.roleFor(cardId),
+                    flipGateFormationSelection
+                        .hasUnprotectedLegalAlternative()));
+            PolicyOperationAdapter.apply(action, flipGateFormationLedger);
             PhysicalCard battleCandidate = null;
             if (gameState != null) {
                 try {

@@ -757,6 +757,35 @@ public class MoveEvaluator extends ActionEvaluator {
                     // A power gap greater than six remains retreatable.
                     try {
                         var gateAnalyzer = context.getObjectiveAnalyzer();
+                        boolean activeRequiredControl =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && !gateAnalyzer.isFlipped()
+                                && gateAnalyzer.isPreFlipPlainControlRequirementLocation(
+                                    game, playerId, currentLocation);
+                        boolean controlsRequiredLocation =
+                                activeRequiredControl
+                                && game.getModifiersQuerying().controlsLocation(
+                                    gameState, currentLocation, playerId,
+                                    com.gempukku.swccgo.common.SpotOverride
+                                        .INCLUDE_EXCLUDED_FROM_BATTLE);
+                        boolean soleControlSource =
+                                controlsRequiredLocation
+                                && gateAnalyzer.isSoleControlSourceAtRequiredLocation(
+                                    game, playerId, cardToMove, currentLocation);
+                        MoveObjectiveGateHoldPolicy.Evaluation controlHold =
+                                MoveObjectiveGateHoldPolicy.evaluateRequiredControl(
+                                    activeRequiredControl,
+                                    activeRequiredControl,
+                                    controlsRequiredLocation,
+                                    soleControlSource);
+                        if (controlHold.hardVeto()) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason = controlHold.reason();
+                            logger.warn("OBJECTIVE REQUIRED CONTROL HOLD: {} at {} vetoed ({})",
+                                cardToMove.getTitle(), currentLocation.getTitle(),
+                                controlHold.branch());
+                        }
                         boolean activeActorGate = gateAnalyzer != null
                                 && gateAnalyzer.isAnalyzed()
                                 && !gateAnalyzer.isFlipped()
@@ -1178,6 +1207,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                     MovePostFlipConsolidationPolicy.isObjectiveLocation(
                                         curLocTitle,
                                         objFrags);
+                                boolean currentLocationMustBeHeld =
+                                    moveConsolidateAnalyzer.isFlipBackProtectionLocation(
+                                        currentLocation, game, playerId);
 
                                 // Count occupied objective locations and find the weakest
                                 java.util.Map<String, Float> objPowerMap = new java.util.LinkedHashMap<>();
@@ -1194,6 +1226,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                     MovePostFlipConsolidationPolicy.evaluate(
                                         curLocTitle,
                                         atObjLoc,
+                                        currentLocationMustBeHeld,
                                         objPowerMap);
                                 if (v31Decision.applies()) {
                                     action.addReasoning(

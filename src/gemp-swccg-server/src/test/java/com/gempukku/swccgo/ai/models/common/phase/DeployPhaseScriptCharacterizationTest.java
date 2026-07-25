@@ -1,13 +1,22 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class DeployPhaseScriptCharacterizationTest {
     @Test
@@ -56,6 +65,48 @@ public class DeployPhaseScriptCharacterizationTest {
         assertTrue(resolveSteps(script,
                 "Take a weapon into hand from Reserve Deck").isEmpty());
         assertTrue(resolveSteps(script, "Use game text").isEmpty());
+    }
+
+    @Test
+    public void bothBotsPutMissingFlipGateActorUploadBeforeOtherCharacters() throws Exception {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard sidious = mock(PhysicalCard.class);
+        ObjectiveAnalyzer objectiveAnalyzer = mock(ObjectiveAnalyzer.class);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {"upload", "security"});
+        parameters.put("actionText", new String[] {
+                "Take card into hand from Reserve Deck", "Deploy a character"
+        });
+        parameters.put("cardId", new String[] {"190", null});
+
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.findCardById(190)).thenReturn(sidious);
+        when(objectiveAnalyzer.getStrategyCharacterTokens(game, "p"))
+                .thenReturn(Collections.emptySet());
+        when(objectiveAnalyzer.isFlipGateActorUploadIntoHandAction(
+                game, "p", sidious, "Take card into hand from Reserve Deck"))
+                .thenReturn(true);
+
+        DeployPhaseScript.Result rando =
+                new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript()
+                        .selectAllowedActions(
+                                decision, gameState, game, "p", objectiveAnalyzer);
+        DeployPhaseScript.Result chosen =
+                new com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript()
+                        .selectAllowedActions(
+                                decision, gameState, game, "p", objectiveAnalyzer);
+
+        assertEquals(
+                "[KEY_CHARACTERS:[[upload], [security]], "
+                        + "KEY_CHARACTERS:[[upload], [security]]]",
+                java.util.Arrays.toString(new Object[] {
+                        rando.step + ":" + rando.stepBuckets,
+                        chosen.step + ":" + chosen.stepBuckets
+                }));
     }
 
     @SuppressWarnings("unchecked")

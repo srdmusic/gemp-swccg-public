@@ -8255,3 +8255,38 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     no engine, game, card, action, decision metadata, objective data, client, database, deck-library,
     routing, or player-choice source changed. JVM load, deployment, and live firing remain separate gates.
     Revert the single V297.2 commit; V297.1 and all earlier behavior remain independent.
+
+  ==== Invasion objective behavior Batch Zero (2026-07-24): complete flip-chain proof ====
+    Card source requires exact Dark Side control of Naboo: Theed Palace Throne Room with an owned,
+    non-undercover Neimoidian there plus exact Dark Side control of Naboo system. The back side flips
+    when Light Side controls either exact Naboo system or exact Throne Room. The approved profile now
+    records that back condition as structured post-flip anyOf while retaining the front allOf law.
+
+    Replay 4sec2izfk7qq3hlb proved that a correct 340-point Throne Room pull did not update the deploy
+    plan cached before the gate appeared and before Sidious uploaded Nute. Sidious followed stale Swamp
+    geography, and non-additive V201 DEFER disproved the earlier inference that V193 could merely bypass
+    V201. Both bot planners now replan when the exact gate appears or the typed actor reaches hand.
+    A free upload enabler is recognized only with the actor in Reserve and the complete formation funded:
+    Sidious 6 plus Nute 3 succeeds with 9 Force and is rejected with 8. Maintenance and location
+    obligations remain reserved; only the battle reserve may fund exact objective completion.
+
+    Exact structured facts now drive later phases. Moving the sole control source away from Naboo is
+    hard-vetoed pre-flip. Post-flip siting and consolidation protect exact Naboo system and Throne Room,
+    never Swamp by substring. A safe battle at an unmet exact gate gets +80 only outside formation-safety,
+    predictor-defeat, low-Reserve, effective-difference, and V25 suicide boundaries. Existing V21 protects
+    the last Neimoidian from Force loss. Battle forfeit adds -9999 for the last required actor or buddy
+    only when a legal alternative exists, so unavoidable losses remain possible.
+
+    AI tests execute the real front and back card triggers and the replay-shaped chain: exact pull,
+    9-Force Sidious, free Nute upload, same-turn dual-bot replan, Nute deployment, movement, battle,
+    Force loss, forfeit, and actual flip. Exact Throne without Naboo does not flip, real Naboo completes
+    it, opponent Naboo or Throne control flips back, and Swamp is a negative control.
+
+    Independent verification passed. Focused Batch Zero suites passed 39/0/0/0; the full reactor passed
+    2114/0/0/26 across 289 suites. Four normalized bot mirror pairs, objective JSON, diff, AI-only scope,
+    forbidden type-by-title, compile, package, and class-marker gates passed. Packaged server jar SHA-256
+    is f4f9186d8e152b85971368fc118f45cbb5f974febef06ff1f3853f971833709e and packaged web jar SHA-256 is
+    f0c4cc0d53b5388e887c6883bf7eeda2b8b2a7db22a522de15f9ef2c89de3f66. No engine or card Java changed.
+    The JVM was not restarted, nothing was deployed or pushed, and no fresh live game was claimed.
+    Revert the single Batch Zero behavior commit; the source-audit commit and V297 through V297.2 remain
+    independent.
