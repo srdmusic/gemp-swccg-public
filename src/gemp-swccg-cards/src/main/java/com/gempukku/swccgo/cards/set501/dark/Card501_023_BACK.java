@@ -41,7 +41,7 @@ public class Card501_023_BACK extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, Filters.and(Filters.your(self), Filters.here(self), Filters.participatingInBattle), 1));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.here(self), Filters.participatingInBattle), 1));
         return modifiers;
     }
 
