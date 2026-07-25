@@ -81,6 +81,49 @@ public class MoveObjectiveGateHoldPolicyTest {
     }
 
     @Test
+    public void runtimeActorHoldsThroughSixPowerDeficitAndRetreatsAtSeven() {
+        MoveObjectiveGateHoldPolicy.Evaluation held =
+                MoveObjectiveGateHoldPolicy
+                        .evaluateRuntimeActorFormation(
+                                true,
+                                FlipGateFormationRole
+                                        .LAST_REQUIRED_ACTOR,
+                                8.0f, 14.0f);
+        MoveObjectiveGateHoldPolicy.Evaluation retreat =
+                MoveObjectiveGateHoldPolicy
+                        .evaluateRuntimeActorFormation(
+                                true,
+                                FlipGateFormationRole
+                                        .LAST_REQUIRED_ACTOR,
+                                8.0f, 15.0f);
+
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.HOLD_LAST_ACTOR,
+                held.branch());
+        assertTrue(held.hardVeto());
+        assertEquals(
+                "MOVE.OBJECTIVE.RUNTIME_ACTOR_HOLD: keep the sole required actor at a qualifying location",
+                held.reason());
+        assertFalse(retreat.hardVeto());
+    }
+
+    @Test
+    public void castleReturnHoldsOnlyWhenEveryLegalMoverNeedsProtection() {
+        MoveObjectiveGateHoldPolicy.Evaluation held =
+                MoveObjectiveGateHoldPolicy
+                        .evaluateVaderCastleReturn(true, true);
+        assertTrue(held.hardVeto());
+        assertEquals(
+                "MOVE.OBJECTIVE.RUNTIME_ACTOR_HOLD: Castle return would evacuate every legal sole battleground Vader",
+                held.reason());
+        assertFalse(MoveObjectiveGateHoldPolicy
+                .evaluateVaderCastleReturn(true, false)
+                .hardVeto());
+        assertFalse(MoveObjectiveGateHoldPolicy
+                .evaluateVaderCastleReturn(false, true)
+                .hardVeto());
+    }
+
+    @Test
     public void postFlipBlockerHoldsDefensibleContestButAllowsDoomedRetreat() {
         MoveObjectiveGateHoldPolicy.Evaluation defensible =
                 MoveObjectiveGateHoldPolicy.evaluatePostFlipBlocker(

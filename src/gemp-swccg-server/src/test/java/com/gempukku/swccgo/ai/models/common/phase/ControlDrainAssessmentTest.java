@@ -14,6 +14,26 @@ import static org.junit.Assert.assertEquals;
 public class ControlDrainAssessmentTest {
 
     @Test
+    public void classicHuntExecutorDrainStopsBeforeAllGenericScoring() {
+        Facts facts = new Facts();
+        facts.classicHuntExecutorHardLoss = true;
+        List<PolicyOperation> operations =
+                ControlDrainAssessment.assess("A", facts).operations();
+        assertEquals(List.of(), facts.queries);
+        assertEquals(1, operations.size());
+        PolicyOperation operation = operations.get(0);
+        assertEquals(
+                "OBJECTIVE.HARD_LOSS.CLASSIC_HUNT_EXECUTOR_DRAIN",
+                operation.ruleArmId().id());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operation.domainId());
+        assertEquals(TraceOutputKind.VETO, operation.outputKind());
+        assertEquals(PolicyOperationKind.HARD_VETO, operation.kind());
+        assertEquals(Float.floatToRawIntBits(0.0f),
+                Float.floatToRawIntBits(operation.delta()));
+    }
+
+    @Test
     public void nonpositiveDrainStopsAfterPrimary() {
         Facts facts = new Facts();
         facts.primary = primary(0, 0, 10, 0);
@@ -192,6 +212,11 @@ public class ControlDrainAssessmentTest {
         private ControlDrainAssessment.MultiDrain multi;
         private ControlDrainAssessment.HuntDown huntDown =
                 new ControlDrainAssessment.HuntDown(false, 0);
+        private boolean classicHuntExecutorHardLoss;
+
+        @Override public boolean classicHuntExecutorHardLoss() {
+            return classicHuntExecutorHardLoss;
+        }
 
         @Override public ControlDrainAssessment.Primary primary() {
             queries.add("primary");

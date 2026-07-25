@@ -117,6 +117,9 @@ public final class BattleForfeitPolicy {
             case LAST_REQUIRED_BUDDY:
                 reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the required actor's last buddy while another legal loss exists";
                 break;
+            case LAST_REQUIRED_ON_TABLE_ACTOR:
+                reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the last required actor on table while another legal loss exists";
+                break;
             case LAST_FLIP_BACK_BLOCKER:
                 reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the sole flip-back blocker while another legal loss exists";
                 break;

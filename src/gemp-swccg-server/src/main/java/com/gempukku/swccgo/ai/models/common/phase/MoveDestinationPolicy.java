@@ -139,6 +139,64 @@ public final class MoveDestinationPolicy {
                 1000.0f);
     }
 
+    public static Contribution objectiveActorLocationStart(
+            boolean hasSafeAdvancingHop,
+            String actorTitle) {
+        if (!hasSafeAdvancingHop) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.ACTOR_LOCATION_START: "
+                        + (actorTitle != null
+                                ? actorTitle : "typed actor")
+                        + " has a safe legal move to a live qualifying location",
+                600.0f);
+    }
+
+    public static Contribution objectiveActorLocationDestination(
+            boolean advancesLocation,
+            String actorTitle,
+            String destinationTitle) {
+        if (!advancesLocation) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION: "
+                        + (actorTitle != null
+                                ? actorTitle : "typed actor")
+                        + " advances the objective at "
+                        + (destinationTitle != null
+                                ? destinationTitle : "this location"),
+                1000.0f);
+    }
+
+    public static Contribution objectiveBlockerChaseStart(
+            boolean hasSafeChase,
+            String actorTitle) {
+        if (!hasSafeChase) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.BLOCKER_CHASE_START: "
+                        + (actorTitle != null
+                                ? actorTitle : "typed actor")
+                        + " has a safe legal move toward a flip blocker",
+                600.0f);
+    }
+
+    public static Contribution objectiveBlockerChaseDestination(
+            boolean chasesBlocker,
+            String actorTitle,
+            String destinationTitle) {
+        if (!chasesBlocker) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.BLOCKER_CHASE_DESTINATION: "
+                        + (actorTitle != null
+                                ? actorTitle : "typed actor")
+                        + " chases the blocker at "
+                        + (destinationTitle != null
+                                ? destinationTitle : "this location"),
+                1000.0f);
+    }
+
     public static IconScoring icons(int ownIcons, int opponentIcons) {
         Contribution opponent = opponentIcons > 0
                 ? new Contribution(

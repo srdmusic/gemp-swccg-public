@@ -309,6 +309,7 @@ public final class BattleDecisionPolicy {
                                 float oppWeaponBonus = 0;
                                 boolean ourVaderHere = false;
                                 boolean ourVaderArmed = false;
+                                PhysicalCard ourVaderCard = null;
                                 boolean lukeHere = false;
                                 boolean hasIHYN = false;
                                 java.util.List<PhysicalCard> cardsHere = null;
@@ -327,6 +328,9 @@ public final class BattleDecisionPolicy {
                                             if (Filters.Vader.accepts(game, locCard)) {
                                                 ourVaderHere = true;
                                                 ourVaderArmed |= profile.armed();
+                                                if (ourVaderCard == null) {
+                                                    ourVaderCard = locCard;
+                                                }
                                             }
                                         } else if (opponentId != null && opponentId.equals(cardOwner)) {
                                             // Opponent character — check for key targets
@@ -379,8 +383,10 @@ public final class BattleDecisionPolicy {
                                         if (locCard == null || locCard.getBlueprint() == null) continue;
                                         if (locCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
                                         if (!playerId.equals(locCard.getOwner())) continue;
-                                        String lcTitle = locCard.getTitle() != null ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
-                                        if (lcTitle.contains("vader")) continue; // Skip Vader
+                                        if (Filters.Vader.accepts(
+                                                game, locCard)) {
+                                            continue;
+                                        }
                                         Float pw = locCard.getBlueprint().getPower();
                                         powerWithoutVader += (pw != null ? pw : 0);
                                         charCountWithoutVader++;
@@ -388,9 +394,27 @@ public final class BattleDecisionPolicy {
 
                                     float powerDeficitWithoutVader = theirPower - powerWithoutVader;
                                     ObjectiveAnalyzer expendAnalyzer = context.getObjectiveAnalyzer();
+                                    boolean requiredObjectiveVader =
+                                        expendAnalyzer != null
+                                        && ourVaderCard != null
+                                        && (expendAnalyzer
+                                                .classifyGateFormationPieceIfRemoved(
+                                                    game, playerId,
+                                                    ourVaderCard)
+                                                == ObjectiveAnalyzer
+                                                    .FlipGateFormationRole
+                                                    .LAST_REQUIRED_ACTOR
+                                            || expendAnalyzer
+                                                .classifyGateFormationPieceIfRemoved(
+                                                    game, playerId,
+                                                    ourVaderCard)
+                                                == ObjectiveAnalyzer
+                                                    .FlipGateFormationRole
+                                                    .LAST_REQUIRED_ON_TABLE_ACTOR);
                                     boolean huntDownV = expendAnalyzer != null
                                         && expendAnalyzer.isAnalyzed()
-                                        && expendAnalyzer.isHuntDownV();
+                                        && expendAnalyzer.isHuntDownV()
+                                        && !requiredObjectiveVader;
                                     BattleInitiationPolicy.Contribution barrierRisk =
                                         BattleInitiationPolicy.barrierRisk(
                                             ourVaderHere,
@@ -438,7 +462,9 @@ public final class BattleDecisionPolicy {
                                 // destiny draws — massive advantage. Also check for Jedi opponents.
                                 {
                                     ObjectiveAnalyzer v35ObjAnalyzer = context.getObjectiveAnalyzer();
-                                    if (v35ObjAnalyzer != null && v35ObjAnalyzer.isAnalyzed() && v35ObjAnalyzer.isHuntDownV()
+                                    if (v35ObjAnalyzer != null
+                                        && v35ObjAnalyzer.isAnalyzed()
+                                        && v35ObjAnalyzer.isVirtualHuntDownObjective()
                                         && cardsHere != null) {
                                         boolean inquisitorInBattle = false;
                                         boolean hatredAtLocation = false;
@@ -573,15 +599,23 @@ public final class BattleDecisionPolicy {
 
                                     boolean exactStructuredPreFlipTarget = false;
                                     boolean missingSelfControl = false;
+                                    boolean globalObjectiveBlocker = false;
                                     try {
                                         ObjectiveAnalyzer objectiveAnalyzer =
                                                 context.getObjectiveAnalyzer();
+                                        globalObjectiveBlocker =
+                                                objectiveAnalyzer != null
+                                                && objectiveAnalyzer
+                                                    .isPreFlipBattleRemovableGlobalBlockerAt(
+                                                        game, playerId,
+                                                        targetLocation);
                                         exactStructuredPreFlipTarget =
                                                 objectiveAnalyzer != null
                                                 && objectiveAnalyzer
                                                     .isMissingPreFlipRequirementAt(
                                                         game, playerId,
-                                                        targetLocation);
+                                                        targetLocation)
+                                                && !globalObjectiveBlocker;
                                         if (exactStructuredPreFlipTarget) {
                                             missingSelfControl =
                                                 !game.getModifiersQuerying()
@@ -602,6 +636,7 @@ public final class BattleDecisionPolicy {
                                             actionId,
                                             exactStructuredPreFlipTarget,
                                             missingSelfControl,
+                                            globalObjectiveBlocker,
                                             true,
                                             formationSafetyVeto,
                                             predictorSafe,

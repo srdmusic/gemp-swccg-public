@@ -124,15 +124,66 @@
   ],
   "profile": {
     "exists": true,
-    "loaderEnabled": false,
+    "loaderEnabled": true,
+    "startingLocationIds": [
+      "4_161",
+      "4_163"
+    ],
+    "startingEffectIds": [
+      "4_135",
+      "5_129"
+    ],
+    "keyCharacterFilter": "Vader",
+    "frontStructuredRule": "preFlip/flip allOf: any Vader at a runtime battleground site in rules terms, and zero opponent Jedi-or-Luke at any runtime battleground site in rules terms; include excluded-from-battle cards",
+    "backStructuredRule": "postFlip/flipBack anyOf: zero Vader on table, or opponent Jedi-or-Luke at a runtime battleground site in rules terms; include excluded-from-battle cards",
     "profileGaps": [
-      "keyCharacterFilter is null: the flip law's sole actor is Filters.Vader; not represented.",
-      "flipGateSite is null and flipGateCardIds empty: true gate is any battleground site (Filters.battleground_site); objectiveNamedLocations lists 'battleground site' as a generic named location but nothing marks it as the flip gate.",
-      "Flip blocker (opponent Jedi/Luke at a battleground site) is not represented in any profile field.",
-      "requiredCardsOnTable empty: back-side flip-back triggers when Vader leaves table; 'Vader on table' is a de facto required-card-on-table for holding the back, not encoded.",
-      "pullableCards empty: start-of-game deploys (Holotheatre, Visage Of The Emperor, Meditation Chamber, Epic Duel) not listed; Holotheatre/Meditation Chamber appear only as named locations.",
-      "Hard-lose landmines (Scanning Crew, non-Epic duel, Force drain at Executor site => Objective out of play) are not represented anywhere in the profile."
+      "The three place-out-of-play predicates remain source-owned rather than duplicated in objective data. ObjectiveHardLossPolicy now guards Scanning Crew, non-Epic duel initiation, and Executor-site Force drains only while classic Hunt Down is active.",
+      "The four-Force recall remains engine game text. AI policy scores its exact live source and binds the physical Vader target while preserving a sole required Vader."
     ]
   },
-  "proofGate": "SOURCE_VERIFIED"
+  "missingStateCalculation": [
+    "Front is complete only when a real Vader persona is at a runtime battleground site and no opponent Jedi or Luke is at any runtime battleground site. The battleground need not be controlled, and opponent-owned Vader also satisfies the source's unscoped actor spot.",
+    "A Padawan who is neither a Jedi nor Luke is not a classic blocker. A blocker at a non-battleground is irrelevant. A title containing Vader without Persona.VADER is not the actor.",
+    "After flip, Vader may leave the battleground and remain anywhere on table without causing flip-back. The missing state begins only when no Vader remains on table or a classic blocker reaches any battleground."
+  ],
+  "flipPreservation": [
+    "Before flip, deploy and movement doctrine favor a legal runtime battleground destination for the last needed Vader. Landspeed and the complete docking-bay transit parent/destination/mover chain use exact legal routes. They do not require a buddy or friendly control.",
+    "Force-loss and battle-forfeit selection preserve the last needed Vader only when another legal loss exists. Unavoidable loss remains selectable.",
+    "After flip, the last Vader anywhere on table is protected from avoidable forfeit. Movement from a battleground to Vader's Castle is not blocked because battleground presence is no longer the stay-flipped law.",
+    "Safe battle scoring targets a remote Jedi-or-Luke blocker. Formation Safety, predictor defeat, effective power below the established boundary, low Reserve, and V25 anti-suicide remain absolute."
+  ],
+  "runtimeOwners": [
+    "ObjectiveAnalyzer.assessFlipLocationRules owns the classic allOf front law and anyOf back law with runtime battleground, controller-any actor, opponent blocker, and on-table semantics.",
+    "ObjectiveAnalyzer.classifyPreFlipProgressCandidate, getDeployObjectiveAdjustments, advancesPreFlipActorAtRuntimeLocation, and wouldCompletePreFlipRequirementAt own Vader pull, parent deploy, destination deploy, movement, and exact completion facts.",
+    "DeployTacticalPolicy V51 now receives a complete-objective fact instead of an opponent-site guess. It scores only when every live classic condition is true.",
+    "MoveDestinationPolicy owns the +600 legal actor-location start and +1000 legal advancing destination contributions after both Formation Safety vetoes.",
+    "ObjectiveBattlePolicy BATTLE.OBJECTIVE.GLOBAL_BLOCKER_REMOVAL owns the bounded safe battle against a remote classic blocker.",
+    "ForceLossPolicy V21-objective and BattleForfeitPolicy BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD preserve the required pre-flip or last on-table Vader.",
+    "ObjectiveHardLossPolicy owns classic-only Scanning Crew, non-Epic duel, and Executor-site drain vetoes. ObjectiveAnalyzer resets identity when the objective leaves play so these guards cannot leak.",
+    "ObjectiveAnalyzer and the mirrored Combined, Move, and CardSelection evaluators own docking-bay transit source, exact destination, and mover binding across the engine's cancel-suffixed prompts.",
+    "Rando and Chosen One adapters call the same shared analyzers and policies."
+  ],
+  "contradictions": [
+    "Printed Force icons are not runtime battleground truth. Every deploy and movement decision reads Filters.battleground_site through the live modifier query.",
+    "The actor controller is any, not self. The blocker controller is opponent. The source does not require Dark Side control of Vader's site.",
+    "Classic Hunt Down excludes Padawan from its blocker filter. The virtual profile includes Padawan and is tested separately.",
+    "Pre-flip requires Vader at a battleground. Post-flip requires Vader only somewhere on table. Reusing the front location hold after flip would be false.",
+    "Vader is the complete count-one formation for this law. A generic buddy requirement would invent card text."
+  ],
+  "testEvidence": {
+    "positiveAndNegative": [
+      "HuntDownObjectiveBehaviorTest loads both bot facades and checks real Vader persona versus title impostor, runtime battleground versus non-battleground, controller-any actor scope, remote classic blockers, Padawan exclusion, full allOf completion, movement progress, pre-flip actor preservation, and post-flip on-table preservation.",
+      "HuntDownObjectiveDecisionPolicyTest locks exact semantic rule IDs, score magnitudes, safety boundaries, unavoidable-loss behavior, and full-condition V51 gating."
+    ],
+    "candidateChoice": [
+      "HuntDownObjectiveAdapterSourceParityTest proves both mirrored deploy adapters use runtime battleground truth and the complete live objective state, both movement adapters preserve Formation Safety before objective scoring, and both battle adapters consume the classic blocker filter.",
+      "HuntDownCastleMoveSourceParityTest proves the exact Vader's Castle source action, origin-destination-mover prompt order, modifier-adjusted exact move-cost legality, movement advancement, and both bot routes.",
+      "HuntDownCombinedEvaluatorDecisionTest proves classic recall target safety, all three hard-loss guards through production adapters, and the real docking-bay transit action, destination, and mover sequence with competing candidates."
+    ],
+    "sequence": "HuntDownObjectiveEngineContractTest uses unchanged card and engine code. It performs classic setup, proves Vader at a battleground fires the real front trigger, proves a remote Luke blocks and flips back, proves a below-Jedi Padawan does neither, proves Vader leaving table flips back, and proves the real Vader's Castle movement action may move Vader off the battleground without flipping back.",
+    "parity": "Core behavior, exact adapter source, policy arithmetic, Castle movement, recall target, hard-loss, and docking-transit sequence tests cover identical Rando and Chosen One facts and decisions.",
+    "packaged": "Package gate passed. objective_playbooks.json is 176597 bytes with SHA-256 700f6c9c57b8a180dfb7b54994cd939440de14b63c600053b951acf536cd1d29 in source, the server jar, and web.jar. Server jar SHA-256: 93d66a5c65696f88ad727a8e7eefc7244e3d3f7540ea65c20323196ee619f887. web.jar SHA-256: 737b1460b04ad6d480bb9d9e02cf549d6aed131bc5de1223af576b6773a9bcbb. Both jars contain ObjectiveHardLossPolicy, shared ObjectiveAnalyzer, both bot adapters, docking-transit provenance markers, exact Castle scoring, and classic recall veto markers.",
+    "replay": "No live replay claim. Deterministic engine scenarios provide FLIP_OBSERVED without restarting or deploying the live JVM."
+  },
+  "proofGate": "FLIP_OBSERVED"
 }

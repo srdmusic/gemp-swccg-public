@@ -397,6 +397,8 @@ public class RegionalCountedObjectiveBehaviorTest {
             if (actorQualified.contains(i)) {
                 PhysicalCard actor = actor(
                         gameState, modifiers, family.actorIcon, PLAYER_ID);
+                when(actor.getZone()).thenReturn(Zone.AT_LOCATION);
+                setActive(gameState, actor, true);
                 deployedActors.add(actor);
                 permanents.add(actor);
                 when(modifiers.getLocationThatCardIsPresentAt(
@@ -440,6 +442,16 @@ public class RegionalCountedObjectiveBehaviorTest {
                 unrelatedSite,
                 typedActorCandidate,
                 wrongActorCandidate);
+    }
+
+    private static void setActive(
+            GameState gameState, PhysicalCard card, boolean active) {
+        when(gameState.isCardInPlayActive(
+                card, false, false, false, false,
+                false, false, false, false)).thenReturn(active);
+        when(gameState.isCardInPlayActive(
+                card, true, false, false, false,
+                false, false, false, false)).thenReturn(active);
     }
 
     private static PhysicalCard site(String title, String systemName) {

@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -22,6 +23,7 @@ public final class ControlDrainFacts implements ControlDrainAssessment.Facts {
     private final int turnNumber;
     private final BooleanSupplier battleOrderRules;
     private final BooleanSupplier huntDownV;
+    private final BooleanSupplier classicHuntDown;
 
     public ControlDrainFacts(GameState gameState,
                              SwccgGame game,
@@ -29,7 +31,8 @@ public final class ControlDrainFacts implements ControlDrainAssessment.Facts {
                              String locationCardId,
                              int turnNumber,
                              BooleanSupplier battleOrderRules,
-                             BooleanSupplier huntDownV) {
+                             BooleanSupplier huntDownV,
+                             BooleanSupplier classicHuntDown) {
         this.gameState = gameState;
         this.game = game;
         this.playerId = Objects.requireNonNull(playerId, "playerId");
@@ -37,6 +40,23 @@ public final class ControlDrainFacts implements ControlDrainAssessment.Facts {
         this.turnNumber = turnNumber;
         this.battleOrderRules = Objects.requireNonNull(battleOrderRules, "battleOrderRules");
         this.huntDownV = Objects.requireNonNull(huntDownV, "huntDownV");
+        this.classicHuntDown = Objects.requireNonNull(
+                classicHuntDown, "classicHuntDown");
+    }
+
+    @Override
+    public boolean classicHuntExecutorHardLoss() {
+        if (!classicHuntDown.getAsBoolean() || gameState == null
+                || game == null) {
+            return false;
+        }
+        try {
+            PhysicalCard location = findLocation();
+            return location != null && Filters.Executor_site.accepts(
+                    gameState, game.getModifiersQuerying(), location);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override

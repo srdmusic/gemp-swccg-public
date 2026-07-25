@@ -7,6 +7,9 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSnapshots;
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
@@ -43,6 +46,8 @@ public class CombinedEvaluator {
     }
 
     private final List<ActionEvaluator> evaluators;
+    private String pendingDockingTransitSourceCardId;
+    private String pendingDockingTransitDestinationCardId;
     // V295 RETIRED (unused, zero reads): private final Random random = new Random();
     // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): per-decision trace sink.
     // Production default = NoOpTraceSink: no session is opened, EvaluatedAction's guards
@@ -114,12 +119,14 @@ public class CombinedEvaluator {
         }
         boolean traced = externallyOwned || opened;
         if (!traced) {
-            return evaluateDecisionCore(context, false);
+            return evaluateWithDockingTransitState(
+                    context, false);
         }
         EvaluatedAction traceResult = null;
         boolean completedNormally = false;
         try {
-            traceResult = evaluateDecisionCore(context, true);
+            traceResult = evaluateWithDockingTransitState(
+                    context, true);
             completedNormally = true;
             return traceResult;
         } finally {
@@ -151,6 +158,112 @@ public class CombinedEvaluator {
                     TraceSession.abandon();
                 }
             }
+        }
+    }
+
+    private EvaluatedAction evaluateWithDockingTransitState(
+            DecisionContext context, boolean traced) {
+        if (pendingDockingTransitSourceCardId != null) {
+            context.setExtra(
+                    ObjectiveAnalyzer
+                        .DOCKING_TRANSIT_SOURCE_CARD_ID_EXTRA,
+                    pendingDockingTransitSourceCardId);
+        }
+        if (pendingDockingTransitDestinationCardId != null) {
+            context.setExtra(
+                    ObjectiveAnalyzer
+                        .DOCKING_TRANSIT_DESTINATION_CARD_ID_EXTRA,
+                    pendingDockingTransitDestinationCardId);
+        }
+        EvaluatedAction result =
+                evaluateDecisionCore(context, traced);
+        updateDockingTransitState(context, result);
+        return result;
+    }
+
+    private void updateDockingTransitState(
+            DecisionContext context, EvaluatedAction winner) {
+        if (context == null) return;
+        String type = context.getDecisionType();
+        String decisionText = context.getDecisionText() != null
+                ? context.getDecisionText().trim()
+                    .toLowerCase(java.util.Locale.ROOT)
+                : "";
+        if (decisionText.startsWith(
+                "choose cards to docking bay transit to ")) {
+            pendingDockingTransitSourceCardId = null;
+            pendingDockingTransitDestinationCardId = null;
+            return;
+        }
+        if (decisionText.startsWith(
+                "choose docking bay to transit to")) {
+            pendingDockingTransitDestinationCardId = null;
+            if (winner == null
+                    || winner.getActionId() == null
+                    || winner.getActionId().isBlank()
+                    || context.getGameState() == null
+                    || context.getGame() == null) {
+                pendingDockingTransitSourceCardId = null;
+                return;
+            }
+            try {
+                PhysicalCard destination =
+                        context.getGameState().findCardById(
+                            Integer.parseInt(
+                                winner.getActionId()));
+                if (destination != null
+                        && Filters.docking_bay.accepts(
+                            context.getGameState(),
+                            context.getGame()
+                                .getModifiersQuerying(),
+                            destination)) {
+                    pendingDockingTransitDestinationCardId =
+                            winner.getActionId();
+                    return;
+                }
+            } catch (Exception ignored) {
+            }
+            pendingDockingTransitSourceCardId = null;
+            return;
+        }
+        if (!"ACTION_CHOICE".equals(type)
+                && !"CARD_ACTION_CHOICE".equals(type)) {
+            return;
+        }
+        pendingDockingTransitSourceCardId = null;
+        pendingDockingTransitDestinationCardId = null;
+        if (winner == null
+                || context.getActionIds() == null
+                || context.getActionTexts() == null
+                || context.getCardIds() == null) {
+            return;
+        }
+        for (int i = 0; i < context.getActionIds().size(); i++) {
+            if (!winner.getActionId().equals(
+                        context.getActionIds().get(i))
+                    || i >= context.getActionTexts().size()
+                    || i >= context.getCardIds().size()
+                    || !"docking bay transit".equalsIgnoreCase(
+                        context.getActionTexts().get(i).trim())) {
+                continue;
+            }
+            String cardId = context.getCardIds().get(i);
+            try {
+                PhysicalCard source =
+                        context.getGameState().findCardById(
+                                Integer.parseInt(cardId));
+                if (source != null && context.getGame() != null
+                        && Filters.docking_bay.accepts(
+                            context.getGameState(),
+                            context.getGame()
+                                .getModifiersQuerying(),
+                            source)) {
+                    pendingDockingTransitSourceCardId =
+                            cardId;
+                }
+            } catch (Exception ignored) {
+            }
+            return;
         }
     }
 

@@ -48,7 +48,8 @@ public class MoveHuntTargetPolicyTest {
                 .thenReturn(List.of(jedi));
 
         MoveHuntTargetPolicy.Evaluation result = harness.evaluate(
-                current, vader, card -> false, title -> title.contains("jedi"));
+                current, vader, card -> card == vader,
+                location -> location == jediSite);
 
         assertEquals(MoveHuntTargetPolicy.Branch.JEDI, result.branch());
         assertTrue(result.contribution().applies());
@@ -80,7 +81,8 @@ public class MoveHuntTargetPolicyTest {
                 .thenReturn(List.of());
 
         MoveHuntTargetPolicy.Evaluation result = harness.evaluate(
-                current, dooku, card -> false, title -> false);
+                current, dooku, card -> card == dooku,
+                location -> false);
 
         assertEquals(MoveHuntTargetPolicy.Branch.GENERIC, result.branch());
         assertEquals("First", result.targetLocation());
@@ -157,7 +159,8 @@ public class MoveHuntTargetPolicyTest {
                 .thenReturn(List.of());
 
         MoveHuntTargetPolicy.Evaluation unarmed = harness.evaluate(
-                current, vader, card -> false, title -> false);
+                current, vader, card -> card == vader,
+                location -> false);
         assertFalse(unarmed.armed());
         assertFalse(unarmed.contribution().applies());
 
@@ -165,7 +168,8 @@ public class MoveHuntTargetPolicyTest {
                 PLAYER, CardCategory.WEAPON, "Weapon"));
         harness.power(current, 1.0f);
         MoveHuntTargetPolicy.Evaluation contested = harness.evaluate(
-                current, vader, card -> false, title -> false);
+                current, vader, card -> card == vader,
+                location -> false);
         assertTrue(contested.armed());
         assertFloat(1.0f, contested.opponentPowerAtCurrentLocation());
         assertFalse(contested.contribution().applies());
@@ -189,7 +193,8 @@ public class MoveHuntTargetPolicyTest {
                 .thenReturn(List.of());
 
         MoveHuntTargetPolicy.Evaluation result = harness.evaluate(
-                current, tyranus, card -> false, title -> false);
+                current, tyranus, card -> card == tyranus,
+                location -> false);
 
         assertTrue(result.contribution().applies());
         assertFloat(0.0f, result.opponentPowerAtCurrentLocation());
@@ -208,7 +213,8 @@ public class MoveHuntTargetPolicyTest {
                 .thenThrow(new RuntimeException("attachments"));
 
         MoveHuntTargetPolicy.Evaluation result = harness.evaluate(
-                current, vader, card -> false, title -> false);
+                current, vader, card -> card == vader,
+                location -> false);
 
         assertFalse(result.armed());
         assertFalse(result.contribution().applies());
@@ -238,7 +244,8 @@ public class MoveHuntTargetPolicyTest {
                 false, false)).thenThrow(new RuntimeException("broken"));
 
         MoveHuntTargetPolicy.Evaluation result = harness.evaluate(
-                current, vader, card -> false, title -> false);
+                current, vader, card -> card == vader,
+                location -> false);
 
         assertTrue(result.contribution().applies());
         assertSame(MoveHuntTargetPolicy.Branch.GENERIC, result.branch());
@@ -264,8 +271,31 @@ public class MoveHuntTargetPolicyTest {
         harness.power(negative, -1.0f);
 
         MoveHuntTargetPolicy.Evaluation result = harness.evaluate(
-                current, vader, card -> false, title -> false);
+                current, vader, card -> card == vader,
+                location -> false);
 
+        assertFalse(result.contribution().applies());
+    }
+
+    @Test
+    public void vaderTitleImpostorIsNotAHunter() {
+        Harness harness = new Harness();
+        PhysicalCard current = location("Current");
+        PhysicalCard target = location("Target");
+        PhysicalCard broker = card(
+                PLAYER, CardCategory.CHARACTER,
+                "Lando Calrissian, Vader's Broker");
+        harness.locations(current, target);
+        harness.armed(broker, card(
+                PLAYER, CardCategory.WEAPON, "Weapon"));
+        harness.power(current, 0.0f);
+        harness.power(target, 5.0f);
+
+        MoveHuntTargetPolicy.Evaluation result = harness.evaluate(
+                current, broker, card -> false,
+                location -> false);
+
+        assertFalse(result.hunter());
         assertFalse(result.contribution().applies());
     }
 
@@ -320,10 +350,12 @@ public class MoveHuntTargetPolicyTest {
         private MoveHuntTargetPolicy.Evaluation evaluate(
                 PhysicalCard current, PhysicalCard mover,
                 java.util.function.Predicate<PhysicalCard> hunter,
-                java.util.function.Predicate<String> jedi) {
+                java.util.function.Predicate<PhysicalCard>
+                        blockerLocation) {
             return MoveHuntTargetPolicy.evaluate(
                     gameState, game, current, mover, PLAYER,
-                    () -> true, hunter, jedi, 350.0f);
+                    () -> true, hunter, blockerLocation,
+                    350.0f);
         }
     }
 }

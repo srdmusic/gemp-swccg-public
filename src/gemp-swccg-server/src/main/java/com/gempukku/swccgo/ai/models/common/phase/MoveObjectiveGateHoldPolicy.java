@@ -94,6 +94,61 @@ public final class MoveObjectiveGateHoldPolicy {
     }
 
     /**
+     * Keeps the sole active actor satisfying a runtime-location flip leg in
+     * place, even when another unsatisfied alternative keeps the full rule
+     * unflipped. A power deficit greater than six releases the retreat.
+     */
+    public static Evaluation evaluateRuntimeActorFormation(
+            boolean activePreFlipRuntimeActor,
+            FlipGateFormationRole formationRole,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation) {
+        return evaluateRuntimeActorFormation(
+                activePreFlipRuntimeActor, formationRole,
+                friendlyPowerAtLocation, opponentPowerAtLocation,
+                false);
+    }
+
+    /**
+     * A legal, formation-safe relocation to another qualifying runtime
+     * location preserves the actor leg and must not be mistaken for an
+     * evacuation.
+     */
+    public static Evaluation evaluateRuntimeActorFormation(
+            boolean activePreFlipRuntimeActor,
+            FlipGateFormationRole formationRole,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation,
+            boolean hasSafeQualifyingRelocation) {
+        if (!activePreFlipRuntimeActor
+                || formationRole
+                    != FlipGateFormationRole.LAST_REQUIRED_ACTOR
+                || hasSafeQualifyingRelocation
+                || opponentPowerAtLocation
+                    > friendlyPowerAtLocation + RETREATABLE_POWER_GAP) {
+            return Evaluation.none();
+        }
+        return new Evaluation(
+                Branch.HOLD_LAST_ACTOR,
+                true,
+                "MOVE.OBJECTIVE.RUNTIME_ACTOR_HOLD: keep the sole required actor at a qualifying location");
+    }
+
+    /** Holds Castle's reverse move when every legal mover is the sole actor. */
+    public static Evaluation evaluateVaderCastleReturn(
+            boolean activeRuntimeActorRule,
+            boolean everyLegalMoverRequiresHold) {
+        if (!activeRuntimeActorRule
+                || !everyLegalMoverRequiresHold) {
+            return Evaluation.none();
+        }
+        return new Evaluation(
+                Branch.HOLD_LAST_ACTOR,
+                true,
+                "MOVE.OBJECTIVE.RUNTIME_ACTOR_HOLD: Castle return would evacuate every legal sole battleground Vader");
+    }
+
+    /**
      * Keeps a sole post-flip presence source in place when its departure would
      * immediately satisfy the objective's flip-back predicate. A deficit
      * greater than six permits ordinary retreat policy to take over.

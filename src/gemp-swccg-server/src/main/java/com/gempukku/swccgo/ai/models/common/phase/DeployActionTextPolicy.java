@@ -158,16 +158,30 @@ public final class DeployActionTextPolicy {
                     TraceOutputKind.BANDED, 0.0f,
                     "Vader already on table — Castle deploy not urgent"));
         }
-        if (facts.forceAvailable() < 6) {
-            return result(operation(facts.actionId(), "V25-vader-castle-unaffordable",
+        if (!facts.legalVaderDeploy()) {
+            return result(operation(facts.actionId(),
+                    "V25-vader-castle-no-legal-candidate",
                     TraceOutputKind.VETO, -500.0f,
-                    "V25 HUNT DOWN: NOT ENOUGH FORCE for Vader! Need 6, have "
-                            + facts.forceAvailable() + ". SAVE Castle action!"));
+                    "V25 HUNT DOWN: No Vader in Reserve can legally deploy"
+                            + " to Castle with " + facts.forceAvailable()
+                            + " Force. Save the action."));
+        }
+        if (!facts.preservesCastleMoveForce()) {
+            return result(operation(
+                    facts.actionId(),
+                    "V25-vader-castle-deploy-only",
+                    TraceOutputKind.BANDED,
+                    250.0f,
+                    "V25 HUNT DOWN: Deploy Vader now, but "
+                            + facts.forceAvailable()
+                            + " Force cannot also preserve the Castle's"
+                            + " exact move cost this turn"));
         }
         return result(operation(facts.actionId(), "V25-vader-castle-priority",
                 TraceOutputKind.ORDERING, 550.0f,
-                "V25 HUNT DOWN: DEPLOY VADER NOW! Have " + facts.forceAvailable()
-                        + " Force, deck cannot function without him!"));
+                "V25 HUNT DOWN: DEPLOY VADER NOW! Have "
+                        + facts.forceAvailable()
+                        + " Force and preserve the Castle move cost"));
     }
 
     public static PolicyResult scoreDiningRoomLando(

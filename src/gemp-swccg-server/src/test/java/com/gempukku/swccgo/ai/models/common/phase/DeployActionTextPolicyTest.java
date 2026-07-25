@@ -133,23 +133,39 @@ public class DeployActionTextPolicyTest {
     }
 
     @Test
-    public void vaderCastleRetainsObjectiveForceAndPresenceBranches() {
+    public void vaderCastleDownloadRetainsOrdinaryDeployCostBudget() {
         assertOperation(DeployActionTextPolicy.scoreVaderCastle(
-                        new DeployActionTextFacts.VaderCastleFacts("vader", false, false, false, 0)),
+                        new DeployActionTextFacts.VaderCastleFacts(
+                                "vader", false, false, false,
+                                false, false, 0)),
                 "V25-vader-castle-generic", 50.0f,
                 "Deploy Vader from reserve");
         assertOperation(DeployActionTextPolicy.scoreVaderCastle(
-                        new DeployActionTextFacts.VaderCastleFacts("vader", true, true, true, 0)),
+                        new DeployActionTextFacts.VaderCastleFacts(
+                                "vader", true, true, true,
+                                false, false, 0)),
                 "V25-vader-castle-vader-present", 0.0f,
                 "Vader already on table — Castle deploy not urgent");
+        PolicyResult lowForce = DeployActionTextPolicy.scoreVaderCastle(
+                new DeployActionTextFacts.VaderCastleFacts(
+                        "vader", true, true, false,
+                        false, false, 8));
+        assertEquals(1, lowForce.operations().size());
+        assertEquals("V25-vader-castle-no-legal-candidate",
+                lowForce.operations().get(0).ruleArmId().id());
+        assertRawFloat(-500.0f, lowForce.operations().get(0).delta());
         assertOperation(DeployActionTextPolicy.scoreVaderCastle(
-                        new DeployActionTextFacts.VaderCastleFacts("vader", true, true, false, 5)),
-                "V25-vader-castle-unaffordable", -500.0f,
-                "V25 HUNT DOWN: NOT ENOUGH FORCE for Vader! Need 6, have 5. SAVE Castle action!");
-        assertOperation(DeployActionTextPolicy.scoreVaderCastle(
-                        new DeployActionTextFacts.VaderCastleFacts("vader", true, true, false, 6)),
+                        new DeployActionTextFacts.VaderCastleFacts(
+                                "vader", true, true, false,
+                                true, true, 7)),
                 "V25-vader-castle-priority", 550.0f,
-                "V25 HUNT DOWN: DEPLOY VADER NOW! Have 6 Force, deck cannot function without him!");
+                "V25 HUNT DOWN: DEPLOY VADER NOW! Have 7 Force and preserve the Castle move cost");
+        assertOperation(DeployActionTextPolicy.scoreVaderCastle(
+                        new DeployActionTextFacts.VaderCastleFacts(
+                                "vader", true, true, false,
+                                true, false, 6)),
+                "V25-vader-castle-deploy-only", 250.0f,
+                "V25 HUNT DOWN: Deploy Vader now, but 6 Force cannot also preserve the Castle's exact move cost this turn");
     }
 
     @Test

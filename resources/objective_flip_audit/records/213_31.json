@@ -106,7 +106,7 @@
     "START OF GAME (front, required): deploy Vader's Castle: DeployCardFromReserveDeckEffect(Filters.title(Title.Vaders_Castle), true, false) [Card213_031.java:65-71]",
     "START OF GAME (front, required): deploy [Set 13] Visage Of The Emperor: DeployCardFromReserveDeckEffect(Filters.and(Filters.Visage_Of_The_Emperor, Filters.icon(Icon.VIRTUAL_SET_13)), true, false) [Card213_031.java:72-78]",
     "START OF GAME (front, required): deploy a [Cloud City] site with exactly one [Dark Side] icon: DeployCardFromReserveDeckEffect(Filters.and(Icon.CLOUD_CITY, Filters.site, Filters.iconCount(Icon.DARK_FORCE, 1)), true, false) [Card213_031.java:79-86]",
-    "FRONT, once per owner's deploy phase (free): download a [Cloud City] or Malachor battleground site: DeployCardFromReserveDeckEffect(Filters.and(Filters.battleground_site, Filters.or(Filters.partOfSystem(Title.Malachor), Filters.icon(Icon.CLOUD_CITY))), true), GameTextActionId.HUNT_DOWN_V__DOWNLOAD_LOCATION [Card213_031.java:91-108]",
+    "FRONT, once per owner's deploy phase: deploy a [Cloud City] or Malachor battleground site from Reserve Deck at ordinary cost: DeployCardFromReserveDeckEffect(Filters.and(Filters.battleground_site, Filters.or(Filters.partOfSystem(Title.Malachor), Filters.icon(Icon.CLOUD_CITY))), true), GameTextActionId.HUNT_DOWN_V__DOWNLOAD_LOCATION [Card213_031.java:91-108]",
     "FRONT (fires on flip), once per game: take Vader into hand from a site you control (cards on him: yours to hand, per ReturnCardToHandFromTableEffect(..., Zone.HAND, Zone.LOST_PILE)), GameTextActionId.HUNT_DOWN_V__TAKE_VADER_INTO_HAND [Card213_031.java:121-155]"
   ],
   "otherObligations": [
@@ -122,15 +122,75 @@
   ],
   "profile": {
     "exists": true,
-    "loaderEnabled": false,
+    "loaderEnabled": true,
+    "startingLocationIds": [
+      "209_50",
+      "217_15",
+      "5_168",
+      "5_169",
+      "5_170",
+      "5_171",
+      "5_172",
+      "5_173"
+    ],
+    "startingEffectIds": [
+      "213_16"
+    ],
+    "keyCharacterFilter": "Vader",
+    "frontStructuredRule": "preFlip/flip allOf: any Vader at a runtime battleground site in rules terms, and zero opponent Jedi, Padawan, or Luke at any runtime battleground site in rules terms; include excluded-from-battle cards",
+    "backStructuredRule": "postFlip/flipBack anyOf: zero Vader on table, or opponent Jedi, Padawan, or Luke at a runtime battleground site in rules terms; include excluded-from-battle cards",
     "profileGaps": [
-      "keyCharacterFilter is null: Filters.Vader is the single flip actor; not represented.",
-      "flipGateSite is null and flipGateCardIds empty: gate is any battleground site; 'Battleground site' appears in objectiveNamedLocations but has no gate role.",
-      "Blocker set (opponent Jedi/Padawan/Luke at a battleground site) not represented anywhere; padawan inclusion (the delta vs 7_297) is invisible to the profile.",
-      "requiredCardsOnTable empty: Vader-on-table is required to hold the back (flip-back on Vader leaving).",
-      "pullableCards empty: three required start deploys and the once-per-turn CC/Malachor battleground-site download are not represented (locations appear only as objectiveNamedLocations).",
-      "Deploy ban (only bounty hunters, droids, Imperials) and the Inquisitor/Hatred destiny package are not represented as obligations."
+      "The permanent character deploy restriction remains engine legality rather than duplicated objective data.",
+      "The once-per-game recall remains engine game text. AI policy scores its exact live source and binds the physical Vader target, but does not duplicate the card's once-per-game legality.",
+      "The Inquisitor and Hatred destiny package is behaviorally scoped to the virtual objective in BattleDecisionPolicy, but it is not part of the flip-condition data."
     ]
   },
-  "proofGate": "SOURCE_VERIFIED"
+  "missingStateCalculation": [
+    "Front is complete only when a real Vader persona is at a runtime battleground site and no opponent Jedi, Padawan, or Luke is at any runtime battleground site. The battleground need not be controlled, and opponent-owned Vader also satisfies the source's unscoped actor spot.",
+    "A blocker at another battleground still blocks. A blocker at a non-battleground is irrelevant. A title containing Vader without Persona.VADER is not the actor.",
+    "After flip, Vader may leave the battleground and remain anywhere on table without causing flip-back. The missing state begins only when no Vader remains on table or a virtual blocker reaches any battleground."
+  ],
+  "flipPreservation": [
+    "The exact virtual objective location-download action receives a positive parent contribution only when Reserve contains a Cloud City or Malachor runtime battleground accepted by the source filter.",
+    "Vader's Castle's exact Reserve Deck deploy receives +550 only when the engine finds a source-legal Vader candidate that can pay its ordinary deploy cost at Castle. An unavailable or unaffordable candidate receives -500.",
+    "Before flip, deploy and movement doctrine favor a legal runtime battleground destination for the last needed Vader. Landspeed, Vader's Castle, and the complete docking-bay transit parent/destination/mover chain use exact legal routes. Force-loss and battle-forfeit selection preserve that Vader only when another legal loss exists.",
+    "After flip, the last Vader anywhere on table is protected from avoidable forfeit. The exact Castle movement action may move Vader off a battleground because the back law requires only on-table Vader.",
+    "Safe battle scoring targets a remote Jedi, Padawan, or Luke blocker. Formation Safety, predictor defeat, effective power, low Reserve, and V25 anti-suicide boundaries remain absolute."
+  ],
+  "runtimeOwners": [
+    "ObjectiveAnalyzer.assessFlipLocationRules owns the virtual allOf front law and anyOf back law with runtime battleground, controller-any actor, opponent blocker, and on-table semantics.",
+    "ObjectiveAnalyzer.hasVirtualHuntDownLocationDownloadInReserve mirrors the source's Cloud City-or-Malachor runtime battleground filter. PullSpecificActionPolicy PULL.OBJECTIVE.HUNT_DOWN_LOCATION_DOWNLOAD owns its parent score.",
+    "ObjectiveAnalyzer.classifyPreFlipProgressCandidate, getDeployObjectiveAdjustments, advancesPreFlipActorAtRuntimeLocation, and wouldCompletePreFlipRequirementAt own Vader pull, parent deploy, destination deploy, movement, and exact completion facts.",
+    "DeployActionTextPolicy V25-vader-castle-priority owns the Castle Vader action after ObjectiveAnalyzer proves an exact source-legal Reserve candidate can deploy there at ordinary cost.",
+    "MoveDestinationPolicy owns ordinary runtime battleground progress. The exact Card209_050 location-text route uses live GameTextActionState provenance, source blueprint 209_50, engine location-text legality, modifier-adjusted exact move cost, and both Formation Safety vetoes.",
+    "ObjectiveAnalyzer and the mirrored Combined, Move, and CardSelection evaluators own docking-bay transit. They preserve the exact source and selected physical destination across the engine's cancel-suffixed prompts, bind the exact mover, reject routes that break the sole required Vader, and clear provenance after completion.",
+    "ObjectiveBattlePolicy BATTLE.OBJECTIVE.GLOBAL_BLOCKER_REMOVAL owns the bounded safe battle against a remote virtual blocker. The Inquisitor/Hatred destiny heuristic is gated to this virtual profile.",
+    "ForceLossPolicy V21-objective and BattleForfeitPolicy BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD preserve the required pre-flip or last on-table Vader.",
+    "Rando and Chosen One adapters call the same shared analyzers and policies."
+  ],
+  "contradictions": [
+    "Printed Force icons are not runtime battleground truth. Every deploy, pull, and movement decision uses the live battleground filter.",
+    "The actor controller is any, not self. The blocker controller is opponent. The source does not require Dark Side control of Vader's site.",
+    "Virtual Hunt Down includes Padawan in its blocker filter. Classic Hunt Down does not.",
+    "Vader's Castle is not a battleground, but its location text can move Vader to and from another battleground. After flip, moving Vader back to Castle is legal and does not itself flip the objective.",
+    "The Castle Vader deploy is not free: the four-argument DeployCardToLocationFromReserveDeckEffect constructor treats its boolean as reshuffle and delegates with forFree=false. The AI therefore trusts the engine's exact deployability and current Force-cost calculation instead of a fixed six-Force proxy.",
+    "Vader is the complete count-one formation for this law. A generic buddy requirement would invent card text."
+  ],
+  "testEvidence": {
+    "positiveAndNegative": [
+      "HuntDownObjectiveBehaviorTest loads both bot facades and checks real Vader persona versus title impostor, runtime battleground versus non-battleground, controller-any actor scope, remote blockers, Padawan inclusion, full allOf completion, exact location source filter and engine deployability, movement progress, pre-flip actor preservation, and post-flip on-table preservation.",
+      "HuntDownObjectiveDecisionPolicyTest locks exact semantic rule IDs, score magnitudes, Castle legal-candidate gating, safety boundaries, unavoidable-loss behavior, and full-condition V51 gating."
+    ],
+    "candidateChoice": [
+      "HuntDownLocationDownloadActionTextParityTest runs both public ActionTextEvaluator adapters and proves the exact 213_31 parent action receives the objective contribution when an exact legal target exists.",
+      "HuntDownObjectiveAdapterSourceParityTest proves both mirrored deploy adapters use runtime battleground truth and the complete live objective state, both movement adapters preserve Formation Safety before objective scoring, and both battle adapters consume the virtual blocker filter.",
+      "HuntDownCastleMoveSourceParityTest proves exact source text, source blueprint, prompt order, modifier-adjusted exact move-cost legality, live GameTextActionState provenance, objective advancement, and both bot routes.",
+      "HuntDownCombinedEvaluatorDecisionTest uses the real docking-bay transit CARD_ACTION_CHOICE and cancel-suffixed destination and mover prompts. Competing destinations and movers prove the battleground Vader route wins, unsafe sole-Vader transit is held, and carried provenance clears after completion."
+    ],
+    "sequence": "HuntDownObjectiveEngineContractTest uses unchanged card and engine code. It performs virtual setup, exposes and executes the exact once-per-turn location download, proves Vader at a battleground fires the real front trigger, proves a remote Padawan blocks and flips back, proves Vader leaving table flips back, and proves the real Vader's Castle movement action may move Vader off the battleground without flipping back.",
+    "parity": "Core behavior, exact adapter source, policy arithmetic, parent action, Castle movement, recall target, hard-loss, and docking-transit sequence tests cover identical Rando and Chosen One facts and decisions.",
+    "packaged": "Package gate passed. objective_playbooks.json is 176597 bytes with SHA-256 700f6c9c57b8a180dfb7b54994cd939440de14b63c600053b951acf536cd1d29 in source, the server jar, and web.jar. Server jar SHA-256: 93d66a5c65696f88ad727a8e7eefc7244e3d3f7540ea65c20323196ee619f887. web.jar SHA-256: 737b1460b04ad6d480bb9d9e02cf549d6aed131bc5de1223af576b6773a9bcbb. Both jars contain ObjectiveHardLossPolicy, shared ObjectiveAnalyzer, both bot adapters, docking-transit provenance markers, exact Castle scoring, and virtual recall veto markers.",
+    "replay": "No live replay claim. Deterministic engine scenarios provide FLIP_OBSERVED without restarting or deploying the live JVM."
+  },
+  "proofGate": "FLIP_OBSERVED"
 }

@@ -200,6 +200,7 @@ public class WeHaveAPlanObjectiveBehaviorTest {
                         fixture.courtyard));
 
         when(reserveAmidala.getZone()).thenReturn(Zone.AT_LOCATION);
+        setActive(fixture.gameState, reserveAmidala, true);
         when(fixture.modifiers.getLocationThatCardIsPresentAt(
                 fixture.gameState, reserveAmidala))
                 .thenReturn(fixture.courtyard);
@@ -208,6 +209,7 @@ public class WeHaveAPlanObjectiveBehaviorTest {
                         fixture.game, PLAYER_ID, fixture.padme,
                         fixture.courtyard));
         when(reserveAmidala.isCaptive()).thenReturn(true);
+        setActive(fixture.gameState, reserveAmidala, false);
         assertTrue("A captive Amidala cannot execute the route",
                 fixture.analyzer.stagesPreFlipActorRoute(
                         fixture.game, PLAYER_ID, fixture.padme,
@@ -481,6 +483,8 @@ public class WeHaveAPlanObjectiveBehaviorTest {
         PhysicalCard padme = amidala(gameState, modifiers, "Padme Naberrie");
         PhysicalCard deployedAmidala =
                 amidala(gameState, modifiers, "Queen Amidala");
+        when(deployedAmidala.getZone()).thenReturn(Zone.AT_LOCATION);
+        setActive(gameState, deployedAmidala, true);
         PhysicalCard panaka = character("Captain Panaka");
         PhysicalCard neimoidian = character("Daultay Dofine");
 
@@ -541,6 +545,16 @@ public class WeHaveAPlanObjectiveBehaviorTest {
                 analyzer, game, gameState, modifiers,
                 throne, hallway, courtyard, unrelated,
                 padme, deployedAmidala, panaka, neimoidian);
+    }
+
+    private static void setActive(
+            GameState gameState, PhysicalCard card, boolean active) {
+        when(gameState.isCardInPlayActive(
+                card, false, false, false, false,
+                false, false, false, false)).thenReturn(active);
+        when(gameState.isCardInPlayActive(
+                card, true, false, false, false,
+                false, false, false, false)).thenReturn(active);
     }
 
     private static void distance(

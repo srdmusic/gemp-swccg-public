@@ -17,10 +17,13 @@ import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveForceEconomyPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ObjectiveHardLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
@@ -31,6 +34,9 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -250,6 +256,159 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     logger.warn("Blocked action (V163 hard veto): {}", actionText);
                     actions.add(action);
                     continue;
+                }
+            }
+
+            var hardLossAnalyzer = context.getObjectiveAnalyzer();
+            boolean classicHuntDownActive =
+                hardLossAnalyzer != null
+                && hardLossAnalyzer.isAnalyzed()
+                && hardLossAnalyzer.isClassicHuntDownObjective();
+            if (classicHuntDownActive) {
+                PhysicalCard hardLossSource = null;
+                try {
+                    if (gameState != null && cardId != null) {
+                        hardLossSource = gameState.findCardById(
+                            Integer.parseInt(cardId));
+                    }
+                } catch (Exception ignore) { }
+                ObjectiveHardLossPolicy.Threat threat =
+                    ObjectiveHardLossPolicy.Threat.NONE;
+                try {
+                    if (hardLossSource != null && game != null
+                            && com.gempukku.swccgo.filters.Filters
+                                .Scanning_Crew.accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
+                                    hardLossSource)) {
+                        threat = ObjectiveHardLossPolicy.Threat
+                            .SCANNING_CREW;
+                    } else if ((textLower.trim()
+                                    .startsWith("duel ")
+                                || textLower.trim()
+                                    .startsWith("initiate ")
+                                    && textLower.contains(" duel"))
+                            && !textLower.contains("epic duel")) {
+                        threat = ObjectiveHardLossPolicy.Threat
+                            .NON_EPIC_DUEL;
+                    }
+                } catch (Exception ignore) { }
+                boolean maulException =
+                    threat == ObjectiveHardLossPolicy.Threat
+                        .NON_EPIC_DUEL
+                    && hardLossAnalyzer
+                        .hasClassicHuntDownMaulDuelException(
+                            game, context.getPlayerId(),
+                            hardLossSource);
+                PolicyResult hardLoss =
+                    ObjectiveHardLossPolicy.score(
+                        new ObjectiveHardLossPolicy.Facts(
+                            actionId, true, threat,
+                            maulException));
+                if (!hardLoss.operations().isEmpty()) {
+                    PolicyContributionLedger hardLossLedger =
+                        new PolicyContributionLedger(
+                            "objective-hard-loss-" + actionId);
+                    hardLossLedger.register(hardLoss);
+                    PolicyOperationAdapter.apply(
+                        action, hardLossLedger);
+                    actions.add(action);
+                    continue;
+                }
+            }
+
+            if ("move from other battleground site to here"
+                    .equals(textLower.trim())
+                    && cardId != null && gameState != null
+                    && game != null
+                    && context.getPlayerId() != null) {
+                try {
+                    PhysicalCard castle = gameState.findCardById(
+                            Integer.parseInt(cardId));
+                    var castleObjective =
+                            context.getObjectiveAnalyzer();
+                    boolean holdAll = castle != null
+                            && "209_50".equals(
+                                castle.getBlueprintId(true))
+                            && castleObjective != null
+                            && castleObjective
+                                .mustHoldAllVaderCastleReturnMovers(
+                                    game, context.getPlayerId(),
+                                    castle);
+                    MoveObjectiveGateHoldPolicy.Evaluation hold =
+                        MoveObjectiveGateHoldPolicy
+                            .evaluateVaderCastleReturn(
+                                castleObjective != null
+                                    && castleObjective
+                                        .hasPreFlipRuntimeActorRule(),
+                                holdAll);
+                    if (hold.hardVeto()) {
+                        action.setActionType(ActionType.MOVE);
+                        action.hardVeto(
+                            hold.reason(),
+                            TraceRuleId.of(
+                                "MOVE.OBJECTIVE.VADERS_CASTLE_RETURN_HOLD"),
+                            TraceDomainId.MOVE,
+                            TraceOutputKind.VETO);
+                        actions.add(action);
+                        continue;
+                    }
+                } catch (Exception e) {
+                    logger.debug(
+                        "Hunt Down Castle return hold failed: {}",
+                        e.getMessage());
+                }
+            }
+
+            if ("move from here to other battleground site"
+                    .equals(textLower.trim())
+                    && cardId != null && gameState != null
+                    && game != null && context.getPlayerId() != null) {
+                try {
+                    PhysicalCard source = gameState.findCardById(
+                            Integer.parseInt(cardId));
+                    com.gempukku.swccgo.ai.models.rando.strategy
+                        .ObjectiveAnalyzer objective =
+                            context.getObjectiveAnalyzer();
+                    if (source != null
+                            && "209_50".equals(
+                                source.getBlueprintId(true))
+                            && objective != null
+                            && objective
+                                .hasPreFlipRuntimeActorRule()) {
+                        if (objective.mustHoldVaderCastleRoutes(
+                                game, context.getPlayerId(),
+                                source, true)) {
+                            action.setActionType(ActionType.MOVE);
+                            action.hardVeto(
+                                "OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE_HOLD: no safe outbound Castle route",
+                                TraceRuleId.of(
+                                    "MOVE.OBJECTIVE.VADERS_CASTLE_ROUTE_HOLD"),
+                                TraceDomainId.MOVE,
+                                TraceOutputKind.VETO);
+                            actions.add(action);
+                            continue;
+                        }
+                        boolean safeRoute = objective
+                            .hasSafeVaderCastleOutboundRoute(
+                                game, context.getPlayerId());
+                        MoveDestinationPolicy.Contribution contribution =
+                            MoveDestinationPolicy
+                                .objectiveActorLocationStart(
+                                    safeRoute, "Vader");
+                        if (contribution.applies()) {
+                            action.setActionType(ActionType.MOVE);
+                            action.addReasoning(
+                                contribution.reason(),
+                                contribution.delta());
+                            logger.warn(
+                                "HUNT DOWN CASTLE MOVE: safe Vader route from Castle +600");
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.debug(
+                        "Hunt Down Castle move assessment failed: {}",
+                        e.getMessage());
                 }
             }
 
@@ -1742,10 +1901,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // then check DeckOracle for valid targets based on the source card's identity.
             if (textLower.contains("from reserve") && cardId != null && gameState != null) {
                 String sourceTitle = null;
+                PhysicalCard reserveSourceCard = null;
                 try {
-                    PhysicalCard sourceCard = gameState.findCardById(Integer.parseInt(cardId));
-                    if (sourceCard != null && sourceCard.getTitle() != null) {
-                        sourceTitle = sourceCard.getTitle();
+                    reserveSourceCard = gameState.findCardById(Integer.parseInt(cardId));
+                    if (reserveSourceCard != null
+                            && reserveSourceCard.getTitle() != null) {
+                        sourceTitle = reserveSourceCard.getTitle();
                     }
                 } catch (Exception e) { /* ignore parse errors */ }
 
@@ -1915,7 +2076,35 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
                     // --- HUNT DOWN (objective): deploys location from reserve ---
                     else if (sourceLower.contains("hunt down") && textLower.contains("location")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
+                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer
+                                huntObjective = context.getObjectiveAnalyzer();
+                        boolean exactVirtualObjectiveAction =
+                                reserveSourceCard != null
+                                && "213_31".equals(
+                                    reserveSourceCard.getBlueprintId(true))
+                                && "deploy a location from reserve deck".equals(
+                                    textLower.trim())
+                                && huntObjective != null
+                                && huntObjective.isAnalyzed()
+                                && huntObjective.isVirtualHuntDownObjective();
+                        if (exactVirtualObjectiveAction) {
+                            boolean hasTarget = huntObjective
+                                .hasVirtualHuntDownLocationDownloadInReserve(
+                                    game, context.getPlayerId());
+                            applyNamedReserveSourcePolicy(action,
+                                PullSpecificActionFacts.ReserveSourceKind.HUNT_DOWN,
+                                hasTarget);
+                            applyPullSpecificActionPolicy(action,
+                                PullSpecificActionPolicy
+                                    .scoreHuntDownLocationDownload(
+                                        new PullSpecificActionFacts
+                                            .HuntDownLocationDownload(
+                                                actionId, hasTarget)));
+                            if (!hasTarget) {
+                                logger.warn("HUNT DOWN OBJECTIVE BLOCKED: No eligible Cloud City or Malachor battleground site in reserve");
+                            }
+                        } else if (pullOracle != null
+                                && pullOracle.isAnalyzed()) {
                             java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> locsInReserve =
                                 pullOracle.getCardsByCategory(com.gempukku.swccgo.common.CardCategory.LOCATION,
                                     com.gempukku.swccgo.common.Zone.RESERVE_DECK);
@@ -2507,24 +2696,87 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== V35: VADER SELF-RECALL (Hunt Down V once-per-game) ==========
             // "Take Vader into hand" — allows redeploying Vader to hunt Jedi elsewhere
             // "Return an Inquisitor here to hand" — Eighth Brother repositioning
-            else if (textLower.contains("take vader into hand") || textLower.contains("return") && textLower.contains("inquisitor") && textLower.contains("hand")) {
+            else if (textLower.contains("take vader into hand")
+                        && (isClassicHuntDownActionSource(
+                                gameState, cardId)
+                            || isVirtualHuntDownActionSource(
+                                gameState, cardId))
+                    || textLower.contains("return")
+                        && textLower.contains("inquisitor")
+                        && textLower.contains("hand")) {
                 if (textLower.contains("vader")) {
-                    // Vader self-recall — check if there are Jedi elsewhere to hunt
+                    if (isVirtualHuntDownActionSource(
+                            gameState, cardId)) {
+                        boolean preservesPostFlipVader = false;
+                        try {
+                            var recallObjective =
+                                context.getObjectiveAnalyzer();
+                            preservesPostFlipVader =
+                                recallObjective != null
+                                && recallObjective
+                                    .hasSafeVirtualHuntDownVaderRecallTarget(
+                                        game, context.getPlayerId());
+                        } catch (Exception e) { /* ignore */ }
+                        PolicyResult recallGuard =
+                            ObjectiveHardLossPolicy.scoreRecall(
+                                new ObjectiveHardLossPolicy.RecallFacts(
+                                    actionId,
+                                    ObjectiveHardLossPolicy.RecallKind
+                                        .VIRTUAL,
+                                    preservesPostFlipVader));
+                        if (!recallGuard.operations().isEmpty()) {
+                            PolicyContributionLedger recallGuardLedger =
+                                new PolicyContributionLedger(
+                                    "objective-recall-" + actionId);
+                            recallGuardLedger.register(recallGuard);
+                            PolicyOperationAdapter.apply(
+                                action, recallGuardLedger);
+                            actions.add(action);
+                            continue;
+                        }
+                        applyBattleActionTextPolicy(action,
+                            BattleActionTextPolicy
+                                .scoreVirtualVaderRecall(
+                                    new BattleActionTextFacts
+                                        .ActionFacts(actionId)));
+                        actions.add(action);
+                        continue;
+                    }
                     boolean v35JediElsewhere = false;
+                    boolean preservesObjectiveActor = false;
                     try {
-                        if (gameState != null) {
-                            String v35Oid = gameState.getOpponent(context.getPlayerId());
-                            for (PhysicalCard loc : gameState.getTopLocations()) {
-                                if (loc == null) continue;
-                                for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
-                                    if (c == null || !v35Oid.equals(c.getOwner())) continue;
-                                    String ct = c.getTitle() != null ? c.getTitle().toLowerCase(Locale.ROOT) : "";
-                                    if (isJediOrPadawan(ct)) { v35JediElsewhere = true; break; }
-                                }
-                                if (v35JediElsewhere) break;
-                            }
+                        var recallObjective =
+                            context.getObjectiveAnalyzer();
+                        if (recallObjective != null) {
+                            var recallAssessment = recallObjective
+                                .assessClassicHuntDownVaderRecall(
+                                    game, context.getPlayerId());
+                            preservesObjectiveActor =
+                                recallAssessment.safeTarget();
+                            v35JediElsewhere =
+                                recallAssessment
+                                    .remoteJediOrLukeBlocker();
                         }
                     } catch (Exception e) { /* ignore */ }
+
+                    PolicyResult classicRecallGuard =
+                        ObjectiveHardLossPolicy.scoreRecall(
+                            new ObjectiveHardLossPolicy.RecallFacts(
+                                actionId,
+                                ObjectiveHardLossPolicy.RecallKind
+                                    .CLASSIC,
+                                preservesObjectiveActor));
+                    if (!classicRecallGuard.operations().isEmpty()) {
+                        PolicyContributionLedger recallGuardLedger =
+                            new PolicyContributionLedger(
+                                "objective-recall-" + actionId);
+                        recallGuardLedger.register(
+                            classicRecallGuard);
+                        PolicyOperationAdapter.apply(
+                            action, recallGuardLedger);
+                        actions.add(action);
+                        continue;
+                    }
 
                     if (v35JediElsewhere) {
                         logger.warn("V35 VADER RECALL: Jedi detected elsewhere — recalling Vader to redeploy (+300)");
@@ -3566,7 +3818,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // If the action deploys Vader from Reserve Deck (via Vader's Castle), and
             // Hunt Down V is the objective, this is THE most important action in the game.
             // Vader must be on table for the deck to function.
-            else if (actionText.contains("Deploy Vader from Reserve Deck") || actionText.contains("Deploy Vader here")) {
+            else if ((actionText.contains("Deploy Vader from Reserve Deck")
+                    || actionText.contains("Deploy Vader here"))
+                    && isVadersCastleActionSource(gameState, cardId)) {
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer vaderObjAnalyzer =
                     context.getObjectiveAnalyzer();
                 boolean objectiveAnalyzed = vaderObjAnalyzer != null
@@ -3574,6 +3828,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 boolean huntDownVActive = objectiveAnalyzed
                     && vaderObjAnalyzer.isHuntDownV();
                 boolean vaderOnTable = false;
+                boolean legalVaderDeploy = false;
+                boolean preservesCastleMoveForce = false;
                 int forceAvailable = 0;
                 if (huntDownVActive && context.getGame() != null
                         && context.getGame().getGameState() != null) {
@@ -3581,13 +3837,23 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         context.getGame().getGameState();
                     vaderOnTable = vaderObjAnalyzer.isVaderOnTable(
                         vaderGs, context.getPlayerId());
+                    legalVaderDeploy =
+                        vaderObjAnalyzer.hasLegalVaderCastleDeployInReserve(
+                            context.getGame(), context.getPlayerId());
+                    preservesCastleMoveForce =
+                        vaderObjAnalyzer
+                            .hasVaderCastleDeployWithMoveReserve(
+                                context.getGame(),
+                                context.getPlayerId());
                     forceAvailable = vaderGs.getForcePileSize(context.getPlayerId());
                 }
                 applyDeployActionTextPolicy(action,
                     DeployActionTextPolicy.scoreVaderCastle(
                         new DeployActionTextFacts.VaderCastleFacts(
                             actionId, objectiveAnalyzed, huntDownVActive,
-                            vaderOnTable, forceAvailable)));
+                            vaderOnTable, legalVaderDeploy,
+                            preservesCastleMoveForce,
+                            forceAvailable)));
             }
 
             // ========== V26/V29.6: Dining Room — Deploy Lando (TDIGWATT) ==========
@@ -4182,7 +4448,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 && context.getStrategyController().isUnderBattleOrderRules(),
             () -> context.getObjectiveAnalyzer() != null
                 && context.getObjectiveAnalyzer().isAnalyzed()
-                && context.getObjectiveAnalyzer().isHuntDownV());
+                && context.getObjectiveAnalyzer().isHuntDownV(),
+            () -> context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer().isAnalyzed()
+                && context.getObjectiveAnalyzer()
+                    .isClassicHuntDownObjective());
         controlLedger.register(ControlDrainAssessment.assess(action.getActionId(), facts));
         PolicyOperationAdapter.apply(action, controlLedger);
     }
@@ -4765,6 +5035,47 @@ public class ActionTextEvaluator extends ActionEvaluator {
     }
 
     // ========== Utility Methods ==========
+
+    private boolean isVadersCastleActionSource(
+            GameState gameState, String cardId) {
+        if (gameState == null || cardId == null) return false;
+        try {
+            PhysicalCard source =
+                    gameState.findCardById(Integer.parseInt(cardId));
+            return source != null
+                    && "209_50".equals(source.getBlueprintId(true));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isClassicHuntDownActionSource(
+            GameState gameState, String cardId) {
+        if (gameState == null || cardId == null) return false;
+        try {
+            PhysicalCard source =
+                    gameState.findCardById(Integer.parseInt(cardId));
+            return source != null
+                    && "7_297".equals(source.getBlueprintId(true));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isVirtualHuntDownActionSource(
+            GameState gameState, String cardId) {
+        if (gameState == null || cardId == null) return false;
+        try {
+            PhysicalCard source =
+                    gameState.findCardById(Integer.parseInt(cardId));
+            return source != null
+                    && ("213_31".equals(source.getBlueprintId(true))
+                        || "213_31_BACK".equals(
+                            source.getBlueprintId(true)));
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     private String extractBlueprintFromText(String actionText) {
         if (actionText == null) return null;

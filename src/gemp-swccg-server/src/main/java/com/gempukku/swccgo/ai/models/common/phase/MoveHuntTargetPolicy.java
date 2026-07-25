@@ -6,7 +6,6 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
@@ -53,20 +52,14 @@ public final class MoveHuntTargetPolicy {
             PhysicalCard currentLocation, PhysicalCard cardToMove,
             String playerId, BooleanSupplier huntDownGate,
             Predicate<PhysicalCard> darkJediClassifier,
-            Predicate<String> jediClassifier, float jediBonus) {
+            Predicate<PhysicalCard> blockerLocationClassifier,
+            float jediBonus) {
         boolean hunter = false;
-        if (cardToMove != null && cardToMove.getTitle() != null) {
-            String title = cardToMove.getTitle()
-                    .toLowerCase(Locale.ROOT);
-            if (title.contains("vader") || title.contains("tyranus")
-                    || title.contains("dooku")) {
-                hunter = true;
-            } else {
-                try {
-                    hunter = darkJediClassifier.test(cardToMove);
-                } catch (Exception e) {
-                    // Preserve V137b's fail-open hunter classification.
-                }
+        if (cardToMove != null) {
+            try {
+                hunter = darkJediClassifier.test(cardToMove);
+            } catch (Exception e) {
+                // Preserve V137b's fail-open hunter classification.
             }
         }
 
@@ -129,22 +122,10 @@ public final class MoveHuntTargetPolicy {
                         bestTargetPower = opponentPower;
                         bestTargetLocation = location.getTitle();
                     }
-                    for (PhysicalCard card :
-                            gameState.getCardsAtLocation(location)) {
-                        if (card == null
-                                || !opponentId.equals(card.getOwner())) {
-                            continue;
-                        }
-                        String cardTitle = card.getTitle() != null
-                                ? card.getTitle().toLowerCase(Locale.ROOT)
-                                : "";
-                        if (jediClassifier.test(cardTitle)) {
-                            if (opponentPower > bestJediPower) {
-                                bestJediPower = opponentPower;
-                                bestJediLocation = location.getTitle();
-                            }
-                            break;
-                        }
+                    if (blockerLocationClassifier.test(location)
+                            && opponentPower > bestJediPower) {
+                        bestJediPower = opponentPower;
+                        bestJediLocation = location.getTitle();
                     }
                 }
             }

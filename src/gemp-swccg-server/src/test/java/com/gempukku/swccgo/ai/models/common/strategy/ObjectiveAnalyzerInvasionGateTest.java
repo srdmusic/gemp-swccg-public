@@ -364,7 +364,9 @@ public class ObjectiveAnalyzerInvasionGateTest {
         when(candidateBlueprint.getCardCategory()).thenReturn(CardCategory.CHARACTER);
         when(candidateBlueprint.getDeployCost()).thenReturn(3.0f);
         when(existing.getOwner()).thenReturn(PLAYER_ID);
+        when(existing.getZone()).thenReturn(Zone.AT_LOCATION);
         when(existing.isUndercover()).thenReturn(false);
+        setActive(gameState, existing, true);
         when(throneRoom.getBlueprint()).thenReturn(throneBlueprint);
         when(throneRoom.getTitle()).thenReturn("Naboo: Theed Palace Throne Room");
         when(throneRoom.getTitles()).thenReturn(List.of("Naboo: Theed Palace Throne Room"));
@@ -418,6 +420,16 @@ public class ObjectiveAnalyzerInvasionGateTest {
         analyzer.analyze(game, PLAYER_ID, Side.DARK);
         return new Fixture(
                 game, candidate, throneRoom, nabooSystem, generator);
+    }
+
+    private static void setActive(
+            GameState gameState, PhysicalCard card, boolean active) {
+        when(gameState.isCardInPlayActive(
+                card, false, false, false, false,
+                false, false, false, false)).thenReturn(active);
+        when(gameState.isCardInPlayActive(
+                card, true, false, false, false,
+                false, false, false, false)).thenReturn(active);
     }
 
     private record Fixture(

@@ -53,6 +53,10 @@ import java.util.regex.Pattern;
  * This is Approach B: universal, no hardcoded per-objective knowledge needed.
  */
 public class ObjectiveAnalyzer {
+    public static final String DOCKING_TRANSIT_SOURCE_CARD_ID_EXTRA =
+            "objectiveDockingTransitSourceCardId";
+    public static final String DOCKING_TRANSIT_DESTINATION_CARD_ID_EXTRA =
+            "objectiveDockingTransitDestinationCardId";
     private final Logger LOG;
 
     protected ObjectiveAnalyzer(Logger logger) {
@@ -194,6 +198,7 @@ public class ObjectiveAnalyzer {
     public enum FlipGateFormationRole {
         LAST_REQUIRED_ACTOR,
         LAST_REQUIRED_BUDDY,
+        LAST_REQUIRED_ON_TABLE_ACTOR,
         LAST_FLIP_BACK_BLOCKER,
         NONE
     }
@@ -241,6 +246,7 @@ public class ObjectiveAnalyzer {
             PhysicalCard objectiveCard = findOurObjective(gameState, playerId);
             if (objectiveCard == null) {
                 LOG.warn("[ObjectiveAnalyzer] No objective found for {}", playerId);
+                reset();
                 return;
             }
 
@@ -321,6 +327,9 @@ public class ObjectiveAnalyzer {
 
     public boolean isObjectiveRelevantLocation(String locationTitle) {
         if (!analyzed || locationTitle == null) return false;
+        if (hasPreFlipRuntimeActorRule()) {
+            return false;
+        }
         String titleLower = locationTitle.toLowerCase(Locale.ROOT);
 
         Boolean structuredMatch = exactStructuredTitleMatch(
@@ -405,6 +414,22 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
+    /** True when the active front has an actor-at-runtime-location flip leg. */
+    public boolean hasPreFlipRuntimeActorRule() {
+        if (!analyzed || isFlipped || activeFlipLocationRules == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (isActorToRuntimeLocationAlternative(alternative)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Classifies a real candidate by whether it fills the next typed location
      * or actor leg of a counted pre-flip rule.
@@ -433,8 +458,10 @@ public class ObjectiveAnalyzer {
                     }
                     int required = expectedCount(
                             game, playerId, alternative.count);
+                    String controller = resolveController(
+                            gameState, playerId, alternative.controller);
                     int qualified = countAlternativeMatches(
-                            game, playerId, playerId, alternative);
+                            game, playerId, controller, alternative);
                     if (qualified >= required) continue;
 
                     com.gempukku.swccgo.filters.Filter locationFilter =
@@ -452,17 +479,27 @@ public class ObjectiveAnalyzer {
 
                     com.gempukku.swccgo.filters.Filter actorFilter =
                             resolveFilter(alternative.actorFilterKey);
+                    boolean duplicateCountOneActor = required <= 1
+                            && (hasOtherMatchingActorInHand(
+                                    game, playerId, candidate,
+                                    actorFilter)
+                                || isActorAtRelation(alternative)
+                                    && hasOtherMatchingActorOnTable(
+                                        game, playerId, candidate,
+                                        actorFilter,
+                                        alternative
+                                                .includeExcludedFromBattle)
+                                || !isActorAtRelation(alternative)
+                                    && hasOtherMatchingActorOnPreFlipRoute(
+                                        game, playerId, candidate,
+                                        actorFilter,
+                                        alternative
+                                                .includeExcludedFromBattle));
                     if (actorFilter != null
                             && actorFilter.accepts(
                                     gameState, game.getModifiersQuerying(),
                                     candidate)
-                            && (required > 1
-                                || !hasOtherMatchingActorInHand(
-                                        game, playerId, candidate,
-                                        actorFilter)
-                                    && !hasOtherMatchingActorOnPreFlipRoute(
-                                        game, playerId, candidate,
-                                        actorFilter))) {
+                            && !duplicateCountOneActor) {
                         List<PhysicalCard> locations =
                                 gameState.getLocationsInOrder();
                         if (locations == null) continue;
@@ -482,6 +519,892 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    /**
+     * True when the virtual Hunt Down objective's exact once-per-deploy-phase
+     * action has a legal Cloud City or Malachor battleground site in Reserve.
+     */
+    public boolean hasVirtualHuntDownLocationDownloadInReserve(
+            SwccgGame game, String playerId) {
+        if (!analyzed || isFlipped || !isVirtualHuntDownObjective()
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard objective = findOurObjective(
+                    gameState, playerId);
+            if (objective == null) return false;
+            List<PhysicalCard> reserve = gameState.getReserveDeck(playerId);
+            if (reserve == null) return false;
+            com.gempukku.swccgo.filters.Filter legalDownload = Filters.and(
+                    Filters.battleground_site,
+                    Filters.or(
+                            Filters.partOfSystem(
+                                    com.gempukku.swccgo.common.Title.Malachor),
+                            Filters.icon(
+                                    com.gempukku.swccgo.common.Icon.CLOUD_CITY)),
+                    Filters.deployable(objective, null, false, 0.0f));
+            for (PhysicalCard candidate : reserve) {
+                if (candidate != null && legalDownload.accepts(
+                        gameState, game.getModifiersQuerying(), candidate)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Virtual Hunt Down location download assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * True only when the exact Vader's Castle source has a Vader in Reserve
+     * that the engine currently considers deployable to that Castle at
+     * ordinary cost.
+     */
+    public boolean hasLegalVaderCastleDeployInReserve(
+            SwccgGame game, String playerId) {
+        return hasLegalVaderCastleDeployInReserve(
+                game, playerId, false);
+    }
+
+    /**
+     * Uses the exact minimum prospective Castle move cost as extra deploy
+     * reserve for the same Vader candidate.
+     */
+    public boolean hasVaderCastleDeployWithMoveReserve(
+            SwccgGame game, String playerId) {
+        return hasLegalVaderCastleDeployInReserve(
+                game, playerId, true);
+    }
+
+    public record VaderCastleRouteAssessment(
+            PhysicalCard mover,
+            PhysicalCard origin,
+            PhysicalCard destination,
+            boolean outbound,
+            boolean objectiveAdvance,
+            boolean formationSafe,
+            boolean returnHeld,
+            int forceCost) {
+        public boolean objectiveSafe() {
+            return objectiveAdvance && formationSafe;
+        }
+
+        public boolean admissible() {
+            return formationSafe && (outbound || !returnHeld);
+        }
+    }
+
+    public record VaderCastleOutboundAssessment(
+            boolean safeRoute,
+            int minimumForce) {
+        private static VaderCastleOutboundAssessment none() {
+            return new VaderCastleOutboundAssessment(false, 0);
+        }
+    }
+
+    public record VaderCastleDeployCandidateAssessment(
+            boolean found,
+            boolean legalDeploy,
+            boolean preservesMoveCost) {
+        private static VaderCastleDeployCandidateAssessment none() {
+            return new VaderCastleDeployCandidateAssessment(
+                    false, false, false);
+        }
+    }
+
+    public record DockingBayTransitRouteAssessment(
+            PhysicalCard mover,
+            PhysicalCard origin,
+            PhysicalCard destination,
+            boolean objectiveAdvance,
+            boolean blockerChase,
+            boolean objectiveHold,
+            String safetyVeto) {
+        public boolean admissible() {
+            return !objectiveHold && safetyVeto == null;
+        }
+
+        public boolean objectiveSafe() {
+            return admissible()
+                    && (objectiveAdvance || blockerChase);
+        }
+    }
+
+    /**
+     * Mirrors the stock DockingBayTransitAction candidate and destination
+     * laws, then overlays the active runtime-actor hold and formation safety.
+     */
+    public List<DockingBayTransitRouteAssessment>
+            assessDockingBayTransitRoutes(
+                    SwccgGame game, String playerId,
+                    PhysicalCard sourceDockingBay) {
+        if (!analyzed || isFlipped
+                || !hasPreFlipRuntimeActorRule()
+                || game == null || playerId == null
+                || sourceDockingBay == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return List.of();
+        }
+        try {
+            GameState gameState = game.getGameState();
+            if (!Filters.docking_bay.accepts(
+                    gameState, game.getModifiersQuerying(),
+                    sourceDockingBay)) {
+                return List.of();
+            }
+            com.gempukku.swccgo.filters.Filter atFilter =
+                    Filters.and(
+                        Filters.your(playerId),
+                        Filters.hasNotPerformedRegularMove,
+                        Filters.or(
+                            Filters.character,
+                            Filters.vehicle,
+                            Filters.movesLikeCharacter),
+                        Filters.atLocation(sourceDockingBay));
+            com.gempukku.swccgo.filters.Filter attachedArtilleryFilter =
+                    Filters.and(
+                        Filters.your(playerId),
+                        Filters.hasNotPerformedRegularMove,
+                        Filters.artillery_weapon_that_may_use_db_transit,
+                        Filters.attachedTo(sourceDockingBay));
+            com.gempukku.swccgo.filters.Filter moverFilter =
+                    Filters.or(
+                        atFilter, attachedArtilleryFilter);
+            if (playerId.equals(
+                    gameState.getCurrentPlayerId())) {
+                moverFilter = Filters.and(
+                        moverFilter,
+                        Filters.not(Filters.or(
+                            Filters.undercover_spy,
+                            Filters
+                                .deploysAndMovesLikeUndercoverSpy)));
+            } else {
+                moverFilter = Filters.and(
+                        moverFilter,
+                        Filters.or(
+                            Filters.undercover_spy,
+                            Filters
+                                .deploysAndMovesLikeUndercoverSpy));
+            }
+            Collection<PhysicalCard> movers =
+                    Filters.filterActive(
+                        game, null,
+                        SpotOverride.INCLUDE_UNDERCOVER,
+                        moverFilter);
+            List<PhysicalCard> destinations =
+                    gameState.getTopLocations();
+            if (movers == null || destinations == null) {
+                return List.of();
+            }
+            String opponent =
+                    gameState.getOpponent(playerId);
+            List<DockingBayTransitRouteAssessment> routes =
+                    new ArrayList<>();
+            for (PhysicalCard mover : movers) {
+                com.gempukku.swccgo.filters.Filter
+                        legalDestination =
+                        Filters.canMoveToUsingDockingBayTransit(
+                                mover, false, 0.0f);
+                for (PhysicalCard destination : destinations) {
+                    if (destination == null
+                            || !Filters.other(
+                                sourceDockingBay).accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
+                                    destination)
+                            || !Filters.docking_bay.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                destination)
+                            || !legalDestination.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                destination)) {
+                        continue;
+                    }
+                    boolean objectiveAdvance =
+                            advancesPreFlipActorAtRuntimeLocation(
+                                game, playerId, mover,
+                                destination);
+                    boolean preservesActor =
+                            qualifiesPreFlipRuntimeActorAtLocation(
+                                game, playerId, mover,
+                                destination);
+                    boolean blockerChase =
+                            !objectiveAdvance
+                            && preservesActor
+                            && isPreFlipGlobalBlockerAt(
+                                game, playerId,
+                                destination);
+                    boolean objectiveHold =
+                            classifyGateFormationPieceIfRemoved(
+                                game, playerId, mover)
+                                == FlipGateFormationRole
+                                    .LAST_REQUIRED_ACTOR
+                            && !preservesActor
+                            && !isRetreatableAt(
+                                game, playerId, opponent,
+                                sourceDockingBay);
+                    String safetyVeto =
+                            FormationSafety.vetoMoveDestination(
+                                game, gameState, playerId,
+                                mover, destination);
+                    if (safetyVeto == null) {
+                        safetyVeto =
+                                FormationSafety.vetoMoveOrigin(
+                                    game, gameState,
+                                    playerId, mover,
+                                    sourceDockingBay);
+                    }
+                    routes.add(
+                        new DockingBayTransitRouteAssessment(
+                            mover, sourceDockingBay,
+                            destination,
+                            objectiveAdvance,
+                            blockerChase,
+                            objectiveHold,
+                            safetyVeto));
+                }
+            }
+            return List.copyOf(routes);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Objective docking-bay transit assessment failed: {}",
+                    e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Candidate-specific child fact for Castle's Reserve Deck download.
+     * Blueprint binding is exact because that mandatory prompt exposes
+     * blueprint choices rather than physical card ids.
+     */
+    public VaderCastleDeployCandidateAssessment
+            assessVaderCastleDeployCandidate(
+                    SwccgGame game, String playerId,
+                    String blueprintId) {
+        if (!analyzed || !isHuntDownV()
+                || game == null || playerId == null
+                || blueprintId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return VaderCastleDeployCandidateAssessment.none();
+        }
+        try {
+            PhysicalCard castle =
+                    findActiveVaderCastle(game, playerId);
+            List<PhysicalCard> reserve =
+                    game.getGameState().getReserveDeck(playerId);
+            if (castle == null || reserve == null) {
+                return VaderCastleDeployCandidateAssessment.none();
+            }
+            boolean found = false;
+            boolean legal = false;
+            boolean preserves = false;
+            for (PhysicalCard candidate : reserve) {
+                if (candidate == null
+                        || !blueprintId.equals(
+                            candidate.getBlueprintId(true))
+                        || !Filters.Vader.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            candidate)) {
+                    continue;
+                }
+                found = true;
+                legal |= vaderCastleDeployCandidateLegal(
+                        game, playerId, candidate,
+                        castle, false);
+                preserves |= vaderCastleDeployCandidateLegal(
+                        game, playerId, candidate,
+                        castle, true);
+            }
+            return new VaderCastleDeployCandidateAssessment(
+                    found, legal, preserves);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Vader's Castle deploy candidate assessment failed: {}",
+                    e.getMessage());
+            return VaderCastleDeployCandidateAssessment.none();
+        }
+    }
+
+    /**
+     * Returns the exact minimum Force needed for a currently legal Vader's
+     * Castle outbound move that advances the active Hunt Down actor leg.
+     * {@link VaderCastleOutboundAssessment#safeRoute()} distinguishes a free
+     * route from no route.
+     */
+    public int getVaderCastleOutboundMoveReserve(
+            SwccgGame game, String playerId) {
+        return assessVaderCastleOutbound(
+                game, playerId).minimumForce();
+    }
+
+    public boolean hasSafeVaderCastleOutboundRoute(
+            SwccgGame game, String playerId) {
+        return assessVaderCastleOutbound(
+                game, playerId).safeRoute();
+    }
+
+    public VaderCastleOutboundAssessment assessVaderCastleOutbound(
+            SwccgGame game, String playerId) {
+        PhysicalCard castle = findActiveVaderCastle(game, playerId);
+        if (castle == null) {
+            return VaderCastleOutboundAssessment.none();
+        }
+        int minimumForce = Integer.MAX_VALUE;
+        for (VaderCastleRouteAssessment route
+                : assessVaderCastleRoutes(
+                        game, playerId, castle, true)) {
+            if (route.objectiveSafe()) {
+                minimumForce = Math.min(
+                        minimumForce, route.forceCost());
+            }
+        }
+        return minimumForce == Integer.MAX_VALUE
+                ? VaderCastleOutboundAssessment.none()
+                : new VaderCastleOutboundAssessment(
+                        true, minimumForce);
+    }
+
+    /**
+     * Mirrors Vader's Castle's real location-text candidate set. Every
+     * physical mover and destination remains separate, including duplicates.
+     */
+    public List<VaderCastleRouteAssessment> assessVaderCastleRoutes(
+            SwccgGame game, String playerId, PhysicalCard castle,
+            boolean outbound) {
+        if (!analyzed || isFlipped || !isHuntDownV()
+                || !hasPreFlipRuntimeActorRule()
+                || game == null || playerId == null || castle == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(castle.getOwner())
+                || !"209_50".equals(castle.getBlueprintId(true))
+                || !isActiveForSpot(game, castle, false)) {
+            return List.of();
+        }
+        try {
+            GameState gameState = game.getGameState();
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            List<PhysicalCard> locations =
+                    gameState.getLocationsInOrder();
+            if (permanents == null || locations == null) {
+                return List.of();
+            }
+            List<VaderCastleRouteAssessment> routes =
+                    new ArrayList<>();
+            String opponent = gameState.getOpponent(playerId);
+            for (PhysicalCard mover : permanents) {
+                if (mover == null
+                        || !playerId.equals(mover.getOwner())
+                        || !gameState.isCardInPlayActive(
+                                mover,
+                                false, true, false, false,
+                                false, false, false, false)
+                        || !Filters.Vader.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                mover)
+                        || !Filters.hasNotPerformedRegularMove.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                mover)) {
+                    continue;
+                }
+                PhysicalCard origin =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                    gameState, mover);
+                if (origin == null
+                        || outbound
+                            != samePhysicalLocation(origin, castle)) {
+                    continue;
+                }
+                if (!outbound
+                        && (!isActiveForSpot(game, origin, false)
+                            || !Filters.battleground_site.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                origin))) {
+                    continue;
+                }
+
+                com.gempukku.swccgo.filters.Filter legalDestination =
+                        Filters.canMoveToUsingLocationText(
+                                mover, false, 1.0f, 0.0f);
+                for (PhysicalCard destination : locations) {
+                    if (destination == null
+                            || !isActiveForSpot(
+                                    game, destination, false)
+                            || outbound
+                                && (samePhysicalLocation(
+                                        destination, castle)
+                                    || !Filters.battleground_site
+                                        .accepts(
+                                            gameState,
+                                            game.getModifiersQuerying(),
+                                            destination))
+                            || !outbound
+                                && !samePhysicalLocation(
+                                        destination, castle)
+                            || !legalDestination.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                destination)) {
+                        continue;
+                    }
+
+                    String veto =
+                            FormationSafety.vetoMoveDestination(
+                                game, gameState, playerId,
+                                mover, destination);
+                    if (veto == null) {
+                        veto = FormationSafety.vetoMoveOrigin(
+                                game, gameState, playerId,
+                                mover, origin);
+                    }
+                    boolean objectiveAdvance = outbound
+                            && advancesPreFlipActorAtRuntimeLocation(
+                                game, playerId, mover, destination);
+                    boolean returnHeld = !outbound
+                            && classifyGateFormationPieceIfRemoved(
+                                game, playerId, mover)
+                                == FlipGateFormationRole
+                                    .LAST_REQUIRED_ACTOR
+                            && !isRetreatableAt(
+                                game, playerId, opponent, origin);
+                    float rawCost =
+                            game.getModifiersQuerying()
+                                .getMoveUsingLocationTextCost(
+                                    gameState, mover, origin,
+                                    destination, 1.0f, 0.0f);
+                    routes.add(new VaderCastleRouteAssessment(
+                            mover, origin, destination, outbound,
+                            objectiveAdvance, veto == null,
+                            returnHeld,
+                            (int) Math.ceil(
+                                    Math.max(0.0f, rawCost))));
+                }
+            }
+            return List.copyOf(routes);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Vader's Castle route assessment failed: {}",
+                    e.getMessage());
+            return List.of();
+        }
+    }
+
+    private PhysicalCard findActiveVaderCastle(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null
+                || game.getGameState() == null) {
+            return null;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            if (card != null
+                    && playerId.equals(card.getOwner())
+                    && "209_50".equals(card.getBlueprintId(true))
+                    && isActiveForSpot(game, card, false)) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private boolean isRetreatableAt(
+            SwccgGame game, String playerId, String opponent,
+            PhysicalCard location) {
+        if (opponent == null || location == null) return false;
+        GameState gameState = game.getGameState();
+        float friendlyPower =
+                game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(
+                        gameState, location, playerId,
+                        false, false);
+        float opponentPower =
+                game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(
+                        gameState, location, opponent,
+                        false, false)
+                + FormationSafety.weaponBonusAt(
+                        gameState, location, opponent);
+        return opponentPower > friendlyPower + 6.0f;
+    }
+
+    private boolean hasLegalVaderCastleDeployInReserve(
+            SwccgGame game, String playerId, boolean reserveCastleMove) {
+        if (!analyzed || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard castle = null;
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents == null) return false;
+            for (PhysicalCard card : permanents) {
+                if (card == null || !playerId.equals(card.getOwner())
+                        || !"209_50".equals(card.getBlueprintId(true))
+                        || !isActiveForSpot(game, card, false)) {
+                    continue;
+                }
+                castle = card;
+                break;
+            }
+            if (castle == null) return false;
+
+            List<PhysicalCard> reserve =
+                    gameState.getReserveDeck(playerId);
+            if (reserve == null) return false;
+            for (PhysicalCard candidate : reserve) {
+                if (vaderCastleDeployCandidateLegal(
+                        game, playerId, candidate,
+                        castle, reserveCastleMove)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Vader's Castle deploy assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean vaderCastleDeployCandidateLegal(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard castle, boolean reserveCastleMove) {
+        if (candidate == null || !Filters.Vader.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(),
+                candidate)) {
+            return false;
+        }
+        int moveReserve = reserveCastleMove
+                ? prospectiveVaderCastleOutboundMoveReserve(
+                        game, playerId, candidate, castle)
+                : 0;
+        if (reserveCastleMove && moveReserve < 0) {
+            return false;
+        }
+        return Filters.deployableToLocation(
+                castle, Filters.here(castle),
+                false, moveReserve).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        candidate);
+    }
+
+    /**
+     * Minimum ceiled engine cost for this Reserve Vader to move from Castle
+     * to an active battleground site after deployment. Returns -1 when no
+     * source-valid route exists.
+     */
+    private int prospectiveVaderCastleOutboundMoveReserve(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard castle) {
+        GameState gameState = game.getGameState();
+        if (game.getModifiersQuerying().mayNotMove(
+                gameState, candidate)) {
+            return -1;
+        }
+        List<PhysicalCard> locations =
+                gameState.getLocationsInOrder();
+        if (locations == null) return -1;
+        int minimumForce = Integer.MAX_VALUE;
+        com.gempukku.swccgo.filters.Filter validMoveTarget =
+                candidate.getBlueprint().getValidMoveTargetFilter(
+                        playerId, game, candidate, false);
+        for (PhysicalCard destination : locations) {
+            if (destination == null
+                    || samePhysicalLocation(destination, castle)
+                    || !isActiveForSpot(game, destination, false)
+                    || !Filters.battleground_site.accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            destination)
+                    || !validMoveTarget.accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            destination)
+                    || game.getModifiersQuerying()
+                        .mayNotMoveFromLocationToLocationUsingLocationText(
+                            gameState, candidate, castle,
+                            destination)) {
+                continue;
+            }
+            float rawCost = game.getModifiersQuerying()
+                    .getMoveUsingLocationTextCost(
+                            gameState, candidate, castle,
+                            destination, 1.0f, 0.0f);
+            minimumForce = Math.min(
+                    minimumForce,
+                    (int) Math.ceil(Math.max(0.0f, rawCost)));
+        }
+        return minimumForce == Integer.MAX_VALUE
+                ? -1 : minimumForce;
+    }
+
+    /**
+     * True when classic Hunt Down's exact move-phase recall action has at
+     * least one legal Vader target whose removal does not dismantle the sole
+     * actor currently satisfying the runtime battleground leg.
+     */
+    public boolean hasSafeClassicHuntDownVaderRecallTarget(
+            SwccgGame game, String playerId) {
+        return assessClassicHuntDownVaderRecall(
+                game, playerId).safeTarget();
+    }
+
+    /**
+     * The virtual objective offers a post-flip once-per-game Vader recall.
+     * Its child target is any active Vader. A target is safe only while
+     * another active Vader remains on table to keep the back side stable.
+     */
+    public boolean hasSafeVirtualHuntDownVaderRecallTarget(
+            SwccgGame game, String playerId) {
+        if (!analyzed || !isFlipped || !isVirtualHuntDownObjective()
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents == null) return false;
+            for (PhysicalCard candidate : permanents) {
+                HuntDownRecallTargetAssessment assessment =
+                        assessVirtualHuntDownVaderRecallTarget(
+                                game, playerId, candidate);
+                if (assessment.applies()
+                        && assessment.safeTarget()) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Virtual Hunt Down recall assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public record HuntDownRecallTargetAssessment(
+            boolean applies,
+            boolean safeTarget,
+            boolean preservesRequiredVader,
+            boolean remoteBlockerChase) {
+        private static HuntDownRecallTargetAssessment none() {
+            return new HuntDownRecallTargetAssessment(
+                    false, false, false, false);
+        }
+    }
+
+    /**
+     * Candidate-level classic recall fact. The source can target any active
+     * Vader at a location the player controls. Removing the sole battleground
+     * Vader is allowed only when that exact Vader can be redeployed to chase a
+     * remote Jedi or Luke blocker.
+     */
+    public HuntDownRecallTargetAssessment
+            assessClassicHuntDownVaderRecallTarget(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (!analyzed || isFlipped || !isClassicHuntDownObjective()
+                || game == null || playerId == null || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return HuntDownRecallTargetAssessment.none();
+        }
+        try {
+            GameState gameState = game.getGameState();
+            com.gempukku.swccgo.filters.Filter legalTarget =
+                    Filters.and(
+                            Filters.Vader,
+                            Filters.at(Filters.controls(playerId)));
+            if (!isActiveForSpot(game, candidate, false)
+                    || !legalTarget.accepts(
+                            gameState, game.getModifiersQuerying(),
+                            candidate)) {
+                return HuntDownRecallTargetAssessment.none();
+            }
+
+            boolean ownedByPlayer =
+                    playerId.equals(candidate.getOwner());
+            boolean preservesRequiredVader =
+                    ownedByPlayer
+                    && classifyGateFormationPieceIfRemoved(
+                            game, playerId, candidate)
+                        != FlipGateFormationRole.LAST_REQUIRED_ACTOR;
+            boolean remoteBlocker =
+                    ownedByPlayer
+                    && hasRemoteClassicHuntDownBlocker(
+                            game, playerId, candidate);
+            return new HuntDownRecallTargetAssessment(
+                    true,
+                    preservesRequiredVader || remoteBlocker,
+                    preservesRequiredVader,
+                    remoteBlocker);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Classic Hunt Down recall target assessment failed: {}",
+                    e.getMessage());
+            return HuntDownRecallTargetAssessment.none();
+        }
+    }
+
+    /**
+     * Candidate-level virtual recall fact. The real child target is any active
+     * Vader, not only one at the controlled site that exposed the trigger. It
+     * is safe exactly when another active Vader remains on table.
+     */
+    public HuntDownRecallTargetAssessment
+            assessVirtualHuntDownVaderRecallTarget(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (!analyzed || !isFlipped || !isVirtualHuntDownObjective()
+                || game == null || playerId == null || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return HuntDownRecallTargetAssessment.none();
+        }
+        try {
+            GameState gameState = game.getGameState();
+            if (!isActiveForSpot(game, candidate, false)
+                    || !Filters.Vader.accepts(
+                            gameState, game.getModifiersQuerying(),
+                            candidate)) {
+                return HuntDownRecallTargetAssessment.none();
+            }
+            if (!playerId.equals(candidate.getOwner())) {
+                return new HuntDownRecallTargetAssessment(
+                        true, false, false, false);
+            }
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents == null) {
+                return new HuntDownRecallTargetAssessment(
+                        true, false, false, false);
+            }
+            for (PhysicalCard other : permanents) {
+                if (other != null
+                        && !samePhysicalLocation(other, candidate)
+                        && isActiveForSpot(game, other, false)
+                        && Filters.Vader.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), other)) {
+                    return new HuntDownRecallTargetAssessment(
+                            true, true, true, false);
+                }
+            }
+            return new HuntDownRecallTargetAssessment(
+                    true, false, false, false);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Virtual Hunt Down recall target assessment failed: {}",
+                    e.getMessage());
+            return HuntDownRecallTargetAssessment.none();
+        }
+    }
+
+    public record ClassicHuntDownRecallAssessment(
+            boolean safeTarget,
+            boolean remoteJediOrLukeBlocker) {
+        private static ClassicHuntDownRecallAssessment none() {
+            return new ClassicHuntDownRecallAssessment(false, false);
+        }
+    }
+
+    public ClassicHuntDownRecallAssessment
+            assessClassicHuntDownVaderRecall(
+                    SwccgGame game, String playerId) {
+        if (!analyzed || isFlipped || !isClassicHuntDownObjective()
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return ClassicHuntDownRecallAssessment.none();
+        }
+        try {
+            GameState gameState = game.getGameState();
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents == null) {
+                return ClassicHuntDownRecallAssessment.none();
+            }
+            for (PhysicalCard candidate : permanents) {
+                HuntDownRecallTargetAssessment assessment =
+                        assessClassicHuntDownVaderRecallTarget(
+                                game, playerId, candidate);
+                if (assessment.applies()
+                        && assessment.safeTarget()) {
+                    return new ClassicHuntDownRecallAssessment(
+                            true,
+                            assessment.remoteBlockerChase());
+                }
+            }
+            return ClassicHuntDownRecallAssessment.none();
+        } catch (Exception e) {
+            LOG.debug("Classic Hunt Down recall assessment failed: {}",
+                    e.getMessage());
+        }
+        return ClassicHuntDownRecallAssessment.none();
+    }
+
+    private boolean hasRemoteClassicHuntDownBlocker(
+            SwccgGame game, String playerId,
+            PhysicalCard recallTarget) {
+        GameState gameState = game.getGameState();
+        Collection<PhysicalCard> permanents =
+                gameState.getAllPermanentCards();
+        if (permanents == null) return false;
+        PhysicalCard targetLocation =
+                game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                            gameState, recallTarget);
+        String opponent = gameState.getOpponent(playerId);
+        com.gempukku.swccgo.filters.Filter blocker =
+                Filters.or(Filters.Jedi, Filters.Luke);
+        for (PhysicalCard card : permanents) {
+            if (card == null || opponent == null
+                    || !opponent.equals(card.getOwner())
+                    || !isActiveForSpot(game, card, true)
+                    || !blocker.accepts(
+                        gameState,
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard blockerLocation =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                                gameState, card);
+            if (!samePhysicalLocation(
+                        targetLocation, blockerLocation)
+                    && Filters.battleground_site.accepts(
+                        gameState,
+                        game.getModifiersQuerying(),
+                        blockerLocation)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean hasOtherMatchingActorInHand(
@@ -505,6 +1428,31 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
+    private boolean hasOtherMatchingActorOnTable(
+            SwccgGame game,
+            String playerId,
+            PhysicalCard candidate,
+            com.gempukku.swccgo.filters.Filter actorFilter,
+            Boolean includeExcludedFromBattle) {
+        GameState gameState = game.getGameState();
+        Collection<PhysicalCard> permanents =
+                gameState != null ? gameState.getAllPermanentCards() : null;
+        if (permanents == null || actorFilter == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null || samePhysicalLocation(card, candidate)
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(
+                            game, card, includeExcludedFromBattle)
+                    || !actorFilter.accepts(
+                            gameState, game.getModifiersQuerying(),
+                            card)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
     /**
      * A count-one actor is already actionable only when it is in play on a
      * site route to the exact gate. A matching pilot aboard a starship or an
@@ -514,7 +1462,8 @@ public class ObjectiveAnalyzer {
             SwccgGame game,
             String playerId,
             PhysicalCard candidate,
-            com.gempukku.swccgo.filters.Filter actorFilter) {
+            com.gempukku.swccgo.filters.Filter actorFilter,
+            Boolean includeExcludedFromBattle) {
         GameState gameState = game.getGameState();
         if (gameState == null || actorFilter == null
                 || game.getModifiersQuerying() == null) {
@@ -533,10 +1482,9 @@ public class ObjectiveAnalyzer {
             for (PhysicalCard card : permanents) {
                 if (card == null || samePhysicalLocation(card, candidate)
                         || !playerId.equals(card.getOwner())
-                        || card.getZone() == null
-                        || !card.getZone().isInPlay()
-                        || card.isCaptive()
-                        || card.isUndercover()
+                        || !isActiveForSpot(
+                                game, card,
+                                includeExcludedFromBattle)
                         || !actorFilter.accepts(
                                 gameState, game.getModifiersQuerying(),
                                 card)) {
@@ -587,6 +1535,371 @@ public class ObjectiveAnalyzer {
             }
         }
         return false;
+    }
+
+    /**
+     * True when an owned actor would advance a structured actor-at-location
+     * alternative such as Vader at any runtime battleground site.
+     */
+    public boolean advancesPreFlipActorAtRuntimeLocation(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || candidate == null || location == null
+                || !playerId.equals(candidate.getOwner())
+                || activeFlipLocationRules == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || isRuleSatisfied(game, playerId, rule)) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (isActorToRuntimeLocationAlternative(alternative)
+                        && advancesAlternativeAt(
+                                game, playerId, candidate,
+                                location, alternative)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * True when the candidate satisfies the typed actor-at-runtime-location
+     * alternative at the supplied location. Unlike the advancement query,
+     * this remains true when another actor already satisfies that leg, which
+     * lets movement preserve a completed leg instead of freezing its actor.
+     */
+    public boolean qualifiesPreFlipRuntimeActorAtLocation(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || candidate == null || location == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        GameState gameState = game.getGameState();
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!isActorToRuntimeLocationAlternative(alternative)
+                        || !locationMatchesAlternative(
+                                gameState, game, playerId,
+                                location, alternative)) {
+                    continue;
+                }
+                String controller = resolveController(
+                        gameState, playerId, alternative.controller);
+                if (controller != null
+                        && !controller.equals(candidate.getOwner())) {
+                    continue;
+                }
+                if (candidate.getZone() != null
+                        && candidate.getZone().isInPlay()
+                        && !isActiveForSpot(
+                                game, candidate,
+                                alternative.includeExcludedFromBattle)) {
+                    continue;
+                }
+                com.gempukku.swccgo.filters.Filter actorFilter =
+                        resolveFilter(alternative.actorFilterKey);
+                if (actorFilter != null && actorFilter.accepts(
+                        gameState, game.getModifiersQuerying(),
+                        candidate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isSafePreFlipRuntimeActorLandspeedDestination(
+            SwccgGame game, String playerId, PhysicalCard mover,
+            PhysicalCard destination) {
+        if (!qualifiesPreFlipRuntimeActorAtLocation(
+                    game, playerId, mover, destination)) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                            gameState, mover);
+            if (origin == null
+                    || samePhysicalLocation(origin, destination)
+                    || !Filters.canMoveToUsingLandspeed(
+                            playerId, mover,
+                            false, false, false, 0.0f, null)
+                        .accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            destination)) {
+                return false;
+            }
+            String veto = FormationSafety.vetoMoveDestination(
+                    game, gameState, playerId,
+                    mover, destination);
+            if (veto == null) {
+                veto = FormationSafety.vetoMoveOrigin(
+                        game, gameState, playerId,
+                        mover, origin);
+            }
+            return veto == null;
+        } catch (Exception e) {
+            LOG.debug(
+                    "Objective runtime-actor landspeed destination failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean hasSafePreFlipRuntimeActorLandspeedDestination(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (game == null || game.getGameState() == null) return false;
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard destination : locations) {
+            if (isSafePreFlipRuntimeActorLandspeedDestination(
+                    game, playerId, mover, destination)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Location-only fallback for a duplicate-blueprint actor whose exact
+     * physical copy cannot be resolved at the child deploy prompt.
+     */
+    public boolean isUnmetPreFlipRuntimeActorLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || location == null || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || isRuleSatisfied(game, playerId, rule)) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!isActorToRuntimeLocationAlternative(alternative)
+                        || !locationMatchesAlternative(
+                            game.getGameState(), game, playerId,
+                            location, alternative)) {
+                    continue;
+                }
+                String controller = resolveController(
+                        game.getGameState(), playerId,
+                        alternative.controller);
+                int required = expectedCount(
+                        game, playerId, alternative.count);
+                int qualified = countAlternativeMatches(
+                        game, playerId, controller, alternative);
+                if (qualified < required
+                        && !relationSatisfiedAt(
+                            game, playerId, controller, location,
+                            alternative.relation,
+                            alternative.actorFilterKey,
+                            alternative.includeExcludedFromBattle)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Parent deploy-action fact. It requires one engine-legal destination that
+     * advances an unmet actor-at-runtime-location alternative.
+     */
+    public boolean hasLegalPreFlipActorLocationDestination(
+            SwccgGame game, String playerId, PhysicalCard actor) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || actor == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            for (PhysicalCard location
+                    : game.getGameState().getLocationsInOrder()) {
+                if (!advancesPreFlipActorAtRuntimeLocation(
+                            game, playerId, actor, location)) {
+                    continue;
+                }
+                if (Filters.deployableToLocation(
+                        actor, Filters.sameCardId(location),
+                        false, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), actor)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Objective actor-location deploy assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * True when Castle has legal routes but every route is rejected by either
+     * formation safety or the objective actor hold.
+     */
+    public boolean mustHoldVaderCastleRoutes(
+            SwccgGame game, String playerId, PhysicalCard castle,
+            boolean outbound) {
+        List<VaderCastleRouteAssessment> routes =
+                assessVaderCastleRoutes(
+                        game, playerId, castle, outbound);
+        return !routes.isEmpty()
+                && routes.stream().noneMatch(
+                        VaderCastleRouteAssessment::admissible);
+    }
+
+    /** Reverse-action compatibility wrapper. */
+    public boolean mustHoldAllVaderCastleReturnMovers(
+            SwccgGame game, String playerId, PhysicalCard castle) {
+        return mustHoldVaderCastleRoutes(
+                game, playerId, castle, false);
+    }
+
+    /** True when this location currently holds a global pre-flip blocker. */
+    public boolean isPreFlipGlobalBlockerAt(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        return isPreFlipGlobalBlockerAt(
+                game, playerId, location, null);
+    }
+
+    /**
+     * True when this location holds a blocker that can participate in the
+     * current battle. Excluded blockers still prevent the flip, but battling
+     * them cannot remove that blocker.
+     */
+    public boolean isPreFlipBattleRemovableGlobalBlockerAt(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || location == null || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || isRuleSatisfied(game, playerId, rule)) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!"globalBlockerAbsent".equals(
+                            alternative.scoreRole)
+                        || isFlipLocationAlternativeSatisfied(
+                            game, playerId, alternative)
+                        || !locationMatchesAlternative(
+                            game.getGameState(), game, playerId,
+                            location, alternative)
+                        || !hasBattleParticipantMatchingAlternativeAt(
+                            game, playerId, location, alternative)) {
+                    continue;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasBattleParticipantMatchingAlternativeAt(
+            SwccgGame game, String playerId, PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        GameState gameState = game.getGameState();
+        String controller = resolveController(
+                gameState, playerId, alternative.controller);
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(alternative.actorFilterKey);
+        Collection<PhysicalCard> permanents =
+                gameState.getAllPermanentCards();
+        if (actorFilter == null || permanents == null) return false;
+        com.gempukku.swccgo.filters.Filter participant =
+                Filters.canParticipateInBattleAt(location, playerId);
+        for (PhysicalCard card : permanents) {
+            if (card == null
+                    || controller != null
+                        && !controller.equals(card.getOwner())
+                    || !isActiveForSpot(
+                            game, card,
+                            alternative.includeExcludedFromBattle)
+                    || !actorFilter.accepts(
+                            gameState, game.getModifiersQuerying(),
+                            card)
+                    || !participant.accepts(
+                            gameState, game.getModifiersQuerying(),
+                            card)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isPreFlipGlobalBlockerAt(
+            SwccgGame game, String playerId, PhysicalCard location,
+            Boolean includeExcludedOverride) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || location == null || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || isRuleSatisfied(game, playerId, rule)) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!"globalBlockerAbsent".equals(
+                            alternative.scoreRole)
+                        || isFlipLocationAlternativeSatisfied(
+                            game, playerId, alternative)
+                        || !locationMatchesAlternative(
+                            game.getGameState(), game, playerId,
+                            location, alternative)) {
+                    continue;
+                }
+                String controller = resolveController(
+                        game.getGameState(), playerId,
+                        alternative.controller);
+                if (relationSatisfiedAt(
+                        game, playerId, controller, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        includeExcludedOverride != null
+                                ? includeExcludedOverride
+                                : alternative
+                                        .includeExcludedFromBattle)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean isActorToRuntimeLocationAlternative(
+            FlipLocationAlternative alternative) {
+        return alternative != null
+                && isActorAtRelation(alternative)
+                && "actorToLocation".equals(alternative.scoreRole)
+                && alternative.actorFilterKey != null
+                && alternative.locationFilterKey != null
+                && alternative.count != null
+                && alternative.count.value != null
+                && alternative.count.value > 0;
     }
 
     public boolean wouldCompletePreFlipRequirementAt(
@@ -643,8 +1956,11 @@ public class ObjectiveAnalyzer {
             fingerprint.append(rule.id).append('=');
             for (FlipLocationAlternative alternative : rule.alternatives) {
                 if (alternative == null) continue;
+                String controller = resolveController(
+                        game.getGameState(), playerId,
+                        alternative.controller);
                 fingerprint.append(countAlternativeMatches(
-                        game, playerId, playerId, alternative)).append('/');
+                        game, playerId, controller, alternative)).append('/');
                 fingerprint.append(countMatchingLocations(
                         game, playerId, alternative)).append('/');
                 RuleOpponentConstraint constraint =
@@ -690,20 +2006,36 @@ public class ObjectiveAnalyzer {
                 }
                 int required = expectedCount(
                         game, playerId, alternative.count);
+                String controller = resolveController(
+                        gameState, playerId, alternative.controller);
                 int qualified = countAlternativeMatches(
-                        game, playerId, playerId, alternative);
-                if (qualified >= required
-                        || relationSatisfiedAt(
-                                game, playerId, playerId, location,
-                                alternative.relation,
-                                alternative.actorFilterKey,
-                                alternative.includeExcludedFromBattle)) {
+                        game, playerId, controller, alternative);
+                boolean relationHere = relationSatisfiedAt(
+                        game, playerId, controller, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle);
+                if (isUpperBound(alternative.count)) {
+                    if (relationHere
+                            && !isFlipLocationAlternativeSatisfied(
+                                game, playerId, alternative)) {
+                        return true;
+                    }
                     continue;
                 }
+                if (qualified >= required || relationHere) continue;
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean isUpperBound(RuleCount count) {
+        if (count == null || count.comparator == null) return false;
+        return "<".equals(count.comparator)
+                || "<=".equals(count.comparator)
+                || "=".equals(count.comparator)
+                || "==".equals(count.comparator);
     }
 
     /**
@@ -753,9 +2085,7 @@ public class ObjectiveAnalyzer {
             if (risk.applies()) {
                 return risk.requiresProtection();
             }
-            return matchesStructuredRequirementLocation(
-                    game, playerId, location,
-                    "postFlip", "flipBack", null, null);
+            return false;
         }
         return isFlipBackProtectionLocation(location.getTitle());
     }
@@ -1048,7 +2378,9 @@ public class ObjectiveAnalyzer {
     private boolean isFlipLocationAlternativeSatisfied(
             SwccgGame game, String playerId,
             FlipLocationAlternative alternative) {
-        if (alternative == null || alternative.locationFilterKey == null) {
+        if (alternative == null
+                || (!"onTable".equals(alternative.relation)
+                    && alternative.locationFilterKey == null)) {
             return false;
         }
 
@@ -1058,9 +2390,12 @@ public class ObjectiveAnalyzer {
                 return false;
             }
 
-            String controller = "opponent".equals(alternative.controller)
-                    ? gameState.getOpponent(playerId) : playerId;
-            if (controller == null) return false;
+            String controller = resolveController(
+                    gameState, playerId, alternative.controller);
+            if (controller == null
+                    && !"any".equals(alternative.controller)) {
+                return false;
+            }
 
             int matchingLocations = countAlternativeMatches(
                     game, playerId, controller, alternative);
@@ -1095,6 +2430,29 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId, String controller,
             FlipLocationAlternative alternative) {
         GameState gameState = game.getGameState();
+        if ("onTable".equals(alternative.relation)) {
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(alternative.actorFilterKey);
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (actorFilter == null || permanents == null) return 0;
+            int matchingActors = 0;
+            for (PhysicalCard card : permanents) {
+                if (card == null
+                        || controller != null
+                            && !controller.equals(card.getOwner())
+                        || !isActiveForSpot(
+                                game, card,
+                                alternative.includeExcludedFromBattle)
+                        || !actorFilter.accepts(
+                                gameState, game.getModifiersQuerying(),
+                                card)) {
+                    continue;
+                }
+                matchingActors++;
+            }
+            return matchingActors;
+        }
         List<PhysicalCard> locations = gameState.getLocationsInOrder();
         if (locations == null) return 0;
         int matchingLocations = 0;
@@ -1110,6 +2468,15 @@ public class ObjectiveAnalyzer {
             }
         }
         return matchingLocations;
+    }
+
+    private static String resolveController(
+            GameState gameState, String playerId, String scope) {
+        if ("any".equals(scope)) return null;
+        if ("opponent".equals(scope)) {
+            return gameState.getOpponent(playerId);
+        }
+        return playerId;
     }
 
     private static boolean isActivePreFlipRule(FlipLocationRule rule) {
@@ -1174,15 +2541,22 @@ public class ObjectiveAnalyzer {
                 || candidate == null || location == null
                 || !locationMatchesAlternative(
                         game.getGameState(), game, playerId,
-                        location, alternative)) {
+                        location, alternative)
+                || candidate.getZone() != null
+                    && candidate.getZone().isInPlay()
+                    && !isActiveForSpot(
+                            game, candidate,
+                            alternative.includeExcludedFromBattle)) {
             return false;
         }
         int required = expectedCount(game, playerId, alternative.count);
+        String controller = resolveController(
+                game.getGameState(), playerId, alternative.controller);
         int qualified = countAlternativeMatches(
-                game, playerId, playerId, alternative);
+                game, playerId, controller, alternative);
         if (qualified >= required
                 || relationSatisfiedAt(
-                        game, playerId, playerId, location,
+                        game, playerId, controller, location,
                         alternative.relation,
                         alternative.actorFilterKey,
                         alternative.includeExcludedFromBattle)) {
@@ -1195,6 +2569,9 @@ public class ObjectiveAnalyzer {
                 game.getGameState(), game.getModifiersQuerying(),
                 candidate)) {
             return false;
+        }
+        if (isActorAtRelation(alternative)) {
+            return true;
         }
         Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
                 Boolean.TRUE.equals(
@@ -1242,8 +2619,10 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId,
             FlipLocationAlternative alternative) {
         int required = expectedCount(game, playerId, alternative.count);
+        String controller = resolveController(
+                game.getGameState(), playerId, alternative.controller);
         int qualified = countAlternativeMatches(
-                game, playerId, playerId, alternative);
+                game, playerId, controller, alternative);
         return qualified + 1 >= required
                 && opponentConstraintSatisfied(
                         game, playerId,
@@ -1254,7 +2633,7 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId, String controller,
             PhysicalCard location, String relation, String actorFilterKey,
             Boolean includeExcludedFromBattle) {
-        if (controller == null || location == null || relation == null) {
+        if (location == null || relation == null) {
             return false;
         }
         GameState gameState = game.getGameState();
@@ -1262,15 +2641,18 @@ public class ObjectiveAnalyzer {
                 Boolean.TRUE.equals(includeExcludedFromBattle)
                         ? SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE : null;
         if ("control".equals(relation)) {
+            if (controller == null) return false;
             return game.getModifiersQuerying().controlsLocation(
                     gameState, location, controller, overrides);
         }
         if ("occupy".equals(relation)) {
+            if (controller == null) return false;
             return game.getModifiersQuerying().occupiesLocation(
                     gameState, location, controller, overrides);
         }
         if ("controlWith".equals(relation)
                 || "occupyWith".equals(relation)) {
+            if (controller == null) return false;
             boolean relationSatisfied = "controlWith".equals(relation)
                     ? game.getModifiersQuerying().controlsLocation(
                             gameState, location, controller, overrides)
@@ -1282,7 +2664,13 @@ public class ObjectiveAnalyzer {
         }
         if ("presentAt".equals(relation)) {
             return hasMatchingActorAtLocation(
-                    game, controller, location, actorFilterKey);
+                    game, controller, location, actorFilterKey,
+                    includeExcludedFromBattle);
+        }
+        if ("at".equals(relation)) {
+            return hasMatchingActorAtLocation(
+                    game, controller, location, actorFilterKey,
+                    includeExcludedFromBattle, true);
         }
         return false;
     }
@@ -1372,6 +2760,15 @@ public class ObjectiveAnalyzer {
     private boolean hasMatchingActorAtLocation(
             SwccgGame game, String controller, PhysicalCard location,
             String actorFilterKey, Boolean includeExcludedFromBattle) {
+        return hasMatchingActorAtLocation(
+                game, controller, location, actorFilterKey,
+                includeExcludedFromBattle, false);
+    }
+
+    private boolean hasMatchingActorAtLocation(
+            SwccgGame game, String controller, PhysicalCard location,
+            String actorFilterKey, Boolean includeExcludedFromBattle,
+            boolean rulesAt) {
         com.gempukku.swccgo.filters.Filter actorFilter =
                 resolveFilter(actorFilterKey);
         if (actorFilter == null) return false;
@@ -1380,23 +2777,83 @@ public class ObjectiveAnalyzer {
         Collection<PhysicalCard> cards = gameState.getAllPermanentCards();
         if (cards == null) return false;
         for (PhysicalCard card : cards) {
-            if (card == null || !controller.equals(card.getOwner())
-                    || card.isUndercover()
+            if (card == null
+                    || controller != null
+                        && !controller.equals(card.getOwner())
+                    || !isActiveForSpot(
+                            game, card, includeExcludedFromBattle)
                     || !actorFilter.accepts(
                             gameState, game.getModifiersQuerying(), card)) {
                 continue;
             }
-            if (!Boolean.TRUE.equals(includeExcludedFromBattle)
-                    && gameState.isDuringBattle()
-                    && game.getModifiersQuerying().isExcludedFromBattle(
-                            gameState, card)) {
-                continue;
-            }
-            PhysicalCard actorLocation = game.getModifiersQuerying()
-                    .getLocationThatCardIsPresentAt(gameState, card);
+            PhysicalCard actorLocation = rulesAt
+                    ? game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                                gameState, card)
+                    : game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(
+                                gameState, card);
             if (samePhysicalLocation(actorLocation, location)) return true;
         }
         return false;
+    }
+
+    private static boolean isActorAtRelation(
+            FlipLocationAlternative alternative) {
+        return alternative != null
+                && ("presentAt".equals(alternative.relation)
+                    || "at".equals(alternative.relation));
+    }
+
+    private PhysicalCard actorLocationForAlternative(
+            SwccgGame game, PhysicalCard actor,
+            FlipLocationAlternative alternative) {
+        if (game == null || actor == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        return alternative != null
+                && "at".equals(alternative.relation)
+                ? game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                            game.getGameState(), actor)
+                : game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                            game.getGameState(), actor);
+    }
+
+    /**
+     * Mirrors the engine's ordinary active-card spotting semantics while
+     * allowing only the exact structured-rule override for exclusion from
+     * battle. Captive Fury's explicit participation modifier remains honored.
+     */
+    private boolean isActiveForSpot(
+            SwccgGame game, PhysicalCard card,
+            Boolean includeExcludedFromBattle) {
+        if (game == null || card == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            boolean captiveMayParticipate =
+                    game.getModifiersQuerying()
+                            .captiveMayParticipateInBattle(
+                                    gameState, card);
+            return gameState.isCardInPlayActive(
+                    card,
+                    Boolean.TRUE.equals(includeExcludedFromBattle),
+                    false,
+                    captiveMayParticipate,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private int expectedCount(
@@ -1492,6 +2949,7 @@ public class ObjectiveAnalyzer {
     // no rules (activeFlipLocationRules/activeActorLocationRules null → same result as the title overload).
     public boolean isObjectiveRelevantLocation(PhysicalCard loc, SwccgGame game, String playerId) {
         if (!analyzed || loc == null) return false;
+        if (hasPreFlipRuntimeActorRule()) return false;
         if (loc.getTitle() != null && isObjectiveRelevantLocation(loc.getTitle())) return true;
         if (game == null) return false;
         GameState gs = game.getGameState();
@@ -1792,11 +3250,22 @@ public class ObjectiveAnalyzer {
         }
 
         if (isFlipped) {
+            if (wouldRemovalTriggerOnTableFlipBack(
+                    game, playerId, candidate)) {
+                return FlipGateFormationRole
+                        .LAST_REQUIRED_ON_TABLE_ACTOR;
+            }
             return wouldDepartureTriggerFlipBack(game, playerId, candidate)
                     ? FlipGateFormationRole.LAST_FLIP_BACK_BLOCKER
                     : FlipGateFormationRole.NONE;
         }
 
+        FlipGateFormationRole runtimeActorRole =
+                classifyRuntimeActorIfRemoved(
+                        game, playerId, candidate);
+        if (runtimeActorRole != FlipGateFormationRole.NONE) {
+            return runtimeActorRole;
+        }
         if (hasCountedPreFlipActorRule()) {
             return classifyCountedGatePieceIfRemoved(
                     game, playerId, candidate);
@@ -1858,6 +3327,174 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return FlipGateFormationRole.NONE;
+    }
+
+    private FlipGateFormationRole classifyRuntimeActorIfRemoved(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null
+                    || activeFlipLocationRules == null) {
+                return FlipGateFormationRole.NONE;
+            }
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!isActorToRuntimeLocationAlternative(alternative)) {
+                        continue;
+                    }
+                    com.gempukku.swccgo.filters.Filter actorFilter =
+                            resolveFilter(alternative.actorFilterKey);
+                    String controller = resolveController(
+                            gameState, playerId, alternative.controller);
+                    if (actorFilter == null
+                            || controller != null
+                                && !controller.equals(
+                                        candidate.getOwner())
+                            || !actorFilter.accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
+                                    candidate)) {
+                        continue;
+                    }
+                    PhysicalCard location =
+                            actorLocationForAlternative(
+                                    game, candidate, alternative);
+                    if (!locationMatchesAlternative(
+                                gameState, game, playerId,
+                                location, alternative)
+                            || !relationSatisfiedAt(
+                                game, playerId, controller, location,
+                                alternative.relation,
+                                alternative.actorFilterKey,
+                                alternative.includeExcludedFromBattle)) {
+                        continue;
+                    }
+
+                    int required = expectedCount(
+                            game, playerId, alternative.count);
+                    int qualified = countAlternativeMatches(
+                            game, playerId, controller, alternative);
+                    boolean breaksLocation =
+                            !hasOtherMatchingActorAtLocation(
+                                    game, controller, location,
+                                    alternative, candidate);
+                    if (!breaksLocation
+                            || qualified - 1 >= required) {
+                        continue;
+                    }
+                    if ("anyOf".equals(rule.mode)
+                            && hasSatisfiedAlternativeOtherThan(
+                                    game, playerId, rule,
+                                    alternative)) {
+                        continue;
+                    }
+                    return FlipGateFormationRole.LAST_REQUIRED_ACTOR;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Runtime objective actor casualty assessment failed: {}",
+                    e.getMessage());
+        }
+        return FlipGateFormationRole.NONE;
+    }
+
+    private boolean wouldRemovalTriggerOnTableFlipBack(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null
+                    || activeFlipLocationRules == null) {
+                return false;
+            }
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (rule == null || !"postFlip".equals(rule.phase)
+                        || !"flipBack".equals(rule.purpose)
+                        || rule.alternatives == null
+                        || isRuleSatisfied(game, playerId, rule)) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!"onTable".equals(alternative.relation)
+                            || !"requiredActorMissing".equals(
+                                    alternative.scoreRole)
+                            || !candidateMatchesOnTableAlternative(
+                                    game, playerId, candidate,
+                                    alternative)) {
+                        continue;
+                    }
+                    String controller = resolveController(
+                            gameState, playerId,
+                            alternative.controller);
+                    int current = countAlternativeMatches(
+                            game, playerId, controller, alternative);
+                    boolean targetSatisfiedAfter = compareCounts(
+                            Math.max(0, current - 1),
+                            expectedCount(
+                                    game, playerId,
+                                    alternative.count),
+                            alternative.count != null
+                                    ? alternative.count.comparator : null);
+                    if (!targetSatisfiedAfter) continue;
+                    if ("anyOf".equals(rule.mode)) return true;
+
+                    boolean allSatisfiedAfter = true;
+                    for (FlipLocationAlternative other
+                            : rule.alternatives) {
+                        if (other == alternative) continue;
+                        if (!isFlipLocationAlternativeSatisfied(
+                                    game, playerId, other)) {
+                            allSatisfiedAfter = false;
+                            break;
+                        }
+                    }
+                    if (allSatisfiedAfter) return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "On-table objective actor casualty assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean candidateMatchesOnTableAlternative(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            FlipLocationAlternative alternative) {
+        GameState gameState = game.getGameState();
+        String controller = resolveController(
+                gameState, playerId, alternative.controller);
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(alternative.actorFilterKey);
+        if (actorFilter == null
+                || controller != null
+                    && !controller.equals(candidate.getOwner())
+                || !isActiveForSpot(
+                        game, candidate,
+                        alternative.includeExcludedFromBattle)
+                || !actorFilter.accepts(
+                        gameState, game.getModifiersQuerying(),
+                        candidate)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean hasSatisfiedAlternativeOtherThan(
+            SwccgGame game, String playerId, FlipLocationRule rule,
+            FlipLocationAlternative excluded) {
+        for (FlipLocationAlternative alternative : rule.alternatives) {
+            if (alternative != excluded
+                    && isFlipLocationAlternativeSatisfied(
+                            game, playerId, alternative)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private FlipGateFormationRole classifyCountedGatePieceIfRemoved(
@@ -2000,16 +3637,19 @@ public class ObjectiveAnalyzer {
         if (cards == null) return false;
         for (PhysicalCard card : cards) {
             if (card == null || card == excluded
-                    || !playerId.equals(card.getOwner())
-                    || card.isUndercover()
+                    || playerId != null
+                        && !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(
+                            game, card,
+                            alternative.includeExcludedFromBattle)
                     || !actorFilter.accepts(
                             game.getGameState(),
                             game.getModifiersQuerying(), card)) {
                 continue;
             }
-            PhysicalCard cardLocation = game.getModifiersQuerying()
-                    .getLocationThatCardIsPresentAt(
-                            game.getGameState(), card);
+            PhysicalCard cardLocation =
+                    actorLocationForAlternative(
+                            game, card, alternative);
             if (samePhysicalLocation(cardLocation, location)) return true;
         }
         return false;
@@ -2111,7 +3751,7 @@ public class ObjectiveAnalyzer {
                     resolveFilter(rule.actorFilterKey);
             if (actorFilter == null
                     || hasOtherMatchingActorOnPreFlipRoute(
-                            game, playerId, actor, actorFilter)) {
+                            game, playerId, actor, actorFilter, false)) {
                 return false;
             }
 
@@ -2618,8 +4258,8 @@ public class ObjectiveAnalyzer {
         RuleCount count;
     }
     static final class FlipLocationAlternative {
-        String relation;              // control | occupy | presentAt | controlWith | occupyWith
-        String controller;            // self | opponent
+        String relation;              // control | occupy | presentAt | onTable | controlWith | occupyWith
+        String controller;            // self | opponent | any
         String locationFilterKey;     // registry key or dynamic ref
         List<String> locationFragments;
         RuleCount count;
@@ -2799,6 +4439,16 @@ public class ObjectiveAnalyzer {
             case "senator":          return com.gempukku.swccgo.filters.Filters.senator;
             case "Neimoidian":       return com.gempukku.swccgo.filters.Filters.Neimoidian;
             case "Amidala":          return com.gempukku.swccgo.filters.Filters.Amidala;
+            case "Vader":             return com.gempukku.swccgo.filters.Filters.Vader;
+            case "Jedi_or_Luke":
+                return com.gempukku.swccgo.filters.Filters.or(
+                    com.gempukku.swccgo.filters.Filters.Jedi,
+                    com.gempukku.swccgo.filters.Filters.Luke);
+            case "Jedi_Padawan_or_Luke":
+                return com.gempukku.swccgo.filters.Filters.or(
+                    com.gempukku.swccgo.filters.Filters.Jedi,
+                    com.gempukku.swccgo.filters.Filters.padawan,
+                    com.gempukku.swccgo.filters.Filters.Luke);
             case "Rebel":             return com.gempukku.swccgo.filters.Filters.Rebel;
             case "Imperial":          return com.gempukku.swccgo.filters.Filters.Imperial;
             case "Phoenix_Squadron_character":
@@ -2838,6 +4488,7 @@ public class ObjectiveAnalyzer {
             case "Ralltiir_location":            return com.gempukku.swccgo.filters.Filters.Ralltiir_location;
             case "Lothal_location":              return com.gempukku.swccgo.filters.Filters.Lothal_location;
             case "Lothal_site":                  return com.gempukku.swccgo.filters.Filters.Lothal_site;
+            case "battleground_site":            return com.gempukku.swccgo.filters.Filters.battleground_site;
             case "Galactic_Senate":              return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
             case "Rebel_Base_location":          return com.gempukku.swccgo.filters.Filters.Rebel_Base_location;
             case "Wattos_Junkyard":              return com.gempukku.swccgo.filters.Filters.Wattos_Junkyard;
@@ -2917,6 +4568,15 @@ public class ObjectiveAnalyzer {
                                 + card.getTitle()
                                 + "' to stage its route to the flip gate"));
             }
+        }
+        if (analyzed && !isFlipped && isCharacter
+                && hasLegalPreFlipActorLocationDestination(
+                        game, playerId, card)) {
+            notes.add(new ScoreNote(
+                    600.0f,
+                    "OBJECTIVE ACTOR LOCATION: deploy '"
+                            + card.getTitle()
+                            + "' where it advances the live objective route"));
         }
 
         // My Lord DEPLOY magnitudes now read from the ACTIVE playbook (JSON-built when loaderEnabled, else the
@@ -3074,6 +4734,44 @@ public class ObjectiveAnalyzer {
 
     // V25: Hunt Down V accessors
     public boolean isHuntDownV() { return isHuntDownV; }
+    public boolean isClassicHuntDownObjective() {
+        return "7_297".equals(objectiveBlueprintId)
+                || "7_297_BACK".equals(objectiveBlueprintId);
+    }
+    public boolean isVirtualHuntDownObjective() {
+        return "213_31".equals(objectiveBlueprintId)
+                || "213_31_BACK".equals(objectiveBlueprintId);
+    }
+    public boolean hasClassicHuntDownMaulDuelException(
+            SwccgGame game, String playerId, PhysicalCard actionSource) {
+        if (!analyzed || !isClassicHuntDownObjective()
+                || game == null || playerId == null
+                || actionSource == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard objective = findOurObjective(
+                    gameState, playerId);
+            return objective != null
+                    && game.getModifiersQuerying()
+                        .hasGameTextModification(
+                            gameState, objective,
+                            ModifyGameTextType
+                                .HUNT_DOWN__DO_NOT_PLACE_OUT_OF_PLAY_IF_MAUL_DUELS)
+                    && Filters.or(
+                            Filters.Maul,
+                            Filters.Maul_Strikes)
+                        .accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            actionSource);
+        } catch (Exception e) {
+            return false;
+        }
+    }
     public boolean isShieldWillBeDown() { return isShieldWillBeDown; }
     public boolean huntDownNeedsVader() { return huntDownNeedsVader; }
     public boolean huntDownFlipBackNoVader() { return huntDownFlipBackNoVader; }
@@ -3181,33 +4879,61 @@ public class ObjectiveAnalyzer {
     }
 
     /**
+     * Uses the active playbook's rules-truth filter when a physical candidate
+     * is available. Objectives without a typed key-character filter retain
+     * the legacy strategy-token fallback.
+     */
+    public boolean isStrategyKeyCharacter(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (candidate == null || candidate.getBlueprint() == null
+                || candidate.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER) {
+            return false;
+        }
+        if (activePlaybook != null
+                && activePlaybook.keyCharacter != null) {
+            if (game == null || game.getGameState() == null
+                    || game.getModifiersQuerying() == null) {
+                return false;
+            }
+            try {
+                return activePlaybook.keyCharacter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        candidate);
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return isStrategyKeyCharacter(
+                game, playerId, candidate.getTitle());
+    }
+
+    public boolean hasTypedStrategyKeyCharacter() {
+        return activePlaybook != null
+                && activePlaybook.keyCharacter != null;
+    }
+
+    /**
      * V25: Check if Vader is currently on table for a player.
      */
     public boolean isVaderOnTable(GameState gameState, String playerId) {
         if (gameState == null || playerId == null) return false;
+        SwccgGame game = gameState.getGame();
+        if (game == null || game.getModifiersQuerying() == null) {
+            return false;
+        }
         for (PhysicalCard card : gameState.getAllPermanentCards()) {
             if (card == null) continue;
             if (!playerId.equals(card.getOwner())) continue;
-            Zone zone = card.getZone();
-            if (zone == null || !zone.isInPlay()) continue;
-            String title = card.getTitle();
-            if (title != null && title.toLowerCase(Locale.ROOT).contains("vader")
-                && card.getBlueprint() != null
-                && card.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+            if (isActiveForSpot(game, card, true)
+                    && Filters.Vader.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), card)) {
                 return true;
             }
         }
         return false;
-    }
-
-    /**
-     * V25: Check if a character card is Vader (any version).
-     */
-    public static boolean isVaderCard(SwccgCardBlueprint bp) {
-        if (bp == null) return false;
-        if (bp.getCardCategory() != CardCategory.CHARACTER) return false;
-        String title = bp.getTitle();
-        return title != null && title.toLowerCase(Locale.ROOT).contains("vader");
     }
 
     /**

@@ -242,6 +242,18 @@ public final class BattleActionTextPolicy {
                 "V35 VADER RECALL: Take Vader into hand — no clear target, keep him deployed");
     }
 
+    public static PolicyResult scoreVirtualVaderRecall(
+            BattleActionTextFacts.ActionFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        return oneWeapons(
+                facts.actionId(),
+                "OBJECTIVE.POST_FLIP.VIRTUAL_HUNT_VADER_RECALL_SAFE",
+                TraceOutputKind.VETO,
+                -100.0f,
+                "VIRTUAL HUNT DOWN RECALL: another Vader remains on table;"
+                        + " no tactical need to recall this one");
+    }
+
     public static PolicyResult scoreInquisitorRecall(
             BattleActionTextFacts.InquisitorRecallFacts facts) {
         Objects.requireNonNull(facts, "facts");

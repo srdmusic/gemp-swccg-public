@@ -43,7 +43,8 @@ public class MoveHuntGroupPolicyTest {
         harness.cardsAt(strong, allyTwo);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, vader, "MOVE TO STRONG CAMP", card -> false);
+                source, vader, "MOVE TO STRONG CAMP",
+                card -> card == vader);
 
         assertEquals(MoveHuntGroupPolicy.Branch.HUNTER_TOWARD_ALLIES,
                 result.branch());
@@ -69,7 +70,8 @@ public class MoveHuntGroupPolicyTest {
         harness.cardsAt(camp, ally);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, dooku, "move to camp", card -> false);
+                source, dooku, "move to camp",
+                card -> card == dooku);
 
         assertEquals(MoveHuntGroupPolicy.Branch.HUNTER_TOWARD_ALLIES,
                 result.branch());
@@ -91,7 +93,8 @@ public class MoveHuntGroupPolicyTest {
                 PLAYER, "Second Ally", 8.0f, Zone.AT_LOCATION, second));
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, hunter, "move to second camp", card -> false);
+                source, hunter, "move to second camp",
+                card -> card == hunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.HUNTER_AWAY_FROM_ALLIES,
                 result.branch());
@@ -114,7 +117,8 @@ public class MoveHuntGroupPolicyTest {
                 PLAYER, "Powerless Ally", null, Zone.AT_LOCATION, camp));
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, hunter, "move to camp", card -> false);
+                source, hunter, "move to camp",
+                card -> card == hunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.NONE, result.branch());
         assertFalse(result.contribution().applies());
@@ -136,7 +140,8 @@ public class MoveHuntGroupPolicyTest {
         harness.opponentPower(target, 1.0f);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, hunter, "move to target", card -> false);
+                source, hunter, "move to target",
+                card -> card == hunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.NONE, result.branch());
         assertTrue(result.huntingOpponents());
@@ -165,7 +170,8 @@ public class MoveHuntGroupPolicyTest {
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
                 source, hunter,
-                "move through first target to second target", card -> false);
+                "move through first target to second target",
+                card -> card == hunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.HUNTER_AWAY_FROM_ALLIES,
                 result.branch());
@@ -225,7 +231,8 @@ public class MoveHuntGroupPolicyTest {
         harness.permanents(hunter);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                hunterLocation, mover, "move elsewhere", card -> false);
+                hunterLocation, mover, "move elsewhere",
+                card -> card == hunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.ALLY_AWAY_FROM_HUNTER,
                 result.branch());
@@ -248,7 +255,8 @@ public class MoveHuntGroupPolicyTest {
         harness.permanents(hunter);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, mover, "move to hunter camp", card -> false);
+                source, mover, "move to hunter camp",
+                card -> card == hunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.ALLY_TOWARD_HUNTER,
                 result.branch());
@@ -272,7 +280,8 @@ public class MoveHuntGroupPolicyTest {
         harness.permanents(hunter);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, mover, "move somewhere else", card -> false);
+                source, mover, "move somewhere else",
+                card -> card == hunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.ALLY_ELSEWHERE,
                 result.branch());
@@ -295,7 +304,8 @@ public class MoveHuntGroupPolicyTest {
         harness.permanents(hunter);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                hunterLocation, mover, "move to hunter camp", card -> false);
+                hunterLocation, mover, "move to hunter camp",
+                card -> card == hunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.NONE, result.branch());
         assertFalse(result.contribution().applies());
@@ -317,7 +327,9 @@ public class MoveHuntGroupPolicyTest {
         harness.permanents(firstHunter, laterHunter);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, mover, "move to useful camp", card -> false);
+                source, mover, "move to useful camp",
+                card -> card == firstHunter
+                        || card == laterHunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.NONE, result.branch());
         assertFalse(result.contribution().applies());
@@ -347,11 +359,40 @@ public class MoveHuntGroupPolicyTest {
                 effectHunter, usableHunter);
 
         MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
-                source, mover, "move to hunter camp", card -> false);
+                source, mover, "move to hunter camp",
+                card -> card == opponentHunter
+                        || card == outOfPlayHunter
+                        || card == effectHunter
+                        || card == usableHunter);
 
         assertEquals(MoveHuntGroupPolicy.Branch.ALLY_TOWARD_HUNTER,
                 result.branch());
         assertSame(hunterLocation, result.anchorLocation());
+    }
+
+    @Test
+    public void vaderTitleImpostorDoesNotBecomeTheGroupAnchor() {
+        Harness harness = new Harness();
+        PhysicalCard source = location("Source");
+        PhysicalCard brokerLocation = location("Broker Camp");
+        PhysicalCard mover = character(
+                PLAYER, "Brother", 4.0f,
+                Zone.AT_LOCATION, source);
+        PhysicalCard broker = character(
+                PLAYER,
+                "Lando Calrissian, Vader's Broker",
+                3.0f, Zone.AT_LOCATION,
+                brokerLocation);
+        harness.permanents(broker);
+
+        MoveHuntGroupPolicy.Evaluation result = harness.evaluate(
+                source, mover, "move to broker camp",
+                card -> false);
+
+        assertEquals(
+                MoveHuntGroupPolicy.Branch.NONE,
+                result.branch());
+        assertFalse(result.contribution().applies());
     }
 
     private static PhysicalCard location(String title) {

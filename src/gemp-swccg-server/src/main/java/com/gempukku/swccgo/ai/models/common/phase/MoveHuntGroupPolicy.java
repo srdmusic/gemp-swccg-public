@@ -52,15 +52,11 @@ public final class MoveHuntGroupPolicy {
             PhysicalCard currentLocation, PhysicalCard cardToMove,
             String playerId, Supplier<String> actionTextSupplier,
             Predicate<PhysicalCard> darkJediClassifier) {
-        String movingCardTitle = cardToMove.getTitle()
-                .toLowerCase(Locale.ROOT);
-        boolean movingCardIsHunter = titleMarksHunter(movingCardTitle);
-        if (!movingCardIsHunter) {
-            try {
-                movingCardIsHunter = darkJediClassifier.test(cardToMove);
-            } catch (Exception e) {
-                // Preserve V137b's fail-open hunter classification.
-            }
+        boolean movingCardIsHunter = false;
+        try {
+            movingCardIsHunter = darkJediClassifier.test(cardToMove);
+        } catch (Exception e) {
+            // Preserve V137b's fail-open hunter classification.
         }
 
         String actionText = actionTextSupplier.get();
@@ -205,15 +201,11 @@ public final class MoveHuntGroupPolicy {
                             != CardCategory.CHARACTER) {
                 continue;
             }
-            String title = tableCard.getTitle() != null
-                    ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
-            boolean hunterAnchor = titleMarksHunter(title);
-            if (!hunterAnchor) {
-                try {
-                    hunterAnchor = darkJediClassifier.test(tableCard);
-                } catch (Exception e) {
-                    // Preserve V137b's fail-open anchor classification.
-                }
+            boolean hunterAnchor = false;
+            try {
+                hunterAnchor = darkJediClassifier.test(tableCard);
+            } catch (Exception e) {
+                // Preserve V137b's fail-open anchor classification.
             }
             if (hunterAnchor) {
                 hunterLocation = tableCard.getAtLocation();
@@ -270,9 +262,4 @@ public final class MoveHuntGroupPolicy {
         return Evaluation.none();
     }
 
-    private static boolean titleMarksHunter(String titleLower) {
-        return titleLower.contains("vader")
-                || titleLower.contains("tyranus")
-                || titleLower.contains("dooku");
-    }
 }

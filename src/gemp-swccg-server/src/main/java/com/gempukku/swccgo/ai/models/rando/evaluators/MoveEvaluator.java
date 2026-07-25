@@ -457,6 +457,66 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
             }
 
+            if (cardToMove != null && gameState != null
+                    && game != null && playerId != null
+                    && "docking bay transit".equals(
+                        actionLower.trim())) {
+                try {
+                    var objective =
+                            context.getObjectiveAnalyzer();
+                    if (objective != null
+                            && objective.isAnalyzed()) {
+                        var routes = objective
+                            .assessDockingBayTransitRoutes(
+                                game, playerId, cardToMove);
+                        boolean hasAdmissible = routes.stream()
+                            .anyMatch(route ->
+                                route.admissible());
+                        if (!routes.isEmpty()
+                                && !hasAdmissible) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason =
+                                "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_HOLD: no safe docking-bay transit route";
+                        } else {
+                            boolean actorAdvance =
+                                routes.stream().anyMatch(
+                                    route -> route.admissible()
+                                        && route
+                                            .objectiveAdvance());
+                            boolean blockerChase =
+                                !actorAdvance
+                                && routes.stream().anyMatch(
+                                    route -> route.admissible()
+                                        && route.blockerChase());
+                            MoveDestinationPolicy.Contribution
+                                objectiveTransit =
+                                    actorAdvance
+                                    ? MoveDestinationPolicy
+                                        .objectiveActorLocationStart(
+                                            true, "Vader")
+                                    : MoveDestinationPolicy
+                                        .objectiveBlockerChaseStart(
+                                            blockerChase, "Vader");
+                            if (objectiveTransit.applies()) {
+                                action.addReasoning(
+                                    objectiveTransit.reason(),
+                                    objectiveTransit.delta());
+                                ladderClaimR2(
+                                    actorAdvance
+                                        ? "OBJECTIVE ACTOR TRANSIT"
+                                        : "OBJECTIVE BLOCKER TRANSIT",
+                                    objectiveTransit.delta(),
+                                    0.0f, blockerChase);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.debug(
+                        "Objective docking-bay transit assessment failed: {}",
+                        e.getMessage());
+                }
+            }
+
             // A lone opponent undercover spy prevents our drain but is not a battle target.
             // Keep survival moves available, while blocking doctrine claims that would send
             // an ordinary character into that dead position instead of contesting elsewhere.
@@ -517,6 +577,8 @@ public class MoveEvaluator extends ActionEvaluator {
                             .getLocationThatCardIsPresentAt(
                                     gameState, cardToMove);
                     boolean safeAdvancingHop = false;
+                    boolean runtimeLocationHop = false;
+                    boolean runtimeBlockerChaseHop = false;
                     if (routeAnalyzer != null && routeAnalyzer.isAnalyzed()
                             && routeOrigin != null) {
                         com.gempukku.swccgo.filters.Filter
@@ -531,11 +593,28 @@ public class MoveEvaluator extends ActionEvaluator {
                                     || !legalLandspeedTarget.accepts(
                                         gameState,
                                         game.getModifiersQuerying(),
-                                        routeDestination)
-                                    || !routeAnalyzer
-                                        .advancesPreFlipActorRoute(
+                                        routeDestination)) {
+                                continue;
+                            }
+                            boolean actorRouteHop = routeAnalyzer
+                                    .advancesPreFlipActorRoute(
                                             game, playerId, cardToMove,
-                                            routeDestination)) {
+                                            routeDestination);
+                            boolean actorLocationHop = routeAnalyzer
+                                    .advancesPreFlipActorAtRuntimeLocation(
+                                            game, playerId, cardToMove,
+                                            routeDestination);
+                            boolean blockerChaseHop = routeAnalyzer
+                                    .qualifiesPreFlipRuntimeActorAtLocation(
+                                            game, playerId, cardToMove,
+                                            routeDestination)
+                                    && routeAnalyzer
+                                        .isPreFlipGlobalBlockerAt(
+                                            game, playerId,
+                                            routeDestination);
+                            if (!actorRouteHop
+                                    && !actorLocationHop
+                                    && !blockerChaseHop) {
                                 continue;
                             }
                             String routeVeto =
@@ -553,12 +632,26 @@ public class MoveEvaluator extends ActionEvaluator {
                             }
                             if (routeVeto == null) {
                                 safeAdvancingHop = true;
+                                runtimeLocationHop = actorLocationHop;
+                                runtimeBlockerChaseHop =
+                                        blockerChaseHop;
                                 break;
                             }
                         }
                     }
                     MoveDestinationPolicy.Contribution objectiveRoute =
-                            MoveDestinationPolicy.objectiveActorRouteStart(
+                            runtimeLocationHop
+                            ? MoveDestinationPolicy
+                                .objectiveActorLocationStart(
+                                    safeAdvancingHop,
+                                    cardToMove.getTitle())
+                            : runtimeBlockerChaseHop
+                            ? MoveDestinationPolicy
+                                .objectiveBlockerChaseStart(
+                                    safeAdvancingHop,
+                                    cardToMove.getTitle())
+                            : MoveDestinationPolicy
+                                .objectiveActorRouteStart(
                                     safeAdvancingHop,
                                     cardToMove.getTitle());
                     if (objectiveRoute.applies()) {
@@ -566,10 +659,14 @@ public class MoveEvaluator extends ActionEvaluator {
                                 objectiveRoute.reason(),
                                 objectiveRoute.delta());
                         ladderClaimR2(
-                                "OBJECTIVE ACTOR ROUTE",
+                                runtimeLocationHop
+                                    ? "OBJECTIVE ACTOR LOCATION"
+                                    : runtimeBlockerChaseHop
+                                    ? "OBJECTIVE BLOCKER CHASE"
+                                    : "OBJECTIVE ACTOR ROUTE",
                                 objectiveRoute.delta(), 0.0f, false);
                         logger.warn(
-                                "OBJECTIVE ACTOR ROUTE: {} has a safe closer landspeed hop",
+                                "OBJECTIVE ACTOR MOVE: {} has a safe objective landspeed hop",
                                 cardToMove.getTitle());
                     }
                 } catch (Exception e) {
@@ -969,6 +1066,65 @@ public class MoveEvaluator extends ActionEvaluator {
                                 countedHold.branch(), countedRole,
                                 (int) countedFriendlyPower,
                                 (int) countedOpponentPower);
+                        }
+                        boolean activeRuntimeActor =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && !gateAnalyzer.isFlipped()
+                                && gateAnalyzer
+                                    .hasPreFlipRuntimeActorRule();
+                        com.gempukku.swccgo.ai.models.common.strategy
+                                .ObjectiveAnalyzer.FlipGateFormationRole
+                                runtimeActorRole = activeRuntimeActor
+                                ? gateAnalyzer
+                                    .classifyGateFormationPieceIfRemoved(
+                                        game, playerId, cardToMove)
+                                : com.gempukku.swccgo.ai.models.common.strategy
+                                    .ObjectiveAnalyzer
+                                    .FlipGateFormationRole.NONE;
+                        float runtimeFriendlyPower = activeRuntimeActor
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        playerId, false, false)
+                                : 0.0f;
+                        String runtimeOpponent =
+                                gameState.getOpponent(playerId);
+                        float runtimeOpponentPower = activeRuntimeActor
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        runtimeOpponent, false, false)
+                                    + oppWeaponBonusAt(
+                                        gameState, currentLocation,
+                                        runtimeOpponent)
+                                : 0.0f;
+                        boolean safeRuntimeActorRelocation =
+                                activeRuntimeActor
+                                && actionLower.contains(
+                                    "move using landspeed")
+                                && gateAnalyzer
+                                    .hasSafePreFlipRuntimeActorLandspeedDestination(
+                                        game, playerId,
+                                        cardToMove);
+                        MoveObjectiveGateHoldPolicy.Evaluation runtimeHold =
+                                MoveObjectiveGateHoldPolicy
+                                    .evaluateRuntimeActorFormation(
+                                        activeRuntimeActor,
+                                        runtimeActorRole,
+                                        runtimeFriendlyPower,
+                                        runtimeOpponentPower,
+                                        safeRuntimeActorRelocation);
+                        if (runtimeHold.hardVeto()) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason =
+                                    runtimeHold.reason();
+                            logger.warn("OBJECTIVE RUNTIME ACTOR HOLD: {} at {} vetoed ({}, power={}/{})",
+                                cardToMove.getTitle(),
+                                currentLocation.getTitle(),
+                                runtimeActorRole,
+                                (int) runtimeFriendlyPower,
+                                (int) runtimeOpponentPower);
                         }
                         boolean departureTriggersFlipBack =
                                 gateAnalyzer != null
@@ -1534,9 +1690,12 @@ public class MoveEvaluator extends ActionEvaluator {
                                 () -> huntMoveAnalyzer != null
                                     && huntMoveAnalyzer.isAnalyzed()
                                     && huntMoveAnalyzer.isHuntDownV(),
-                                card -> com.gempukku.swccgo.filters.Filters.Dark_Jedi
+                                card -> com.gempukku.swccgo.filters.Filters.Vader
                                     .accepts(gameState, game.getModifiersQuerying(), card),
-                                MoveEvaluator::isJediOrPadawan,
+                                location -> huntMoveAnalyzer != null
+                                    && huntMoveAnalyzer
+                                        .isPreFlipGlobalBlockerAt(
+                                            game, playerId, location),
                                 (float) RandoConfig.SCORE_VADER_SEEK_JEDI);
                         if (huntTarget.contribution().applies()) {
                             action.addReasoning(
@@ -1754,7 +1913,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                         gameState, game, currentLocation,
                                         cardToMove, playerId,
                                         action::getDisplayText,
-                                        candidate -> com.gempukku.swccgo.filters.Filters.Dark_Jedi
+                                        candidate -> com.gempukku.swccgo.filters.Filters.Vader
                                             .accepts(gameState, game.getModifiersQuerying(), candidate));
                                 if (huntGroup.contribution().applies()) {
                                     action.addReasoning(

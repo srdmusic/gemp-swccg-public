@@ -16,6 +16,9 @@ public final class ControlDrainAssessment {
     private static final int LEGACY_CONTROLLED_BATTLEGROUND_BONUS = 20;
 
     public interface Facts {
+        default boolean classicHuntExecutorHardLoss() {
+            return false;
+        }
         Primary primary();
         boolean simpleTricksBlocks();
         Economy economy();
@@ -70,6 +73,19 @@ public final class ControlDrainAssessment {
         Objects.requireNonNull(actionId, "actionId");
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>();
+
+        if (facts.classicHuntExecutorHardLoss()) {
+            operations.add(PolicyOperation.hardVeto(
+                    actionId,
+                    TraceRuleId.of(
+                            "OBJECTIVE.HARD_LOSS.CLASSIC_HUNT_EXECUTOR_DRAIN"),
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.VETO,
+                    "CLASSIC HUNT DOWN HARD LOSS: initiating a Force drain"
+                            + " at an Executor site places the objective"
+                            + " out of play"));
+            return result(operations);
+        }
 
         Primary primary = facts.primary();
         if (primary != null) {

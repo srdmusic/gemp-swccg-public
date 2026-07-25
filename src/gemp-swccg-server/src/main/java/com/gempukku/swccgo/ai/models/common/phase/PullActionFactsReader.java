@@ -79,6 +79,12 @@ public final class PullActionFactsReader {
         String flipConditionText();
 
         Set<String> strategyCharacterTokens(SwccgGame game, String playerId);
+
+        boolean hasTypedStrategyKeyCharacter();
+
+        boolean isStrategyKeyCharacter(
+                SwccgGame game, String playerId,
+                PhysicalCard candidate);
     }
 
     public interface LateView {
@@ -341,7 +347,9 @@ public final class PullActionFactsReader {
         }
 
         try {
-            keyCharacter = keyCharacter(sourceTitle, targets, gameState, context);
+            keyCharacter = keyCharacter(
+                    sourceTitle, targets, sourceZone,
+                    gameState, context);
         } catch (Exception ignored) {
             keyCharacter = KeyCharacter.none();
         }
@@ -845,6 +853,7 @@ public final class PullActionFactsReader {
     private static KeyCharacter keyCharacter(
             String sourceTitle,
             List<String> targets,
+            Zone sourceZone,
             GameState gameState,
             Context context) {
         if (context == null || context.objective() == null
@@ -870,13 +879,52 @@ public final class PullActionFactsReader {
         if (token.isEmpty() || gameState == null) {
             return new KeyCharacter(token, false);
         }
+        boolean typedKeyRole =
+                context.objective().hasTypedStrategyKeyCharacter();
+        if (typedKeyRole) {
+            Zone candidateZone = sourceZone != null
+                    ? sourceZone : Zone.RESERVE_DECK;
+            boolean typedTargetExists = false;
+            Collection<PhysicalCard> pile =
+                    gameState.getCardPile(
+                            context.playerId(),
+                            candidateZone);
+            if (pile != null) {
+                for (PhysicalCard card : pile) {
+                    if (card == null || card.getTitle() == null
+                            || !matchesAnyTarget(
+                                card.getTitle()
+                                    .toLowerCase(Locale.ROOT),
+                                targets)) {
+                        continue;
+                    }
+                    if (context.objective()
+                            .isStrategyKeyCharacter(
+                                context.game(),
+                                context.playerId(),
+                                card)) {
+                        typedTargetExists = true;
+                        break;
+                    }
+                }
+            }
+            if (!typedTargetExists) {
+                return KeyCharacter.none();
+            }
+        }
         boolean filled = false;
         for (PhysicalCard card : gameState.getAllPermanentCards()) {
             if (!isFriendlyInPlayCharacter(card, context.playerId())
                     || card.getTitle() == null) {
                 continue;
             }
-            if (card.getTitle().toLowerCase(Locale.ROOT).contains(token)) {
+            boolean fillsSameRole = typedKeyRole
+                    ? context.objective().isStrategyKeyCharacter(
+                        context.game(), context.playerId(), card)
+                    : card.getTitle()
+                        .toLowerCase(Locale.ROOT)
+                        .contains(token);
+            if (fillsSameRole) {
                 filled = true;
                 break;
             }

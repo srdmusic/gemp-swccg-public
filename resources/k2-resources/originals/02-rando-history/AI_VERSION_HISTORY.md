@@ -8377,3 +8377,67 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     No engine or card Java changed. The JVM was not restarted, nothing was deployed or pushed, and
     no fresh live game was claimed. Revert the single We Have A Plan Batch Two commit; Regional
     Batch One, Invasion Batch Zero, and the objective source-audit commit remain independent.
+
+  ==== Hunt Down objective behavior Batch Three (2026-07-24) ====
+    Classic Card7_297 flips when any Vader is at any runtime battleground site and no opponent Jedi
+    or Luke is at any runtime battleground site. Its back flips when no Vader remains anywhere on
+    table or an opponent Jedi or Luke reaches any runtime battleground. Virtual Card213_031 adds
+    Padawan to the blocker set. All spots include cards excluded from battle, and neither version
+    requires Dark Side control of Vader's site.
+
+    Approved profiles 7_297 and 213_31 are loader-enabled with structured front allOf and back anyOf
+    rules plus exact setup identities. Shared analysis uses live battleground status, Vader persona,
+    controller-any actor scope, and opponent-only blockers. A missing Vader receives +400 on a
+    candidate pull, a legal parent deploy toward a runtime battleground receives +600, and the exact
+    destination receives +1000. V51 applies only when the complete objective would become satisfied.
+    The virtual objective's exact location-download parent action receives +300 only when Reserve
+    contains a source-legal Cloud City or Malachor battleground. Vader's Castle's Vader deploy
+    receives +550 only when the engine proves an exact Reserve Vader can legally deploy there at
+    ordinary cost; an unavailable or unaffordable candidate receives -500.
+
+    Ordinary movement rewards only a safe, engine-legal Vader route to a runtime battleground. Both
+    Formation Safety vetoes remain absolute. Vader's Castle uses live action-state provenance,
+    source blueprint 209_50, exact physical candidates, and the modifier-adjusted exact move cost.
+    Docking-bay transit carries the source and selected physical destination across the engine's
+    cancel-suffixed destination and mover prompts, chooses the objective-safe Vader route, holds a
+    sole required Vader when another traveler can move, and clears provenance after completion. A
+    post-flip Vader may leave the battleground while remaining on table because the back law requires
+    only on-table Vader.
+
+    Safe global blocker removal receives +250 within the existing predictor, effective-power,
+    low-Reserve, and V25 anti-suicide boundaries. Classic ignores Padawan; virtual includes Padawan
+    and alone receives the Inquisitor/Hatred battle heuristic. Force-loss, battle-forfeit, and exact
+    recall-target choices protect the last required Vader only when another legal choice exists.
+    Classic-only hard-loss guards veto Scanning Crew, non-Epic duel initiation, and Executor-site
+    Force drains, then reset when the objective leaves play.
+
+    Unchanged-engine tests execute both real setup sequences and both real front and back triggers.
+    Production CombinedEvaluator tests prove pull, deploy, exact Castle Force budgeting, landspeed,
+    docking transit, battle, Force loss, forfeit, recall, and hard-loss choices for both bots. Engine
+    tests prove remote blockers, the classic-versus-virtual Padawan split, Vader persona versus title
+    impostors, runtime battleground truth, controller-any scope, excluded-card inclusion, Vader
+    leaving table, the virtual location download, and the real Castle move without a false flip-back.
+
+    Card legality, trigger timing, once-per-game limits, and the classic four-Force recall cost remain
+    engine-owned. The AI consumes those legal actions and protects exact physical candidates without
+    duplicating engine or card Java.
+
+    Verification: independent review passed. The Hunt Down wildcard gate passed 77/0/0/0; the
+    corrected Castle, movement, and production decision gate passed 53/0/0/0; the exact full-reactor
+    failure regression passed 82/0/0/0; and the full reactor passed 2273/0/0/26 across 305 suites.
+    Exact normalized parity passed for all six bot evaluator pairs. JSON, diff, compile, AI-only
+    scope, and async package gates passed.
+
+    objective_playbooks.json is 176597 bytes with SHA-256
+    700f6c9c57b8a180dfb7b54994cd939440de14b63c600053b951acf536cd1d29 in source, the server jar,
+    and web.jar. Packaged server jar SHA-256 is
+    93d66a5c65696f88ad727a8e7eefc7244e3d3f7540ea65c20323196ee619f887; packaged web jar SHA-256
+    is 737b1460b04ad6d480bb9d9e02cf549d6aed131bc5de1223af576b6773a9bcbb. Both contain the shared
+    analyzer and hard-loss policy, both bot adapters, Castle and recall markers, and the complete
+    docking-transit provenance chain.
+
+    Card-source law, production decisions, real engine triggers, compilation, full regression, and
+    packaged-jar presence are complete. No engine or card Java changed. The JVM was not restarted,
+    nothing was deployed or pushed, and no fresh live game was claimed. Revert the single Hunt Down
+    Batch Three commit; We Have A Plan Batch Two and all earlier objective-audit commits remain
+    independent.

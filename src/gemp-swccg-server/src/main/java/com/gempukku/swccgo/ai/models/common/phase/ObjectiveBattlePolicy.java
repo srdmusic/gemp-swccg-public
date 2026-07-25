@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,6 +15,9 @@ public final class ObjectiveBattlePolicy {
     public static final String REQUIRED_LOCATION_CONTEST_RULE_ID =
             "BATTLE.OBJECTIVE.REQUIRED_LOCATION_CONTEST";
     public static final float REQUIRED_LOCATION_CONTEST_BONUS = 80.0f;
+    public static final String GLOBAL_BLOCKER_REMOVAL_RULE_ID =
+            "BATTLE.OBJECTIVE.GLOBAL_BLOCKER_REMOVAL";
+    public static final float GLOBAL_BLOCKER_REMOVAL_BONUS = 250.0f;
 
     private static final int MINIMUM_RESERVE = 3;
     private static final float MINIMUM_EFFECTIVE_DIFF = -2.0f;
@@ -24,6 +28,7 @@ public final class ObjectiveBattlePolicy {
             String actionId,
             boolean exactStructuredPreFlipTarget,
             boolean missingSelfControl,
+            boolean globalBlocker,
             boolean bothSidesPresent,
             boolean formationSafetyVeto,
             boolean predictorSafe,
@@ -33,6 +38,24 @@ public final class ObjectiveBattlePolicy {
             float theirPower) {
         public Facts {
             Objects.requireNonNull(actionId, "actionId");
+        }
+
+        public Facts(
+                String actionId,
+                boolean exactStructuredPreFlipTarget,
+                boolean missingSelfControl,
+                boolean bothSidesPresent,
+                boolean formationSafetyVeto,
+                boolean predictorSafe,
+                float effectiveDiff,
+                int reserveDeckSize,
+                float ourPower,
+                float theirPower) {
+            this(actionId, exactStructuredPreFlipTarget,
+                    missingSelfControl, false, bothSidesPresent,
+                    formationSafetyVeto, predictorSafe,
+                    effectiveDiff, reserveDeckSize, ourPower,
+                    theirPower);
         }
     }
 
@@ -48,9 +71,7 @@ public final class ObjectiveBattlePolicy {
         boolean reserveReady = facts.reserveDeckSize() >= MINIMUM_RESERVE
                 || rawOverpowerMargin >= OVERPOWER_MARGIN;
 
-        if (!facts.exactStructuredPreFlipTarget()
-                || !facts.missingSelfControl()
-                || !facts.bothSidesPresent()
+        if (!facts.bothSidesPresent()
                 || facts.formationSafetyVeto()
                 || !facts.predictorSafe()
                 || facts.effectiveDiff() < MINIMUM_EFFECTIVE_DIFF
@@ -59,14 +80,26 @@ public final class ObjectiveBattlePolicy {
             return new PolicyResult(PRODUCER, List.of());
         }
 
-        return new PolicyResult(
-                PRODUCER,
-                List.of(PolicyOperation.add(
-                        facts.actionId(),
-                        TraceRuleId.of(REQUIRED_LOCATION_CONTEST_RULE_ID),
-                        TraceDomainId.BATTLE_INITIATION,
-                        TraceOutputKind.BANDED,
-                        REQUIRED_LOCATION_CONTEST_BONUS,
-                        "Contest the exact unmet pre-flip objective control location")));
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (facts.exactStructuredPreFlipTarget()
+                && facts.missingSelfControl()) {
+            operations.add(PolicyOperation.add(
+                    facts.actionId(),
+                    TraceRuleId.of(REQUIRED_LOCATION_CONTEST_RULE_ID),
+                    TraceDomainId.BATTLE_INITIATION,
+                    TraceOutputKind.BANDED,
+                    REQUIRED_LOCATION_CONTEST_BONUS,
+                    "Contest the exact unmet pre-flip objective control location"));
+        }
+        if (facts.globalBlocker()) {
+            operations.add(PolicyOperation.add(
+                    facts.actionId(),
+                    TraceRuleId.of(GLOBAL_BLOCKER_REMOVAL_RULE_ID),
+                    TraceDomainId.BATTLE_INITIATION,
+                    TraceOutputKind.BANDED,
+                    GLOBAL_BLOCKER_REMOVAL_BONUS,
+                    "Remove an opponent actor blocking the objective at this battleground"));
+        }
+        return new PolicyResult(PRODUCER, operations);
     }
 }

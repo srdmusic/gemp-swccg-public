@@ -264,7 +264,9 @@ public abstract class DeployPhaseScript {
         if (cardIdStr != null && (txt.equals("deploy") || txt.equals("deploy a card"))) {
             PhysicalCard card = findCardByIdSafe(gameState, cardIdStr);
             if (card != null && card.getBlueprint() != null) {
-                Step s = stepForCard(card, keyCharTokens);
+                Step s = stepForCard(
+                        card, keyCharTokens,
+                        objectiveAnalyzer, game, playerId);
                 if (s != null) {
                     steps.add(s);
                     return steps;
@@ -282,7 +284,9 @@ public abstract class DeployPhaseScript {
                     if (hand != null) {
                         for (PhysicalCard hc : hand) {
                             if (hc == null || hc.getBlueprint() == null) continue;
-                            Step s = stepForCard(hc, keyCharTokens);
+                            Step s = stepForCard(
+                                    hc, keyCharTokens,
+                                    objectiveAnalyzer, game, playerId);
                             if (s != null) steps.add(s);
                         }
                     }
@@ -300,7 +304,9 @@ public abstract class DeployPhaseScript {
         if (bpId != null) {
             PhysicalCard bpCard = findCardByBlueprint(gameState, bpId);
             if (bpCard != null && bpCard.getBlueprint() != null) {
-                Step s = stepForCard(bpCard, keyCharTokens);
+                Step s = stepForCard(
+                        bpCard, keyCharTokens,
+                        objectiveAnalyzer, game, playerId);
                 if (s != null) steps.add(s);
             }
         }
@@ -355,13 +361,25 @@ public abstract class DeployPhaseScript {
     }
 
     /** Map a card's category → step bucket. Returns null for non-deploy categories. */
-    private Step stepForCard(PhysicalCard card, Set<String> keyCharTokens) {
+    private Step stepForCard(
+            PhysicalCard card, Set<String> keyCharTokens,
+            ObjectiveAnalyzer objectiveAnalyzer,
+            SwccgGame game, String playerId) {
         if (card == null || card.getBlueprint() == null) return null;
         CardCategory cat = card.getBlueprint().getCardCategory();
         if (cat == null) return null;
         switch (cat) {
             case LOCATION: return Step.LOCATIONS;
-            case CHARACTER:
+            case CHARACTER: {
+                boolean keyCharacter = objectiveAnalyzer != null
+                        ? objectiveAnalyzer.isStrategyKeyCharacter(
+                                game, playerId, card)
+                        : isKeyCharacter(
+                                card.getTitle(), keyCharTokens);
+                return keyCharacter
+                        ? Step.KEY_CHARACTERS
+                        : Step.OTHER_CHARACTERS;
+            }
             case STARSHIP:
             case VEHICLE:
             case CREATURE:

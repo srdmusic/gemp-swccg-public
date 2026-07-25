@@ -202,6 +202,17 @@ public final class PullSpecificActionPolicy {
         return result(operations);
     }
 
+    public static PolicyResult scoreHuntDownLocationDownload(
+            PullSpecificActionFacts.HuntDownLocationDownload facts) {
+        Objects.requireNonNull(facts, "facts");
+        return facts.targetAvailable()
+                ? one(facts.actionId(),
+                    "PULL.OBJECTIVE.HUNT_DOWN_LOCATION_DOWNLOAD",
+                    TraceOutputKind.ORDERING, 300.0f,
+                    "Use the objective action to deploy an eligible battleground site")
+                : empty();
+    }
+
     public static PolicyResult scoreReserveRisk(
             PullSpecificActionFacts.ReserveRisk facts) {
         Objects.requireNonNull(facts, "facts");

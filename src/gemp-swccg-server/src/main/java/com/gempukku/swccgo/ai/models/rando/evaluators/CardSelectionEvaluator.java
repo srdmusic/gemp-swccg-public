@@ -53,8 +53,11 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.logic.GameUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 // V295 RETIRED: import java.util.Random;
@@ -706,6 +709,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluatePilotSelection(context);
         } else if (textLower.contains("choose card to cancel")) {
             return evaluateCancelSelection(context);
+        } else if (isHuntDownVaderRecallTargetDecision(context)) {
+            return evaluateHuntDownVaderRecallTarget(context);
+        } else if (isHuntDownCastleMoveDecision(context)) {
+            return evaluateHuntDownCastleMove(context);
+        } else if (isObjectiveDockingTransitDecision(context)) {
+            return evaluateObjectiveDockingTransit(context);
         } else if (textLower.contains("move to,")
                    || textLower.contains("where to move")
                    || (textLower.contains("move") && textLower.contains("to")
@@ -1157,7 +1166,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     objectiveProgressDeployingCard, location);
                             logger.debug("V214 DEPLOY CHILD OBJECTIVE FACTS: outcome={} evidence={}",
                                 objectiveProgress.outcome(), objectiveProgress.evidence());
+                            boolean actorLocationProgress =
+                                    objectiveProgressAnalyzer
+                                            .advancesPreFlipActorAtRuntimeLocation(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location);
                             boolean countedProgress =
+                                    !actorLocationProgress
+                                    &&
                                     objectiveProgressAnalyzer
                                             .advancesPreFlipRequirementAt(
                                                 game, playerId,
@@ -1168,6 +1185,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     .scoreCountedObjectiveProgress(
                                         action.getActionId(),
                                         countedProgress));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreActorRuntimeLocation(
+                                        action.getActionId(),
+                                        actorLocationProgress));
                         }
 
                         // === V166 (Steve, 2026-06): CONTEST THE OPPONENT'S DRAIN by deploying to it ===
@@ -3172,7 +3194,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 if (deployingBlueprintId != null) {
                                     SwccgCardBlueprint deployBp = getBlueprintFromId(context, deployingBlueprintId);
                                     if (deployBp != null) {
-                                        deployingIsVader = com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.isVaderCard(deployBp);
+                                        deployingIsVader =
+                                            objectiveProgressDeployingCard != null
+                                                && com.gempukku.swccgo.filters
+                                                    .Filters.Vader.accepts(
+                                                    gameState,
+                                                    game.getModifiersQuerying(),
+                                                    objectiveProgressDeployingCard)
+                                            || objectiveProgressDeployingCard
+                                                == null
+                                                && deployBp.hasPersona(
+                                                    com.gempukku.swccgo.common
+                                                        .Persona.VADER);
                                         // Check if Inquisitor — they have "inquisitor" in title or characteristics
                                         String depTitle = deployBp.getTitle();
                                         String depGameText = deployBp.getGameText();
@@ -3189,10 +3222,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
 
                                 boolean v279HuntDownBattleground = false;
-                                if (deployingIsVader && blueprint != null) {
+                                if (deployingIsVader) {
                                     v279HuntDownBattleground =
-                                        blueprint.hasIcon(com.gempukku.swccgo.common.Icon.DARK_FORCE)
-                                            && blueprint.hasIcon(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
+                                        objectiveProgressDeployingCard != null
+                                            ? locObjAnalyzer
+                                                .advancesPreFlipActorAtRuntimeLocation(
+                                                    game, playerId,
+                                                    objectiveProgressDeployingCard,
+                                                    location)
+                                            : locObjAnalyzer
+                                                .isUnmetPreFlipRuntimeActorLocation(
+                                                    game, playerId,
+                                                    location);
                                 }
                                 DeployObjectiveSitingPolicy.HuntDownEvaluation v279HuntDown =
                                     DeployObjectiveSitingPolicy.evaluateHuntDownCharacter(
@@ -5376,6 +5417,487 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return oppTotal - ourTotal;
     }
 
+    private boolean isHuntDownVaderRecallTargetDecision(
+            DecisionContext context) {
+        if (context == null || context.getDecisionText() == null
+                || !"choose vader to take into hand".equalsIgnoreCase(
+                    context.getDecisionText().trim())
+                || context.getMin() != 1 || context.getMax() != 1
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null) {
+            return false;
+        }
+        try {
+            var actionState =
+                    context.getGameState().getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String sourceId = source != null
+                    ? source.getBlueprintId(true) : null;
+            String liveText = liveAction != null
+                    ? liveAction.getText() : null;
+            var objective = context.getObjectiveAnalyzer();
+            return "take vader into hand".equalsIgnoreCase(
+                        liveText != null ? liveText.trim() : "")
+                    && ("7_297".equals(sourceId)
+                        && objective.isClassicHuntDownObjective()
+                        || ("213_31".equals(sourceId)
+                            || "213_31_BACK".equals(sourceId))
+                        && objective.isVirtualHuntDownObjective());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private List<EvaluatedAction> evaluateHuntDownVaderRecallTarget(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        List<com.gempukku.swccgo.ai.models.common.strategy
+                .ObjectiveAnalyzer.HuntDownRecallTargetAssessment>
+                assessments = new ArrayList<>();
+        GameState gameState = context.getGameState();
+        SwccgGame game = context.getGame();
+        String playerId = context.getPlayerId();
+        var objective = context.getObjectiveAnalyzer();
+        boolean virtual = objective.isVirtualHuntDownObjective();
+        boolean hasSafeOfferedTarget = false;
+
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            String cardId = context.getCardIds().get(i);
+            com.gempukku.swccgo.ai.models.common.strategy
+                .ObjectiveAnalyzer.HuntDownRecallTargetAssessment
+                assessment = null;
+            try {
+                PhysicalCard candidate = gameState.findCardById(
+                        Integer.parseInt(cardId));
+                assessment = virtual
+                        ? objective
+                            .assessVirtualHuntDownVaderRecallTarget(
+                                game, playerId, candidate)
+                        : objective
+                            .assessClassicHuntDownVaderRecallTarget(
+                                game, playerId, candidate);
+            } catch (Exception ignored) {
+            }
+            assessments.add(assessment);
+            hasSafeOfferedTarget |= isCardSelectable(context, i)
+                    && assessment != null
+                    && assessment.applies()
+                    && assessment.safeTarget();
+        }
+
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    "Choose Vader recall target");
+            var assessment = assessments.get(i);
+            if (assessment != null && assessment.applies()) {
+                if (!assessment.safeTarget()
+                        && hasSafeOfferedTarget) {
+                    action.hardVeto(
+                        "OBJECTIVE.HUNT_DOWN.RECALL_TARGET_HOLD: preserve the required Vader");
+                } else if (assessment.preservesRequiredVader()) {
+                    action.addReasoning(
+                        "OBJECTIVE.HUNT_DOWN.RECALL_TARGET_SAFE: another required Vader remains",
+                        1000.0f);
+                } else if (assessment.remoteBlockerChase()) {
+                    action.addReasoning(
+                        "OBJECTIVE.HUNT_DOWN.RECALL_TARGET_CHASE: redeploy this Vader toward the remote blocker",
+                        600.0f);
+                }
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private boolean isHuntDownCastleMoveDecision(
+            DecisionContext context) {
+        if (context == null || context.getDecisionText() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !context.getObjectiveAnalyzer().isHuntDownV()
+                || context.getObjectiveAnalyzer().isFlipped()) {
+            return false;
+        }
+        String decision = context.getDecisionText().trim();
+        if (!"choose card to move from".equalsIgnoreCase(decision)
+                && !"choose card to move to".equalsIgnoreCase(decision)
+                && !decision.toLowerCase(Locale.ROOT)
+                    .startsWith("choose card to move to ")) {
+            return false;
+        }
+        try {
+            var actionState =
+                    context.getGameState().getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String liveText = liveAction != null
+                    ? liveAction.getText() : null;
+            return source != null
+                    && "209_50".equals(
+                        source.getBlueprintId(true))
+                    && ("move from here to other battleground site"
+                            .equalsIgnoreCase(
+                                liveText != null
+                                    ? liveText.trim() : "")
+                        || "move from other battleground site to here"
+                            .equalsIgnoreCase(
+                                liveText != null
+                                    ? liveText.trim() : ""));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private List<EvaluatedAction> evaluateHuntDownCastleMove(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        GameState gameState = context.getGameState();
+        var actionState = gameState.getTopGameTextActionState();
+        var liveAction = actionState.getGameTextAction();
+        PhysicalCard castle = liveAction.getActionSource();
+        String liveText = liveAction.getText() != null
+                ? liveAction.getText().trim() : "";
+        boolean outbound =
+                "move from here to other battleground site"
+                    .equalsIgnoreCase(liveText);
+        var objective = context.getObjectiveAnalyzer();
+        List<com.gempukku.swccgo.ai.models.common.strategy
+                .ObjectiveAnalyzer.VaderCastleRouteAssessment>
+                routes = objective.assessVaderCastleRoutes(
+                    context.getGame(), context.getPlayerId(),
+                    castle, outbound);
+        String decision = context.getDecisionText().trim();
+        boolean chooseOrigin =
+                "choose card to move from".equalsIgnoreCase(decision);
+        boolean chooseDestination =
+                "choose card to move to".equalsIgnoreCase(decision);
+        PhysicalCard finalDestination =
+                !chooseOrigin && !chooseDestination
+                ? resolveCastleFinalDestination(
+                        gameState, decision) : null;
+
+        List<Boolean> admissible = new ArrayList<>();
+        List<Boolean> preferred = new ArrayList<>();
+        boolean hasAdmissibleOffered = false;
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard candidate = null;
+            try {
+                candidate = gameState.findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            boolean candidateAdmissible = false;
+            boolean candidatePreferred = false;
+            for (var route : routes) {
+                boolean bound = chooseOrigin
+                        ? samePhysicalCard(
+                            route.origin(), candidate)
+                        : chooseDestination
+                            ? samePhysicalCard(
+                                route.destination(), candidate)
+                            : finalDestination != null
+                                && samePhysicalCard(
+                                    route.destination(),
+                                    finalDestination)
+                                && samePhysicalCard(
+                                    route.mover(), candidate);
+                if (!bound) continue;
+                candidateAdmissible |= route.admissible();
+                candidatePreferred |= route.objectiveSafe();
+            }
+            admissible.add(candidateAdmissible);
+            preferred.add(candidatePreferred);
+            hasAdmissibleOffered |= isCardSelectable(context, i)
+                    && candidateAdmissible;
+        }
+
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    "Choose Vader's Castle move");
+            if (preferred.get(i)) {
+                action.addReasoning(
+                    "OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE: safe route advances the battleground Vader leg",
+                    1000.0f);
+            } else if (!admissible.get(i)
+                    && (hasAdmissibleOffered
+                        || !routes.isEmpty())) {
+                action.hardVeto(
+                    "OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE_HOLD: choose a safe Castle route");
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private boolean isObjectiveDockingTransitDecision(
+            DecisionContext context) {
+        if (context == null || context.getDecisionText() == null
+                || context.getGameState() == null
+                || context.getGame() == null
+                || context.getObjectiveAnalyzer() == null
+                || !context.getObjectiveAnalyzer()
+                    .hasPreFlipRuntimeActorRule()) {
+            return false;
+        }
+        String decision = normalizeDockingTransitPrompt(
+                context.getDecisionText());
+        if (!"choose docking bay to transit to"
+                    .equalsIgnoreCase(decision)
+                && !decision.toLowerCase(Locale.ROOT)
+                    .startsWith(
+                        "choose cards to docking bay transit to ")) {
+            return false;
+        }
+        Object sourceId = context.getExtra(
+                com.gempukku.swccgo.ai.models.common.strategy
+                    .ObjectiveAnalyzer
+                    .DOCKING_TRANSIT_SOURCE_CARD_ID_EXTRA);
+        if (sourceId == null) return false;
+        try {
+            PhysicalCard source =
+                    context.getGameState().findCardById(
+                        Integer.parseInt(
+                            String.valueOf(sourceId)));
+            return source != null
+                    && Filters.docking_bay.accepts(
+                        context.getGameState(),
+                        context.getGame()
+                            .getModifiersQuerying(),
+                        source);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private List<EvaluatedAction>
+            evaluateObjectiveDockingTransit(
+                    DecisionContext context) {
+        List<EvaluatedAction> actions =
+                new ArrayList<>();
+        GameState gameState = context.getGameState();
+        String decision =
+                normalizeDockingTransitPrompt(
+                    context.getDecisionText());
+        boolean chooseDestination =
+                "choose docking bay to transit to"
+                    .equalsIgnoreCase(decision);
+        Object sourceId = context.getExtra(
+                com.gempukku.swccgo.ai.models.common.strategy
+                    .ObjectiveAnalyzer
+                    .DOCKING_TRANSIT_SOURCE_CARD_ID_EXTRA);
+        PhysicalCard source = null;
+        try {
+            source = gameState.findCardById(
+                    Integer.parseInt(
+                        String.valueOf(sourceId)));
+        } catch (Exception ignored) {
+        }
+        var objective = context.getObjectiveAnalyzer();
+        List<com.gempukku.swccgo.ai.models.common.strategy
+                .ObjectiveAnalyzer
+                .DockingBayTransitRouteAssessment>
+                routes = source != null
+                    ? objective.assessDockingBayTransitRoutes(
+                        context.getGame(),
+                        context.getPlayerId(), source)
+                    : List.of();
+        if (chooseDestination && routes.isEmpty()) {
+            return evaluateMoveDestination(context);
+        }
+        PhysicalCard finalDestination =
+                chooseDestination ? null
+                    : resolveDockingTransitDestination(
+                        context, decision);
+
+        for (int i = 0;
+                i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId =
+                    context.getCardIds().get(i);
+            PhysicalCard candidate = null;
+            try {
+                candidate = gameState.findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            boolean admissible = false;
+            boolean actorAdvance = false;
+            boolean blockerChase = false;
+            for (var route : routes) {
+                boolean bound = chooseDestination
+                        ? samePhysicalCard(
+                            route.destination(), candidate)
+                        : finalDestination != null
+                            && samePhysicalCard(
+                                route.destination(),
+                                finalDestination)
+                            && samePhysicalCard(
+                                route.mover(), candidate);
+                if (!bound || !route.admissible()) {
+                    continue;
+                }
+                admissible = true;
+                actorAdvance |=
+                        route.objectiveAdvance();
+                blockerChase |=
+                        route.blockerChase();
+            }
+
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    chooseDestination
+                        ? "Choose docking-bay transit destination"
+                        : "Choose docking-bay transit mover");
+            PhysicalCard destination =
+                    chooseDestination
+                        ? candidate : finalDestination;
+            String destinationTitle =
+                    destination != null
+                        ? destination.getTitle() : null;
+            String actorTitle =
+                    !chooseDestination && candidate != null
+                        ? candidate.getTitle() : "Vader";
+            MoveDestinationPolicy.Contribution
+                    objectiveMove = actorAdvance
+                        ? MoveDestinationPolicy
+                            .objectiveActorLocationDestination(
+                                true, actorTitle,
+                                destinationTitle)
+                        : MoveDestinationPolicy
+                            .objectiveBlockerChaseDestination(
+                                blockerChase, actorTitle,
+                                destinationTitle);
+            if (objectiveMove.applies()) {
+                action.addReasoning(
+                        objectiveMove.reason(),
+                        objectiveMove.delta());
+            } else if (admissible) {
+                action.addReasoning(
+                    "MOVE.OBJECTIVE.DOCKING_TRANSIT_SAFE_COMPLETION: finish the selected transit without breaking the flip formation",
+                    10.0f);
+            } else if (!admissible
+                    && !routes.isEmpty()) {
+                action.hardVeto(
+                    "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_HOLD: choose a safe docking-bay transit route");
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private String normalizeDockingTransitPrompt(
+            String decisionText) {
+        if (decisionText == null) return "";
+        String trimmed = decisionText.trim();
+        String suffix =
+                ", or click 'done' to cancel";
+        if (trimmed.toLowerCase(Locale.ROOT)
+                .endsWith(suffix)) {
+            return trimmed.substring(
+                    0, trimmed.length()
+                        - suffix.length()).trim();
+        }
+        return trimmed;
+    }
+
+    private PhysicalCard resolveDockingTransitDestination(
+            DecisionContext context,
+            String decisionText) {
+        GameState gameState = context != null
+                ? context.getGameState() : null;
+        if (gameState == null || decisionText == null) {
+            return null;
+        }
+        Object destinationId = context.getExtra(
+                com.gempukku.swccgo.ai.models.common.strategy
+                    .ObjectiveAnalyzer
+                    .DOCKING_TRANSIT_DESTINATION_CARD_ID_EXTRA);
+        if (destinationId != null) {
+            try {
+                PhysicalCard exact =
+                        gameState.findCardById(
+                            Integer.parseInt(
+                                String.valueOf(
+                                    destinationId)));
+                if (exact != null) return exact;
+            } catch (Exception ignored) {
+            }
+        }
+        PhysicalCard resolved = null;
+        Collection<PhysicalCard> locations =
+                gameState.getTopLocations();
+        if (locations == null) return null;
+        for (PhysicalCard location : locations) {
+            if (location == null) continue;
+            try {
+                String exactPrompt =
+                        "Choose cards to docking bay transit to "
+                        + GameUtils.getCardLink(location);
+                if (!exactPrompt.equalsIgnoreCase(
+                        decisionText.trim())) {
+                    continue;
+                }
+                if (resolved != null
+                        && !samePhysicalCard(
+                            resolved, location)) {
+                    return null;
+                }
+                resolved = location;
+            } catch (Exception ignored) {
+            }
+        }
+        return resolved;
+    }
+
+    private PhysicalCard resolveCastleFinalDestination(
+            GameState gameState, String decisionText) {
+        if (gameState == null || decisionText == null) return null;
+        PhysicalCard resolved = null;
+        List<PhysicalCard> locations =
+                gameState.getLocationsInOrder();
+        if (locations == null) return null;
+        for (PhysicalCard location : locations) {
+            if (location == null) continue;
+            try {
+                String exactPrompt = "Choose card to move to "
+                        + GameUtils.getCardLink(location);
+                if (!exactPrompt.equalsIgnoreCase(
+                        decisionText.trim())) {
+                    continue;
+                }
+                if (resolved != null
+                        && !samePhysicalCard(
+                            resolved, location)) {
+                    return null;
+                }
+                resolved = location;
+            } catch (Exception ignored) {
+            }
+        }
+        return resolved;
+    }
+
+    private boolean samePhysicalCard(
+            PhysicalCard first, PhysicalCard second) {
+        if (first == null || second == null) return false;
+        if (first == second) return true;
+        int firstId = first.getPermanentCardId();
+        int secondId = second.getPermanentCardId();
+        return firstId > 0 && firstId == secondId;
+    }
+
     private List<EvaluatedAction> evaluateMoveDestination(DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
         GameState gameState = context.getGameState();
@@ -5500,7 +6022,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 }
             } catch (Exception e) { /* partial info — no veto */ }
         }
-
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
@@ -5578,12 +6099,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         }
 
                         boolean objectiveActorRouteDestination = false;
+                        boolean objectiveActorLocationDestination = false;
                         if (fsMover != null && fsOrigin != null
                                 && game != null && playerId != null) {
                             try {
-                                com.gempukku.swccgo.ai.models.rando.strategy
-                                    .ObjectiveAnalyzer routeAnalyzer =
-                                        context.getObjectiveAnalyzer();
+                                var routeAnalyzer =
+                                    context.getObjectiveAnalyzer();
                                 objectiveActorRouteDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -5591,6 +6112,66 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .advancesPreFlipActorRoute(
                                             game, playerId, fsMover,
                                             location);
+                                objectiveActorLocationDestination =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .advancesPreFlipActorAtRuntimeLocation(
+                                            game, playerId, fsMover,
+                                            location);
+                                boolean preservesRuntimeActor =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .qualifiesPreFlipRuntimeActorAtLocation(
+                                            game, playerId, fsMover,
+                                            location);
+                                boolean objectiveBlockerChaseDestination =
+                                    !objectiveActorLocationDestination
+                                    && preservesRuntimeActor
+                                    && routeAnalyzer
+                                        .isPreFlipGlobalBlockerAt(
+                                            game, playerId, location);
+                                if (routeAnalyzer != null
+                                        && routeAnalyzer.isAnalyzed()
+                                        && context.getDecisionText() != null
+                                        && context.getDecisionText()
+                                            .toLowerCase(Locale.ROOT)
+                                            .contains("using landspeed")
+                                        && routeAnalyzer
+                                            .classifyGateFormationPieceIfRemoved(
+                                                game, playerId, fsMover)
+                                            == com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .ObjectiveAnalyzer
+                                                .FlipGateFormationRole
+                                                .LAST_REQUIRED_ACTOR
+                                        && !preservesRuntimeActor) {
+                                    String opponent =
+                                        gameState.getOpponent(playerId);
+                                    float friendlyPower =
+                                        game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, fsOrigin,
+                                                playerId, false, false);
+                                    float opponentPower = opponent != null
+                                        ? game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, fsOrigin,
+                                                opponent, false, false)
+                                            + com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .FormationSafety
+                                                .weaponBonusAt(
+                                                    gameState, fsOrigin,
+                                                    opponent)
+                                        : 0.0f;
+                                    if (opponentPower
+                                            <= friendlyPower + 6.0f) {
+                                        action.hardVeto(
+                                            "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_DESTINATION_HOLD: Vader must remain at a battleground site");
+                                    }
+                                }
                                 MoveDestinationPolicy.Contribution
                                     objectiveRoute =
                                         MoveDestinationPolicy
@@ -5603,6 +6184,34 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         objectiveRoute.delta());
                                     logger.warn(
                                         "OBJECTIVE ACTOR ROUTE DEST: {} to {} +1000",
+                                        fsMover.getTitle(), title);
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    objectiveActorLocation =
+                                        MoveDestinationPolicy
+                                            .objectiveActorLocationDestination(
+                                                objectiveActorLocationDestination,
+                                                fsMover.getTitle(), title);
+                                if (objectiveActorLocation.applies()) {
+                                    action.addReasoning(
+                                        objectiveActorLocation.reason(),
+                                        objectiveActorLocation.delta());
+                                    logger.warn(
+                                        "OBJECTIVE ACTOR LOCATION DEST: {} to {} +1000",
+                                        fsMover.getTitle(), title);
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    objectiveBlockerChase =
+                                        MoveDestinationPolicy
+                                            .objectiveBlockerChaseDestination(
+                                                objectiveBlockerChaseDestination,
+                                                fsMover.getTitle(), title);
+                                if (objectiveBlockerChase.applies()) {
+                                    action.addReasoning(
+                                        objectiveBlockerChase.reason(),
+                                        objectiveBlockerChase.delta());
+                                    logger.warn(
+                                        "OBJECTIVE BLOCKER CHASE DEST: {} to {} +1000",
                                         fsMover.getTitle(), title);
                                 }
                             } catch (Exception e) {
@@ -6356,7 +6965,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 v67zNonMapuzoBG || v67zTransitHub,
                                                 MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat),
                                                 v156JoinMode && v156DestFriendlyChars > 0,
-                                                objectiveActorRouteDestination);
+                                                objectiveActorRouteDestination
+                                                    || objectiveActorLocationDestination);
                                         if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.HIDDEN_PATH_EXEMPT) {
                                             logger.info("V67z HIDDEN PATH {} EXEMPT: {} on Hidden Path — V41 WRONG DIRECTION skipped",
@@ -7404,6 +8014,38 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      * Used when selecting from Reserve Deck (e.g., deploying shields via starting effect).
      * Uses DeployPhasePlanner when available to select cards that fit the deployment plan.
      */
+    private boolean isVaderCastleReserveSelection(
+            DecisionContext context, String textLower) {
+        if (context == null || textLower == null
+                || !"choose card to deploy from reserve deck"
+                        .equals(textLower.trim())
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !context.getObjectiveAnalyzer().isHuntDownV()) {
+            return false;
+        }
+        try {
+            var state =
+                    context.getGameState()
+                        .getTopGameTextActionState();
+            var liveAction = state != null
+                    ? state.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            return source != null
+                    && "209_50".equals(
+                        source.getBlueprintId(true))
+                    && "deploy vader from reserve deck"
+                        .equalsIgnoreCase(
+                            actionText != null
+                                ? actionText.trim() : "");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private List<EvaluatedAction> evaluateReserveDeckSelection(DecisionContext context, String textLower) {
         List<EvaluatedAction> actions = new ArrayList<>();
         String decisionId = context.getDecisionId();
@@ -7418,6 +8060,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         Side side = context.getSide();
         String playerId = context.getPlayerId();
         int turnNumber = context.getTurnNumber();
+        boolean castleVaderSelection =
+                isVaderCastleReserveSelection(
+                        context, textLower);
+        List<com.gempukku.swccgo.ai.models.common.strategy
+                .ObjectiveAnalyzer.VaderCastleDeployCandidateAssessment>
+                castleAssessments = new ArrayList<>();
+        boolean hasCastleMoveCandidate = false;
+        if (castleVaderSelection) {
+            for (int i = 0; i < blueprints.size(); i++) {
+                var assessment = context.getObjectiveAnalyzer()
+                        .assessVaderCastleDeployCandidate(
+                                game, playerId,
+                                blueprints.get(i));
+                castleAssessments.add(assessment);
+                hasCastleMoveCandidate |=
+                        isCardSelectable(context, i)
+                        && assessment.preservesMoveCost();
+            }
+        }
 
         logger.info("[CardSelectionEvaluator] Evaluating Reserve Deck selection: {}", textLower);
 
@@ -7463,6 +8124,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 50.0f,
                 "Deploy " + (cardTitle != null ? cardTitle : blueprintId)
             );
+            if (castleVaderSelection) {
+                var assessment = castleAssessments.get(i);
+                if (assessment.preservesMoveCost()) {
+                    action.addReasoning(
+                        "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE: this Vader preserves the exact outbound move cost",
+                        1000.0f);
+                } else if (hasCastleMoveCandidate) {
+                    action.hardVeto(
+                        "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE_HOLD: choose the Vader that preserves the outbound move");
+                } else if (assessment.legalDeploy()) {
+                    action.addReasoning(
+                        "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE_DEPLOY_ONLY: legal Vader, but no offered candidate preserves the move",
+                        250.0f);
+                } else {
+                    action.hardVeto(
+                        "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE_ILLEGAL: offered blueprint no longer has a legal Castle deploy");
+                }
+            }
             PullDeployCandidatePolicy.Evaluation pullCandidate =
                     PullDeployCandidatePolicy.evaluate(
                             PullPolicyAdapter.readDeployCandidate(

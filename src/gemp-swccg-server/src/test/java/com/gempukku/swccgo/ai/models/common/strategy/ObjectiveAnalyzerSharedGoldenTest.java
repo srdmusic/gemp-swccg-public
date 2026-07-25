@@ -198,8 +198,8 @@ public class ObjectiveAnalyzerSharedGoldenTest {
             loaderEnabled.setAccessible(true);
             if (Boolean.TRUE.equals(loaderEnabled.get(profile))) enabled++;
         }
-        assertEquals(16, enabled);
-        assertEquals(42, profiles.size() - enabled);
+        assertEquals(18, enabled);
+        assertEquals(40, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

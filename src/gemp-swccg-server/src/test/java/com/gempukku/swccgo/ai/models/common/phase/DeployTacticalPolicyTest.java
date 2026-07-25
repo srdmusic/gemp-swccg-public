@@ -221,7 +221,7 @@ public class DeployTacticalPolicyTest {
     }
 
     @Test
-    public void v51VaderFlipRequiresAnOpponentSite() {
+    public void v51VaderFlipRequiresAllLiveConditions() {
         assertEmpty(DeployTacticalPolicy.scoreV51VaderFlip(
                 new DeployTacticalPolicy.VaderFlipFacts(
                         "deploy-42", "Cloud City: Guest Quarters", false)));
@@ -229,7 +229,7 @@ public class DeployTacticalPolicyTest {
                         new DeployTacticalPolicy.VaderFlipFacts(
                                 "deploy-42", "Cloud City: Guest Quarters", true)),
                 "V51", 900.0f,
-                "V51 VADER FLIP: Deploy Vader to Cloud City: Guest Quarters — FLIPS OBJECTIVE IMMEDIATELY!");
+                "V51 VADER FLIP: Deploy Vader to Cloud City: Guest Quarters, all live flip conditions are met");
     }
 
     @Test

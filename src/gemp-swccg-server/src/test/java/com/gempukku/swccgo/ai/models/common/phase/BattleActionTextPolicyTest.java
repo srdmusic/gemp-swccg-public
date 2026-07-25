@@ -208,13 +208,25 @@ public class BattleActionTextPolicyTest {
     @Test
     public void recallsAndStunningLeaderRetainThresholds() {
         assertOperation(onlyWeapons(BattleActionTextPolicy.scoreVaderRecall(
-                new BattleActionTextFacts.VaderRecallFacts("recall", true))),
+                new BattleActionTextFacts.VaderRecallFacts(
+                        "recall", true))),
                 "V35-vader-recall-jedi", 300.0f,
                 "V35 VADER RECALL: Take Vader into hand — Jedi elsewhere to hunt! Redeploy!");
         assertOperation(onlyWeapons(BattleActionTextPolicy.scoreVaderRecall(
-                new BattleActionTextFacts.VaderRecallFacts("recall", false))),
+                new BattleActionTextFacts.VaderRecallFacts(
+                        "recall", false))),
                 "V35-vader-recall-save", -100.0f,
                 "V35 VADER RECALL: Take Vader into hand — no clear target, keep him deployed");
+        assertOperation(onlyWeapons(
+                        BattleActionTextPolicy
+                                .scoreVirtualVaderRecall(
+                                    new BattleActionTextFacts
+                                                .ActionFacts(
+                                                        "virtual-recall"))),
+                "OBJECTIVE.POST_FLIP.VIRTUAL_HUNT_VADER_RECALL_SAFE",
+                -100.0f,
+                "VIRTUAL HUNT DOWN RECALL: another Vader remains on table;"
+                        + " no tactical need to recall this one");
         assertOperation(onlyWeapons(BattleActionTextPolicy.scoreInquisitorRecall(
                 new BattleActionTextFacts.InquisitorRecallFacts("recall", true))),
                 "V35.1-inquisitor-recall-block", -400.0f,

@@ -11,7 +11,8 @@ public class ControlDrainFactsTest {
     @Test
     public void absentStockGameObjectsFailClosedWithoutInventingFacts() {
         ControlDrainFacts facts = new ControlDrainFacts(
-                null, null, "player", null, 4, () -> true, () -> true);
+                null, null, "player", null, 4,
+                () -> true, () -> true, () -> true);
 
         assertNull(facts.primary());
         assertFalse(facts.simpleTricksBlocks());
@@ -20,6 +21,7 @@ public class ControlDrainFactsTest {
         assertEquals(0, economy.forceAvailable());
         assertFalse(economy.hasDeployableCard());
         assertFalse(facts.battleOrderCostWaived());
+        assertFalse(facts.classicHuntExecutorHardLoss());
         assertNull(facts.battleOrderDrainValue());
         assertNull(facts.multiDrain());
         ControlDrainAssessment.HuntDown huntDown = facts.huntDown();

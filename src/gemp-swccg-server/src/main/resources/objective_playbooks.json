@@ -3277,6 +3277,7 @@
     },
     {
       "label": "Hunt Down And Destroy The Jedi",
+      "loaderEnabled": true,
       "blueprintIds": [
         "7_297",
         "7_297_BACK"
@@ -3290,12 +3291,115 @@
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
-      "startingEffects": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "4_161"
+          ],
+          "titleFragments": [
+            "executor: holotheatre"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "4_163"
+          ],
+          "titleFragments": [
+            "executor: meditation chamber"
+          ]
+        }
+      ],
+      "startingEffects": [
+        {
+          "blueprintIds": [
+            "4_135"
+          ],
+          "titleFragments": [
+            "visage of the emperor"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "5_129"
+          ],
+          "titleFragments": [
+            "epic duel"
+          ]
+        }
+      ],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
+      "keyCharacterFilter": "Vader",
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "hunt-down-classic-front",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "any",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Vader",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "actorToLocation",
+              "sourceText": "Vader at a battleground site"
+            },
+            {
+              "relation": "at",
+              "controller": "opponent",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Jedi_or_Luke",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerAbsent",
+              "sourceText": "no opponent Jedi or Luke at any battleground site"
+            }
+          ]
+        },
+        {
+          "id": "hunt-down-classic-back",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Vader",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "requiredActorMissing",
+              "sourceText": "Vader is not on table"
+            },
+            {
+              "relation": "at",
+              "controller": "opponent",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Jedi_or_Luke",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerPresent",
+              "sourceText": "opponent has a Jedi or Luke at a battleground site"
+            }
+          ]
+        }
+      ],
       "frontBp": "7_297",
       "backBp": "7_297_BACK",
       "abbreviation": "HDADTJ",
@@ -5170,6 +5274,7 @@
     },
     {
       "label": "Hunt Down And Destroy The Jedi",
+      "loaderEnabled": true,
       "blueprintIds": [
         "213_31",
         "213_31_BACK"
@@ -5183,12 +5288,111 @@
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
-      "startingEffects": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "209_50"
+          ],
+          "titleFragments": [
+            "mustafar: vader's castle"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "217_15",
+            "5_168",
+            "5_169",
+            "5_170",
+            "5_171",
+            "5_172",
+            "5_173"
+          ],
+          "titleFragments": []
+        }
+      ],
+      "startingEffects": [
+        {
+          "blueprintIds": [
+            "213_16"
+          ],
+          "titleFragments": [
+            "visage of the emperor"
+          ]
+        }
+      ],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
+      "keyCharacterFilter": "Vader",
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "hunt-down-v-front",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "any",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Vader",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "actorToLocation",
+              "sourceText": "Vader at a battleground site"
+            },
+            {
+              "relation": "at",
+              "controller": "opponent",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Jedi_Padawan_or_Luke",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerAbsent",
+              "sourceText": "no opponent Jedi, Padawan, or Luke at any battleground site"
+            }
+          ]
+        },
+        {
+          "id": "hunt-down-v-back",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Vader",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "requiredActorMissing",
+              "sourceText": "Vader is not on table"
+            },
+            {
+              "relation": "at",
+              "controller": "opponent",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Jedi_Padawan_or_Luke",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerPresent",
+              "sourceText": "opponent has a Jedi, Padawan, or Luke at a battleground site"
+            }
+          ]
+        }
+      ],
       "frontBp": "213_31",
       "backBp": "213_31_BACK",
       "abbreviation": "HDADTJ",

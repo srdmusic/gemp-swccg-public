@@ -53,6 +53,8 @@ public final class DeployActionTextFacts {
             boolean objectiveAnalyzed,
             boolean huntDownVActive,
             boolean vaderOnTable,
+            boolean legalVaderDeploy,
+            boolean preservesCastleMoveForce,
             int forceAvailable) {
 
         public VaderCastleFacts {

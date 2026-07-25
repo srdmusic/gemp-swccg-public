@@ -207,9 +207,9 @@ public final class DeployTacticalPolicy {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
 
-        if (facts.opponentSite()) {
+        if (facts.completesObjective()) {
             add(operations, facts.actionId(), "V51", 900.0f, String.format(
-                    "V51 VADER FLIP: Deploy Vader to %s — FLIPS OBJECTIVE IMMEDIATELY!",
+                    "V51 VADER FLIP: Deploy Vader to %s, all live flip conditions are met",
                     facts.locationTitle()));
         }
 
@@ -800,7 +800,7 @@ public final class DeployTacticalPolicy {
     }
 
     public record VaderFlipFacts(String actionId, String locationTitle,
-                                 boolean opponentSite) {
+                                 boolean completesObjective) {
         public VaderFlipFacts {
             Objects.requireNonNull(actionId, "actionId");
             locationTitle = locationTitle == null ? "" : locationTitle;

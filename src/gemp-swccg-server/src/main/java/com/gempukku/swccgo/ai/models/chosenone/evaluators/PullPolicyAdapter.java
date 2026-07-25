@@ -13,6 +13,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 
@@ -142,6 +143,19 @@ final class PullPolicyAdapter {
             public Set<String> strategyCharacterTokens(
                     SwccgGame game, String playerId) {
                 return objective.getStrategyCharacterTokens(game, playerId);
+            }
+
+            @Override
+            public boolean hasTypedStrategyKeyCharacter() {
+                return objective.hasTypedStrategyKeyCharacter();
+            }
+
+            @Override
+            public boolean isStrategyKeyCharacter(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+                return objective.isStrategyKeyCharacter(
+                        game, playerId, candidate);
             }
         };
     }

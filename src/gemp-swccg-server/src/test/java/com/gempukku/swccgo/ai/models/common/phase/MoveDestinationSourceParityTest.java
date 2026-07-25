@@ -200,7 +200,7 @@ public class MoveDestinationSourceParityTest {
     }
 
     @Test
-    public void objectiveActorRouteUsesOneAnalyzerFactAndSharedScores()
+    public void objectiveActorRoutesUseOneAnalyzerFactAndSharedScores()
             throws IOException {
         String move = evaluatorSource("rando");
         String destination = moveDestinationBlock(
@@ -212,15 +212,29 @@ public class MoveDestinationSourceParityTest {
         assertEquals(1, countOccurrences(
                 destination, ".advancesPreFlipActorRoute("));
         assertEquals(1, countOccurrences(
+                move, ".advancesPreFlipActorAtRuntimeLocation("));
+        assertEquals(1, countOccurrences(
+                destination, ".advancesPreFlipActorAtRuntimeLocation("));
+        assertEquals(1, countOccurrences(
                 move,
-                "MoveDestinationPolicy.objectiveActorRouteStart("));
+                ".objectiveActorRouteStart("));
+        assertEquals(2, countOccurrences(
+                move,
+                ".objectiveActorLocationStart("));
         assertEquals(1, countOccurrences(
                 destination,
                 ".objectiveActorRouteDestination("));
+        assertEquals(1, countOccurrences(
+                destination,
+                ".objectiveActorLocationDestination("));
         assertTrue(policy.contains(
                 "public static Contribution objectiveActorRouteStart("));
         assertTrue(policy.contains(
                 "public static Contribution objectiveActorRouteDestination("));
+        assertTrue(policy.contains(
+                "public static Contribution objectiveActorLocationStart("));
+        assertTrue(policy.contains(
+                "public static Contribution objectiveActorLocationDestination("));
         assertTrue(policy.contains("OBJECTIVE_ROUTE_EXEMPT"));
     }
 
@@ -234,32 +248,44 @@ public class MoveDestinationSourceParityTest {
                 ".vetoMoveDestination(", parentFact);
         int parentOriginVeto = move.indexOf(
                 ".vetoMoveOrigin(", parentDestinationVeto);
-        int parentScore = move.indexOf(
-                "MoveDestinationPolicy.objectiveActorRouteStart(",
+        int parentRouteScore = move.indexOf(
+                ".objectiveActorRouteStart(",
+                parentOriginVeto);
+        int parentLocationScore = move.indexOf(
+                ".objectiveActorLocationStart(",
                 parentOriginVeto);
         int parentClaim = move.indexOf(
-                "ladderClaimR2(", parentScore);
+                "ladderClaimR2(", parentLocationScore);
 
         assertTrue(parentFact >= 0);
         assertTrue(parentDestinationVeto > parentFact);
         assertTrue(parentOriginVeto > parentDestinationVeto);
-        assertTrue(parentScore > parentOriginVeto);
-        assertTrue(parentClaim > parentScore);
+        assertTrue(parentRouteScore > parentOriginVeto);
+        assertTrue(parentLocationScore > parentOriginVeto);
+        assertTrue(parentClaim > parentRouteScore);
+        assertTrue(parentClaim > parentLocationScore);
 
         String destination = moveDestinationBlock(
                 cardSelectionSource("rando"));
         int childHardVeto = destination.indexOf("action.hardVeto(");
         int childFact = destination.indexOf(
                 ".advancesPreFlipActorRoute(", childHardVeto);
-        int childScore = destination.indexOf(
+        int childLocationFact = destination.indexOf(
+                ".advancesPreFlipActorAtRuntimeLocation(", childFact);
+        int childRouteScore = destination.indexOf(
                 ".objectiveActorRouteDestination(", childFact);
+        int childLocationScore = destination.indexOf(
+                ".objectiveActorLocationDestination(", childRouteScore);
         int wrongDirection = destination.indexOf(
-                "MoveDestinationPolicy.wrongDirection(", childScore);
+                "MoveDestinationPolicy.wrongDirection(",
+                childLocationScore);
 
         assertTrue(childHardVeto >= 0);
         assertTrue(childFact > childHardVeto);
-        assertTrue(childScore > childFact);
-        assertTrue(wrongDirection > childScore);
+        assertTrue(childLocationFact > childFact);
+        assertTrue(childRouteScore > childLocationFact);
+        assertTrue(childLocationScore > childRouteScore);
+        assertTrue(wrongDirection > childLocationScore);
     }
 
     @Test

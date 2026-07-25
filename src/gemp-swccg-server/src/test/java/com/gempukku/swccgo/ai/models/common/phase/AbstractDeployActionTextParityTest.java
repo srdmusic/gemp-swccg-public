@@ -18,8 +18,8 @@ public abstract class AbstractDeployActionTextParityTest {
     public void simpleDeployRoutesRetainLegacyScoresAndReasons() {
         assertScore("Use game text: Deploy docking bay", 200.0f,
                 "V29.7 FIRST DOCKING BAY");
-        assertScore("Deploy Vader from Reserve Deck", 50.0f,
-                "Deploy Vader from reserve");
+        assertScore("Deploy Vader from Reserve Deck", 150.0f,
+                "V192 PULL SCORER");
         assertScore("Cloud City: Dining Room: Deploy Lando from Reserve Deck",
                 -20.0f, "V29.6 Dining Room: Lando alone");
         assertScore("Reveal pilot or Star Destroyer from hand", 300.0f,

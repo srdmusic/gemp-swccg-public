@@ -95,6 +95,13 @@ public final class PullSpecificActionFacts {
         }
     }
 
+    public record HuntDownLocationDownload(
+            String actionId, boolean targetAvailable) {
+        public HuntDownLocationDownload {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
     public record ReserveRisk(String actionId, int reserveSize) {
         public ReserveRisk {
             Objects.requireNonNull(actionId, "actionId");

@@ -100,6 +100,19 @@ public final class DeployObjectiveSitingPolicy {
                         "Deploy here to advance a missing counted-objective location"));
     }
 
+    public static PolicyResult scoreActorRuntimeLocation(
+            String actionId, boolean advancesActorLocation) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!advancesActorLocation) {
+            return new PolicyResult(
+                    "DEPLOY_ACTOR_RUNTIME_LOCATION_POLICY", List.of());
+        }
+        return single("DEPLOY_ACTOR_RUNTIME_LOCATION_POLICY",
+                add(actionId, "DEPLOY.OBJECTIVE.ACTOR_RUNTIME_LOCATION",
+                        TraceOutputKind.BANDED, 1000.0f,
+                        "Deploy the required actor to a live qualifying objective location"));
+    }
+
     public static PolicyResult scoreActorRouteStaging(
             String actionId,
             boolean stagesActorRoute,
@@ -239,7 +252,8 @@ public final class DeployObjectiveSitingPolicy {
                     TraceOutputKind.BANDED, score,
                     "V25 HUNT DOWN: DEPLOY VADER! Critical for flip!"
                             + (facts.battleground()
-                                    ? " BATTLEGROUND = CAN FLIP!" : ""));
+                                    ? " LIVE BATTLEGROUND = ADVANCES FLIP!"
+                                    : ""));
             outcome = HuntDownOutcome.VADER;
         } else if (!facts.vaderOnTable() && facts.preFlip()) {
             if (facts.inquisitor()) {

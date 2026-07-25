@@ -250,6 +250,21 @@ public class DeployEvaluator extends ActionEvaluator {
         if (vaderCheckGs != null && vaderCheckGame != null) {
             try {
                 String vPlayerId = context.getPlayerId();
+                var v48Objective = context.getObjectiveAnalyzer();
+                boolean v48HuntActorRoute =
+                    v48Objective != null
+                    && v48Objective.isAnalyzed()
+                    && v48Objective.isHuntDownV()
+                    && v48Objective.hasPreFlipRuntimeActorRule();
+                if (v48HuntActorRoute) {
+                    vaderMoveReserve =
+                        v48Objective.getVaderCastleOutboundMoveReserve(
+                            vaderCheckGame, vPlayerId);
+                    if (vaderMoveReserve > 0) {
+                        LOG.warn("V48 VADER MOVE RESERVE: legal Vader's Castle outbound route needs {} Force",
+                            vaderMoveReserve);
+                    }
+                }
                 // V79: track Verge of Greatness + Death Star state across the same scan
                 boolean v79VergeActive = false;
                 PhysicalCard v79DeathStar = null;
@@ -286,27 +301,6 @@ public class DeployEvaluator extends ActionEvaluator {
                         if (dsOrbited != null && dsOrbited.toLowerCase(Locale.ROOT).contains("scarif")) {
                             v79DeathStarAtScarif = true;
                         }
-                    }
-                    if (pTitle.contains("vader") && pCard.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                        PhysicalCard vaderLoc = pCard.getAtLocation();
-                        if (vaderLoc != null) {
-                            // Check if there are opponents at Vader's current location
-                            String vOppId = vaderCheckGame.getOpponent(vPlayerId);
-                            boolean opponentsHere = false;
-                            try {
-                                float oppPower = vaderCheckGame.getModifiersQuerying().getTotalPowerAtLocation(
-                                    vaderCheckGs, vaderLoc, vOppId, false, false);
-                                opponentsHere = (oppPower > 0);
-                            } catch (Exception e) { /* ignore */ }
-
-                            if (!opponentsHere) {
-                                // Vader is at a location with no opponents — needs to MOVE to fight
-                                vaderMoveReserve = 2; // Reserve 2 force for movement (1-2 sites)
-                                LOG.warn("V48 VADER MOVE RESERVE: Vader at {} with no opponents — reserving {} force for move!",
-                                    vaderLoc.getTitle(), vaderMoveReserve);
-                            }
-                        }
-                        // Don't break — let V79 scan continue
                     }
                 }
                 // V79: if Verge of Greatness + Death Star not yet at Scarif, reserve 1 Force
@@ -1793,8 +1787,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     if (c == null || !playerId.equals(c.getOwner())) continue;
                                     if (c.getBlueprint() == null) continue;
                                     if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                    String cTitle = c.getTitle() != null ? c.getTitle().toLowerCase(Locale.ROOT) : "";
-                                    if (cTitle.contains("vader")) vaderHere = true;
+                                    if (isVader(game, gameState, c)) {
+                                        vaderHere = true;
+                                    }
                                     Float cAb = c.getBlueprint().getAbility();
                                     float cAbVal = cAb != null ? cAb : 0;
                                     allyAbilityHere += cAbVal;
@@ -1902,9 +1897,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     if (vz == null || !vz.isInPlay()) continue;
                                     if (tableCard.getBlueprint() == null
                                         || tableCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                    String vTitle = tableCard.getTitle() != null
-                                        ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
-                                    if (vTitle.contains("vader")) {
+                                    if (isVader(
+                                            game, gameState,
+                                            tableCard)) {
                                         vaderLoc = tableCard.getAtLocation();
                                         if (vaderLoc != null && vaderLoc.getTitle() != null) {
                                             vaderLocTitle = vaderLoc.getTitle().toLowerCase(Locale.ROOT);
@@ -1919,9 +1914,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     boolean deploysToVaderLoc = actionTextLower.contains(vaderLocTitle);
 
                                     // Also check: is card being deployed NOT Vader himself?
-                                    String deployCardTitle = card.getTitle() != null
-                                        ? card.getTitle().toLowerCase(Locale.ROOT) : "";
-                                    boolean isNotVader = !deployCardTitle.contains("vader");
+                                    boolean isNotVader =
+                                        !isVader(game, gameState, card);
 
                                     float oppAtVaderLoc = 0;
                                     boolean isObjRelevant = false;
@@ -2080,48 +2074,45 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === V51: VADER AGGRESSIVE FLIP — Deploy Vader from hand to opponent battleground ===
-                    // If Hunt Down V objective is NOT flipped AND Vader is in hand, deploying
-                    // Vader to ANY opponent's battleground site immediately flips the objective.
-                    // This is THE highest priority play — Steve does this Turn 1 every game.
-                    if (blueprint.getCardCategory() == CardCategory.CHARACTER && actionLower.contains("vader")
+                    // === V51: VADER AGGRESSIVE FLIP ===
+                    // The bonus applies only when the exact deployment satisfies every
+                    // source-backed live flip condition.
+                    if (blueprint.getCardCategory() == CardCategory.CHARACTER
+                        && isVader(game, gameState, card)
                         && !actionLower.contains("bounty") && !actionLower.contains("lightsaber")
                         && gameState != null && game != null) {
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer vaderFlipAnalyzer =
                             context.getObjectiveAnalyzer();
                         if (vaderFlipAnalyzer != null && vaderFlipAnalyzer.isAnalyzed()
                             && vaderFlipAnalyzer.isHuntDownV() && !vaderFlipAnalyzer.isFlipped()) {
-                            // Hunt Down not flipped — check if deploying to opponent's battleground
                             String vfPid = context.getPlayerId();
-                            String vfOid = game.getOpponent(vfPid);
+                            PhysicalCard vfTarget = null;
                             for (PhysicalCard vfLoc : gameState.getTopLocations()) {
                                 if (vfLoc == null || vfLoc.getTitle() == null) continue;
                                 String vfLocLower = vfLoc.getTitle().toLowerCase(Locale.ROOT);
                                 if (!actionLower.contains(vfLocLower)) continue;
-                                // Check if it's an opponent's location with their presence or their icons
+                                if (vfTarget == null
+                                        || vfLoc.getTitle().length()
+                                            > vfTarget.getTitle().length()) {
+                                    vfTarget = vfLoc;
+                                }
+                            }
+                            if (vfTarget != null) {
                                 try {
-                                    float vfOppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                        gameState, vfLoc, vfOid, false, false);
-                                    com.gempukku.swccgo.game.SwccgCardBlueprint vfLocBp = vfLoc.getBlueprint();
-                                    boolean isOpponentSite = false;
-                                    if (vfLocBp != null) {
-                                        com.gempukku.swccgo.common.Side oppSide = (context.getSide() == com.gempukku.swccgo.common.Side.DARK)
-                                            ? com.gempukku.swccgo.common.Side.LIGHT : com.gempukku.swccgo.common.Side.DARK;
-                                        int oppIcons = (oppSide == com.gempukku.swccgo.common.Side.DARK)
-                                            ? vfLocBp.getIconCount(com.gempukku.swccgo.common.Icon.DARK_FORCE)
-                                            : vfLocBp.getIconCount(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
-                                        if (oppIcons > 0 || vfOppPower > 0) isOpponentSite = true;
-                                    }
+                                    boolean completesObjective =
+                                        vaderFlipAnalyzer
+                                            .wouldCompletePreFlipRequirementAt(
+                                                game, vfPid, card, vfTarget);
                                     PolicyResult vaderFlip = DeployTacticalPolicy.scoreV51VaderFlip(
                                         new DeployTacticalPolicy.VaderFlipFacts(
-                                            actionId, vfLoc.getTitle(), isOpponentSite));
+                                            actionId, vfTarget.getTitle(),
+                                            completesObjective));
                                     applySharedPolicy(action, decisionId, actionId,
                                         "deploy-vader-flip", vaderFlip);
                                     if (!vaderFlip.operations().isEmpty()) {
-                                        LOG.warn("V51 VADER FLIP: Vader to {} — Hunt Down flips! +900", vfLoc.getTitle());
+                                        LOG.warn("V51 VADER FLIP: Vader to {}, all live Hunt Down conditions met (+900)", vfTarget.getTitle());
                                     }
                                 } catch (Exception e) { /* ignore */ }
-                                break;
                             }
                         }
                     }
@@ -2190,14 +2181,31 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
 
                                     // V35: Check for Jedi at this location — Vader/Inquisitor bonuses
-                                    boolean v35JediHere = false;
+                                    com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer
+                                        v35Objective =
+                                            context.getObjectiveAnalyzer();
+                                    boolean v35UsesObjectiveBlocker =
+                                        v35Objective != null
+                                        && v35Objective.isAnalyzed()
+                                        && v35Objective.isHuntDownV()
+                                        && !v35Objective.isFlipped();
+                                    boolean v35JediHere =
+                                        v35UsesObjectiveBlocker
+                                        && v35Objective
+                                            .isPreFlipGlobalBlockerAt(
+                                                game, playerId,
+                                                locCard);
                                     boolean v35HatredHere = false;
                                     try {
                                         for (PhysicalCard lc : gameState.getCardsAtLocation(locCard)) {
                                             if (lc == null) continue;
                                             String lcTitle = lc.getTitle() != null ? lc.getTitle().toLowerCase(Locale.ROOT) : "";
                                             if (opponentIdDeploy.equals(lc.getOwner())) {
-                                                if (isJediOrPadawan(lcTitle)) v35JediHere = true;
+                                                if (!v35UsesObjectiveBlocker
+                                                        && isJediOrPadawan(
+                                                            lcTitle)) {
+                                                    v35JediHere = true;
+                                                }
                                                 java.util.List<PhysicalCard> stacked = gameState.getStackedCards(lc);
                                                 if (stacked != null && !stacked.isEmpty()) v35HatredHere = true;
                                             }
@@ -2205,7 +2213,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     } catch (Exception e) { /* ignore */ }
 
                                     String deployCardLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
-                                    if (v35JediHere && deployCardLower.contains("vader")) {
+                                    boolean deploysVader =
+                                        isVader(game, gameState, card);
+                                    if (v35JediHere && deploysVader) {
                                         // V35.8: Raised from +350 to +600 — killing Jedi is THE objective
                                         // of Hunt Down. Opponent loses extra Force when Jedi dies.
                                         LOG.warn("V35.8 HUNT JEDI DEPLOY: Vader to {} with JEDI! (+600)",
@@ -2224,7 +2234,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                             new DeployTacticalPolicy.DirectEngageFacts(
                                                 actionId, card.getTitle(), locCard.getTitle(),
                                                 oppPowerHere, v35JediHere, v35HatredHere,
-                                                deployCardLower.contains("vader"),
+                                                deploysVader,
                                                 isInquisitor(deployCardLower),
                                                 (float) RandoConfig.SCORE_INQUISITOR_HATRED_SYNERGY));
                                     applySharedPolicy(action, decisionId, actionId,
@@ -2325,7 +2335,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     String cardTitleLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
                     boolean eliteCharacter = category == CardCategory.CHARACTER
                             && gameState != null && game != null
-                            && (cardTitleLower.contains("vader")
+                            && (isVader(game, gameState, card)
                             || cardTitleLower.contains("emperor")
                             || cardTitleLower.contains("palpatine"));
                     // === V40: POSITIVE DEPLOY BONUSES ===
@@ -2847,30 +2857,55 @@ public class DeployEvaluator extends ActionEvaluator {
                         try {
                             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer akObj =
                                 context.getObjectiveAnalyzer();
-                            if (akObj.isStrategyKeyCharacter(game, context.getPlayerId(), card.getTitle())) {
+                            if (akObj.isStrategyKeyCharacter(
+                                    game, context.getPlayerId(), card)) {
+                                boolean typedKeyRole =
+                                        akObj.hasTypedStrategyKeyCharacter();
+                                java.util.Set<String> candidateTokens =
+                                        new java.util.HashSet<>();
+                                if (!typedKeyRole) {
+                                    String candidateTitle =
+                                            card.getTitle()
+                                                .toLowerCase(Locale.ROOT);
+                                    for (String token
+                                            : akObj
+                                                .getStrategyCharacterTokens(
+                                                    game,
+                                                    context
+                                                        .getPlayerId())) {
+                                        if (token != null
+                                                && candidateTitle
+                                                    .contains(token)) {
+                                            candidateTokens.add(token);
+                                        }
+                                    }
+                                }
                                 // Check the matched token is NOT already on table as a card
                                 // that satisfies the same key-character role.
-                                String akCardTitleLower = card.getTitle().toLowerCase(Locale.ROOT);
                                 boolean alreadyOnTable = false;
                                 for (PhysicalCard exist : gameState.getAllPermanentCards()) {
-                                    if (exist == null || exist.getBlueprint() == null) continue;
+                                    if (exist == null
+                                            || exist.getBlueprint() == null
+                                            || exist.getTitle() == null) continue;
                                     if (!context.getPlayerId().equals(exist.getOwner())) continue;
                                     com.gempukku.swccgo.common.Zone ez = exist.getZone();
                                     if (ez == null || !ez.isInPlay()) continue;
                                     if (exist.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                    String et = exist.getTitle();
-                                    if (et == null) continue;
-                                    String etLower = et.toLowerCase(Locale.ROOT);
-                                    // Persona-style match: any strategy token that appears in
-                                    // BOTH the candidate card's title AND an existing-on-table
-                                    // card's title means the role is already filled.
-                                    for (String tok : akObj.getStrategyCharacterTokens(game, context.getPlayerId())) {
-                                        if (akCardTitleLower.contains(tok) && etLower.contains(tok)) {
-                                            alreadyOnTable = true;
-                                            break;
-                                        }
+                                    boolean fillsSameRole = typedKeyRole
+                                            ? akObj.isStrategyKeyCharacter(
+                                                game,
+                                                context.getPlayerId(),
+                                                exist)
+                                            : candidateTokens.stream()
+                                                .anyMatch(token ->
+                                                    exist.getTitle()
+                                                        .toLowerCase(
+                                                            Locale.ROOT)
+                                                        .contains(token));
+                                    if (fillsSameRole) {
+                                        alreadyOnTable = true;
+                                        break;
                                     }
-                                    if (alreadyOnTable) break;
                                 }
                                 if (!alreadyOnTable) {
                                     applySharedPolicy(action, decisionId, actionId,
@@ -4556,6 +4591,24 @@ public class DeployEvaluator extends ActionEvaluator {
                         ? owner : decisionId + "-" + owner) + "-" + actionId);
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private static boolean isVader(
+            SwccgGame game, GameState gameState,
+            PhysicalCard card) {
+        if (game == null || gameState == null || card == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            return com.gempukku.swccgo.filters.Filters.Vader
+                    .accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            card);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
