@@ -58,10 +58,10 @@ public class Card501_212 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (TriggerConditions.isEndOfEachTurn(game, effectResult)) {
-            int battlegroundsYouOccupy = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.battleground, Filters.occupies(playerId))).size();
-            int battlegroundsOpponentOccupies = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.battleground, Filters.occupies(opponent))).size();
+            int battlegroundSitesYouOccupy = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.battleground_site, Filters.occupies(playerId))).size();
+            int battlegroundSitesOpponentOccupies = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.battleground_site, Filters.occupies(opponent))).size();
 
-            if (battlegroundsYouOccupy > battlegroundsOpponentOccupies) {
+            if (battlegroundSitesYouOccupy > battlegroundSitesOpponentOccupies) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText(opponent + " loses 1 Force");
                 // Perform result(s)
