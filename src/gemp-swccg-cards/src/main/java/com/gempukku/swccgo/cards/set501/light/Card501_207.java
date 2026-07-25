@@ -40,7 +40,7 @@ public class Card501_207 extends AbstractNormalEffect {
     public Card501_207() {
         super(Side.LIGHT, 1, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Do, Or Do Not & Wise Advice", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         addComboCardTitles(Title.Do_Or_Do_Not, Title.Wise_Advice);
-        setGameText("Deploy on table. Sense and Alter are Lost Interrupts. When any player makes a destiny draw for Sense or Alter, and that destiny draw is successful, that player loses 2 Force (may not be reduced). Grogu and [Dagobah] Luke are Padawans. Yoda and Padawans deploy -1 (except to Lothal) and are immune to Imperial Barrier. If your Padawan about to leave table, may lose 1 Force to place your cards on them in Used Pile. [Immune to Alter.]");
+        setGameText("Deploy on table. Sense and Alter are Lost Interrupts. When any player makes a destiny draw for Sense or Alter, and that destiny draw is successful, that player loses 2 Force (may not be reduced). May [download] Bog Clearing. [Dagobah] Luke is a Padawan. Yoda and Padawans are immune to Imperial Barrier and Stunning Leader and may move for free using landspeed. Once per game, may deploy Anakin's Lightsaber from Lost Pile. [Immune to Alter.]");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_SET_27);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
