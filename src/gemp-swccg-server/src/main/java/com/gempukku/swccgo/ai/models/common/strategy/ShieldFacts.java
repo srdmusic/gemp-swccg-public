@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Locale;
+import java.util.List;
 
 // ═══════════════════════════════════════════════════════════
 // ═══ T2 MOVE #3 (2026-07-06): SHARED SHIELD/OCCUPATION FACTS ═══
@@ -200,6 +201,75 @@ public final class ShieldFacts {
                     eligibleBattleground));
         } catch (Exception e) {
             LOG.debug("occupiesAnyBattleground error: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean shouldReserveEopBattleOrderSlot(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null) return false;
+        try {
+            GameState gs = game.getGameState();
+            if (gs == null) return false;
+            boolean eop = com.gempukku.swccgo.filters.Filters.canSpot(
+                game, null, com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.filters.Filters.owner(playerId),
+                    com.gempukku.swccgo.filters.Filters.Objective,
+                    com.gempukku.swccgo.filters.Filters.or(
+                        com.gempukku.swccgo.filters.Filters.title("Endor Operations"),
+                        com.gempukku.swccgo.filters.Filters.title("Imperial Outpost"))));
+            boolean battleOrderPlayed =
+                com.gempukku.swccgo.filters.Filters.canSpot(
+                    game, null, com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.owner(playerId),
+                        com.gempukku.swccgo.filters.Filters.title("Battle Order")));
+            boolean site = com.gempukku.swccgo.filters.Filters.canSpot(
+                game, null, com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.filters.Filters.occupies(playerId),
+                    com.gempukku.swccgo.filters.Filters.battleground_site));
+            boolean system = com.gempukku.swccgo.filters.Filters.canSpot(
+                game, null, com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.filters.Filters.occupies(playerId),
+                    com.gempukku.swccgo.filters.Filters.battleground_system));
+            boolean endorSystemOnTable =
+                com.gempukku.swccgo.filters.Filters.canSpot(
+                    game, null, com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.title("Endor"),
+                        com.gempukku.swccgo.filters.Filters.battleground_system));
+            int force = gs.getForcePileSize(playerId);
+            int slaveOneCost = Integer.MAX_VALUE;
+            int ozzelCost = Integer.MAX_VALUE;
+            List<PhysicalCard> hand = gs.getHand(playerId);
+            if (hand != null) {
+                for (PhysicalCard card : hand) {
+                    if (card == null || card.getBlueprint() == null) continue;
+                    Float printed = card.getBlueprint().getDeployCost();
+                    int cost = printed == null ? Integer.MAX_VALUE
+                        : (int)Math.ceil(printed);
+                    if (cost > force) continue;
+                    String title = card.getTitle() == null
+                        ? "" : card.getTitle().toLowerCase(Locale.ROOT);
+                    if (title.contains("slave i")) {
+                        slaveOneCost = Math.min(slaveOneCost, cost);
+                    }
+                    if (title.contains("admiral ozzel")) {
+                        ozzelCost = Math.min(ozzelCost, cost);
+                    }
+                }
+            }
+            // Replay-scoped legality proof. This exact pair was offered by the
+            // engine for simultaneous deployment to the Endor system. Do not
+            // infer legality from an arbitrary ship plus arbitrary character.
+            boolean fundedSpacePair = endorSystemOnTable
+                && slaveOneCost != Integer.MAX_VALUE
+                && ozzelCost != Integer.MAX_VALUE
+                && slaveOneCost + ozzelCost <= force;
+            return EndorOperationsTacticalPolicy
+                .shouldReserveShieldSlotForBattleOrder(
+                    eop, battleOrderPlayed, site, system,
+                    fundedSpacePair);
+        } catch (Exception e) {
+            LOG.debug("EOP Battle Order reserve scan error: {}", e.getMessage());
             return false;
         }
     }

@@ -126,6 +126,36 @@ public final class ShieldPolicy {
                                                  int activationCount,
                                                  boolean atPacingCap,
                                                  int turnNumber) {
+        return stackedPileParent(actionId, shieldsOnTable, occupiesBothTheaters,
+                fourthSlot, atActivationCap, activationCount, atPacingCap,
+                turnNumber, false);
+    }
+
+    // EOP-era compatibility overload (no occupiesBothTheaters): the V112
+    // third-slot hold cannot fire through this path — pass true so only the
+    // EOP reserve semantics apply, matching the EOP lineage's behavior.
+    public static PolicyResult stackedPileParent(String actionId,
+                                                 int shieldsOnTable,
+                                                 FourthSlotPick fourthSlot,
+                                                 boolean atActivationCap,
+                                                 int activationCount,
+                                                 boolean atPacingCap,
+                                                 int turnNumber,
+                                                 boolean reserveForBattleOrder) {
+        return stackedPileParent(actionId, shieldsOnTable, true, fourthSlot,
+                atActivationCap, activationCount, atPacingCap, turnNumber,
+                reserveForBattleOrder);
+    }
+
+    public static PolicyResult stackedPileParent(String actionId,
+                                                 int shieldsOnTable,
+                                                 boolean occupiesBothTheaters,
+                                                 FourthSlotPick fourthSlot,
+                                                 boolean atActivationCap,
+                                                 int activationCount,
+                                                 boolean atPacingCap,
+                                                 int turnNumber,
+                                                 boolean reserveForBattleOrder) {
         Objects.requireNonNull(fourthSlot, "fourthSlot");
         List<PolicyOperation> operations = new ArrayList<>();
 
@@ -133,6 +163,11 @@ public final class ShieldPolicy {
             add(operations, actionId, "V112-third-slot-reserve",
                     TraceOutputKind.ORDERING, -3000.0f,
                     "V112 3RD SLOT HOLD: reserve the third shield for Battle Order");
+        }
+        if (reserveForBattleOrder) {
+            add(operations, actionId, "SHIELDS-EOP-BATTLE-ORDER-RESERVE",
+                    TraceOutputKind.ORDERING, -3000.0f,
+                    "EOP SHIELD HOLD: preserve this slot until the funded battleground-system deployment makes Battle Order live");
         }
         if (shieldsOnTable >= 3 && !fourthSlot.pursue()) {
             add(operations, actionId, "V124", TraceOutputKind.ORDERING, -3000.0f,

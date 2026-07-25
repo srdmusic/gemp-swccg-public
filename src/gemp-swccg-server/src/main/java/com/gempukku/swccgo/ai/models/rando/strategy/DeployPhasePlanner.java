@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.common.CardCategory;
@@ -793,6 +794,7 @@ public class DeployPhasePlanner {
                 forceAvailable, "ground");
             if (!reinforcePlan.getInstructions().isEmpty()) {
                 float score = scorePlan(reinforcePlan, allLocations, turn);
+                score += endorPostFlipPlanAdjustment(reinforcePlan, true, false);
                 plans.add(new ScoredPlan(reinforcePlan, score, "ground_reinforce"));
             }
         }
@@ -806,6 +808,7 @@ public class DeployPhasePlanner {
                 forceAvailable, threshold, "ground");
             if (!establishPlan.getInstructions().isEmpty()) {
                 float score = scorePlan(establishPlan, allLocations, turn);
+                score += endorPostFlipPlanAdjustment(establishPlan, false, true);
                 plans.add(new ScoredPlan(establishPlan, score, "ground_establish"));
             }
         }
@@ -819,11 +822,41 @@ public class DeployPhasePlanner {
                 forceAvailable, "ground");
             if (!attackPlan.getInstructions().isEmpty()) {
                 float score = scorePlan(attackPlan, allLocations, turn);
+                score += endorPostFlipPlanAdjustment(attackPlan, true, false);
                 plans.add(new ScoredPlan(attackPlan, score, "ground_attack"));
             }
         }
 
         return plans;
+    }
+
+    private float endorPostFlipPlanAdjustment(
+            DeploymentPlan plan,
+            boolean reinforceOrAttack,
+            boolean establishesEmptySite) {
+        boolean endorOperations = objectiveAnalyzer != null
+            && objectiveAnalyzer.isAnalyzed()
+            && EndorOperationsTacticalPolicy.isEndorOperations(
+                objectiveAnalyzer.getObjectiveBlueprintId(),
+                objectiveAnalyzer.getObjectiveTitle());
+        boolean targetsEndorSite = plan != null
+            && plan.getInstructions().stream()
+                .map(DeploymentInstruction::getTargetLocationName)
+                .filter(Objects::nonNull)
+                .anyMatch(title -> title.toLowerCase(Locale.ROOT)
+                    .startsWith("endor:"));
+        float adjustment =
+            EndorOperationsTacticalPolicy.postFlipPlanAdjustment(
+                endorOperations,
+                objectiveAnalyzer != null && objectiveAnalyzer.isFlipped(),
+                reinforceOrAttack,
+                targetsEndorSite,
+                establishesEmptySite);
+        if (adjustment != 0.0f) {
+            LOG.warn("EOP POST-FLIP PLAN: {} receives {} for {}",
+                plan.getStrategy(), adjustment, plan.getReason());
+        }
+        return adjustment;
     }
 
     /**

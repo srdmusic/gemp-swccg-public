@@ -2855,11 +2855,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             ? shieldStrategy.knDActivationsThisTurn(turnNumber) : 0;
                     boolean pacingCap = shieldStrategy != null && !activationCap
                             && shieldStrategy.atPacingCap(turnNumber);
+                    boolean reserveEopBattleOrder =
+                            shieldsOnTable >= 2
+                            && ShieldFacts.shouldReserveEopBattleOrderSlot(
+                                context.getGame(), context.getPlayerId());
 
                     controlLedger.register(ShieldPolicy.stackedPileParent(
                             actionId, shieldsOnTable, occupiesBothTheaters,
                             fourthSlot, activationCap,
-                            activationCount, pacingCap, turnNumber));
+                            activationCount, pacingCap, turnNumber,
+                            reserveEopBattleOrder));
                     PolicyOperationAdapter.apply(action, controlLedger);
 
                     if (shieldsOnTable >= 3 && !fourthSlot.pursue()) {

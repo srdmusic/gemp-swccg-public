@@ -163,7 +163,15 @@ public final class PullDeployFactsReader {
         }
 
         List<String> targets = pullTargets(sourceText, oracle);
-        boolean noWeaponHolder = sourceValidation.outcome()
+        boolean sourceVerifiedEndorShieldEffect =
+                "endor: bunker".equalsIgnoreCase(sourceTitle)
+                && text.toLowerCase(Locale.ROOT)
+                    .contains("deploy endor shield from reserve deck")
+                && targets.stream().anyMatch(
+                    target -> target != null
+                        && target.contains("endor shield"));
+        boolean noWeaponHolder = !sourceVerifiedEndorShieldEffect
+                && sourceValidation.outcome()
                 == PullOracleView.Outcome.WILL_SUCCEED
                 && context != null && context.game() != null && playerId != null
                 && oracle != null && safeNoWeaponHolder(

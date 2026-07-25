@@ -8599,6 +8599,23 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Fresh live-game branch firing remains a separate gate.
     Revert the single First Order Reigns Batch Six commit; Shield twin Batch Five and all earlier
     objective-audit commits remain independent.
+  ==== Endor Operations replay follow-up (2026-07-25): concentrate after flip ====
+    Replay 1zcjvdkdd0f4b856 showed a successful Imperial Outpost flip followed by unsafe
+    empty-site spreading. The planner now applies the existing concentrate scale at its missing
+    selection layer: +500 to post-flip Endor reinforce or viable attack plans and -250 to another
+    empty Endor establish plan. Exact replay math changes reinforce 5 versus establish 227 into
+    reinforce 505 versus establish -23; pre-flip spreading is unchanged.
+
+    Endor: Bunker's source-verified Endor Shield upload bypasses both false V185 weapon
+    classifications and receives +1500 bootstrap priority. Real weapon pulls keep both vetoes.
+    Cheap Imperial admirals receive +1200 at the pre-flip Bunker and Boba Fett receives -1200.
+    The Battle Order slot hold is narrow to the replay-proven funded Endor system, Slave I, and
+    Admiral Ozzel sequence. Both bots are mirrored. No engine or card Java changed.
+
+    Independent review passed. An isolated clean-clone suite passed 34/0/0/0. Packaging, JVM
+    load, deployment, and live-game firing remain separate gates. Revert the single follow-up
+    commit without affecting Endor Operations Batch Four.
+
 ## 2026-07-26: Capture objective family Batch Seven
 
 There Is Good In Him / I Can Save Him (`9_61/9_61_BACK`) advances by allowing its owner's Death Star II Luke to become captive. An eligible Imperial at Luke's exact physical site supplies the native capture route. Bring Him Before Me / Take Your Father's Place (`9_151/9_151_BACK`) targets Luke by default, with source-supported Leia and Kanan retarget branches, and flips on the target's real captive state. Vader's automatic seizure remains a distinct route with stricter source conditions. Exact original `9_134` Your Destiny supplies the live Vader battleground Force-loss clock, while exact original `9_127` Insignificant Rebellion supplies the projected battle-win payoff. Both backs remain stable only while the source-defined captive-or-present-with-Vader state is true.

@@ -145,7 +145,9 @@ public class CharacterDeploySiteEvaluator {
             gs, mq, candidateSite, playerId, currentTurn,
             isObjectiveRelevantSite, deckShipCount);
 
-        float total = scoreA + scoreB + scoreC + scoreD;
+        float eopBunker = endorOperationsBunkerAdjustment(
+            game, gs, mq, deployingCard, candidateSite, playerId);
+        float total = scoreA + scoreB + scoreC + scoreD + eopBunker;
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("V136 {} → {}: §A={} §B={} §C={} §D={} total={}",
@@ -153,6 +155,52 @@ public class CharacterDeploySiteEvaluator {
                 scoreA, scoreB, scoreC, scoreD, total);
         }
         return total;
+    }
+
+    private static float endorOperationsBunkerAdjustment(
+            SwccgGame game,
+            GameState gs,
+            ModifiersQuerying mq,
+            PhysicalCard deployingCard,
+            PhysicalCard candidateSite,
+            String playerId) {
+        try {
+            PhysicalCard objective = Filters.findFirstActive(
+                game, null, Filters.and(
+                    Filters.owner(playerId),
+                    Filters.Objective,
+                    Filters.or(
+                        Filters.title("Endor Operations"),
+                        Filters.title("Imperial Outpost"))));
+            if (objective == null) return 0.0f;
+
+            String objectiveTitle = safeTitle(objective);
+            boolean flipped = objectiveTitle.toLowerCase(Locale.ROOT)
+                .contains("imperial outpost");
+            boolean bunker = safeTitle(candidateSite)
+                .equalsIgnoreCase("Endor: Bunker");
+            boolean imperialAdmiral =
+                Filters.and(Filters.Imperial, Filters.admiral)
+                    .accepts(gs, mq, deployingCard);
+            Float printedCost = deployingCard.getBlueprint() == null
+                ? null : deployingCard.getBlueprint().getDeployCost();
+            int deployCost = printedCost == null
+                ? Integer.MAX_VALUE : (int)Math.ceil(printedCost);
+            boolean mobileBoba = safeTitle(deployingCard)
+                .toLowerCase(Locale.ROOT).contains("boba fett");
+            float adjustment =
+                EndorOperationsTacticalPolicy.bunkerGarrisonAdjustment(
+                    true, flipped, bunker, imperialAdmiral,
+                    deployCost, mobileBoba);
+            if (adjustment != 0.0f) {
+                LOG.warn("EOP BUNKER GARRISON: {} -> {} ({})",
+                    safeTitle(deployingCard), safeTitle(candidateSite),
+                    adjustment);
+            }
+            return adjustment;
+        } catch (Exception ignored) {
+            return 0.0f;
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════

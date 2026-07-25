@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
@@ -309,6 +310,18 @@ public final class PullActionPolicy {
                     "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
                     TraceOutputKind.BANDED, 1000.0f,
                     "Use the objective's source-verified upload for a missing required on-table card"));
+        }
+        if (!hardBlocked && !downgraded) {
+            float endorShieldBootstrap =
+                    EndorOperationsTacticalPolicy
+                        .endorShieldBootstrapAdjustment(
+                            facts.sourceTitle(), facts.actionText());
+            if (endorShieldBootstrap != 0.0f) {
+                operations.add(add(facts.actionId(),
+                        "EOP-ENDOR-SHIELD-BOOTSTRAP",
+                        TraceOutputKind.BANDED, endorShieldBootstrap,
+                        "EOP bootstrap: deploy Endor Shield from the Bunker before assigning its cheap garrison"));
+            }
         }
 
         if (!hardBlocked && downgraded) {

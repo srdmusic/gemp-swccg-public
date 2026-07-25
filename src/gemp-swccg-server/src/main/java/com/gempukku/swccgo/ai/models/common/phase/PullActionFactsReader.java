@@ -306,7 +306,15 @@ public final class PullActionFactsReader {
                     hosts, keyCharacter, context, false, formation);
         }
 
-        boolean allUnattachable = sourceValidation.outcome()
+        boolean sourceVerifiedEndorShieldEffect =
+                "endor: bunker".equalsIgnoreCase(sourceTitle)
+                && text.toLowerCase(Locale.ROOT)
+                    .contains("deploy endor shield from reserve deck")
+                && targets.stream().anyMatch(
+                    target -> target != null
+                        && target.contains("endor shield"));
+        boolean allUnattachable = !sourceVerifiedEndorShieldEffect
+                && sourceValidation.outcome()
                 == PullOracleView.Outcome.WILL_SUCCEED
                 && sourceZone == Zone.RESERVE_DECK
                 && context != null && context.game() != null

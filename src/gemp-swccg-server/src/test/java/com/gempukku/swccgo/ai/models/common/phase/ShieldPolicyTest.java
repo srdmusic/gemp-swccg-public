@@ -124,6 +124,20 @@ public class ShieldPolicyTest {
     }
 
     @Test
+    public void eopReservesThirdShieldSlotUntilBattleOrderIsLive() {
+        PolicyResult reserved = ShieldPolicy.stackedPileParent(
+                "A", 2, closed(), false, 0, false, 2, true);
+        assertOperations(reserved,
+                "SHIELDS-EOP-BATTLE-ORDER-RESERVE", -3000.0f,
+                "SHIELDS-stacked-pile-available", 50.0f);
+
+        PolicyResult ordinary = ShieldPolicy.stackedPileParent(
+                "A", 2, closed(), false, 0, false, 2, false);
+        assertOperations(ordinary,
+                "SHIELDS-stacked-pile-available", 50.0f);
+    }
+
+    @Test
     public void defensiveWindowPreservesOpponentTurnPrecedence() {
         assertOperations(ShieldPolicy.defensiveShieldWindow("A", false, true, 1),
                 "SHIELDS-opponent-turn", -10.0f);
