@@ -56,10 +56,8 @@ public class Card501_207 extends AbstractNormalEffect {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new LostInterruptModifier(self, Filters.or(Filters.Sense, Filters.Alter)));
         // character filter enforces non-characters becoming padawans
-        Filter groguCharacter = Filters.and(Filters.Grogu, Filters.character);
-        Filter dagobahLuke = Filters.and(Filters.Luke, Filters.icon(Icon.DAGOBAH), Filters.character);
-        Filter groguAndLuke = Filters.or(groguCharacter, dagobahLuke);
-        modifiers.add(new KeywordModifier(self, groguAndLuke, Keyword.PADAWAN));
+        Filter dagobahLuke = Filters.and(Icon.DAGOBAH, Filters.Luke, Filters.character);
+        modifiers.add(new KeywordModifier(self, dagobahLuke, Keyword.PADAWAN));
         Filter padawansAndYoda = Filters.or(Filters.padawan, Filters.Yoda);
         modifiers.add(new DeployCostToLocationModifier(self, padawansAndYoda, -1, Filters.not(Filters.Lothal_location)));
         modifiers.add(new ImmuneToTitleModifier(self, padawansAndYoda, Title.Imperial_Barrier));
