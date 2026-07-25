@@ -1,5 +1,5 @@
 {
- "generatedBy": "K-2 Phase A+B merge 2026-07-24",
+ "generatedBy": "K-2 Phase A+B merge 2026-07-24; engineClass merge from 33 family dossiers + Codex/evidence-packet results 2026-07-25",
  "baselineHead": "192abf72d",
  "counts": {
   "objectives": 66,
@@ -7,7 +7,12 @@
   "ABSENT_DISABLED": 43,
   "PARTIAL": 14,
   "WRONG": 1,
-  "COMPLETE": 0
+  "COMPLETE": 0,
+  "engineClass_EXISTING_ENGINE_FIT": 15,
+  "engineClass_NEW_PRIMITIVE": 24,
+  "engineClass_PROVEN_BY_CODEX": 10,
+  "engineClass_SMALL_SHARED_EXTENSION": 16,
+  "engineClass_STUB_NA": 1
  },
  "rows": [
   {
@@ -20,7 +25,9 @@
    "flipLaw": "Flip if owner controls at least 3 Dantooine sites each with a Rebel contributing to control, AND opponent controls zero Dantooine locations. Both checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
    "flipBackLaw": "Back flips to front if opponent controls at least 2 Dantooine locations (count becomes 3 when legacy game-text modification LEGACY__MORE_DANGEROUS_THAN_YOU_REALIZE__REQUIRES_THREE_SITES_TO_FLIP_BACK i",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via fef64a826 RegionalObjectiveEngineContractTest/BehaviorTest (regional flip-chain family, Dantooine)"
   },
   {
    "frontBp": "7_136",
@@ -32,7 +39,9 @@
    "flipLaw": "Owner may flip any time once the deployed-system tracker is satisfied: the 'Hidden Base' indicator system has been deployed AND (6+ tracked system titles exist, i.e. hidden base non-battleground + 5 b",
    "flipBackLaw": "No FlipCardEffect exists on the back. Required after-trigger: when TriggerConditions.systemProbed fires and the probed system's title equals the stacked hidden-base indicator's title, the objective is",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "deployed-battleground-system counter + optional-flip-when-ready policy; shares design w/10_26/7_138"
   },
   {
    "frontBp": "7_137",
@@ -44,7 +53,9 @@
    "flipLaw": "Flip if your matching operatives control at least 3 battleground sites related to the Subjugated planet (control-with: you control the site AND at least one of your matching operatives is there; spott",
    "flipBackLaw": "Back flips to front if you do NOT occupy at least 2 battleground sites related to the Subjugated planet. Plain occupy (any of your active cards provides presence, operatives NOT required), includes ex",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "actorToSite(matchingOperativeToSubjugatedPlanet); 2 registry keys; batch w/7_298 twin"
   },
   {
    "frontBp": "7_138",
@@ -56,7 +67,9 @@
    "flipLaw": "Flip when Jedi Test #5 is completed by Luke (or by Leia if the Daughter Of Skywalker retarget game-text modification is active) and the objective can be flipped.",
    "flipBackLaw": "Back never flips to front. Instead it is PLACED OUT OF PLAY (and the apprentice's Jedi Tests canceled) if you initiate a Force drain at a Dagobah location or the apprentice (Luke/Leia) is placed out o",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "REFINED 2026-07-25 deep packet: quest completion = first-class enum (getJediTestStatus) + apprentice TargetId, read-adapter family; honest primitive residue = training-sequence DRIVE only + small post-flip drain veto. Dossier two-primitive claim overstated."
   },
   {
    "frontBp": "7_139",
@@ -68,7 +81,9 @@
    "flipLaw": "Flip when the objective owner moves Leia to Yavin 4: War Room (move performed by playerId; any Leia, no ability constraint on the move trigger).",
    "flipBackLaw": "Back flips to front if Leia is captured.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "capture-state family; survival-persona fact (Leia) + move-to-War-Room flip, terminal on Leia loss"
   },
   {
    "frontBp": "7_296",
@@ -80,7 +95,9 @@
    "flipLaw": "Flips if (A) after start-of-game deployment no card is imprisoned in Security Tower (no Rebel was in opponent's Reserve Deck; also sets WhileInPlayData flag), OR (B) owner just moved a character escor",
    "flipBackLaw": "My Favorite Decoration is placed out of play when no frozen captive can be spotted on table (SpotOverride.INCLUDE_CAPTIVE), unless the front's WhileInPlayData flag was set (i.e., unless no Rebel was i",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "escort-move-to-Audience-Chamber fact + captive-on-table survival fact; capture-state family"
   },
   {
    "frontBp": "7_297",
@@ -92,7 +109,9 @@
    "flipLaw": "Flip if Vader can be spotted at a battleground site AND no opponent Jedi or Luke can be spotted at a battleground site. Both spots use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE. Note: this is canSpot ",
    "flipBackLaw": "Back flips to front if opponent has a Jedi or Luke at a battleground site, OR Vader cannot be spotted on table. SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
    "profileGaps": 6,
-   "seedMismatches": 2
+   "seedMismatches": 2,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via dc3d996fc HuntDownObjectiveEngineContractTest/BehaviorTest suite"
   },
   {
    "frontBp": "7_298",
@@ -104,7 +123,9 @@
    "flipLaw": "Flips when your matching operatives CONTROL at least 3 battleground sites related to the Renegade planet (controlsWith: you control the site AND at least one of your matchingOperativeToRenegadePlanet ",
    "flipBackLaw": "Flips back when you do NOT OCCUPY at least 2 battleground sites related to the Renegade planet (plain occupies, no operative requirement).",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "actorToSite(matchingOperativeToRenegadePlanet); DARK twin of 7_137, identical pattern"
   },
   {
    "frontBp": "7_299",
@@ -116,7 +137,9 @@
    "flipLaw": "Flip if 4 ISB agents are on table OR ISB agents control at least 2 Rebel Base locations (control-with).",
    "flipBackLaw": "Back flips to front if no ISB agents are on table (cannot spot even one).",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "DEMOTED 2026-07-25 deep packet: route B (controlsWith 2 Rebel_Base_location) UNWIRED, isbFlipLocationCount is dead data; last-agent hold unprotected; double-steer if profile lands without retiring V25 statics; spurious coruscant parser fragment. Fix = 1 resolveFilter key + anyOf profile + retire V29.7 statics, MEDIUM."
   },
   {
    "frontBp": "7_300",
@@ -128,7 +151,9 @@
    "flipLaw": "Flip if you control at least 3 Ralltiir sites each with an Imperial there, and opponent controls no Ralltiir locations.",
    "flipBackLaw": "Back flips to front if opponent controls at least 2 Ralltiir locations.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via fef64a826 RegionalObjectiveEngineContractTest/BehaviorTest; twin pattern to Dantooine (Ralltiir)"
   },
   {
    "frontBp": "8_78",
@@ -140,7 +165,9 @@
    "flipLaw": "Flip if Bunker is 'blown away', or if during your move phase you control three exterior Endor sites each of which has two of your Rebel scouts (coded as: site is sameSiteAs a your-Rebel-scout that is ",
    "flipBackLaw": "Back flips to front if (Bunker not blown away) and during opponent's move phase opponent controls the Endor system, or controls three exterior Endor sites.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "Bunker proxy-route + pairing count primitive stands, upload pull PROFILE_ONLY per RST delta"
   },
   {
    "frontBp": "8_167",
@@ -152,7 +179,9 @@
    "flipLaw": "Flips when both Effects Ominous Rumors AND Establish Secret Base can be spotted on table. Pure card-on-table check; no location control/occupy involved.",
    "flipBackLaw": "Flips back to front when Ominous Rumors and Establish Secret Base are NOT both on table (either one missing).",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via ee64e6f3b EndorOperations* suite (engine contract, battle decision, retention, required effects)"
   },
   {
    "frontBp": "9_61",
@@ -164,7 +193,9 @@
    "flipLaw": "Flip if Luke can be spotted as a captive (anywhere; spot includes captives and battle-excluded cards). The capture itself is engineered by a separate front trigger: when any Imperial that can escort i",
    "flipBackLaw": "Back flips to front if Luke can NOT be spotted as (captive OR present with Vader). I.e., flips back when Luke is free and away from Vader; also flips back if Luke is no longer on table at all (spot fa",
    "profileGaps": 6,
-   "seedMismatches": 2
+   "seedMismatches": 2,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "capture-inversion fact (own Luke wants captured); must suppress protect-character penalty"
   },
   {
    "frontBp": "9_151",
@@ -176,7 +207,9 @@
    "flipLaw": "Flip if the target character (Luke by default; Leia or Kanan if retargeted) is a CAPTIVE - spotted anywhere with INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE. No requirement that Vader captured or escorts",
    "flipBackLaw": "Flips back if the target (Luke default / Leia / Kanan) can NOT be spotted as (captive OR presentWith Vader) - i.e. target is neither a captive nor present with Vader (or has left the table).",
    "profileGaps": 4,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "capture-flip-actor fact (target persona+Vader capturer); capture-state family, twin of 9_61"
   },
   {
    "frontBp": "10_26",
@@ -188,7 +221,9 @@
    "flipLaw": "Flip if you have completed two Kessel Runs OR you occupy two battlegrounds with smugglers (occupy-with: your smuggler at each of 2 battlegrounds).",
    "flipBackLaw": "Back flips to front if you have NOT completed two Kessel Runs AND you do NOT occupy two battlegrounds. NOTE: back-hold occupy check is PLAIN occupy (smugglers NOT required), weaker than the front flip",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "DOWNGRADED 2026-07-25 deep packet: route B = live occupyWith engine + 2 registry keys (smuggler, battleground); route A counter = E6-style read-adapter over hasCompletedUtinniEffect (first-class list, ModifiersLogic:161). No progress-counter primitive needed. Recipe must be blueprint-scoped vs 601_146."
   },
   {
    "frontBp": "10_29",
@@ -200,7 +235,9 @@
    "flipLaw": "Flip if Xizor (or legacy Shada under LEGACY__TREAT_XIZOR_AS_SHADA) is at a battleground site AND Luke (or Rey/Anakin under Reflections-II retarget mods) is NOT at a battleground site.",
    "flipBackLaw": "Back flips to front if the Luke-target (Luke, or Rey/Anakin under retarget mods) is at a battleground site, OR Xizor (or legacy Shada) is not on table.",
    "profileGaps": 5,
-   "seedMismatches": 2
+   "seedMismatches": 2,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "actorToSite(Xizor) + negative/absence-leg ext (opponent Luke absence at battleground), shared w/208_25"
   },
   {
    "frontBp": "12_88",
@@ -212,7 +249,9 @@
    "flipLaw": "Flip if you have 3+ of your senators AT Galactic Senate, or 2+ of your senators AT Galactic Senate at least one of which has a peace agenda. Count is a filterActive collection size, spotting includes ",
    "flipBackLaw": "Back flips to front if you have fewer than two of your senators AT Galactic Senate.",
    "profileGaps": 4,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "LIGHT mirror of My Lord; broaden isMyLord into senate-family flag + mirror 12_179 profile"
   },
   {
    "frontBp": "12_89",
@@ -224,7 +263,9 @@
    "flipLaw": "Flips when Credits Will Do Fine is active on table and has 4 or more cards stacked beneath it. Pure counter-on-card check; no control/occupy/presence requirement.",
    "flipBackLaw": "Card12_089_BACK contains no FlipCardEffect and no PlaceCardOutOfPlayFromTableEffect anywhere; getGameTextRequiredAfterTriggers only implements the end-of-control-phase senator Force-loss enforcement.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "stacked-card counter-host fact (Credits Will Do Fine>=4); shared schema w/210_25 twin"
   },
   {
    "frontBp": "12_179",
@@ -236,7 +277,9 @@
    "flipLaw": "Collect your senators AT Galactic Senate (Filters.filterActive with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE). Flip if that collection has >= 3 senators, OR >= 2 senators with at least one of them ha",
    "flipBackLaw": "Back flips to front if you have FEWER than 2 senators at Galactic Senate (cannot spot 2 of your senators at Galactic Senate; spot includes battle-excluded).",
    "profileGaps": 5,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "only loaderEnabled:true My-Lord profile; V83/V88/V108/V110 senator arms already drive it"
   },
   {
    "frontBp": "12_180",
@@ -248,7 +291,9 @@
    "flipLaw": "Flip if Watto is PRESENT AT Watto's Junkyard AND you OCCUPY Mos Espa.",
    "flipBackLaw": "Flips back if Watto NOT present at Watto's Junkyard OR you do NOT occupy Mos Espa (exact negation of the flip law).",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "multi-leg conjunctive flip gate (Watto@Junkyard AND occupy Mos Espa) + 2 registry keys"
   },
   {
    "frontBp": "13_46",
@@ -260,7 +305,9 @@
    "flipLaw": "Flip if an opponent's Dark Jedi is PRESENT at an interior Naboo battleground site (presentAt = actual presence at the site, spotting includes excluded-from-battle).",
    "flipBackLaw": "Back flips to front (and owner retrieves 1 Force) if opponent has NO Dark Jedi present at any interior Naboo battleground site - exact negation of the front flip spot.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "interior_Naboo_battleground_site already resolves; optional opponent-Dark-Jedi readiness fact"
   },
   {
    "frontBp": "13_73",
@@ -272,7 +319,9 @@
    "flipLaw": "Flip if an opponent's Jedi is PRESENT at an interior Naboo battleground site. Opponent-driven: their Jedi arriving flips you.",
    "flipBackLaw": "Back flips to front (and owner retrieves 1 Force) when opponent has NO Jedi present at any interior Naboo battleground site.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "DARK mirror of 13_46; same interior-Naboo positioning fit + optional readiness fact"
   },
   {
    "frontBp": "14_52",
@@ -284,7 +333,9 @@
    "flipLaw": "Flip if you CONTROL Theed Palace Throne Room WITH Amidala there (controlsWith: you control the location and Amidala is spotted there, spotting includes excluded-from-battle).",
    "flipBackLaw": "Back flips to front if OPPONENT controls Theed Palace Throne Room (plain control; Amidala irrelevant).",
    "profileGaps": 4,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via cf788f8c8 WeHaveAPlanObjectiveEngineContractTest/BehaviorTest/CombinedEvaluatorDecisionTest"
   },
   {
    "frontBp": "14_113",
@@ -296,7 +347,9 @@
    "flipLaw": "Flips when owner CONTROLS Theed Palace Throne Room with a Neimoidian there AND CONTROLS Naboo system.",
    "flipBackLaw": "Flips back to front when OPPONENT controls Naboo system OR Theed Palace Throne Room.",
    "profileGaps": 3,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via ef8790b73 InvasionObjectiveEngineContractTest/FullChainBehaviorTest; back hold still absent"
   },
   {
    "frontBp": "109_4",
@@ -308,7 +361,9 @@
    "flipLaw": "Flip if opponent controls NO Bespin locations, AND you control Bespin: Cloud City (the site), AND (you control >= 2 Cloud City sites, OR (Lando or Lobot is on Cloud City [at any Cloud City site] AND y",
    "flipBackLaw": "Back flips to front if opponent controls Bespin system, OR opponent controls at least 3 locations among Cloud City sites and/or Bespin cloud sectors (combined count).",
    "profileGaps": 5,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "UPGRADED 2026-07-25 deep packet: subLegs NOT needed, Lando/Lobot branch subsumed by anchor leg; 5 registry keys (Bespin_location, Bespin_Cloud_City, Bespin_cloud_sector, Lando, Lobot) + profile rules. Keys also unlock 301_2."
   },
   {
    "frontBp": "109_12",
@@ -320,7 +375,9 @@
    "flipLaw": "Flip if Dark Deal on table AND you occupy Bespin system AND you occupy Bespin: Cloud City. All three required.",
    "flipBackLaw": "Flips back if Dark Deal is canceled, OR opponent CONTROLS Bespin system, OR Bespin (system) is 'blown away'. NOTE: losing your own occupation of Bespin/Cloud City does NOT flip it back; only opponent ",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "isTdigwatt arms already drive flip; wire Dark Deal into requiredCardsOnTable/flipGateCardIds"
   },
   {
    "frontBp": "110_4",
@@ -332,7 +389,9 @@
    "flipLaw": "Flip if Han is on Tatooine and not a captive (spot Han with on(Tatooine) and not(captive); includes excluded-from-battle but NOT captives, so frozen/imprisoned Han never satisfies it).",
    "flipBackLaw": "Back flips to front if Han is captured or not on table (cannot spot a non-captive Han anywhere).",
    "profileGaps": 6,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "actorToSite(Han) + captive-state qualifier + optional-location scope (rescue from frozen captive)"
   },
   {
    "frontBp": "110_6",
@@ -344,7 +403,9 @@
    "flipLaw": "Flip if you have one captive of ability > 2 at a Jabba's Palace site, OR two captives at Jabba's Palace site(s).",
    "flipBackLaw": "Back flips to front if you have NO captives at Tatooine sites AND opponent has NO character at the same site as a Rancor.",
    "profileGaps": 6,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "captive-count-at-Jabbas_Palace_site fact w/ability>2 threshold + INCLUDE_CAPTIVE spotting; no owner"
   },
   {
    "frontBp": "111_4",
@@ -356,7 +417,9 @@
    "flipLaw": "Flip if you CONTROL three Yavin 4 sites AND opponent does NOT control three Yavin 4 sites.",
    "flipBackLaw": "The back (One In A Million) has no flip-back trigger of any kind; once flipped, it stays on the back for the rest of the game. Verified: Card111_004_BACK.java contains no FlipCardEffect.",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "control-3 Yavin_4_site + opponent-<3, +1 registry key; permanent back = omit postFlip rule"
   },
   {
    "frontBp": "111_6",
@@ -368,7 +431,9 @@
    "flipLaw": "Flips when Alderaan (system) is 'blown away' - i.e., the Commence Primary Ignition epic event completes against Alderaan. Nothing else flips this card.",
    "flipBackLaw": "The Ultimate Power In The Universe is placed out of play if Death Star (system) is 'blown away' (TriggerConditions.isBlownAwayLastStep on Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Death_Star",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "CPI proxy-route; back hard-loss PROFILE_ONLY"
   },
   {
    "frontBp": "112_1",
@@ -380,7 +445,9 @@
    "flipLaw": "If any non-Tatooine location is on table: flip requires you OCCUPY >= 3 battleground sites AND at least one battleground site is occupied with a non-unique alien of your Rep's species. If NO non-Tatoo",
    "flipBackLaw": "Back flips to front if you do NOT occupy at least 2 battleground sites.",
    "profileGaps": 6,
-   "seedMismatches": 2
+   "seedMismatches": 2,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "chosen-state Rep-species fact (dynamic occupyWith); count/branch legs small-ext; shared w/112_15"
   },
   {
    "frontBp": "112_15",
@@ -392,7 +459,9 @@
    "flipLaw": "If a non-Tatooine location is on table: flip requires you OCCUPY 3 battleground sites AND you occupy at least one battleground site with a non-unique alien of your Rep's species (the species alien may",
    "flipBackLaw": "Flips back if you do NOT occupy 2 battleground sites. NOTE asymmetry: the back never re-checks the species-alien / 3-site branch; 2 occupied battleground sites always suffice to hold the back, even wi",
    "profileGaps": 4,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "chosen-state Rep-species fact, twin of 112_1, build once serve both"
   },
   {
    "frontBp": "201_39",
@@ -404,7 +473,9 @@
    "flipLaw": "Flip if you control 3 Tatooine sites AND opponent controls fewer than 3 Tatooine sites. Plain control (no actor filter); sites only, system does not count.",
    "flipBackLaw": "Back flips to front if opponent controls MORE Tatooine sites than you (strict count comparison of controlled Tatooine sites).",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "control-3 Tatooine_site + opponent-<3, +1 registry key (Tatooine_site)"
   },
   {
    "frontBp": "203_19",
@@ -416,7 +487,9 @@
    "flipLaw": "Flip if Stolen Data Tapes are 'delivered' AND you control a battleground site with a Rebel AND you control a battleground system with a Rebel.",
    "flipBackLaw": "Back flips to front if you do not occupy a battleground site, OR do not occupy a battleground system, OR do not control any location.",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "delivered-state STATE hook (Stolen Data Tapes) + dual controlsWith(bg site+system,Rebel) fact"
   },
   {
    "frontBp": "204_32",
@@ -428,7 +501,9 @@
    "flipLaw": "Flip if (you CONTROL Jakku system AND OCCUPY two Jakku battleground sites) OR (you OCCUPY Jakku system AND CONTROL two Jakku battleground sites).",
    "flipBackLaw": "Back flips to front if you do NOT occupy two battlegrounds (ANY battlegrounds anywhere, not just Jakku; sites and systems both count - Filters.battleground).",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "COLLAPSES w/o subLegs: DNF of TWO flat allOf preFlip/flip rules (R1 control-sys+occupy2-sites, R2 occupy-sys+control2-sites); HEAD engine ORs multiple same-phase rules (verified: every activeFlipLocationRules consumer advances/completes ANY rule, none AND-aggregates). control=>occupy (LocationControl:341). No nested allOf-inside-anyOf needed; E4 subLegs NOT required by this consumer. Caveat: multi-rule OR is implemented but never shipped/tested (0 profiles ship 2 same-phase rules)."
   },
   {
    "frontBp": "208_25",
@@ -440,7 +515,9 @@
    "flipLaw": "Flips when Luke or a Jedi is at a battleground site, UNLESS an opponent's character of ability > 4 is at (any) battleground site.",
    "flipBackLaw": "Flips back (unless Vader crossed over) if an opponent character of ability > 4 is at a battleground site OR you no longer have Luke or a Jedi at a battleground site.",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "actorToSite(Jedi_or_Luke) clean fit; negative/absence-leg ext (opp ability>4 blocker), marquee case"
   },
   {
    "frontBp": "208_26",
@@ -452,7 +529,9 @@
    "flipLaw": "Flip if 4 Rebels are on table (anywhere), OR owner controls at least 2 battleground systems with a Rebel among the controlling presence. SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE on both legs.",
    "flipBackLaw": "Back flips to front if FEWER than 4 Rebels are on table AND owner does NOT occupy at least 2 battlegrounds (any battleground: site or system). Four Rebels on table alone holds the back regardless of o",
    "profileGaps": 5,
-   "seedMismatches": 2
+   "seedMismatches": 2,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "route A needs generic count-N-actor-on-table primitive (shared w/ISB); route B fits actorLocationRules"
   },
   {
    "frontBp": "208_57",
@@ -464,7 +543,9 @@
    "flipLaw": "Flip if your First Order characters CONTROL two battlegrounds (controlsWith: control + at least one First Order character there) AND no Resistance Agent is present at a battleground site.",
    "flipBackLaw": "Flips back if you do NOT OCCUPY two battlegrounds (plain occupy - First Order characters NOT required to hold) OR a Resistance Agent IS present at a battleground site.",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "positive leg (First Order control-2-battleground) small-ext; negative leg needs denyOpponentActor consumer"
   },
   {
    "frontBp": "209_29",
@@ -476,7 +557,9 @@
    "flipLaw": "Flip if you CONTROL two Scarif locations (any Scarif locations - system or sites; plain control, no actor filter).",
    "flipBackLaw": "Back flips to front if you do NOT OCCUPY two Scarif locations, UNLESS Rogue One is at a Scarif site you occupy (spot exception).",
    "profileGaps": 6,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "control-2 Scarif_location flip + presentAt-count==0 Rogue-One back-hold exception, +registry keys"
   },
   {
    "frontBp": "210_25",
@@ -488,7 +571,9 @@
    "flipLaw": "Flip when there are 4 or more cards stacked beneath Credits Will Do Fine (which must be active on table).",
    "flipBackLaw": "Back (We'll Need A New One (V)) has NO flip-to-front trigger and NO place-out-of-play condition; getGameTextRequiredAfterTriggers contains no FlipCardEffect or PlaceCardOutOfPlayFromTableEffect. Once ",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "stacked-card counter-host fact, shares schema w/12_89 twin (Credits Will Do Fine>=4)"
   },
   {
    "frontBp": "211_26",
@@ -500,7 +585,9 @@
    "flipLaw": "Flip if the Insidious Prisoner card (found via Filters.findFirstActive) is attached to an Invisible Hand site. Card-attached-to-location semantics, not control/occupy.",
    "flipBackLaw": "Back flips to front if Insidious Prisoner exists on table (non-null) and is NOT attached to an Invisible Hand site. If Insidious Prisoner has left the table entirely, the back does NOT flip (null guar",
    "profileGaps": 5,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "hasAttached STATE hook (Insidious Prisoner attached to Invisible_Hand_site); shared w/221_67"
   },
   {
    "frontBp": "211_36",
@@ -512,7 +599,9 @@
    "flipLaw": "MAY flip when a battle was just initiated involving a Resistance character, while Luke is on Ahch-To. Flipping immediately places Luke out of play and prevents all weapon firing for remainder of that ",
    "flipBackLaw": "On cardFlipped: required action places Luke out of play (PlaceCardOutOfPlayFromTableEffect on Filters.findFirstActive(game, self, Filters.Luke); comment notes immunity to Bring Him Before Me restricti",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "voluntary/optional-flip DECISION policy (Luke-out-of-play cost); shared w/225_53"
   },
   {
    "frontBp": "213_31",
@@ -524,7 +613,9 @@
    "flipLaw": "Flip if Vader can be spotted at a battleground site AND no opponent Jedi, Padawan, or Luke can be spotted at a battleground site. Both spots use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE. Differs from",
    "flipBackLaw": "Back flips to front if Vader is not on table, OR opponent has Luke, a Jedi, or a Padawan at a battleground site. A once-per-game consolation is mechanized on the FRONT class: on cardFlipped, if a site",
    "profileGaps": 6,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via dc3d996fc HuntDown suite; V-variant sibling of 7_297, same engine"
   },
   {
    "frontBp": "213_32",
@@ -536,7 +627,9 @@
    "flipLaw": "Route A: flip when a character was just 'hit' by your card (any character, any location; no canBeFlipped guard in code). Route B: flip during your battle phase when your gangsters CONTROL two battlegr",
    "flipBackLaw": "Flips back at end of every turn (TriggerConditions.isEndOfEachTurn), unconditional (no canBeFlipped guard in code). Companion effects: on flipping (cardFlipped on back) owner MAY re-circulate and shuf",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "hit-EVENT flip signal (route A) + controlsWith(gangster) counter (route B) + turn oscillation"
   },
   {
    "frontBp": "215_17",
@@ -548,7 +641,9 @@
    "flipLaw": "Flip if Leia occupies a Death Star site (occupy-with: you occupy a Death Star site with Leia there - imprisoned/captive Leia does NOT occupy) AND the Death Star power is 'shut down' (A Power Loss stat",
    "flipBackLaw": "Back flips to front if Leia is not at a Death Star site. Code spot uses only INCLUDE_EXCLUDED_FROM_BATTLE (no INCLUDE_CAPTIVE), so a CAPTURED Leia is unspottable and also flips the card back to front.",
    "profileGaps": 6,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "capture-state family; occupy-with-global-flag fact (free Leia @ Death Star site + power shut down)"
   },
   {
    "frontBp": "216_11",
@@ -560,7 +655,9 @@
    "flipLaw": "Flip if Krennic or Tarkin is at a Scarif battleground site AND a Death Star system is orbiting Scarif.",
    "flipBackLaw": "Back flips to front if you do NOT have a leader at a Scarif battleground site. Separately (checked first), back is PLACED OUT OF PLAY if Death Star system or Shield Gate is not on table.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "orbit half EXISTING via V79; add actorToSite(Krennic|Tarkin,Scarif site) + requiredCardsOnTable guard"
   },
   {
    "frontBp": "219_1",
@@ -572,7 +669,9 @@
    "flipLaw": "Flip during any deploy phase if Thrawn is at a battleground (any battleground, site or system) AND Thrawn's Art Collection is on table with 2+ cards stacked on it ('two or more artwork cards on table'",
    "flipBackLaw": "Back flips to front if (A) Thrawn's Art Collection is on table with zero stacked cards, except during battle; OR (B) Thrawn cannot be spotted on table (any phase, battle or not). Note: if the Collecti",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "counter-host fact (Art Collection>=2) + Thrawn-at-battleground-during-deploy presence fact"
   },
   {
    "frontBp": "219_48",
@@ -584,7 +683,9 @@
    "flipLaw": "Flips when (Rebels control three Lothal locations OR you occupy three Lothal locations with Phoenix Squadron characters) AND opponent controls no Lothal location.",
    "flipBackLaw": "Flips back when opponent controls MORE Lothal locations than you (strict count comparison of controlled Lothal locations).",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via fef64a826 ZeroHourObjectiveEngineContractTest (regional flip-chain family)"
   },
   {
    "frontBp": "221_67",
@@ -596,7 +697,9 @@
    "flipLaw": "Flip if the Effect 'Grievous Will Run And Hide' is attached to this Objective ('here'), UNLESS Grievous is alone at a battleground. The alone-exception is double-checked: it only blocks the flip when ",
    "flipBackLaw": "Back flips to front if Grievous Will Run And Hide is NOT attached to this Objective (wherever it went, including off-table), OR if Grievous is alone at a battleground (alone verified including battle-",
    "profileGaps": 5,
-   "seedMismatches": 2
+   "seedMismatches": 2,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "hasAttached STATE hook (GWRAH attached to objective) + opponent-Grievous-alone exception, shared w/211_26"
   },
   {
    "frontBp": "222_14",
@@ -608,7 +711,9 @@
    "flipLaw": "Flip when Main Power Generators is 'blown away' (last step of the blown-away process). Single event condition; no board-count threshold.",
    "flipBackLaw": "No FlipCardEffect on the back. Required after-trigger: on isTableChanged, if canBePlacedOutOfPlay and you can NOT spot a Hoth site that you occupy with (piloted AT-AT OR Imperial leader OR snowtrooper",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via 000cbcf1b ShieldTwinObjectiveEngineContractTest"
   },
   {
    "frontBp": "222_27",
@@ -620,7 +725,9 @@
    "flipLaw": "Flip if opponent OCCUPIES a Hoth location that YOU own (ownership-qualified: Filters.your(playerId) on the location card).",
    "flipBackLaw": "Back flips to front if opponent does NOT occupy any of your Hoth locations - exact negation of the front condition. The card toggles with opponent presence on your Hoth locations.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "your_Hoth_location already resolves; optional opponent-presence readiness fact shared w/13_46/13_73"
   },
   {
    "frontBp": "222_30",
@@ -632,7 +739,9 @@
    "flipLaw": "Flip when Main Power Generators is 'blown away' (your own 1st Marker site; the win path is Target The Main Generator + AT-AT Cannon).",
    "flipBackLaw": "Back never flips to front. Instead it is PLACED OUT OF PLAY on any table change if you do not occupy a Hoth site with a piloted AT-AT, an Imperial leader, or a snowtrooper.",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven via 000cbcf1b ShieldTwinObjectiveEngineContractTest; twin of 222_14"
   },
   {
    "frontBp": "225_32",
@@ -641,10 +750,12 @@
    "classification": "ABSENT",
    "subclass": "DISABLED",
    "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
-   "flipLaw": "Flip if Tracked Fleet is 'annihilated' - coded as the blown-away state of Filters.Tracked_Fleet.",
+   "flipLaw": "Flip if Tracked Fleet is 'annihilated' - coded as the blown-away state of Filters.Tracked_Fleet. DRIVER (one level up, the actionable flip plan): Tracked Fleet's own REQUIRED trigger annihilates it at",
    "flipBackLaw": "The back (The Resistance Is Doomed) has no flip-back trigger; verified no FlipCardEffect anywhere in Card225_032_BACK.java. Instead the back carries a place-out-of-play hazard: if Kylo was just forfei",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "dynamic fleet-host fact; Salt Plateau hard-loss PROFILE_ONLY per m01306"
   },
   {
    "frontBp": "225_53",
@@ -656,7 +767,9 @@
    "flipLaw": "MAY flip during your turn if Luke is on Dagobah. Implemented as a top-level game-text action, not a table-changed trigger - Rando must actively take the action.",
    "flipBackLaw": "On cardFlipped: required action returns Luke and any cards on him to owner's hand (ReturnCardToHandFromTableEffect on Filters.findFirstActive(game, self, Filters.Luke), Zone.HAND for attached cards to",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "voluntary/optional-flip DECISION policy, 2nd consumer shared w/211_36 (low-stakes variant)"
   },
   {
    "frontBp": "226_12",
@@ -668,7 +781,9 @@
    "flipLaw": "Flip if you control at least 3 Bespin locations AND opponent controls fewer than 3 Bespin locations. SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE on both control checks.",
    "flipBackLaw": "Back flips to front if opponent controls MORE Bespin locations than you (strict comparative count of top locations on table).",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "control-3 Bespin_location + opponent-<3, +1 registry key + flip loaderEnabled true"
   },
   {
    "frontBp": "226_28",
@@ -680,7 +795,9 @@
    "flipLaw": "Flip if Jedi OCCUPY two non-Mapuzo sites (occupiesWith count 2: two sites, each occupied by owner and having a Jedi there).",
    "flipBackLaw": "Flips back if Jedi do NOT occupy two non-Mapuzo sites (exact negation, same occupiesWith call).",
    "profileGaps": 5,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "actorToSite(Jedi, non-Mapuzo site) symmetric law, 2 registry keys"
   },
   {
    "frontBp": "301_2",
@@ -692,7 +809,9 @@
    "flipLaw": "Flip if (a) you control two Cloud City battleground sites, (b) you occupy Bespin system, and (c) opponent controls NO Cloud City site. Three-leg conjunction with an opponent-zero constraint.",
    "flipBackLaw": "Back flips to front if opponent controls MORE Cloud City sites than you (strict count comparison; battleground not required on either count).",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "purest Zero-Hour-shaped fit; zero registry adds"
   },
   {
    "frontBp": "301_4",
@@ -704,7 +823,9 @@
    "flipLaw": "Flip if you control two Tatooine battleground sites (at least one controlled with a Dark Jedi), occupy Tatooine system, and opponent controls no Tatooine sites.",
    "flipBackLaw": "Back flips to front if opponent controls MORE Tatooine sites than you (strict count comparison).",
    "profileGaps": 4,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "control+controlWith(Dark_Jedi)+occupy+opponent-zero, flat legs; registry keys incl. Dark_Jedi"
   },
   {
    "frontBp": "501_14",
@@ -716,7 +837,9 @@
    "flipLaw": "When a battle is just initiated involving both Din and 'The Asset', a required singleton action makes the OPPONENT choose: (0) lose The Asset from table to exclude Din from the battle (and objective o",
    "flipBackLaw": "Back flips to front automatically at the start of any move phase. On flipping TO the back, an optional trigger lets the owner immediately re-circulate and shuffle their Reserve Deck.",
    "profileGaps": 2,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "adversarial opponent-choice flip gate (Rando cannot force it); recommend out-of-scope, non-canonical"
   },
   {
    "frontBp": "501_19",
@@ -728,7 +851,9 @@
    "flipLaw": "Flips when two [Separatist] systems can be spotted on table. Pure card-on-table count; no control/occupy requirement and no ownership restriction in the filter.",
    "flipBackLaw": "Flips back when FEWER than two [Separatist] systems are on table (negation of the same canSpot count-2 check).",
    "profileGaps": 2,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "flip law = card-on-table count (mirrors Hunt Down onTable leg) +1 filter key; non-canonical playtest"
   },
   {
    "frontBp": "501_60",
@@ -737,10 +862,12 @@
    "classification": "ABSENT",
    "subclass": "NO_PROFILE",
    "why": "no profile exists",
-   "flipLaw": "Flip if Tracked Fleet is 'blown away' ('annihilated' in card text; engine models it as blown-away state). Playtest card (ExpansionSet.PLAYTESTING, setTestingText).",
+   "flipLaw": "Flip if Tracked Fleet is 'blown away' ('annihilated' in card text; engine models it as blown-away state). Playtest card (ExpansionSet.PLAYTESTING, setTestingText). DRIVER (one level up, the actionable",
    "flipBackLaw": "The back NEVER flips back to front: Card501_060_BACK.java contains no FlipCardEffect and no flip trigger. Instead the back carries a hard-lose: place Objective out of play if Kylo was just forfeited t",
    "profileGaps": 2,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "NEW_PRIMITIVE",
+   "engineClassNote": "twin of 225_32 (dynamic fleet-host fact); no profile, playtest-only, non-canonical"
   },
   {
    "frontBp": "501_91",
@@ -752,7 +879,9 @@
    "flipLaw": "Card501_091 is an empty AbstractObjective shell: constructor only (side/title/expansion, setVirtualSuffix, setTestingText(\"Massassi Base Operations (V)\"), hideFromDeckBuilder). No getGameTextWhenDeplo",
    "flipBackLaw": "Card501_091_BACK is likewise an empty shell (constructor only, setTestingText(\"One In A Million (V)\"), hideFromDeckBuilder). No triggers, no flip, no modifiers.",
    "profileGaps": 1,
-   "seedMismatches": 1
+   "seedMismatches": 1,
+   "engineClass": "STUB_NA",
+   "engineClassNote": "empty AbstractObjective shell, no game text, no flip law; definitively out of scope"
   },
   {
    "frontBp": "501_94",
@@ -764,7 +893,9 @@
    "flipLaw": "Flip when the Bunker is 'blown away' (blown-away last step for a card titled Bunker). No control/occupy component at all.",
    "flipBackLaw": "Back flips to front if OPPONENT CONTROLS the Bunker (plain control of a location matching Filters.Bunker).",
    "profileGaps": 1,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "twin of 8_78 (Bunker blown-away flip), simpler law; playtest-only, non-canonical"
   },
   {
    "frontBp": "601_29",
@@ -776,7 +907,9 @@
    "flipLaw": "Flip if your slavers control two Kashyyyk battlegrounds (each controlled with a slaver there) and opponent controls no Kashyyyk locations.",
    "flipBackLaw": "Back flips to front if opponent controls two Kashyyyk battlegrounds.",
    "profileGaps": 1,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "actorToSite(slaver,Kashyyyk battleground)+opponentConstraint(==0); no new engine, needs from-scratch profile"
   },
   {
    "frontBp": "601_87",
@@ -788,7 +921,9 @@
    "flipLaw": "Flip if Galen or Vader is AT a battleground site AND opponent has NO unique character of ability > 3 AT a battleground site. Coded as AT (Filters.at), although printed text says 'present at' for the o",
    "flipBackLaw": "Back flips to front if opponent has a unique character of ability > 3 AT a battleground site, OR if NEITHER Vader NOR Galen can be spotted on table. The second route (Vader and Galen both gone) is NOT",
    "profileGaps": 2,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "EXISTING_ENGINE_FIT",
+   "engineClassNote": "Hunt Down engine+profile reused, 2 filter keys; legacy non-canonical sibling of proven 7_297/213_31"
   },
   {
    "frontBp": "601_146",
@@ -800,7 +935,9 @@
    "flipLaw": "Flips when you OCCUPY Corellia system AND CONTROL two Corellia battleground sites with Corellians.",
    "flipBackLaw": "Flips back when you do NOT occupy two battlegrounds (any battlegrounds, not Corellia-specific). NOTE: the printed game text's exception '(unless you have completed two Kessel Runs)' is NOT implemented",
    "profileGaps": 2,
-   "seedMismatches": 0
+   "seedMismatches": 0,
+   "engineClass": "SMALL_SHARED_EXTENSION",
+   "engineClassNote": "actorToSite(Corellian,Corellia bg)+occupy(Corellia system) leg; no profile exists yet"
   }
  ]
 }

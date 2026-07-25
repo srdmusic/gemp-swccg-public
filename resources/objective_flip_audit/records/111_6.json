@@ -71,7 +71,7 @@
     "profileGaps": [
       "flipGateSite null and nothing represents the true gate: an EVENT (Alderaan system 'blown away' via Commence Primary Ignition), which requires the Superlaser/CPI epic-event pipeline, not any control/occupy state.",
       "flipGateCardIds empty; Alderaan system (1_281, listed in objectiveNamedLocations) is not wired as the gate target, and Commence Primary Ignition / Superlaser prerequisites are absent from pullableCards/requiredCardsOnTable.",
-      "Back hard-lose (Death Star system blown away => objective out of play) is not represented.",
+      "Back hard-lose (Death Star system blown away => objective out of play) is not wired, though the machinery EXISTS and is Endor-proven: hardLossLocationRules (trigger 'blownAwayLastStep' / outcome 'objectiveOutOfPlay') -> isObjectiveHardLossLocation/isObjectiveHardLossDefenseLocation (ObjectiveAnalyzer.java:5955-6040) -> battle-defense bias BattleDecisionPolicy.java:641; SYCFA lacks (a) a profile hardLossLocationRules entry, (b) loaderEnabled=true (hydration gated, ObjectiveAnalyzer.java:7848/7896), and (c) a Death_Star_system key in resolveLocationFilter (registry ObjectiveAnalyzer.java:8072-8113 has no such case; unknown key fails closed).",
       "No representation of the front's own-drain cancellation at Death Star sites / no-drain-at-Alderaan restrictions that shape pre-flip play."
     ]
   },

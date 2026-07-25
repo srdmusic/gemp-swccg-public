@@ -1,6 +1,9 @@
 # ObjectiveAnalyzer Runtime Consumer Map
 
 Date: 2026-07-24. Branch `rando-consolidation-2026-06-23`, HEAD `192abf72d`.
+
+> **ADDENDUM 2026-07-25 (HEAD `ee64e6f3b`):** Codex's Endor commit generalized `flipLocationRules`/`activeFlipLocationRules` into a profile-driven engine (~30 analyzer methods + Facts-based policies: ObjectiveBattlePolicy, ForceLossFacts/Policy, DeployObjectiveSitingPolicy, PullSelectionCandidatePolicy requiredOnTableCard path). The "Invasion-only" statement in §3 is stale: the engine now fires for ANY loaderEnabled profile carrying flipLocationRules. Still isEndor-hard-gated: assessDeployChild (OA:7416), ENDOR_PLAYBOOK static (OA:328), V193 title detection (OA:9995). Full analysis: `gates/ee64e6f3b_gate.md` + mailbox m01288.
+> Family A audit (2026-07-25) further confirmed the post-Endor engine fully evaluates the schema: all relations control/controlWith/occupy/occupyWith/presentAt/at (`relationSatisfiedAt` OA:4231), all comparators (`compareCounts` OA:3305+), `referenceController` relative counts (OA:3959), and `opponentConstraint` with arbitrary comparator (OA:4277). §3's per-field table below predates this — read it together with this addendum.
 Scope: what the LIVE AI brain actually consumes from `src/gemp-swccg-server/src/main/resources/objective_playbooks.json`, so a per-objective gap-diff can classify each profile field ACTIVE / INFORMATIONAL / DEAD.
 
 All paths below are relative to `src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/` unless absolute. "OA" = `models/common/strategy/ObjectiveAnalyzer.java` (the shared live analyzer, 2,253 lines). "DE" = `models/rando/evaluators/DeployEvaluator.java`, "CSE" = `models/rando/evaluators/CardSelectionEvaluator.java`, "DPP" = `models/rando/strategy/DeployPhasePlanner.java`, "ME" = `models/rando/evaluators/MoveEvaluator.java`. Chosenone copies are identical (see §6).

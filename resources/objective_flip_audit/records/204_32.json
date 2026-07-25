@@ -82,7 +82,7 @@
   "profileGaps": [
    "flipGateSite is null; the flip gate is the Jakku system + two Jakku battleground sites combination - the count-2 requirement and the control/occupy either-way pairing are not represented.",
    "flipGateCardIds is empty although the profile's own objectiveNamedLocations resolves Jakku system to [204_26, 204_51] and Niima Outpost Shipyard to [204_27].",
-   "requiredCardsOnTable is empty; [Episode VII] Falcon is a REQUIRED setup deploy (and its home site Niima Outpost Shipyard is one of the two obvious Jakku battleground sites) - unrepresented.",
+   "requiredCardsOnTable is empty; [Episode VII] Falcon is a REQUIRED setup deploy (home site Niima Outpost Shipyard, Card204_027, is NOT a battleground - no Icon.BATTLEGROUND - so it does NOT count toward the Jakku_battleground_site flip count; nor does Graveyard Of Giants, Card204_014, which is an Effect) - unrepresented.",
    "keyCharacterFilter is null; no flip actor exists (acceptable), but Rey (Visage suspension) and Han (defense bonus) obligations have no representation.",
    "Flip-back hazard (must occupy 2 battlegrounds ANYWHERE) appears only as a generic 'Battleground' fragment with no count or occupy semantics."
   ]
