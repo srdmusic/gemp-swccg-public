@@ -19,6 +19,8 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer.ObjectiveProgressCandidateRole.REQUIRED_ACTOR;
+import static com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer.ObjectiveProgressCandidateRole.REQUIRED_LOCATION;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -312,6 +314,63 @@ public class ForceLossCardSelectionPolicyParityTest {
         assertBits(-8949.0f, rando.get(0).getScore());
         assertReasons(rando.get(0).getReasoning(),
                 "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+1000.0)",
+                "OBJECTIVE CRITICAL IN HAND - NEVER LOSE! (-9999.0)");
+    }
+
+    @Test
+    public void countedObjectiveActorAndLocationInHandReceiveForceLossProtectionWithBotParity() {
+        PhysicalCard requiredActor = card(
+                "Required Actor", Zone.HAND, CardCategory.CHARACTER);
+        PhysicalCard requiredLocation = card(
+                "Required Location", Zone.HAND, CardCategory.LOCATION);
+        List<PhysicalCard> hand = List.of(
+                requiredActor,
+                requiredLocation,
+                card("Hand Three", Zone.HAND, CardCategory.EFFECT),
+                card("Hand Four", Zone.HAND, CardCategory.EFFECT),
+                card("Hand Five", Zone.HAND, CardCategory.EFFECT));
+        GameState gameState = gameState(
+                Map.of(28, requiredActor, 29, requiredLocation),
+                hand, List.of(), 11, 0, 4);
+        SwccgGame game = mock(SwccgGame.class);
+        when(game.getGameState()).thenReturn(gameState);
+        gameStateWithGame(gameState, game);
+
+        var randoContext = randoContext(gameState, "Choose Force to lose",
+                List.of("28", "29"), Phase.CONTROL);
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.classifyPreFlipProgressCandidate(
+                game, "tester", requiredActor)).thenReturn(REQUIRED_ACTOR);
+        when(randoObjective.classifyPreFlipProgressCandidate(
+                game, "tester", requiredLocation)).thenReturn(REQUIRED_LOCATION);
+        randoContext.setObjectiveAnalyzer(randoObjective);
+
+        var chosenContext = chosenContext(gameState, "Choose Force to lose",
+                List.of("28", "29"), Phase.CONTROL);
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.classifyPreFlipProgressCandidate(
+                game, "tester", requiredActor)).thenReturn(REQUIRED_ACTOR);
+        when(chosenObjective.classifyPreFlipProgressCandidate(
+                game, "tester", requiredLocation)).thenReturn(REQUIRED_LOCATION);
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertActionParity(rando, chosen);
+        assertBits(-9849.0f, action(rando, "28").getScore());
+        assertBits(-9349.0f, action(rando, "29").getScore());
+        assertReasons(action(rando, "28").getReasoning(),
+                "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+100.0)",
+                "OBJECTIVE CRITICAL IN HAND - NEVER LOSE! (-9999.0)");
+        assertReasons(action(rando, "29").getReasoning(),
+                "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+600.0)",
                 "OBJECTIVE CRITICAL IN HAND - NEVER LOSE! (-9999.0)");
     }
 

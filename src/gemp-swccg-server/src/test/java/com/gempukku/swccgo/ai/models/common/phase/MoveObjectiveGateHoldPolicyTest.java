@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer.FlipGateFormationRole;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -28,6 +29,53 @@ public class MoveObjectiveGateHoldPolicyTest {
         assertNeutralRequiredControl(true, false, true, true);
         assertNeutralRequiredControl(true, true, false, true);
         assertNeutralRequiredControl(true, true, true, false);
+    }
+
+    @Test
+    public void countedFormationKeepsLastActorAndBuddyWhenUnopposed() {
+        MoveObjectiveGateHoldPolicy.Evaluation actor =
+                MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
+                        true, FlipGateFormationRole.LAST_REQUIRED_ACTOR,
+                        5.0f, 0.0f);
+        MoveObjectiveGateHoldPolicy.Evaluation buddy =
+                MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
+                        true, FlipGateFormationRole.LAST_REQUIRED_BUDDY,
+                        5.0f, 0.0f);
+
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.HOLD_LAST_ACTOR,
+                actor.branch());
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.HOLD_LAST_BUDDY,
+                buddy.branch());
+        assertTrue(actor.hardVeto());
+        assertTrue(buddy.hardVeto());
+    }
+
+    @Test
+    public void countedFormationHoldsAtSixPowerDeficitButAllowsRetreatBeyondIt() {
+        MoveObjectiveGateHoldPolicy.Evaluation actor =
+                MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
+                        true, FlipGateFormationRole.LAST_REQUIRED_ACTOR,
+                        8.0f, 14.0f);
+        MoveObjectiveGateHoldPolicy.Evaluation buddy =
+                MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
+                        true, FlipGateFormationRole.LAST_REQUIRED_BUDDY,
+                        8.0f, 15.0f);
+
+        assertEquals(
+                MoveObjectiveGateHoldPolicy.Branch.HOLD_DEFENSIBLE_CONTEST,
+                actor.branch());
+        assertTrue(actor.hardVeto());
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.NONE,
+                buddy.branch());
+        assertFalse(buddy.hardVeto());
+    }
+
+    @Test
+    public void countedFormationFailsClosedWithoutAnActiveProvenRole() {
+        assertNeutralCountedFormation(
+                false, FlipGateFormationRole.LAST_REQUIRED_ACTOR);
+        assertNeutralCountedFormation(true, FlipGateFormationRole.NONE);
+        assertNeutralCountedFormation(true, null);
     }
 
     @Test
@@ -113,6 +161,21 @@ public class MoveObjectiveGateHoldPolicyTest {
                         moverAtExactRequiredLocation,
                         currentlyControlsLocation,
                         soleControlSourceProven);
+
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.NONE, result.branch());
+        assertFalse(result.hardVeto());
+        assertEquals(null, result.reason());
+    }
+
+    private static void assertNeutralCountedFormation(
+            boolean activePreFlipCountedFormation,
+            FlipGateFormationRole formationRole) {
+        MoveObjectiveGateHoldPolicy.Evaluation result =
+                MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
+                        activePreFlipCountedFormation,
+                        formationRole,
+                        8.0f,
+                        10.0f);
 
         assertEquals(MoveObjectiveGateHoldPolicy.Branch.NONE, result.branch());
         assertFalse(result.hardVeto());

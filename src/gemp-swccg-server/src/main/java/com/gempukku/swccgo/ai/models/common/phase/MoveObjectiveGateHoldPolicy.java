@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer.FlipGateFormationRole;
+
 /**
  * Keeps a pre-flip actor-and-buddy formation intact at its exact objective gate.
  * The adapters own board reads and ladder veto application.
@@ -45,6 +47,47 @@ public final class MoveObjectiveGateHoldPolicy {
                 Branch.HOLD_LAST_CONTROL_SOURCE,
                 true,
                 "MOVE.OBJECTIVE.REQUIRED_CONTROL_HOLD: keep the sole control source at the required location");
+    }
+
+    /**
+     * Keeps a proven piece of a counted pre-flip formation in place while the
+     * location is unopposed or defensibly contested. A deficit greater than six
+     * permits the ordinary retreat policies to take over.
+     */
+    public static Evaluation evaluateCountedFormation(
+            boolean activePreFlipCountedFormation,
+            FlipGateFormationRole formationRole,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation) {
+        if (!activePreFlipCountedFormation
+                || formationRole == null
+                || formationRole == FlipGateFormationRole.NONE) {
+            return Evaluation.none();
+        }
+
+        boolean contested = opponentPowerAtLocation > 0.0f;
+        boolean retreatable = opponentPowerAtLocation
+                > friendlyPowerAtLocation + RETREATABLE_POWER_GAP;
+        if (retreatable) {
+            return Evaluation.none();
+        }
+        if (contested) {
+            return new Evaluation(
+                    Branch.HOLD_DEFENSIBLE_CONTEST,
+                    true,
+                    "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: keep the defensible counted formation together");
+        }
+
+        if (formationRole == FlipGateFormationRole.LAST_REQUIRED_ACTOR) {
+            return new Evaluation(
+                    Branch.HOLD_LAST_ACTOR,
+                    true,
+                    "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: the last required actor must remain");
+        }
+        return new Evaluation(
+                Branch.HOLD_LAST_BUDDY,
+                true,
+                "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: preserve the required actor's last buddy");
     }
 
     public static Evaluation evaluate(

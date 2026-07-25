@@ -3358,9 +3358,11 @@ public class DeployEvaluator extends ActionEvaluator {
                                     java.util.Map<String, Float> objLocPower = new java.util.LinkedHashMap<>();
                                     java.util.Set<String> exactStructuredHoldLocations =
                                         new java.util.LinkedHashSet<>();
+                                    boolean structuredHoldLocationsAuthoritative =
+                                        flipObjAnalyzer.hasStructuredFlipBackLocationRules();
                                     for (PhysicalCard loc : gameState.getTopLocations()) {
                                         if (loc == null || loc.getTitle() == null) continue;
-                                        if (flipObjAnalyzer.hasStructuredFlipBackLocationRules()
+                                        if (structuredHoldLocationsAuthoritative
                                                 && flipObjAnalyzer.isFlipBackProtectionLocation(
                                                     loc, game, flipPlayerId)) {
                                             exactStructuredHoldLocations.add(loc.getTitle());
@@ -3384,7 +3386,9 @@ public class DeployEvaluator extends ActionEvaluator {
 
                                     java.util.Set<String> holdLocations =
                                         DeployObjectiveSitingPolicy.selectPostFlipHoldLocations(
-                                            exactStructuredHoldLocations, objLocPower);
+                                            structuredHoldLocationsAuthoritative,
+                                            exactStructuredHoldLocations,
+                                            objLocPower);
 
                                     // Check if deploy target is one of the hold locations
                                     boolean deploysToHoldLoc = false;

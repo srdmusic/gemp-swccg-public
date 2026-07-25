@@ -50,7 +50,13 @@ public class MovePostFlipConsolidationSourceParityTest {
         assertTrue(block.contains(
                 "moveConsolidateAnalyzer.getFlipConditionLocationFragments()"));
         assertTrue(block.contains(
-                "moveConsolidateAnalyzer.isFlipBackProtectionLocation("));
+                "moveConsolidateAnalyzer\n"
+                        + "                                            .assessPostFlipLocationRisk("));
+        assertTrue(block.contains(
+                "moveConsolidateAnalyzer\n"
+                        + "                                            .wouldDepartureTriggerFlipBack("));
+        assertTrue(block.contains(
+                ".isFlipBackProtectionLocation("));
         assertTrue(block.contains("currentLocationMustBeHeld"));
         assertTrue(block.contains("gameState.getTopLocations()"));
         assertTrue(block.contains(
@@ -76,8 +82,16 @@ public class MovePostFlipConsolidationSourceParityTest {
         int currentMatch = block.indexOf(
                 "MovePostFlipConsolidationPolicy.isObjectiveLocation(",
                 fragments);
+        int physicalRisk = block.indexOf(
+                "assessPostFlipLocationRisk(", currentMatch);
+        int countedBranch = block.indexOf(
+                "countedRisk.applies()", physicalRisk);
+        int departureRisk = block.indexOf(
+                "wouldDepartureTriggerFlipBack(", countedBranch);
+        int physicalFallback = block.indexOf(
+                "isFlipBackProtectionLocation(", departureRisk);
         int locations = block.indexOf(
-                "gameState.getTopLocations()", currentMatch);
+                "gameState.getTopLocations()", physicalFallback);
         int locationMatch = block.indexOf(
                 "MovePostFlipConsolidationPolicy.isObjectiveLocation(",
                 currentMatch + 1);
@@ -99,7 +113,11 @@ public class MovePostFlipConsolidationSourceParityTest {
         assertTrue(tryBlock > flipped);
         assertTrue(fragments > tryBlock);
         assertTrue(currentMatch > fragments);
-        assertTrue(locations > currentMatch);
+        assertTrue(physicalRisk > currentMatch);
+        assertTrue(countedBranch > physicalRisk);
+        assertTrue(departureRisk > countedBranch);
+        assertTrue(physicalFallback > departureRisk);
+        assertTrue(locations > physicalFallback);
         assertTrue(locationMatch > locations);
         assertTrue(power > locationMatch);
         assertTrue(decision > power);

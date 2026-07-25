@@ -28,6 +28,66 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "dantooine-base-operations-front-control",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Dantooine_site",
+              "locationFragments": [
+                "dantooine"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "actorFilterKey": "Rebel",
+              "includeExcludedFromBattle": true,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Dantooine_location",
+                "includeExcludedFromBattle": true,
+                "count": {
+                  "comparator": "==",
+                  "value": 0
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "Rebels control at least three Dantooine sites and opponent controls no Dantooine locations"
+            }
+          ]
+        },
+        {
+          "id": "dantooine-base-operations-back-control",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Dantooine_location",
+              "locationFragments": [
+                "dantooine"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2,
+                "gameTextModification": "LEGACY__MORE_DANGEROUS_THAN_YOU_REALIZE__REQUIRES_THREE_SITES_TO_FLIP_BACK",
+                "modifiedValue": 3
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls at least two Dantooine locations, or three with the legacy game-text modification"
+            }
+          ]
+        }
+      ],
       "frontBp": "7_135",
       "backBp": "7_135_BACK",
       "abbreviation": "DBO",
@@ -2346,6 +2406,89 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "zero-hour-front-control-or-occupy",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Lothal_location",
+              "locationFragments": [
+                "lothal"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "actorFilterKey": "Rebel",
+              "includeExcludedFromBattle": false,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Lothal_location",
+                "includeExcludedFromBattle": false,
+                "count": {
+                  "comparator": "==",
+                  "value": 0
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "Rebels control three Lothal locations and opponent controls no Lothal locations"
+            },
+            {
+              "relation": "occupyWith",
+              "controller": "self",
+              "locationFilterKey": "Lothal_location",
+              "locationFragments": [
+                "lothal"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "actorFilterKey": "Phoenix_Squadron_character",
+              "includeExcludedFromBattle": false,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Lothal_location",
+                "includeExcludedFromBattle": false,
+                "count": {
+                  "comparator": "==",
+                  "value": 0
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "occupy three Lothal locations with Phoenix Squadron characters and opponent controls no Lothal locations"
+            }
+          ]
+        },
+        {
+          "id": "zero-hour-back-control-margin",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Lothal_location",
+              "locationFragments": [
+                "lothal"
+              ],
+              "count": {
+                "comparator": ">",
+                "referenceController": "self"
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls more Lothal locations than owner"
+            }
+          ]
+        }
+      ],
       "frontBp": "219_48",
       "backBp": "219_48_BACK",
       "abbreviation": "ZH",
@@ -3274,6 +3417,64 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "ralltiir-operations-front-control",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Ralltiir_site",
+              "locationFragments": [
+                "ralltiir"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "actorFilterKey": "Imperial",
+              "includeExcludedFromBattle": true,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Ralltiir_location",
+                "includeExcludedFromBattle": true,
+                "count": {
+                  "comparator": "==",
+                  "value": 0
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "Imperials control at least three Ralltiir sites and opponent controls no Ralltiir locations"
+            }
+          ]
+        },
+        {
+          "id": "ralltiir-operations-back-control",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Ralltiir_location",
+              "locationFragments": [
+                "ralltiir"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls at least two Ralltiir locations"
+            }
+          ]
+        }
+      ],
       "frontBp": "7_300",
       "backBp": "7_300_BACK",
       "abbreviation": "RO",
@@ -3967,6 +4168,7 @@
                 "value": 1
               },
               "actorFilterKey": "Neimoidian",
+              "includeExcludedFromBattle": true,
               "scoreRole": "flipGate",
               "sourceText": "control Theed Palace Throne Room with a Neimoidian there"
             },
@@ -3981,6 +4183,7 @@
                 "comparator": ">=",
                 "value": 1
               },
+              "includeExcludedFromBattle": true,
               "scoreRole": "flipProgress",
               "sourceText": "control Naboo system"
             }
@@ -4003,6 +4206,7 @@
                 "comparator": ">=",
                 "value": 1
               },
+              "includeExcludedFromBattle": true,
               "scoreRole": "stayFlipped",
               "sourceText": "opponent controls Naboo system"
             },
@@ -4017,6 +4221,7 @@
                 "comparator": ">=",
                 "value": 1
               },
+              "includeExcludedFromBattle": true,
               "scoreRole": "stayFlipped",
               "sourceText": "opponent controls Theed Palace Throne Room"
             }

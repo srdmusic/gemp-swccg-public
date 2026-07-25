@@ -398,6 +398,39 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
     }
 
+    private void applyCountedObjectivePullPolicy(
+            DecisionContext context, EvaluatedAction action,
+            String blueprintId, boolean lossDecision) {
+        if (lossDecision || context.getGame() == null
+                || context.getGameState() == null
+                || context.getPlayerId() == null
+                || context.getObjectiveAnalyzer() == null
+                || !context.getObjectiveAnalyzer().isAnalyzed()) {
+            return;
+        }
+
+        PhysicalCard candidate = findFirstCardByBlueprint(
+                context.getGameState(), context.getPlayerId(), blueprintId);
+        com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer
+                .ObjectiveProgressCandidateRole role =
+                context.getObjectiveAnalyzer()
+                        .classifyPreFlipProgressCandidate(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                candidate);
+        applyPullSelectionPolicy(action,
+                PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
+                        action.getActionId(),
+                        role == com.gempukku.swccgo.ai.models.common.strategy
+                                .ObjectiveAnalyzer
+                                .ObjectiveProgressCandidateRole
+                                .REQUIRED_ACTOR,
+                        role == com.gempukku.swccgo.ai.models.common.strategy
+                                .ObjectiveAnalyzer
+                                .ObjectiveProgressCandidateRole
+                                .REQUIRED_LOCATION));
+    }
+
     /**
      * Check if gameText contains a ship name, filtering out known false positives.
      * First checks if the text contains the ship name at all. If it does,
@@ -1118,6 +1151,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     objectiveProgressDeployingCard, location);
                             logger.debug("V214 DEPLOY CHILD OBJECTIVE FACTS: outcome={} evidence={}",
                                 objectiveProgress.outcome(), objectiveProgress.evidence());
+                            boolean countedProgress =
+                                    objectiveProgressAnalyzer
+                                            .advancesPreFlipRequirementAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location);
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreCountedObjectiveProgress(
+                                        action.getActionId(),
+                                        countedProgress));
                         }
 
                         // === V166 (Steve, 2026-06): CONTEST THE OPPONENT'S DRAIN by deploying to it ===
@@ -2138,19 +2182,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer locObjAnalyzer =
                             context.getObjectiveAnalyzer();
                         if (!earlySpyDetected && locObjAnalyzer != null && locObjAnalyzer.isAnalyzed() && title != null) {
-                            if (locObjAnalyzer.isObjectiveRelevantLocation(title)) {
-                                float objLocBonus = locObjAnalyzer.getLocationObjectiveBonus(title);
-                                DeployObjectiveSitingPolicy.Facts v22SitingFacts =
-                                    new DeployObjectiveSitingPolicy.Facts(
-                                        action.getActionId(), earlySpyDetected, true, true,
-                                        objLocBonus, false, false, false, false,
-                                        false, false, false, "", 0.0f, 0.0f);
-                                PolicyContributionLedger v22SitingLedger = new PolicyContributionLedger(
-                                    "deploy-objective-v22-" + action.getActionId());
-                                v22SitingLedger.register(
-                                    DeployObjectiveSitingPolicy.evaluate(v22SitingFacts));
-                                PolicyOperationAdapter.apply(action, v22SitingLedger);
-                                logger.warn("V22 OBJECTIVE DEPLOY: {} is objective-relevant (+{})", title, objLocBonus);
+                            if (locObjAnalyzer.isObjectiveRelevantLocation(
+                                    location, game, playerId)) {
+                                float objLocBonus =
+                                    locObjAnalyzer.getLocationObjectiveBonus(
+                                        location, game, playerId);
+                                if (objLocBonus != 0.0f) {
+                                    DeployObjectiveSitingPolicy.Facts v22SitingFacts =
+                                        new DeployObjectiveSitingPolicy.Facts(
+                                            action.getActionId(), earlySpyDetected, true, true,
+                                            objLocBonus, false, false, false, false,
+                                            false, false, false, "", 0.0f, 0.0f);
+                                    PolicyContributionLedger v22SitingLedger = new PolicyContributionLedger(
+                                        "deploy-objective-v22-" + action.getActionId());
+                                    v22SitingLedger.register(
+                                        DeployObjectiveSitingPolicy.evaluate(v22SitingFacts));
+                                    PolicyOperationAdapter.apply(action, v22SitingLedger);
+                                    logger.warn("V22 OBJECTIVE DEPLOY: {} is objective-relevant (+{})", title, objLocBonus);
+                                }
                             }
                         }
 
@@ -2666,6 +2715,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     }
                                                 } else {
                                                     v212V193FormationSupported = true;
+                                                }
+                                                if (fsObj != null
+                                                        && fsObj.wouldCompletePreFlipRequirementAt(
+                                                            context.getGame(),
+                                                            context.getPlayerId(),
+                                                            v136DeployingCard,
+                                                            location)) {
+                                                    fsFlipGate = location.getTitle();
                                                 }
                                                 com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployVerdict fsVerdict =
                                                     com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
@@ -4169,8 +4226,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 && context.getGame() != null
                 && context.getPlayerId() != null
                 && physicalCard != null
-                && objectiveAnalyzer.matchesFlipGateActorRequirement(
-                        context.getGame(), context.getPlayerId(), physicalCard);
+                && (objectiveAnalyzer.matchesFlipGateActorRequirement(
+                        context.getGame(), context.getPlayerId(), physicalCard)
+                    || objectiveAnalyzer.classifyPreFlipProgressCandidate(
+                            context.getGame(), context.getPlayerId(),
+                            physicalCard)
+                        != com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer
+                            .ObjectiveProgressCandidateRole.NONE);
         if (route == ForceLossPolicy.Route.STANDALONE) {
             myLord = objectiveAnalyzer.getObjectiveTitle() != null
                     && objectiveAnalyzer.isMyLord();
@@ -7190,6 +7253,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             applyUnknownPullSelectionPolicy(context, action, cardTitle,
                     blueprintId, category, blueprint != null,
                     isLossDecision, textLower);
+            applyCountedObjectivePullPolicy(
+                    context, action, blueprintId, isLossDecision);
 
             // V28/V47 RESERVE SOLO BLOCK — RETIRED 2026-07-12 (batch 1d; Codex m00206 wrong-facts
             // audit CODEX_V47_WRONG_FACTS_AUDIT_2026-07-12.md): it applied Cloud City board facts to
@@ -7353,6 +7418,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // and reserve-deck deployment-plan scoring.
             applyBlueprintPullSelectionPolicy(
                     action, blueprintId, cardTitle, textLower, plan);
+            applyCountedObjectivePullPolicy(
+                    context, action, blueprintId, false);
 
             // === Shield scoring ===
             if (pullCategory == CardCategory.DEFENSIVE_SHIELD) {
@@ -7693,6 +7760,27 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             match = candidate;
         }
         return match;
+    }
+
+    private PhysicalCard findFirstCardByBlueprint(
+            GameState gameState, String playerId, String blueprintId) {
+        if (gameState == null || playerId == null || blueprintId == null
+                || blueprintId.isBlank() || "inPlay".equals(blueprintId)) {
+            return null;
+        }
+        java.util.List<PhysicalCard> candidates = new java.util.ArrayList<>();
+        java.util.List<PhysicalCard> reserveCards = gameState.getCardPile(
+                playerId, com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+        java.util.List<PhysicalCard> handCards = gameState.getHand(playerId);
+        if (reserveCards != null) candidates.addAll(reserveCards);
+        if (handCards != null) candidates.addAll(handCards);
+        for (PhysicalCard candidate : candidates) {
+            if (candidate != null
+                    && blueprintId.equals(candidate.getBlueprintId(true))) {
+                return candidate;
+            }
+        }
+        return null;
     }
 
     // ====================================================================

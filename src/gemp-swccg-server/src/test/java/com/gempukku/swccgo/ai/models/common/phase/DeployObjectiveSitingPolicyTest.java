@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
@@ -106,6 +107,44 @@ public class DeployObjectiveSitingPolicyTest {
         assertOperation(army, "V51-CC-ARMY", 500.0f);
         assertOperation(objective, "V51-OBJ-FIRST", 300.0f);
         assertOperation(key, "V67ak", 800.0f);
+    }
+
+    @Test
+    public void countedObjectiveDeployScoresOnlyMissingLocationProgress() {
+        PolicyOperation progress =
+                DeployObjectiveSitingPolicy.scoreCountedObjectiveProgress(
+                        "a", true).operations().get(0);
+        PolicyResult neutral =
+                DeployObjectiveSitingPolicy.scoreCountedObjectiveProgress(
+                        "a", false);
+
+        assertOperation(progress,
+                "DEPLOY.OBJECTIVE.COUNTED_REQUIRED_LOCATION", 600.0f);
+        assertEquals(TraceDomainId.DEPLOY_SITING, progress.domainId());
+        assertEquals(TraceOutputKind.BANDED, progress.outputKind());
+        assertEquals("DEPLOY_COUNTED_OBJECTIVE_PROGRESS_POLICY",
+                neutral.producerId());
+        assertTrue(neutral.operations().isEmpty());
+    }
+
+    @Test
+    public void countedObjectiveDeployScoreHasExplicitLegacyBoundaries() {
+        float progress =
+                DeployObjectiveSitingPolicy.scoreCountedObjectiveProgress(
+                        "a", true).operations().get(0).delta();
+        float genericObjective =
+                DeployObjectiveSitingPolicy.scoreObjectiveFirst(
+                        new DeployObjectiveSitingPolicy.ObjectiveFirstFacts(
+                                "a", "Ralltiir: Spaceport Prefect's Office"))
+                        .operations().get(0).delta();
+        float namedKeyCharacter =
+                DeployObjectiveSitingPolicy.scoreKeyCharacter(
+                        new DeployObjectiveSitingPolicy.KeyCharacterFacts(
+                                "a", "Admiral Piett"))
+                        .operations().get(0).delta();
+
+        assertTrue(progress > genericObjective);
+        assertTrue(progress < namedKeyCharacter);
     }
 
     @Test
@@ -340,6 +379,17 @@ public class DeployObjectiveSitingPolicyTest {
         assertEquals(new LinkedHashSet<>(List.of("Site C", "Site A")),
                 DeployObjectiveSitingPolicy.selectPostFlipHoldLocations(
                         Set.of(), powers));
+    }
+
+    @Test
+    public void authoritativeEmptyStructuredSetDoesNotFallBackToStrongestTwo() {
+        Map<String, Float> powers = linkedPowers(
+                "Site A", 6.0f,
+                "Site B", 6.0f,
+                "Site C", 9.0f);
+
+        assertTrue(DeployObjectiveSitingPolicy.selectPostFlipHoldLocations(
+                true, Set.of(), powers).isEmpty());
     }
 
     @Test

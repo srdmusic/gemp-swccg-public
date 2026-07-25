@@ -62,6 +62,7 @@ public class DeployPhasePlanner {
     private int lastPlanTurn = -1;
     private boolean lastPlanHadActiveFlipGate = false;
     private boolean lastPlanHadFlipGateActorInHand = false;
+    private String lastPlanPreFlipProgressFingerprint = "";
 
     // Board state reference for scoring
     private SwccgGame currentGame;
@@ -88,6 +89,7 @@ public class DeployPhasePlanner {
         lastPlanTurn = -1;
         lastPlanHadActiveFlipGate = false;
         lastPlanHadFlipGateActorInHand = false;
+        lastPlanPreFlipProgressFingerprint = "";
         currentGame = null;
         currentPlayerId = null;
     }
@@ -132,6 +134,13 @@ public class DeployPhasePlanner {
                 game, playerId);
         boolean hasFlipGateActorInHand = hasFlipGateActorInHand(
                 game, playerId);
+        String preFlipProgressFingerprint = objectiveAnalyzer == null
+                ? ""
+                : objectiveAnalyzer.getPreFlipProgressFingerprint(
+                        game, playerId);
+        if (preFlipProgressFingerprint == null) {
+            preFlipProgressFingerprint = "";
+        }
 
         // If we already have a plan for this turn, return it
         if (currentPlan != null && lastPlanTurn == currentTurn) {
@@ -144,6 +153,12 @@ public class DeployPhasePlanner {
                 LOG.warn("OBJECTIVE.DEPLOY.REPLAN_ACTOR_ARRIVED: refreshing turn {} plan "
                         + "because the missing flip-gate actor entered hand",
                     currentTurn);
+            } else if (!lastPlanPreFlipProgressFingerprint.equals(
+                    preFlipProgressFingerprint)) {
+                LOG.warn("OBJECTIVE.DEPLOY.REPLAN_PROGRESS_CHANGED: refreshing turn {} plan "
+                        + "because structured pre-flip progress changed from {} to {}",
+                    currentTurn, lastPlanPreFlipProgressFingerprint,
+                    preFlipProgressFingerprint);
             } else {
                 LOG.debug("📋 Returning cached plan for turn {} ({} instructions remaining)",
                     currentTurn, currentPlan.getInstructions().size());
@@ -307,6 +322,7 @@ public class DeployPhasePlanner {
         lastPlanTurn = currentTurn;
         lastPlanHadActiveFlipGate = hasActiveFlipGate;
         lastPlanHadFlipGateActorInHand = hasFlipGateActorInHand;
+        lastPlanPreFlipProgressFingerprint = preFlipProgressFingerprint;
         logFinalPlan(bestPlan);
 
         return currentPlan;
@@ -1691,9 +1707,15 @@ public class DeployPhasePlanner {
             float objectiveBonus = 0.0f;
             if (objectiveAnalyzer != null && objectiveAnalyzer.isAnalyzed()) {
                 String locTitle = targetLoc.location.getTitle();
-                if (locTitle != null && objectiveAnalyzer.isObjectiveRelevantLocation(locTitle)) {
-                    float objBonus = objectiveAnalyzer.getLocationObjectiveBonus(locTitle);
-                    objectiveRelevant = true;
+                if (locTitle != null && objectiveAnalyzer
+                        .isObjectiveRelevantLocation(
+                                targetLoc.location, currentGame,
+                                currentPlayerId)) {
+                    float objBonus = objectiveAnalyzer
+                            .getLocationObjectiveBonus(
+                                    targetLoc.location, currentGame,
+                                    currentPlayerId);
+                    objectiveRelevant = objBonus != 0.0f;
                     objectiveBonus = objBonus;
                     LOG.warn("V22 PLAN SCORE: {} is objective-relevant, +{} to plan score", locTitle, objBonus);
                 }

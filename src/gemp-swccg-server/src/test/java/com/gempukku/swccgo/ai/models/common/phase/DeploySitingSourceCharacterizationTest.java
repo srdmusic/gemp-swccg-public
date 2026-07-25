@@ -230,6 +230,34 @@ public class DeploySitingSourceCharacterizationTest {
     }
 
     @Test
+    public void postFlipHoldAdaptersUseStructuredPhysicalLocationFacts()
+            throws IOException {
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String deploy = evaluatorSource(bot, "DeployEvaluator.java");
+            int postFlip = deploy.indexOf(
+                    "// === POST-FLIP: Consolidate to fewer locations ===");
+            int authoritative = deploy.indexOf(
+                    "flipObjAnalyzer.hasStructuredFlipBackLocationRules()",
+                    postFlip);
+            int physicalRisk = deploy.indexOf(
+                    "flipObjAnalyzer.isFlipBackProtectionLocation(\n"
+                            + "                                                    loc, game, flipPlayerId)",
+                    authoritative);
+            int selection = deploy.indexOf(
+                    "DeployObjectiveSitingPolicy.selectPostFlipHoldLocations(\n"
+                            + "                                            structuredHoldLocationsAuthoritative,",
+                    physicalRisk);
+
+            assertTrue(bot, postFlip >= 0);
+            assertTrue(bot, authoritative > postFlip);
+            assertTrue(bot, physicalRisk > authoritative);
+            assertTrue(bot, selection > physicalRisk);
+            assertEquals(bot, 1, countOccurrences(deploy,
+                    "hasStructuredFlipBackLocationRules()"));
+        }
+    }
+
+    @Test
     public void sitingPoliciesContainNoEngineDecisionMetadata() throws IOException {
         String combined = commonPhaseSource("DeploySitingPolicy.java")
                 + commonPhaseSource("DeployObjectiveSitingPolicy.java")

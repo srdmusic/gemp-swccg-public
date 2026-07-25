@@ -87,6 +87,19 @@ public final class DeployObjectiveSitingPolicy {
                                 facts.locationTitle())));
     }
 
+    public static PolicyResult scoreCountedObjectiveProgress(
+            String actionId, boolean advancesRequiredLocation) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!advancesRequiredLocation) {
+            return new PolicyResult(
+                    "DEPLOY_COUNTED_OBJECTIVE_PROGRESS_POLICY", List.of());
+        }
+        return single("DEPLOY_COUNTED_OBJECTIVE_PROGRESS_POLICY",
+                add(actionId, "DEPLOY.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
+                        TraceOutputKind.BANDED, 600.0f,
+                        "Deploy here to advance a missing counted-objective location"));
+    }
+
     public static PolicyResult scoreKeyCharacter(KeyCharacterFacts facts) {
         Objects.requireNonNull(facts, "facts");
         return single("DEPLOY_KEY_CHARACTER_POLICY",
@@ -457,12 +470,22 @@ public final class DeployObjectiveSitingPolicy {
     public static Set<String> selectPostFlipHoldLocations(
             Set<String> exactStructuredHoldLocations,
             Map<String, Float> occupiedObjectivePower) {
+        return selectPostFlipHoldLocations(
+                !exactStructuredHoldLocations.isEmpty(),
+                exactStructuredHoldLocations,
+                occupiedObjectivePower);
+    }
+
+    public static Set<String> selectPostFlipHoldLocations(
+            boolean structuredAuthoritative,
+            Set<String> exactStructuredHoldLocations,
+            Map<String, Float> occupiedObjectivePower) {
         Objects.requireNonNull(exactStructuredHoldLocations,
                 "exactStructuredHoldLocations");
         Objects.requireNonNull(occupiedObjectivePower,
                 "occupiedObjectivePower");
 
-        if (!exactStructuredHoldLocations.isEmpty()) {
+        if (structuredAuthoritative) {
             return Collections.unmodifiableSet(
                     new LinkedHashSet<>(exactStructuredHoldLocations));
         }

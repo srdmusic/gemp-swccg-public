@@ -8290,3 +8290,45 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     The JVM was not restarted, nothing was deployed or pushed, and no fresh live game was claimed.
     Revert the single Batch Zero behavior commit; the source-audit commit and V297 through V297.2 remain
     independent.
+
+  ==== Regional counted-objective behavior Batch One (2026-07-24) ====
+    Card source defines a mirrored regional family. Ralltiir Operations requires three Ralltiir sites,
+    each controlled with an Imperial, while Light Side controls no Ralltiir location. Its back flips at
+    two Light Side-controlled Ralltiir locations. Dantooine Base Operations uses Rebels and Dantooine,
+    with a back threshold of two that becomes three under the Legacy game-text modifier. Zero Hour
+    requires either three Rebel-controlled Lothal locations or three Lothal locations occupied with
+    Phoenix Squadron characters, while Dark Side controls none. Its back flips only when Dark Side
+    controls strictly more Lothal locations than Light Side.
+
+    The shared analyzer now consumes these structured count, relation, controller, opponent constraint,
+    and modified-threshold facts. A missing typed actor scores +400 on Reserve Deck choice, a missing
+    location scores +300, and deployment to the exact missing qualifying location scores +600. Both
+    bot planners refresh a same-turn plan only when the structured progress fingerprint changes.
+    Ability-zero Chopper is valid Phoenix progress only where another friendly card already supplies
+    occupation; he remains invalid at an empty site.
+
+    Movement preserves the last actor or presence source at partial 1/3, partial 2/3, and exact 3/3
+    progress, with the existing escape when opponent power leads by more than six. A redundant fourth
+    qualified location is not held. Safe battle scoring targets only missing qualifying locations.
+    Existing V21 protection now applies to counted-objective actors and locations in hand, and casualty
+    classification protects the last actor or buddy that keeps a counted location qualified.
+
+    Physical post-flip risk analysis protects only a location whose loss can cross the exact structured
+    threshold. It handles Ralltiir and Dantooine's opponent-control counts, the Dantooine Legacy
+    modifier, and Zero Hour's strict opponent-versus-self margin. The structured hold set is
+    authoritative even when empty, preventing broad title-fragment fallback.
+
+    Real engine tests exercise both sides of all three objectives. Ralltiir and Dantooine objective
+    actions download the final affiliated character for exact Force cost and actually flip. Zero Hour
+    downloads a Lothal site for zero Force, proves both front routes, proves the objective-granted
+    Phoenix Squadron keyword makes Chopper the completing actor only with existing occupation, and
+    proves that an equal control count does not flip back.
+
+    Focused objective, pull, deploy, move, Force-loss, and parity suites passed 346/0/0/0 across 42
+    suites. The full reactor passed 2156/0/0/26 across 293 suites. Compilation, exact bot mirror parity,
+    objective JSON, diff, AI-only scope, package, and class-marker gates passed. Packaged server jar
+    SHA-256 is 68bcf947997425ba9336c0168bedfba3bb5899ad8249f9b844cae430942b5baf and packaged web jar
+    SHA-256 is 3f4cb3e978bb5d003b1959d1410ba26367f2f1773393930ab769d7191780f30b. No engine or card Java
+    changed. The JVM was not restarted, nothing was deployed or pushed, and no fresh live game was
+    claimed. Revert the single regional counted-objective Batch One commit; Invasion Batch Zero and
+    the source-audit commit remain independent.

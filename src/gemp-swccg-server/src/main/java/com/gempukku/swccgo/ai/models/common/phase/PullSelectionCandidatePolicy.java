@@ -43,6 +43,29 @@ public final class PullSelectionCandidatePolicy {
                 : empty();
     }
 
+    public static PolicyResult scoreCountedObjectiveProgress(
+            String actionId, boolean requiredActor,
+            boolean requiredLocation) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (requiredActor && requiredLocation) {
+            throw new IllegalArgumentException(
+                    "A pull candidate cannot be both a required actor and location");
+        }
+        if (requiredActor) {
+            return one(actionId, "PULL.OBJECTIVE.COUNTED_REQUIRED_ACTOR",
+                    TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED,
+                    400.0f,
+                    "Pull the typed actor required by the counted objective");
+        }
+        if (requiredLocation) {
+            return one(actionId, "PULL.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
+                    TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED,
+                    300.0f,
+                    "Pull a missing location required by the counted objective");
+        }
+        return empty();
+    }
+
     public static PolicyResult scoreUnknownPull(
             PullSelectionCandidateFacts.UnknownPull facts) {
         Objects.requireNonNull(facts, "facts");

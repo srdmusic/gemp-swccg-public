@@ -210,9 +210,23 @@ public final class MoveObjectiveConsolidationPolicy {
             Predicate<String> protectionLocation,
             Consumer<Exception> opponentPowerFailureObserver,
             Consumer<Exception> protectionFailureObserver) {
+        return postFlipPhysical(
+                gameState, game, currentLocation, playerId,
+                location -> location != null
+                        && protectionLocation.test(location.getTitle()),
+                opponentPowerFailureObserver,
+                protectionFailureObserver);
+    }
+
+    public static Evaluation postFlipPhysical(
+            GameState gameState, SwccgGame game,
+            PhysicalCard currentLocation, String playerId,
+            Predicate<PhysicalCard> protectionLocation,
+            Consumer<Exception> opponentPowerFailureObserver,
+            Consumer<Exception> protectionFailureObserver) {
         String currentLocationName = currentLocation.getTitle();
         boolean atProtectionLocation =
-                protectionLocation.test(currentLocationName);
+                protectionLocation.test(currentLocation);
         String opponentId = game.getOpponent(playerId);
 
         int ownPowerCardCount = 0;
@@ -251,7 +265,7 @@ public final class MoveObjectiveConsolidationPolicy {
                 if (location == null || location.getTitle() == null) {
                     continue;
                 }
-                if (!protectionLocation.test(location.getTitle())) {
+                if (!protectionLocation.test(location)) {
                     continue;
                 }
                 float ourPowerAtLocation = game.getModifiersQuerying()

@@ -6,10 +6,12 @@ import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 
 import org.apache.logging.log4j.Logger;
 
@@ -195,6 +197,38 @@ public class ObjectiveAnalyzer {
         NONE
     }
 
+    /** How one Reserve Deck or hand candidate advances a counted pre-flip rule. */
+    public enum ObjectiveProgressCandidateRole {
+        REQUIRED_LOCATION,
+        REQUIRED_ACTOR,
+        NONE
+    }
+
+    /** Current counterfactual risk for one counted post-flip location rule. */
+    public record PostFlipLocationRisk(
+            boolean applies,
+            boolean inScope,
+            boolean flipBackNow,
+            boolean opponentControlsHere,
+            boolean criticalIfSelfControlLost,
+            boolean criticalIfOpponentGainsControl,
+            int selfControlCount,
+            int opponentControlCount,
+            int adverseStepsRemaining) {
+        public boolean requiresProtection() {
+            return applies && inScope
+                    && (opponentControlsHere
+                        || criticalIfSelfControlLost
+                        || criticalIfOpponentGainsControl);
+        }
+
+        private static PostFlipLocationRisk none() {
+            return new PostFlipLocationRisk(
+                    false, false, false, false,
+                    false, false, 0, 0, 0);
+        }
+    }
+
     public void analyze(SwccgGame game, String playerId, Side side) {
         LOG.warn("[ObjectiveAnalyzer] analyze() CALLED - game={}, player={}, side={}", game != null, playerId, side);
         if (game == null || playerId == null) return;
@@ -348,6 +382,196 @@ public class ObjectiveAnalyzer {
         return Collections.unmodifiableList(states);
     }
 
+    public boolean hasCountedPreFlipActorRule() {
+        if (!analyzed || isFlipped || activeFlipLocationRules == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !"preFlip".equals(rule.phase)
+                    || !"flip".equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (alternative != null && alternative.actorFilterKey != null
+                        && alternative.count != null
+                        && alternative.count.value != null
+                        && alternative.count.value > 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Classifies a real candidate by whether it fills the next typed location
+     * or actor leg of a counted pre-flip rule.
+     */
+    public ObjectiveProgressCandidateRole classifyPreFlipProgressCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || candidate == null || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return ObjectiveProgressCandidateRole.NONE;
+        }
+
+        try {
+            GameState gameState = game.getGameState();
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule) || isRuleSatisfied(
+                        game, playerId, rule)) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative : rule.alternatives) {
+                    if (alternative == null || alternative.count == null
+                            || alternative.count.value == null
+                            || alternative.count.value <= 1) {
+                        continue;
+                    }
+                    int required = expectedCount(
+                            game, playerId, alternative.count);
+                    int qualified = countAlternativeMatches(
+                            game, playerId, playerId, alternative);
+                    if (qualified >= required) continue;
+
+                    com.gempukku.swccgo.filters.Filter locationFilter =
+                            resolveLocationFilter(
+                                    alternative.locationFilterKey, playerId);
+                    if (locationFilter != null
+                            && locationFilter.accepts(
+                                    gameState, game.getModifiersQuerying(),
+                                    candidate)
+                            && countMatchingLocations(
+                                    game, playerId, alternative) < required) {
+                        return ObjectiveProgressCandidateRole
+                                .REQUIRED_LOCATION;
+                    }
+
+                    com.gempukku.swccgo.filters.Filter actorFilter =
+                            resolveFilter(alternative.actorFilterKey);
+                    if (actorFilter != null
+                            && actorFilter.accepts(
+                                    gameState, game.getModifiersQuerying(),
+                                    candidate)) {
+                        List<PhysicalCard> locations =
+                                gameState.getLocationsInOrder();
+                        if (locations == null) continue;
+                        for (PhysicalCard location : locations) {
+                            if (advancesAlternativeAt(
+                                    game, playerId, candidate, location,
+                                    alternative)) {
+                                return ObjectiveProgressCandidateRole
+                                        .REQUIRED_ACTOR;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Objective progress candidate assessment failed: {}",
+                    e.getMessage());
+        }
+        return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    /**
+     * True when this typed candidate deployed to this exact location would add
+     * one qualifying location to an unmet counted pre-flip alternative.
+     */
+    public boolean advancesPreFlipRequirementAt(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || candidate == null || location == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule) || isRuleSatisfied(
+                    game, playerId, rule)) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (advancesAlternativeAt(
+                        game, playerId, candidate, location, alternative)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean wouldCompletePreFlipRequirementAt(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || candidate == null || location == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            boolean advanced = false;
+            boolean allSatisfiedAfter = true;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                boolean advances = advancesAlternativeAt(
+                        game, playerId, candidate, location, alternative);
+                if (advances) advanced = true;
+                boolean satisfiedAfter = advances
+                        ? alternativeSatisfiedAfterCandidate(
+                                game, playerId, alternative)
+                        : isFlipLocationAlternativeSatisfied(
+                                game, playerId, alternative);
+                if ("anyOf".equals(rule.mode) && satisfiedAfter && advances) {
+                    return true;
+                }
+                allSatisfiedAfter &= satisfiedAfter;
+            }
+            if (!"anyOf".equals(rule.mode)
+                    && advanced && allSatisfiedAfter) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Stable cache key for typed pre-flip progress. It changes at each counted
+     * location, actor, or opponent-blocker transition, not only at completion.
+     */
+    public String getPreFlipProgressFingerprint(
+            SwccgGame game, String playerId) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return "";
+        }
+        StringBuilder fingerprint = new StringBuilder();
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            fingerprint.append(rule.id).append('=');
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (alternative == null) continue;
+                fingerprint.append(countAlternativeMatches(
+                        game, playerId, playerId, alternative)).append('/');
+                fingerprint.append(countMatchingLocations(
+                        game, playerId, alternative)).append('/');
+                RuleOpponentConstraint constraint =
+                        alternative.opponentConstraint;
+                fingerprint.append(countOpponentConstraintMatches(
+                        game, playerId, constraint)).append(';');
+            }
+        }
+        return fingerprint.toString();
+    }
+
     /**
      * True when this exact location owns an unmet structured pre-flip condition.
      */
@@ -363,21 +587,36 @@ public class ObjectiveAnalyzer {
         if (gameState == null || game.getModifiersQuerying() == null) return false;
 
         for (FlipLocationRule rule : activeFlipLocationRules) {
-            if (rule == null || !"preFlip".equals(rule.phase)
-                    || !"flip".equals(rule.purpose)
-                    || rule.alternatives == null) {
+            if (!isActivePreFlipRule(rule)
+                    || isRuleSatisfied(game, playerId, rule)) {
                 continue;
             }
             for (FlipLocationAlternative alternative : rule.alternatives) {
-                if (alternative == null
-                        || !locationMatchesAlternative(
-                                gameState, game, playerId, location, alternative)) {
+                if (alternative == null) {
                     continue;
                 }
-                if (!isFlipLocationAlternativeSatisfied(
-                        game, playerId, alternative)) {
+                if (isOpponentConstraintBlockingAt(
+                        game, playerId, location,
+                        alternative.opponentConstraint)) {
                     return true;
                 }
+                if (!locationMatchesAlternative(
+                        gameState, game, playerId, location, alternative)) {
+                    continue;
+                }
+                int required = expectedCount(
+                        game, playerId, alternative.count);
+                int qualified = countAlternativeMatches(
+                        game, playerId, playerId, alternative);
+                if (qualified >= required
+                        || relationSatisfiedAt(
+                                game, playerId, playerId, location,
+                                alternative.relation,
+                                alternative.actorFilterKey,
+                                alternative.includeExcludedFromBattle)) {
+                    continue;
+                }
+                return true;
             }
         }
         return false;
@@ -425,11 +664,197 @@ public class ObjectiveAnalyzer {
             PhysicalCard location, SwccgGame game, String playerId) {
         if (!analyzed || location == null) return false;
         if (hasStructuredFlipBackLocationRules()) {
+            PostFlipLocationRisk risk = assessPostFlipLocationRisk(
+                    game, playerId, location);
+            if (risk.applies()) {
+                return risk.requiresProtection();
+            }
             return matchesStructuredRequirementLocation(
                     game, playerId, location,
                     "postFlip", "flipBack", null, null);
         }
         return isFlipBackProtectionLocation(location.getTitle());
+    }
+
+    /**
+     * Evaluates the enabled counted back-side shapes without confusing
+     * regional geography with an immediate hold requirement.
+     */
+    public PostFlipLocationRisk assessPostFlipLocationRisk(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || !isFlipped || game == null || playerId == null
+                || location == null || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return PostFlipLocationRisk.none();
+        }
+
+        PostFlipLocationRisk supportedOutOfScope = null;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !"postFlip".equals(rule.phase)
+                    || !"flipBack".equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!isSupportedCountedFlipBackAlternative(alternative)) {
+                    continue;
+                }
+                PostFlipLocationRisk risk = assessPostFlipLocationRisk(
+                        game, playerId, location, alternative);
+                if (risk.inScope()) return risk;
+                if (supportedOutOfScope == null) {
+                    supportedOutOfScope = risk;
+                }
+            }
+        }
+        return supportedOutOfScope != null
+                ? supportedOutOfScope : PostFlipLocationRisk.none();
+    }
+
+    /**
+     * True only when this exact mover is the last friendly presence source and
+     * its departure would immediately satisfy the counted flip-back predicate.
+     */
+    public boolean wouldDepartureTriggerFlipBack(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (!analyzed || !isFlipped || game == null || playerId == null
+                || mover == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(gameState, mover);
+            PostFlipLocationRisk risk = assessPostFlipLocationRisk(
+                    game, playerId, location);
+            if (!risk.applies() || !risk.inScope() || risk.flipBackNow()
+                    || !isSolePresenceSourceAtLocation(
+                            game, playerId, mover, location)) {
+                return false;
+            }
+
+            FlipLocationAlternative alternative =
+                    findSupportedPostFlipAlternative(
+                            game, playerId, location);
+            if (alternative == null) return false;
+            String opponent = gameState.getOpponent(playerId);
+            if (opponent == null) return false;
+            Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                    Boolean.TRUE.equals(
+                            alternative.includeExcludedFromBattle)
+                            ? SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE
+                            : null;
+            boolean opponentOccupies =
+                    game.getModifiersQuerying().occupiesLocation(
+                            gameState, location, opponent, overrides);
+            return opponentOccupies
+                    ? risk.criticalIfOpponentGainsControl()
+                    : risk.criticalIfSelfControlLost();
+        } catch (Exception e) {
+            LOG.debug("Objective flip-back departure assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private PostFlipLocationRisk assessPostFlipLocationRisk(
+            SwccgGame game, String playerId, PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        GameState gameState = game.getGameState();
+        String opponent = gameState.getOpponent(playerId);
+        if (opponent == null) return PostFlipLocationRisk.none();
+
+        int selfCount = countAlternativeMatches(
+                game, playerId, playerId, alternative);
+        int opponentCount = countAlternativeMatches(
+                game, playerId, opponent, alternative);
+        boolean inScope = locationMatchesAlternative(
+                gameState, game, playerId, location, alternative);
+        boolean selfControlsHere = inScope && relationSatisfiedAt(
+                game, playerId, playerId, location,
+                alternative.relation, alternative.actorFilterKey,
+                alternative.includeExcludedFromBattle);
+        boolean opponentControlsHere = inScope && relationSatisfiedAt(
+                game, playerId, opponent, location,
+                alternative.relation, alternative.actorFilterKey,
+                alternative.includeExcludedFromBattle);
+
+        boolean flipBackNow = postFlipCountTriggered(
+                game, playerId, alternative,
+                opponentCount, selfCount);
+        boolean selfLossTriggers = selfControlsHere
+                && postFlipCountTriggered(
+                        game, playerId, alternative,
+                        opponentCount, Math.max(0, selfCount - 1));
+        boolean opponentGainTriggers = inScope && !opponentControlsHere
+                && postFlipCountTriggered(
+                        game, playerId, alternative,
+                        opponentCount + 1,
+                        Math.max(0, selfCount
+                                - (selfControlsHere ? 1 : 0)));
+
+        int adverseSteps = 0;
+        while (adverseSteps < 100
+                && !postFlipCountTriggered(
+                        game, playerId, alternative,
+                        opponentCount + adverseSteps, selfCount)) {
+            adverseSteps++;
+        }
+        return new PostFlipLocationRisk(
+                true, inScope, flipBackNow, opponentControlsHere,
+                selfLossTriggers, opponentGainTriggers,
+                selfCount, opponentCount, adverseSteps);
+    }
+
+    private boolean postFlipCountTriggered(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative,
+            int opponentCount, int selfCount) {
+        RuleCount count = alternative.count;
+        if (count.referenceController != null) {
+            return compareCounts(
+                    opponentCount, selfCount, count.comparator);
+        }
+        return compareCounts(
+                opponentCount, expectedCount(game, playerId, count),
+                count.comparator);
+    }
+
+    private static boolean isSupportedCountedFlipBackAlternative(
+            FlipLocationAlternative alternative) {
+        if (alternative == null
+                || !"control".equals(alternative.relation)
+                || !"opponent".equals(alternative.controller)
+                || alternative.locationFilterKey == null
+                || alternative.count == null) {
+            return false;
+        }
+        return alternative.count.value != null
+                || "self".equals(
+                        alternative.count.referenceController);
+    }
+
+    private FlipLocationAlternative findSupportedPostFlipAlternative(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (activeFlipLocationRules == null) return null;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !"postFlip".equals(rule.phase)
+                    || !"flipBack".equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (isSupportedCountedFlipBackAlternative(alternative)
+                        && locationMatchesAlternative(
+                                game.getGameState(), game, playerId,
+                                location, alternative)) {
+                    return alternative;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -553,52 +978,294 @@ public class ObjectiveAnalyzer {
                     ? gameState.getOpponent(playerId) : playerId;
             if (controller == null) return false;
 
-            int matchingLocations = 0;
-            List<PhysicalCard> locations = gameState.getLocationsInOrder();
-            if (locations == null) return false;
-            for (PhysicalCard location : locations) {
-                if (!locationMatchesAlternative(
-                        gameState, game, playerId, location, alternative)) {
-                    continue;
-                }
-
-                String relation = alternative.relation;
-                boolean relationSatisfied;
-                if ("control".equals(relation) || "controlWith".equals(relation)) {
-                    relationSatisfied = game.getModifiersQuerying().controlsLocation(
-                            gameState, location, controller,
-                            SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE);
-                } else if ("occupy".equals(relation)
-                        || "occupyWith".equals(relation)) {
-                    relationSatisfied = game.getModifiersQuerying().occupiesLocation(
-                            gameState, location, controller,
-                            SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE);
-                } else if ("presentAt".equals(relation)) {
-                    relationSatisfied = true;
-                } else {
-                    return false;
-                }
-
-                if (relationSatisfied
-                        && relation.endsWith("With")) {
-                    relationSatisfied = hasMatchingActorAtLocation(
-                            game, controller, location,
-                            alternative.actorFilterKey);
-                } else if (relationSatisfied
-                        && "presentAt".equals(relation)) {
-                    relationSatisfied = hasMatchingActorAtLocation(
-                            game, controller, location,
-                            alternative.actorFilterKey);
-                }
-
-                if (relationSatisfied) matchingLocations++;
+            int matchingLocations = countAlternativeMatches(
+                    game, playerId, controller, alternative);
+            boolean countSatisfied;
+            RuleCount count = alternative.count;
+            if (count != null && count.referenceController != null) {
+                String referenceController =
+                        "opponent".equals(count.referenceController)
+                                ? gameState.getOpponent(playerId) : playerId;
+                int referenceCount = referenceController == null ? 0
+                        : countAlternativeMatches(
+                                game, playerId, referenceController,
+                                alternative);
+                countSatisfied = compareCounts(
+                        matchingLocations, referenceCount, count.comparator);
+            } else {
+                countSatisfied = compareCounts(
+                        matchingLocations,
+                        expectedCount(game, playerId, count),
+                        count != null ? count.comparator : null);
             }
-            return countMatches(matchingLocations, alternative.count);
+            return countSatisfied && opponentConstraintSatisfied(
+                    game, playerId, alternative.opponentConstraint);
         } catch (Exception e) {
             LOG.debug("Structured objective location assessment failed: {}",
                     e.getMessage());
             return false;
         }
+    }
+
+    private int countAlternativeMatches(
+            SwccgGame game, String playerId, String controller,
+            FlipLocationAlternative alternative) {
+        GameState gameState = game.getGameState();
+        List<PhysicalCard> locations = gameState.getLocationsInOrder();
+        if (locations == null) return 0;
+        int matchingLocations = 0;
+        for (PhysicalCard location : locations) {
+            if (locationMatchesAlternative(
+                    gameState, game, playerId, location, alternative)
+                    && relationSatisfiedAt(
+                            game, playerId, controller, location,
+                            alternative.relation,
+                            alternative.actorFilterKey,
+                            alternative.includeExcludedFromBattle)) {
+                matchingLocations++;
+            }
+        }
+        return matchingLocations;
+    }
+
+    private static boolean isActivePreFlipRule(FlipLocationRule rule) {
+        return rule != null && "preFlip".equals(rule.phase)
+                && "flip".equals(rule.purpose)
+                && rule.alternatives != null
+                && !rule.alternatives.isEmpty();
+    }
+
+    private boolean isRuleSatisfied(
+            SwccgGame game, String playerId, FlipLocationRule rule) {
+        if (rule == null || rule.alternatives == null
+                || rule.alternatives.isEmpty()) {
+            return false;
+        }
+        if ("anyOf".equals(rule.mode)) {
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (isFlipLocationAlternativeSatisfied(
+                        game, playerId, alternative)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        for (FlipLocationAlternative alternative : rule.alternatives) {
+            if (!isFlipLocationAlternativeSatisfied(
+                    game, playerId, alternative)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private int countMatchingLocations(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative) {
+        com.gempukku.swccgo.filters.Filter filter =
+                resolveLocationFilter(
+                        alternative.locationFilterKey, playerId);
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (filter == null || locations == null) return 0;
+        int count = 0;
+        for (PhysicalCard location : locations) {
+            if (filter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private boolean advancesAlternativeAt(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        if (alternative == null || alternative.count == null
+                || alternative.count.value == null
+                || alternative.count.value <= 1
+                || alternative.actorFilterKey == null
+                || candidate == null || location == null
+                || !locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)) {
+            return false;
+        }
+        int required = expectedCount(game, playerId, alternative.count);
+        int qualified = countAlternativeMatches(
+                game, playerId, playerId, alternative);
+        if (qualified >= required
+                || relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle)) {
+            return false;
+        }
+
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(alternative.actorFilterKey);
+        if (actorFilter == null || !actorFilter.accepts(
+                game.getGameState(), game.getModifiersQuerying(),
+                candidate)) {
+            return false;
+        }
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                Boolean.TRUE.equals(
+                        alternative.includeExcludedFromBattle)
+                        ? SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE
+                        : null;
+        if ("controlWith".equals(alternative.relation)
+                && game.getModifiersQuerying().controlsLocation(
+                        game.getGameState(), location, playerId,
+                        overrides)) {
+            return true;
+        }
+        if ("occupyWith".equals(alternative.relation)
+                && game.getModifiersQuerying().occupiesLocation(
+                        game.getGameState(), location, playerId,
+                        overrides)) {
+            return true;
+        }
+        SwccgCardBlueprint candidateBlueprint = candidate.getBlueprint();
+        boolean providesPresence = candidateBlueprint != null
+                && candidateBlueprint.hasAbilityAttribute()
+                && candidateBlueprint.getAbility() != null
+                && candidateBlueprint.getAbility() >= 1.0f;
+        if (!providesPresence) {
+            providesPresence = Filters.or(
+                    Filters.hasAbilityOrHasPermanentPilotWithAbility,
+                    com.gempukku.swccgo.common.Icon.PRESENCE).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate);
+        }
+        if (!providesPresence) return false;
+
+        if ("controlWith".equals(alternative.relation)) {
+            String opponent =
+                    game.getGameState().getOpponent(playerId);
+            return opponent == null
+                    || !game.getModifiersQuerying().occupiesLocation(
+                            game.getGameState(), location,
+                            opponent, overrides);
+        }
+        return "occupyWith".equals(alternative.relation);
+    }
+
+    private boolean alternativeSatisfiedAfterCandidate(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative) {
+        int required = expectedCount(game, playerId, alternative.count);
+        int qualified = countAlternativeMatches(
+                game, playerId, playerId, alternative);
+        return qualified + 1 >= required
+                && opponentConstraintSatisfied(
+                        game, playerId,
+                        alternative.opponentConstraint);
+    }
+
+    private boolean relationSatisfiedAt(
+            SwccgGame game, String playerId, String controller,
+            PhysicalCard location, String relation, String actorFilterKey,
+            Boolean includeExcludedFromBattle) {
+        if (controller == null || location == null || relation == null) {
+            return false;
+        }
+        GameState gameState = game.getGameState();
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                Boolean.TRUE.equals(includeExcludedFromBattle)
+                        ? SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE : null;
+        if ("control".equals(relation)) {
+            return game.getModifiersQuerying().controlsLocation(
+                    gameState, location, controller, overrides);
+        }
+        if ("occupy".equals(relation)) {
+            return game.getModifiersQuerying().occupiesLocation(
+                    gameState, location, controller, overrides);
+        }
+        if ("controlWith".equals(relation)
+                || "occupyWith".equals(relation)) {
+            boolean relationSatisfied = "controlWith".equals(relation)
+                    ? game.getModifiersQuerying().controlsLocation(
+                            gameState, location, controller, overrides)
+                    : game.getModifiersQuerying().occupiesLocation(
+                            gameState, location, controller, overrides);
+            return relationSatisfied && hasMatchingActorAtLocation(
+                    game, controller, location, actorFilterKey,
+                    includeExcludedFromBattle);
+        }
+        if ("presentAt".equals(relation)) {
+            return hasMatchingActorAtLocation(
+                    game, controller, location, actorFilterKey);
+        }
+        return false;
+    }
+
+    private boolean opponentConstraintSatisfied(
+            SwccgGame game, String playerId,
+            RuleOpponentConstraint constraint) {
+        if (constraint == null) return true;
+        int actual = countOpponentConstraintMatches(
+                game, playerId, constraint);
+        return compareCounts(
+                actual, expectedCount(game, playerId, constraint.count),
+                constraint.count != null
+                        ? constraint.count.comparator : null);
+    }
+
+    private int countOpponentConstraintMatches(
+            SwccgGame game, String playerId,
+            RuleOpponentConstraint constraint) {
+        if (constraint == null || game == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        GameState gameState = game.getGameState();
+        String opponent = gameState.getOpponent(playerId);
+        com.gempukku.swccgo.filters.Filter locationFilter =
+                resolveLocationFilter(
+                        constraint.locationFilterKey, playerId);
+        List<PhysicalCard> locations = gameState.getLocationsInOrder();
+        if (opponent == null || locationFilter == null || locations == null) {
+            return 0;
+        }
+        int actual = 0;
+        for (PhysicalCard location : locations) {
+            if (locationFilter.accepts(
+                    gameState, game.getModifiersQuerying(), location)
+                    && relationSatisfiedAt(
+                            game, playerId, opponent, location,
+                            constraint.relation, null,
+                            constraint.includeExcludedFromBattle)) {
+                actual++;
+            }
+        }
+        return actual;
+    }
+
+    private boolean isOpponentConstraintBlockingAt(
+            SwccgGame game, String playerId, PhysicalCard location,
+            RuleOpponentConstraint constraint) {
+        if (constraint == null || opponentConstraintSatisfied(
+                game, playerId, constraint)) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter locationFilter =
+                resolveLocationFilter(
+                        constraint.locationFilterKey, playerId);
+        String opponent =
+                game.getGameState().getOpponent(playerId);
+        return locationFilter != null && opponent != null
+                && locationFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                && relationSatisfiedAt(
+                        game, playerId, opponent, location,
+                        constraint.relation, null,
+                        constraint.includeExcludedFromBattle);
     }
 
     private boolean locationMatchesAlternative(
@@ -614,6 +1281,13 @@ public class ObjectiveAnalyzer {
     private boolean hasMatchingActorAtLocation(
             SwccgGame game, String controller, PhysicalCard location,
             String actorFilterKey) {
+        return hasMatchingActorAtLocation(
+                game, controller, location, actorFilterKey, true);
+    }
+
+    private boolean hasMatchingActorAtLocation(
+            SwccgGame game, String controller, PhysicalCard location,
+            String actorFilterKey, Boolean includeExcludedFromBattle) {
         com.gempukku.swccgo.filters.Filter actorFilter =
                 resolveFilter(actorFilterKey);
         if (actorFilter == null) return false;
@@ -628,6 +1302,12 @@ public class ObjectiveAnalyzer {
                             gameState, game.getModifiersQuerying(), card)) {
                 continue;
             }
+            if (!Boolean.TRUE.equals(includeExcludedFromBattle)
+                    && gameState.isDuringBattle()
+                    && game.getModifiersQuerying().isExcludedFromBattle(
+                            gameState, card)) {
+                continue;
+            }
             PhysicalCard actorLocation = game.getModifiersQuerying()
                     .getLocationThatCardIsPresentAt(gameState, card);
             if (samePhysicalLocation(actorLocation, location)) return true;
@@ -635,11 +1315,37 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
-    private static boolean countMatches(int actual, RuleCount count) {
+    private int expectedCount(
+            SwccgGame game, String playerId, RuleCount count) {
         int expected = count != null && count.value != null ? count.value : 1;
-        String comparator = count != null && count.comparator != null
-                ? count.comparator : ">=";
-        return switch (comparator) {
+        if (count == null || count.gameTextModification == null
+                || count.modifiedValue == null || game == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return expected;
+        }
+        try {
+            PhysicalCard objective =
+                    findOurObjective(game.getGameState(), playerId);
+            ModifyGameTextType type = ModifyGameTextType.valueOf(
+                    count.gameTextModification);
+            if (objective != null
+                    && game.getModifiersQuerying().hasGameTextModification(
+                            game.getGameState(), objective, type)) {
+                return count.modifiedValue;
+            }
+        } catch (Exception e) {
+            LOG.debug("Objective count modifier assessment failed: {}",
+                    e.getMessage());
+        }
+        return expected;
+    }
+
+    private static boolean compareCounts(
+            int actual, int expected, String comparator) {
+        String effectiveComparator =
+                comparator != null ? comparator : ">=";
+        return switch (effectiveComparator) {
             case ">" -> actual > expected;
             case "<" -> actual < expected;
             case "<=" -> actual <= expected;
@@ -775,6 +1481,27 @@ public class ObjectiveAnalyzer {
             return 150.0f;
         }
         return 0.0f;
+    }
+
+    /**
+     * Game-aware objective bonus. Counted post-flip rules award defense only
+     * to current recovery or one-transition risk locations.
+     */
+    public float getLocationObjectiveBonus(
+            PhysicalCard location, SwccgGame game, String playerId) {
+        if (!analyzed || location == null) return 0.0f;
+        if (isFlipped && hasStructuredFlipBackLocationRules()) {
+            PostFlipLocationRisk risk = assessPostFlipLocationRisk(
+                    game, playerId, location);
+            if (risk.applies()) {
+                return risk.requiresProtection() ? 200.0f : 0.0f;
+            }
+        }
+        if (!isFlipped && isObjectiveRelevantLocation(
+                location, game, playerId)) {
+            return 150.0f;
+        }
+        return getLocationObjectiveBonus(location.getTitle());
     }
 
     public Set<String> getFlipConditionLocationFragments() {
@@ -967,16 +1694,24 @@ public class ObjectiveAnalyzer {
     }
 
     /**
-     * Classifies one friendly character by what the exact unflipped Invasion
-     * formation would lose if that card left the typed Throne Room gate.
+     * Classifies one friendly card by what the active typed pre-flip formation
+     * would lose if that card left play.
      */
     public FlipGateFormationRole classifyGateFormationPieceIfRemoved(
             SwccgGame game, String playerId, PhysicalCard candidate) {
-        if (!analyzed || isFlipped || !isInvasion || game == null
+        if (!analyzed || isFlipped || game == null
                 || playerId == null || candidate == null
                 || !playerId.equals(candidate.getOwner())
                 || candidate.isUndercover()
-                || candidate.getBlueprint() == null
+                || candidate.getBlueprint() == null) {
+            return FlipGateFormationRole.NONE;
+        }
+
+        if (hasCountedPreFlipActorRule()) {
+            return classifyCountedGatePieceIfRemoved(
+                    game, playerId, candidate);
+        }
+        if (!isInvasion
                 || candidate.getBlueprint().getCardCategory()
                     != CardCategory.CHARACTER) {
             return FlipGateFormationRole.NONE;
@@ -1033,6 +1768,192 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return FlipGateFormationRole.NONE;
+    }
+
+    private FlipGateFormationRole classifyCountedGatePieceIfRemoved(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        try {
+            GameState gameState = game.getGameState();
+            if (gameState == null || game.getModifiersQuerying() == null) {
+                return FlipGateFormationRole.NONE;
+            }
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(gameState, candidate);
+            if (location == null) return FlipGateFormationRole.NONE;
+
+            ruleLoop:
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (alternative == null
+                            || alternative.actorFilterKey == null
+                            || alternative.count == null
+                            || alternative.count.value == null
+                            || alternative.count.value <= 1
+                            || !locationMatchesAlternative(
+                                    gameState, game, playerId,
+                                    location, alternative)) {
+                        continue;
+                    }
+                    int required = expectedCount(
+                            game, playerId, alternative.count);
+                    int qualified = countAlternativeMatches(
+                            game, playerId, playerId, alternative);
+                    if (qualified <= 0 || qualified > required
+                            || !relationSatisfiedAt(
+                                    game, playerId, playerId, location,
+                                    alternative.relation,
+                                    alternative.actorFilterKey,
+                                    alternative.includeExcludedFromBattle)) {
+                        continue;
+                    }
+
+                    com.gempukku.swccgo.filters.Filter actorFilter =
+                            resolveFilter(alternative.actorFilterKey);
+                    boolean candidateIsActor = actorFilter != null
+                            && actorFilter.accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(), candidate);
+                    if (candidateIsActor
+                            && !hasOtherMatchingActorAtLocation(
+                                    game, playerId, location,
+                                    alternative, candidate)) {
+                        if ("anyOf".equals(rule.mode)
+                                && anyCountedAlternativeMeetsThresholdAfterRemoval(
+                                    game, playerId, rule,
+                                    candidate, location)) {
+                            continue ruleLoop;
+                        }
+                        return FlipGateFormationRole.LAST_REQUIRED_ACTOR;
+                    }
+
+                    if (!candidateIsActor
+                            && hasMatchingActorAtLocation(
+                                    game, playerId, location,
+                                    alternative.actorFilterKey,
+                                    alternative.includeExcludedFromBattle)
+                            && isSolePresenceSourceAtLocation(
+                                    game, playerId, candidate, location)) {
+                        if ("anyOf".equals(rule.mode)
+                                && anyCountedAlternativeMeetsThresholdAfterRemoval(
+                                    game, playerId, rule,
+                                    candidate, location)) {
+                            continue ruleLoop;
+                        }
+                        return FlipGateFormationRole.LAST_REQUIRED_BUDDY;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Counted objective casualty classification failed: {}",
+                    e.getMessage());
+        }
+        return FlipGateFormationRole.NONE;
+    }
+
+    private boolean anyCountedAlternativeMeetsThresholdAfterRemoval(
+            SwccgGame game, String playerId, FlipLocationRule rule,
+            PhysicalCard candidate, PhysicalCard candidateLocation) {
+        if (rule == null || rule.alternatives == null) return false;
+        for (FlipLocationAlternative alternative : rule.alternatives) {
+            if (alternative == null || alternative.count == null
+                    || alternative.count.value == null
+                    || alternative.count.value <= 1
+                    || alternative.actorFilterKey == null) {
+                continue;
+            }
+            int qualified = countAlternativeMatches(
+                    game, playerId, playerId, alternative);
+            int required = expectedCount(
+                    game, playerId, alternative.count);
+            if (qualified < required) continue;
+            if (!locationMatchesAlternative(
+                    game.getGameState(), game, playerId,
+                    candidateLocation, alternative)
+                    || !relationSatisfiedAt(
+                        game, playerId, playerId, candidateLocation,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle)) {
+                return true;
+            }
+
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(alternative.actorFilterKey);
+            boolean candidateIsActor = actorFilter != null
+                    && actorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+            boolean breaksThisLocation = candidateIsActor
+                    ? !hasOtherMatchingActorAtLocation(
+                            game, playerId, candidateLocation,
+                            alternative, candidate)
+                    : isSolePresenceSourceAtLocation(
+                            game, playerId, candidate,
+                            candidateLocation);
+            if (qualified - (breaksThisLocation ? 1 : 0) >= required) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasOtherMatchingActorAtLocation(
+            SwccgGame game, String playerId, PhysicalCard location,
+            FlipLocationAlternative alternative, PhysicalCard excluded) {
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(alternative.actorFilterKey);
+        if (actorFilter == null) return false;
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card == null || card == excluded
+                    || !playerId.equals(card.getOwner())
+                    || card.isUndercover()
+                    || !actorFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard cardLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(cardLocation, location)) return true;
+        }
+        return false;
+    }
+
+    private boolean isSolePresenceSourceAtLocation(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location) {
+        com.gempukku.swccgo.filters.Filter presenceSource = Filters.or(
+                Filters.hasAbilityOrHasPermanentPilotWithAbility,
+                com.gempukku.swccgo.common.Icon.PRESENCE);
+        if (!presenceSource.accepts(
+                game.getGameState(), game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card == null || card == candidate
+                    || !playerId.equals(card.getOwner())
+                    || card.isUndercover()
+                    || attachedToOrAboard(card, candidate)
+                    || !presenceSource.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard cardLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(cardLocation, location)) return false;
+        }
+        return true;
     }
 
     /**
@@ -1406,9 +2327,8 @@ public class ObjectiveAnalyzer {
         String keyCharacterFilter;
         String keySiteFilter;
         Map<String, Float> weights;
-        // Loader EXTENSION (2026-07-08, Codex schema OBJECTIVE_LOADER_EXTENSION_SCHEMA_2026-07-08.md).
-        // PARSE-ONLY for now (step 1): DTOs bind from JSON; NO consumer reads them yet → behavior-neutral.
-        // The count-refine/relation/dynamic sub-buckets will use these once the scorer is wired (step 3+).
+        // Loader extension schema. Structured location rules are consumed by
+        // the analyzer and the phase-policy adapters.
         List<FlipLocationRule> flipLocationRules;
         List<ActorLocationRule> actorLocationRules;
         List<DynamicLocationRule> dynamicLocationRules;
@@ -1417,10 +2337,19 @@ public class ObjectiveAnalyzer {
         List<JsonProfile> profiles;
     }
 
-    // ─── Loader-extension rule DTOs (parse-only step 1; Gson-bound; no runtime consumer yet) ───
-    static final class RuleCount { String comparator; Integer value; }
+    // ─── Loader-extension rule DTOs (Gson-bound runtime data) ───
+    static final class RuleCount {
+        String comparator;
+        Integer value;
+        String referenceController;
+        String gameTextModification;
+        Integer modifiedValue;
+    }
     static final class RuleOpponentConstraint {
-        String relation; String locationFilterKey; RuleCount count;
+        String relation;
+        String locationFilterKey;
+        Boolean includeExcludedFromBattle;
+        RuleCount count;
     }
     static final class FlipLocationAlternative {
         String relation;              // control | occupy | presentAt | controlWith | occupyWith
@@ -1430,6 +2359,7 @@ public class ObjectiveAnalyzer {
         RuleCount count;
         String actorFilterKey;
         String requiredSide;          // LIGHT | DARK | null
+        Boolean includeExcludedFromBattle;
         RuleOpponentConstraint opponentConstraint;
         String scoreRole;             // setupLocation | flipProgress | flipGate | stayFlipped
         String sourceText;            // audit only — runtime must not parse this
@@ -1602,6 +2532,10 @@ public class ObjectiveAnalyzer {
         switch (key) {
             case "senator":          return com.gempukku.swccgo.filters.Filters.senator;
             case "Neimoidian":       return com.gempukku.swccgo.filters.Filters.Neimoidian;
+            case "Rebel":             return com.gempukku.swccgo.filters.Filters.Rebel;
+            case "Imperial":          return com.gempukku.swccgo.filters.Filters.Imperial;
+            case "Phoenix_Squadron_character":
+                return com.gempukku.swccgo.filters.Filters.Phoenix_Squadron_character;
             case "Galactic_Senate":  return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
             case "biker_scout":      return com.gempukku.swccgo.filters.Filters.biker_scout;
             case "Bunker":           return com.gempukku.swccgo.filters.Filters.Bunker;
@@ -1631,6 +2565,12 @@ public class ObjectiveAnalyzer {
             case "Hoth_location":                return com.gempukku.swccgo.filters.Filters.Hoth_location;
             case "Theed_Palace_Throne_Room":     return com.gempukku.swccgo.filters.Filters.Theed_Palace_Throne_Room;
             case "Naboo_system":                 return com.gempukku.swccgo.filters.Filters.Naboo_system;
+            case "Dantooine_site":               return com.gempukku.swccgo.filters.Filters.Dantooine_site;
+            case "Dantooine_location":           return com.gempukku.swccgo.filters.Filters.Dantooine_location;
+            case "Ralltiir_site":                return com.gempukku.swccgo.filters.Filters.Ralltiir_site;
+            case "Ralltiir_location":            return com.gempukku.swccgo.filters.Filters.Ralltiir_location;
+            case "Lothal_location":              return com.gempukku.swccgo.filters.Filters.Lothal_location;
+            case "Lothal_site":                  return com.gempukku.swccgo.filters.Filters.Lothal_site;
             case "Galactic_Senate":              return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
             case "Rebel_Base_location":          return com.gempukku.swccgo.filters.Filters.Rebel_Base_location;
             case "Wattos_Junkyard":              return com.gempukku.swccgo.filters.Filters.Wattos_Junkyard;

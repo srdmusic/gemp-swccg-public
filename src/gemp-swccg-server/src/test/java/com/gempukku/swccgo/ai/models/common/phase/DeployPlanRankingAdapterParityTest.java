@@ -28,6 +28,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -324,6 +325,78 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
+    public void bothBotsRefreshSameTurnWhenStructuredPreFlipProgressChanges() {
+        PlanRefreshFixture fixture = planRefreshFixture();
+        AtomicReference<String> randoFingerprint =
+                new AtomicReference<>("regional=0/0;");
+
+        var randoPlanner = newRandoPlanner();
+        var randoAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(randoAnalyzer, fixture);
+        when(randoAnalyzer.getPreFlipProgressFingerprint(
+                fixture.game(), "player")).thenAnswer(
+                ignored -> randoFingerprint.get());
+        randoPlanner.setObjectiveAnalyzer(randoAnalyzer);
+        var randoBefore = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+        randoFingerprint.set("regional=1/0;");
+        var randoAfter = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        AtomicReference<String> chosenFingerprint =
+                new AtomicReference<>("regional=0/0;");
+        var chosenPlanner = newChosenPlanner();
+        var chosenAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(chosenAnalyzer, fixture);
+        when(chosenAnalyzer.getPreFlipProgressFingerprint(
+                fixture.game(), "player")).thenAnswer(
+                ignored -> chosenFingerprint.get());
+        chosenPlanner.setObjectiveAnalyzer(chosenAnalyzer);
+        var chosenBefore = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+        chosenFingerprint.set("regional=1/0;");
+        var chosenAfter = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        assertNotSame(randoBefore, randoAfter);
+        assertNotSame(chosenBefore, chosenAfter);
+    }
+
+    @Test
+    public void bothBotsKeepCachedPlanWhenStructuredPreFlipProgressIsStable() {
+        PlanRefreshFixture fixture = planRefreshFixture();
+
+        var randoPlanner = newRandoPlanner();
+        var randoAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(randoAnalyzer, fixture);
+        when(randoAnalyzer.getPreFlipProgressFingerprint(
+                fixture.game(), "player")).thenReturn("regional=1/0;");
+        randoPlanner.setObjectiveAnalyzer(randoAnalyzer);
+        var randoBefore = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+        var randoAfter = randoPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        var chosenPlanner = newChosenPlanner();
+        var chosenAnalyzer = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        configureRefreshAnalyzer(chosenAnalyzer, fixture);
+        when(chosenAnalyzer.getPreFlipProgressFingerprint(
+                fixture.game(), "player")).thenReturn("regional=1/0;");
+        chosenPlanner.setObjectiveAnalyzer(chosenAnalyzer);
+        var chosenBefore = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+        var chosenAfter = chosenPlanner.createPlan(
+                fixture.game(), "player", Side.DARK);
+
+        assertSame(randoBefore, randoAfter);
+        assertSame(chosenBefore, chosenAfter);
+    }
+
+    @Test
     public void bothBotsSpendTheBattleReserveToCompleteTheExactFlipFormation() {
         PlanRefreshFixture fixture = planRefreshFixture();
         fixture.locations().set(List.of(fixture.swamp(), fixture.throneRoom()));
@@ -547,6 +620,19 @@ public class DeployPlanRankingAdapterParityTest {
         when(analyzer.isAnalyzed()).thenReturn(true);
         when(analyzer.isObjectiveRelevantLocation("Objective")).thenReturn(true);
         when(analyzer.getLocationObjectiveBonus("Objective")).thenReturn(150.0f);
+        when(analyzer.isObjectiveRelevantLocation(
+                any(PhysicalCard.class),
+                nullable(SwccgGame.class),
+                nullable(String.class))).thenAnswer(invocation ->
+                "Objective".equals(
+                        ((PhysicalCard) invocation.getArgument(0)).getTitle()));
+        when(analyzer.getLocationObjectiveBonus(
+                any(PhysicalCard.class),
+                nullable(SwccgGame.class),
+                nullable(String.class))).thenAnswer(invocation ->
+                "Objective".equals(
+                        ((PhysicalCard) invocation.getArgument(0)).getTitle())
+                        ? 150.0f : 0.0f);
         planner.setObjectiveAnalyzer(analyzer);
     }
 
@@ -797,6 +883,19 @@ public class DeployPlanRankingAdapterParityTest {
         when(analyzer.isAnalyzed()).thenReturn(true);
         when(analyzer.isObjectiveRelevantLocation("Objective")).thenReturn(true);
         when(analyzer.getLocationObjectiveBonus("Objective")).thenReturn(150.0f);
+        when(analyzer.isObjectiveRelevantLocation(
+                any(PhysicalCard.class),
+                nullable(SwccgGame.class),
+                nullable(String.class))).thenAnswer(invocation ->
+                "Objective".equals(
+                        ((PhysicalCard) invocation.getArgument(0)).getTitle()));
+        when(analyzer.getLocationObjectiveBonus(
+                any(PhysicalCard.class),
+                nullable(SwccgGame.class),
+                nullable(String.class))).thenAnswer(invocation ->
+                "Objective".equals(
+                        ((PhysicalCard) invocation.getArgument(0)).getTitle())
+                        ? 150.0f : 0.0f);
         planner.setObjectiveAnalyzer(analyzer);
     }
 

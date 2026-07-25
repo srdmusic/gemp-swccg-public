@@ -28,9 +28,13 @@ public class MoveObjectiveConsolidationSourceParityTest {
         assertEquals(1, countOccurrences(
                 move, "MoveObjectiveConsolidationPolicy.preFlip("));
         assertEquals(1, countOccurrences(
+                move, "MoveObjectiveConsolidationPolicy.postFlipPhysical("));
+        assertEquals(0, countOccurrences(
                 move, "MoveObjectiveConsolidationPolicy.postFlip("));
         assertTrue(policy.contains("public static Evaluation preFlip("));
         assertTrue(policy.contains("public static Evaluation postFlip("));
+        assertTrue(policy.contains(
+                "public static Evaluation postFlipPhysical("));
 
         int start = move.indexOf("// V22.5: PRE-FLIP");
         int end = move.indexOf("} else {", start);
@@ -50,6 +54,10 @@ public class MoveObjectiveConsolidationSourceParityTest {
         assertTrue(move.contains("!moveObjAnalyzer.isFlipped()"));
         assertTrue(move.contains("moveObjAnalyzer.isFlipped()"));
         assertTrue(move.contains(
+                "location -> moveObjAnalyzer\n"
+                        + "                                    .isFlipBackProtectionLocation(\n"
+                        + "                                        location, game, playerId)"));
+        assertFalse(move.contains(
                 "moveObjAnalyzer::isFlipBackProtectionLocation"));
         assertTrue(move.contains("preFlip.contribution().reason()"));
         assertTrue(move.contains("postFlip.contribution().reason()"));
@@ -73,7 +81,7 @@ public class MoveObjectiveConsolidationSourceParityTest {
         int preFlip = move.indexOf(
                 "MoveObjectiveConsolidationPolicy.preFlip(", huntGroup);
         int postFlip = move.indexOf(
-                "MoveObjectiveConsolidationPolicy.postFlip(", preFlip);
+                "MoveObjectiveConsolidationPolicy.postFlipPhysical(", preFlip);
         int movementTypes = move.indexOf(
                 "MoveTransitPolicy.movementTypes(", postFlip);
 

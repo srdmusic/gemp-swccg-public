@@ -32,6 +32,49 @@ public class PullSelectionCandidatePolicyTest {
     }
 
     @Test
+    public void countedObjectivePullDistinguishesActorFromLocationProgress() {
+        PolicyOperation actor = only(
+                PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
+                        ACTION_ID, true, false));
+        PolicyOperation location = only(
+                PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
+                        ACTION_ID, false, true));
+
+        assertOperation(actor, "PULL.OBJECTIVE.COUNTED_REQUIRED_ACTOR",
+                TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 400.0f,
+                "Pull the typed actor required by the counted objective");
+        assertOperation(location, "PULL.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
+                TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 300.0f,
+                "Pull a missing location required by the counted objective");
+    }
+
+    @Test
+    public void countedObjectivePullScoresStayInsideLegacyPriorityBand() {
+        float actorScore = only(
+                PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
+                        ACTION_ID, true, false)).delta();
+        float locationScore = only(
+                PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
+                        ACTION_ID, false, true)).delta();
+
+        assertTrue(locationScore > 10.0f);
+        assertTrue(actorScore > locationScore);
+        assertTrue(actorScore < 500.0f);
+    }
+
+    @Test
+    public void irrelevantCountedObjectivePullCandidateStaysSilent() {
+        assertEmpty(PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
+                ACTION_ID, false, false));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void countedObjectivePullRoleMustBeExclusive() {
+        PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
+                ACTION_ID, true, true);
+    }
+
+    @Test
     public void unknownGainStackPreservesLegacyOrder() {
         PolicyResult result = PullSelectionCandidatePolicy.scoreUnknownPull(
                 new PullSelectionCandidateFacts.UnknownPull(

@@ -846,6 +846,55 @@ public class MoveEvaluator extends ActionEvaluator {
                                     (int) friendlyPowerAtGate,
                                     (int) opponentPowerAtGate);
                         }
+                        boolean activeCountedFormation =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && !gateAnalyzer.isFlipped()
+                                && gateAnalyzer.hasCountedPreFlipActorRule();
+                        com.gempukku.swccgo.ai.models.common.strategy
+                                .ObjectiveAnalyzer.FlipGateFormationRole
+                                countedRole = activeCountedFormation
+                                ? gateAnalyzer
+                                    .classifyGateFormationPieceIfRemoved(
+                                        game, playerId, cardToMove)
+                                : com.gempukku.swccgo.ai.models.common.strategy
+                                    .ObjectiveAnalyzer
+                                    .FlipGateFormationRole.NONE;
+                        float countedFriendlyPower = activeCountedFormation
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        playerId, false, false)
+                                : 0.0f;
+                        String countedOpponent =
+                                gameState.getOpponent(playerId);
+                        float countedOpponentPower =
+                                activeCountedFormation
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        countedOpponent, false, false)
+                                    + oppWeaponBonusAt(
+                                        gameState, currentLocation,
+                                        countedOpponent)
+                                : 0.0f;
+                        MoveObjectiveGateHoldPolicy.Evaluation countedHold =
+                                MoveObjectiveGateHoldPolicy
+                                    .evaluateCountedFormation(
+                                        activeCountedFormation,
+                                        countedRole,
+                                        countedFriendlyPower,
+                                        countedOpponentPower);
+                        if (countedHold.hardVeto()) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason = countedHold.reason();
+                            logger.warn("OBJECTIVE COUNTED FORMATION HOLD: {} at {} vetoed ({}, role={}, power={}/{})",
+                                cardToMove.getTitle(),
+                                currentLocation.getTitle(),
+                                countedHold.branch(), countedRole,
+                                (int) countedFriendlyPower,
+                                (int) countedOpponentPower);
+                        }
                     } catch (Exception e) {
                         logger.debug("V297 objective gate hold failed open: {}",
                                 e.getMessage());
@@ -1207,9 +1256,23 @@ public class MoveEvaluator extends ActionEvaluator {
                                     MovePostFlipConsolidationPolicy.isObjectiveLocation(
                                         curLocTitle,
                                         objFrags);
+                                com.gempukku.swccgo.ai.models.common.strategy
+                                    .ObjectiveAnalyzer.PostFlipLocationRisk
+                                    countedRisk =
+                                        moveConsolidateAnalyzer
+                                            .assessPostFlipLocationRisk(
+                                                game, playerId,
+                                                currentLocation);
                                 boolean currentLocationMustBeHeld =
-                                    moveConsolidateAnalyzer.isFlipBackProtectionLocation(
-                                        currentLocation, game, playerId);
+                                    countedRisk.applies()
+                                        ? moveConsolidateAnalyzer
+                                            .wouldDepartureTriggerFlipBack(
+                                                game, playerId,
+                                                cardToMove)
+                                        : moveConsolidateAnalyzer
+                                            .isFlipBackProtectionLocation(
+                                                currentLocation, game,
+                                                playerId);
 
                                 // Count occupied objective locations and find the weakest
                                 java.util.Map<String, Float> objPowerMap = new java.util.LinkedHashMap<>();
@@ -1653,9 +1716,11 @@ public class MoveEvaluator extends ActionEvaluator {
                     // Scale required power based on opponent's threat level.
                     if (moveObjAnalyzer != null && moveObjAnalyzer.isAnalyzed() && moveObjAnalyzer.isFlipped()) {
                         MoveObjectiveConsolidationPolicy.Evaluation postFlip =
-                            MoveObjectiveConsolidationPolicy.postFlip(
+                            MoveObjectiveConsolidationPolicy.postFlipPhysical(
                                 gameState, game, currentLocation, playerId,
-                                moveObjAnalyzer::isFlipBackProtectionLocation,
+                                location -> moveObjAnalyzer
+                                    .isFlipBackProtectionLocation(
+                                        location, game, playerId),
                                 e -> logger.debug(
                                     "Could not sum opponent power: {}",
                                     e.getMessage()),

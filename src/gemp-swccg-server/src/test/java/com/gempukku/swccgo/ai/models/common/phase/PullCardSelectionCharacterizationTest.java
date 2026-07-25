@@ -2,8 +2,10 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
+import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import org.junit.Test;
 
@@ -13,6 +15,8 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer.ObjectiveProgressCandidateRole.REQUIRED_ACTOR;
+import static com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer.ObjectiveProgressCandidateRole.REQUIRED_LOCATION;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -189,6 +193,75 @@ public class PullCardSelectionCharacterizationTest {
                 rando.stream().map(action -> action.getCardName()).toList());
         assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
                 40.0f, 340.0f);
+        assertMirrored(rando, chosen);
+    }
+
+    @Test
+    public void countedObjectivePullScoresRequiredActorAboveRequiredLocationInBothAdapters() {
+        GameState gameState = gameState(2);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard actor = card(
+                "Phoenix Squadron Character", 3.0f, CardCategory.CHARACTER);
+        PhysicalCard location = card(
+                "Lothal: Required Site", 0.0f, CardCategory.LOCATION);
+        when(actor.getBlueprintId(true)).thenReturn("207_9");
+        when(location.getBlueprintId(true)).thenReturn("219_39");
+        when(game.getGameState()).thenReturn(gameState);
+        when(gameState.getCardPile(PLAYER, Zone.RESERVE_DECK))
+                .thenReturn(List.of(actor, location));
+        when(gameState.getHand(PLAYER)).thenReturn(List.of());
+
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, actor)).thenReturn(REQUIRED_ACTOR);
+        when(randoObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, location)).thenReturn(REQUIRED_LOCATION);
+
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, actor)).thenReturn(REQUIRED_ACTOR);
+        when(chosenObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, location)).thenReturn(REQUIRED_LOCATION);
+
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, PLAYER, "ARBITRARY_CARDS",
+                "Choose card to deploy from Reserve Deck",
+                "counted-objective-rando", Phase.DEPLOY);
+        randoContext.setGame(game);
+        randoContext.setBlueprints(List.of("207_9", "219_39"));
+        randoContext.setSelectable(List.of(true, true));
+        randoContext.setTestingTexts(List.of(
+                "Phoenix Squadron Character", "Lothal: Required Site"));
+        randoContext.setObjectiveAnalyzer(randoObjective);
+
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, PLAYER, "ARBITRARY_CARDS",
+                "Choose card to deploy from Reserve Deck",
+                "counted-objective-chosen", Phase.DEPLOY);
+        chosenContext.setGame(game);
+        chosenContext.setBlueprints(List.of("207_9", "219_39"));
+        chosenContext.setSelectable(List.of(true, true));
+        chosenContext.setTestingTexts(List.of(
+                "Phoenix Squadron Character", "Lothal: Required Site"));
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertEquals(List.of("0", "1"),
+                rando.stream().map(action -> action.getActionId()).toList());
+        assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
+                450.0f, 350.0f);
+        assertTrue(rando.get(0).getReasoning().stream().anyMatch(
+                reason -> reason.contains("typed actor required")));
+        assertTrue(rando.get(1).getReasoning().stream().anyMatch(
+                reason -> reason.contains("missing location required")));
         assertMirrored(rando, chosen);
     }
 
