@@ -147,7 +147,9 @@ public final class PullActionPolicy {
         List<PolicyOperation> operations = new ArrayList<>();
         boolean hardBlocked = false;
 
-        if (facts.reserveSize() >= 0 && facts.reserveSize() <= 2) {
+        if (!facts.requiredOnTableCardPullVetoBypass()
+                && facts.reserveSize() >= 0
+                && facts.reserveSize() <= 2) {
             operations.add(add(facts.actionId(), "V60-reserve-risk",
                     TraceOutputKind.VETO, -9999.0f,
                     "V60 RESERVE RISK: Reserve deck has " + facts.reserveSize()
@@ -195,7 +197,9 @@ public final class PullActionPolicy {
             hardBlocked = true;
         }
 
-        if (!hardBlocked && facts.cheapestTargetCost() != null
+        if (!hardBlocked
+                && !facts.requiredOnTableCardPullVetoBypass()
+                && facts.cheapestTargetCost() != null
                 && facts.cheapestTargetCost() > facts.availableForce()) {
             operations.add(add(facts.actionId(), "V67ac",
                     TraceOutputKind.VETO, -9999.0f,
@@ -249,7 +253,9 @@ public final class PullActionPolicy {
                     tier, tierName, facts.locationReason());
         }
 
-        if (!hardBlocked && facts.weaponPull() && !facts.locationPull()) {
+        if (!hardBlocked
+                && !facts.requiredOnTableCardPullVetoBypass()
+                && facts.weaponPull() && !facts.locationPull()) {
             WeaponOrderEvaluation weaponOrder = evaluateWeaponOrder(
                     new WeaponOrderFacts(facts.actionId(), facts.weaponPull(),
                             facts.locationPull(), facts.unarmedCharacters(),
@@ -265,7 +271,9 @@ public final class PullActionPolicy {
             }
         }
 
-        if (!hardBlocked && facts.devicePull()
+        if (!hardBlocked
+                && !facts.requiredOnTableCardPullVetoBypass()
+                && facts.devicePull()
                 && !facts.locationPull() && !facts.weaponPull()) {
             if (facts.deviceUnarmedCharacters() == 0
                     && facts.deviceArmedCharacters() > 0) {

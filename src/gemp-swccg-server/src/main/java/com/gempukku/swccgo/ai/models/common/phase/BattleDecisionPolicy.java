@@ -645,8 +645,19 @@ public final class BattleDecisionPolicy {
                                                 || requiredCardControlEnabler
                                                 || requiredCardRetention
                                                 || hardLossLocation) {
-                                            missingSelfControl =
-                                                !game.getModifiersQuerying()
+                                            boolean ordinaryControl =
+                                                objectiveAnalyzer != null
+                                                && objectiveAnalyzer
+                                                    .preFlipRequirementUsesOrdinaryControl(
+                                                        game, playerId,
+                                                        targetLocation);
+                                            missingSelfControl = ordinaryControl
+                                                ? !game.getModifiersQuerying()
+                                                    .controlsLocation(
+                                                        gameState,
+                                                        targetLocation,
+                                                        playerId)
+                                                : !game.getModifiersQuerying()
                                                     .controlsLocation(
                                                         gameState,
                                                         targetLocation,

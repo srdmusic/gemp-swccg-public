@@ -621,10 +621,16 @@ public class MoveEvaluator extends ActionEvaluator {
                                             game, playerId,
                                             cardToMove,
                                             routeDestination);
+                            boolean mainGeneratorHop = routeAnalyzer
+                                    .advancesShieldMainGeneratorRoute(
+                                            game, playerId,
+                                            cardToMove,
+                                            routeDestination);
                             if (!actorRouteHop
                                     && !actorLocationHop
                                     && !blockerChaseHop
-                                    && !requiredEnablerHop) {
+                                    && !requiredEnablerHop
+                                    && !mainGeneratorHop) {
                                 continue;
                             }
                             String routeVeto =
@@ -686,7 +692,15 @@ public class MoveEvaluator extends ActionEvaluator {
                         } else {
                             action.addReasoning(
                                     objectiveRoute.reason(),
-                                    objectiveRoute.delta());
+                                    objectiveRoute.delta(),
+                                    TraceRuleId.of(
+                                        runtimeLocationHop
+                                            ? "MOVE.OBJECTIVE.ACTOR_LOCATION_START"
+                                            : runtimeBlockerChaseHop
+                                            ? "MOVE.OBJECTIVE.BLOCKER_CHASE_START"
+                                            : "MOVE.OBJECTIVE.ACTOR_ROUTE_START"),
+                                    TraceDomainId.MOVE,
+                                    TraceOutputKind.BANDED);
                         }
                         ladderClaimR2(
                                 requiredCardEnablerHop
@@ -1097,7 +1111,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                         .hasCountedPreFlipActorRule()
                                     || gateAnalyzer
                                         .hasActiveRequiredCardDeployActorRule(
-                                            game, playerId));
+                                            game, playerId)
+                                    || gateAnalyzer
+                                        .hasShieldMainGeneratorFormationRule());
                         com.gempukku.swccgo.ai.models.common.strategy
                                 .ObjectiveAnalyzer.FlipGateFormationRole
                                 countedRole = activeCountedFormation
@@ -1129,10 +1145,14 @@ public class MoveEvaluator extends ActionEvaluator {
                                 activeCountedFormation
                                 && actionLower.contains(
                                     "move using landspeed")
-                                && gateAnalyzer
+                                && (gateAnalyzer
                                     .hasSafeRequiredCardDeployActorLandspeedDestination(
                                         game, playerId,
-                                        cardToMove);
+                                        cardToMove)
+                                    || gateAnalyzer
+                                        .hasShieldMainGeneratorRouteDestination(
+                                            game, playerId,
+                                            cardToMove));
                         MoveObjectiveGateHoldPolicy.Evaluation countedHold =
                                 MoveObjectiveGateHoldPolicy
                                     .evaluateCountedFormation(
@@ -1216,8 +1236,55 @@ public class MoveEvaluator extends ActionEvaluator {
                                 && gateAnalyzer.isFlipped()
                                 && gateAnalyzer.wouldDepartureTriggerFlipBack(
                                     game, playerId, cardToMove);
-                        float postFlipFriendlyPower =
+                        boolean departureTriggersObjectiveLoss =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && gateAnalyzer.isFlipped()
+                                && gateAnalyzer
+                                    .wouldDepartureTriggerStayFlippedFailure(
+                                        game, playerId, cardToMove);
+                        boolean departureTriggersPostFlipFailure =
                                 departureTriggersFlipBack
+                                || departureTriggersObjectiveLoss;
+                        boolean safePostFlipSurvivalRelocation = false;
+                        if (departureTriggersObjectiveLoss) {
+                            if (actionLower.contains(
+                                    "move using landspeed")) {
+                                safePostFlipSurvivalRelocation =
+                                    gateAnalyzer
+                                        .hasSafeStayFlippedLandspeedDestination(
+                                            game, playerId,
+                                            cardToMove);
+                            } else {
+                                PhysicalCard explicitDestination =
+                                    MoveDestinationPolicy
+                                        .resolveDestination(
+                                            gameState,
+                                            currentLocation,
+                                            actionLower);
+                                safePostFlipSurvivalRelocation =
+                                    explicitDestination != null
+                                    && gateAnalyzer
+                                        .preservesStayFlippedRequirementByMovingTo(
+                                            game, playerId,
+                                            cardToMove,
+                                            explicitDestination)
+                                    && com.gempukku.swccgo.ai.models
+                                        .common.strategy.FormationSafety
+                                        .vetoMoveDestination(
+                                            game, gameState,
+                                            playerId, cardToMove,
+                                            explicitDestination) == null
+                                    && com.gempukku.swccgo.ai.models
+                                        .common.strategy.FormationSafety
+                                        .vetoMoveOrigin(
+                                            game, gameState,
+                                            playerId, cardToMove,
+                                            currentLocation) == null;
+                            }
+                        }
+                        float postFlipFriendlyPower =
+                                departureTriggersPostFlipFailure
                                 ? game.getModifiersQuerying()
                                     .getTotalPowerAtLocation(
                                         gameState, currentLocation,
@@ -1226,7 +1293,7 @@ public class MoveEvaluator extends ActionEvaluator {
                         String postFlipOpponent =
                                 gameState.getOpponent(playerId);
                         float postFlipOpponentPower =
-                                departureTriggersFlipBack
+                                departureTriggersPostFlipFailure
                                 ? game.getModifiersQuerying()
                                     .getTotalPowerAtLocation(
                                         gameState, currentLocation,
@@ -1237,7 +1304,13 @@ public class MoveEvaluator extends ActionEvaluator {
                                 : 0.0f;
                         MoveObjectiveGateHoldPolicy.Evaluation
                                 postFlipBlockerHold =
-                                MoveObjectiveGateHoldPolicy
+                                departureTriggersObjectiveLoss
+                                ? MoveObjectiveGateHoldPolicy
+                                    .evaluatePostFlipSurvivalActor(
+                                        true, postFlipFriendlyPower,
+                                        postFlipOpponentPower,
+                                        safePostFlipSurvivalRelocation)
+                                : MoveObjectiveGateHoldPolicy
                                     .evaluatePostFlipBlocker(
                                         departureTriggersFlipBack,
                                         postFlipFriendlyPower,
@@ -1246,7 +1319,7 @@ public class MoveEvaluator extends ActionEvaluator {
                             ladderVetoHard = true;
                             ladderVetoHardReason =
                                     postFlipBlockerHold.reason();
-                            logger.warn("OBJECTIVE FLIP-BACK BLOCKER HOLD: {} at {} vetoed ({}, power={}/{})",
+                            logger.warn("OBJECTIVE POST-FLIP HOLD: {} at {} vetoed ({}, power={}/{})",
                                 cardToMove.getTitle(),
                                 currentLocation.getTitle(),
                                 postFlipBlockerHold.branch(),
@@ -1788,6 +1861,16 @@ public class MoveEvaluator extends ActionEvaluator {
                                             .wouldDepartureTriggerFlipBack(
                                                 game, playerId,
                                                 cardToMove)
+                                            || moveConsolidateAnalyzer
+                                                .wouldDepartureTriggerStayFlippedFailure(
+                                                    game, playerId,
+                                                    cardToMove)
+                                                && !(actionLower.contains(
+                                                        "move using landspeed")
+                                                    && moveConsolidateAnalyzer
+                                                        .hasSafeStayFlippedLandspeedDestination(
+                                                            game, playerId,
+                                                            cardToMove))
                                         : moveConsolidateAnalyzer
                                             .isFlipBackProtectionLocation(
                                                 currentLocation, game,

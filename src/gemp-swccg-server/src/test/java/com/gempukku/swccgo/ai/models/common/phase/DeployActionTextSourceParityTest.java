@@ -91,10 +91,11 @@ public class DeployActionTextSourceParityTest {
                     "// === V160 (Steve, 2026-05-29):",
                     "// === V158 RESERVE-DEPLOY BYPASS GUARD");
             assertOrdered(v160,
-                    "textLower.contains(\"target the main generator\")",
                     "context.getObjectiveAnalyzer()",
-                    "v160OA.isAnalyzed()",
-                    "v160OA.isShieldWillBeDown()",
+                    "v160OA != null",
+                    ".isShieldMainGeneratorRouteAction(",
+                    "game, context.getPlayerId(),",
+                    "cardId, actionText",
                     "DeployActionTextPolicy.scoreMainGenerator(",
                     "logger.warn(\"V160 SHIELD WILL BE DOWN:");
             assertFalse(v160.contains("action.addReasoning("));

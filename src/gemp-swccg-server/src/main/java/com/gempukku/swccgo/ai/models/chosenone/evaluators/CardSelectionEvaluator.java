@@ -407,7 +407,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
     private void applyCountedObjectivePullPolicy(
             DecisionContext context, EvaluatedAction action,
-            String blueprintId, boolean lossDecision) {
+            String cardId, String blueprintId,
+            boolean lossDecision) {
         if (lossDecision || context.getGame() == null
                 || context.getGameState() == null
                 || context.getPlayerId() == null
@@ -416,8 +417,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return;
         }
 
-        PhysicalCard candidate = findFirstCardByBlueprint(
-                context.getGameState(), context.getPlayerId(), blueprintId);
+        PhysicalCard candidate = findPullCandidate(
+                context, cardId, blueprintId);
         com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer
                 .ObjectiveProgressCandidateRole role =
                 context.getObjectiveAnalyzer()
@@ -4383,9 +4384,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             .ObjectiveProgressCandidateRole
                             .REQUIRED_ON_TABLE_CARD);
         boolean requiredOnTableCard =
-                title != null
+                physicalCard != null
                 && objectiveAnalyzer
-                    .isRequiredCardForFlip(title);
+                    .isRequiredCardForFlip(physicalCard);
         boolean preferredRequiredCard =
                 context.getGame() != null
                 && context.getPlayerId() != null
@@ -4395,22 +4396,36 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         context.getGame(),
                         context.getPlayerId(),
                         physicalCard);
+        boolean preferredShieldRoutePackageCard =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredShieldRoutePackageForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
         if (route == ForceLossPolicy.Route.STANDALONE) {
             myLord = objectiveAnalyzer.getObjectiveTitle() != null
                     && objectiveAnalyzer.isMyLord();
             required = preferredRequiredCard
+                    || preferredShieldRoutePackageCard
                     || candidate.fromHand() && requiredActor;
             pullable = candidate.fromHand() && title != null && !required
                     && !requiredOnTableCard
-                    && objectiveAnalyzer.isPullableCard(title);
+                    && objectiveAnalyzer.isPullableCard(
+                        physicalCard);
             huntDown = candidate.fromHand() && title != null
                     && objectiveAnalyzer.isHuntDownV();
         } else {
             huntDown = title != null && objectiveAnalyzer.isHuntDownV();
-            required = preferredRequiredCard || requiredActor;
+            required = preferredRequiredCard
+                    || preferredShieldRoutePackageCard
+                    || requiredActor;
             pullable = title != null && !required
                     && !requiredOnTableCard
-                    && objectiveAnalyzer.isPullableCard(title);
+                    && objectiveAnalyzer.isPullableCard(
+                        physicalCard);
         }
         return new ForceLossPolicy.ObjectiveFlags(
                 myLord,
@@ -4537,13 +4552,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             String fTitle = card.getTitle();
                             boolean requiredForFlip = context.getObjectiveAnalyzer() != null
                                 && context.getObjectiveAnalyzer().isAnalyzed()
-                                && fTitle != null
-                                && context.getObjectiveAnalyzer().isRequiredCardForFlip(fTitle);
+                                && context.getObjectiveAnalyzer()
+                                    .isRequiredCardForFlip(card);
                             boolean pullable = context.getObjectiveAnalyzer() != null
                                 && context.getObjectiveAnalyzer().isAnalyzed()
-                                && fTitle != null
                                 && !requiredForFlip
-                                && context.getObjectiveAnalyzer().isPullableCard(fTitle);
+                                && context.getObjectiveAnalyzer()
+                                    .isPullableCard(card);
                             BattleForfeitFacts.CandidateFacts candidate =
                                 BattleForfeitFacts.readCandidate(
                                     cardId, card, context.getGame(), context.getPlayerId(),
@@ -4691,9 +4706,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         boolean requiredForFlip = false;
                         boolean pullable = false;
                         if (fObjAnalyzer != null && fObjAnalyzer.isAnalyzed() && fTitle != null) {
-                            if (fObjAnalyzer.isRequiredCardForFlip(fTitle)) {
+                            if (fObjAnalyzer.isRequiredCardForFlip(card)) {
                                 requiredForFlip = true;
-                            } else if (fObjAnalyzer.isPullableCard(fTitle)) {
+                            } else if (fObjAnalyzer.isPullableCard(card)) {
                                 pullable = true;
                             }
                         }
@@ -6206,10 +6221,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 objectiveActorRouteDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
-                                    && routeAnalyzer
+                                    && (routeAnalyzer
                                         .advancesPreFlipActorRoute(
                                             game, playerId, fsMover,
-                                            location);
+                                            location)
+                                        || routeAnalyzer
+                                            .advancesShieldMainGeneratorRoute(
+                                                game, playerId,
+                                                fsMover, location));
                                 objectiveActorLocationDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -6247,6 +6266,55 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .common.strategy
                                         .ObjectiveAnalyzer
                                         .FlipGateFormationRole.NONE;
+                                if (moverFormationRole
+                                        == com.gempukku.swccgo.ai.models
+                                            .common.strategy
+                                            .ObjectiveAnalyzer
+                                            .FlipGateFormationRole
+                                            .LAST_OBJECTIVE_SURVIVAL_ACTOR
+                                        && context.getDecisionText() != null
+                                        && context.getDecisionText()
+                                            .toLowerCase(Locale.ROOT)
+                                            .contains("using landspeed")) {
+                                    String opponent =
+                                        gameState.getOpponent(playerId);
+                                    float friendlyPower =
+                                        game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, fsOrigin,
+                                                playerId, false, false);
+                                    float opponentPower = opponent != null
+                                        ? game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, fsOrigin,
+                                                opponent, false, false)
+                                            + com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .FormationSafety
+                                                .weaponBonusAt(
+                                                    gameState, fsOrigin,
+                                                    opponent)
+                                        : 0.0f;
+                                    boolean safeRelocation =
+                                        routeAnalyzer
+                                            .preservesStayFlippedRequirementByMovingTo(
+                                                game, playerId,
+                                                fsMover, location);
+                                    var survivalHold =
+                                        MoveObjectiveGateHoldPolicy
+                                            .evaluatePostFlipSurvivalActor(
+                                                true, friendlyPower,
+                                                opponentPower,
+                                                safeRelocation);
+                                    if (survivalHold.hardVeto()) {
+                                        action.hardVeto(
+                                            survivalHold.reason(),
+                                            TraceRuleId.of(
+                                                "MOVE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD"),
+                                            TraceDomainId.MOVE,
+                                            TraceOutputKind.VETO);
+                                    }
+                                }
                                 boolean countedFormationActive =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -6255,7 +6323,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             .hasCountedPreFlipActorRule()
                                         || routeAnalyzer
                                             .hasActiveRequiredCardDeployActorRule(
-                                                game, playerId));
+                                                game, playerId)
+                                        || routeAnalyzer
+                                            .hasShieldMainGeneratorFormationRule());
                                 if (countedFormationActive
                                         && context.getDecisionText() != null
                                         && context.getDecisionText()
@@ -6283,6 +6353,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     boolean preservesCount =
                                         routeAnalyzer
                                             .preservesRequiredCardDeployPrerequisiteByMovingTo(
+                                                game, playerId,
+                                                fsMover, location)
+                                        || routeAnalyzer
+                                            .advancesShieldMainGeneratorRoute(
                                                 game, playerId,
                                                 fsMover, location);
                                     var countedDestinationHold =
@@ -6395,7 +6469,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 if (objectiveRoute.applies()) {
                                     action.addReasoning(
                                         objectiveRoute.reason(),
-                                        objectiveRoute.delta());
+                                        objectiveRoute.delta(),
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.BANDED);
                                     logger.warn(
                                         "OBJECTIVE ACTOR ROUTE DEST: {} to {} +1000",
                                         fsMover.getTitle(), title);
@@ -7936,7 +8014,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             }
 
             pullLedger.register(PullTakeCandidatePolicy.evaluate(pullFacts));
+            PullDeployCandidatePolicy.Evaluation pullCandidate =
+                    PullDeployCandidatePolicy.evaluate(
+                            PullPolicyAdapter.readDeployCandidate(
+                                    context,
+                                    cardId,
+                                    cardId,
+                                    blueprintId,
+                                    cardTitle,
+                                    blueprint != null
+                                            ? blueprint.getCardCategory()
+                                            : null,
+                                    blueprint));
+            pullLedger.register(pullCandidate.result());
             PolicyOperationAdapter.apply(action, pullLedger);
+            applyCountedObjectivePullPolicy(
+                    context, action, cardId,
+                    blueprintId, false);
 
             logger.debug("🎯 {} ({}): score={}, destiny={}, power={}",
                     cardTitle, blueprintId != null ? blueprintId : cardId,
@@ -8084,7 +8178,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             PullDeployCandidatePolicy.Evaluation pullCandidate =
                     PullDeployCandidatePolicy.evaluate(
                             PullPolicyAdapter.readDeployCandidate(
-                                    context, cardId, cardTitle, category, blueprint));
+                                    context, cardId, cardId,
+                                    blueprintId, cardTitle,
+                                    category, blueprint));
             pullCandidateLedger.register(pullCandidate.result());
             PolicyOperationAdapter.apply(action, pullCandidateLedger);
             if (pullCandidate.adapterStep()
@@ -8231,7 +8327,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     blueprintId, category, blueprint != null,
                     isLossDecision, textLower);
             applyCountedObjectivePullPolicy(
-                    context, action, blueprintId, isLossDecision);
+                    context, action, cardId,
+                    blueprintId, isLossDecision);
 
             // V28/V47 RESERVE SOLO BLOCK — RETIRED 2026-07-12 (batch 1d; Codex m00206 wrong-facts
             // audit CODEX_V47_WRONG_FACTS_AUDIT_2026-07-12.md): it applied Cloud City board facts to
@@ -8393,9 +8490,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         // V24.10: Get card titles for smarter reserve deck selection
         List<String> reserveTestingTexts = context.getTestingTexts();
+        List<String> reserveCardIds = context.getCardIds();
 
         for (int i = 0; i < blueprints.size(); i++) {
             String blueprintId = blueprints.get(i);
+            String candidateCardId =
+                    reserveCardIds != null
+                        && i < reserveCardIds.size()
+                            ? reserveCardIds.get(i) : null;
 
             String testingTitle = null;
             if (reserveTestingTexts != null && i < reserveTestingTexts.size()) {
@@ -8446,6 +8548,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             PullPolicyAdapter.readDeployCandidate(
                                     context,
                                     action.getActionId(),
+                                    candidateCardId,
+                                    blueprintId,
                                     cardTitle != null ? cardTitle : blueprintId,
                                     pullCategory,
                                     pullBlueprint));
@@ -8465,7 +8569,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             applyBlueprintPullSelectionPolicy(
                     action, blueprintId, cardTitle, textLower, plan);
             applyCountedObjectivePullPolicy(
-                    context, action, blueprintId, false);
+                    context, action, candidateCardId,
+                    blueprintId, false);
 
             // === Shield scoring ===
             if (pullCategory == CardCategory.DEFENSIVE_SHIELD) {
@@ -8822,25 +8927,76 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return match;
     }
 
-    private PhysicalCard findFirstCardByBlueprint(
-            GameState gameState, String playerId, String blueprintId) {
+    static PhysicalCard findPullCandidate(
+            DecisionContext context,
+            String cardId, String blueprintId) {
+        if (context == null) return null;
+        GameState gameState = context.getGameState();
+        String playerId = context.getPlayerId();
         if (gameState == null || playerId == null || blueprintId == null
                 || blueprintId.isBlank() || "inPlay".equals(blueprintId)) {
             return null;
         }
-        java.util.List<PhysicalCard> candidates = new java.util.ArrayList<>();
+        if (cardId != null) {
+            try {
+                PhysicalCard exact = gameState.findCardById(
+                        Integer.parseInt(cardId));
+                if (exact != null
+                        && playerId.equals(exact.getOwner())
+                        && blueprintId.equals(
+                            exact.getBlueprintId(true))) {
+                    return exact;
+                }
+            } catch (NumberFormatException ignored) {
+                // Temporary arbitrary-choice ids need the blueprint fallback.
+            }
+        }
         java.util.List<PhysicalCard> reserveCards = gameState.getCardPile(
                 playerId, com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+        if (cardId != null && cardId.startsWith("temp")) {
+            List<String> offeredCardIds = context.getCardIds();
+            List<String> offeredBlueprints = context.getBlueprints();
+            int offeredIndex = offeredCardIds != null
+                    ? offeredCardIds.indexOf(cardId) : -1;
+            if (offeredIndex < 0 || offeredBlueprints == null
+                    || offeredIndex >= offeredBlueprints.size()
+                    || !cardId.equals("temp" + offeredIndex)) {
+                return null;
+            }
+            boolean reserveOrderMatches = reserveCards != null
+                    && reserveCards.size() == offeredBlueprints.size();
+            for (int index = 0;
+                    reserveOrderMatches
+                            && index < reserveCards.size();
+                    index++) {
+                PhysicalCard reserveCard = reserveCards.get(index);
+                reserveOrderMatches = reserveCard != null
+                        && offeredBlueprints.get(index).equals(
+                                reserveCard.getBlueprintId(true));
+            }
+            if (reserveOrderMatches) {
+                PhysicalCard exact = reserveCards.get(offeredIndex);
+                if (exact != null
+                        && playerId.equals(exact.getOwner())
+                        && blueprintId.equals(
+                                exact.getBlueprintId(true))) {
+                    return exact;
+                }
+            }
+        }
+        java.util.List<PhysicalCard> candidates = new java.util.ArrayList<>();
         java.util.List<PhysicalCard> handCards = gameState.getHand(playerId);
         if (reserveCards != null) candidates.addAll(reserveCards);
         if (handCards != null) candidates.addAll(handCards);
+        PhysicalCard unique = null;
         for (PhysicalCard candidate : candidates) {
             if (candidate != null
                     && blueprintId.equals(candidate.getBlueprintId(true))) {
-                return candidate;
+                if (unique != null) return null;
+                unique = candidate;
             }
         }
-        return null;
+        return unique;
     }
 
     // ====================================================================

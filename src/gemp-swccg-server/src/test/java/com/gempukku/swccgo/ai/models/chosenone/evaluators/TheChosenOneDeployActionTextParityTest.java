@@ -67,8 +67,10 @@ public class TheChosenOneDeployActionTextParityTest
     @Test
     public void mainGeneratorObjectiveGateStaysAdapterOwned() {
         ObjectiveAnalyzer active = mock(ObjectiveAnalyzer.class);
-        when(active.isAnalyzed()).thenReturn(true);
-        when(active.isShieldWillBeDown()).thenReturn(true);
+        when(active.isShieldMainGeneratorRouteAction(
+                null, "bot", "",
+                "Target The Main Generator"))
+                .thenReturn(true);
         EvaluatedAction pushed = evaluateText(active,
                 "Target The Main Generator");
         assertEquals(Float.floatToRawIntBits(800.0f),

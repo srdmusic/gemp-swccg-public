@@ -14,6 +14,7 @@ public final class MoveObjectiveGateHoldPolicy {
         HOLD_LAST_BUDDY,
         HOLD_LAST_CONTROL_SOURCE,
         HOLD_FLIP_BACK_BLOCKER,
+        HOLD_POST_FLIP_SURVIVAL_ACTOR,
         HOLD_REQUIRED_CARD_RETENTION_DEFENDER,
         HOLD_HARD_LOSS_DEFENDER
     }
@@ -250,6 +251,27 @@ public final class MoveObjectiveGateHoldPolicy {
                 Branch.HOLD_FLIP_BACK_BLOCKER,
                 true,
                 "MOVE.OBJECTIVE.FLIP_BACK_BLOCKER_HOLD: keep the sole blocker preventing immediate flip-back");
+    }
+
+    /**
+     * Keeps the last actor satisfying a post-flip survival law. The terminal
+     * result can be removal from play rather than a flip back.
+     */
+    public static Evaluation evaluatePostFlipSurvivalActor(
+            boolean departureTriggersObjectiveLoss,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation,
+            boolean safeRelocation) {
+        if (!departureTriggersObjectiveLoss
+                || safeRelocation
+                || opponentPowerAtLocation
+                    > friendlyPowerAtLocation + RETREATABLE_POWER_GAP) {
+            return Evaluation.none();
+        }
+        return new Evaluation(
+                Branch.HOLD_POST_FLIP_SURVIVAL_ACTOR,
+                true,
+                "MOVE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD: keep the last actor preventing immediate objective loss");
     }
 
     public static Evaluation evaluate(

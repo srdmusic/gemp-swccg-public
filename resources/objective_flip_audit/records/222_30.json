@@ -9,7 +9,7 @@
  "cacheCheck": "OK",
  "flipToBack": {
   "timing": "RequiredGameTextTriggerAction on blown-away-last-step event (event trigger, not table-changed polling)",
-  "prose": "Flip when Main Power Generators is 'blown away' (your own 1st Marker site; the win path is Target The Main Generator + AT-AT Cannon).",
+  "prose": "Flip when Main Power Generators is 'blown away' (your own 1st Marker site). Rando's encoded pursuit path is specifically Target The Main Generator (V) 222_13 plus an AT-AT Cannon attached to a piloted AT-AT, not classic 3_115.",
   "expression": {
    "op": "allOf",
    "children": [
@@ -56,6 +56,8 @@
  ],
  "setupAndPullRoutes": [
   "Setup (required on objective deploy): deploy 5th Marker, [Set 17] 4th Marker, 1st Marker (= Main Power Generators), and [Set 9] Prepare For A Surface Attack from Reserve Deck (Card222_030.java:55-88).",
+  "Prepare For A Surface Attack (V) 209_42 reduces AT-AT Cannon deploy cost, lets it fire for free, and can take a qualifying vehicle weapon or Hoth Epic Event into hand from Reserve Deck (Card209_042.java:35-54,61-94).",
+  "Selected executable route: deploy Target The Main Generator (V) 222_13 on the mandatory 5th Marker Ice Plains and have it follow a controlled vehicle toward Main Power Generators through adjacent deployed marker sites. Stop at the first 3rd-or-lower site where the attached AT-AT Cannon is in range, normally 3rd Marker when Light Side has not inserted 2nd Marker; continue to 2nd only when its presence makes that necessary. Missing printed marker numbers may be skipped when the remaining deployed sites are adjacent. Total destiny must exceed 8 (Card222_013.java:54-65,68-100,119-145).",
   "Front once per turn (THE_SHIELD_WILL_BE_DOWN_IN_MOMENTS__DOWNLOAD_HOTH_LOCATION): deploy a Hoth location from Reserve Deck (Card222_030.java:116-134).",
   "Back once per turn (IMPERIAL_TROOPS_HAVE_ENTERED_THE_BASE__DEPLOY_SNOWTROOPER): deploy a snowtrooper from Reserve Deck; reshuffle (Card222_030_BACK.java:107-122).",
   "Back once during your control phase (shared action id, choose one): retrieve bottom card of Lost Pile into hand (:71-84) OR peek at top X cards of opponent's Reserve Deck and replace in any order, X = Hoth locations you control (Filters.and(Filters.Hoth_location, Filters.controls(playerId))) (:87-103)."
@@ -66,19 +68,19 @@
   "Back: attrition against opponent +1 for each Imperial leader in battle (OnTableEvaluator on participatingInBattle Imperial leaders) (Card222_030_BACK.java:59).",
   "Back: Rebel Leadership and We're Doomed are Lost Interrupts (:58).",
   "Back HARD LOSE: out of play if you do not occupy a Hoth site with piloted AT-AT / Imperial leader / snowtrooper (:128-146). Maintain a durable Hoth-site occupier forever.",
-  "Strategic: the flip is your own epic-event win path (blow away Main Power Generators); Rando must drive Target The Main Generator + AT-AT Cannon, and the flip gate dies if Main Power Generators never reaches table."
+  "Strategic: the flip is your own epic-event win path (blow away Main Power Generators); Rando must drive exact virtual Target The Main Generator 222_13 plus an AT-AT Cannon attached to a piloted AT-AT, and the flip gate dies if Main Power Generators never reaches table."
  ],
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
+  "loaderEnabled": true,
   "profileGaps": [
-   "flipGateSite null / flipGateCardIds empty: flip gate is own Main Power Generators site blown away (Filters.title(Title.Main_Power_Generators, true); 222_9) - no BLOWN_AWAY semantics anywhere in the profile",
-   "keyCharacterFilter null: back survival actors (piloted AT-AT, Imperial leader, snowtrooper occupying a Hoth site) exist only as a raw recipe string in objectiveNamedLocations",
-   "requiredCardsOnTable empty: 1st Marker / Main Power Generators must reach and stay on table for the blow-away path; Target The Main Generator epic event dependency not encoded",
-   "pullableCards empty: front Hoth-location download and back snowtrooper download not represented",
-   "profile does not distinguish that the back has NO flip-back, only a hard-lose"
+   "The profile encodes the exact 222_13 pursuit prerequisites, but the actual >8 epic-event result and isBlownAwayLastStep flip remain engine outcomes rather than board-state facts",
+   "The profile expresses the firing endpoint as the first 1st, 2nd, or 3rd Marker where the physical Cannon is actually in range, so 3rd is terminal without Light Side 2nd but remains a bridge when 2nd is inserted",
+   "The DTO evaluates Target 222_13 and the in-range cannon package as separate alternatives across the same 1st-through-3rd Marker union; runtime counting must require both alternatives at one physical location and fail closed otherwise",
+   "requiredCardsOnTable names Target The Main Generator and AT-AT Cannon so pull, Force reserve, deploy, and Force-loss policies preserve the executable package; runtime physical-card matching restricts the Target requirement to virtual 222_13 and excludes classic 3_115",
+   "The back is encoded as purpose stayFlipped with the exact durable occupier union. Failure places the objective out of play; it is not represented as flipBack"
   ]
  },
- "proofGate": "SOURCE_VERIFIED"
+ "proofGate": "FLIP_OBSERVED"
 }

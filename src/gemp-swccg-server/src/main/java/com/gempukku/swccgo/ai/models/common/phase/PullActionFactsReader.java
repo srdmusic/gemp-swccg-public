@@ -91,6 +91,14 @@ public final class PullActionFactsReader {
                 String sourceTitle) {
             return false;
         }
+
+        default boolean objectivePullAdvancesRequiredOnTableCard(
+                SwccgGame game, String playerId,
+                PhysicalCard source) {
+            return objectivePullAdvancesRequiredOnTableCard(
+                    game, playerId,
+                    source != null ? source.getTitle() : null);
+        }
     }
 
     public interface LateView {
@@ -217,8 +225,37 @@ public final class PullActionFactsReader {
         HostAssessment hosts = HostAssessment.none();
         KeyCharacter keyCharacter = KeyCharacter.none();
         FormationAssessment formation = FormationAssessment.none();
+        boolean lowReserve =
+                reserveSize >= 0 && reserveSize <= 2;
+        boolean objectiveExceptionCanApply =
+                context != null
+                && context.objective() != null
+                && context.game() != null
+                && context.playerId() != null;
+        if (lowReserve && !objectiveExceptionCanApply) {
+            return buildParent(actionId, text, reserveSize, "",
+                    memoryValidation, sourceValidation, "?", null, false,
+                    null, 0, deadInterrupt, location, hosts, keyCharacter,
+                    context, false, formation);
+        }
+        PhysicalCard source = sourceCard(gameState, sourceCardId);
+        String sourceTitle = sourceTitle(source);
+        CardCategory sourceCategory = sourceCategory(source);
+        boolean requiredOnTableCardPull =
+                context != null
+                && context.objective() != null
+                && context.objective()
+                    .objectivePullAdvancesRequiredOnTableCard(
+                        context.game(), context.playerId(),
+                        source);
+        boolean requiredOnTableCardPullVetoBypass =
+                requiredOnTableCardPull
+                && source != null
+                && "209_42".equals(
+                    source.getBlueprintId(true));
 
-        if (reserveSize >= 0 && reserveSize <= 2) {
+        if (!requiredOnTableCardPullVetoBypass
+                && lowReserve) {
             return buildParent(actionId, text, reserveSize, "",
                     memoryValidation, sourceValidation, "?", null, false,
                     null, 0, deadInterrupt, location, hosts, keyCharacter,
@@ -241,9 +278,6 @@ public final class PullActionFactsReader {
                     context, false, formation);
         }
 
-        PhysicalCard source = sourceCard(gameState, sourceCardId);
-        String sourceTitle = sourceTitle(source);
-        CardCategory sourceCategory = sourceCategory(source);
         String sourceText = sourceText(source, context, oracle);
         List<String> targets = pullTargets(sourceText, oracle);
         Zone sourceZone = sourceZone(text, oracle);
@@ -262,6 +296,7 @@ public final class PullActionFactsReader {
                 == PullOracleView.Outcome.WILL_SUCCEED
                 && sourceZone == Zone.RESERVE_DECK
                 && context != null && context.game() != null
+                && !requiredOnTableCardPullVetoBypass
                 && oracle != null && safeAllUnattachable(
                         oracle, context.game(), context.playerId(), targets);
         if (allUnattachable) {
@@ -307,7 +342,9 @@ public final class PullActionFactsReader {
                 // Fail open.
             }
         }
-        if (cheapestCost != null && cheapestCost > availableForce) {
+        if (!requiredOnTableCardPullVetoBypass
+                && cheapestCost != null
+                && cheapestCost > availableForce) {
             return buildParent(actionId, text, reserveSize, "",
                     memoryValidation, sourceValidation, sourceTitle,
                     sourceCategory, false, cheapestCost, availableForce,
@@ -343,7 +380,8 @@ public final class PullActionFactsReader {
         hosts = hostAssessment(
                 lower, sourceTitle, targets, gameState,
                 context != null ? context.playerId() : null);
-        if (hostHardBlocked(location, hosts)
+        if ((!requiredOnTableCardPullVetoBypass
+                && hostHardBlocked(location, hosts))
                 || location.v131State() == PullActionFacts.V131State.DOWNGRADE) {
             return buildParent(actionId, text, reserveSize, "",
                     memoryValidation, sourceValidation, sourceTitle,
@@ -366,7 +404,8 @@ public final class PullActionFactsReader {
                 memoryValidation, sourceValidation, sourceTitle,
                 sourceCategory, false, cheapestCost, availableForce,
                 deadInterrupt, location, hosts, keyCharacter, context,
-                true, formation);
+                true, formation, requiredOnTableCardPull,
+                requiredOnTableCardPullVetoBypass);
     }
 
     private static PullActionFacts.Parent buildParent(
@@ -388,6 +427,36 @@ public final class PullActionFactsReader {
             Context context,
             boolean includeLateContext,
             FormationAssessment formation) {
+        return buildParent(
+                actionId, text, reserveSize, namedMissingTarget,
+                memoryValidation, sourceValidation, sourceTitle,
+                sourceCategory, allUnattachable, cheapestCost,
+                availableForce, deadInterrupt, location, hosts,
+                keyCharacter, context, includeLateContext,
+                formation, false, false);
+    }
+
+    private static PullActionFacts.Parent buildParent(
+            String actionId,
+            String text,
+            int reserveSize,
+            String namedMissingTarget,
+            PullOracleView.Validation memoryValidation,
+            PullOracleView.Validation sourceValidation,
+            String sourceTitle,
+            CardCategory sourceCategory,
+            boolean allUnattachable,
+            Integer cheapestCost,
+            int availableForce,
+            DeadInterrupt deadInterrupt,
+            LocationAssessment location,
+            HostAssessment hosts,
+            KeyCharacter keyCharacter,
+            Context context,
+            boolean includeLateContext,
+            FormationAssessment formation,
+            boolean requiredOnTableCardPull,
+            boolean requiredOnTableCardPullVetoBypass) {
         boolean charactersOrVehiclesInHand = false;
         boolean battlePlausible = false;
         if (includeLateContext && context != null && context.lateView() != null) {
@@ -441,13 +510,8 @@ public final class PullActionFactsReader {
                 battlePlausible,
                 formation.state(),
                 formation.reason(),
-                sourceCategory == CardCategory.OBJECTIVE
-                    && context != null
-                    && context.objective() != null
-                    && context.objective()
-                        .objectivePullAdvancesRequiredOnTableCard(
-                            context.game(), context.playerId(),
-                            sourceTitle));
+                requiredOnTableCardPull,
+                requiredOnTableCardPullVetoBypass);
     }
 
     private static int safeReserveSize(Context context) {

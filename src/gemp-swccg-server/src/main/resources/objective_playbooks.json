@@ -6045,6 +6045,7 @@
     },
     {
       "label": "The Shield Will Be Down in Moments",
+      "loaderEnabled": true,
       "blueprintIds": [
         "222_14",
         "222_14_BACK"
@@ -6054,16 +6055,124 @@
         "imperial troops have entered the base"
       ],
       "locationFragments": [],
-      "requiredCardsOnTable": [],
-      "pullableCards": [],
+      "requiredCardsOnTable": [
+        "target the main generator",
+        "at-at cannon"
+      ],
+      "pullableCards": [
+        "at-at cannon"
+      ],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
-      "startingEffects": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "208_49",
+            "3_148"
+          ],
+          "titleFragments": [
+            "hoth: ice plains (5th marker)"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "217_12"
+          ],
+          "titleFragments": [
+            "hoth: north ridge (4th marker)"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "222_9"
+          ],
+          "titleFragments": [
+            "hoth: main power generators (1st marker)"
+          ]
+        }
+      ],
+      "startingEffects": [
+        {
+          "blueprintIds": [
+            "209_42"
+          ],
+          "titleFragments": [
+            "prepare for a surface attack"
+          ]
+        }
+      ],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "shield-will-be-down-virtual-in-range-route",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "self",
+              "locationFilterKey": "First_Second_or_Third_Marker",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Target_The_Main_Generator_V_222_13",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "Selected executable route: Target The Main Generator (V) 222_13 follows the cannon host toward the first deployed marker site where its Cannon is in range of Main Power Generators, normally 3rd Marker unless Light Side inserts 2nd Marker"
+            },
+            {
+              "relation": "at",
+              "controller": "self",
+              "locationFilterKey": "First_Second_or_Third_Marker",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "AT_AT_Cannon_on_piloted_AT_AT_in_range_of_Main_Power_Generators",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "At 3rd Marker or lower, an in-range AT-AT Cannon attached to your piloted AT-AT is the exact firing package used by Target The Main Generator (V) 222_13"
+            }
+          ]
+        },
+        {
+          "id": "imperial-troops-back-hoth-site-survival",
+          "phase": "postFlip",
+          "purpose": "stayFlipped",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupyWith",
+              "controller": "self",
+              "locationFilterKey": "Hoth_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "piloted_AT_AT_or_Imperial_leader_or_snowtrooper",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "Occupy a Hoth site with a piloted AT-AT, Imperial leader, or snowtrooper; otherwise place the objective out of play. This is a survival law, not a flip-back condition"
+            }
+          ]
+        }
+      ],
+      "requiredCardDeployRules": [
+        {
+          "id": "shield-virtual-target-main-generator-deploy",
+          "requiredCardFilterKey": "Target_The_Main_Generator_V_222_13",
+          "blueprintIds": [
+            "222_13"
+          ],
+          "destinationLocationFilterKey": "Ice_Plains",
+          "sourceText": "Target The Main Generator (V) 222_13 deploys on Ice Plains. Classic 3_115 is not this objective route"
+        }
+      ],
       "frontBp": "222_14",
       "backBp": "222_14_BACK",
       "abbreviation": "TSWBDIM",
@@ -6156,6 +6265,7 @@
     },
     {
       "label": "The Shield Will Be Down in Moments",
+      "loaderEnabled": true,
       "blueprintIds": [
         "222_30",
         "222_30_BACK"
@@ -6165,16 +6275,124 @@
         "imperial troops have entered the base"
       ],
       "locationFragments": [],
-      "requiredCardsOnTable": [],
-      "pullableCards": [],
+      "requiredCardsOnTable": [
+        "target the main generator",
+        "at-at cannon"
+      ],
+      "pullableCards": [
+        "at-at cannon"
+      ],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
-      "startingEffects": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "208_49",
+            "3_148"
+          ],
+          "titleFragments": [
+            "hoth: ice plains (5th marker)"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "217_12"
+          ],
+          "titleFragments": [
+            "hoth: north ridge (4th marker)"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "222_9"
+          ],
+          "titleFragments": [
+            "hoth: main power generators (1st marker)"
+          ]
+        }
+      ],
+      "startingEffects": [
+        {
+          "blueprintIds": [
+            "209_42"
+          ],
+          "titleFragments": [
+            "prepare for a surface attack"
+          ]
+        }
+      ],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "shield-will-be-down-virtual-in-range-route",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "self",
+              "locationFilterKey": "First_Second_or_Third_Marker",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Target_The_Main_Generator_V_222_13",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "Selected executable route: Target The Main Generator (V) 222_13 follows the cannon host toward the first deployed marker site where its Cannon is in range of Main Power Generators, normally 3rd Marker unless Light Side inserts 2nd Marker"
+            },
+            {
+              "relation": "at",
+              "controller": "self",
+              "locationFilterKey": "First_Second_or_Third_Marker",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "AT_AT_Cannon_on_piloted_AT_AT_in_range_of_Main_Power_Generators",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "At 3rd Marker or lower, an in-range AT-AT Cannon attached to your piloted AT-AT is the exact firing package used by Target The Main Generator (V) 222_13"
+            }
+          ]
+        },
+        {
+          "id": "imperial-troops-back-hoth-site-survival",
+          "phase": "postFlip",
+          "purpose": "stayFlipped",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupyWith",
+              "controller": "self",
+              "locationFilterKey": "Hoth_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "piloted_AT_AT_or_Imperial_leader_or_snowtrooper",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "Occupy a Hoth site with a piloted AT-AT, Imperial leader, or snowtrooper; otherwise place the objective out of play. This is a survival law, not a flip-back condition"
+            }
+          ]
+        }
+      ],
+      "requiredCardDeployRules": [
+        {
+          "id": "shield-virtual-target-main-generator-deploy",
+          "requiredCardFilterKey": "Target_The_Main_Generator_V_222_13",
+          "blueprintIds": [
+            "222_13"
+          ],
+          "destinationLocationFilterKey": "Ice_Plains",
+          "sourceText": "Target The Main Generator (V) 222_13 deploys on Ice Plains. Classic 3_115 is not this objective route"
+        }
+      ],
       "frontBp": "222_30",
       "backBp": "222_30_BACK",
       "abbreviation": "TSWBDIM",

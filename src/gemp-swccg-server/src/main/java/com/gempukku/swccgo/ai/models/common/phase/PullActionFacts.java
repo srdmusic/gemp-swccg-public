@@ -78,7 +78,8 @@ public final class PullActionFacts {
             boolean battlePlausible,
             FormationState formationState,
             String formationReason,
-            boolean requiredOnTableCardPull) {
+            boolean requiredOnTableCardPull,
+            boolean requiredOnTableCardPullVetoBypass) {
         public Parent {
             Objects.requireNonNull(actionId, "actionId");
             actionText = actionText == null ? "" : actionText;

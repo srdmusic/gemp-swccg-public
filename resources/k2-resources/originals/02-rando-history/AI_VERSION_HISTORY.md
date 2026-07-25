@@ -8480,3 +8480,61 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     The running JVM was not restarted, and nothing was deployed or pushed. Revert the single
     Endor Operations Batch Four commit; Hunt Down Batch Three and all earlier objective-audit
     commits remain independent.
+
+  ==== Shield twin objective behavior Batch Five (2026-07-24) ====
+    Card222_014 and Card222_030 begin with exact Hoth sites plus virtual Prepare For A Surface
+    Attack 209_42. Their source-backed route requires virtual Target The Main Generator 222_13
+    and an AT-AT Cannon on a piloted AT-AT in actual range. The Epic Event fires at the start of
+    deploy from the First, Second, or Third Marker, blows away Main Power Generators only when
+    total weapon destiny is strictly greater than 8, makes Light Side lose exactly 5 Force, and
+    flips the objective as the last blow-away step. The back side never flips; it leaves play
+    when Dark Side no longer occupies a Hoth site with a piloted AT-AT, Imperial leader, or
+    snowtrooper.
+
+    Approved profiles 222_14 and 222_30 now use exact physical requirements for the virtual
+    Event, Cannon, Prepare, and starting cards. Shared analysis follows the live deployed-site
+    adjacency graph from Ice Plains, handles an inserted Second Marker or missing printed
+    markers, pulls only the Dark Side Third Marker route, and recognizes a complete Cannon only
+    while attached to a piloted AT-AT at a site from which the real Event may fire.
+
+    Exact Prepare's parent upload bypass applies only to physical 209_42; generic pulls and the
+    existing Endor V60 boundary remain unchanged. The real ARBITRARY_CARDS child prompt resolves
+    each tempN against the full ordered Reserve Deck, so duplicate Cannons preserve exact physical
+    identity and only the selected route copy receives the objective bypass and score. Both bots
+    stage a no-walker package, preserve its sole pilot, reserve exact deploy and movement Force,
+    and prefer the Event, host, pilot, Cannon, and legal route site in dependency order.
+
+    The Event and complete walker package hold together before movement. A split package receives
+    an exact reunion route instead of generic consolidation. The Event follows only from a
+    controlled source site to the live adjacent deployed marker, and an off-route Cannon cannot
+    falsely complete the route. Existing formation and battle-safety vetoes remain dominant.
+    Required Event, selected route package, and sole future pilot survive avoidable Force loss and
+    battle forfeit, while duplicate nonselected copies remain expendable.
+
+    After the real flip, spent Target, Cannon, and Prepare route protection is released. The last
+    qualifying Hoth occupier and a sole pilot needed to preserve that occupier remain protected
+    from avoidable loss or relocation. No artificial flip-back behavior was added.
+
+    Unchanged-engine tests execute both real objective printings, the virtual Event follow and
+    fire actions, exact range and inserted-marker branches, strict destiny threshold, five-Force
+    loss, Main Power Generators blow-away, and the actual flip. Production Rando and Chosen One
+    tests cover parent and real child pulls, deploy and Force budgets, movement, battle, Force
+    loss, forfeit, recovery, duplicate identities, and post-flip survival.
+
+    Production edits are limited to shared AI policy/analyzer code, mirrored Rando and Chosen One
+    adapters, and approved profiles 222_14 and 222_30. No engine, game, card Java, action,
+    decision metadata, client, database, deck-library, routing, or player-choice source changed.
+    Independent static review passed the corrected boundaries. The focused Shield plus impacted
+    shared suite passed 73/0/0/0; the isolated clean full reactor passed 2405/0/0/26 across 314
+    suites; and the clean async package passed. objective_playbooks.json is 194171 bytes with
+    SHA-256 25e2e26f60ce2a18a7f850a98ed28bcd6ef54887fcc569cbe08cfb4af7f26e79 in source,
+    the server jar, and web.jar. Server jar SHA-256 is
+    5fc533a4df6b2d7dcfadb88aabda2b5bdf4e210f9c1f4f9143e2ea608c4ceba7; web.jar SHA-256 is
+    7cf1808e41122b76e1d3996a5d4001bd7fb971dfb39ac5d3def05774c25ef7d5, with shared and
+    mirrored Shield markers present. Deployment waited until the previous game was logged finished
+    and the last evaluator decision was over 37 minutes old. The recreated app started at
+    2026-07-25T16:19:07.342460504Z with restart count 0, loaded the matching jar hash, returned
+    HTTP 200, restored AI/private/stat/account switches, and logged a clean startup. Nothing was
+    pushed; fresh live-game branch firing remains separate. Revert the single Shield
+    twin Batch Five commit; Endor Operations Batch Four and all earlier objective-audit commits
+    remain independent.

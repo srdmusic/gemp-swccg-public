@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveSideBlueprints;
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Zone;
@@ -208,6 +209,7 @@ public class ObjectiveAnalyzer {
         LAST_REQUIRED_BUDDY,
         LAST_REQUIRED_ON_TABLE_ACTOR,
         LAST_FLIP_BACK_BLOCKER,
+        LAST_OBJECTIVE_SURVIVAL_ACTOR,
         REQUIRED_CARD_RETENTION_DEFENDER,
         HARD_LOSS_LOCATION_DEFENDER,
         NONE
@@ -414,9 +416,14 @@ public class ObjectiveAnalyzer {
             }
 
             boolean anyOf = "anyOf".equals(rule.mode);
-            boolean conditionSatisfied = anyOf
-                    ? !satisfied.isEmpty()
-                    : missing.isEmpty() && !rule.alternatives.isEmpty();
+            boolean conditionSatisfied =
+                    isShieldMainGeneratorRouteRule(rule)
+                    ? isShieldMainGeneratorRouteRuleSatisfied(
+                        game, playerId)
+                    : anyOf
+                        ? !satisfied.isEmpty()
+                        : missing.isEmpty()
+                            && !rule.alternatives.isEmpty();
             states.add(new FlipLocationRuleState(
                     rule.id,
                     rule.mode,
@@ -480,6 +487,26 @@ public class ObjectiveAnalyzer {
 
         try {
             GameState gameState = game.getGameState();
+            if (isPreferredRequiredCardDeployCandidate(
+                    game, playerId, candidate)) {
+                return ObjectiveProgressCandidateRole
+                        .REQUIRED_ON_TABLE_CARD;
+            }
+            if (isPreferredNamedRequiredCardCandidate(
+                    game, playerId, candidate)) {
+                return ObjectiveProgressCandidateRole
+                        .REQUIRED_ON_TABLE_CARD;
+            }
+            if (isPreferredShieldRouteStageLocation(
+                    game, playerId, candidate)) {
+                return ObjectiveProgressCandidateRole
+                        .REQUIRED_LOCATION;
+            }
+            if (isPreferredShieldRoutePackageCandidate(
+                    game, playerId, candidate)) {
+                return ObjectiveProgressCandidateRole
+                        .REQUIRED_ACTOR;
+            }
             for (FlipLocationRule rule : activeFlipLocationRules) {
                 if (!isActivePreFlipRule(rule) || isRuleSatisfied(
                         game, playerId, rule)) {
@@ -579,6 +606,111 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    /**
+     * Exact required-deploy rules own the initial pull before the later flip
+     * destination is on table. Shield must acquire 222_13 while its legal
+     * Ice Plains destination is ready; waiting for 3rd Marker would deadlock
+     * the route before it started.
+     */
+    private boolean isPreferredRequiredCardDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (activeRequiredCardDeployRules == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            if (!isRequiredCardDeployRuleActive(
+                        game, playerId, rule)
+                    || rule.blueprintIds == null
+                    || !rule.blueprintIds.contains(
+                        candidate.getBlueprintId(true))) {
+                continue;
+            }
+            com.gempukku.swccgo.filters.Filter cardFilter =
+                    resolveFilter(rule.requiredCardFilterKey);
+            if (cardFilter != null
+                    && cardFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    && isRequiredOnTableCardPullRouteReady(
+                        game, playerId, candidate)
+                    && !hasOtherReadyOnTableRequirementInHand(
+                        game, playerId, candidate,
+                        cardFilter)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isPreferredNamedRequiredCardCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        String requirement =
+                matchingRequiredTitle(candidate);
+        if (requirement == null
+                || isRequiredCardActiveOnTable(
+                    game, requirement)
+                || !isRequiredOnTableCardPullRouteReady(
+                    game, playerId, candidate)) {
+            return false;
+        }
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        List<PhysicalCard> candidates = new ArrayList<>();
+        if (hand != null) candidates.addAll(hand);
+        List<PhysicalCard> reserve =
+                game.getGameState().getReserveDeck(playerId);
+        if (reserve != null) candidates.addAll(reserve);
+        int candidateRank =
+                requiredCardProgressZoneRank(candidate);
+        Integer candidateCost =
+                requiredOnTableCardDeployCost(
+                    game, playerId, candidate);
+        int candidateCostRank = candidateCost != null
+                ? candidateCost : Integer.MAX_VALUE;
+        for (PhysicalCard card : candidates) {
+            if (card == null || card == candidate
+                    || !playerId.equals(card.getOwner())
+                    || !physicalCardMatchesRequirement(
+                        card, requirement)
+                    || !isRequiredOnTableCardPullRouteReady(
+                        game, playerId, card)) {
+                continue;
+            }
+            int rank = requiredCardProgressZoneRank(card);
+            Integer cost =
+                    requiredOnTableCardDeployCost(
+                        game, playerId, card);
+            int costRank = cost != null
+                    ? cost : Integer.MAX_VALUE;
+            if (rank < candidateRank
+                    || rank == candidateRank
+                        && (costRank < candidateCostRank
+                            || costRank == candidateCostRank
+                                && card.getCardId()
+                                    < candidate.getCardId())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int requiredCardProgressZoneRank(
+            PhysicalCard card) {
+        if (card == null || card.getZone() == null) return 3;
+        Zone zone = card.getZone();
+        if (zone == Zone.HAND) return 0;
+        if (zone == Zone.RESERVE_DECK
+                || zone == Zone.TOP_OF_RESERVE_DECK) {
+            return 1;
+        }
+        return 2;
     }
 
     private ObjectiveProgressCandidateRole
@@ -2641,6 +2773,10 @@ public class ObjectiveAnalyzer {
                 || game.getModifiersQuerying() == null) {
             return false;
         }
+        if (advancesShieldRoutePackageAt(
+                game, playerId, candidate, location)) {
+            return true;
+        }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule) || isRuleSatisfied(
                     game, playerId, rule)) {
@@ -3097,13 +3233,29 @@ public class ObjectiveAnalyzer {
     public boolean isMissingPreFlipRequirementAt(
             SwccgGame game, String playerId, PhysicalCard location) {
         if (!analyzed || isFlipped || game == null
-                || playerId == null || location == null
-                || activeFlipLocationRules == null) {
+                || playerId == null || location == null) {
             return false;
         }
 
         GameState gameState = game.getGameState();
         if (gameState == null || game.getModifiersQuerying() == null) return false;
+
+        if (isShieldMainGeneratorControlContestLocation(
+                    game, playerId, location)) {
+            return !game.getModifiersQuerying()
+                    .controlsLocation(
+                        gameState, location, playerId);
+        }
+        if (isShieldMainGeneratorFiringMarker(
+                    game, location)) {
+            boolean targetHere = hasActiveShieldTargetAt(
+                    game, playerId, location);
+            boolean packageHere =
+                    hasActiveShieldFiringPackageAt(
+                        game, playerId, location);
+            if (targetHere != packageHere) return true;
+        }
+        if (activeFlipLocationRules == null) return false;
 
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)
@@ -3173,7 +3325,9 @@ public class ObjectiveAnalyzer {
      */
     public boolean isPreFlipFlipRequirementLocation(
             SwccgGame game, String playerId, PhysicalCard location) {
-        return matchesStructuredRequirementLocation(
+        return isShieldMainGeneratorControlContestLocation(
+                    game, playerId, location)
+                || matchesStructuredRequirementLocation(
                 game, playerId, location,
                 "preFlip", "flip", null, null);
     }
@@ -3182,7 +3336,7 @@ public class ObjectiveAnalyzer {
         if (!analyzed || activeFlipLocationRules == null) return false;
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (rule != null && "postFlip".equals(rule.phase)
-                    && "flipBack".equals(rule.purpose)
+                    && isPostFlipProtectionPurpose(rule)
                     && rule.alternatives != null
                     && !rule.alternatives.isEmpty()) {
                 return true;
@@ -3236,16 +3390,18 @@ public class ObjectiveAnalyzer {
         PostFlipLocationRisk supportedOutOfScope = null;
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (rule == null || !"postFlip".equals(rule.phase)
-                    || !"flipBack".equals(rule.purpose)
+                    || !isPostFlipProtectionPurpose(rule)
                     || rule.alternatives == null) {
                 continue;
             }
             for (FlipLocationAlternative alternative : rule.alternatives) {
-                if (!isSupportedCountedFlipBackAlternative(alternative)) {
+                if (!isSupportedPostFlipAlternative(
+                            rule, alternative)) {
                     continue;
                 }
                 PostFlipLocationRisk risk = assessPostFlipLocationRisk(
-                        game, playerId, location, alternative);
+                        game, playerId, location, rule,
+                        alternative);
                 if (risk.inScope()) return risk;
                 if (supportedOutOfScope == null) {
                     supportedOutOfScope = risk;
@@ -3303,8 +3459,229 @@ public class ObjectiveAnalyzer {
         }
     }
 
+    /**
+     * True when moving or losing this exact card would violate a structured
+     * stay-flipped survival law. This is deliberately separate from flip-back:
+     * Shield's back side is placed out of play when its last qualifying Hoth
+     * occupier disappears.
+     */
+    public boolean wouldDepartureTriggerStayFlippedFailure(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (!analyzed || !isFlipped || game == null || playerId == null
+                || mover == null || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(gameState, mover);
+            if (location == null) return false;
+
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (rule == null
+                        || !"postFlip".equals(rule.phase)
+                        || !"stayFlipped".equals(rule.purpose)
+                        || rule.alternatives == null) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!isSupportedPostFlipAlternative(
+                                rule, alternative)
+                            || !locationMatchesAlternative(
+                                gameState, game, playerId,
+                                location, alternative)) {
+                        continue;
+                    }
+                    PostFlipLocationRisk risk =
+                            assessPostFlipLocationRisk(
+                                game, playerId, location,
+                                rule, alternative);
+                    if (!risk.criticalIfSelfControlLost()) {
+                        continue;
+                    }
+
+                    com.gempukku.swccgo.filters.Filter actorFilter =
+                            resolveFilter(
+                                alternative.actorFilterKey);
+                    PhysicalCard pilotDependentHost =
+                            findPilotedAtAtDependentOnPilot(
+                                game, mover);
+                    boolean removesQualifyingActor =
+                            removedGroupContainsMatchingActor(
+                                game, playerId, location,
+                                alternative, mover,
+                                pilotDependentHost, actorFilter);
+                    if (!removesQualifyingActor
+                            && pilotDependentHost != null
+                            && actorFilter != null
+                            && actorFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                pilotDependentHost)) {
+                        removesQualifyingActor = true;
+                    }
+                    if (removesQualifyingActor
+                            && !hasOtherMatchingActorOutsideRemovedGroup(
+                                game, playerId, location,
+                                alternative, mover,
+                                pilotDependentHost)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Objective stay-flipped departure assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * A move is safe when the moved card group still satisfies the active
+     * stay-flipped law at its destination. Shield may relocate its last
+     * qualifying occupier between Hoth sites without losing the objective.
+     */
+    public boolean preservesStayFlippedRequirementByMovingTo(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard destination) {
+        if (!analyzed || !isFlipped || game == null
+                || playerId == null || mover == null
+                || destination == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        if (!wouldDepartureTriggerStayFlippedFailure(
+                    game, playerId, mover)) {
+            return true;
+        }
+        try {
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (rule == null
+                        || !"postFlip".equals(rule.phase)
+                        || !"stayFlipped".equals(rule.purpose)
+                        || rule.alternatives == null) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!isSupportedPostFlipAlternative(
+                                rule, alternative)) {
+                        continue;
+                    }
+                    com.gempukku.swccgo.filters.Filter actorFilter =
+                            resolveFilter(
+                                alternative.actorFilterKey);
+                    if (movedGroupCanSatisfyAlternativeAt(
+                                game, playerId, mover,
+                                destination, alternative,
+                                actorFilter)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Objective stay-flipped relocation assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasSafeStayFlippedLandspeedDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard mover) {
+        if (game == null || playerId == null || mover == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                    game.getGameState(), mover);
+        if (origin == null) return false;
+        try {
+            com.gempukku.swccgo.filters.Filter legalTarget =
+                    Filters.canMoveToUsingLandspeed(
+                        playerId, mover,
+                        false, false, false,
+                        0.0f, null);
+            for (PhysicalCard destination
+                    : game.getGameState()
+                        .getLocationsInOrder()) {
+                if (destination != null
+                        && legalTarget.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            destination)
+                        && preservesStayFlippedRequirementByMovingTo(
+                            game, playerId, mover,
+                            destination)
+                        && FormationSafety
+                            .vetoMoveDestination(
+                                game, game.getGameState(),
+                                playerId, mover,
+                                destination) == null
+                        && FormationSafety
+                            .vetoMoveOrigin(
+                                game, game.getGameState(),
+                                playerId, mover,
+                                origin) == null) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Objective stay-flipped landspeed assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Returns the currently piloted AT-AT that would become unpiloted if this
+     * exact assigned pilot left. Permanent pilots and a second assigned pilot
+     * keep the vehicle valid and therefore return no dependency.
+     */
+    private PhysicalCard findPilotedAtAtDependentOnPilot(
+            SwccgGame game, PhysicalCard candidate) {
+        GameState gameState = game.getGameState();
+        PhysicalCard host = game.getModifiersQuerying()
+                .getIsPilotOf(gameState, candidate);
+        if (host == null
+                || !Filters.AT_AT.accepts(
+                    gameState, game.getModifiersQuerying(), host)
+                || !Filters.piloted.accepts(
+                    gameState, game.getModifiersQuerying(), host)
+                || game.getModifiersQuerying()
+                    .hasPermanentPilot(gameState, host)) {
+            return null;
+        }
+        Collection<PhysicalCard> cards =
+                gameState.getAllPermanentCards();
+        if (cards == null) return null;
+        for (PhysicalCard card : cards) {
+            if (card == null || card == candidate
+                    || !isActiveForSpot(game, card, true)) {
+                continue;
+            }
+            PhysicalCard otherHost = game.getModifiersQuerying()
+                    .getIsPilotOf(gameState, card);
+            if (otherHost == host) {
+                return null;
+            }
+        }
+        return host;
+    }
+
     private PostFlipLocationRisk assessPostFlipLocationRisk(
             SwccgGame game, String playerId, PhysicalCard location,
+            FlipLocationRule rule,
             FlipLocationAlternative alternative) {
         GameState gameState = game.getGameState();
         String opponent = gameState.getOpponent(playerId);
@@ -3312,14 +3689,38 @@ public class ObjectiveAnalyzer {
 
         int selfCount = countAlternativeMatches(
                 game, playerId, playerId, alternative);
-        int opponentCount = countAlternativeMatches(
-                game, playerId, opponent, alternative);
         boolean inScope = locationMatchesAlternative(
                 gameState, game, playerId, location, alternative);
-        boolean selfControlsHere = inScope && relationSatisfiedAt(
+        boolean selfQualifiesHere = inScope && relationSatisfiedAt(
                 game, playerId, playerId, location,
                 alternative.relation, alternative.actorFilterKey,
                 alternative.includeExcludedFromBattle);
+
+        if ("stayFlipped".equals(rule.purpose)) {
+            int required = expectedCount(
+                    game, playerId, alternative.count);
+            String comparator = alternative.count.comparator;
+            boolean protectionFailedNow = !compareCounts(
+                    selfCount, required, comparator);
+            boolean selfLossTriggers = selfQualifiesHere
+                    && !compareCounts(
+                        Math.max(0, selfCount - 1),
+                        required, comparator);
+            int adverseSteps = 0;
+            while (adverseSteps < 100
+                    && compareCounts(
+                        Math.max(0, selfCount - adverseSteps),
+                        required, comparator)) {
+                adverseSteps++;
+            }
+            return new PostFlipLocationRisk(
+                    true, inScope, protectionFailedNow, false,
+                    selfLossTriggers, false,
+                    selfCount, 0, adverseSteps);
+        }
+
+        int opponentCount = countAlternativeMatches(
+                game, playerId, opponent, alternative);
         boolean opponentControlsHere = inScope && relationSatisfiedAt(
                 game, playerId, opponent, location,
                 alternative.relation, alternative.actorFilterKey,
@@ -3328,7 +3729,7 @@ public class ObjectiveAnalyzer {
         boolean flipBackNow = postFlipCountTriggered(
                 game, playerId, alternative,
                 opponentCount, selfCount);
-        boolean selfLossTriggers = selfControlsHere
+        boolean selfLossTriggers = selfQualifiesHere
                 && postFlipCountTriggered(
                         game, playerId, alternative,
                         opponentCount, Math.max(0, selfCount - 1));
@@ -3337,7 +3738,7 @@ public class ObjectiveAnalyzer {
                         game, playerId, alternative,
                         opponentCount + 1,
                         Math.max(0, selfCount
-                                - (selfControlsHere ? 1 : 0)));
+                                - (selfQualifiesHere ? 1 : 0)));
 
         int adverseSteps = 0;
         while (adverseSteps < 100
@@ -3350,6 +3751,30 @@ public class ObjectiveAnalyzer {
                 true, inScope, flipBackNow, opponentControlsHere,
                 selfLossTriggers, opponentGainTriggers,
                 selfCount, opponentCount, adverseSteps);
+    }
+
+    private static boolean isPostFlipProtectionPurpose(
+            FlipLocationRule rule) {
+        return rule != null
+                && ("flipBack".equals(rule.purpose)
+                    || "stayFlipped".equals(rule.purpose));
+    }
+
+    private static boolean isSupportedPostFlipAlternative(
+            FlipLocationRule rule,
+            FlipLocationAlternative alternative) {
+        if (rule == null || alternative == null) return false;
+        if ("flipBack".equals(rule.purpose)) {
+            return isSupportedCountedFlipBackAlternative(alternative);
+        }
+        return "stayFlipped".equals(rule.purpose)
+                && "self".equals(alternative.controller)
+                && ("occupyWith".equals(alternative.relation)
+                    || "controlWith".equals(alternative.relation))
+                && alternative.locationFilterKey != null
+                && alternative.actorFilterKey != null
+                && alternative.count != null
+                && alternative.count.value != null;
     }
 
     private boolean postFlipCountTriggered(
@@ -3622,6 +4047,10 @@ public class ObjectiveAnalyzer {
                 || rule.alternatives.isEmpty()) {
             return false;
         }
+        if (isShieldMainGeneratorRouteRule(rule)) {
+            return isShieldMainGeneratorRouteRuleSatisfied(
+                    game, playerId);
+        }
         if ("anyOf".equals(rule.mode)) {
             for (FlipLocationAlternative alternative : rule.alternatives) {
                 if (isFlipLocationAlternativeSatisfied(
@@ -3638,6 +4067,37 @@ public class ObjectiveAnalyzer {
             }
         }
         return true;
+    }
+
+    private boolean isShieldMainGeneratorRouteRule(
+            FlipLocationRule rule) {
+        return isShieldWillBeDown
+                && rule != null
+                && "shield-will-be-down-virtual-in-range-route"
+                    .equals(rule.id);
+    }
+
+    private boolean isShieldMainGeneratorRouteRuleSatisfied(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard location : locations) {
+            if (isShieldMainGeneratorFiringMarker(
+                        game, location)
+                    && hasActiveShieldTargetAt(
+                        game, playerId, location)
+                    && hasActiveShieldFiringPackageAt(
+                        game, playerId, location)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int countMatchingLocations(
@@ -4138,6 +4598,22 @@ public class ObjectiveAnalyzer {
     }
 
     /**
+     * Printing-aware required-card fact. Shield's playable route is the
+     * virtual Epic Event 222_13; the classic card shares its title but cannot
+     * legally execute this objective's route.
+     */
+    public boolean isRequiredCardForFlip(PhysicalCard card) {
+        if (card == null
+                || !isRequiredCardForFlip(card.getTitle())) {
+            return false;
+        }
+        return !isShieldMainGeneratorRequirement(
+                    card.getTitle())
+                || "222_13".equals(
+                    card.getBlueprintId(true));
+    }
+
+    /**
      * Source-accurate active spotting for one named required card.
      * Endor Operations includes cards excluded from battle, but not suspended
      * or otherwise inactive cards.
@@ -4154,13 +4630,31 @@ public class ObjectiveAnalyzer {
                 game.getGameState().getAllPermanentCards();
         if (permanents == null) return false;
         for (PhysicalCard card : permanents) {
-            if (card != null && titleMatchesRequired(
-                        card.getTitle(), cardTitle)
-                    && isActiveForSpot(game, card, true)) {
+            if (physicalCardMatchesRequirement(
+                        card, cardTitle)
+                    && isActiveForSpot(game, card, true)
+                    && (!isShieldCannonRequirement(
+                            cardTitle)
+                        || isActiveShieldCannonOnRoute(
+                            game, card))) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean isActiveShieldCannonOnRoute(
+            SwccgGame game, PhysicalCard cannon) {
+        if (cannon == null || cannon.getOwner() == null
+                || cannon.getAttachedTo() == null) {
+            return false;
+        }
+        PhysicalCard staging = shieldRouteStagingLocation(
+                game, cannon.getOwner());
+        return staging != null
+                && isCompleteShieldRouteHost(
+                    game, cannon.getOwner(),
+                    cannon.getAttachedTo(), staging);
     }
 
     /**
@@ -4174,12 +4668,13 @@ public class ObjectiveAnalyzer {
         if (!analyzed || game == null || playerId == null
                 || candidate == null
                 || !playerId.equals(candidate.getOwner())
-                || game.getGameState() == null) {
+                || game.getGameState() == null
+                || isShieldWillBeDown && isFlipped) {
             return false;
         }
         GameState gameState = game.getGameState();
         String requirement =
-                matchingRequiredTitle(candidate.getTitle());
+                matchingRequiredTitle(candidate);
         if (requirement == null
                 || isRequiredCardActiveOnTable(
                     game, requirement)) {
@@ -4205,8 +4700,8 @@ public class ObjectiveAnalyzer {
         for (PhysicalCard card : survivingCopies) {
             if (card == null
                     || !playerId.equals(card.getOwner())
-                    || !titleMatchesRequired(
-                        card.getTitle(), requirement)) {
+                    || !physicalCardMatchesRequirement(
+                        card, requirement)) {
                 continue;
             }
             int rank = requiredCardForceLossRank(
@@ -4224,6 +4719,28 @@ public class ObjectiveAnalyzer {
             }
         }
         return preferred == candidate;
+    }
+
+    /**
+     * Protects the exact executable Shield package from Force loss without
+     * making a pilot deploy before its selected host.
+     */
+    public boolean isPreferredShieldRoutePackageForceLossCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!hasShieldMainGeneratorFormationRule()
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        ShieldRoutePackage packagePlan =
+                selectShieldRoutePackage(
+                        game, playerId);
+        return packagePlan != null
+                && (candidate == packagePlan.host
+                    || candidate == packagePlan.pilot
+                    || candidate == packagePlan.cannon);
     }
 
     private int requiredCardForceLossRank(
@@ -4269,6 +4786,43 @@ public class ObjectiveAnalyzer {
                 || requiredCardsOnTable.isEmpty()) {
             return false;
         }
+        return hasMissingReadyRequiredCardInReserve(
+                game, playerId);
+    }
+
+    /**
+     * Physical-source overload for tutors outside the objective itself.
+     * Virtual Prepare For A Surface Attack 209_42 is the Shield route's exact
+     * source. The classic printing shares its title and must not inherit this
+     * objective priority.
+     */
+    public boolean objectivePullAdvancesRequiredOnTableCard(
+            SwccgGame game, String playerId,
+            PhysicalCard source) {
+        if (source == null) return false;
+        if (objectiveTitle != null
+                && objectiveTitle.equalsIgnoreCase(
+                    source.getTitle())) {
+            if (isShieldWillBeDown) {
+                return false;
+            }
+            return objectivePullAdvancesRequiredOnTableCard(
+                    game, playerId, source.getTitle());
+        }
+        return analyzed && !isFlipped && isShieldWillBeDown
+                && "209_42".equals(
+                    source.getBlueprintId(true))
+                && hasMissingReadyRequiredCardInReserve(
+                    game, playerId);
+    }
+
+    private boolean hasMissingReadyRequiredCardInReserve(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null
+                || game.getGameState() == null
+                || requiredCardsOnTable.isEmpty()) {
+            return false;
+        }
         List<PhysicalCard> reserve =
                 game.getGameState().getReserveDeck(playerId);
         if (reserve == null || reserve.isEmpty()) return false;
@@ -4279,10 +4833,10 @@ public class ObjectiveAnalyzer {
                         game, playerId, hand, required)) {
                 continue;
             }
-            for (PhysicalCard card : reserve) {
-                if (card != null && playerId.equals(card.getOwner())
-                        && titleMatchesRequired(
-                                card.getTitle(), required)
+                for (PhysicalCard card : reserve) {
+                    if (card != null && playerId.equals(card.getOwner())
+                        && physicalCardMatchesRequirement(
+                                card, required)
                         && isRequiredOnTableCardPullRouteReady(
                             game, playerId, card)) {
                     return true;
@@ -4299,7 +4853,8 @@ public class ObjectiveAnalyzer {
         for (PhysicalCard card : cards) {
             if (card != null
                     && playerId.equals(card.getOwner())
-                    && titleMatchesRequired(card.getTitle(), required)
+                    && physicalCardMatchesRequirement(
+                        card, required)
                     && isRequiredOnTableCardPullRouteReady(
                         game, playerId, card)) {
                 return true;
@@ -4322,9 +4877,16 @@ public class ObjectiveAnalyzer {
                 || activeRequiredCardDeployRules == null
                 || game.getGameState() == null
                 || game.getModifiersQuerying() == null
-                || matchingRequiredTitle(
-                    candidate.getTitle()) == null) {
+                || matchingRequiredTitle(candidate) == null) {
             return false;
+        }
+        if (isShieldCannonRequirement(
+                candidate.getTitle())) {
+            ShieldRoutePackage packagePlan =
+                    selectShieldRoutePackage(
+                            game, playerId);
+            return packagePlan != null
+                    && packagePlan.cannon == candidate;
         }
         boolean matchingTitleHasStructuredRoutes = false;
         String blueprintId = candidate.getBlueprintId(true);
@@ -4358,7 +4920,9 @@ public class ObjectiveAnalyzer {
                 return true;
             }
         }
-        return !matchingTitleHasStructuredRoutes;
+        return !isShieldMainGeneratorRequirement(
+                    candidate.getTitle())
+                && !matchingTitleHasStructuredRoutes;
     }
 
     private boolean hasRequiredCardDeployDestination(
@@ -4407,7 +4971,7 @@ public class ObjectiveAnalyzer {
         if (hand == null || hand.isEmpty()) return 0;
         String deployingRequirement = deployingCandidate != null
                 ? matchingRequiredTitle(
-                    deployingCandidate.getTitle())
+                    deployingCandidate)
                 : null;
         Map<String, Integer> minimumCosts = new HashMap<>();
         for (PhysicalCard card : hand) {
@@ -4417,7 +4981,7 @@ public class ObjectiveAnalyzer {
                 continue;
             }
             String requirement =
-                    matchingRequiredTitle(card.getTitle());
+                    matchingRequiredTitle(card);
             if (requirement == null
                     || requirement.equals(deployingRequirement)
                     || isRequiredCardActiveOnTable(game, requirement)) {
@@ -4427,13 +4991,18 @@ public class ObjectiveAnalyzer {
                         game, playerId, card)) {
                 continue;
             }
+            if (isShieldWillBeDown
+                    && titleMatchesRequired(
+                        card.getTitle(), "at-at cannon")) {
+                continue;
+            }
             try {
-                float cost = game.getModifiersQuerying()
-                        .getDeployCost(game.getGameState(), card);
-                int roundedCost =
-                        (int) Math.ceil(Math.max(0.0f, cost));
-                minimumCosts.merge(
-                        requirement, roundedCost, Math::min);
+                Integer cost = requiredOnTableCardDeployCost(
+                        game, playerId, card);
+                if (cost != null) {
+                    minimumCosts.merge(
+                            requirement, cost, Math::min);
+                }
             } catch (Exception e) {
                 LOG.debug(
                         "Required on-table card Force reserve unavailable: {}",
@@ -4444,7 +5013,62 @@ public class ObjectiveAnalyzer {
         for (int cost : minimumCosts.values()) {
             reserve += cost;
         }
+        reserve += getShieldRoutePackageForceReserve(
+                game, playerId, deployingCandidate);
         return reserve;
+    }
+
+    private Integer requiredOnTableCardDeployCost(
+            SwccgGame game, String playerId,
+            PhysicalCard card) {
+        if (!isShieldWillBeDown
+                || card == null
+                || card.getTitle() == null
+                || !titleMatchesRequired(
+                    card.getTitle(), "at-at cannon")) {
+            return requiredCardDeployCost(game, card);
+        }
+
+        Integer minimum = null;
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards != null) {
+            for (PhysicalCard host : cards) {
+                if (host == null
+                        || !playerId.equals(host.getOwner())
+                        || !isActiveForSpot(game, host, true)
+                        || !Filters.AT_AT.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), host)
+                        || !shieldCannonCanDeployOnHost(
+                            game, card, host)) {
+                    continue;
+                }
+                Integer cost =
+                        requiredCardDeployCostAt(
+                            game, card, host);
+                if (cost != null
+                        && (minimum == null || cost < minimum)) {
+                    minimum = cost;
+                }
+            }
+        }
+        ShieldRoutePackage packagePlan =
+                selectShieldRoutePackage(
+                        game, playerId);
+        if (packagePlan != null
+                && packagePlan.host != null
+                && shieldCannonCanDeployOnHost(
+                    game, card, packagePlan.host)) {
+            Integer plannedCost = requiredCardDeployCostAt(
+                    game, card, packagePlan.host);
+            if (plannedCost != null
+                    && (minimum == null
+                        || plannedCost < minimum)) {
+                minimum = plannedCost;
+            }
+        }
+        return minimum;
     }
 
     public int getRequiredCardDeployEnablerForceReserve(
@@ -5565,12 +6189,73 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
+    public boolean isPullableCard(PhysicalCard card) {
+        if (card == null || !isPullableCard(card.getTitle())) {
+            return false;
+        }
+        if (isShieldWillBeDown && isFlipped) {
+            return false;
+        }
+        if (isShieldMainGeneratorRequirement(card.getTitle())) {
+            return "222_13".equals(
+                    card.getBlueprintId(true));
+        }
+        if (isShieldWillBeDown
+                && titleMatchesRequired(
+                    card.getTitle(),
+                    "prepare for a surface attack")) {
+            return "209_42".equals(
+                    card.getBlueprintId(true));
+        }
+        return true;
+    }
+
     private String matchingRequiredTitle(String cardTitle) {
         if (cardTitle == null) return null;
         for (String required : requiredCardsOnTable) {
             if (titleMatchesRequired(cardTitle, required)) return required;
         }
         return null;
+    }
+
+    private String matchingRequiredTitle(PhysicalCard card) {
+        if (card == null) return null;
+        String requirement =
+                matchingRequiredTitle(card.getTitle());
+        return requirement != null
+                && physicalCardMatchesRequirement(
+                    card, requirement)
+                ? requirement : null;
+    }
+
+    private boolean physicalCardMatchesRequirement(
+            PhysicalCard card, String requirement) {
+        if (card == null
+                || !titleMatchesRequired(
+                    card.getTitle(), requirement)) {
+            return false;
+        }
+        return !isShieldMainGeneratorRequirement(requirement)
+                || "222_13".equals(
+                    card.getBlueprintId(true));
+    }
+
+    private boolean isShieldMainGeneratorRequirement(
+            String titleOrRequirement) {
+        return isShieldWillBeDown
+                && titleOrRequirement != null
+                && titleMatchesRequired(
+                    titleOrRequirement,
+                    "target the main generator");
+    }
+
+    private boolean isShieldCannonRequirement(
+            String titleOrRequirement) {
+        return isShieldWillBeDown
+                && titleOrRequirement != null
+                && titleMatchesRequired(
+                    titleOrRequirement,
+                    "at-at cannon");
     }
 
     private static boolean containsRequiredTitle(
@@ -5874,11 +6559,22 @@ public class ObjectiveAnalyzer {
                         : FlipGateFormationRole
                             .LAST_REQUIRED_ON_TABLE_ACTOR;
             }
+            if (wouldDepartureTriggerStayFlippedFailure(
+                    game, playerId, candidate)) {
+                return FlipGateFormationRole
+                        .LAST_OBJECTIVE_SURVIVAL_ACTOR;
+            }
             return wouldDepartureTriggerFlipBack(game, playerId, candidate)
                     ? FlipGateFormationRole.LAST_FLIP_BACK_BLOCKER
                     : FlipGateFormationRole.NONE;
         }
 
+        FlipGateFormationRole shieldRouteRole =
+                classifyShieldMainGeneratorFormationPieceIfRemoved(
+                    game, playerId, candidate);
+        if (shieldRouteRole != FlipGateFormationRole.NONE) {
+            return shieldRouteRole;
+        }
         FlipGateFormationRole runtimeActorRole =
                 classifyRuntimeActorIfRemoved(
                         game, playerId, candidate);
@@ -7381,6 +8077,85 @@ public class ObjectiveAnalyzer {
             case "Deactivate_The_Shield_Generator":
                 return com.gempukku.swccgo.filters.Filters
                         .Deactivate_The_Shield_Generator;
+            case "Target_The_Main_Generator_V_222_13":
+                return new com.gempukku.swccgo.filters.Filter() {
+                    @Override
+                    public boolean accepts(
+                            GameState gameState,
+                            com.gempukku.swccgo.logic.modifiers.querying
+                                .ModifiersQuerying modifiersQuerying,
+                            PhysicalCard card) {
+                        return card != null
+                                && "222_13".equals(
+                                    card.getBlueprintId(true));
+                    }
+                };
+            case "AT_AT_Cannon":
+                return com.gempukku.swccgo.filters.Filters
+                        .AT_AT_Cannon;
+            case "AT_AT_Cannon_on_piloted_AT_AT":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters
+                            .AT_AT_Cannon,
+                        com.gempukku.swccgo.filters.Filters
+                            .attachedTo(
+                                com.gempukku.swccgo.filters.Filters.and(
+                                    com.gempukku.swccgo.filters.Filters
+                                        .AT_AT,
+                                    com.gempukku.swccgo.filters.Filters
+                                        .piloted)));
+            case "AT_AT_Cannon_on_piloted_AT_AT_in_range_of_Main_Power_Generators":
+                return new com.gempukku.swccgo.filters.Filter() {
+                    @Override
+                    public boolean accepts(
+                            GameState gameState,
+                            com.gempukku.swccgo.logic.modifiers.querying
+                                .ModifiersQuerying modifiersQuerying,
+                            PhysicalCard card) {
+                        if (card == null
+                                || !com.gempukku.swccgo.filters.Filters
+                                    .and(
+                                        com.gempukku.swccgo.filters.Filters
+                                            .AT_AT_Cannon,
+                                        com.gempukku.swccgo.filters.Filters
+                                            .attachedTo(
+                                                com.gempukku.swccgo.filters
+                                                    .Filters.and(
+                                                        com.gempukku.swccgo
+                                                            .filters.Filters
+                                                            .AT_AT,
+                                                        com.gempukku.swccgo
+                                                            .filters.Filters
+                                                            .piloted)))
+                                    .accepts(
+                                        gameState, modifiersQuerying,
+                                        card)) {
+                            return false;
+                        }
+                        PhysicalCard generators =
+                                com.gempukku.swccgo.filters.Filters
+                                    .findFirstFromTopLocationsOnTable(
+                                        gameState.getGame(),
+                                        com.gempukku.swccgo.filters.Filters
+                                            .Main_Power_Generators);
+                        return generators != null
+                                && com.gempukku.swccgo.filters.Filters
+                                    .canBeFiredAtLocationInRange(
+                                        generators)
+                                    .accepts(
+                                        gameState, modifiersQuerying,
+                                        card);
+                    }
+                };
+            case "piloted_AT_AT_or_Imperial_leader_or_snowtrooper":
+                return com.gempukku.swccgo.filters.Filters.or(
+                        com.gempukku.swccgo.filters.Filters.and(
+                            com.gempukku.swccgo.filters.Filters.AT_AT,
+                            com.gempukku.swccgo.filters.Filters.piloted),
+                        com.gempukku.swccgo.filters.Filters
+                            .Imperial_leader,
+                        com.gempukku.swccgo.filters.Filters
+                            .snowtrooper);
             case "biker_scout_or_piloted_AT_ST":
                 return com.gempukku.swccgo.filters.Filters.or(
                     com.gempukku.swccgo.filters.Filters.biker_scout,
@@ -7419,6 +8194,15 @@ public class ObjectiveAnalyzer {
             case "Tatooine_location":            return com.gempukku.swccgo.filters.Filters.Tatooine_location;
             case "Yavin_4_location":             return com.gempukku.swccgo.filters.Filters.Yavin_4_location;
             case "Hoth_location":                return com.gempukku.swccgo.filters.Filters.Hoth_location;
+            case "Hoth_site":                    return com.gempukku.swccgo.filters.Filters.Hoth_site;
+            case "Ice_Plains":                   return com.gempukku.swccgo.filters.Filters.Ice_Plains;
+            case "Second_Marker":                return com.gempukku.swccgo.filters.Filters.Second_Marker;
+            case "Third_Marker":                 return com.gempukku.swccgo.filters.Filters.Third_Marker;
+            case "First_Second_or_Third_Marker":
+                return com.gempukku.swccgo.filters.Filters.or(
+                    com.gempukku.swccgo.filters.Filters.First_Marker,
+                    com.gempukku.swccgo.filters.Filters.Second_Marker,
+                    com.gempukku.swccgo.filters.Filters.Third_Marker);
             case "Theed_Palace_Throne_Room":     return com.gempukku.swccgo.filters.Filters.Theed_Palace_Throne_Room;
             case "Naboo_system":                 return com.gempukku.swccgo.filters.Filters.Naboo_system;
             case "Dantooine_site":               return com.gempukku.swccgo.filters.Filters.Dantooine_site;
@@ -7519,6 +8303,9 @@ public class ObjectiveAnalyzer {
         }
         if (analyzed && !isFlipped
                 && isRequiredCardForFlip(card.getTitle())
+                && (!isShieldWillBeDown
+                    || isRequiredOnTableCardPullRouteReady(
+                        game, playerId, card))
                 && !isRequiredCardActiveOnTable(
                         game, card.getTitle())) {
             notes.add(new ScoreNote(
@@ -7537,6 +8324,24 @@ public class ObjectiveAnalyzer {
                     "DEPLOY.OBJECTIVE.REQUIRED_CARD_ENABLER: deploy '"
                             + card.getTitle()
                             + "' to unlock a missing required objective card"));
+        }
+        if (analyzed && !isFlipped
+                && isPreferredShieldRoutePackageCandidate(
+                        game, playerId, card)) {
+            notes.add(new ScoreNote(
+                    600.0f,
+                    "DEPLOY.OBJECTIVE.SHIELD_ROUTE_PACKAGE: deploy '"
+                            + card.getTitle()
+                            + "' to build the piloted AT-AT and cannon route"));
+        }
+        if (analyzed && !isFlipped
+                && isPreferredShieldRouteStageLocation(
+                        game, playerId, card)) {
+            notes.add(new ScoreNote(
+                    600.0f,
+                    "DEPLOY.OBJECTIVE.SHIELD_ROUTE_LOCATION: deploy '"
+                            + card.getTitle()
+                            + "' as the next adjacent marker in the firing route"));
         }
 
         // My Lord DEPLOY magnitudes now read from the ACTIVE playbook (JSON-built when loaderEnabled, else the
@@ -7733,6 +8538,1309 @@ public class ObjectiveAnalyzer {
         }
     }
     public boolean isShieldWillBeDown() { return isShieldWillBeDown; }
+
+    public boolean hasShieldMainGeneratorFormationRule() {
+        return analyzed && !isFlipped && isShieldWillBeDown;
+    }
+
+    private static final class ShieldRoutePackage {
+        private final PhysicalCard stagingLocation;
+        private final PhysicalCard host;
+        private final PhysicalCard pilot;
+        private final PhysicalCard cannon;
+        private final int hostCost;
+        private final int pilotCost;
+        private final int cannonCost;
+        private final int availabilityRank;
+
+        private ShieldRoutePackage(
+                PhysicalCard stagingLocation,
+                PhysicalCard host,
+                PhysicalCard pilot,
+                PhysicalCard cannon,
+                int hostCost,
+                int pilotCost,
+                int cannonCost,
+                int availabilityRank) {
+            this.stagingLocation = stagingLocation;
+            this.host = host;
+            this.pilot = pilot;
+            this.cannon = cannon;
+            this.hostCost = hostCost;
+            this.pilotCost = pilotCost;
+            this.cannonCost = cannonCost;
+            this.availabilityRank = availabilityRank;
+        }
+
+        private int totalCost() {
+            return hostCost + pilotCost + cannonCost;
+        }
+    }
+
+    /**
+     * Dark Side can provide 3rd Marker as the route bridge. 2nd Marker is a
+     * Light Side location, so it may be used when present but is never an
+     * objective pull target for this player.
+     */
+    private boolean isPreferredShieldRouteStageLocation(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!hasShieldMainGeneratorFormationRule()
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            if (hasShieldMarkerOnTable(
+                    game, Filters.Third_Marker)) {
+                return false;
+            }
+            com.gempukku.swccgo.filters.Filter neededFilter =
+                    Filters.Third_Marker;
+            if (!neededFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    candidate)) {
+                return false;
+            }
+
+            int candidateRank =
+                    requiredCardProgressZoneRank(
+                            candidate);
+            Integer candidateCost =
+                    requiredCardDeployCost(
+                            game, candidate);
+            int candidateCostRank = candidateCost != null
+                    ? candidateCost : Integer.MAX_VALUE;
+            List<PhysicalCard> candidates =
+                    new ArrayList<>();
+            List<PhysicalCard> hand =
+                    game.getGameState()
+                        .getHand(playerId);
+            if (hand != null) candidates.addAll(hand);
+            List<PhysicalCard> reserve =
+                    game.getGameState()
+                        .getReserveDeck(playerId);
+            if (reserve != null) candidates.addAll(reserve);
+            for (PhysicalCard card : candidates) {
+                if (card == null || card == candidate
+                        || !playerId.equals(card.getOwner())
+                        || !neededFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            card)) {
+                    continue;
+                }
+                int rank =
+                        requiredCardProgressZoneRank(
+                                card);
+                Integer cost =
+                        requiredCardDeployCost(
+                                game, card);
+                int costRank = cost != null
+                        ? cost : Integer.MAX_VALUE;
+                if (rank < candidateRank
+                        || rank == candidateRank
+                            && (costRank
+                                    < candidateCostRank
+                                || costRank
+                                    == candidateCostRank
+                                    && card.getCardId()
+                                        < candidate
+                                            .getCardId())) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            LOG.debug(
+                    "Shield route location selection failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean hasShieldMarkerOnTable(
+            SwccgGame game,
+            com.gempukku.swccgo.filters.Filter markerFilter) {
+        List<PhysicalCard> locations =
+                game.getGameState()
+                    .getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard location : locations) {
+            if (location != null
+                    && markerFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Selects one physical, executable Shield package. Table pieces dominate
+     * hand pieces, which dominate Reserve Deck possibilities. Cost and card id
+     * break ties so duplicate cards do not all receive objective protection.
+     */
+    private ShieldRoutePackage selectShieldRoutePackage(
+            SwccgGame game, String playerId) {
+        if (!hasShieldMainGeneratorFormationRule()
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard staging =
+                    shieldRouteStagingLocation(
+                            game, playerId);
+            if (staging == null) return null;
+
+            LinkedHashSet<PhysicalCard> accessible =
+                    new LinkedHashSet<>();
+            List<PhysicalCard> hand =
+                    gameState.getHand(playerId);
+            if (hand != null) accessible.addAll(hand);
+            List<PhysicalCard> reserve =
+                    gameState.getReserveDeck(playerId);
+            if (reserve != null) accessible.addAll(reserve);
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents != null) {
+                accessible.addAll(permanents);
+            }
+
+            ShieldRoutePackage best = null;
+            for (PhysicalCard host : accessible) {
+                if (!isAccessibleShieldHost(
+                        game, playerId, host, staging)) {
+                    continue;
+                }
+                int hostRank =
+                        shieldPackageZoneRank(
+                                game, host, staging);
+                if (hostRank > 0
+                        && !isShieldHostDeployableAt(
+                            game, host, staging)) {
+                    continue;
+                }
+                Integer hostCost = hostRank == 0
+                        ? 0
+                        : requiredCardDeployCostAt(
+                            game, host, staging);
+                if (hostCost == null) continue;
+
+                boolean hostAlreadyPiloted =
+                        hostHasPermanentPilot(game, host)
+                        || hostRank == 0
+                            && Filters.piloted.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                host);
+                List<PhysicalCard> pilots =
+                        new ArrayList<>();
+                if (hostAlreadyPiloted) {
+                    pilots.add(null);
+                } else {
+                    for (PhysicalCard pilot : accessible) {
+                        int pilotRank =
+                                shieldPackageZoneRank(
+                                        game, pilot, staging);
+                        if (pilotRank > 1
+                                || pilotRank == 0
+                                    && pilot.getAttachedTo()
+                                        != null
+                                || !isLegalProspectivePilotForHost(
+                                    game, playerId,
+                                    host, pilot)) {
+                            continue;
+                        }
+                        pilots.add(pilot);
+                    }
+                }
+                if (pilots.isEmpty()) continue;
+
+                List<PhysicalCard> cannons =
+                        new ArrayList<>();
+                for (PhysicalCard cannon : accessible) {
+                    if (cannon == null
+                            || !playerId.equals(
+                                cannon.getOwner())
+                            || !Filters.AT_AT_Cannon.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                cannon)) {
+                        continue;
+                    }
+                    int cannonRank =
+                            shieldPackageZoneRank(
+                                    game, cannon, staging);
+                    if (cannonRank == 0) {
+                        if (cannon.getAttachedTo() == host
+                                && isActiveForSpot(
+                                    game, cannon, true)) {
+                            cannons.add(cannon);
+                        }
+                    } else if (cannonRank <= 2
+                            && cannon.getAttachedTo() == null
+                            && (cannonRank < 2
+                                || hasActiveShieldPrepare(
+                                    game, playerId))
+                            && shieldCannonCanDeployOnHost(
+                                game, cannon, host)) {
+                        cannons.add(cannon);
+                    }
+                }
+                if (cannons.isEmpty()) continue;
+
+                for (PhysicalCard pilot : pilots) {
+                    int pilotRank = pilot == null
+                            ? 0
+                            : shieldPackageZoneRank(
+                                game, pilot, staging);
+                    Integer pilotCost = pilot == null
+                            || pilotRank == 0 ? 0
+                            : requiredCardDeployCostAt(
+                                game, pilot, host);
+                    if (pilotCost == null) continue;
+
+                    for (PhysicalCard cannon : cannons) {
+                        int cannonRank =
+                                shieldPackageZoneRank(
+                                        game, cannon, staging);
+                        Integer cannonCost =
+                                cannonRank == 0
+                                    ? 0
+                                    : requiredCardDeployCostAt(
+                                        game, cannon, host);
+                        if (cannonCost == null) continue;
+
+                        int availabilityRank =
+                                hostRank * 100
+                                + cannonRank * 10
+                                + pilotRank;
+                        ShieldRoutePackage option =
+                                new ShieldRoutePackage(
+                                    staging, host, pilot,
+                                    cannon, hostCost,
+                                    pilotCost, cannonCost,
+                                    availabilityRank);
+                        if (betterShieldRoutePackage(
+                                option, best)) {
+                            best = option;
+                        }
+                    }
+                }
+            }
+            return best;
+        } catch (Exception e) {
+            LOG.debug(
+                    "Shield route package selection failed: {}",
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    private boolean betterShieldRoutePackage(
+            ShieldRoutePackage candidate,
+            ShieldRoutePackage current) {
+        if (current == null) return true;
+        if (candidate.availabilityRank
+                != current.availabilityRank) {
+            return candidate.availabilityRank
+                    < current.availabilityRank;
+        }
+        if (candidate.totalCost()
+                != current.totalCost()) {
+            return candidate.totalCost()
+                    < current.totalCost();
+        }
+        int candidateHostId =
+                candidate.host.getCardId();
+        int currentHostId =
+                current.host.getCardId();
+        if (candidateHostId != currentHostId) {
+            return candidateHostId < currentHostId;
+        }
+        int candidatePilotId = candidate.pilot != null
+                ? candidate.pilot.getCardId() : -1;
+        int currentPilotId = current.pilot != null
+                ? current.pilot.getCardId() : -1;
+        if (candidatePilotId != currentPilotId) {
+            return candidatePilotId < currentPilotId;
+        }
+        return candidate.cannon.getCardId()
+                < current.cannon.getCardId();
+    }
+
+    private PhysicalCard shieldRouteStagingLocation(
+            SwccgGame game, String playerId) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards != null) {
+            for (PhysicalCard card : cards) {
+                if (card != null
+                        && playerId.equals(card.getOwner())
+                        && "222_13".equals(
+                            card.getBlueprintId(true))
+                        && isActiveForSpot(
+                            game, card, true)) {
+                    PhysicalCard location =
+                            shieldTargetLocation(
+                                    game, card);
+                    if (location != null) return location;
+                }
+            }
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return null;
+        for (PhysicalCard location : locations) {
+            if (location != null
+                    && Filters.Ice_Plains.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        location)) {
+                return location;
+            }
+        }
+        return null;
+    }
+
+    private boolean isAccessibleShieldHost(
+            SwccgGame game, String playerId,
+            PhysicalCard host,
+            PhysicalCard staging) {
+        if (host == null
+                || !playerId.equals(host.getOwner())
+                || !Filters.AT_AT.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    host)) {
+            return false;
+        }
+        int rank = shieldPackageZoneRank(
+                game, host, staging);
+        return rank >= 0 && rank <= 1;
+    }
+
+    private boolean isShieldHostDeployableAt(
+            SwccgGame game, PhysicalCard host,
+            PhysicalCard staging) {
+        try {
+            return Filters.deployableToLocation(
+                        host,
+                        Filters.sameCardId(staging),
+                        true, 0.0f)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        host);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Shield host deploy route unavailable: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private int shieldPackageZoneRank(
+            SwccgGame game, PhysicalCard card,
+            PhysicalCard staging) {
+        if (card == null || card.getZone() == null) {
+            return 9;
+        }
+        if (card.getZone().isInPlay()) {
+            PhysicalCard location =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), card);
+            return isActiveForSpot(game, card, true)
+                    && samePhysicalLocation(
+                        location, staging)
+                            ? 0 : 9;
+        }
+        if (card.getZone() == Zone.HAND) return 1;
+        if (card.getZone() == Zone.RESERVE_DECK
+                || card.getZone()
+                    == Zone.TOP_OF_RESERVE_DECK) {
+            return 2;
+        }
+        return 9;
+    }
+
+    private boolean hostHasPermanentPilot(
+            SwccgGame game, PhysicalCard host) {
+        try {
+            return Filters.hasPermanentPilot.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        host)
+                    || game.getModifiersQuerying()
+                        .hasPermanentPilot(
+                            game.getGameState(), host);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean hasActiveShieldPrepare(
+            SwccgGame game, String playerId) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card != null
+                    && playerId.equals(card.getOwner())
+                    && "209_42".equals(
+                        card.getBlueprintId(true))
+                    && isActiveForSpot(
+                        game, card, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean shieldCannonCanDeployOnHost(
+            SwccgGame game, PhysicalCard cannon,
+            PhysicalCard host) {
+        if (cannon == null || host == null
+                || !Filters.AT_AT_Cannon.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    cannon)
+                || !Filters.AT_AT.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    host)) {
+            return false;
+        }
+        return !"222_3".equals(
+                    cannon.getBlueprintId(true))
+                || !Filters.icon(Icon.MAINTENANCE)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        host);
+    }
+
+    private boolean isPreferredShieldRoutePackageCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        ShieldRoutePackage packagePlan =
+                selectShieldRoutePackage(
+                        game, playerId);
+        if (packagePlan == null) return false;
+        int hostRank = shieldPackageZoneRank(
+                game, packagePlan.host,
+                packagePlan.stagingLocation);
+        return (candidate == packagePlan.host
+                    && hostRank > 0)
+                || (candidate == packagePlan.pilot
+                    && hostRank == 0);
+    }
+
+    private boolean advancesShieldRoutePackageAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        ShieldRoutePackage packagePlan =
+                selectShieldRoutePackage(
+                        game, playerId);
+        if (packagePlan == null
+                || candidate == null
+                || destination == null) {
+            return false;
+        }
+        if (candidate == packagePlan.host) {
+            return samePhysicalLocation(
+                    destination,
+                    packagePlan.stagingLocation);
+        }
+        if (candidate == packagePlan.pilot
+                || candidate == packagePlan.cannon) {
+            return destination == packagePlan.host
+                    && shieldPackageZoneRank(
+                        game, packagePlan.host,
+                        packagePlan.stagingLocation) == 0;
+        }
+        return false;
+    }
+
+    private int getShieldRoutePackageForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        ShieldRoutePackage packagePlan =
+                selectShieldRoutePackage(
+                        game, playerId);
+        if (packagePlan == null) return 0;
+        int reserve = 0;
+        if (packagePlan.host != deployingCandidate
+                && packagePlan.host.getZone() == Zone.HAND) {
+            reserve += packagePlan.hostCost;
+        }
+        if (packagePlan.pilot != null
+                && packagePlan.pilot != deployingCandidate
+                && packagePlan.pilot.getZone() == Zone.HAND) {
+            reserve += packagePlan.pilotCost;
+        }
+        if (packagePlan.cannon != deployingCandidate
+                && packagePlan.cannon.getZone() == Zone.HAND) {
+            reserve += packagePlan.cannonCost;
+        }
+        return reserve;
+    }
+
+    /**
+     * Classifies the exact event, cannon, AT-AT, or sole assigned pilot whose
+     * removal would break Shield's only live marker-route package.
+     */
+    private FlipGateFormationRole
+            classifyShieldMainGeneratorFormationPieceIfRemoved(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (!hasShieldMainGeneratorFormationRule()
+                || game == null || playerId == null
+                || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return FlipGateFormationRole.NONE;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        gameState, candidate);
+            if (location == null) {
+                location = game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            gameState, candidate);
+            }
+            PhysicalCard dependentHost =
+                    findPilotedAtAtDependentOnPilot(
+                        game, candidate);
+            ShieldRoutePackage packagePlan =
+                    selectShieldRoutePackage(
+                            game, playerId);
+            boolean selectedStagedHost =
+                    packagePlan != null
+                    && candidate == packagePlan.host
+                    && shieldPackageZoneRank(
+                        game, candidate,
+                        packagePlan.stagingLocation) == 0;
+            boolean selectedStagedCannon =
+                    packagePlan != null
+                    && candidate == packagePlan.cannon
+                    && shieldPackageZoneRank(
+                        game, candidate,
+                        packagePlan.stagingLocation) == 0;
+            boolean selectedStagedPilot =
+                    packagePlan != null
+                    && ((candidate == packagePlan.pilot
+                            && shieldPackageZoneRank(
+                                game, candidate,
+                                packagePlan.stagingLocation) == 0)
+                        || dependentHost == packagePlan.host
+                            && shieldPackageZoneRank(
+                                game, dependentHost,
+                                packagePlan.stagingLocation) == 0);
+            PhysicalCard splitRouteHost =
+                    selectSplitShieldRouteHost(
+                            game, playerId);
+            boolean selectedSplitHost =
+                    candidate == splitRouteHost;
+            boolean selectedSplitCannon =
+                    splitRouteHost != null
+                    && candidate.getAttachedTo()
+                        == splitRouteHost
+                    && Filters.AT_AT_Cannon.accepts(
+                        gameState,
+                        game.getModifiersQuerying(),
+                        candidate);
+            boolean selectedSplitPilot =
+                    splitRouteHost != null
+                    && dependentHost == splitRouteHost;
+            boolean selectedFutureOrRecoveryPiece =
+                    selectedStagedHost
+                    || selectedStagedCannon
+                    || selectedStagedPilot
+                    || selectedSplitHost
+                    || selectedSplitCannon
+                    || selectedSplitPilot;
+            if (location == null
+                    || (!hasActiveShieldTargetAt(
+                            game, playerId, location)
+                        && !selectedFutureOrRecoveryPiece)) {
+                return FlipGateFormationRole.NONE;
+            }
+
+            boolean candidateIsTarget =
+                    "222_13".equals(
+                        candidate.getBlueprintId(true));
+            boolean candidateIsHost =
+                    selectedStagedHost
+                    || selectedSplitHost
+                    || (Filters.AT_AT.accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            candidate)
+                        && isShieldCannonHost(
+                            game, playerId, candidate,
+                            location));
+            PhysicalCard cannonHost =
+                    candidate.getAttachedTo();
+            boolean candidateIsCannon =
+                    selectedStagedCannon
+                    || selectedSplitCannon
+                    || (Filters.AT_AT_Cannon.accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            candidate)
+                        && cannonHost != null
+                        && isShieldCannonHost(
+                            game, playerId, cannonHost,
+                            location));
+            boolean candidateIsSolePilot =
+                    selectedStagedPilot
+                    || selectedSplitPilot
+                    || (dependentHost != null
+                        && isCompleteShieldRouteHost(
+                            game, playerId,
+                            dependentHost, location));
+
+            if (!candidateIsTarget && !candidateIsHost
+                    && !candidateIsCannon
+                    && !candidateIsSolePilot) {
+                return FlipGateFormationRole.NONE;
+            }
+
+            Collection<PhysicalCard> cards =
+                    gameState.getAllPermanentCards();
+            if (cards == null) return FlipGateFormationRole.NONE;
+            if (candidateIsTarget) {
+                for (PhysicalCard card : cards) {
+                    if (card != null && card != candidate
+                            && playerId.equals(card.getOwner())
+                            && "222_13".equals(
+                                card.getBlueprintId(true))
+                            && isActiveForSpot(game, card, true)
+                            && samePhysicalLocation(
+                                shieldTargetLocation(
+                                    game, card),
+                                location)) {
+                        return FlipGateFormationRole.NONE;
+                    }
+                }
+                return FlipGateFormationRole
+                        .LAST_REQUIRED_ACTOR;
+            }
+
+            if (candidateIsCannon) {
+                for (PhysicalCard card : cards) {
+                    if (card == null || card == candidate
+                            || !playerId.equals(card.getOwner())
+                            || !Filters.AT_AT_Cannon.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                card)
+                            || !isActiveForSpot(
+                                game, card, true)) {
+                        continue;
+                    }
+                    PhysicalCard host = card.getAttachedTo();
+                    if (host != null
+                            && isCompleteShieldRouteHost(
+                                game, playerId, host,
+                                location)) {
+                        return FlipGateFormationRole.NONE;
+                    }
+                }
+                return FlipGateFormationRole
+                        .LAST_REQUIRED_ACTOR;
+            }
+
+            PhysicalCard removedHost =
+                    candidateIsHost
+                    ? candidate : dependentHost;
+            for (PhysicalCard card : cards) {
+                if (card == null || card == removedHost
+                        || !playerId.equals(card.getOwner())
+                        || !Filters.AT_AT.accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            card)
+                        || !isCompleteShieldRouteHost(
+                            game, playerId, card,
+                            location)) {
+                    continue;
+                }
+                return FlipGateFormationRole.NONE;
+            }
+            return candidateIsSolePilot
+                    ? FlipGateFormationRole.LAST_REQUIRED_BUDDY
+                    : FlipGateFormationRole.LAST_REQUIRED_ACTOR;
+        } catch (Exception e) {
+            LOG.debug(
+                    "Shield route formation classification failed: {}",
+                    e.getMessage());
+            return FlipGateFormationRole.NONE;
+        }
+    }
+
+    private PhysicalCard selectSplitShieldRouteHost(
+            SwccgGame game, String playerId) {
+        PhysicalCard targetLocation =
+                activeShieldTargetLocation(
+                        game, playerId);
+        if (targetLocation == null) return null;
+        Integer targetMarker = game.getModifiersQuerying()
+                .getMarkerNumber(
+                    game.getGameState(),
+                    targetLocation);
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (targetMarker == null || cards == null) {
+            return null;
+        }
+        PhysicalCard best = null;
+        int bestDistance = Integer.MAX_VALUE;
+        for (PhysicalCard card : cards) {
+            if (card == null
+                    || !playerId.equals(card.getOwner())
+                    || !Filters.AT_AT.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        card)) {
+                continue;
+            }
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), card);
+            Integer marker = location != null
+                    ? game.getModifiersQuerying()
+                        .getMarkerNumber(
+                            game.getGameState(), location)
+                    : null;
+            if (location == null || marker == null
+                    || samePhysicalLocation(
+                        location, targetLocation)
+                    || !isCompleteShieldRouteHost(
+                        game, playerId, card,
+                        location)
+                    || !hasAdjacentMarkerStepToward(
+                        game, location,
+                        targetLocation)) {
+                continue;
+            }
+            int distance =
+                    Math.abs(marker - targetMarker);
+            if (best == null || distance < bestDistance
+                    || distance == bestDistance
+                        && card.getCardId()
+                            < best.getCardId()) {
+                best = card;
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
+    private boolean hasAdjacentMarkerStepToward(
+            SwccgGame game,
+            PhysicalCard origin,
+            PhysicalCard target) {
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard destination : locations) {
+            if (isAdjacentMarkerStepToward(
+                    game, origin,
+                    destination, target)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isAdjacentMarkerStepToward(
+            SwccgGame game,
+            PhysicalCard origin,
+            PhysicalCard destination,
+            PhysicalCard target) {
+        if (origin == null || destination == null
+                || target == null
+                || samePhysicalLocation(
+                    origin, destination)) {
+            return false;
+        }
+        Integer originMarker = game.getModifiersQuerying()
+                .getMarkerNumber(
+                    game.getGameState(), origin);
+        Integer destinationMarker =
+                game.getModifiersQuerying()
+                    .getMarkerNumber(
+                        game.getGameState(), destination);
+        Integer targetMarker = game.getModifiersQuerying()
+                .getMarkerNumber(
+                    game.getGameState(), target);
+        return originMarker != null
+                && destinationMarker != null
+                && targetMarker != null
+                && game.getModifiersQuerying()
+                    .isAdjacentSites(
+                        game.getGameState(),
+                        origin, destination)
+                && Math.abs(
+                    destinationMarker - targetMarker)
+                    < Math.abs(
+                        originMarker - targetMarker);
+    }
+
+    private PhysicalCard activeShieldTargetLocation(
+            SwccgGame game, String playerId) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        PhysicalCard selected = null;
+        if (cards == null) return null;
+        for (PhysicalCard card : cards) {
+            if (card == null
+                    || !playerId.equals(card.getOwner())
+                    || !"222_13".equals(
+                        card.getBlueprintId(true))
+                    || !isActiveForSpot(
+                        game, card, true)) {
+                continue;
+            }
+            if (selected == null
+                    || card.getCardId()
+                        < selected.getCardId()) {
+                selected = card;
+            }
+        }
+        return selected != null
+                ? shieldTargetLocation(game, selected)
+                : null;
+    }
+
+    private boolean hasActiveShieldTargetAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card != null
+                    && playerId.equals(card.getOwner())
+                    && "222_13".equals(
+                        card.getBlueprintId(true))
+                    && isActiveForSpot(game, card, true)
+                    && samePhysicalLocation(
+                        shieldTargetLocation(game, card),
+                        location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasActiveShieldFiringPackageAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        com.gempukku.swccgo.filters.Filter packageFilter =
+                resolveFilter(
+                    "AT_AT_Cannon_on_piloted_AT_AT_in_range_of_Main_Power_Generators");
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (packageFilter == null || cards == null) {
+            return false;
+        }
+        for (PhysicalCard card : cards) {
+            if (card == null
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(game, card, true)
+                    || !packageFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard cardLocation =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(
+                    cardLocation, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private PhysicalCard shieldTargetLocation(
+            SwccgGame game, PhysicalCard target) {
+        PhysicalCard location = target.getAttachedTo();
+        return location != null ? location
+                : game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), target);
+    }
+
+    private boolean isShieldCannonHost(
+            SwccgGame game, String playerId,
+            PhysicalCard host, PhysicalCard location) {
+        if (host == null
+                || !playerId.equals(host.getOwner())
+                || !isActiveForSpot(game, host, true)
+                || !Filters.AT_AT.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)
+                || !samePhysicalLocation(
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(
+                            game.getGameState(), host),
+                    location)) {
+            return false;
+        }
+        return hasActiveShieldCannonAttached(
+                game, playerId, host);
+    }
+
+    private boolean isCompleteShieldRouteHost(
+            SwccgGame game, String playerId,
+            PhysicalCard host, PhysicalCard location) {
+        return isShieldCannonHost(
+                    game, playerId, host, location)
+                && Filters.piloted.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host);
+    }
+
+    private boolean hasActiveShieldCannonAttached(
+            SwccgGame game, String playerId,
+            PhysicalCard host) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card != null
+                    && playerId.equals(card.getOwner())
+                    && card.getAttachedTo() == host
+                    && isActiveForSpot(game, card, true)
+                    && Filters.AT_AT_Cannon.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Exact V160 action gate for the executable virtual epic-event route.
+     *
+     * The live fire action says "Attempt to 'blow away' Main Power
+     * Generators", so title-only action-text matching misses it. Conversely,
+     * text-only matching can leak the bonus to the classic control-phase
+     * Interrupt, which this objective prevents from firing. The source must
+     * therefore be the physical 222_13 card and the objective must still be
+     * on its front side.
+     */
+    public boolean isShieldMainGeneratorRouteAction(
+            SwccgGame game, String playerId,
+            String sourceCardId,
+            String actionText) {
+        if (!analyzed || isFlipped || !isShieldWillBeDown
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || sourceCardId == null
+                || actionText == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard source = gameState.findCardById(
+                    Integer.parseInt(sourceCardId));
+            if (source == null
+                    || !"222_13".equals(
+                        source.getBlueprintId(true))) {
+                return false;
+            }
+            String text = actionText.toLowerCase(Locale.ROOT);
+            if (text.contains("target the main generator")
+                    || text.contains(
+                        "attempt to 'blow away' main power generators")) {
+                return true;
+            }
+            return text.contains(
+                        "follow vehicle moving from same site")
+                    && isForwardShieldMainGeneratorFollow(
+                        game, playerId, source);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private boolean isForwardShieldMainGeneratorFollow(
+            SwccgGame game, String playerId,
+            PhysicalCard source) {
+        if (source == null
+                || source.getWhileInPlayData() == null) {
+            return false;
+        }
+        PhysicalCard mover = source.getWhileInPlayData()
+                .getPhysicalCard();
+        PhysicalCard origin =
+                shieldTargetLocation(game, source);
+        PhysicalCard destination =
+                mover != null
+                ? game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), mover)
+                : null;
+        if (origin == null || destination == null
+                || !isCompleteShieldRouteHost(
+                    game, playerId, mover,
+                    destination)) {
+            return false;
+        }
+        Integer originMarker = game.getModifiersQuerying()
+                .getMarkerNumber(
+                    game.getGameState(), origin);
+        Integer destinationMarker = game.getModifiersQuerying()
+                .getMarkerNumber(
+                    game.getGameState(), destination);
+        return originMarker != null
+                && destinationMarker != null
+                && originMarker > 1
+                && destinationMarker >= 1
+                && destinationMarker < originMarker
+                && !isShieldMainGeneratorFiringSite(
+                    game, origin)
+                && game.getModifiersQuerying()
+                    .isAdjacentSites(
+                        game.getGameState(), origin,
+                        destination);
+    }
+
+    /**
+     * True when this AT-AT move carries the physical virtual epic event to an
+     * adjacent deployed marker closer to its first legal firing position.
+     * Missing marker numbers may be skipped because 222_13 follows by live
+     * site adjacency, not by printed marker arithmetic.
+     * The source site must be controlled because 222_13 requires that control
+     * before it may follow the vehicle.
+     */
+    public boolean advancesShieldMainGeneratorRoute(
+            SwccgGame game, String playerId, PhysicalCard mover,
+            PhysicalCard destination) {
+        if (!analyzed || isFlipped || !isShieldWillBeDown
+                || game == null || playerId == null || mover == null
+                || destination == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(mover.getOwner())) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            if (!Filters.AT_AT.accepts(
+                        gameState, game.getModifiersQuerying(), mover)) {
+                return false;
+            }
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(gameState, mover);
+            if (origin == null
+                    || !isCompleteShieldRouteHost(
+                        game, playerId, mover, origin)) {
+                return false;
+            }
+            PhysicalCard activeTarget =
+                    activeShieldTargetLocation(
+                            game, playerId);
+            if (mover == selectSplitShieldRouteHost(
+                        game, playerId)
+                    && isAdjacentMarkerStepToward(
+                        game, origin, destination,
+                        activeTarget)) {
+                return true;
+            }
+            if (!game.getModifiersQuerying()
+                    .controlsLocation(
+                        gameState, origin, playerId)) {
+                return false;
+            }
+            Integer originMarker = game.getModifiersQuerying()
+                    .getMarkerNumber(gameState, origin);
+            Integer destinationMarker = game.getModifiersQuerying()
+                    .getMarkerNumber(gameState, destination);
+            if (originMarker == null || destinationMarker == null
+                    || originMarker <= 1
+                    || destinationMarker < 1
+                    || destinationMarker >= originMarker
+                    || isShieldMainGeneratorFiringSite(
+                        game, origin)
+                    || !game.getModifiersQuerying()
+                        .isAdjacentSites(
+                            gameState, origin,
+                            destination)) {
+                return false;
+            }
+            for (PhysicalCard card
+                    : gameState.getAllPermanentCards()) {
+                if (card == null
+                        || !playerId.equals(card.getOwner())
+                        || !"222_13".equals(
+                            card.getBlueprintId(true))
+                        || !isActiveForSpot(game, card, true)) {
+                    continue;
+                }
+                PhysicalCard routeSite = card.getAttachedTo();
+                if (routeSite == null) {
+                    routeSite = game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                gameState, card);
+                }
+                if (samePhysicalLocation(routeSite, origin)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Shield main-generator route assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasShieldMainGeneratorRouteDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard mover) {
+        if (game == null || game.getGameState() == null
+                || mover == null) {
+            return false;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard destination : locations) {
+            if (!advancesShieldMainGeneratorRoute(
+                        game, playerId, mover,
+                        destination)) {
+                continue;
+            }
+            String veto = FormationSafety.vetoMoveDestination(
+                    game, game.getGameState(), playerId,
+                    mover, destination);
+            if (veto == null) {
+                veto = FormationSafety.vetoMoveOrigin(
+                        game, game.getGameState(), playerId,
+                        mover, game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                game.getGameState(), mover));
+            }
+            if (veto == null) return true;
+        }
+        return false;
+    }
+
+    /**
+     * The current physical 222_13 site must be controlled only while another
+     * forward follow remains. The epic event's fire action itself does not
+     * require control.
+     */
+    public boolean isShieldMainGeneratorControlContestLocation(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        if (!analyzed || isFlipped || !isShieldWillBeDown
+                || game == null || playerId == null || location == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            Integer marker = game.getModifiersQuerying()
+                    .getMarkerNumber(
+                        game.getGameState(), location);
+            if (marker == null || marker <= 1
+                    || isShieldMainGeneratorFiringSite(
+                        game, location)) {
+                return false;
+            }
+            for (PhysicalCard card
+                    : game.getGameState()
+                        .getAllPermanentCards()) {
+                if (card == null
+                        || !playerId.equals(card.getOwner())
+                        || !"222_13".equals(
+                            card.getBlueprintId(true))
+                        || !isActiveForSpot(game, card, true)) {
+                    continue;
+                }
+                PhysicalCard routeSite = card.getAttachedTo();
+                if (routeSite == null) {
+                    routeSite = game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                game.getGameState(), card);
+                }
+                if (samePhysicalLocation(
+                        routeSite, location)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Shield main-generator control-site assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * 222_13 may fire only at 3rd Marker or lower, and both AT-AT Cannon
+     * printings used by this package target the same or an adjacent site.
+     */
+    private boolean isShieldMainGeneratorFiringMarker(
+            SwccgGame game, PhysicalCard location) {
+        if (game == null || location == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        Integer marker = game.getModifiersQuerying()
+                .getMarkerNumber(
+                    game.getGameState(), location);
+        return marker != null && marker >= 1 && marker <= 3;
+    }
+
+    private boolean isShieldMainGeneratorFiringSite(
+            SwccgGame game, PhysicalCard location) {
+        if (!isShieldMainGeneratorFiringMarker(
+                game, location)) {
+            return false;
+        }
+        PhysicalCard generators =
+                Filters.findFirstFromTopLocationsOnTable(
+                    game, Filters.Main_Power_Generators);
+        if (generators == null) return false;
+        Integer distance = game.getModifiersQuerying()
+                .getDistanceBetweenSites(
+                    game.getGameState(), location,
+                    generators);
+        return distance != null && distance <= 1;
+    }
+
+    public boolean preFlipRequirementUsesOrdinaryControl(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        return isShieldMainGeneratorControlContestLocation(
+                game, playerId, location);
+    }
     public boolean huntDownNeedsVader() { return huntDownNeedsVader; }
     public boolean huntDownFlipBackNoVader() { return huntDownFlipBackNoVader; }
 

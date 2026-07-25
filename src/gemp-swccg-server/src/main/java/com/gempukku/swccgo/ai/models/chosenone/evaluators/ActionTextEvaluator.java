@@ -943,15 +943,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Target The Main Generator (Epic Event, deploys on Ice Plains) lets the AT-AT
             // Cannon fire at the generators. Without TtMG on the table, the deck CAN'T win.
             // Steve: "He needs to get the epic event on the table so he can blow up the hoth
-            // generator." Push any action involving Target The Main Generator when the deck
-            // is recognized (covers the deploy and the fire-AT-AT response).
-            if (textLower.contains("target the main generator")) {
+            // generator." The live fire text does not name Target The Main Generator, so the
+            // objective brain verifies the exact physical 222_13 source for deploy/follow/fire.
+            {
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v160OA = context.getObjectiveAnalyzer();
-                if (v160OA != null && v160OA.isAnalyzed() && v160OA.isShieldWillBeDown()) {
+                if (v160OA != null
+                        && v160OA.isShieldMainGeneratorRouteAction(
+                            game, context.getPlayerId(),
+                            cardId, actionText)) {
                     applyDeployActionTextPolicy(action,
                         DeployActionTextPolicy.scoreMainGenerator(
                             new DeployActionTextFacts.MainGeneratorFacts(actionId)));
-                    logger.warn("V160 SHIELD WILL BE DOWN: pushing '{}' — Target The Main Generator action (+800)", actionText);
+                    logger.warn("V160 SHIELD WILL BE DOWN: pushing exact virtual main-generator route action '{}' (+800)", actionText);
                 }
             }
 

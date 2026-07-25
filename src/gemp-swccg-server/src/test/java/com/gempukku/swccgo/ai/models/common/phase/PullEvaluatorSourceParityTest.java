@@ -87,13 +87,22 @@ public class PullEvaluatorSourceParityTest {
                 "textLower.contains(\"card to take into hand\")");
         int takeChildMethod = cardSelectionSource.indexOf(
                 "private List<EvaluatedAction> evaluateTakeIntoHand");
+        int takeChildV70 = cardSelectionSource.indexOf(
+                "PullDeployCandidatePolicy.evaluate(",
+                takeChildMethod);
+        int takeChildObjective = cardSelectionSource.indexOf(
+                "applyCountedObjectivePullPolicy(",
+                takeChildV70);
         int takeChildSort = cardSelectionSource.indexOf(
                 "actions.sort((a, b) -> Float.compare(b.getScore(), a.getScore()))",
                 takeChildMethod);
         assertTrue(takeChildRoute >= 0);
         assertTrue(takeChildRoute < takeChildMethod);
+        assertTrue(takeChildMethod < takeChildV70);
+        assertTrue(takeChildV70 < takeChildObjective);
+        assertTrue(takeChildObjective < takeChildSort);
         assertTrue(takeChildMethod < takeChildSort);
-        assertEquals(2, occurrences(cardSelectionSource,
+        assertEquals(3, occurrences(cardSelectionSource,
                 "PullDeployCandidatePolicy.evaluate("));
     }
 

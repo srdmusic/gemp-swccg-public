@@ -12,6 +12,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -98,7 +99,8 @@ public class BattleForfeitAdapterParityTest {
         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer randoAnalyzer =
                 mock(com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
         when(randoAnalyzer.isAnalyzed()).thenReturn(true);
-        when(randoAnalyzer.isRequiredCardForFlip("Objective Card")).thenReturn(true);
+        when(randoAnalyzer.isRequiredCardForFlip(same(card)))
+                .thenReturn(true);
         com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext randoContext =
                 new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
                         gameState, "bot", "CARD_SELECTION",
@@ -109,7 +111,8 @@ public class BattleForfeitAdapterParityTest {
         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer chosenAnalyzer =
                 mock(com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
         when(chosenAnalyzer.isAnalyzed()).thenReturn(true);
-        when(chosenAnalyzer.isRequiredCardForFlip("Objective Card")).thenReturn(true);
+        when(chosenAnalyzer.isRequiredCardForFlip(same(card)))
+                .thenReturn(true);
         com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext chosenContext =
                 new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
                         gameState, "bot", "CARD_SELECTION",

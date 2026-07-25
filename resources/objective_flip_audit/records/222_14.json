@@ -40,7 +40,7 @@
   ]
  },
  "requirementSemantics": [
-  "flipToBack: pure blown-away event on an exact-title location (Title.Main_Power_Generators, exact match true); external engine (Target The Main Generator epic event) causes it - objective only listens",
+  "flipToBack: pure blown-away event on an exact-title location (Title.Main_Power_Generators, exact match true); the objective only listens. Rando's encoded pursuit route is specifically Target The Main Generator (V) 222_13, not classic 3_115",
   "back hard-lose: OCCUPY-with semantics - need >=1 Hoth SITE occupied with piloted AT-AT (Filters.and(Filters.AT_AT, Filters.piloted)) or Imperial leader or snowtrooper; checked via canSpot on Filters.and(Filters.Hoth_site, Filters.occupiesWith(playerId, self, ...)) with INCLUDE_EXCLUDED_FROM_BATTLE",
   "no flip-back exists: once flipped, the only failure mode is out-of-play loss of the objective"
  ],
@@ -54,6 +54,8 @@
  ],
  "setupAndPullRoutes": [
   "On deploy: deploy 5th Marker, [Set 17] 4th Marker, 1st Marker, and [Set 9] Prepare For A Surface Attack from Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_014.java:54-87]",
+  "Prepare For A Surface Attack (V) 209_42 reduces AT-AT Cannon deploy cost, lets it fire for free, and can take a qualifying vehicle weapon or Hoth Epic Event into hand from Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set209/dark/Card209_042.java:35-54,61-94]",
+  "Selected executable route: deploy Target The Main Generator (V) 222_13 on the mandatory 5th Marker Ice Plains and have it follow a controlled vehicle toward Main Power Generators through adjacent deployed marker sites. Stop at the first 3rd-or-lower site where the attached AT-AT Cannon is in range, normally 3rd Marker when Light Side has not inserted 2nd Marker; continue to 2nd only when its presence makes that necessary. Missing printed marker numbers may be skipped when the remaining deployed sites are adjacent. Total destiny must exceed 8 [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_013.java:54-65,68-100,119-145]",
   "Front, once per turn: deploy a Hoth location from Reserve Deck (THE_SHIELD_WILL_BE_DOWN_IN_MOMENTS__DOWNLOAD_HOTH_LOCATION) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_014.java:115-133]",
   "Back, once per turn: deploy a snowtrooper from Reserve Deck; reshuffle (IMPERIAL_TROOPS_HAVE_ENTERED_THE_BASE__DEPLOY_SNOWTROOPER) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_014_BACK.java:105-121]",
   "Back, once per YOUR control phase (shared action id, choose one): retrieve bottom card of Lost Pile into hand OR peek at top X cards of opponent's Reserve Deck (X = Hoth locations you control) and replace in any order [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set222/dark/Card222_014_BACK.java:67-102]"
@@ -67,14 +69,14 @@
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
+  "loaderEnabled": true,
   "profileGaps": [
-   "flipGateSite null even though the flip gate IS a concrete location (Hoth: Main Power Generators, bp 222_9 - present in objectiveNamedLocations but not wired as flipGateSite)",
-   "flipGateCardIds empty (222_9 known in namedLocation blueprintIds)",
-   "requiredCardsOnTable empty: mandatory [Set 9] Prepare For A Surface Attack start card absent",
-   "keyCharacterFilter null: back survival actors (piloted AT-AT / Imperial leader / snowtrooper) unrepresented",
-   "no representation of the blown-away event dependency (Target The Main Generator engine) or the place-out-of-play hard-lose; pullableCards empty despite 3 recurring routes; weights empty"
+   "The profile encodes the exact 222_13 pursuit prerequisites, but the actual >8 epic-event result and isBlownAwayLastStep flip remain engine outcomes rather than board-state facts",
+   "The profile expresses the firing endpoint as the first 1st, 2nd, or 3rd Marker where the physical Cannon is actually in range, so 3rd is terminal without Light Side 2nd but remains a bridge when 2nd is inserted",
+   "The DTO evaluates Target 222_13 and the in-range cannon package as separate alternatives across the same 1st-through-3rd Marker union; runtime counting must require both alternatives at one physical location and fail closed otherwise",
+   "requiredCardsOnTable names Target The Main Generator and AT-AT Cannon so pull, Force reserve, deploy, and Force-loss policies preserve the executable package; runtime physical-card matching restricts the Target requirement to virtual 222_13 and excludes classic 3_115",
+   "The back is encoded as purpose stayFlipped with the exact durable occupier union. Failure places the objective out of play; it is not represented as flipBack"
   ]
  },
- "proofGate": "SOURCE_VERIFIED"
+ "proofGate": "FLIP_OBSERVED"
 }

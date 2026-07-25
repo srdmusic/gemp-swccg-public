@@ -125,6 +125,11 @@ public final class BattleForfeitPolicy {
             case LAST_FLIP_BACK_BLOCKER:
                 reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the sole flip-back blocker while another legal loss exists";
                 break;
+            case LAST_OBJECTIVE_SURVIVAL_ACTOR:
+                ruleId =
+                        "BATTLE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD";
+                reason = "BATTLE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD: preserve the last actor keeping the objective in play while another legal loss exists";
+                break;
             case REQUIRED_CARD_RETENTION_DEFENDER:
                 ruleId =
                         "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD";

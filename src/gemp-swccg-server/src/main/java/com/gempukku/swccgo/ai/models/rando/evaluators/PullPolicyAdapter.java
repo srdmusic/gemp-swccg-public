@@ -86,14 +86,53 @@ final class PullPolicyAdapter {
     static PullDeployCandidateFacts readDeployCandidate(
             DecisionContext context,
             String actionId,
+            String candidateCardId,
+            String blueprintId,
             String displayTitle,
             com.gempukku.swccgo.common.CardCategory category,
             SwccgCardBlueprint blueprint) {
+        String weaponDeviceBlock =
+                CardSelectionEvaluator.v70CheckWeaponDeviceBlock(
+                        context.getGame(), context.getPlayerId(),
+                        category, blueprint);
+        if (weaponDeviceBlock != null
+                && isReadyRequiredObjectiveCandidate(
+                    context, candidateCardId,
+                    blueprintId)) {
+            weaponDeviceBlock = null;
+        }
         return new PullDeployCandidateFacts(
                 actionId,
                 displayTitle,
-                CardSelectionEvaluator.v70CheckWeaponDeviceBlock(
-                        context.getGame(), context.getPlayerId(), category, blueprint));
+                weaponDeviceBlock);
+    }
+
+    private static boolean isReadyRequiredObjectiveCandidate(
+            DecisionContext context,
+            String candidateCardId,
+            String blueprintId) {
+        if (context == null || candidateCardId == null
+                || context.getGame() == null
+                || context.getGameState() == null
+                || context.getPlayerId() == null
+                || context.getObjectiveAnalyzer() == null
+                || !context.getObjectiveAnalyzer().isAnalyzed()
+                || context.getObjectiveAnalyzer().isFlipped()) {
+            return false;
+        }
+        PhysicalCard candidate =
+                CardSelectionEvaluator.findPullCandidate(
+                    context,
+                    candidateCardId,
+                    blueprintId);
+        return candidate != null
+                && context.getObjectiveAnalyzer()
+                    .isRequiredCardForFlip(candidate)
+                && context.getObjectiveAnalyzer()
+                    .isRequiredOnTableCardPullRouteReady(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        candidate);
     }
 
     private static PullActionFactsReader.Context actionContext(DecisionContext context) {
@@ -161,10 +200,10 @@ final class PullPolicyAdapter {
             @Override
             public boolean objectivePullAdvancesRequiredOnTableCard(
                     SwccgGame game, String playerId,
-                    String sourceTitle) {
+                    PhysicalCard source) {
                 return objective
                         .objectivePullAdvancesRequiredOnTableCard(
-                                game, playerId, sourceTitle);
+                                game, playerId, source);
             }
         };
     }
