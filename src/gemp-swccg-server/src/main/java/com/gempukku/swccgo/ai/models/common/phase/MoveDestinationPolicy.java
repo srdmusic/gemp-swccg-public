@@ -139,6 +139,35 @@ public final class MoveDestinationPolicy {
                 1000.0f);
     }
 
+    public static Contribution objectiveRequiredCardEnablerStart(
+            boolean hasSafeAdvancingHop,
+            String actorTitle) {
+        if (!hasSafeAdvancingHop) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_START: "
+                        + (actorTitle != null
+                            ? actorTitle : "required actor")
+                        + " has a safe move toward a required-card deploy condition",
+                600.0f);
+    }
+
+    public static Contribution objectiveRequiredCardEnablerDestination(
+            boolean advancesRoute,
+            String actorTitle,
+            String destinationTitle) {
+        if (!advancesRoute) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_DESTINATION: "
+                        + (actorTitle != null
+                            ? actorTitle : "required actor")
+                        + " advances a required-card deploy condition at "
+                        + (destinationTitle != null
+                            ? destinationTitle : "this site"),
+                1000.0f);
+    }
+
     public static Contribution objectiveActorLocationStart(
             boolean hasSafeAdvancingHop,
             String actorTitle) {

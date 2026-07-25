@@ -197,18 +197,20 @@ public final class ForceLossPolicy {
                             + "' (hand/used) -100");
         }
 
-        if (candidate.fromHand()) {
-            if (objective.requiredForFlip()) {
-                add(operations, actionId, "V21-objective", TraceOutputKind.VETO,
-                        -9999.0f, "OBJECTIVE CRITICAL IN HAND - NEVER LOSE!");
-            } else if (objective.pullable()) {
-                add(operations, actionId, "V21-objective", TraceOutputKind.VETO,
-                        -9999.0f, "OBJECTIVE PULLABLE IN HAND - NEVER LOSE!");
-            }
-            if (objective.huntDown() && isLightsaber(title)) {
-                add(operations, actionId, "V25", TraceOutputKind.ORDERING,
-                        -500.0f, "V25 HUNT DOWN: PROTECT LIGHTSABER IN HAND!");
-            }
+        if (objective.requiredForFlip()) {
+            add(operations, actionId, "V21-objective", TraceOutputKind.VETO,
+                    -9999.0f,
+                    candidate.fromHand()
+                            ? "OBJECTIVE CRITICAL IN HAND - NEVER LOSE!"
+                            : "OBJECTIVE CRITICAL - NEVER LOSE!");
+        } else if (candidate.fromHand() && objective.pullable()) {
+            add(operations, actionId, "V21-objective", TraceOutputKind.VETO,
+                    -9999.0f, "OBJECTIVE PULLABLE IN HAND - NEVER LOSE!");
+        }
+        if (candidate.fromHand()
+                && objective.huntDown() && isLightsaber(title)) {
+            add(operations, actionId, "V25", TraceOutputKind.ORDERING,
+                    -500.0f, "V25 HUNT DOWN: PROTECT LIGHTSABER IN HAND!");
         }
     }
 

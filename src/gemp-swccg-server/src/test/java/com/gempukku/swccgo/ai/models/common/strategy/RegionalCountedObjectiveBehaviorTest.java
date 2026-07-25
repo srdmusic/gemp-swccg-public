@@ -403,6 +403,8 @@ public class RegionalCountedObjectiveBehaviorTest {
                 permanents.add(actor);
                 when(modifiers.getLocationThatCardIsPresentAt(
                         gameState, actor)).thenReturn(site);
+                when(modifiers.getLocationThatCardIsAt(
+                        gameState, actor)).thenReturn(site);
                 when(gameState.getCardsAtLocation(site))
                         .thenReturn(List.of(actor));
             } else {

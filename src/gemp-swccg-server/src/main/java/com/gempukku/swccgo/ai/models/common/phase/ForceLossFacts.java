@@ -18,6 +18,8 @@ public final class ForceLossFacts {
         USED,
         RESERVE,
         FORCE_PILE,
+        UNRESOLVED_DESTINY,
+        SABACC,
         OTHER
     }
 
@@ -163,6 +165,9 @@ public final class ForceLossFacts {
     }
 
     private static ZoneBand zoneBand(String zoneName) {
+        if (zoneName.contains("SABACC")) {
+            return ZoneBand.SABACC;
+        }
         if (zoneName.contains("HAND")) {
             return ZoneBand.HAND;
         }
@@ -174,6 +179,9 @@ public final class ForceLossFacts {
         }
         if (zoneName.contains("FORCE_PILE")) {
             return ZoneBand.FORCE_PILE;
+        }
+        if (zoneName.contains("UNRESOLVED_DESTINY")) {
+            return ZoneBand.UNRESOLVED_DESTINY;
         }
         return ZoneBand.OTHER;
     }

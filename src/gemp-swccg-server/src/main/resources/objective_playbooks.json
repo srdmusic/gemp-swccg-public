@@ -3792,6 +3792,283 @@
       "weights": {
         "deployFlipGateSite": 400
       },
+      "flipLocationRules": [
+        {
+          "id": "endor-operations-front-required-effects",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Ominous_Rumors",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "requiredOnTableCard",
+              "sourceText": "Ominous Rumors on table"
+            },
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Establish_Secret_Base",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "requiredOnTableCard",
+              "sourceText": "Establish Secret Base on table"
+            }
+          ]
+        },
+        {
+          "id": "endor-operations-back-required-effects",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Ominous_Rumors",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "requiredOnTableCardMissing",
+              "sourceText": "Ominous Rumors not on table"
+            },
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Establish_Secret_Base",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "requiredOnTableCardMissing",
+              "sourceText": "Establish Secret Base not on table"
+            }
+          ]
+        }
+      ],
+      "requiredCardDeployRules": [
+        {
+          "id": "endor-establish-secret-base-classic-route",
+          "requiredCardFilterKey": "Establish_Secret_Base",
+          "blueprintIds": [
+            "8_124"
+          ],
+          "destinationLocationFilterKey": "Endor_system",
+          "prerequisite": {
+            "relation": "controlWith",
+            "controller": "self",
+            "locationFilterKey": "Endor_site",
+            "count": {
+              "comparator": ">=",
+              "value": 3
+            },
+            "actorFilterKey": "biker_scout_or_piloted_AT_ST",
+            "prospectiveActorPair": {
+              "hostFilterKey": "AT_ST",
+              "pilotFilterKey": "pilot"
+            },
+            "includeExcludedFromBattle": false,
+            "scoreRole": "requiredCardDeployEnabler",
+            "sourceText": "your biker scouts and/or piloted AT-STs control three Endor sites"
+          },
+          "sourceText": "Establish Secret Base 8_124 deploys on Endor system if your biker scouts and/or piloted AT-STs control three Endor sites"
+        },
+        {
+          "id": "endor-establish-secret-base-v-route",
+          "requiredCardFilterKey": "Establish_Secret_Base",
+          "blueprintIds": [
+            "207_25",
+            "207_025"
+          ],
+          "destinationLocationFilterKey": "Bunker",
+          "prerequisite": {
+            "relation": "control",
+            "controller": "self",
+            "locationFilterKey": "Bunker",
+            "count": {
+              "comparator": ">=",
+              "value": 1
+            },
+            "includeExcludedFromBattle": false,
+            "scoreRole": "requiredCardDeployEnabler",
+            "sourceText": "control Bunker"
+          },
+          "sourceText": "Establish Secret Base 207_25 deploys on Bunker if you control that site"
+        },
+        {
+          "id": "endor-establish-secret-base-legacy-route",
+          "requiredCardFilterKey": "Establish_Secret_Base",
+          "blueprintIds": [
+            "601_260"
+          ],
+          "destinationLocationFilterKey": "Endor_system",
+          "prerequisite": {
+            "relation": "control",
+            "controller": "self",
+            "locationFilterKey": "Bunker",
+            "count": {
+              "comparator": ">=",
+              "value": 1
+            },
+            "includeExcludedFromBattle": false,
+            "scoreRole": "requiredCardDeployEnabler",
+            "sourceText": "control Bunker"
+          },
+          "sourceText": "Establish Secret Base 601_260 deploys on Endor system if you control Bunker"
+        },
+        {
+          "id": "endor-ominous-rumors-classic-route",
+          "requiredCardFilterKey": "Ominous_Rumors",
+          "blueprintIds": [
+            "8_127"
+          ],
+          "destinationLocationFilterKey": "Endor_system",
+          "prerequisite": {
+            "relation": "control",
+            "controller": "opponent",
+            "locationFilterKey": "Endor_site",
+            "count": {
+              "comparator": "==",
+              "value": 0
+            },
+            "includeExcludedFromBattle": false,
+            "scoreRole": "requiredCardDeployEnabler",
+            "sourceText": "opponent controls no Endor sites"
+          },
+          "sourceText": "Ominous Rumors 8_127 uses 2 Force and deploys on Endor system if opponent controls no Endor sites"
+        },
+        {
+          "id": "endor-ominous-rumors-v-direct-route",
+          "requiredCardFilterKey": "Ominous_Rumors",
+          "blueprintIds": [
+            "223_19",
+            "223_019"
+          ],
+          "destinationLocationFilterKey": "Bunker",
+          "sourceText": "Ominous Rumors 223_19 deploys directly on Bunker with no strategic prerequisite"
+        },
+        {
+          "id": "endor-ominous-rumors-legacy-direct-route",
+          "requiredCardFilterKey": "Ominous_Rumors",
+          "blueprintIds": [
+            "601_261"
+          ],
+          "destinationLocationFilterKey": "Bunker",
+          "sourceText": "Ominous Rumors 601_261 deploys directly on Bunker with no strategic prerequisite"
+        }
+      ],
+      "requiredCardRetentionRules": [
+        {
+          "id": "endor-ominous-rumors-classic-legacy-retention",
+          "requiredCardFilterKey": "Ominous_Rumors",
+          "blueprintIds": [
+            "8_127",
+            "601_261"
+          ],
+          "trigger": "tableChangedOpponentControl",
+          "outcome": "cancel",
+          "requiresCancelable": true,
+          "removalCondition": {
+            "relation": "control",
+            "controller": "opponent",
+            "locationFilterKey": "Endor_site",
+            "count": {
+              "comparator": ">=",
+              "value": 3
+            },
+            "includeExcludedFromBattle": true,
+            "scoreRole": "requiredCardRetention",
+            "sourceText": "opponent controls at least three Endor sites"
+          },
+          "cancelPrevention": {
+            "actorFilterKey": "Dyer",
+            "locationFilterKey": "Dyer_Ominous_Rumors_protection_location",
+            "sourceText": "Dyer at Bunker or an Endor battleground site prevents Ominous Rumors from being canceled"
+          },
+          "sourceText": "Ominous Rumors 8_127 and 601_261 cancel on a table change if cancelable and opponent controls at least three Endor sites"
+        },
+        {
+          "id": "endor-establish-secret-base-classic-retention",
+          "requiredCardFilterKey": "Establish_Secret_Base",
+          "blueprintIds": [
+            "8_124"
+          ],
+          "trigger": "tableChangedOpponentControl",
+          "outcome": "usedPile",
+          "requiresCancelable": false,
+          "removalCondition": {
+            "relation": "control",
+            "controller": "opponent",
+            "locationFilterKey": "Endor_system",
+            "count": {
+              "comparator": ">=",
+              "value": 1
+            },
+            "includeExcludedFromBattle": false,
+            "scoreRole": "requiredCardRetention",
+            "sourceText": "opponent controls Endor system"
+          },
+          "sourceText": "Establish Secret Base 8_124 goes to Used Pile on a table change if opponent controls Endor system"
+        },
+        {
+          "id": "endor-establish-secret-base-v-retention",
+          "requiredCardFilterKey": "Establish_Secret_Base",
+          "blueprintIds": [
+            "207_25",
+            "207_025"
+          ],
+          "trigger": "tableChangedOpponentControl",
+          "outcome": "usedPile",
+          "requiresCancelable": false,
+          "removalCondition": {
+            "relation": "control",
+            "controller": "opponent",
+            "locationFilterKey": "Bunker",
+            "count": {
+              "comparator": ">=",
+              "value": 1
+            },
+            "includeExcludedFromBattle": false,
+            "scoreRole": "requiredCardRetention",
+            "sourceText": "opponent controls Bunker"
+          },
+          "sourceText": "Establish Secret Base 207_25 goes to Used Pile on a table change if opponent controls Bunker"
+        }
+      ],
+      "requiredCardInactivationRules": [
+        {
+          "id": "endor-reactor-core-suspends-ominous-rumors",
+          "sourceBlueprintIds": [
+            "9_146"
+          ],
+          "requiredCardFilterKey": "Ominous_Rumors",
+          "outcome": "suspend",
+          "sourceText": "Death Star II: Reactor Core suspends Ominous Rumors while its Dark Side text is active"
+        }
+      ],
+      "hardLossLocationRules": [
+        {
+          "id": "endor-operations-location-blown-away",
+          "locationFilterKey": "Endor_location",
+          "defenseLocationFilterKey": "Bunker",
+          "threatCardFilterKey": "Deactivate_The_Shield_Generator",
+          "trigger": "blownAwayLastStep",
+          "outcome": "objectiveOutOfPlay",
+          "sourceText": "Place objective out of play if an Endor location is blown away"
+        }
+      ],
       "frontBp": "8_167",
       "backBp": "8_167_BACK",
       "abbreviation": "EO",

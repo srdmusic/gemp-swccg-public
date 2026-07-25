@@ -21,6 +21,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveAbilityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveLandoStayPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
@@ -39,6 +40,9 @@ import com.gempukku.swccgo.ai.models.common.phase.TargetSelectionPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
@@ -438,6 +442,30 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 .ObjectiveProgressCandidateRole
                                 .REQUIRED_LOCATION
                                 && !dedicatedFlipGateLocation));
+        applyPullSelectionPolicy(action,
+                PullSelectionCandidatePolicy.scoreRequiredOnTableCard(
+                        action.getActionId(),
+                        role == com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer
+                            .ObjectiveProgressCandidateRole
+                            .REQUIRED_ON_TABLE_CARD,
+                        context.getObjectiveAnalyzer()
+                            .isRequiredOnTableCardPullRouteReady(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                candidate)));
+        applyPullSelectionPolicy(action,
+                PullSelectionCandidatePolicy
+                    .scoreRequiredCardDeployEnabler(
+                        action.getActionId(),
+                        role == com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer
+                            .ObjectiveProgressCandidateRole
+                            .REQUIRED_CARD_DEPLOY_ENABLER_ACTOR,
+                        role == com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer
+                            .ObjectiveProgressCandidateRole
+                            .REQUIRED_CARD_DEPLOY_ENABLER_LOCATION));
     }
 
     /**
@@ -694,6 +722,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } else if (textLower.contains("simultaneously deploy aboard")) {
             // Simultaneous pilot deployment - special handling
             return evaluateSimultaneousPilotSelection(context);
+        } else if (textLower.contains(
+                "choose where to embark")) {
+            return evaluateObjectiveEmbarkTarget(context);
         } else if (textLower.contains("choose a pilot") ||
                    (textLower.contains("pilot") && (textLower.contains("choose") || textLower.contains("select"))) ||
                    (textLower.contains("matching") && textLower.contains("starship")
@@ -1162,7 +1193,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (objectiveProgressAnalyzer != null) {
                             com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment
                                 objectiveProgress = objectiveProgressAnalyzer.assessDeployChild(
-                                    gameState, playerId,
+                                    game, playerId,
                                     objectiveProgressDeployingCard, location);
                             logger.debug("V214 DEPLOY CHILD OBJECTIVE FACTS: outcome={} evidence={}",
                                 objectiveProgress.outcome(), objectiveProgress.evidence());
@@ -1190,6 +1221,38 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     .scoreActorRuntimeLocation(
                                         action.getActionId(),
                                         actorLocationProgress));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreRequiredOnTableCard(
+                                        action.getActionId(),
+                                        objectiveProgress.outcome()));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreRequiredCardDeployEnabler(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .advancesRequiredCardDeployPrerequisiteAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreRequiredCardRetentionDefense(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .advancesRequiredCardRetentionDefenseAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreObjectiveHardLossDefense(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .advancesObjectiveHardLossDefenseAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
                         }
 
                         // === V166 (Steve, 2026-06): CONTEST THE OPPONENT'S DRAIN by deploying to it ===
@@ -4291,34 +4354,62 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         boolean huntDown;
         boolean required;
         boolean pullable;
+        var progressRole = !objectiveAnalyzer.isFlipped()
+                && context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                        ? objectiveAnalyzer
+                            .classifyPreFlipProgressCandidate(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                physicalCard)
+                        : com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer
+                            .ObjectiveProgressCandidateRole.NONE;
         boolean requiredActor = !objectiveAnalyzer.isFlipped()
                 && context.getGame() != null
                 && context.getPlayerId() != null
                 && physicalCard != null
                 && (objectiveAnalyzer.matchesFlipGateActorRequirement(
-                        context.getGame(), context.getPlayerId(), physicalCard)
-                    || objectiveAnalyzer.classifyPreFlipProgressCandidate(
-                            context.getGame(), context.getPlayerId(),
-                            physicalCard)
+                        context.getGame(),
+                        context.getPlayerId(), physicalCard)
+                    || progressRole
                         != com.gempukku.swccgo.ai.models.common.strategy
                             .ObjectiveAnalyzer
-                            .ObjectiveProgressCandidateRole.NONE);
+                            .ObjectiveProgressCandidateRole.NONE
+                        && progressRole
+                        != com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer
+                            .ObjectiveProgressCandidateRole
+                            .REQUIRED_ON_TABLE_CARD);
+        boolean requiredOnTableCard =
+                title != null
+                && objectiveAnalyzer
+                    .isRequiredCardForFlip(title);
+        boolean preferredRequiredCard =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredRequiredCardForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
         if (route == ForceLossPolicy.Route.STANDALONE) {
             myLord = objectiveAnalyzer.getObjectiveTitle() != null
                     && objectiveAnalyzer.isMyLord();
-            required = candidate.fromHand() && title != null
-                    && (objectiveAnalyzer.isRequiredCardForFlip(title)
-                            || requiredActor);
+            required = preferredRequiredCard
+                    || candidate.fromHand() && requiredActor;
             pullable = candidate.fromHand() && title != null && !required
+                    && !requiredOnTableCard
                     && objectiveAnalyzer.isPullableCard(title);
             huntDown = candidate.fromHand() && title != null
                     && objectiveAnalyzer.isHuntDownV();
         } else {
             huntDown = title != null && objectiveAnalyzer.isHuntDownV();
-            required = title != null
-                    && (objectiveAnalyzer.isRequiredCardForFlip(title)
-                            || requiredActor);
+            required = preferredRequiredCard || requiredActor;
             pullable = title != null && !required
+                    && !requiredOnTableCard
                     && objectiveAnalyzer.isPullableCard(title);
         }
         return new ForceLossPolicy.ObjectiveFlags(
@@ -5904,6 +5995,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         SwccgGame game = context.getGame();
         String playerId = context.getPlayerId();
         Side mySide = context.getSide();
+        Integer exactMoverCardId =
+            movePhysicalCardId(context);
 
         // Icon bonus constant (same as MoveEvaluator/Python)
         // === V169 (Steve, 2026-06): RETREAT MODE — is the card being moved ENDANGERED? ===
@@ -5923,7 +6016,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 String v169MoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
                 MovePhysicalCardResolver.ResolvedMover v169Mover =
                     MovePhysicalCardResolver.resolveOnTable(
-                        gameState.getAllPermanentCards(), playerId, v169MoverBp);
+                        gameState.getAllPermanentCards(), playerId,
+                        v169MoverBp, exactMoverCardId);
                 if (v169Mover != null) {
                     PhysicalCard v169Pc = v169Mover.card();
                     PhysicalCard v169Loc = v169Mover.origin();
@@ -5961,7 +6055,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 String v156MoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
                 MovePhysicalCardResolver.ResolvedMover v156Mover =
                     MovePhysicalCardResolver.resolveOnTable(
-                        gameState.getAllPermanentCards(), playerId, v156MoverBp);
+                        gameState.getAllPermanentCards(), playerId,
+                        v156MoverBp, exactMoverCardId);
                 if (v156Mover != null) {
                     PhysicalCard v156Pc = v156Mover.card();
                     PhysicalCard v156Loc = v156Mover.origin();
@@ -6015,7 +6110,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 String fsMoverBp = extractBlueprintFromDecisionText(context.getDecisionText());
                 MovePhysicalCardResolver.ResolvedMover fsResolved =
                     MovePhysicalCardResolver.resolveOnTable(
-                        gameState.getAllPermanentCards(), playerId, fsMoverBp);
+                        gameState.getAllPermanentCards(), playerId,
+                        fsMoverBp, exactMoverCardId);
                 if (fsResolved != null) {
                     fsMover = fsResolved.card();
                     fsOrigin = fsResolved.origin();
@@ -6100,6 +6196,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                         boolean objectiveActorRouteDestination = false;
                         boolean objectiveActorLocationDestination = false;
+                        boolean objectiveRequiredCardEnablerDestination =
+                                false;
                         if (fsMover != null && fsOrigin != null
                                 && game != null && playerId != null) {
                             try {
@@ -6119,6 +6217,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .advancesPreFlipActorAtRuntimeLocation(
                                             game, playerId, fsMover,
                                             location);
+                                objectiveRequiredCardEnablerDestination =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .advancesRequiredCardDeployPrerequisiteByMovingTo(
+                                            game, playerId, fsMover,
+                                            location);
                                 boolean preservesRuntimeActor =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -6132,15 +6237,124 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     && routeAnalyzer
                                         .isPreFlipGlobalBlockerAt(
                                             game, playerId, location);
+                                var moverFormationRole =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    ? routeAnalyzer
+                                        .classifyGateFormationPieceIfRemoved(
+                                            game, playerId, fsMover)
+                                    : com.gempukku.swccgo.ai.models
+                                        .common.strategy
+                                        .ObjectiveAnalyzer
+                                        .FlipGateFormationRole.NONE;
+                                boolean countedFormationActive =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && !routeAnalyzer.isFlipped()
+                                    && (routeAnalyzer
+                                            .hasCountedPreFlipActorRule()
+                                        || routeAnalyzer
+                                            .hasActiveRequiredCardDeployActorRule(
+                                                game, playerId));
+                                if (countedFormationActive
+                                        && context.getDecisionText() != null
+                                        && context.getDecisionText()
+                                            .toLowerCase(Locale.ROOT)
+                                            .contains("using landspeed")) {
+                                    String opponent =
+                                        gameState.getOpponent(playerId);
+                                    float friendlyPower =
+                                        game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, fsOrigin,
+                                                playerId, false, false);
+                                    float opponentPower = opponent != null
+                                        ? game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, fsOrigin,
+                                                opponent, false, false)
+                                            + com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .FormationSafety
+                                                .weaponBonusAt(
+                                                    gameState, fsOrigin,
+                                                    opponent)
+                                        : 0.0f;
+                                    boolean preservesCount =
+                                        routeAnalyzer
+                                            .preservesRequiredCardDeployPrerequisiteByMovingTo(
+                                                game, playerId,
+                                                fsMover, location);
+                                    var countedDestinationHold =
+                                        MoveObjectiveGateHoldPolicy
+                                            .evaluateCountedFormation(
+                                                countedFormationActive,
+                                                moverFormationRole,
+                                                friendlyPower,
+                                                opponentPower,
+                                                preservesCount);
+                                    if (countedDestinationHold
+                                            .hardVeto()) {
+                                        action.hardVeto(
+                                            countedDestinationHold
+                                                .reason(),
+                                            TraceRuleId.of(
+                                                "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD"),
+                                            TraceDomainId.MOVE,
+                                            TraceOutputKind.VETO);
+                                    }
+                                }
+                                if (moverFormationRole
+                                        == com.gempukku.swccgo.ai.models
+                                            .common.strategy
+                                            .ObjectiveAnalyzer
+                                            .FlipGateFormationRole
+                                            .REQUIRED_CARD_RETENTION_DEFENDER) {
+                                    String opponent =
+                                        gameState.getOpponent(playerId);
+                                    float friendlyPower =
+                                        game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, fsOrigin,
+                                                playerId, false, false);
+                                    float opponentPower = opponent != null
+                                        ? game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, fsOrigin,
+                                                opponent, false, false)
+                                            + com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .FormationSafety
+                                                .weaponBonusAt(
+                                                    gameState, fsOrigin,
+                                                    opponent)
+                                        : 0.0f;
+                                    boolean safeRelocation =
+                                        routeAnalyzer
+                                            .preservesRequiredCardCancelPreventionAt(
+                                                game, playerId,
+                                                fsMover, location);
+                                    var retentionHold =
+                                        MoveObjectiveGateHoldPolicy
+                                            .evaluateRequiredCardRetentionDefender(
+                                                moverFormationRole,
+                                                friendlyPower,
+                                                opponentPower,
+                                                safeRelocation);
+                                    if (retentionHold.hardVeto()) {
+                                        action.hardVeto(
+                                            retentionHold.reason());
+                                    }
+                                }
                                 if (routeAnalyzer != null
                                         && routeAnalyzer.isAnalyzed()
+                                        && routeAnalyzer
+                                            .hasPreFlipRuntimeActorRule()
                                         && context.getDecisionText() != null
                                         && context.getDecisionText()
                                             .toLowerCase(Locale.ROOT)
                                             .contains("using landspeed")
-                                        && routeAnalyzer
-                                            .classifyGateFormationPieceIfRemoved(
-                                                game, playerId, fsMover)
+                                        && moverFormationRole
                                             == com.gempukku.swccgo.ai.models
                                                 .common.strategy
                                                 .ObjectiveAnalyzer
@@ -6184,6 +6398,27 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         objectiveRoute.delta());
                                     logger.warn(
                                         "OBJECTIVE ACTOR ROUTE DEST: {} to {} +1000",
+                                        fsMover.getTitle(), title);
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    objectiveRequiredCardEnabler =
+                                        MoveDestinationPolicy
+                                            .objectiveRequiredCardEnablerDestination(
+                                                objectiveRequiredCardEnablerDestination,
+                                                fsMover.getTitle(),
+                                                title);
+                                if (objectiveRequiredCardEnabler.applies()) {
+                                    action.addReasoning(
+                                        objectiveRequiredCardEnabler
+                                            .reason(),
+                                        objectiveRequiredCardEnabler
+                                            .delta(),
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_DESTINATION"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.ORDERING);
+                                    logger.warn(
+                                        "OBJECTIVE REQUIRED-CARD ENABLER DEST: {} to {} +1000",
                                         fsMover.getTitle(), title);
                                 }
                                 MoveDestinationPolicy.Contribution
@@ -7075,6 +7310,70 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             actions.add(action);
         }
 
+        return actions;
+    }
+
+    private List<EvaluatedAction>
+            evaluateObjectiveEmbarkTarget(
+                    DecisionContext context) {
+        List<EvaluatedAction> actions =
+                new ArrayList<>();
+        GameState gameState = context.getGameState();
+        SwccgGame game = context.getGame();
+        String playerId = context.getPlayerId();
+        PhysicalCard embarker = null;
+        Integer exactCardId =
+                movePhysicalCardId(context);
+        if (gameState != null && exactCardId != null) {
+            embarker = gameState.findCardById(
+                    exactCardId);
+        }
+        if (embarker == null && gameState != null) {
+            String blueprintId =
+                    extractBlueprintFromDecisionText(
+                        context.getDecisionText());
+            MovePhysicalCardResolver.ResolvedMover resolved =
+                    MovePhysicalCardResolver.resolveOnTable(
+                        gameState.getAllPermanentCards(),
+                        playerId, blueprintId);
+            embarker = resolved != null
+                    ? resolved.card() : null;
+        }
+        for (String cardId : context.getCardIds()) {
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    "Choose embark target");
+            PhysicalCard target = null;
+            try {
+                target = gameState != null
+                        ? gameState.findCardById(
+                            Integer.parseInt(cardId))
+                        : null;
+            } catch (NumberFormatException ignored) {
+            }
+            boolean objectiveTarget =
+                    game != null && embarker != null
+                    && target != null
+                    && context.getObjectiveAnalyzer() != null
+                    && context.getObjectiveAnalyzer()
+                        .isAnalyzed()
+                    && context.getObjectiveAnalyzer()
+                        .advancesRequiredCardDeployPrerequisiteAt(
+                            game, playerId, embarker,
+                            target);
+            if (objectiveTarget) {
+                action.addReasoning(
+                    "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_TARGET: board "
+                        + target.getTitle()
+                        + " to create the required deploy actor",
+                    1000.0f,
+                    TraceRuleId.of(
+                        "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_TARGET"),
+                    TraceDomainId.MOVE,
+                    TraceOutputKind.ORDERING);
+            }
+            actions.add(action);
+        }
         return actions;
     }
 
@@ -8482,6 +8781,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         return null;
+    }
+
+    private Integer movePhysicalCardId(
+            DecisionContext context) {
+        if (context == null) return null;
+        Object value = context.getExtra(
+                MovePhysicalCardResolver
+                    .MOVER_CARD_ID_EXTRA);
+        if (value == null) return null;
+        try {
+            return Integer.valueOf(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private PhysicalCard findUniqueDeployingCard(

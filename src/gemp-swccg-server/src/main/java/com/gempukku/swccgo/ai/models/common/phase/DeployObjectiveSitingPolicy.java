@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
@@ -111,6 +112,100 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId, "DEPLOY.OBJECTIVE.ACTOR_RUNTIME_LOCATION",
                         TraceOutputKind.BANDED, 1000.0f,
                         "Deploy the required actor to a live qualifying objective location"));
+    }
+
+    public static PolicyResult scoreRequiredOnTableCard(
+            String actionId,
+            ObjectiveProgressAssessment.Outcome outcome) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (outcome == null
+                || (outcome
+                        != ObjectiveProgressAssessment.Outcome
+                            .ADVANCES_MISSING_REQUIREMENT
+                    && outcome
+                        != ObjectiveProgressAssessment.Outcome
+                            .COMPLETES_FLIP_NOW)) {
+            return new PolicyResult(
+                    "DEPLOY_REQUIRED_ON_TABLE_CARD_POLICY", List.of());
+        }
+        boolean completes = outcome
+                == ObjectiveProgressAssessment.Outcome
+                    .COMPLETES_FLIP_NOW;
+        return single("DEPLOY_REQUIRED_ON_TABLE_CARD_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
+                        TraceOutputKind.BANDED,
+                        completes ? 1200.0f : 800.0f,
+                        completes
+                            ? "Deploy the final active-table card and complete the modeled flip condition"
+                            : "Deploy a missing active-table card required by the objective"));
+    }
+
+    public static PolicyResult scoreRequiredCardDeployEnabler(
+            String actionId, boolean advancesDeployEnabler) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!advancesDeployEnabler) {
+            return new PolicyResult(
+                    "DEPLOY_REQUIRED_CARD_ENABLER_POLICY",
+                    List.of());
+        }
+        return single("DEPLOY_REQUIRED_CARD_ENABLER_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.REQUIRED_CARD_ENABLER",
+                        TraceOutputKind.BANDED,
+                        900.0f,
+                        "Deploy here to satisfy a source-verified prerequisite for a missing objective card"));
+    }
+
+    public static PolicyResult scoreRequiredCardRetentionDefense(
+            String actionId, boolean advancesRetentionDefense) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!advancesRetentionDefense) {
+            return new PolicyResult(
+                    "DEPLOY_REQUIRED_CARD_RETENTION_POLICY",
+                    List.of());
+        }
+        return single("DEPLOY_REQUIRED_CARD_RETENTION_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.REQUIRED_CARD_RETENTION",
+                        TraceOutputKind.BANDED,
+                        900.0f,
+                            "Deploy here to keep an active required objective card from removing itself"));
+    }
+
+    public static PolicyResult scoreObjectiveHardLossDefense(
+            String actionId, boolean advancesHardLossDefense) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!advancesHardLossDefense) {
+            return new PolicyResult(
+                    "DEPLOY_OBJECTIVE_HARD_LOSS_DEFENSE_POLICY",
+                    List.of());
+        }
+        return single("DEPLOY_OBJECTIVE_HARD_LOSS_DEFENSE_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.HARD_LOSS_DEFENSE",
+                        TraceOutputKind.BANDED,
+                        1200.0f,
+                        "Deploy here to defend a live threat to the objective's terminal-loss location"));
+    }
+
+    public static PolicyResult blockRequiredCardInactivation(
+            String actionId, boolean inactivatesRequiredCard) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!inactivatesRequiredCard) {
+            return new PolicyResult(
+                    "DEPLOY_REQUIRED_CARD_INACTIVATION_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_REQUIRED_CARD_INACTIVATION_POLICY",
+                PolicyOperation.hardVeto(
+                        actionId,
+                        TraceRuleId.of(
+                                "DEPLOY.OBJECTIVE.REQUIRED_CARD_INACTIVATION"),
+                        TraceDomainId.DEPLOY_SITING,
+                        TraceOutputKind.VETO,
+                        "Do not deploy a card that suspends an active card required by the objective"));
     }
 
     public static PolicyResult scoreActorRouteStaging(

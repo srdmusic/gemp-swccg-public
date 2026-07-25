@@ -8441,3 +8441,42 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     nothing was deployed or pushed, and no fresh live game was claimed. Revert the single Hunt Down
     Batch Three commit; We Have A Plan Batch Two and all earlier objective-audit commits remain
     independent.
+
+  ==== Endor Operations objective behavior Batch Four (2026-07-24) ====
+    Card8_167 flips only when active-spottable Ominous Rumors and Establish Secret Base are both on
+    table; either missing or suspended Effect flips Card8_167_BACK back. The six source-backed
+    printing routes remain distinct. Ominous Rumors 8_127 deploys on Endor system only with no
+    opponent-controlled Endor site; 223_19/223_019 and 601_261 deploy directly on Bunker. Establish
+    Secret Base 8_124 deploys on Endor system after three Endor sites are controlled with biker
+    scouts and/or piloted AT-STs; 207_25/207_025 deploys on controlled Bunker; and 601_260 deploys
+    on Endor system while Bunker is controlled.
+
+    All six Effects are immune to Alter. Colonel Dyer at Bunker or an Endor battleground protects
+    Ominous Rumors from printing-specific cancellation, so retention, reinforcement, battle,
+    movement, and safe relocation preserve his support when needed. Death Star II: Reactor Core
+    9_146 is rejected while the objective depends on active Ominous Rumors; unchanged card behavior
+    proves its suspension can trigger the real flip-back.
+
+    The classic Establish Secret Base route counts biker scouts, already piloted AT-STs, and legal
+    prospective AT-ST-plus-pilot formations. Piloting and Embark choices preserve exact physical
+    card identity, compatible capacity, distinct qualifying targets, exact-target deployment costs,
+    and the live Force budget. Duplicate blueprint IDs cannot redirect the later mover prompt.
+
+    Pull, deploy, movement, battle, forfeit, and Force-loss decisions preserve the objective chain
+    without bypassing existing safety vetoes. Required Effects use one global surviving-copy ranking
+    across the legal Force-loss zones, so only the preferred still-needed physical copy receives
+    avoidable-loss protection. The source terminal law remains broad, any blown-away Endor location
+    places the objective out of play, while proactive hard-loss defense is narrowly scoped to Bunker
+    with an active opponent Deactivate The Shield Generator attached.
+
+    Shared AI policies and analyzer facts are consumed by mirrored Rando and Chosen One adapters.
+    No engine or card Java changed. Verification passed 102 Endor-focused tests, 5 shared
+    Force-loss fact tests, 58 selected parity tests, and the full 2,367-test reactor with 26
+    skipped. objective_playbooks.json is 186731 bytes with SHA-256
+    0f27aa53f37177b163096dd76f0031f55aa6940a9ad7f04dafc36ba867d941bf in source, the server jar,
+    and web.jar; representative shared-policy and mirrored-adapter class bytes also match both
+    jars. Server jar SHA-256 is 04fc992b8cce2b2fd744cfdd66500d91a52167e2f613201e5d77d4caca11cde0;
+    web.jar SHA-256 is 663753e500b60bb8fd126614c63adb934d5786d3f4762449d6cf81492be073a7.
+    The running JVM was not restarted, and nothing was deployed or pushed. Revert the single
+    Endor Operations Batch Four commit; Hunt Down Batch Three and all earlier objective-audit
+    commits remain independent.

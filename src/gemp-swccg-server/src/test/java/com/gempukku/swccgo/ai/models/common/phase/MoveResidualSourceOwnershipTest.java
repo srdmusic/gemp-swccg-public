@@ -157,7 +157,10 @@ public class MoveResidualSourceOwnershipTest {
         assertTrue(actionText.contains(
                 "if (pcLoc != embarkLoc) continue;"));
         assertTrue(actionText.contains(
-                "unmannedTitle = pc.getTitle();\n                    break;"));
+                "if (unmannedTitle == null) {\n"
+                        + "                        unmannedTitle = pc.getTitle();"));
+        assertTrue(actionText.contains(
+                ".advancesRequiredCardDeployPrerequisiteAt("));
         assertTrue(actionText.contains(
                 "} catch (Exception e) {\n            logger.debug(\"evaluateEmbark error:"));
         assertTrue(actionText.contains(

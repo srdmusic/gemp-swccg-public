@@ -8,6 +8,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import org.junit.Test;
 
 import java.lang.reflect.Proxy;
@@ -17,6 +18,8 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,9 +33,11 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(gameState.getAllPermanentCards()).thenReturn(List.of());
         SwccgGame game = mock(SwccgGame.class);
         when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying())
+                .thenReturn(mock(ModifiersQuerying.class));
 
         ObjectiveProgressAssessment assessment = analyzer.assessDeployChild(
-                gameState, PLAYER_ID, null, null);
+                game, PLAYER_ID, null, null);
 
         assertEquals(ObjectiveProgressAssessment.Outcome.NO_OBJECTIVE, assessment.outcome());
     }
@@ -49,7 +54,7 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(fixture.gameState.getTopLocations()).thenReturn(List.of(endorSystem));
 
         ObjectiveProgressAssessment assessment = fixture.analyzer.assessDeployChild(
-                fixture.gameState, PLAYER_ID, ominousRumors, endorSystem);
+                fixture.game, PLAYER_ID, ominousRumors, endorSystem);
 
         assertEquals(ObjectiveProgressAssessment.Outcome.ADVANCES_MISSING_REQUIREMENT,
                 assessment.outcome());
@@ -72,7 +77,7 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(fixture.gameState.getTopLocations()).thenReturn(List.of(bunker));
 
         ObjectiveProgressAssessment assessment = fixture.analyzer.assessDeployChild(
-                fixture.gameState, PLAYER_ID, establishSecretBase, bunker);
+                fixture.game, PLAYER_ID, establishSecretBase, bunker);
 
         assertEquals(ObjectiveProgressAssessment.Outcome.COMPLETES_FLIP_NOW,
                 assessment.outcome());
@@ -89,7 +94,7 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(fixture.gameState.getTopLocations()).thenReturn(List.of(bunker));
 
         ObjectiveProgressAssessment assessment = fixture.analyzer.assessDeployChild(
-                fixture.gameState, PLAYER_ID, null, bunker);
+                fixture.game, PLAYER_ID, null, bunker);
 
         assertEquals(ObjectiveProgressAssessment.Outcome.UNPROVEN, assessment.outcome());
         assertTrue(assessment.evidence().contains("unique physical card"));
@@ -105,7 +110,7 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(fixture.gameState.getTopLocations()).thenReturn(List.of(endorSystem));
 
         ObjectiveProgressAssessment assessment = fixture.analyzer.assessDeployChild(
-                fixture.gameState, PLAYER_ID, ominousRumors, endorSystem);
+                fixture.game, PLAYER_ID, ominousRumors, endorSystem);
 
         assertEquals(ObjectiveProgressAssessment.Outcome.UNPROVEN, assessment.outcome());
         assertTrue(assessment.evidence().contains("exact live child"));
@@ -125,7 +130,7 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(fixture.gameState.getTopLocations()).thenReturn(List.of(liveEndorSystem));
 
         ObjectiveProgressAssessment assessment = fixture.analyzer.assessDeployChild(
-                fixture.gameState, PLAYER_ID, ominousRumors, disconnectedEndorSystem);
+                fixture.game, PLAYER_ID, ominousRumors, disconnectedEndorSystem);
 
         assertEquals(ObjectiveProgressAssessment.Outcome.UNPROVEN, assessment.outcome());
         assertTrue(assessment.evidence().contains("exact live top location"));
@@ -160,6 +165,8 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(gameState.getAllPermanentCards()).thenReturn(List.of(objective));
         SwccgGame game = mock(SwccgGame.class);
         when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying())
+                .thenReturn(mock(ModifiersQuerying.class));
         ObjectiveAnalyzer analyzer = new com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer();
         analyzer.analyze(game, PLAYER_ID, Side.DARK);
         PhysicalCard candidate = card("Test Senator", "test_1", CardCategory.CHARACTER,
@@ -170,7 +177,7 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(gameState.getTopLocations()).thenReturn(List.of(destination));
 
         ObjectiveProgressAssessment assessment = analyzer.assessDeployChild(
-                gameState, PLAYER_ID, candidate, destination);
+                game, PLAYER_ID, candidate, destination);
 
         assertEquals(ObjectiveProgressAssessment.Outcome.UNPROVEN, assessment.outcome());
     }
@@ -187,9 +194,16 @@ public class ObjectiveAnalyzerDeployProgressTest {
         when(gameState.getAllPermanentCards()).thenReturn(permanents);
         SwccgGame game = mock(SwccgGame.class);
         when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying())
+                .thenReturn(mock(ModifiersQuerying.class));
+        when(gameState.isCardInPlayActive(
+                any(PhysicalCard.class),
+                anyBoolean(), anyBoolean(), anyBoolean(),
+                anyBoolean(), anyBoolean(), anyBoolean(),
+                anyBoolean(), anyBoolean())).thenReturn(true);
         ObjectiveAnalyzer analyzer = new com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer();
         analyzer.analyze(game, PLAYER_ID, Side.DARK);
-        return new Fixture(analyzer, gameState);
+        return new Fixture(analyzer, game, gameState);
     }
 
     private static PhysicalCard objective(
@@ -255,5 +269,6 @@ public class ObjectiveAnalyzerDeployProgressTest {
     }
 
     private record Fixture(
-            ObjectiveAnalyzer analyzer, GameState gameState) { }
+            ObjectiveAnalyzer analyzer, SwccgGame game,
+            GameState gameState) { }
 }

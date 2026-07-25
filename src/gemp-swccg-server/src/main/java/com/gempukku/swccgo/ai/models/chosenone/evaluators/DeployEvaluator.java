@@ -789,7 +789,15 @@ public class DeployEvaluator extends ActionEvaluator {
                 DeployObjectiveSequencingPolicy.isEarlyLocationCandidate(
                     new DeployObjectiveSequencingFacts.EarlyLocationCandidate(
                         actionText, earlyCardResolved, earlyLocationByCategory));
+            boolean objectiveInactivationChecked = false;
             if (earlyLocationCandidate) {
+                objectiveInactivationChecked = true;
+                if (applyRequiredCardInactivationVeto(
+                        context, action, decisionId, actionId,
+                        earlyLocationCard)) {
+                    actions.add(action);
+                    continue;
+                }
                 // === V24.10: EXTRA LOCATION PRIORITY WHEN PIETT NEEDS FINDING ===
                 // If Piett is stuck in the force pile, deploying more locations means
                 // more force generation → bigger force pile → draw through faster to find him.
@@ -1114,6 +1122,13 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (objDeploy != null && gameState != null && game != null
                                 && card != null && blueprint != null && actionText != null) {
+                            if (!objectiveInactivationChecked
+                                    && applyRequiredCardInactivationVeto(
+                                        context, action, decisionId, actionId,
+                                        card)) {
+                                actions.add(action);
+                                continue;
+                            }
                             for (com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.ScoreNote note
                                     : objDeploy.getDeployObjectiveAdjustments(
                                         game, gameState, playerId, card, blueprint, actionText)) {
@@ -1455,6 +1470,15 @@ public class DeployEvaluator extends ActionEvaluator {
                             }
                         }
                     }
+                    int objectiveRequiredCardReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getRequiredOnTableCardForceReserve(
+                                    game, playerId, card)
+                                + context.getObjectiveAnalyzer()
+                                    .getRequiredCardDeployEnablerForceReserve(
+                                        game, playerId, card)
+                            : 0;
                     DeployPlanPolicy.Evaluation planEvaluation = DeployPlanPolicy.evaluate(
                         new DeployPlanPolicy.Facts(
                             actionId, plan != null,
@@ -1614,7 +1638,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                 obligationMaintenance, obligationMaintenanceCost,
                                 gameState != null && context.getForceReserveFacts().dtfActive,
                                 gameState != null && context.getForceReserveFacts().grabberUnused,
-                                objectiveFormationReserve));
+                                objectiveFormationReserve,
+                                objectiveRequiredCardReserve));
                     PolicyContributionLedger futureObligationLedger = new PolicyContributionLedger(
                         (decisionId == null || decisionId.isBlank()
                             ? "deploy-future-obligation"
@@ -4581,6 +4606,36 @@ public class DeployEvaluator extends ActionEvaluator {
 
         LOG.info("[DeployEvaluator] Evaluated {} deploy actions", actions.size());
         return actions;
+    }
+
+    private boolean applyRequiredCardInactivationVeto(
+            DecisionContext context, EvaluatedAction action,
+            String decisionId,
+            String actionId, PhysicalCard card) {
+        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer
+                objective = context.getObjectiveAnalyzer();
+        SwccgGame game = context.getGame();
+        GameState gameState = context.getGameState();
+        String playerId = context.getPlayerId();
+        if (objective == null || game == null || gameState == null
+                || playerId == null || card == null) {
+            return false;
+        }
+        boolean inactivatesRequiredCard =
+                objective.wouldDeployPreventRequiredCardActivity(
+                        game, playerId, card);
+        PolicyContributionLedger ledger =
+                new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "deploy-objective-inactivation"
+                            : decisionId + "-objective-inactivation")
+                            + "-" + actionId);
+        ledger.register(
+                DeployObjectiveSitingPolicy
+                    .blockRequiredCardInactivation(
+                        actionId, inactivatesRequiredCard));
+        PolicyOperationAdapter.apply(action, ledger);
+        return inactivatesRequiredCard;
     }
 
     private void applySharedPolicy(EvaluatedAction action, String decisionId,

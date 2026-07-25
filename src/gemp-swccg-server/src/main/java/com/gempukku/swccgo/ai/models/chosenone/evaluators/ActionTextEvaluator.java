@@ -317,6 +317,76 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            if ("disembark".equals(textLower.trim())
+                    && cardId != null && gameState != null
+                    && game != null
+                    && context.getPlayerId() != null) {
+                try {
+                    PhysicalCard disembarking =
+                            gameState.findCardById(
+                                Integer.parseInt(cardId));
+                    var objective =
+                            context.getObjectiveAnalyzer();
+                    var role = objective != null
+                            && objective.isAnalyzed()
+                            && !objective.isFlipped()
+                            && objective
+                                .hasActiveRequiredCardDeployActorRule(
+                                    game, context.getPlayerId())
+                                    ? objective
+                                        .classifyGateFormationPieceIfRemoved(
+                                            game,
+                                            context.getPlayerId(),
+                                            disembarking)
+                                    : com.gempukku.swccgo.ai.models.common
+                                        .strategy.ObjectiveAnalyzer
+                                        .FlipGateFormationRole.NONE;
+                    PhysicalCard location = disembarking != null
+                            ? game.getModifiersQuerying()
+                                .getLocationThatCardIsAt(
+                                    gameState, disembarking)
+                            : null;
+                    String opponent =
+                            gameState.getOpponent(
+                                context.getPlayerId());
+                    float friendlyPower = location != null
+                            ? game.getModifiersQuerying()
+                                .getTotalPowerAtLocation(
+                                    gameState, location,
+                                    context.getPlayerId(),
+                                    false, false)
+                            : 0.0f;
+                    float opponentPower = location != null
+                            && opponent != null
+                            ? game.getModifiersQuerying()
+                                .getTotalPowerAtLocation(
+                                    gameState, location,
+                                    opponent, false, false)
+                            : 0.0f;
+                    MoveObjectiveGateHoldPolicy.Evaluation hold =
+                            MoveObjectiveGateHoldPolicy
+                                .evaluateCountedFormation(
+                                    true, role,
+                                    friendlyPower,
+                                    opponentPower);
+                    if (hold.hardVeto()) {
+                        action.setActionType(ActionType.MOVE);
+                        action.hardVeto(
+                            hold.reason(),
+                            TraceRuleId.of(
+                                "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_FORMATION_HOLD"),
+                            TraceDomainId.MOVE,
+                            TraceOutputKind.VETO);
+                        actions.add(action);
+                        continue;
+                    }
+                } catch (Exception e) {
+                    logger.debug(
+                        "Required-card pilot disembark hold failed: {}",
+                        e.getMessage());
+                }
+            }
+
             if ("move from other battleground site to here"
                     .equals(textLower.trim())
                     && cardId != null && gameState != null
@@ -2229,7 +2299,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Capacity Slot Selection (Pilot vs Passenger) ==========
             if (textLower.contains("capacity slot")) {
-                boolean pilotCapacity = textLower.contains("pilot capacity slot");
+                boolean pilotCapacity =
+                    textLower.contains("pilot capacity slot")
+                    || textLower.contains("driver capacity slot");
                 boolean passengerCapacity = textLower.contains("passenger capacity slot");
                 MoveTransitPolicy.CapacityChoice capacity =
                     MoveTransitPolicy.capacityChoice(
@@ -4800,11 +4872,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Skip the embark boost for power-4+ characters — they're more
             // valuable hitting people on the ground than crewing a vehicle.
             Float embarkerPower = embarkerBp.hasPowerAttribute() ? embarkerBp.getPower() : null;
-            if (embarkerPower != null && embarkerPower >= 4f) {
-                applyEmbarkPolicy(action, true, true, true, embarkerPower,
-                    false, false, false, embarker.getTitle(), null);
-                return;
-            }
             // Find the embarker's current location.
             com.gempukku.swccgo.game.PhysicalCard embarkLoc = null;
             try {
@@ -4819,6 +4886,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Walk permanents at the same site for an unmanned vehicle/ship owned by us.
             String embarkPid = context.getPlayerId();
             String unmannedTitle = null;
+            String objectiveEnablerTitle = null;
             for (com.gempukku.swccgo.game.PhysicalCard pc : embarkGs.getAllPermanentCards()) {
                 if (pc == null || !embarkPid.equals(pc.getOwner())) continue;
                 if (pc.getBlueprint() == null) continue;
@@ -4835,8 +4903,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 boolean piloted = com.gempukku.swccgo.filters.Filters.piloted.accepts(
                     embarkGs, embarkGame.getModifiersQuerying(), pc);
                 if (!piloted) {
-                    unmannedTitle = pc.getTitle();
-                    break;
+                    if (unmannedTitle == null) {
+                        unmannedTitle = pc.getTitle();
+                    }
+                    if (context.getObjectiveAnalyzer() != null
+                            && context.getObjectiveAnalyzer()
+                                .isAnalyzed()
+                            && context.getObjectiveAnalyzer()
+                                .advancesRequiredCardDeployPrerequisiteAt(
+                                    embarkGame, embarkPid,
+                                    embarker, pc)) {
+                        objectiveEnablerTitle = pc.getTitle();
+                    }
                 }
             }
             if (unmannedTitle != null) {
@@ -4847,6 +4925,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
             } else {
                 applyEmbarkPolicy(action, true, true, true, embarkerPower,
                     true, false, false, embarker.getTitle(), null);
+            }
+            if (objectiveEnablerTitle != null) {
+                action.addReasoning(
+                    "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_START: "
+                        + embarker.getTitle()
+                        + " can pilot " + objectiveEnablerTitle
+                        + " for the required-card deploy route",
+                    600.0f,
+                    TraceRuleId.of(
+                        "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_START"),
+                    TraceDomainId.MOVE,
+                    TraceOutputKind.BANDED);
             }
         } catch (Exception e) {
             logger.debug("evaluateEmbark error: {}", e.getMessage());

@@ -293,6 +293,13 @@ public final class PullActionPolicy {
                     String.format("V67ak KEY-CHARACTER PULL: '%s' would pull '%s' (named in objective/epic-event) \u2014 flip-critical!",
                             facts.sourceTitle(), facts.keyCharacterToken())));
         }
+        if (!hardBlocked && !downgraded
+                && facts.requiredOnTableCardPull()) {
+            operations.add(add(facts.actionId(),
+                    "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
+                    TraceOutputKind.BANDED, 1000.0f,
+                    "Use the objective's source-verified upload for a missing required on-table card"));
+        }
 
         if (!hardBlocked && downgraded) {
             operations.add(add(facts.actionId(), "V192-downgrade",

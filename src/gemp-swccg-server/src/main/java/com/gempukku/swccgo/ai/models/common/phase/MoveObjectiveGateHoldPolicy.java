@@ -13,7 +13,9 @@ public final class MoveObjectiveGateHoldPolicy {
         HOLD_LAST_ACTOR,
         HOLD_LAST_BUDDY,
         HOLD_LAST_CONTROL_SOURCE,
-        HOLD_FLIP_BACK_BLOCKER
+        HOLD_FLIP_BACK_BLOCKER,
+        HOLD_REQUIRED_CARD_RETENTION_DEFENDER,
+        HOLD_HARD_LOSS_DEFENDER
     }
 
     public record Evaluation(Branch branch, boolean hardVeto, String reason) {
@@ -51,6 +53,73 @@ public final class MoveObjectiveGateHoldPolicy {
     }
 
     /**
+     * Keeps control of a location that enables deployment of a still-missing
+     * required objective card. This is intentionally distinct from the
+     * objective's actual flip condition.
+     */
+    public static Evaluation evaluateRequiredCardControlEnabler(
+            boolean activePreFlipControlEnabler,
+            boolean moverAtExactEnablerLocation,
+            boolean currentlyControlsLocation,
+            boolean soleControlSourceProven) {
+        if (!activePreFlipControlEnabler
+                || !moverAtExactEnablerLocation
+                || !currentlyControlsLocation
+                || !soleControlSourceProven) {
+            return Evaluation.none();
+        }
+        return new Evaluation(
+                Branch.HOLD_LAST_CONTROL_SOURCE,
+                true,
+                "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_HOLD: keep the sole control source until the required card deploys");
+    }
+
+    public static Evaluation evaluateHardLossLocationDefender(
+            FlipGateFormationRole formationRole,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation) {
+        if (formationRole
+                != FlipGateFormationRole.HARD_LOSS_LOCATION_DEFENDER
+                || opponentPowerAtLocation
+                    > friendlyPowerAtLocation + RETREATABLE_POWER_GAP) {
+            return Evaluation.none();
+        }
+        return new Evaluation(
+                Branch.HOLD_HARD_LOSS_DEFENDER,
+                true,
+                "MOVE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD: keep the sole presence source defending a terminal-loss location");
+    }
+
+    public static Evaluation evaluateRequiredCardRetentionDefender(
+            FlipGateFormationRole formationRole,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation) {
+        return evaluateRequiredCardRetentionDefender(
+                formationRole, friendlyPowerAtLocation,
+                opponentPowerAtLocation, false);
+    }
+
+    public static Evaluation evaluateRequiredCardRetentionDefender(
+            FlipGateFormationRole formationRole,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation,
+            boolean safeQualifyingRelocation) {
+        if (formationRole
+                != FlipGateFormationRole
+                    .REQUIRED_CARD_RETENTION_DEFENDER
+                || safeQualifyingRelocation
+                || opponentPowerAtLocation
+                    > friendlyPowerAtLocation
+                        + RETREATABLE_POWER_GAP) {
+            return Evaluation.none();
+        }
+        return new Evaluation(
+                Branch.HOLD_REQUIRED_CARD_RETENTION_DEFENDER,
+                true,
+                "MOVE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD: keep the sole defender preventing an active required card from removing itself");
+    }
+
+    /**
      * Keeps a proven piece of a counted pre-flip formation in place while the
      * location is unopposed or defensibly contested. A deficit greater than six
      * permits the ordinary retreat policies to take over.
@@ -60,8 +129,23 @@ public final class MoveObjectiveGateHoldPolicy {
             FlipGateFormationRole formationRole,
             float friendlyPowerAtLocation,
             float opponentPowerAtLocation) {
+        return evaluateCountedFormation(
+                activePreFlipCountedFormation,
+                formationRole,
+                friendlyPowerAtLocation,
+                opponentPowerAtLocation,
+                false);
+    }
+
+    public static Evaluation evaluateCountedFormation(
+            boolean activePreFlipCountedFormation,
+            FlipGateFormationRole formationRole,
+            float friendlyPowerAtLocation,
+            float opponentPowerAtLocation,
+            boolean hasSafeQualifyingRelocation) {
         if (!activePreFlipCountedFormation
                 || formationRole == null
+                || hasSafeQualifyingRelocation
                 || (formationRole != FlipGateFormationRole.LAST_REQUIRED_ACTOR
                     && formationRole
                         != FlipGateFormationRole.LAST_REQUIRED_BUDDY)) {

@@ -18,6 +18,15 @@ public final class ObjectiveBattlePolicy {
     public static final String GLOBAL_BLOCKER_REMOVAL_RULE_ID =
             "BATTLE.OBJECTIVE.GLOBAL_BLOCKER_REMOVAL";
     public static final float GLOBAL_BLOCKER_REMOVAL_BONUS = 250.0f;
+    public static final String REQUIRED_CARD_CONTROL_ENABLER_RULE_ID =
+            "BATTLE.OBJECTIVE.REQUIRED_CARD_CONTROL_ENABLER";
+    public static final float REQUIRED_CARD_CONTROL_ENABLER_BONUS = 80.0f;
+    public static final String REQUIRED_CARD_RETENTION_RULE_ID =
+            "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION";
+    public static final float REQUIRED_CARD_RETENTION_BONUS = 80.0f;
+    public static final String HARD_LOSS_LOCATION_RULE_ID =
+            "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_DEFENSE";
+    public static final float HARD_LOSS_LOCATION_BONUS = 250.0f;
 
     private static final int MINIMUM_RESERVE = 3;
     private static final float MINIMUM_EFFECTIVE_DIFF = -2.0f;
@@ -28,6 +37,9 @@ public final class ObjectiveBattlePolicy {
             String actionId,
             boolean exactStructuredPreFlipTarget,
             boolean missingSelfControl,
+            boolean requiredCardControlEnabler,
+            boolean requiredCardRetention,
+            boolean hardLossLocation,
             boolean globalBlocker,
             boolean bothSidesPresent,
             boolean formationSafetyVeto,
@@ -44,6 +56,9 @@ public final class ObjectiveBattlePolicy {
                 String actionId,
                 boolean exactStructuredPreFlipTarget,
                 boolean missingSelfControl,
+                boolean requiredCardControlEnabler,
+                boolean hardLossLocation,
+                boolean globalBlocker,
                 boolean bothSidesPresent,
                 boolean formationSafetyVeto,
                 boolean predictorSafe,
@@ -52,7 +67,69 @@ public final class ObjectiveBattlePolicy {
                 float ourPower,
                 float theirPower) {
             this(actionId, exactStructuredPreFlipTarget,
-                    missingSelfControl, false, bothSidesPresent,
+                    missingSelfControl, requiredCardControlEnabler,
+                    false, hardLossLocation, globalBlocker,
+                    bothSidesPresent, formationSafetyVeto,
+                    predictorSafe, effectiveDiff, reserveDeckSize,
+                    ourPower, theirPower);
+        }
+
+        public Facts(
+                String actionId,
+                boolean exactStructuredPreFlipTarget,
+                boolean missingSelfControl,
+                boolean requiredCardControlEnabler,
+                boolean globalBlocker,
+                boolean bothSidesPresent,
+                boolean formationSafetyVeto,
+                boolean predictorSafe,
+                float effectiveDiff,
+                int reserveDeckSize,
+                float ourPower,
+                float theirPower) {
+            this(actionId, exactStructuredPreFlipTarget,
+                    missingSelfControl, requiredCardControlEnabler,
+                    false, false, globalBlocker, bothSidesPresent,
+                    formationSafetyVeto, predictorSafe,
+                    effectiveDiff, reserveDeckSize, ourPower,
+                    theirPower);
+        }
+
+        public Facts(
+                String actionId,
+                boolean exactStructuredPreFlipTarget,
+                boolean missingSelfControl,
+                boolean globalBlocker,
+                boolean bothSidesPresent,
+                boolean formationSafetyVeto,
+                boolean predictorSafe,
+                float effectiveDiff,
+                int reserveDeckSize,
+                float ourPower,
+                float theirPower) {
+            this(actionId, exactStructuredPreFlipTarget,
+                    missingSelfControl, false, false, false,
+                    globalBlocker,
+                    bothSidesPresent, formationSafetyVeto,
+                    predictorSafe, effectiveDiff, reserveDeckSize,
+                    ourPower, theirPower);
+        }
+
+        public Facts(
+                String actionId,
+                boolean exactStructuredPreFlipTarget,
+                boolean missingSelfControl,
+                boolean bothSidesPresent,
+                boolean formationSafetyVeto,
+                boolean predictorSafe,
+                float effectiveDiff,
+                int reserveDeckSize,
+                float ourPower,
+                float theirPower) {
+            this(actionId, exactStructuredPreFlipTarget,
+                    missingSelfControl, false, false, false,
+                    false,
+                    bothSidesPresent,
                     formationSafetyVeto, predictorSafe,
                     effectiveDiff, reserveDeckSize, ourPower,
                     theirPower);
@@ -90,6 +167,38 @@ public final class ObjectiveBattlePolicy {
                     TraceOutputKind.BANDED,
                     REQUIRED_LOCATION_CONTEST_BONUS,
                     "Contest the exact unmet pre-flip objective control location"));
+        }
+        if (facts.requiredCardControlEnabler()
+                && facts.missingSelfControl()) {
+            operations.add(PolicyOperation.add(
+                    facts.actionId(),
+                    TraceRuleId.of(
+                            REQUIRED_CARD_CONTROL_ENABLER_RULE_ID),
+                    TraceDomainId.BATTLE_INITIATION,
+                    TraceOutputKind.BANDED,
+                    REQUIRED_CARD_CONTROL_ENABLER_BONUS,
+                    "Contest the exact location that enables deployment of a missing required objective card"));
+        }
+        if (facts.requiredCardRetention()
+                && facts.missingSelfControl()) {
+            operations.add(PolicyOperation.add(
+                    facts.actionId(),
+                    TraceRuleId.of(
+                            REQUIRED_CARD_RETENTION_RULE_ID),
+                    TraceDomainId.BATTLE_INITIATION,
+                    TraceOutputKind.BANDED,
+                    REQUIRED_CARD_RETENTION_BONUS,
+                    "Contest the exact location that keeps an active required objective card on table"));
+        }
+        if (facts.hardLossLocation()
+                && facts.missingSelfControl()) {
+            operations.add(PolicyOperation.add(
+                    facts.actionId(),
+                    TraceRuleId.of(HARD_LOSS_LOCATION_RULE_ID),
+                    TraceDomainId.BATTLE_INITIATION,
+                    TraceOutputKind.BANDED,
+                    HARD_LOSS_LOCATION_BONUS,
+                    "Contest an objective location whose destruction would place the objective out of play"));
         }
         if (facts.globalBlocker()) {
             operations.add(PolicyOperation.add(

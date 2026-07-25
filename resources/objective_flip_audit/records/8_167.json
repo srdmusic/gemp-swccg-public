@@ -96,6 +96,8 @@
   },
   "requirementSemantics": [
     "Flip both ways is card-on-table semantics (canSpot with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE) on two specific Effects; NO control, occupy, or presence requirement exists in either flip law.",
+    "The six legal required-Effect printings are Ominous Rumors 8_127, 223_19/223_019, and 601_261 plus Establish Secret Base 8_124, 207_25/207_025, and 601_260. Every one is immune to Alter in card source.",
+    "Both required titles are unique Effects. Multiple simultaneously active copies of either title are not a legal live-game state.",
     "Both sides also carry a hard-lose timing trigger: objective placed out of play if an Endor location is 'blown away' (TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.Endor_location)).",
     "Back's drain protection is site-scoped with-actor semantics: Endor sites sameSiteAs your biker scout OR your piloted AT-ST (Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.biker_scout, Filters.and(Filters.piloted, Filters.AT_ST)))))."
   ],
@@ -109,7 +111,11 @@
     "Filters.Endor_site",
     "Filters.biker_scout",
     "Filters.and(Filters.piloted, Filters.AT_ST)",
-    "Filters.and(Filters.your(self), Filters.AT_ST)"
+    "Filters.and(Filters.your(self), Filters.AT_ST)",
+    "Filters.pilot",
+    "Filters.Dyer",
+    "Filters.Deactivate_The_Shield_Generator",
+    "blueprintId 9_146 (Death Star II: Reactor Core)"
   ],
   "setupAndPullRoutes": [
     "Start of game deploys Endor system, Bunker, and Landing Platform from Reserve Deck (front:46-70).",
@@ -121,18 +127,89 @@
     "Back: at each Endor site where you have a biker scout or a piloted AT-ST, your Force drains may not be modified or canceled by opponent (ForceDrainsMayNotBeModifiedModifier + ForceDrainsMayNotBeCanceledModifier, BACK:52-56).",
     "Back: opponent may not draw more than 1 battle destiny in each battle (MayNotDrawMoreThanBattleDestinyModifier, BACK:57).",
     "Back: your AT-STs immune to attrition < 3 (BACK:58).",
-    "Strategic note from law: flipping back to front happens the moment EITHER Effect leaves the table, so both Effects must be defended (e.g., from Alter) to stay on Imperial Outpost."
+    "All six required-Effect printings are immune to Alter. Real retention threats instead come from printing-specific self-removal, Ominous Rumors suspension, ordinary legal loss/forfeit choices, and the objective's terminal Endor blow-away law."
   ],
   "seedMismatches": [],
   "profile": {
     "exists": true,
     "loaderEnabled": true,
+    "frontStructuredRule": "preFlip/flip allOf: Ominous Rumors onTable and Establish Secret Base onTable, both active-spotted with excluded-from-battle cards included",
+    "backStructuredRule": "postFlip/flipBack anyOf: active-spotted Ominous Rumors count equals zero or active-spotted Establish Secret Base count equals zero",
+    "requiredCardDeployRules": [
+      "Ominous Rumors 8_127 deploys on Endor system only while opponent controls zero Endor sites.",
+      "Ominous Rumors 223_19/223_019 deploys directly on Bunker with no strategic prerequisite.",
+      "Ominous Rumors 601_261 deploys directly on Bunker with no strategic prerequisite.",
+      "Establish Secret Base 8_124 deploys on Endor system only after biker scouts and/or piloted AT-STs control three Endor sites.",
+      "Establish Secret Base 207_25/207_025 deploys on Bunker only while Dark Side controls Bunker.",
+      "Establish Secret Base 601_260 deploys on Endor system only while Dark Side controls Bunker."
+    ],
+    "requiredCardRetentionRules": [
+      "Ominous Rumors 8_127 and 601_261 cancel, if cancelable, when opponent controls at least three Endor sites. Ominous Rumors 223_19/223_019 has no equivalent self-cancel rule.",
+      "Colonel Dyer at Bunker or an Endor battleground site prevents Ominous Rumors from being canceled, so his legal relocation and retention become objective-critical when cancellation is one opponent control away.",
+      "Establish Secret Base 8_124 goes to Used Pile when opponent controls Endor system; 207_25/207_025 goes to Used Pile when opponent controls Bunker; 601_260 has no equivalent self-removal rule.",
+      "Death Star II: Reactor Core 9_146 suspends Ominous Rumors while its Dark Side text is active. A suspended sole Ominous Rumors no longer satisfies the back-side conjunction, so it produces a real flip-back trigger."
+    ],
+    "hardLossRule": "blownAwayLastStep at Filters.Endor_location places the objective out of play on either side; source-verified active defense is scoped to Bunker while opponent's Deactivate The Shield Generator is attached there",
     "profileGaps": [
-      "flipGateSite 'endor: bunker' is a proxy: the true flip law never checks Bunker (or any location) - it is card-on-table of Ominous Rumors AND Establish Secret Base only. Bunker matters solely as Ominous Rumors' deploy target.",
-      "flipGateCardIds lists only Establish Secret Base ids (207_25/207_025/601_260); Ominous Rumors ids are missing even though the flip law requires BOTH Effects (requiredCardsOnTable names both by fragment only).",
-      "keyCharacterFilter 'biker_scout' is a back-side drain/retrieval actor; the flip law itself has no actor requirement - risk of Rando treating biker scouts as a flip prerequisite.",
-      "Hard-lose (place out of play if an Endor location is blown away, active on BOTH sides) is not represented anywhere in the profile."
+      "The legacy flipGateSite and flipGateCardIds fields remain only for the V and Legacy Establish Secret Base Bunker-control route. The structured on-table rules, not that proxy, own the actual flip law.",
+      "Direct Ominous Rumors routes 223_19/223_019 and 601_261 are explicit printing-aware routes to Bunker. Engine legality supplies the offered destination; the objective scorer supplies missing-card priority.",
+      "Back-side drain, battle-destiny, AT-ST immunity, and biker-scout retrieval benefits remain engine-owned effects after the objective flips. They are not duplicated as flip requirements."
     ]
   },
-  "proofGate": "SOURCE_VERIFIED"
+  "missingStateCalculation": [
+    "The front remains missing until both named Effects are active-spottable anywhere on table. One Effect advances the law; the second completes it. Suspended or otherwise inactive copies do not count.",
+    "The objective's control-phase parent pull is useful only while Reserve Deck contains a still-missing named Effect and no copy is already active or in hand.",
+    "Printing-specific deploy enablers are strategic routes, not flip requirements. Classic Establish Secret Base needs three qualified controlled Endor sites; V and Legacy Establish Secret Base need Bunker control; classic Ominous Rumors needs opponent control of zero Endor sites; V and Legacy Ominous Rumors deploy directly on Bunker.",
+    "For the classic Establish Secret Base route, an open Endor-site contribution may be a biker scout, an already piloted AT-ST, or a legal prospective AT-ST plus pilot pair. Pair matching uses distinct physical cards, compatible pilot capacity, exact legal destinations, and one target contribution per open site.",
+    "The back is immediately at flip-back risk when either unique named Effect is no longer active-spottable."
+  ],
+  "flipPreservation": [
+    "Force-loss selection protects the globally preferred still-needed physical copy of a required Effect across legal selectable loss zones: hand, Reserve Deck, Force Pile, Used Pile, unresolved destiny, and Sabacc hand. A better same-title copy that is guaranteed to survive makes an inferior offered copy expendable; a closed copy or on-table role is not mislabeled as pullable objective progress.",
+    "Force budgeting reserves the cheapest complete legal route for the still-missing printing, including exact-target direct actors and compatible AT-ST-plus-pilot pairs. A physical card cannot fund two sites.",
+    "Pull, deploy, movement, Embark target, Pilot/Driver capacity, and battle scoring pursue the classic three-site control-with chain while preserving exact engine legality and all existing safety vetoes.",
+    "Movement keeps the sole control source at a printing-specific deploy enabler until the missing Effect deploys, subject to the established retreat boundary. Safe relocation that still preserves or advances the counted prerequisite remains available.",
+    "When classic or Legacy Ominous Rumors is one opponent-controlled site away from cancellation, AI holds or reinforces the relevant control site and preserves Colonel Dyer at a legal protection location. Dyer may relocate only when the resulting position still provides protection.",
+    "Deploying Death Star II: Reactor Core is preemptively rejected while Endor Operations depends on active Ominous Rumors; the real card suspension then proves the flip-back consequence.",
+    "Movement and avoidable battle forfeit preserve the sole friendly presence source at Bunker on either objective side only while an active opponent Deactivate The Shield Generator is attached there. A power deficit greater than six releases movement to ordinary retreat policy.",
+    "Safe battle initiation receives a terminal-location defense contribution only at that active Bunker threat and remains below every existing formation, predictor, reserve, effective-power, and anti-suicide veto.",
+    "After flip, removal or inactivation of the active unique copy of either required Effect is classified as the last flip-back blocker."
+  ],
+  "runtimeOwners": [
+    "ObjectiveAnalyzer owns the exact active on-table conjunction, printing-aware deployment and retention facts, distinct-target AT-ST/pilot matching, physical formation groups, Reactor Core inactivation, and terminal Endor-location threat state.",
+    "PullActionFactsReader, PullActionPolicy, PullSelectionCandidatePolicy, and both bot PullPolicyAdapters own the parent tutor, exact required-Effect child choice, and printing-specific enabler pull contributions.",
+    "DeployObjectiveSitingPolicy, DeployBudgetPolicy, DeployEvaluator, and CardSelectionEvaluator own missing-Effect deployment, exact destinations, completion dominance, target-capacity Force reserves, enabler deployment, and threat-site reinforcement.",
+    "MoveObjectiveGateHoldPolicy, MoveEvaluator, ActionTextEvaluator, CardSelectionEvaluator, MoveTransitPolicy, and MovePhysicalCardResolver own exact physical mover binding, safe counted-actor relocation, AT-ST/pilot Embark progression, capacity-slot preference, Dyer retention, and terminal Bunker holds.",
+    "ObjectiveBattlePolicy and BattleDecisionPolicy own safe required-card enabler contests and BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_DEFENSE without bypassing established safety vetoes.",
+    "ForceLossPolicy V21-objective and BattleForfeitPolicy protect the preferred still-needed physical Effect, complete formation groups, retention defenders, and avoidable terminal-location casualties.",
+    "Rando and Chosen One adapters consume the same shared analyzer facts and policies with normalized parity."
+  ],
+  "contradictions": [
+    "Bunker control is not the objective's flip law. It is only a deploy prerequisite for specific Establish Secret Base printings.",
+    "Base Establish Secret Base 8_124 must never inherit the one-body Bunker route. It needs three distinct Endor sites controlled with biker scouts and/or piloted AT-STs.",
+    "Ominous Rumors 8_127 becomes illegal if opponent controls any Endor site, while Ominous Rumors 223_19 has no such prerequisite. Title-only deploy-route inference would be wrong.",
+    "Ominous Rumors 601_261 follows the direct Bunker route, not classic 8_127's zero-opponent-control route.",
+    "All six required Effects are immune to Alter. Alter defense is not part of the live behavior chain.",
+    "A prospective AT-ST without a compatible available pilot, a pilot without legal capacity, an inactive/full/cargo host, or a pair that cannot reach a distinct qualifying site does not advance classic Establish Secret Base.",
+    "Required-card bonuses do not bypass an engine-illegal destination. All adapters score only actions already offered by card and engine code.",
+    "Objective battle bonuses remain additive and safety-gated. They cannot erase Formation Safety, predictor defeat, low Reserve, effective-difference, or V25 suicide rejection.",
+    "The terminal law applies on both objective sides to typed Filters.Endor_location. Hard-veto defense is narrower: exact Bunker plus an active opponent Deactivate The Shield Generator, never every Endor location merely because it exists."
+  ],
+  "testEvidence": {
+    "positiveAndNegative": [
+      "EndorOperationsRequiredEffectsBehaviorTest loads both bot analyzers and covers exact active/inactive Effect state, one-of-two advancement, two-of-two completion, post-flip sole blockers, broad terminal-location law, and threat-scoped Bunker defense.",
+      "EndorOperationsRetentionBehaviorTest and EndorOperationsBattleDecisionTest cover printing-specific self-removal, the two cancelable Ominous Rumors printings, Dyer prevention and safe relocation, retention battles, and threat-scoped Bunker defense.",
+      "EndorOperationsDecisionPolicyTest covers parent and child pull boundaries, deploy advancement versus completion, Force reserves, movement holds, battle safety gates, hard-loss guards, and exact Rando/Chosen One Force-loss parity."
+    ],
+    "candidateChoice": [
+      "EndorOperationsCombinedEvaluatorDecisionTest offers all six printing-aware Effect routes, counted-site actors, compatible prospective AT-ST/pilot pairs, Embark and Pilot/Driver decisions, physical-copy Force-loss candidates, Dyer retention, Reactor Core deployment, and terminal Bunker defenders against legal distractors or Pass.",
+      "topLevelDeployUsesCrossedTargetReserveAndObjectiveActorSelfCloses proves that the exact-target pair reserve reaches both real bot deploy adapters: the off-plan deploy receives DEPLOY.BUDGET.OBJECTIVE_REQUIRED_CARD_RESERVE, the qualifying actor self-closes the reserve, and the objective action wins.",
+      "forceLossProtectsSoleRequiredEffectAcrossRecyclableZones table-drives Used Pile, unresolved destiny, and Sabacc candidates through standalone and combined routes for both bots; forceLossMaySpendOfferedUsedCopyWhenBetterCopySurvives proves the global survivor boundary.",
+      "Required-card completion is scored above mere advancement, while engine legality, physical-card reuse limits, distinct target capacity, formation safety, retreat boundaries, and hard blocks remain dominant."
+    ],
+    "sequence": "EndorOperationsObjectiveEngineContractTest uses unchanged card and engine code to execute setup, the once-per-control-phase tutor, all three Ominous Rumors deployment/retention variants, all three Establish Secret Base deployment/retention variants, the real front flip, removal-driven flip-back, Reactor Core suspension-driven flip-back, classic Establish Secret Base's biker-scout and piloted-AT-ST three-site routes, Dyer cancellation prevention, and a real Deactivate The Shield Generator destiny-13 Bunker blow-away that deals eight Force loss and places the objective out of play.",
+    "parity": "Production evaluator and policy tests assert matching Rando and Chosen One action ids, raw score bits, reasons, display text, veto state, defer state, and winners.",
+    "packaged": "Package gate passed without restart or deployment. objective_playbooks.json is 186731 bytes with SHA-256 0f27aa53f37177b163096dd76f0031f55aa6940a9ad7f04dafc36ba867d941bf in source, the server jar, and web.jar. Server jar SHA-256: 04fc992b8cce2b2fd744cfdd66500d91a52167e2f613201e5d77d4caca11cde0. web.jar SHA-256: 663753e500b60bb8fd126614c63adb934d5786d3f4762449d6cf81492be073a7. Eighteen representative shared-policy and mirrored-adapter class files byte-match target/classes, the server jar, and web.jar. Required-card reserve, Embark, movement, Force-loss, hard-loss battle, classic-route, Reactor Core, and blown-away markers are present in web.jar.",
+    "replay": "No live replay claim. Deterministic unchanged-engine scenarios provide FLIP_OBSERVED, FLIP_BACK_OBSERVED, and OBJECTIVE_OUT_OF_PLAY_OBSERVED without restarting or deploying the live JVM."
+  },
+  "proofGate": "FLIP_OBSERVED"
 }

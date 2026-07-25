@@ -66,6 +66,59 @@ public final class PullSelectionCandidatePolicy {
         return empty();
     }
 
+    public static PolicyResult scoreRequiredOnTableCard(
+            String actionId, boolean requiredOnTableCard) {
+        return scoreRequiredOnTableCard(
+                actionId, requiredOnTableCard, true);
+    }
+
+    public static PolicyResult scoreRequiredOnTableCard(
+            String actionId, boolean requiredOnTableCard,
+            boolean routeReady) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!requiredOnTableCard) return empty();
+        return routeReady
+                ? one(actionId,
+                    "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
+                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceOutputKind.BANDED,
+                    500.0f,
+                    "Pull the missing card whose active table presence is required to flip")
+                : one(actionId,
+                    "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD_ROUTE_BLOCKED",
+                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceOutputKind.BANDED,
+                    150.0f,
+                    "Keep the required card available, but rank it below a printing whose deploy route is ready");
+    }
+
+    public static PolicyResult scoreRequiredCardDeployEnabler(
+            String actionId, boolean requiredActor,
+            boolean requiredLocation) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (requiredActor && requiredLocation) {
+            throw new IllegalArgumentException(
+                    "A deploy-enabler candidate cannot be both actor and location");
+        }
+        if (requiredActor) {
+            return one(actionId,
+                    "PULL.OBJECTIVE.REQUIRED_CARD_ENABLER_ACTOR",
+                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceOutputKind.BANDED,
+                    350.0f,
+                    "Pull an actor required to make a missing objective card deployable");
+        }
+        if (requiredLocation) {
+            return one(actionId,
+                    "PULL.OBJECTIVE.REQUIRED_CARD_ENABLER_LOCATION",
+                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceOutputKind.BANDED,
+                    250.0f,
+                    "Pull a location required to make a missing objective card deployable");
+        }
+        return empty();
+    }
+
     public static PolicyResult scoreUnknownPull(
             PullSelectionCandidateFacts.UnknownPull facts) {
         Objects.requireNonNull(facts, "facts");

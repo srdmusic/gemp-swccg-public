@@ -106,7 +106,8 @@ public final class MoveTransitPolicy {
 
     public static Contribution capacitySlotSwap(String actionLower) {
         if (actionLower.contains("move to passenger capacity slot")
-                || actionLower.contains("move to pilot capacity slot")) {
+                || actionLower.contains("move to pilot capacity slot")
+                || actionLower.contains("move to driver capacity slot")) {
             return new Contribution(
                     true,
                     "V87 NO SWAP: pilot↔passenger capacity slot rearrangement is pointless — hard block",
@@ -172,7 +173,9 @@ public final class MoveTransitPolicy {
                     CapacitySlotBranch.PASSENGER_SKIP,
                     0.0f, Contribution.none());
         }
-        if (actionLower.contains("pilot capacity slot")) {
+        if (actionLower.contains("pilot capacity slot")
+                || actionLower.contains(
+                    "driver capacity slot")) {
             return new CapacitySlot(
                     CapacitySlotBranch.PILOT_PREFER,
                     100.0f,

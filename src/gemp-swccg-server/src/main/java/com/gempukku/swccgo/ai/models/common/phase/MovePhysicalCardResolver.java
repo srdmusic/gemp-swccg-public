@@ -2,8 +2,11 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.game.PhysicalCard;
 
-/** Resolves the first on-table physical mover represented by a stock blueprint hint. */
+/** Resolves an on-table physical mover represented by a stock decision hint. */
 public final class MovePhysicalCardResolver {
+
+    public static final String MOVER_CARD_ID_EXTRA =
+            "movePhysicalCardId";
 
     private MovePhysicalCardResolver() {
     }
@@ -12,6 +15,15 @@ public final class MovePhysicalCardResolver {
             Iterable<PhysicalCard> cards,
             String playerId,
             String blueprintId) {
+        return resolveOnTable(
+                cards, playerId, blueprintId, null);
+    }
+
+    public static ResolvedMover resolveOnTable(
+            Iterable<PhysicalCard> cards,
+            String playerId,
+            String blueprintId,
+            Integer cardId) {
         if (cards == null || playerId == null || blueprintId == null) {
             return null;
         }
@@ -21,6 +33,10 @@ public final class MovePhysicalCardResolver {
                 continue;
             }
             if (!blueprintId.equals(card.getBlueprintId(true))) {
+                continue;
+            }
+            if (cardId != null
+                    && card.getCardId() != cardId) {
                 continue;
             }
             PhysicalCard origin = card.getAtLocation();

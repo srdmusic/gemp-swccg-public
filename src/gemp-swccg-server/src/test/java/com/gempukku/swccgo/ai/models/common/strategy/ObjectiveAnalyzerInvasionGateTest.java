@@ -390,6 +390,8 @@ public class ObjectiveAnalyzerInvasionGateTest {
         when(modifiers.isSpecies(gameState, existing, Species.NEIMOIDIAN)).thenReturn(true);
         when(modifiers.getLocationThatCardIsPresentAt(gameState, existing))
                 .thenReturn(throneRoom);
+        when(modifiers.getLocationThatCardIsAt(gameState, existing))
+                .thenReturn(throneRoom);
         when(modifiers.controlsLocation(
                 gameState, throneRoom, PLAYER_ID,
                 SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))

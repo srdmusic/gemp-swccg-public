@@ -498,6 +498,8 @@ public class WeHaveAPlanObjectiveBehaviorTest {
                 .thenReturn(opponentControlsThrone);
         when(modifiers.getLocationThatCardIsPresentAt(
                 gameState, deployedAmidala)).thenReturn(throne);
+        when(modifiers.getLocationThatCardIsAt(
+                gameState, deployedAmidala)).thenReturn(throne);
 
         List<PhysicalCard> permanents = new ArrayList<>();
         permanents.add(objective);

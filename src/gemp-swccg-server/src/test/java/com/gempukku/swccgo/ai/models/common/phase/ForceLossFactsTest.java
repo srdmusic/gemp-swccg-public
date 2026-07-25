@@ -99,11 +99,31 @@ public class ForceLossFactsTest {
     }
 
     @Test
-    public void forceLossZoneClassifierKeepsOnlyTheFourLegacyBands() {
+    public void forceLossZoneClassifierIncludesEveryEngineOfferedBand() {
         assertTrue(ForceLossFacts.isForceLossZone(zoneCard(Zone.HAND)));
         assertTrue(ForceLossFacts.isForceLossZone(zoneCard(Zone.USED_PILE)));
         assertTrue(ForceLossFacts.isForceLossZone(zoneCard(Zone.RESERVE_DECK)));
         assertTrue(ForceLossFacts.isForceLossZone(zoneCard(Zone.FORCE_PILE)));
+        assertEquals(ForceLossFacts.ZoneBand.UNRESOLVED_DESTINY,
+                ForceLossFacts.readCandidate(
+                        null, "tester",
+                        zoneCard(Zone.TOP_OF_UNRESOLVED_DESTINY_DRAW))
+                        .zoneBand());
+        assertEquals(ForceLossFacts.ZoneBand.SABACC,
+                ForceLossFacts.readCandidate(
+                        null, "tester", zoneCard(Zone.SABACC_HAND))
+                        .zoneBand());
+        assertEquals(ForceLossFacts.ZoneBand.SABACC,
+                ForceLossFacts.readCandidate(
+                        null, "tester",
+                        zoneCard(Zone.REVEALED_SABACC_HAND))
+                        .zoneBand());
+        assertTrue(ForceLossFacts.isForceLossZone(
+                zoneCard(Zone.TOP_OF_UNRESOLVED_DESTINY_DRAW)));
+        assertTrue(ForceLossFacts.isForceLossZone(
+                zoneCard(Zone.SABACC_HAND)));
+        assertTrue(ForceLossFacts.isForceLossZone(
+                zoneCard(Zone.REVEALED_SABACC_HAND)));
         assertFalse(ForceLossFacts.isForceLossZone(zoneCard(Zone.LOST_PILE)));
         assertFalse(ForceLossFacts.isForceLossZone(zoneCard(Zone.AT_LOCATION)));
         assertFalse(ForceLossFacts.isForceLossZone(null));

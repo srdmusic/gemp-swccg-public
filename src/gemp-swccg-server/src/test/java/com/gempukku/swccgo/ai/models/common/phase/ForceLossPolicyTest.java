@@ -197,7 +197,9 @@ public class ForceLossPolicyTest {
                 op("V153-zone", 800.0f,
                         "V153 ZONE (USED_PILE, lifeForce=8, protectChars=true)"),
                 op("V153-priority", -100.0f,
-                        "V153 PRIORITY CARD: protect 'Vader's Lightsaber' (hand/used) -100"));
+                        "V153 PRIORITY CARD: protect 'Vader's Lightsaber' (hand/used) -100"),
+                op("V21-objective", -9999.0f,
+                        "OBJECTIVE CRITICAL - NEVER LOSE!", TraceOutputKind.VETO));
 
         assertOperations(score(ForceLossPolicy.Route.COMBINED_BATTLE,
                         decision(5, 20, 8, 0, 2, false), usedLightsaber, huntRequired),

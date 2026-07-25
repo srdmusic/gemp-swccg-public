@@ -24,6 +24,9 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveWeaponHunterPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWinnabilityPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
@@ -579,6 +582,7 @@ public class MoveEvaluator extends ActionEvaluator {
                     boolean safeAdvancingHop = false;
                     boolean runtimeLocationHop = false;
                     boolean runtimeBlockerChaseHop = false;
+                    boolean requiredCardEnablerHop = false;
                     if (routeAnalyzer != null && routeAnalyzer.isAnalyzed()
                             && routeOrigin != null) {
                         com.gempukku.swccgo.filters.Filter
@@ -612,9 +616,15 @@ public class MoveEvaluator extends ActionEvaluator {
                                         .isPreFlipGlobalBlockerAt(
                                             game, playerId,
                                             routeDestination);
+                            boolean requiredEnablerHop = routeAnalyzer
+                                    .advancesRequiredCardDeployPrerequisiteByMovingTo(
+                                            game, playerId,
+                                            cardToMove,
+                                            routeDestination);
                             if (!actorRouteHop
                                     && !actorLocationHop
-                                    && !blockerChaseHop) {
+                                    && !blockerChaseHop
+                                    && !requiredEnablerHop) {
                                 continue;
                             }
                             String routeVeto =
@@ -632,15 +642,25 @@ public class MoveEvaluator extends ActionEvaluator {
                             }
                             if (routeVeto == null) {
                                 safeAdvancingHop = true;
-                                runtimeLocationHop = actorLocationHop;
-                                runtimeBlockerChaseHop =
+                                runtimeLocationHop |=
+                                        actorLocationHop;
+                                runtimeBlockerChaseHop |=
                                         blockerChaseHop;
-                                break;
+                                requiredCardEnablerHop |=
+                                        requiredEnablerHop;
+                                if (requiredCardEnablerHop) {
+                                    break;
+                                }
                             }
                         }
                     }
                     MoveDestinationPolicy.Contribution objectiveRoute =
-                            runtimeLocationHop
+                            requiredCardEnablerHop
+                            ? MoveDestinationPolicy
+                                .objectiveRequiredCardEnablerStart(
+                                    safeAdvancingHop,
+                                    cardToMove.getTitle())
+                            : runtimeLocationHop
                             ? MoveDestinationPolicy
                                 .objectiveActorLocationStart(
                                     safeAdvancingHop,
@@ -655,11 +675,23 @@ public class MoveEvaluator extends ActionEvaluator {
                                     safeAdvancingHop,
                                     cardToMove.getTitle());
                     if (objectiveRoute.applies()) {
-                        action.addReasoning(
-                                objectiveRoute.reason(),
-                                objectiveRoute.delta());
+                        if (requiredCardEnablerHop) {
+                            action.addReasoning(
+                                    objectiveRoute.reason(),
+                                    objectiveRoute.delta(),
+                                    TraceRuleId.of(
+                                        "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_START"),
+                                    TraceDomainId.MOVE,
+                                    TraceOutputKind.BANDED);
+                        } else {
+                            action.addReasoning(
+                                    objectiveRoute.reason(),
+                                    objectiveRoute.delta());
+                        }
                         ladderClaimR2(
-                                runtimeLocationHop
+                                requiredCardEnablerHop
+                                    ? "OBJECTIVE REQUIRED-CARD ENABLER"
+                                    : runtimeLocationHop
                                     ? "OBJECTIVE ACTOR LOCATION"
                                     : runtimeBlockerChaseHop
                                     ? "OBJECTIVE BLOCKER CHASE"
@@ -919,7 +951,8 @@ public class MoveEvaluator extends ActionEvaluator {
 
             // === STRATEGIC ANALYSIS ===
             if (cardToMove != null && gameState != null && game != null) {
-                PhysicalCard currentLocation = cardToMove.getAtLocation();
+                PhysicalCard currentLocation = game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(gameState, cardToMove);
 
                 if (currentLocation != null) {
                     // V297 addendum: the deploy planner built an actor-and-buddy formation at
@@ -957,6 +990,44 @@ public class MoveEvaluator extends ActionEvaluator {
                             logger.warn("OBJECTIVE REQUIRED CONTROL HOLD: {} at {} vetoed ({})",
                                 cardToMove.getTitle(), currentLocation.getTitle(),
                                 controlHold.branch());
+                        }
+                        boolean activeRequiredCardEnabler =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && gateAnalyzer
+                                    .isActiveRequiredCardControlEnablerLocation(
+                                        game, playerId, currentLocation);
+                        boolean controlsRequiredCardEnabler =
+                                activeRequiredCardEnabler
+                                && game.getModifiersQuerying()
+                                    .controlsLocation(
+                                        gameState, currentLocation,
+                                        playerId,
+                                        com.gempukku.swccgo.common
+                                            .SpotOverride
+                                            .INCLUDE_EXCLUDED_FROM_BATTLE);
+                        boolean soleRequiredCardEnablerSource =
+                                controlsRequiredCardEnabler
+                                && gateAnalyzer
+                                    .isSoleControlSourceAtRequiredCardEnabler(
+                                        game, playerId, cardToMove,
+                                        currentLocation);
+                        MoveObjectiveGateHoldPolicy.Evaluation
+                                requiredCardEnablerHold =
+                                MoveObjectiveGateHoldPolicy
+                                    .evaluateRequiredCardControlEnabler(
+                                        activeRequiredCardEnabler,
+                                        activeRequiredCardEnabler,
+                                        controlsRequiredCardEnabler,
+                                        soleRequiredCardEnablerSource);
+                        if (requiredCardEnablerHold.hardVeto()) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason =
+                                requiredCardEnablerHold.reason();
+                            logger.warn("OBJECTIVE REQUIRED CARD ENABLER HOLD: {} at {} vetoed ({})",
+                                cardToMove.getTitle(),
+                                currentLocation.getTitle(),
+                                requiredCardEnablerHold.branch());
                         }
                         boolean activeActorGate = gateAnalyzer != null
                                 && gateAnalyzer.isAnalyzed()
@@ -1022,7 +1093,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                 gateAnalyzer != null
                                 && gateAnalyzer.isAnalyzed()
                                 && !gateAnalyzer.isFlipped()
-                                && gateAnalyzer.hasCountedPreFlipActorRule();
+                                && (gateAnalyzer
+                                        .hasCountedPreFlipActorRule()
+                                    || gateAnalyzer
+                                        .hasActiveRequiredCardDeployActorRule(
+                                            game, playerId));
                         com.gempukku.swccgo.ai.models.common.strategy
                                 .ObjectiveAnalyzer.FlipGateFormationRole
                                 countedRole = activeCountedFormation
@@ -1050,13 +1125,22 @@ public class MoveEvaluator extends ActionEvaluator {
                                         gameState, currentLocation,
                                         countedOpponent)
                                 : 0.0f;
+                        boolean safeCountedRelocation =
+                                activeCountedFormation
+                                && actionLower.contains(
+                                    "move using landspeed")
+                                && gateAnalyzer
+                                    .hasSafeRequiredCardDeployActorLandspeedDestination(
+                                        game, playerId,
+                                        cardToMove);
                         MoveObjectiveGateHoldPolicy.Evaluation countedHold =
                                 MoveObjectiveGateHoldPolicy
                                     .evaluateCountedFormation(
                                         activeCountedFormation,
                                         countedRole,
                                         countedFriendlyPower,
-                                        countedOpponentPower);
+                                        countedOpponentPower,
+                                        safeCountedRelocation);
                         if (countedHold.hardVeto()) {
                             ladderVetoHard = true;
                             ladderVetoHardReason = countedHold.reason();
@@ -1168,6 +1252,167 @@ public class MoveEvaluator extends ActionEvaluator {
                                 postFlipBlockerHold.branch(),
                                 (int) postFlipFriendlyPower,
                                 (int) postFlipOpponentPower);
+                        }
+                        com.gempukku.swccgo.ai.models.common.strategy
+                                .ObjectiveAnalyzer.FlipGateFormationRole
+                                hardLossRole = gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                ? gateAnalyzer
+                                    .classifyGateFormationPieceIfRemoved(
+                                        game, playerId, cardToMove)
+                                : com.gempukku.swccgo.ai.models.common.strategy
+                                    .ObjectiveAnalyzer
+                                    .FlipGateFormationRole.NONE;
+                        boolean hardLossDefender = hardLossRole
+                                == com.gempukku.swccgo.ai.models.common
+                                    .strategy.ObjectiveAnalyzer
+                                    .FlipGateFormationRole
+                                    .HARD_LOSS_LOCATION_DEFENDER;
+                        float hardLossFriendlyPower = hardLossDefender
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        playerId, false, false)
+                                : 0.0f;
+                        float hardLossOpponentPower = hardLossDefender
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        gameState.getOpponent(playerId),
+                                        false, false)
+                                    + oppWeaponBonusAt(
+                                        gameState, currentLocation,
+                                        gameState.getOpponent(playerId))
+                                : 0.0f;
+                        MoveObjectiveGateHoldPolicy.Evaluation
+                                hardLossHold =
+                                MoveObjectiveGateHoldPolicy
+                                    .evaluateHardLossLocationDefender(
+                                        hardLossRole,
+                                        hardLossFriendlyPower,
+                                        hardLossOpponentPower);
+                        if (hardLossHold.hardVeto()) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason =
+                                    hardLossHold.reason();
+                            logger.warn("OBJECTIVE HARD-LOSS LOCATION HOLD: {} at {} vetoed ({}, power={}/{})",
+                                cardToMove.getTitle(),
+                                currentLocation.getTitle(),
+                                hardLossHold.branch(),
+                                (int) hardLossFriendlyPower,
+                                (int) hardLossOpponentPower);
+                        }
+                        boolean retentionDefender = hardLossRole
+                                == com.gempukku.swccgo.ai.models.common
+                                    .strategy.ObjectiveAnalyzer
+                                    .FlipGateFormationRole
+                                    .REQUIRED_CARD_RETENTION_DEFENDER;
+                        float retentionFriendlyPower = retentionDefender
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        playerId, false, false)
+                                : 0.0f;
+                        float retentionOpponentPower = retentionDefender
+                                ? game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                        gameState, currentLocation,
+                                        gameState.getOpponent(playerId),
+                                        false, false)
+                                    + oppWeaponBonusAt(
+                                        gameState, currentLocation,
+                                        gameState.getOpponent(playerId))
+                                : 0.0f;
+                        boolean safeRetentionRelocation = false;
+                        if (retentionDefender) {
+                            if (actionLower.contains(
+                                    "move using landspeed")) {
+                                var legalRetentionDestination =
+                                    com.gempukku.swccgo.filters.Filters
+                                        .canMoveToUsingLandspeed(
+                                            playerId, cardToMove,
+                                            false, false, false,
+                                            0.0f, null);
+                                for (PhysicalCard destination
+                                        : gameState
+                                            .getLocationsInOrder()) {
+                                    if (destination != null
+                                            && legalRetentionDestination
+                                                .accepts(
+                                                    gameState,
+                                                    game.getModifiersQuerying(),
+                                                    destination)
+                                            && gateAnalyzer
+                                                .preservesRequiredCardCancelPreventionAt(
+                                                    game, playerId,
+                                                    cardToMove,
+                                                    destination)
+                                            && com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .FormationSafety
+                                                .vetoMoveDestination(
+                                                    game, gameState,
+                                                    playerId, cardToMove,
+                                                    destination) == null
+                                            && com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .FormationSafety
+                                                .vetoMoveOrigin(
+                                                    game, gameState,
+                                                    playerId, cardToMove,
+                                                    currentLocation) == null) {
+                                        safeRetentionRelocation = true;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                PhysicalCard explicitDestination =
+                                    MoveDestinationPolicy
+                                        .resolveDestination(
+                                            gameState,
+                                            currentLocation,
+                                            actionLower);
+                                safeRetentionRelocation =
+                                    explicitDestination != null
+                                    && gateAnalyzer
+                                        .preservesRequiredCardCancelPreventionAt(
+                                            game, playerId,
+                                            cardToMove,
+                                            explicitDestination)
+                                    && com.gempukku.swccgo.ai.models
+                                        .common.strategy
+                                        .FormationSafety
+                                        .vetoMoveDestination(
+                                            game, gameState, playerId,
+                                            cardToMove,
+                                            explicitDestination) == null
+                                    && com.gempukku.swccgo.ai.models
+                                        .common.strategy
+                                        .FormationSafety
+                                        .vetoMoveOrigin(
+                                            game, gameState, playerId,
+                                            cardToMove,
+                                            currentLocation) == null;
+                            }
+                        }
+                        MoveObjectiveGateHoldPolicy.Evaluation
+                                retentionHold =
+                                MoveObjectiveGateHoldPolicy
+                                    .evaluateRequiredCardRetentionDefender(
+                                        hardLossRole,
+                                        retentionFriendlyPower,
+                                        retentionOpponentPower,
+                                        safeRetentionRelocation);
+                        if (retentionHold.hardVeto()) {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason =
+                                    retentionHold.reason();
+                            logger.warn("OBJECTIVE REQUIRED-CARD RETENTION HOLD: {} at {} vetoed ({}, power={}/{})",
+                                cardToMove.getTitle(),
+                                currentLocation.getTitle(),
+                                retentionHold.branch(),
+                                (int) retentionFriendlyPower,
+                                (int) retentionOpponentPower);
                         }
                     } catch (Exception e) {
                         logger.debug("V297 objective gate hold failed open: {}",

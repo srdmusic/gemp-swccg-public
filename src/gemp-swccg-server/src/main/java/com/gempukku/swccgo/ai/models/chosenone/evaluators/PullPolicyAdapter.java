@@ -157,6 +157,15 @@ final class PullPolicyAdapter {
                 return objective.isStrategyKeyCharacter(
                         game, playerId, candidate);
             }
+
+            @Override
+            public boolean objectivePullAdvancesRequiredOnTableCard(
+                    SwccgGame game, String playerId,
+                    String sourceTitle) {
+                return objective
+                        .objectivePullAdvancesRequiredOnTableCard(
+                                game, playerId, sourceTitle);
+            }
         };
     }
 

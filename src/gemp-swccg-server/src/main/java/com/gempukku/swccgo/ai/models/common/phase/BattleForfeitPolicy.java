@@ -109,6 +109,8 @@ public final class BattleForfeitPolicy {
             return result(operations);
         }
 
+        String ruleId =
+                "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD";
         String reason;
         switch (role) {
             case LAST_REQUIRED_ACTOR:
@@ -123,11 +125,21 @@ public final class BattleForfeitPolicy {
             case LAST_FLIP_BACK_BLOCKER:
                 reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the sole flip-back blocker while another legal loss exists";
                 break;
+            case REQUIRED_CARD_RETENTION_DEFENDER:
+                ruleId =
+                        "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD";
+                reason = "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD: preserve the sole defender preventing an active required card from removing itself while another legal loss exists";
+                break;
+            case HARD_LOSS_LOCATION_DEFENDER:
+                ruleId =
+                        "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD";
+                reason = "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD: preserve the sole defender of a terminal-loss location while another legal loss exists";
+                break;
             default:
                 return result(operations);
         }
         add(operations, actionId,
-                "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
+                ruleId,
                 TraceOutputKind.VETO, -9999.0f, reason);
         return result(operations);
     }

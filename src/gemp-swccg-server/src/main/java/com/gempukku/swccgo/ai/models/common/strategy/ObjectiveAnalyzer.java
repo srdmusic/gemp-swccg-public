@@ -83,6 +83,14 @@ public class ObjectiveAnalyzer {
     // Null unless a loaderEnabled profile carried rules (none do yet → behavior-neutral).
     private List<FlipLocationRule> activeFlipLocationRules = null;
     private List<ActorLocationRule> activeActorLocationRules = null;
+    private List<RequiredCardDeployRule>
+            activeRequiredCardDeployRules = null;
+    private List<RequiredCardRetentionRule>
+            activeRequiredCardRetentionRules = null;
+    private List<RequiredCardInactivationRule>
+            activeRequiredCardInactivationRules = null;
+    private List<HardLossLocationRule>
+            activeHardLossLocationRules = null;
     // V22.2: Back side / flip-back protection
     private final Set<String> flipBackLocations = new HashSet<>();
     private final Set<String> flipBackLocationFragments = new HashSet<>();
@@ -200,6 +208,8 @@ public class ObjectiveAnalyzer {
         LAST_REQUIRED_BUDDY,
         LAST_REQUIRED_ON_TABLE_ACTOR,
         LAST_FLIP_BACK_BLOCKER,
+        REQUIRED_CARD_RETENTION_DEFENDER,
+        HARD_LOSS_LOCATION_DEFENDER,
         NONE
     }
 
@@ -207,6 +217,9 @@ public class ObjectiveAnalyzer {
     public enum ObjectiveProgressCandidateRole {
         REQUIRED_LOCATION,
         REQUIRED_ACTOR,
+        REQUIRED_ON_TABLE_CARD,
+        REQUIRED_CARD_DEPLOY_ENABLER_LOCATION,
+        REQUIRED_CARD_DEPLOY_ENABLER_ACTOR,
         NONE
     }
 
@@ -232,6 +245,28 @@ public class ObjectiveAnalyzer {
             return new PostFlipLocationRisk(
                     false, false, false, false,
                     false, false, 0, 0, 0);
+        }
+    }
+
+    /** Current removal risk for one active required objective card. */
+    public record RequiredCardRetentionRisk(
+            boolean applies,
+            boolean inScope,
+            boolean removalNow,
+            boolean opponentControlsHere,
+            boolean criticalIfOpponentGainsControl,
+            int opponentControlCount,
+            int adverseStepsRemaining) {
+        public boolean requiresProtection() {
+            return applies && inScope
+                    && (opponentControlsHere
+                        || criticalIfOpponentGainsControl);
+        }
+
+        private static RequiredCardRetentionRisk none() {
+            return new RequiredCardRetentionRisk(
+                    false, false, false, false,
+                    false, 0, 0);
         }
     }
 
@@ -464,6 +499,24 @@ public class ObjectiveAnalyzer {
                             game, playerId, controller, alternative);
                     if (qualified >= required) continue;
 
+                    if ("onTable".equals(alternative.relation)) {
+                        com.gempukku.swccgo.filters.Filter onTableFilter =
+                                resolveFilter(alternative.actorFilterKey);
+                        if (onTableFilter != null
+                                && playerId.equals(candidate.getOwner())
+                                && onTableFilter.accepts(
+                                        gameState,
+                                        game.getModifiersQuerying(),
+                                        candidate)
+                                && !hasOtherReadyOnTableRequirementInHand(
+                                        game, playerId, candidate,
+                                        onTableFilter)) {
+                            return ObjectiveProgressCandidateRole
+                                    .REQUIRED_ON_TABLE_CARD;
+                        }
+                        continue;
+                    }
+
                     com.gempukku.swccgo.filters.Filter locationFilter =
                             resolveLocationFilter(
                                     alternative.locationFilterKey, playerId);
@@ -514,11 +567,1055 @@ public class ObjectiveAnalyzer {
                     }
                 }
             }
+            ObjectiveProgressCandidateRole deployEnablerRole =
+                    classifyRequiredCardDeployEnablerCandidate(
+                            game, playerId, candidate);
+            if (deployEnablerRole
+                    != ObjectiveProgressCandidateRole.NONE) {
+                return deployEnablerRole;
+            }
         } catch (Exception e) {
             LOG.debug("Objective progress candidate assessment failed: {}",
                     e.getMessage());
         }
         return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    private ObjectiveProgressCandidateRole
+            classifyRequiredCardDeployEnablerCandidate(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (activeRequiredCardDeployRules == null
+                || candidate == null) {
+            return ObjectiveProgressCandidateRole.NONE;
+        }
+        GameState gameState = game.getGameState();
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            FlipLocationAlternative prerequisite =
+                    rule != null ? rule.prerequisite : null;
+            if (!isRequiredCardDeployRuleActive(
+                        game, playerId, rule)
+                    || prerequisite == null
+                    || prerequisite.count == null
+                    || prerequisite.count.value == null
+                    || prerequisite.count.value <= 0
+                    || isFlipLocationAlternativeSatisfied(
+                        game, playerId, prerequisite)
+                    || isUpperBound(prerequisite.count)) {
+                continue;
+            }
+            int required = expectedCount(
+                    game, playerId, prerequisite.count);
+            com.gempukku.swccgo.filters.Filter locationFilter =
+                    resolveLocationFilter(
+                            prerequisite.locationFilterKey,
+                            playerId);
+            if (locationFilter != null
+                    && locationFilter.accepts(
+                        gameState, game.getModifiersQuerying(),
+                        candidate)
+                    && countMatchingLocations(
+                        game, playerId, prerequisite) < required) {
+                return ObjectiveProgressCandidateRole
+                        .REQUIRED_CARD_DEPLOY_ENABLER_LOCATION;
+            }
+
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(prerequisite.actorFilterKey);
+            if (actorFilter == null
+                    || !playerId.equals(candidate.getOwner())) {
+                continue;
+            }
+            boolean directActor = actorFilter.accepts(
+                    gameState, game.getModifiersQuerying(),
+                    candidate);
+            if (directActor) {
+                List<PhysicalCard> locations =
+                        gameState.getLocationsInOrder();
+                if (locations == null) continue;
+                for (PhysicalCard location : locations) {
+                    if (advancesAlternativeAt(
+                            game, playerId, candidate, location,
+                            prerequisite)) {
+                        return ObjectiveProgressCandidateRole
+                                .REQUIRED_CARD_DEPLOY_ENABLER_ACTOR;
+                    }
+                }
+            }
+            if (matchesProspectiveActorPairComponent(
+                        game, playerId, candidate,
+                        prerequisite)
+                    && hasOpenRequiredCardDeployActorLocation(
+                        game, playerId, candidate,
+                        prerequisite)) {
+                    return ObjectiveProgressCandidateRole
+                            .REQUIRED_CARD_DEPLOY_ENABLER_ACTOR;
+            }
+        }
+        return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    public boolean advancesRequiredCardDeployPrerequisiteAt(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!analyzed || isFlipped || game == null
+                || playerId == null || candidate == null
+                || destination == null
+                || activeRequiredCardDeployRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            FlipLocationAlternative prerequisite =
+                    rule != null ? rule.prerequisite : null;
+            if (isRequiredCardDeployRuleActive(
+                        game, playerId, rule)
+                    && prerequisite != null
+                    && prerequisite.actorFilterKey != null
+                    && !isUpperBound(prerequisite.count)
+                    && !isFlipLocationAlternativeSatisfied(
+                        game, playerId, prerequisite)
+                    && (advancesAlternativeAt(
+                            game, playerId, candidate, destination,
+                            prerequisite)
+                        || advancesProspectiveActorPairAt(
+                            game, playerId, candidate, destination,
+                            prerequisite))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean advancesRequiredCardDeployPrerequisiteByMovingTo(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!analyzed || isFlipped || game == null
+                || playerId == null || candidate == null
+                || destination == null
+                || activeRequiredCardDeployRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                        game.getGameState(), candidate);
+        if (origin == null
+                || samePhysicalLocation(origin, destination)) {
+            return false;
+        }
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            FlipLocationAlternative prerequisite =
+                    rule != null ? rule.prerequisite : null;
+            if (!isRequiredCardDeployRuleActive(
+                        game, playerId, rule)
+                    || prerequisite == null
+                    || prerequisite.actorFilterKey == null
+                    || prerequisite.count == null
+                    || prerequisite.count.value == null
+                    || prerequisite.count.value <= 0
+                    || isUpperBound(prerequisite.count)
+                    || isFlipLocationAlternativeSatisfied(
+                        game, playerId, prerequisite)
+                    || (!advancesAlternativeAt(
+                            game, playerId, candidate,
+                            destination, prerequisite)
+                        && !advancesProspectiveActorPairAt(
+                            game, playerId, candidate,
+                            destination, prerequisite))) {
+                continue;
+            }
+
+            boolean originQualified =
+                    locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        origin, prerequisite)
+                    && relationSatisfiedAt(
+                        game, playerId, playerId, origin,
+                        prerequisite.relation,
+                        prerequisite.actorFilterKey,
+                        prerequisite.includeExcludedFromBattle);
+            if (!originQualified) return true;
+
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(prerequisite.actorFilterKey);
+            PhysicalCard pairedActorLost =
+                    prospectivePairActorLostWithPilot(
+                        game, playerId, candidate,
+                        prerequisite, actorFilter);
+            boolean removesRequiredActor =
+                    removedGroupContainsMatchingActor(
+                        game, playerId, origin,
+                        prerequisite, candidate,
+                        pairedActorLost, actorFilter)
+                    && !hasOtherMatchingActorOutsideRemovedGroup(
+                        game, playerId, origin,
+                        prerequisite, candidate,
+                        pairedActorLost);
+            boolean removesSolePresence =
+                    isSolePresenceSourceAtLocation(
+                        game, playerId, candidate, origin);
+            if (!removesRequiredActor
+                    && !removesSolePresence) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean
+            preservesRequiredCardDeployPrerequisiteByMovingTo(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate,
+                    PhysicalCard destination) {
+        if (!analyzed || isFlipped || game == null
+                || playerId == null || candidate == null
+                || destination == null
+                || activeRequiredCardDeployRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                        game.getGameState(), candidate);
+        if (origin == null
+                || samePhysicalLocation(origin, destination)) {
+            return false;
+        }
+
+        boolean criticalPrerequisiteSeen = false;
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            FlipLocationAlternative prerequisite =
+                    rule != null ? rule.prerequisite : null;
+            if (!isRequiredCardDeployRuleActive(
+                        game, playerId, rule)
+                    || prerequisite == null
+                    || prerequisite.actorFilterKey == null
+                    || prerequisite.count == null
+                    || prerequisite.count.value == null
+                    || prerequisite.count.value <= 0
+                    || isUpperBound(prerequisite.count)
+                    || !locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        origin, prerequisite)
+                    || !relationSatisfiedAt(
+                        game, playerId, playerId, origin,
+                        prerequisite.relation,
+                        prerequisite.actorFilterKey,
+                        prerequisite.includeExcludedFromBattle)) {
+                continue;
+            }
+
+            int required = expectedCount(
+                    game, playerId, prerequisite.count);
+            int qualified = countAlternativeMatches(
+                    game, playerId, playerId, prerequisite);
+            if (qualified > required) {
+                continue;
+            }
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(prerequisite.actorFilterKey);
+            PhysicalCard dependentActor =
+                    prospectivePairActorLostWithPilot(
+                        game, playerId, candidate,
+                        prerequisite, actorFilter);
+            boolean removesRequiredActor =
+                    removedGroupContainsMatchingActor(
+                        game, playerId, origin,
+                        prerequisite, candidate,
+                        dependentActor, actorFilter)
+                    && !hasOtherMatchingActorOutsideRemovedGroup(
+                        game, playerId, origin,
+                        prerequisite, candidate,
+                        dependentActor);
+            boolean removesSolePresence =
+                    isSolePresenceSourceAtLocation(
+                        game, playerId, candidate, origin);
+            if (!removesRequiredActor
+                    && !removesSolePresence) {
+                continue;
+            }
+
+            criticalPrerequisiteSeen = true;
+            if (relationSatisfiedAt(
+                        game, playerId, playerId,
+                        destination, prerequisite.relation,
+                        prerequisite.actorFilterKey,
+                        prerequisite.includeExcludedFromBattle)
+                    || !movedGroupCanSatisfyAlternativeAt(
+                        game, playerId, candidate,
+                        destination, prerequisite,
+                        actorFilter)) {
+                return false;
+            }
+        }
+        return criticalPrerequisiteSeen;
+    }
+
+    public boolean
+            hasSafeRequiredCardDeployActorLandspeedDestination(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (game == null || playerId == null
+                || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                        game.getGameState(), candidate);
+        if (origin == null) return false;
+        try {
+            com.gempukku.swccgo.filters.Filter legalTarget =
+                    Filters.canMoveToUsingLandspeed(
+                        playerId, candidate,
+                        false, false, false,
+                        0.0f, null);
+            for (PhysicalCard destination
+                    : game.getGameState()
+                        .getLocationsInOrder()) {
+                if (destination != null
+                        && legalTarget.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            destination)
+                        && preservesRequiredCardDeployPrerequisiteByMovingTo(
+                            game, playerId, candidate,
+                            destination)
+                        && FormationSafety
+                            .vetoMoveDestination(
+                                game, game.getGameState(),
+                                playerId, candidate,
+                                destination) == null
+                        && FormationSafety
+                            .vetoMoveOrigin(
+                                game, game.getGameState(),
+                                playerId, candidate,
+                                origin) == null) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card actor relocation assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean movedGroupCanSatisfyAlternativeAt(
+            SwccgGame game, String playerId,
+            PhysicalCard movedRoot,
+            PhysicalCard destination,
+            FlipLocationAlternative alternative,
+            com.gempukku.swccgo.filters.Filter actorFilter) {
+        if (actorFilter == null
+                || !locationMatchesAlternative(
+                    game.getGameState(), game, playerId,
+                    destination, alternative)) {
+            return false;
+        }
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        boolean hasActor = false;
+        boolean providesPresence = false;
+        com.gempukku.swccgo.filters.Filter presenceSource =
+                Filters.or(
+                    Filters.hasAbilityOrHasPermanentPilotWithAbility,
+                    com.gempukku.swccgo.common.Icon.PRESENCE);
+        for (PhysicalCard card : cards) {
+            if (!belongsToRemovedGroup(
+                        card, movedRoot, null)
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(
+                        game, card,
+                        alternative.includeExcludedFromBattle)) {
+                continue;
+            }
+            hasActor |= actorFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), card);
+            SwccgCardBlueprint blueprint =
+                    card.getBlueprint();
+            boolean cardProvidesPresence =
+                    blueprint != null
+                    && blueprint.hasAbilityAttribute()
+                    && blueprint.getAbility() != null
+                    && blueprint.getAbility() >= 1.0f;
+            if (!cardProvidesPresence) {
+                cardProvidesPresence =
+                        presenceSource.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            card);
+            }
+            if (!cardProvidesPresence
+                    && Filters.piloted.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        card)) {
+                cardProvidesPresence =
+                        game.getModifiersQuerying()
+                            .getHighestAbilityPiloting(
+                                game.getGameState(),
+                                card, false, false)
+                            >= 1.0f;
+            }
+            providesPresence |=
+                    cardProvidesPresence;
+        }
+        if (!hasActor) return false;
+        if (isActorAtRelation(alternative)) return true;
+
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean>
+                overrides = Boolean.TRUE.equals(
+                    alternative.includeExcludedFromBattle)
+                        ? SpotOverride
+                            .INCLUDE_EXCLUDED_FROM_BATTLE
+                        : null;
+        if ("controlWith".equals(alternative.relation)) {
+            if (game.getModifiersQuerying()
+                    .controlsLocation(
+                        game.getGameState(), destination,
+                        playerId, overrides)) {
+                return true;
+            }
+            String opponent =
+                    game.getGameState()
+                        .getOpponent(playerId);
+            return providesPresence
+                    && (opponent == null
+                        || !game.getModifiersQuerying()
+                            .occupiesLocation(
+                                game.getGameState(),
+                                destination, opponent,
+                                overrides));
+        }
+        if ("occupyWith".equals(alternative.relation)) {
+            return providesPresence
+                    || game.getModifiersQuerying()
+                        .occupiesLocation(
+                            game.getGameState(),
+                            destination, playerId,
+                            overrides);
+        }
+        return false;
+    }
+
+    private boolean hasOpenRequiredCardDeployActorLocation(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            FlipLocationAlternative prerequisite) {
+        ProspectiveActorPair pair =
+                prerequisite != null
+                        ? prerequisite.prospectiveActorPair : null;
+        if (pair == null || candidate == null) return false;
+        com.gempukku.swccgo.filters.Filter hostFilter =
+                resolveFilter(pair.hostFilterKey);
+        com.gempukku.swccgo.filters.Filter pilotFilter =
+                resolveFilter(pair.pilotFilterKey);
+        if (hostFilter == null || pilotFilter == null) return false;
+
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return false;
+        if (hostFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            for (PhysicalCard location : locations) {
+                if (canProspectivePairAdvanceAtTarget(
+                            game, playerId, location,
+                            prerequisite)
+                        && hasUsablePilotForProspectiveHostAt(
+                            game, playerId, candidate,
+                            pilotFilter, location)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (!pilotFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        if (hand != null) {
+            for (PhysicalCard host : hand) {
+                if (!isUsableProspectivePairCounterpart(
+                            game, playerId, candidate, host,
+                            hostFilter, true, false)) {
+                    continue;
+                }
+                for (PhysicalCard location : locations) {
+                    if (canProspectivePairAdvanceAtTarget(
+                                game, playerId, location,
+                                prerequisite)
+                            && isProspectivePairRouteLegalAt(
+                                game, playerId, host,
+                                candidate, location)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard host : permanents) {
+            if (!isUsableProspectivePairCounterpart(
+                        game, playerId, candidate, host,
+                        hostFilter, true, true)) {
+                continue;
+            }
+            PhysicalCard location =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), host);
+            if (canProspectivePairAdvanceAtTarget(
+                        game, playerId, location,
+                        prerequisite)
+                    && isProspectivePairRouteLegalAt(
+                        game, playerId, host,
+                        candidate, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesProspectiveActorPairComponent(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            FlipLocationAlternative prerequisite) {
+        ProspectiveActorPair pair =
+                prerequisite != null
+                        ? prerequisite.prospectiveActorPair : null;
+        if (pair == null || pair.hostFilterKey == null
+                || pair.pilotFilterKey == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter hostFilter =
+                resolveFilter(pair.hostFilterKey);
+        com.gempukku.swccgo.filters.Filter pilotFilter =
+                resolveFilter(pair.pilotFilterKey);
+        if (hostFilter == null || pilotFilter == null) return false;
+        boolean candidateIsHost = hostFilter.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), candidate);
+        boolean candidateIsPilot = pilotFilter.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), candidate);
+        return candidateIsHost
+                && hasAccessibleProspectivePairCounterpart(
+                    game, playerId, candidate,
+                    pilotFilter, false)
+                || candidateIsPilot
+                && hasAccessibleProspectivePairCounterpart(
+                    game, playerId, candidate,
+                    hostFilter, true);
+    }
+
+    private boolean hasAccessibleProspectivePairCounterpart(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            com.gempukku.swccgo.filters.Filter counterpartFilter,
+            boolean requireUnpiloted) {
+        GameState gameState = game.getGameState();
+        List<PhysicalCard> hand = gameState.getHand(playerId);
+        if (hand != null) {
+            for (PhysicalCard card : hand) {
+                if (isUsableProspectivePairCounterpart(
+                        game, playerId, candidate, card,
+                        counterpartFilter, requireUnpiloted,
+                        false)) {
+                    return true;
+                }
+            }
+        }
+        Collection<PhysicalCard> permanents =
+                gameState.getAllPermanentCards();
+        if (permanents != null) {
+            for (PhysicalCard card : permanents) {
+                if (isUsableProspectivePairCounterpart(
+                        game, playerId, candidate, card,
+                        counterpartFilter, requireUnpiloted,
+                        true)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isUsableProspectivePairCounterpart(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard counterpart,
+            com.gempukku.swccgo.filters.Filter counterpartFilter,
+            boolean requireUnpiloted, boolean requireActive) {
+        if (counterpart == null || counterpart == candidate
+                || !playerId.equals(counterpart.getOwner())
+                || !counterpartFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), counterpart)
+                || requireActive
+                    && !isActiveForSpot(
+                        game, counterpart, false)
+                || requireUnpiloted
+                    && Filters.piloted.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), counterpart)
+                || requireActive && !requireUnpiloted
+                    && counterpart.getAttachedTo() != null) {
+            return false;
+        }
+        PhysicalCard host = requireUnpiloted
+                ? counterpart : candidate;
+        PhysicalCard pilot = requireUnpiloted
+                ? candidate : counterpart;
+        return isLegalProspectivePilotForHost(
+                game, playerId, host, pilot);
+    }
+
+    private boolean isLegalProspectivePilotForHost(
+            SwccgGame game, String playerId,
+            PhysicalCard host, PhysicalCard pilot) {
+        if (game == null || playerId == null
+                || host == null || pilot == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(host.getOwner())
+                || !playerId.equals(pilot.getOwner())
+                || host.getBlueprint() == null
+                || pilot.getBlueprint() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            boolean hostInPlay = host.getZone() != null
+                    && host.getZone().isInPlay();
+            boolean pilotInPlay = pilot.getZone() != null
+                    && pilot.getZone().isInPlay();
+            if (hostInPlay
+                    && (!isActiveForSpot(game, host, false)
+                        || host.getAttachedTo() != null)) {
+                return false;
+            }
+            boolean forDeployment = !pilotInPlay;
+            return host.getBlueprint()
+                        .getValidPilotFilter(
+                                playerId, game, host,
+                                forDeployment)
+                        .accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                pilot)
+                    && Filters.hasAvailablePilotCapacity(pilot)
+                        .accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                host);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Prospective pilot-host legality unavailable: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean isProspectivePairRouteLegalAt(
+            SwccgGame game, String playerId,
+            PhysicalCard host, PhysicalCard pilot,
+            PhysicalCard targetLocation) {
+        if (!isLegalProspectivePilotForHost(
+                    game, playerId, host, pilot)
+                || targetLocation == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            boolean hostInPlay = host.getZone() != null
+                    && host.getZone().isInPlay();
+            boolean pilotInPlay = pilot.getZone() != null
+                    && pilot.getZone().isInPlay();
+            if (hostInPlay) {
+                PhysicalCard hostLocation =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                    gameState, host);
+                if (!samePhysicalLocation(
+                            hostLocation, targetLocation)) {
+                    return false;
+                }
+            }
+            if (pilotInPlay) {
+                PhysicalCard pilotLocation =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                    gameState, pilot);
+                if (!samePhysicalLocation(
+                            pilotLocation, targetLocation)) {
+                    return false;
+                }
+            }
+            // These are route-shape probes. Free-cost mode deliberately
+            // removes current Force affordability so the budget calculation
+            // can reserve toward a legal route that is not affordable yet.
+            if (!hostInPlay) {
+                if (pilotInPlay) {
+                    return Filters.deployableToLocation(
+                                host,
+                                Filters.sameCardId(targetLocation),
+                                true, 0.0f)
+                            .accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                host);
+                }
+                return Filters
+                        .deployableToLocationSimultaneouslyWith(
+                            host, pilot, true, 0.0f,
+                            Filters.sameCardId(targetLocation),
+                            true, 0.0f)
+                        .accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            host);
+            }
+            if (!pilotInPlay) {
+                return Filters.deployableToTarget(
+                            pilot, Filters.sameCardId(host),
+                            true, 0.0f)
+                        .accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            pilot);
+            }
+            return Filters.canEmbarkTo(
+                        playerId, pilot, true, 0.0f)
+                    .accepts(
+                        gameState,
+                        game.getModifiersQuerying(),
+                        host);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Prospective pilot-host route unavailable: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean hasUsablePilotForProspectiveHostAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            com.gempukku.swccgo.filters.Filter pilotFilter,
+            PhysicalCard targetLocation) {
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        if (hand != null) {
+            for (PhysicalCard card : hand) {
+                if (isUsableProspectivePairCounterpart(
+                        game, playerId, candidate, card,
+                        pilotFilter, false, false)
+                        && isProspectivePairRouteLegalAt(
+                            game, playerId, candidate,
+                            card, targetLocation)) {
+                    return true;
+                }
+            }
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (!isUsableProspectivePairCounterpart(
+                        game, playerId, candidate, card,
+                        pilotFilter, false, true)) {
+                continue;
+            }
+            if (isProspectivePairRouteLegalAt(
+                        game, playerId, candidate,
+                        card, targetLocation)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean advancesProspectiveActorPairAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination,
+            FlipLocationAlternative prerequisite) {
+        ProspectiveActorPair pair =
+                prerequisite != null
+                        ? prerequisite.prospectiveActorPair : null;
+        if (pair == null || candidate == null || destination == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter hostFilter =
+                resolveFilter(pair.hostFilterKey);
+        com.gempukku.swccgo.filters.Filter pilotFilter =
+                resolveFilter(pair.pilotFilterKey);
+        if (hostFilter == null || pilotFilter == null) return false;
+        GameState gameState = game.getGameState();
+        PhysicalCard targetLocation;
+        if (hostFilter.accepts(
+                    gameState, game.getModifiersQuerying(),
+                    candidate)) {
+            targetLocation = destination;
+            if (!hasUsablePilotForProspectiveHostAt(
+                        game, playerId, candidate,
+                        pilotFilter, targetLocation)) {
+                return false;
+            }
+        } else if (pilotFilter.accepts(
+                    gameState, game.getModifiersQuerying(),
+                    candidate)
+                && playerId.equals(destination.getOwner())
+                && hostFilter.accepts(
+                    gameState, game.getModifiersQuerying(),
+                    destination)
+                && !Filters.piloted.accepts(
+                    gameState, game.getModifiersQuerying(),
+                    destination)
+                && isLegalProspectivePilotForHost(
+                    game, playerId, destination, candidate)) {
+            targetLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                            gameState, destination);
+            if (!isProspectivePairRouteLegalAt(
+                        game, playerId, destination,
+                        candidate, targetLocation)) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        return canProspectivePairAdvanceAtTarget(
+                game, playerId, targetLocation, prerequisite);
+    }
+
+    private boolean canProspectivePairAdvanceAtTarget(
+            SwccgGame game, String playerId,
+            PhysicalCard targetLocation,
+            FlipLocationAlternative prerequisite) {
+        if (game == null || targetLocation == null
+                || prerequisite == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        GameState gameState = game.getGameState();
+        if (!locationMatchesAlternative(
+                    gameState, game, playerId,
+                    targetLocation, prerequisite)
+                || relationSatisfiedAt(
+                    game, playerId, playerId,
+                    targetLocation, prerequisite.relation,
+                    prerequisite.actorFilterKey,
+                    prerequisite.includeExcludedFromBattle)) {
+            return false;
+        }
+        if ("controlWith".equals(
+                    prerequisite.relation)) {
+            Map<com.gempukku.swccgo.common.InactiveReason, Boolean>
+                    overrides = Boolean.TRUE.equals(
+                        prerequisite.includeExcludedFromBattle)
+                            ? SpotOverride
+                                .INCLUDE_EXCLUDED_FROM_BATTLE
+                            : null;
+            String opponent =
+                    gameState.getOpponent(playerId);
+            if (opponent != null
+                    && !game.getModifiersQuerying()
+                        .controlsLocation(
+                            gameState, targetLocation,
+                            playerId, overrides)
+                    && game.getModifiersQuerying()
+                        .occupiesLocation(
+                            gameState, targetLocation,
+                            opponent, overrides)) {
+                return false;
+            }
+        }
+        int required = expectedCount(
+                game, playerId, prerequisite.count);
+        int qualified = countAlternativeMatches(
+                game, playerId, playerId, prerequisite);
+        return qualified < required;
+    }
+
+    public boolean isMissingRequiredCardDeployEnablerAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null
+                || playerId == null || location == null
+                || activeRequiredCardDeployRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            FlipLocationAlternative prerequisite =
+                    rule != null ? rule.prerequisite : null;
+            if (!isRequiredCardDeployRuleActive(
+                        game, playerId, rule)
+                    || prerequisite == null
+                    || isFlipLocationAlternativeSatisfied(
+                        game, playerId, prerequisite)
+                    || !locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, prerequisite)) {
+                continue;
+            }
+            if (("controlWith".equals(
+                        prerequisite.relation)
+                    || "occupyWith".equals(
+                        prerequisite.relation))
+                    && !hasMatchingActorAtLocation(
+                        game, playerId, location,
+                        prerequisite.actorFilterKey,
+                        prerequisite.includeExcludedFromBattle,
+                        true)) {
+                continue;
+            }
+            String controller = resolveController(
+                    game.getGameState(), playerId,
+                    prerequisite.controller);
+            boolean relationHere = relationSatisfiedAt(
+                    game, playerId, controller, location,
+                    prerequisite.relation,
+                    prerequisite.actorFilterKey,
+                    prerequisite.includeExcludedFromBattle);
+            if (isUpperBound(prerequisite.count)
+                    ? relationHere : !relationHere) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasActiveRequiredCardDeployActorRule(
+            SwccgGame game, String playerId) {
+        if (!analyzed || isFlipped
+                || activeRequiredCardDeployRules == null) {
+            return false;
+        }
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            if (rule != null && rule.prerequisite != null
+                    && rule.prerequisite.actorFilterKey != null
+                    && isRequiredCardDeployRuleActive(
+                        game, playerId, rule)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isRequiredCardDeployRuleActive(
+            SwccgGame game, String playerId,
+            RequiredCardDeployRule rule) {
+        if (rule == null || rule.requiredCardFilterKey == null
+                || rule.blueprintIds == null
+                || rule.blueprintIds.isEmpty()
+                || game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter cardFilter =
+                resolveFilter(rule.requiredCardFilterKey);
+        if (cardFilter == null) return false;
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents != null) {
+            for (PhysicalCard card : permanents) {
+                if (card != null
+                        && isActiveForSpot(game, card, true)
+                        && cardFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                    return false;
+                }
+            }
+        }
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        List<PhysicalCard> reserve =
+                game.getGameState().getReserveDeck(playerId);
+        boolean readyInHand = containsReadyRequiredCard(
+                game, playerId, hand, cardFilter);
+        boolean readyInReserve = containsReadyRequiredCard(
+                game, playerId, reserve, cardFilter);
+        boolean matchingInHand = containsRequiredCard(
+                game, playerId, hand, cardFilter);
+        List<PhysicalCard> preferredCards = readyInHand
+                ? hand
+                : readyInReserve ? reserve
+                : matchingInHand ? hand : reserve;
+        boolean requireReady = readyInHand || readyInReserve;
+        if (preferredCards == null) return false;
+        for (PhysicalCard card : preferredCards) {
+            if (card != null
+                    && playerId.equals(card.getOwner())
+                    && rule.blueprintIds.contains(
+                        card.getBlueprintId(true))
+                    && (!requireReady
+                        || isRequiredOnTableCardPullRouteReady(
+                            game, playerId, card))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containsRequiredCard(
+            SwccgGame game, String playerId,
+            List<PhysicalCard> cards,
+            com.gempukku.swccgo.filters.Filter cardFilter) {
+        if (cards == null || cardFilter == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && cardFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containsReadyRequiredCard(
+            SwccgGame game, String playerId,
+            List<PhysicalCard> cards,
+            com.gempukku.swccgo.filters.Filter cardFilter) {
+        if (cards == null || cardFilter == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && cardFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)
+                    && isRequiredOnTableCardPullRouteReady(
+                        game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1428,6 +2525,28 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
+    private boolean hasOtherReadyOnTableRequirementInHand(
+            SwccgGame game,
+            String playerId,
+            PhysicalCard candidate,
+            com.gempukku.swccgo.filters.Filter actorFilter) {
+        GameState gameState = game.getGameState();
+        if (gameState == null || actorFilter == null) return false;
+        List<PhysicalCard> hand = gameState.getHand(playerId);
+        if (hand == null) return false;
+        for (PhysicalCard card : hand) {
+            if (card != null && card != candidate
+                    && playerId.equals(card.getOwner())
+                    && actorFilter.accepts(
+                        gameState, game.getModifiersQuerying(), card)
+                    && isRequiredOnTableCardPullRouteReady(
+                        game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean hasOtherMatchingActorOnTable(
             SwccgGame game,
             String playerId,
@@ -2079,6 +3198,17 @@ public class ObjectiveAnalyzer {
     public boolean isFlipBackProtectionLocation(
             PhysicalCard location, SwccgGame game, String playerId) {
         if (!analyzed || location == null) return false;
+        if (isRequiredCardCancelPreventerDefenseLocation(
+                game, playerId, location)) {
+            return true;
+        }
+        RequiredCardRetentionRisk retentionRisk =
+                assessRequiredCardRetentionRisk(
+                        game, playerId, location);
+        if (retentionRisk.applies()
+                && retentionRisk.inScope()) {
+            return retentionRisk.requiresProtection();
+        }
         if (hasStructuredFlipBackLocationRules()) {
             PostFlipLocationRisk risk = assessPostFlipLocationRisk(
                     game, playerId, location);
@@ -2602,6 +3732,15 @@ public class ObjectiveAnalyzer {
                             game.getGameState(),
                             game.getModifiersQuerying(), candidate);
         }
+        if (!providesPresence
+                && Filters.piloted.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            providesPresence = game.getModifiersQuerying()
+                    .getHighestAbilityPiloting(
+                        game.getGameState(), candidate,
+                        false, false) >= 1.0f;
+        }
         if (!providesPresence) return false;
 
         if ("controlWith".equals(alternative.relation)) {
@@ -2660,7 +3799,7 @@ public class ObjectiveAnalyzer {
                             gameState, location, controller, overrides);
             return relationSatisfied && hasMatchingActorAtLocation(
                     game, controller, location, actorFilterKey,
-                    includeExcludedFromBattle);
+                    includeExcludedFromBattle, true);
         }
         if ("presentAt".equals(relation)) {
             return hasMatchingActorAtLocation(
@@ -2813,8 +3952,13 @@ public class ObjectiveAnalyzer {
                 || game.getModifiersQuerying() == null) {
             return null;
         }
-        return alternative != null
-                && "at".equals(alternative.relation)
+        boolean rulesAt = alternative != null
+                && ("at".equals(alternative.relation)
+                    || "controlWith".equals(
+                        alternative.relation)
+                    || "occupyWith".equals(
+                        alternative.relation));
+        return rulesAt
                 ? game.getModifiersQuerying()
                     .getLocationThatCardIsAt(
                             game.getGameState(), actor)
@@ -2993,6 +4137,1423 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
+    /**
+     * Source-accurate active spotting for one named required card.
+     * Endor Operations includes cards excluded from battle, but not suspended
+     * or otherwise inactive cards.
+     */
+    public boolean isRequiredCardActiveOnTable(
+            SwccgGame game, String cardTitle) {
+        if (!analyzed || game == null || cardTitle == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !isRequiredCardForFlip(cardTitle)) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card != null && titleMatchesRequired(
+                        card.getTitle(), cardTitle)
+                    && isActiveForSpot(game, card, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Protects one still-needed physical copy of a required on-table card
+     * during Force loss. Ready hand and Reserve routes dominate blocked
+     * printings; an active table copy closes protection for all duplicates.
+     */
+    public boolean isPreferredRequiredCardForceLossCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!analyzed || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null) {
+            return false;
+        }
+        GameState gameState = game.getGameState();
+        String requirement =
+                matchingRequiredTitle(candidate.getTitle());
+        if (requirement == null
+                || isRequiredCardActiveOnTable(
+                    game, requirement)) {
+            return false;
+        }
+        PhysicalCard preferred = null;
+        int preferredRank = Integer.MAX_VALUE;
+        int preferredCost = Integer.MAX_VALUE;
+        List<PhysicalCard> survivingCopies =
+                new ArrayList<>();
+        survivingCopies.addAll(
+                gameState.getHand(playerId));
+        survivingCopies.addAll(
+                gameState.getReserveDeck(playerId));
+        survivingCopies.addAll(
+                gameState.getForcePile(playerId));
+        survivingCopies.addAll(
+                gameState.getUsedPile(playerId));
+        survivingCopies.addAll(
+                gameState.getUnresolvedDestinyDraw(playerId));
+        survivingCopies.addAll(
+                gameState.getSabaccHand(playerId));
+        for (PhysicalCard card : survivingCopies) {
+            if (card == null
+                    || !playerId.equals(card.getOwner())
+                    || !titleMatchesRequired(
+                        card.getTitle(), requirement)) {
+                continue;
+            }
+            int rank = requiredCardForceLossRank(
+                    game, playerId, card);
+            Integer liveCost =
+                    requiredCardDeployCost(game, card);
+            int cost = liveCost != null
+                    ? liveCost : Integer.MAX_VALUE;
+            if (preferred == null || rank < preferredRank
+                    || rank == preferredRank
+                        && cost < preferredCost) {
+                preferred = card;
+                preferredRank = rank;
+                preferredCost = cost;
+            }
+        }
+        return preferred == candidate;
+    }
+
+    private int requiredCardForceLossRank(
+            SwccgGame game, String playerId,
+            PhysicalCard card) {
+        Zone zone = card.getZone();
+        boolean ready = (zone == Zone.HAND
+                    || zone == Zone.RESERVE_DECK
+                    || zone == Zone.TOP_OF_RESERVE_DECK)
+                && isRequiredOnTableCardPullRouteReady(
+                    game, playerId, card);
+        if (zone == Zone.HAND) {
+            return ready ? 0 : 2;
+        }
+        if (zone == Zone.RESERVE_DECK
+                || zone == Zone.TOP_OF_RESERVE_DECK) {
+            return ready ? 1 : 3;
+        }
+        if (zone == Zone.FORCE_PILE
+                || zone == Zone.TOP_OF_FORCE_PILE
+                || zone == Zone.USED_PILE
+                || zone == Zone.TOP_OF_USED_PILE
+                || zone == Zone.UNRESOLVED_DESTINY_DRAW
+                || zone == Zone.TOP_OF_UNRESOLVED_DESTINY_DRAW
+                || zone == Zone.SABACC_HAND
+                || zone == Zone.REVEALED_SABACC_HAND) {
+            return 4;
+        }
+        return 5;
+    }
+
+    /**
+     * True only when the active objective itself can acquire a still-missing
+     * required on-table card from Reserve Deck. A copy already in hand closes
+     * the parent pull bonus so Rando does not upload duplicates.
+     */
+    public boolean objectivePullAdvancesRequiredOnTableCard(
+            SwccgGame game, String playerId, String sourceTitle) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || sourceTitle == null || objectiveTitle == null
+                || !objectiveTitle.equalsIgnoreCase(sourceTitle)
+                || game.getGameState() == null
+                || requiredCardsOnTable.isEmpty()) {
+            return false;
+        }
+        List<PhysicalCard> reserve =
+                game.getGameState().getReserveDeck(playerId);
+        if (reserve == null || reserve.isEmpty()) return false;
+        List<PhysicalCard> hand = game.getGameState().getHand(playerId);
+        for (String required : requiredCardsOnTable) {
+            if (isRequiredCardActiveOnTable(game, required)
+                    || containsReadyRequiredTitle(
+                        game, playerId, hand, required)) {
+                continue;
+            }
+            for (PhysicalCard card : reserve) {
+                if (card != null && playerId.equals(card.getOwner())
+                        && titleMatchesRequired(
+                                card.getTitle(), required)
+                        && isRequiredOnTableCardPullRouteReady(
+                            game, playerId, card)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean containsReadyRequiredTitle(
+            SwccgGame game, String playerId,
+            List<PhysicalCard> cards, String required) {
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card != null
+                    && playerId.equals(card.getOwner())
+                    && titleMatchesRequired(card.getTitle(), required)
+                    && isRequiredOnTableCardPullRouteReady(
+                        game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Printing-aware route readiness for a required-card tutor choice.
+     * A direct route is ready when its typed destination is on table. A gated
+     * route also requires its exact source-defined prerequisite.
+     */
+    public boolean isRequiredOnTableCardPullRouteReady(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!analyzed || isFlipped || game == null
+                || playerId == null || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || activeRequiredCardDeployRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || matchingRequiredTitle(
+                    candidate.getTitle()) == null) {
+            return false;
+        }
+        boolean matchingTitleHasStructuredRoutes = false;
+        String blueprintId = candidate.getBlueprintId(true);
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            if (rule == null
+                    || rule.requiredCardFilterKey == null
+                    || rule.blueprintIds == null) {
+                continue;
+            }
+            com.gempukku.swccgo.filters.Filter requiredFilter =
+                    resolveFilter(
+                            rule.requiredCardFilterKey);
+            if (requiredFilter == null
+                    || !requiredFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        candidate)) {
+                continue;
+            }
+            matchingTitleHasStructuredRoutes = true;
+            if (!rule.blueprintIds.contains(blueprintId)
+                    || !hasRequiredCardDeployDestination(
+                        game, playerId, rule)) {
+                continue;
+            }
+            if (rule.prerequisite == null
+                    || isFlipLocationAlternativeSatisfied(
+                        game, playerId,
+                        rule.prerequisite)) {
+                return true;
+            }
+        }
+        return !matchingTitleHasStructuredRoutes;
+    }
+
+    private boolean hasRequiredCardDeployDestination(
+            SwccgGame game, String playerId,
+            RequiredCardDeployRule rule) {
+        com.gempukku.swccgo.filters.Filter destinationFilter =
+                resolveLocationFilter(
+                        rule.destinationLocationFilterKey,
+                        playerId);
+        if (destinationFilter == null) return false;
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard location : locations) {
+            if (location != null
+                    && destinationFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Force that must remain available to deploy missing required cards
+     * already in hand. Uses the live modifier query, so Ominous Rumors'
+     * source-defined 2 Force cost is honored.
+     */
+    public int getRequiredOnTableCardForceReserve(
+            SwccgGame game, String playerId) {
+        return getRequiredOnTableCardForceReserve(
+                game, playerId, null);
+    }
+
+    public int getRequiredOnTableCardForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        List<PhysicalCard> hand = game.getGameState().getHand(playerId);
+        if (hand == null || hand.isEmpty()) return 0;
+        String deployingRequirement = deployingCandidate != null
+                ? matchingRequiredTitle(
+                    deployingCandidate.getTitle())
+                : null;
+        Map<String, Integer> minimumCosts = new HashMap<>();
+        for (PhysicalCard card : hand) {
+            if (card == null || card == deployingCandidate
+                    || !playerId.equals(card.getOwner())
+                    || card.getTitle() == null) {
+                continue;
+            }
+            String requirement =
+                    matchingRequiredTitle(card.getTitle());
+            if (requirement == null
+                    || requirement.equals(deployingRequirement)
+                    || isRequiredCardActiveOnTable(game, requirement)) {
+                continue;
+            }
+            if (!isRequiredOnTableCardPullRouteReady(
+                        game, playerId, card)) {
+                continue;
+            }
+            try {
+                float cost = game.getModifiersQuerying()
+                        .getDeployCost(game.getGameState(), card);
+                int roundedCost =
+                        (int) Math.ceil(Math.max(0.0f, cost));
+                minimumCosts.merge(
+                        requirement, roundedCost, Math::min);
+            } catch (Exception e) {
+                LOG.debug(
+                        "Required on-table card Force reserve unavailable: {}",
+                        e.getMessage());
+            }
+        }
+        int reserve = 0;
+        for (int cost : minimumCosts.values()) {
+            reserve += cost;
+        }
+        return reserve;
+    }
+
+    public int getRequiredCardDeployEnablerForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!analyzed || isFlipped || game == null
+                || playerId == null
+                || activeRequiredCardDeployRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        int reserve = 0;
+        for (RequiredCardDeployRule rule
+                : activeRequiredCardDeployRules) {
+            FlipLocationAlternative prerequisite =
+                    rule != null ? rule.prerequisite : null;
+            if (!isRequiredCardDeployRuleActive(
+                        game, playerId, rule)
+                    || prerequisite == null
+                    || prerequisite.actorFilterKey == null
+                    || prerequisite.count == null
+                    || prerequisite.count.value == null
+                    || prerequisite.count.value <= 0
+                    || isUpperBound(prerequisite.count)) {
+                continue;
+            }
+            int required = expectedCount(
+                    game, playerId, prerequisite.count);
+            int qualified = countAlternativeMatches(
+                    game, playerId, playerId,
+                    prerequisite);
+            int missing = Math.max(0, required - qualified);
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(prerequisite.actorFilterKey);
+            ProspectiveActorPair pair =
+                    prerequisite.prospectiveActorPair;
+            com.gempukku.swccgo.filters.Filter pairHostFilter =
+                    pair != null
+                            ? resolveFilter(pair.hostFilterKey) : null;
+            com.gempukku.swccgo.filters.Filter pairPilotFilter =
+                    pair != null
+                            ? resolveFilter(pair.pilotFilterKey) : null;
+            if (missing == 0 || actorFilter == null) continue;
+
+            List<DeployCostedCard> directActors =
+                    new ArrayList<>();
+            List<DeployCostedCard> pairHosts = new ArrayList<>();
+            List<DeployCostedCard> pairPilots = new ArrayList<>();
+            if (deployingCandidate != null) {
+                if (actorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        deployingCandidate)) {
+                    directActors.add(new DeployCostedCard(
+                            deployingCandidate, true));
+                }
+                if (pairHostFilter != null
+                        && pairPilotFilter != null
+                        && pairHostFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        deployingCandidate)) {
+                    pairHosts.add(new DeployCostedCard(
+                            deployingCandidate, true));
+                }
+                if (pairPilotFilter != null
+                        && pairPilotFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        deployingCandidate)) {
+                    pairPilots.add(new DeployCostedCard(
+                            deployingCandidate, true));
+                }
+            }
+            List<PhysicalCard> hand =
+                    game.getGameState().getHand(playerId);
+            if (hand != null) {
+                for (PhysicalCard card : hand) {
+                    if (card == null || card == deployingCandidate
+                            || !playerId.equals(card.getOwner())) {
+                        continue;
+                    }
+                    if (actorFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                        directActors.add(new DeployCostedCard(
+                                card, false));
+                    }
+                    if (pairHostFilter != null
+                            && pairHostFilter.accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), card)) {
+                        pairHosts.add(new DeployCostedCard(
+                                card, false));
+                    }
+                    if (pairPilotFilter != null
+                            && pairPilotFilter.accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), card)) {
+                        pairPilots.add(new DeployCostedCard(
+                                card, false));
+                    }
+                }
+            }
+            if (pairHostFilter != null
+                    && pairPilotFilter != null) {
+                Collection<PhysicalCard> permanents =
+                        game.getGameState().getAllPermanentCards();
+                if (permanents != null) {
+                    for (PhysicalCard card : permanents) {
+                        if (card == null
+                                || !playerId.equals(card.getOwner())
+                                || !isActiveForSpot(game, card, false)
+                                || card.getAttachedTo() != null) {
+                            continue;
+                        }
+                        PhysicalCard location =
+                                game.getModifiersQuerying()
+                                    .getLocationThatCardIsAt(
+                                        game.getGameState(), card);
+                        if (!canProspectivePairAdvanceAtTarget(
+                                    game, playerId, location,
+                                    prerequisite)) {
+                            continue;
+                        }
+                        if (pairHostFilter.accepts(
+                                    game.getGameState(),
+                                    game.getModifiersQuerying(), card)
+                                && !Filters.piloted.accepts(
+                                    game.getGameState(),
+                                    game.getModifiersQuerying(), card)) {
+                            pairHosts.add(new DeployCostedCard(
+                                    card, true));
+                        }
+                        if (pairPilotFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                            pairPilots.add(new DeployCostedCard(
+                                    card, true));
+                        }
+                    }
+                }
+            }
+            reserve += minimumRequiredDeployContributionCost(
+                    game, playerId, prerequisite, missing,
+                    directActors, pairHosts, pairPilots);
+        }
+        return reserve;
+    }
+
+    private int minimumRequiredDeployContributionCost(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative prerequisite, int missing,
+            List<DeployCostedCard> directActors,
+            List<DeployCostedCard> pairHosts,
+            List<DeployCostedCard> pairPilots) {
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null || locations.isEmpty()) return 0;
+        List<List<DeployContributionOption>> optionsByTarget =
+                new ArrayList<>();
+        for (PhysicalCard location : locations) {
+            List<DeployContributionOption> options =
+                    new ArrayList<>();
+            for (DeployCostedCard actor : directActors) {
+                if (!advancesAlternativeAt(
+                            game, playerId, actor.card,
+                            location, prerequisite)
+                        || !isDirectActorRouteLegalAt(
+                            game, actor.card, location)) {
+                    continue;
+                }
+                Integer cost = actor.alreadyCovered
+                        ? 0
+                        : requiredCardDeployCostAt(
+                            game, actor.card, location);
+                if (cost != null) {
+                    options.add(new DeployContributionOption(
+                            actor.card, null, cost));
+                }
+            }
+            if (canProspectivePairAdvanceAtTarget(
+                        game, playerId, location,
+                        prerequisite)) {
+                for (DeployCostedCard host : pairHosts) {
+                    for (DeployCostedCard pilot : pairPilots) {
+                        if (!isProspectivePairRouteLegalAt(
+                                    game, playerId,
+                                    host.card, pilot.card,
+                                    location)) {
+                            continue;
+                        }
+                        Integer cost =
+                                requiredProspectivePairCostAt(
+                                    game, host, pilot,
+                                    location);
+                        if (cost != null) {
+                            options.add(
+                                    new DeployContributionOption(
+                                        host.card, pilot.card,
+                                        cost));
+                        }
+                    }
+                }
+            }
+            if (!options.isEmpty()) {
+                options.sort(
+                        Comparator.comparingInt(
+                            option -> option.cost));
+                optionsByTarget.add(options);
+            }
+        }
+        optionsByTarget.sort(
+                Comparator.comparingInt(List::size));
+
+        int maxUnits = Math.min(
+                missing, optionsByTarget.size());
+        for (int units = maxUnits; units > 0; units--) {
+            int[] best = {Integer.MAX_VALUE};
+            minimumDistinctContributionCost(
+                    optionsByTarget, 0, units, 0,
+                    Collections.newSetFromMap(
+                            new IdentityHashMap<>()),
+                    best);
+            if (best[0] != Integer.MAX_VALUE) {
+                return best[0];
+            }
+        }
+        return 0;
+    }
+
+    private void minimumDistinctContributionCost(
+            List<List<DeployContributionOption>> optionsByTarget,
+            int targetIndex, int unitsNeeded, int costSoFar,
+            Set<PhysicalCard> usedCards, int[] best) {
+        if (unitsNeeded == 0) {
+            best[0] = Math.min(best[0], costSoFar);
+            return;
+        }
+        int remainingTargets =
+                optionsByTarget.size() - targetIndex;
+        if (remainingTargets < unitsNeeded
+                || costSoFar >= best[0]) {
+            return;
+        }
+        int lowerBound = minimumRemainingTargetCost(
+                optionsByTarget, targetIndex, unitsNeeded);
+        if (lowerBound == Integer.MAX_VALUE
+                || costSoFar + lowerBound >= best[0]) {
+            return;
+        }
+
+        List<DeployContributionOption> options =
+                optionsByTarget.get(targetIndex);
+        for (DeployContributionOption option : options) {
+            if (usedCards.contains(option.primary)
+                    || option.secondary != null
+                        && usedCards.contains(
+                            option.secondary)) {
+                continue;
+            }
+            usedCards.add(option.primary);
+            if (option.secondary != null) {
+                usedCards.add(option.secondary);
+            }
+            minimumDistinctContributionCost(
+                    optionsByTarget, targetIndex + 1,
+                    unitsNeeded - 1,
+                    costSoFar + option.cost,
+                    usedCards, best);
+            usedCards.remove(option.primary);
+            if (option.secondary != null) {
+                usedCards.remove(option.secondary);
+            }
+        }
+        minimumDistinctContributionCost(
+                optionsByTarget, targetIndex + 1,
+                unitsNeeded, costSoFar, usedCards, best);
+    }
+
+    private static int minimumRemainingTargetCost(
+            List<List<DeployContributionOption>> optionsByTarget,
+            int targetIndex, int unitsNeeded) {
+        List<Integer> minimums = new ArrayList<>();
+        for (int index = targetIndex;
+                index < optionsByTarget.size(); index++) {
+            List<DeployContributionOption> options =
+                    optionsByTarget.get(index);
+            if (!options.isEmpty()) {
+                minimums.add(options.get(0).cost);
+            }
+        }
+        if (minimums.size() < unitsNeeded) {
+            return Integer.MAX_VALUE;
+        }
+        Collections.sort(minimums);
+        int result = 0;
+        for (int index = 0; index < unitsNeeded; index++) {
+            result += minimums.get(index);
+        }
+        return result;
+    }
+
+    private boolean isDirectActorRouteLegalAt(
+            SwccgGame game, PhysicalCard actor,
+            PhysicalCard targetLocation) {
+        if (actor == null || targetLocation == null
+                || actor.getZone() != null
+                    && actor.getZone().isInPlay()) {
+            return false;
+        }
+        try {
+            return Filters.deployableToLocation(
+                        actor,
+                        Filters.sameCardId(targetLocation),
+                        true, 0.0f)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), actor);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card actor deploy route unavailable: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private Integer requiredProspectivePairCostAt(
+            SwccgGame game, DeployCostedCard host,
+            DeployCostedCard pilot,
+            PhysicalCard targetLocation) {
+        if (host.alreadyCovered && pilot.alreadyCovered) {
+            try {
+                float cost = game.getModifiersQuerying()
+                        .getEmbarkingCost(
+                            game.getGameState(),
+                            pilot.card, host.card, 0.0f);
+                return (int) Math.ceil(
+                        Math.max(0.0f, cost));
+            } catch (Exception e) {
+                LOG.debug(
+                    "Required-card embark cost unavailable: {}",
+                    e.getMessage());
+                return null;
+            }
+        }
+        if (!host.alreadyCovered && !pilot.alreadyCovered) {
+            try {
+                float cost = game.getModifiersQuerying()
+                        .getSimultaneousDeployCost(
+                            game.getGameState(),
+                            host.card, host.card,
+                            false, 0.0f,
+                            pilot.card, false, 0.0f,
+                            targetLocation, null, true);
+                return (int) Math.ceil(
+                        Math.max(0.0f, cost));
+            } catch (Exception e) {
+                LOG.debug(
+                        "Required-card pair deploy cost unavailable: {}",
+                        e.getMessage());
+                return null;
+            }
+        }
+        PhysicalCard unpaid = host.alreadyCovered
+                ? pilot.card : host.card;
+        PhysicalCard target = host.alreadyCovered
+                ? host.card : targetLocation;
+        return requiredCardDeployCostAt(
+                game, unpaid, target);
+    }
+
+    private static final class DeployCostedCard {
+        private final PhysicalCard card;
+        private final boolean alreadyCovered;
+
+        private DeployCostedCard(
+                PhysicalCard card, boolean alreadyCovered) {
+            this.card = card;
+            this.alreadyCovered = alreadyCovered;
+        }
+    }
+
+    private static final class DeployContributionOption {
+        private final PhysicalCard primary;
+        private final PhysicalCard secondary;
+        private final int cost;
+
+        private DeployContributionOption(
+                PhysicalCard primary,
+                PhysicalCard secondary, int cost) {
+            this.primary = primary;
+            this.secondary = secondary;
+            this.cost = cost;
+        }
+    }
+
+    private Integer requiredCardDeployCost(
+            SwccgGame game, PhysicalCard card) {
+        try {
+            float cost = game.getModifiersQuerying()
+                    .getDeployCost(game.getGameState(), card);
+            return (int) Math.ceil(Math.max(0.0f, cost));
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card deploy cost unavailable: {}",
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    private Integer requiredCardDeployCostAt(
+            SwccgGame game, PhysicalCard card,
+            PhysicalCard target) {
+        try {
+            float cost = game.getModifiersQuerying()
+                    .getDeployCost(
+                        game.getGameState(), card, card,
+                        target, false, null, false,
+                        0.0f, null, true);
+            return (int) Math.ceil(Math.max(0.0f, cost));
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card enabler Force reserve unavailable: {}",
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * The Bunker control requirement belongs only to the V and Legacy
+     * Establish Secret Base printings. It is a deploy enabler, not the
+     * objective's flip condition.
+     */
+    public boolean isActiveRequiredCardControlEnablerLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || location == null || flipCriticalControlSite == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || isRequiredCardActiveOnTable(
+                        game, flipCriticalControlCard)
+                || !flipCriticalControlSite.equalsIgnoreCase(
+                        location.getTitle())) {
+            return false;
+        }
+        List<List<PhysicalCard>> accessible = Arrays.asList(
+                game.getGameState().getHand(playerId),
+                game.getGameState().getReserveDeck(playerId));
+        for (List<PhysicalCard> cards : accessible) {
+            if (cards == null) continue;
+            for (PhysicalCard card : cards) {
+                if (card != null && playerId.equals(card.getOwner())
+                        && flipCriticalControlCardIds.contains(
+                                card.getBlueprintId(true))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isSoleControlSourceAtRequiredCardEnabler(
+            SwccgGame game, String playerId, PhysicalCard mover,
+            PhysicalCard location) {
+        if (!isActiveRequiredCardControlEnablerLocation(
+                    game, playerId, location)
+                || mover == null || !playerId.equals(mover.getOwner())
+                || !samePhysicalLocation(
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                game.getGameState(), mover),
+                        location)) {
+            return false;
+        }
+        return isSolePresenceSourceAtLocation(
+                game, playerId, mover, location);
+    }
+
+    public RequiredCardRetentionRisk assessRequiredCardRetentionRisk(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || game == null || playerId == null
+                || location == null
+                || activeRequiredCardRetentionRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return RequiredCardRetentionRisk.none();
+        }
+        RequiredCardRetentionRisk best = null;
+        for (RequiredCardRetentionRule rule
+                : activeRequiredCardRetentionRules) {
+            if (!isRequiredCardRetentionRuleActive(
+                        game, playerId, rule)
+                    || rule.removalCondition == null
+                    || !isSupportedRequiredCardRetentionCondition(
+                        rule.removalCondition)) {
+                continue;
+            }
+            RequiredCardRetentionRisk risk =
+                    assessRequiredCardRetentionRisk(
+                            game, playerId, location,
+                            rule.removalCondition);
+            if (!risk.inScope()) {
+                if (best == null) best = risk;
+                continue;
+            }
+            if (best == null || !best.inScope()
+                    || risk.removalNow() && !best.removalNow()
+                    || risk.removalNow() == best.removalNow()
+                        && risk.adverseStepsRemaining()
+                            < best.adverseStepsRemaining()) {
+                best = risk;
+            }
+        }
+        return best != null
+                ? best : RequiredCardRetentionRisk.none();
+    }
+
+    public boolean isRequiredCardRetentionProtectionLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        return assessRequiredCardRetentionRisk(
+                    game, playerId, location).requiresProtection()
+                || isRequiredCardCancelPreventerDefenseLocation(
+                    game, playerId, location);
+    }
+
+    public boolean isRequiredCardRetentionBattleLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        RequiredCardRetentionRisk risk =
+                assessRequiredCardRetentionRisk(
+                        game, playerId, location);
+        return (risk.applies() && risk.inScope()
+                    && !risk.removalNow()
+                    && risk.adverseStepsRemaining() <= 1)
+                || isRequiredCardCancelPreventerDefenseLocation(
+                    game, playerId, location);
+    }
+
+    public boolean advancesRequiredCardRetentionDefenseAt(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!isRequiredCardRetentionBattleLocation(
+                    game, playerId, destination)
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter presenceSource = Filters.or(
+                Filters.hasAbilityOrHasPermanentPilotWithAbility,
+                com.gempukku.swccgo.common.Icon.PRESENCE);
+        return presenceSource.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), candidate);
+    }
+
+    public boolean wouldDepartureTriggerRequiredCardRemoval(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (!analyzed || game == null || playerId == null
+                || mover == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(mover.getOwner())) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                            gameState, mover);
+            RequiredCardRetentionRisk risk =
+                    assessRequiredCardRetentionRisk(
+                            game, playerId, location);
+            if (!risk.applies() || !risk.inScope()
+                    || risk.removalNow()
+                    || !risk.criticalIfOpponentGainsControl()
+                    || !isSolePresenceSourceAtLocation(
+                            game, playerId, mover, location)) {
+                return false;
+            }
+            String opponent = gameState.getOpponent(playerId);
+            if (opponent == null) return false;
+            return game.getModifiersQuerying().occupiesLocation(
+                    gameState, location, opponent,
+                    SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card retention departure assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * True when deploying this exact source would prevent a required card
+     * from ever counting as active while the objective remains on table.
+     */
+    public boolean wouldDeployPreventRequiredCardActivity(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!analyzed || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || (candidate.getZone() != null
+                    && candidate.getZone().isInPlay())
+                || activeRequiredCardInactivationRules == null) {
+            return false;
+        }
+        String candidateBlueprint = candidate.getBlueprintId(true);
+        for (RequiredCardInactivationRule rule
+                : activeRequiredCardInactivationRules) {
+            if (rule == null || rule.sourceBlueprintIds == null
+                    || !rule.sourceBlueprintIds.contains(
+                            candidateBlueprint)
+                    || rule.requiredCardFilterKey == null
+                    || !"suspend".equals(rule.outcome)) {
+                continue;
+            }
+            String requiredTitle =
+                    requiredTitleForFilterKey(
+                            rule.requiredCardFilterKey);
+            if (requiredTitle != null
+                    && isRequiredCardForFlip(requiredTitle)
+                    && findOurObjective(
+                        game.getGameState(), playerId) != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private RequiredCardRetentionRisk
+            assessRequiredCardRetentionRisk(
+                    SwccgGame game, String playerId,
+                    PhysicalCard location,
+                    FlipLocationAlternative condition) {
+        GameState gameState = game.getGameState();
+        String opponent = gameState.getOpponent(playerId);
+        if (opponent == null) {
+            return RequiredCardRetentionRisk.none();
+        }
+        int opponentCount = countAlternativeMatches(
+                game, playerId, opponent, condition);
+        boolean inScope = locationMatchesAlternative(
+                gameState, game, playerId, location,
+                condition);
+        boolean opponentControlsHere = inScope
+                && relationSatisfiedAt(
+                    game, playerId, opponent, location,
+                    condition.relation,
+                    condition.actorFilterKey,
+                    condition.includeExcludedFromBattle);
+        int required = expectedCount(
+                game, playerId, condition.count);
+        boolean removalNow = compareCounts(
+                opponentCount, required,
+                condition.count.comparator);
+        boolean opponentGainTriggers = inScope
+                && !opponentControlsHere
+                && compareCounts(
+                    opponentCount + 1, required,
+                    condition.count.comparator);
+        int adverseSteps = 0;
+        while (adverseSteps < 100
+                && !compareCounts(
+                    opponentCount + adverseSteps,
+                    required, condition.count.comparator)) {
+            adverseSteps++;
+        }
+        return new RequiredCardRetentionRisk(
+                true, inScope, removalNow,
+                opponentControlsHere,
+                opponentGainTriggers,
+                opponentCount, adverseSteps);
+    }
+
+    private boolean isRequiredCardRetentionRuleActive(
+            SwccgGame game, String playerId,
+            RequiredCardRetentionRule rule) {
+        if (rule == null || rule.requiredCardFilterKey == null
+                || rule.blueprintIds == null
+                || rule.blueprintIds.isEmpty()
+                || !"tableChangedOpponentControl".equals(
+                    rule.trigger)
+                || (!"cancel".equals(rule.outcome)
+                    && !"usedPile".equals(rule.outcome))) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter requiredFilter =
+                resolveFilter(rule.requiredCardFilterKey);
+        if (requiredFilter == null) return false;
+        try {
+            PhysicalCard requiredCard =
+                    findActiveRequiredCardForRetention(
+                            game, playerId, rule,
+                            requiredFilter);
+            return requiredCard != null
+                    && (!Boolean.TRUE.equals(
+                            rule.requiresCancelable)
+                        || com.gempukku.swccgo.cards
+                            .GameConditions.canBeCanceled(
+                                game, requiredCard));
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card retention active-state assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private PhysicalCard findActiveRequiredCardForRetention(
+            SwccgGame game, String playerId,
+            RequiredCardRetentionRule rule,
+            com.gempukku.swccgo.filters.Filter requiredFilter) {
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            if (card != null
+                    && playerId.equals(card.getOwner())
+                    && rule.blueprintIds.contains(
+                        card.getBlueprintId(true))
+                    && isActiveForSpot(game, card, true)
+                    && requiredFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private boolean isSoleRequiredCardCancelPreventerIfRemoved(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (activeRequiredCardRetentionRules == null
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            for (RequiredCardRetentionRule rule
+                    : activeRequiredCardRetentionRules) {
+                RequiredCardCancelPrevention prevention =
+                        rule != null ? rule.cancelPrevention : null;
+                if (!Boolean.TRUE.equals(
+                            rule != null
+                                ? rule.requiresCancelable : null)
+                        || prevention == null
+                        || prevention.actorFilterKey == null
+                        || prevention.locationFilterKey == null
+                        || rule.removalCondition == null) {
+                    continue;
+                }
+                com.gempukku.swccgo.filters.Filter requiredFilter =
+                        resolveFilter(
+                                rule.requiredCardFilterKey);
+                PhysicalCard requiredCard =
+                        requiredFilter != null
+                            ? findActiveRequiredCardForRetention(
+                                game, playerId, rule,
+                                requiredFilter)
+                            : null;
+                if (requiredCard == null
+                        || com.gempukku.swccgo.cards
+                            .GameConditions.canBeCanceled(
+                                game, requiredCard)) {
+                    continue;
+                }
+                com.gempukku.swccgo.filters.Filter actorFilter =
+                        resolveFilter(
+                                prevention.actorFilterKey);
+                com.gempukku.swccgo.filters.Filter locationFilter =
+                        resolveLocationFilter(
+                                prevention.locationFilterKey,
+                                playerId);
+                Collection<PhysicalCard> permanents =
+                        gameState.getAllPermanentCards();
+                if (actorFilter == null || locationFilter == null
+                        || permanents == null) {
+                    continue;
+                }
+                PhysicalCard affectedPreventer = null;
+                PhysicalCard candidateLocation = null;
+                for (PhysicalCard card : permanents) {
+                    if (card == null
+                            || !playerId.equals(card.getOwner())
+                            || !isActiveForSpot(game, card, true)
+                            || !actorFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(), card)
+                            || card != candidate
+                                && !attachedToOrAboard(
+                                    card, candidate)) {
+                        continue;
+                    }
+                    PhysicalCard preventerLocation =
+                            game.getModifiersQuerying()
+                                .getLocationThatCardIsAt(
+                                    gameState, card);
+                    if (preventerLocation != null
+                            && locationFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                preventerLocation)) {
+                        affectedPreventer = card;
+                        candidateLocation = preventerLocation;
+                        break;
+                    }
+                }
+                if (affectedPreventer == null
+                        || candidateLocation == null) {
+                    continue;
+                }
+                boolean removalConditionAlreadyMet =
+                        isFlipLocationAlternativeSatisfied(
+                                game, playerId,
+                                rule.removalCondition);
+                RequiredCardRetentionRisk transitionRisk =
+                        assessRequiredCardRetentionRisk(
+                                game, playerId,
+                                candidateLocation,
+                                rule.removalCondition);
+                if (!removalConditionAlreadyMet
+                        && (!transitionRisk.applies()
+                            || !transitionRisk.inScope()
+                            || transitionRisk
+                                .adverseStepsRemaining() > 1)) {
+                    continue;
+                }
+                boolean otherPreventer = false;
+                for (PhysicalCard card : permanents) {
+                    if (card == null || card == affectedPreventer
+                            || card == candidate
+                            || attachedToOrAboard(
+                                card, candidate)
+                            || !playerId.equals(card.getOwner())
+                            || !isActiveForSpot(game, card, true)
+                            || !actorFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                card)) {
+                        continue;
+                    }
+                    PhysicalCard otherLocation =
+                            game.getModifiersQuerying()
+                                .getLocationThatCardIsAt(
+                                    gameState, card);
+                    if (otherLocation != null
+                            && locationFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                otherLocation)) {
+                        otherPreventer = true;
+                        break;
+                    }
+                }
+                if (!otherPreventer) return true;
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card cancel-preventer assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean isRequiredCardCancelPreventerDefenseLocation(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        if (!analyzed || game == null || playerId == null
+                || location == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null || !playerId.equals(card.getOwner())) {
+                continue;
+            }
+            PhysicalCard cardLocation =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(cardLocation, location)
+                    && isSoleRequiredCardCancelPreventerIfRemoved(
+                        game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean preservesRequiredCardCancelPreventionAt(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard destination) {
+        if (!analyzed || game == null || playerId == null
+                || mover == null || destination == null
+                || activeRequiredCardRetentionRules == null
+                || !isSoleRequiredCardCancelPreventerIfRemoved(
+                    game, playerId, mover)) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents == null) return false;
+            for (RequiredCardRetentionRule rule
+                    : activeRequiredCardRetentionRules) {
+                RequiredCardCancelPrevention prevention =
+                        rule != null ? rule.cancelPrevention : null;
+                com.gempukku.swccgo.filters.Filter actorFilter =
+                        prevention != null
+                            ? resolveFilter(
+                                prevention.actorFilterKey)
+                            : null;
+                com.gempukku.swccgo.filters.Filter locationFilter =
+                        prevention != null
+                            ? resolveLocationFilter(
+                                prevention.locationFilterKey,
+                                playerId)
+                            : null;
+                if (actorFilter == null || locationFilter == null
+                        || !locationFilter.accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            destination)) {
+                    continue;
+                }
+                for (PhysicalCard card : permanents) {
+                    if (card != null
+                            && playerId.equals(card.getOwner())
+                            && isActiveForSpot(game, card, true)
+                            && actorFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                card)
+                            && (card == mover
+                                || attachedToOrAboard(
+                                    card, mover))) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card cancel-preventer relocation failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private static boolean
+            isSupportedRequiredCardRetentionCondition(
+                    FlipLocationAlternative condition) {
+        return condition != null
+                && "control".equals(condition.relation)
+                && "opponent".equals(condition.controller)
+                && condition.locationFilterKey != null
+                && condition.count != null
+                && condition.count.value != null;
+    }
+
+    private static String requiredTitleForFilterKey(
+            String filterKey) {
+        if ("Ominous_Rumors".equals(filterKey)) {
+            return "ominous rumors";
+        }
+        if ("Establish_Secret_Base".equals(filterKey)) {
+            return "establish secret base";
+        }
+        return null;
+    }
+
+    public boolean isObjectiveHardLossLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || game == null || playerId == null
+                || location == null
+                || activeHardLossLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            for (HardLossLocationRule rule
+                    : activeHardLossLocationRules) {
+                com.gempukku.swccgo.filters.Filter locationFilter =
+                        rule == null
+                                || !"blownAwayLastStep".equals(
+                                    rule.trigger)
+                                || !"objectiveOutOfPlay".equals(
+                                    rule.outcome)
+                            ? null
+                            : resolveLocationFilter(
+                                rule.locationFilterKey, playerId);
+                if (locationFilter != null
+                        && locationFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), location)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Objective hard-loss location assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean isObjectiveHardLossDefenseLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!isObjectiveHardLossLocation(
+                    game, playerId, location)) {
+            return false;
+        }
+        try {
+            for (HardLossLocationRule rule
+                    : activeHardLossLocationRules) {
+                com.gempukku.swccgo.filters.Filter defenseFilter =
+                        rule == null ? null
+                            : resolveLocationFilter(
+                                rule.defenseLocationFilterKey,
+                                playerId);
+                com.gempukku.swccgo.filters.Filter threatFilter =
+                        rule == null ? null
+                            : resolveFilter(
+                                rule.threatCardFilterKey);
+                if (defenseFilter == null || threatFilter == null
+                        || !defenseFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), location)) {
+                    continue;
+                }
+                Collection<PhysicalCard> permanents =
+                        game.getGameState().getAllPermanentCards();
+                if (permanents == null) continue;
+                for (PhysicalCard threat : permanents) {
+                    if (threat == null
+                            || playerId.equals(threat.getOwner())
+                            || !isActiveForSpot(game, threat, true)
+                            || !threatFilter.accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), threat)) {
+                        continue;
+                    }
+                    PhysicalCard threatLocation =
+                            threat.getAttachedTo();
+                    if (threatLocation == null) {
+                        threatLocation = game.getModifiersQuerying()
+                                .getLocationThatCardIsAt(
+                                    game.getGameState(), threat);
+                    }
+                    if (samePhysicalLocation(
+                            threatLocation, location)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Objective hard-loss defense assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean advancesObjectiveHardLossDefenseAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        if (game == null || playerId == null
+                || candidate == null || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || !isObjectiveHardLossDefenseLocation(
+                    game, playerId, destination)) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter presenceSource =
+                Filters.or(
+                    Filters.hasAbilityOrHasPermanentPilotWithAbility,
+                    com.gempukku.swccgo.common.Icon.PRESENCE);
+        return presenceSource.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), candidate);
+    }
+
+    public boolean isSolePresenceSourceAtObjectiveHardLossLocation(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (game == null || playerId == null || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        PhysicalCard location = game.getModifiersQuerying()
+                .getLocationThatCardIsPresentAt(
+                        game.getGameState(), candidate);
+        return isObjectiveHardLossDefenseLocation(
+                    game, playerId, location)
+                && isSolePresenceSourceAtLocation(
+                    game, playerId, candidate, location);
+    }
+
     public boolean isPullableCard(String cardTitle) {
         if (!analyzed || cardTitle == null) return false;
         String titleLower = cardTitle.toLowerCase(Locale.ROOT);
@@ -3002,6 +5563,36 @@ public class ObjectiveAnalyzer {
             }
         }
         return false;
+    }
+
+    private String matchingRequiredTitle(String cardTitle) {
+        if (cardTitle == null) return null;
+        for (String required : requiredCardsOnTable) {
+            if (titleMatchesRequired(cardTitle, required)) return required;
+        }
+        return null;
+    }
+
+    private static boolean containsRequiredTitle(
+            Iterable<PhysicalCard> cards, String required) {
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card != null
+                    && titleMatchesRequired(
+                            card.getTitle(), required)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean titleMatchesRequired(
+            String cardTitle, String required) {
+        if (cardTitle == null || required == null) return false;
+        String titleLower = cardTitle.toLowerCase(Locale.ROOT);
+        String requiredLower = required.toLowerCase(Locale.ROOT);
+        return titleLower.equals(requiredLower)
+                || titleLower.startsWith(requiredLower);
     }
 
     public float getLocationObjectiveBonus(String locationTitle) {
@@ -3032,6 +5623,18 @@ public class ObjectiveAnalyzer {
     public float getLocationObjectiveBonus(
             PhysicalCard location, SwccgGame game, String playerId) {
         if (!analyzed || location == null) return 0.0f;
+        if (isRequiredCardCancelPreventerDefenseLocation(
+                game, playerId, location)) {
+            return isFlipped ? 200.0f : 150.0f;
+        }
+        RequiredCardRetentionRisk retentionRisk =
+                assessRequiredCardRetentionRisk(
+                        game, playerId, location);
+        if (retentionRisk.applies()
+                && retentionRisk.inScope()
+                && retentionRisk.requiresProtection()) {
+            return isFlipped ? 200.0f : 150.0f;
+        }
         if (isFlipped && hasStructuredFlipBackLocationRules()) {
             PostFlipLocationRisk risk = assessPostFlipLocationRisk(
                     game, playerId, location);
@@ -3249,11 +5852,27 @@ public class ObjectiveAnalyzer {
             return FlipGateFormationRole.NONE;
         }
 
+        if (isSolePresenceSourceAtObjectiveHardLossLocation(
+                    game, playerId, candidate)) {
+            return FlipGateFormationRole
+                    .HARD_LOSS_LOCATION_DEFENDER;
+        }
+        if (wouldDepartureTriggerRequiredCardRemoval(
+                    game, playerId, candidate)
+                || isSoleRequiredCardCancelPreventerIfRemoved(
+                    game, playerId, candidate)) {
+            return FlipGateFormationRole
+                    .REQUIRED_CARD_RETENTION_DEFENDER;
+        }
+
         if (isFlipped) {
             if (wouldRemovalTriggerOnTableFlipBack(
                     game, playerId, candidate)) {
-                return FlipGateFormationRole
-                        .LAST_REQUIRED_ON_TABLE_ACTOR;
+                return matchesRequiredOnTableCardFlipBackAlternative(
+                            game, playerId, candidate)
+                        ? FlipGateFormationRole.LAST_FLIP_BACK_BLOCKER
+                        : FlipGateFormationRole
+                            .LAST_REQUIRED_ON_TABLE_ACTOR;
             }
             return wouldDepartureTriggerFlipBack(game, playerId, candidate)
                     ? FlipGateFormationRole.LAST_FLIP_BACK_BLOCKER
@@ -3265,6 +5884,12 @@ public class ObjectiveAnalyzer {
                         game, playerId, candidate);
         if (runtimeActorRole != FlipGateFormationRole.NONE) {
             return runtimeActorRole;
+        }
+        FlipGateFormationRole deployEnablerRole =
+                classifyRequiredCardDeployEnablerIfRemoved(
+                        game, playerId, candidate);
+        if (deployEnablerRole != FlipGateFormationRole.NONE) {
+            return deployEnablerRole;
         }
         if (hasCountedPreFlipActorRule()) {
             return classifyCountedGatePieceIfRemoved(
@@ -3327,6 +5952,123 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return FlipGateFormationRole.NONE;
+    }
+
+    private FlipGateFormationRole
+            classifyRequiredCardDeployEnablerIfRemoved(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (activeRequiredCardDeployRules == null
+                || game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return FlipGateFormationRole.NONE;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                            gameState, candidate);
+            if (location == null) return FlipGateFormationRole.NONE;
+            for (RequiredCardDeployRule rule
+                    : activeRequiredCardDeployRules) {
+                FlipLocationAlternative prerequisite =
+                        rule != null ? rule.prerequisite : null;
+                if (!isRequiredCardDeployRuleActive(
+                            game, playerId, rule)
+                        || prerequisite == null
+                        || prerequisite.actorFilterKey == null
+                        || prerequisite.count == null
+                        || prerequisite.count.value == null
+                        || prerequisite.count.value <= 1
+                        || isUpperBound(prerequisite.count)
+                        || !locationMatchesAlternative(
+                            gameState, game, playerId,
+                            location, prerequisite)) {
+                    continue;
+                }
+                int required = expectedCount(
+                        game, playerId, prerequisite.count);
+                int qualified = countAlternativeMatches(
+                        game, playerId, playerId,
+                        prerequisite);
+                if (qualified <= 0 || qualified > required
+                        || !relationSatisfiedAt(
+                            game, playerId, playerId, location,
+                            prerequisite.relation,
+                            prerequisite.actorFilterKey,
+                            prerequisite.includeExcludedFromBattle)) {
+                    continue;
+                }
+                com.gempukku.swccgo.filters.Filter actorFilter =
+                        resolveFilter(
+                                prerequisite.actorFilterKey);
+                PhysicalCard pairedActorLost =
+                        prospectivePairActorLostWithPilot(
+                            game, playerId, candidate,
+                            prerequisite, actorFilter);
+                if (removedGroupContainsMatchingActor(
+                            game, playerId, location,
+                            prerequisite, candidate,
+                            pairedActorLost, actorFilter)
+                        && !hasOtherMatchingActorOutsideRemovedGroup(
+                            game, playerId, location,
+                            prerequisite, candidate,
+                            pairedActorLost)) {
+                    return FlipGateFormationRole
+                            .LAST_REQUIRED_ACTOR;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Required-card deploy enabler casualty assessment failed: {}",
+                    e.getMessage());
+        }
+        return FlipGateFormationRole.NONE;
+    }
+
+    private PhysicalCard prospectivePairActorLostWithPilot(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            FlipLocationAlternative prerequisite,
+            com.gempukku.swccgo.filters.Filter actorFilter) {
+        ProspectiveActorPair pair =
+                prerequisite != null
+                        ? prerequisite.prospectiveActorPair : null;
+        if (pair == null || actorFilter == null
+                || candidate == null || !candidate.isPilotOf()) {
+            return null;
+        }
+        com.gempukku.swccgo.filters.Filter hostFilter =
+                resolveFilter(pair.hostFilterKey);
+        com.gempukku.swccgo.filters.Filter pilotFilter =
+                resolveFilter(pair.pilotFilterKey);
+        PhysicalCard host = candidate.getAttachedTo();
+        if (host == null || hostFilter == null || pilotFilter == null
+                || !playerId.equals(host.getOwner())
+                || !pilotFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)
+                || !hostFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)
+                || !actorFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)
+                || Filters.hasPermanentPilot.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)) {
+            return null;
+        }
+        List<PhysicalCard> attached = host.getCardsAttached();
+        if (attached != null) {
+            for (PhysicalCard card : attached) {
+                if (card != null && card != candidate
+                        && card.isPilotOf()) {
+                    return null;
+                }
+            }
+        }
+        return host;
     }
 
     private FlipGateFormationRole classifyRuntimeActorIfRemoved(
@@ -3419,8 +6161,10 @@ public class ObjectiveAnalyzer {
                 for (FlipLocationAlternative alternative
                         : rule.alternatives) {
                     if (!"onTable".equals(alternative.relation)
-                            || !"requiredActorMissing".equals(
+                            || (!"requiredActorMissing".equals(
                                     alternative.scoreRole)
+                                && !"requiredOnTableCardMissing".equals(
+                                    alternative.scoreRole))
                             || !candidateMatchesOnTableAlternative(
                                     game, playerId, candidate,
                                     alternative)) {
@@ -3458,6 +6202,31 @@ public class ObjectiveAnalyzer {
             LOG.debug(
                     "On-table objective actor casualty assessment failed: {}",
                     e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean matchesRequiredOnTableCardFlipBackAlternative(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (activeFlipLocationRules == null) return false;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !"postFlip".equals(rule.phase)
+                    || !"flipBack".equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative
+                    : rule.alternatives) {
+                if (alternative != null
+                        && "onTable".equals(alternative.relation)
+                        && "requiredOnTableCardMissing".equals(
+                                alternative.scoreRole)
+                        && candidateMatchesOnTableAlternative(
+                                game, playerId, candidate,
+                                alternative)) {
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -3653,6 +6422,84 @@ public class ObjectiveAnalyzer {
             if (samePhysicalLocation(cardLocation, location)) return true;
         }
         return false;
+    }
+
+    private boolean removedGroupContainsMatchingActor(
+            SwccgGame game, String playerId, PhysicalCard location,
+            FlipLocationAlternative alternative,
+            PhysicalCard removedRoot,
+            PhysicalCard dependentActor,
+            com.gempukku.swccgo.filters.Filter actorFilter) {
+        if (actorFilter == null) return false;
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (!belongsToRemovedGroup(
+                        card, removedRoot, dependentActor)
+                    || playerId != null
+                        && !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(
+                        game, card,
+                        alternative.includeExcludedFromBattle)
+                    || !actorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard cardLocation =
+                    actorLocationForAlternative(
+                            game, card, alternative);
+            if (samePhysicalLocation(cardLocation, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasOtherMatchingActorOutsideRemovedGroup(
+            SwccgGame game, String playerId, PhysicalCard location,
+            FlipLocationAlternative alternative,
+            PhysicalCard removedRoot,
+            PhysicalCard dependentActor) {
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(alternative.actorFilterKey);
+        if (actorFilter == null) return false;
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (belongsToRemovedGroup(
+                        card, removedRoot, dependentActor)
+                    || playerId != null
+                        && !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(
+                        game, card,
+                        alternative.includeExcludedFromBattle)
+                    || !actorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard cardLocation =
+                    actorLocationForAlternative(
+                            game, card, alternative);
+            if (samePhysicalLocation(cardLocation, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean belongsToRemovedGroup(
+            PhysicalCard card, PhysicalCard removedRoot,
+            PhysicalCard dependentActor) {
+        return card != null
+                && (card == removedRoot
+                    || card == dependentActor
+                    || removedRoot != null
+                        && attachedToOrAboard(
+                            card, removedRoot));
     }
 
     private boolean isSolePresenceSourceAtLocation(
@@ -3918,11 +6765,24 @@ public class ObjectiveAnalyzer {
             String playerId,
             PhysicalCard deployingCard,
             PhysicalCard destination) {
-        if (gameState == null || playerId == null) {
+        return assessDeployChild(
+                gameState != null ? gameState.getGame() : null,
+                playerId, deployingCard, destination);
+    }
+
+    public ObjectiveProgressAssessment assessDeployChild(
+            SwccgGame game,
+            String playerId,
+            PhysicalCard deployingCard,
+            PhysicalCard destination) {
+        if (game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || playerId == null) {
             return ObjectiveProgressAssessment.unproven(
                     objectiveBlueprintId, isFlipped,
-                    "Deploy objective assessment requires game state and player identity");
+                    "Deploy objective assessment requires live game state, modifiers, and player identity");
         }
+        GameState gameState = game.getGameState();
 
         PhysicalCard objectiveCard = findOurObjective(gameState, playerId);
         if (objectiveCard == null) {
@@ -3984,14 +6844,12 @@ public class ObjectiveAnalyzer {
 
         Set<String> satisfied = new LinkedHashSet<>();
         for (PhysicalCard card : gameState.getAllPermanentCards()) {
-            if (card == null || !playerId.equals(card.getOwner())) continue;
-            Zone zone = card.getZone();
-            if (zone == null || !zone.isInPlay()) continue;
+            if (card == null || !isActiveForSpot(
+                    game, card, true)) continue;
             String title = card.getTitle();
             if (title == null) continue;
-            String titleLower = title.toLowerCase(Locale.ROOT);
             for (String requirement : requirements) {
-                if (titleLower.equals(requirement) || titleLower.startsWith(requirement)) {
+                if (titleMatchesRequired(title, requirement)) {
                     satisfied.add(requirement);
                 }
             }
@@ -4016,8 +6874,8 @@ public class ObjectiveAnalyzer {
         String deployingTitleLower = deployingTitle.toLowerCase(Locale.ROOT);
         Set<String> advanced = new LinkedHashSet<>();
         for (String requirement : missing) {
-            if (deployingTitleLower.equals(requirement)
-                    || deployingTitleLower.startsWith(requirement)) {
+            if (titleMatchesRequired(
+                    deployingTitleLower, requirement)) {
                 advanced.add(requirement);
             }
         }
@@ -4238,6 +7096,11 @@ public class ObjectiveAnalyzer {
         List<FlipLocationRule> flipLocationRules;
         List<ActorLocationRule> actorLocationRules;
         List<DynamicLocationRule> dynamicLocationRules;
+        List<RequiredCardDeployRule> requiredCardDeployRules;
+        List<RequiredCardRetentionRule> requiredCardRetentionRules;
+        List<RequiredCardInactivationRule>
+                requiredCardInactivationRules;
+        List<HardLossLocationRule> hardLossLocationRules;
     }
     static final class JsonRoot {
         List<JsonProfile> profiles;
@@ -4264,11 +7127,16 @@ public class ObjectiveAnalyzer {
         List<String> locationFragments;
         RuleCount count;
         String actorFilterKey;
+        ProspectiveActorPair prospectiveActorPair;
         String requiredSide;          // LIGHT | DARK | null
         Boolean includeExcludedFromBattle;
         RuleOpponentConstraint opponentConstraint;
         String scoreRole;             // setupLocation | flipProgress | flipGate | stayFlipped
         String sourceText;            // audit only — runtime must not parse this
+    }
+    static final class ProspectiveActorPair {
+        String hostFilterKey;
+        String pilotFilterKey;
     }
     static final class FlipLocationRule {
         String id;
@@ -4295,6 +7163,46 @@ public class ObjectiveAnalyzer {
         String source;                // subjugatedPlanet | renegadePlanet | repSpecies | setupChoice
         String derivedLocationFilterKey;
         String matchingActorFilterKey;
+        String sourceText;
+    }
+    static final class RequiredCardDeployRule {
+        String id;
+        String requiredCardFilterKey;
+        List<String> blueprintIds;
+        String destinationLocationFilterKey;
+        FlipLocationAlternative prerequisite;
+        String sourceText;
+    }
+    static final class RequiredCardRetentionRule {
+        String id;
+        String requiredCardFilterKey;
+        List<String> blueprintIds;
+        String trigger;
+        String outcome;
+        Boolean requiresCancelable;
+        FlipLocationAlternative removalCondition;
+        RequiredCardCancelPrevention cancelPrevention;
+        String sourceText;
+    }
+    static final class RequiredCardCancelPrevention {
+        String actorFilterKey;
+        String locationFilterKey;
+        String sourceText;
+    }
+    static final class RequiredCardInactivationRule {
+        String id;
+        List<String> sourceBlueprintIds;
+        String requiredCardFilterKey;
+        String outcome;
+        String sourceText;
+    }
+    static final class HardLossLocationRule {
+        String id;
+        String locationFilterKey;
+        String defenseLocationFilterKey;
+        String threatCardFilterKey;
+        String trigger;
+        String outcome;
         String sourceText;
     }
 
@@ -4393,6 +7301,14 @@ public class ObjectiveAnalyzer {
         // step 3b: store the rules for the filter-based relevance overload (runtime filter eval).
         activeFlipLocationRules = p.flipLocationRules;
         activeActorLocationRules = p.actorLocationRules;
+        activeRequiredCardDeployRules =
+                p.requiredCardDeployRules;
+        activeRequiredCardRetentionRules =
+                p.requiredCardRetentionRules;
+        activeRequiredCardInactivationRules =
+                p.requiredCardInactivationRules;
+        activeHardLossLocationRules =
+                p.hardLossLocationRules;
         hydratedFromJson = true;
         LOG.warn("[ObjectiveAnalyzer] JSON hydrate '{}': locFrags={}, reqCards={}, flipGateSite={}, flipGateIds={}, startLoc={}, startEff={}, startInt={}",
             p.label, flipConditionLocationFragments, requiredCardsOnTable, flipCriticalControlSite,
@@ -4455,7 +7371,22 @@ public class ObjectiveAnalyzer {
                 return com.gempukku.swccgo.filters.Filters.Phoenix_Squadron_character;
             case "Galactic_Senate":  return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
             case "biker_scout":      return com.gempukku.swccgo.filters.Filters.biker_scout;
+            case "AT_ST":            return com.gempukku.swccgo.filters.Filters.AT_ST;
+            case "pilot":            return com.gempukku.swccgo.filters.Filters.pilot;
+            case "Dyer":             return com.gempukku.swccgo.filters.Filters.Dyer;
             case "Bunker":           return com.gempukku.swccgo.filters.Filters.Bunker;
+            case "Ominous_Rumors":   return com.gempukku.swccgo.filters.Filters.Ominous_Rumors;
+            case "Establish_Secret_Base":
+                return com.gempukku.swccgo.filters.Filters.Establish_Secret_Base;
+            case "Deactivate_The_Shield_Generator":
+                return com.gempukku.swccgo.filters.Filters
+                        .Deactivate_The_Shield_Generator;
+            case "biker_scout_or_piloted_AT_ST":
+                return com.gempukku.swccgo.filters.Filters.or(
+                    com.gempukku.swccgo.filters.Filters.biker_scout,
+                    com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.piloted,
+                        com.gempukku.swccgo.filters.Filters.AT_ST));
             default:
                 LOG.warn("[ObjectiveAnalyzer] unknown Filter key '{}' in objective_playbooks.json — playbook Filter left null.", key);
                 return null;
@@ -4473,6 +7404,14 @@ public class ObjectiveAnalyzer {
         switch (key) {
             // DIRECT constants
             case "Endor_location":               return com.gempukku.swccgo.filters.Filters.Endor_location;
+            case "Endor_system":                 return com.gempukku.swccgo.filters.Filters.Endor_system;
+            case "Endor_site":                   return com.gempukku.swccgo.filters.Filters.Endor_site;
+            case "Dyer_Ominous_Rumors_protection_location":
+                return com.gempukku.swccgo.filters.Filters.or(
+                    com.gempukku.swccgo.filters.Filters.Bunker,
+                    com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.Endor_site,
+                        com.gempukku.swccgo.filters.Filters.battleground_site));
             case "Bunker":                       return com.gempukku.swccgo.filters.Filters.Bunker;
             case "Bespin_system":                return com.gempukku.swccgo.filters.Filters.Bespin_system;
             case "Cloud_City_site":              return com.gempukku.swccgo.filters.Filters.Cloud_City_site;
@@ -4577,6 +7516,27 @@ public class ObjectiveAnalyzer {
                     "OBJECTIVE ACTOR LOCATION: deploy '"
                             + card.getTitle()
                             + "' where it advances the live objective route"));
+        }
+        if (analyzed && !isFlipped
+                && isRequiredCardForFlip(card.getTitle())
+                && !isRequiredCardActiveOnTable(
+                        game, card.getTitle())) {
+            notes.add(new ScoreNote(
+                    1000.0f,
+                    "DEPLOY.OBJECTIVE.REQUIRED_ON_TABLE_CARD: deploy '"
+                            + card.getTitle()
+                            + "' to satisfy a missing active-table flip requirement"));
+        }
+        if (analyzed && !isFlipped
+                && classifyRequiredCardDeployEnablerCandidate(
+                        game, playerId, card)
+                    == ObjectiveProgressCandidateRole
+                        .REQUIRED_CARD_DEPLOY_ENABLER_ACTOR) {
+            notes.add(new ScoreNote(
+                    600.0f,
+                    "DEPLOY.OBJECTIVE.REQUIRED_CARD_ENABLER: deploy '"
+                            + card.getTitle()
+                            + "' to unlock a missing required objective card"));
         }
 
         // My Lord DEPLOY magnitudes now read from the ACTIVE playbook (JSON-built when loaderEnabled, else the
@@ -4993,6 +7953,10 @@ public class ObjectiveAnalyzer {
         hydratedFromJson = false;
         activeFlipLocationRules = null;
         activeActorLocationRules = null;
+        activeRequiredCardDeployRules = null;
+        activeRequiredCardRetentionRules = null;
+        activeRequiredCardInactivationRules = null;
+        activeHardLossLocationRules = null;
         objectiveTitle = null;
         objectiveBlueprintId = null;
         // V29 UPDATED 2026-07-06: clear stored game text with the rest of the analysis

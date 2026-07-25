@@ -85,6 +85,12 @@ public final class PullActionFactsReader {
         boolean isStrategyKeyCharacter(
                 SwccgGame game, String playerId,
                 PhysicalCard candidate);
+
+        default boolean objectivePullAdvancesRequiredOnTableCard(
+                SwccgGame game, String playerId,
+                String sourceTitle) {
+            return false;
+        }
     }
 
     public interface LateView {
@@ -434,7 +440,14 @@ public final class PullActionFactsReader {
                 charactersOrVehiclesInHand,
                 battlePlausible,
                 formation.state(),
-                formation.reason());
+                formation.reason(),
+                sourceCategory == CardCategory.OBJECTIVE
+                    && context != null
+                    && context.objective() != null
+                    && context.objective()
+                        .objectivePullAdvancesRequiredOnTableCard(
+                            context.game(), context.playerId(),
+                            sourceTitle));
     }
 
     private static int safeReserveSize(Context context) {

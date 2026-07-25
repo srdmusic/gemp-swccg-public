@@ -111,6 +111,16 @@ public final class DeployBudgetPolicy {
                     String.format("Off-plan deploy leaves %d Force; offered objective formation needs %d",
                             forceAfterDeploy, facts.objectiveFormationReserve())));
         }
+        if (facts.objectiveRequiredCardReserve() > 0
+                && forceAfterDeploy
+                    < facts.objectiveRequiredCardReserve()) {
+            operations.add(add(facts.actionId(),
+                    "DEPLOY.BUDGET.OBJECTIVE_REQUIRED_CARD_RESERVE",
+                    -500.0f,
+                    String.format("Off-plan deploy leaves %d Force; a missing required objective card needs %d",
+                            forceAfterDeploy,
+                            facts.objectiveRequiredCardReserve())));
+        }
         if (facts.vaderMoveReserve() > 0
                 && forceAfterDeploy < facts.vaderMoveReserve()) {
             operations.add(add(facts.actionId(), "V48", -500.0f,
@@ -170,9 +180,27 @@ public final class DeployBudgetPolicy {
                                         int maintenanceCost,
                                         boolean dtfActive,
                                         boolean grabberUnused,
-                                        int objectiveFormationReserve) {
+                                        int objectiveFormationReserve,
+                                        int objectiveRequiredCardReserve) {
         public FutureObligationFacts {
             Objects.requireNonNull(actionId, "actionId");
+        }
+
+        public FutureObligationFacts(
+                String actionId, int availableForce,
+                int deployCost, int vaderMoveReserve,
+                int hiddenPathTransitReserve,
+                int vergeMoveReserve,
+                boolean maintenanceCard,
+                int maintenanceCost,
+                boolean dtfActive,
+                boolean grabberUnused,
+                int objectiveFormationReserve) {
+            this(actionId, availableForce, deployCost,
+                    vaderMoveReserve, hiddenPathTransitReserve,
+                    vergeMoveReserve, maintenanceCard,
+                    maintenanceCost, dtfActive, grabberUnused,
+                    objectiveFormationReserve, 0);
         }
     }
 

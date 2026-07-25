@@ -599,6 +599,9 @@ public final class BattleDecisionPolicy {
 
                                     boolean exactStructuredPreFlipTarget = false;
                                     boolean missingSelfControl = false;
+                                    boolean requiredCardControlEnabler = false;
+                                    boolean requiredCardRetention = false;
+                                    boolean hardLossLocation = false;
                                     boolean globalObjectiveBlocker = false;
                                     try {
                                         ObjectiveAnalyzer objectiveAnalyzer =
@@ -616,7 +619,32 @@ public final class BattleDecisionPolicy {
                                                         game, playerId,
                                                         targetLocation)
                                                 && !globalObjectiveBlocker;
-                                        if (exactStructuredPreFlipTarget) {
+                                        requiredCardControlEnabler =
+                                                objectiveAnalyzer != null
+                                                && (objectiveAnalyzer
+                                                        .isActiveRequiredCardControlEnablerLocation(
+                                                            game, playerId,
+                                                            targetLocation)
+                                                    || objectiveAnalyzer
+                                                        .isMissingRequiredCardDeployEnablerAt(
+                                                            game, playerId,
+                                                            targetLocation));
+                                        requiredCardRetention =
+                                                objectiveAnalyzer != null
+                                                && objectiveAnalyzer
+                                                    .isRequiredCardRetentionBattleLocation(
+                                                        game, playerId,
+                                                        targetLocation);
+                                        hardLossLocation =
+                                                objectiveAnalyzer != null
+                                                && objectiveAnalyzer
+                                                    .isObjectiveHardLossDefenseLocation(
+                                                        game, playerId,
+                                                        targetLocation);
+                                        if (exactStructuredPreFlipTarget
+                                                || requiredCardControlEnabler
+                                                || requiredCardRetention
+                                                || hardLossLocation) {
                                             missingSelfControl =
                                                 !game.getModifiersQuerying()
                                                     .controlsLocation(
@@ -636,6 +664,9 @@ public final class BattleDecisionPolicy {
                                             actionId,
                                             exactStructuredPreFlipTarget,
                                             missingSelfControl,
+                                            requiredCardControlEnabler,
+                                            requiredCardRetention,
+                                            hardLossLocation,
                                             globalObjectiveBlocker,
                                             true,
                                             formationSafetyVeto,

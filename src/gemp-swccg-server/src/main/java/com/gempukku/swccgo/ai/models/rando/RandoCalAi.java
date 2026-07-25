@@ -20,6 +20,7 @@ import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.CoordinatorPosturePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
@@ -136,6 +137,7 @@ public class RandoCalAi extends HeuristicAiBase {
     // Own shield tracking for shield pacing
     private final Set<String> seenOwnShields = new HashSet<>();
     private String lastPendingDeployType = null;  // Track pending deploy for confirmation
+    private Integer pendingMovePhysicalCardId;
 
     // Bot stats DAO for record lookups (optional - set via setter)
     private com.gempukku.swccgo.db.BotStatsDAO botStatsDAO;
@@ -1225,6 +1227,40 @@ public class RandoCalAi extends HeuristicAiBase {
         }
     }
 
+    private void rememberSelectedMoveCard(
+            DecisionContext context,
+            EvaluatedAction selected) {
+        if (context == null || selected == null
+                || context.getPhase() != Phase.MOVE
+                || context.getDecisionType() == null
+                || !context.getDecisionType()
+                    .contains("ACTION_CHOICE")) {
+            return;
+        }
+        pendingMovePhysicalCardId = null;
+        int index = context.getActionIds().indexOf(
+                selected.getActionId());
+        if (index < 0
+                || index >= context.getActionTexts().size()
+                || index >= context.getCardIds().size()) {
+            return;
+        }
+        String actionText =
+                context.getActionTexts().get(index);
+        if (actionText == null
+                || (!actionText.toLowerCase(Locale.ROOT)
+                    .contains("move using landspeed")
+                    && !actionText.toLowerCase(Locale.ROOT)
+                        .contains("embark"))) {
+            return;
+        }
+        try {
+            pendingMovePhysicalCardId = Integer.valueOf(
+                    context.getCardIds().get(index));
+        } catch (NumberFormatException ignored) {
+        }
+    }
+
     /**
      * Try to use the evaluator system for this decision.
      *
@@ -1252,6 +1288,7 @@ public class RandoCalAi extends HeuristicAiBase {
         }
 
         LOG.info("Evaluator decision: {} (score: {})", bestAction.getDisplayText(), bestAction.getScore());
+        rememberSelectedMoveCard(evalContext, bestAction);
 
         // === MULTI-SELECT FIX (Steve, 2026-05-31) ===
         // ArbitraryCardsSelectionDecision (and similar multi-select) expects a
@@ -1337,6 +1374,21 @@ public class RandoCalAi extends HeuristicAiBase {
             String.valueOf(decision.getAwaitingDecisionId()),
             phase
         );
+        String promptLower = decision.getText() != null
+            ? decision.getText().toLowerCase(Locale.ROOT) : "";
+        if (pendingMovePhysicalCardId != null
+                && "CARD_SELECTION".equals(
+                    decisionType.name())
+                && (promptLower.contains(
+                    "choose where to move")
+                    || promptLower.contains(
+                        "choose where to embark"))) {
+            evalContext.setExtra(
+                MovePhysicalCardResolver
+                    .MOVER_CARD_ID_EXTRA,
+                pendingMovePhysicalCardId);
+            pendingMovePhysicalCardId = null;
+        }
         evalContext.setActivationAmountDecision(activationAmountDecision);
 
         // Parse parameters from decision
@@ -1434,6 +1486,29 @@ public class RandoCalAi extends HeuristicAiBase {
                     textList.add(txt != null ? txt : "");
                 }
                 evalContext.setActionTexts(textList);
+            }
+
+            if ("MULTIPLE_CHOICE".equals(decisionType.name())
+                    && promptLower.contains("capacity slot")) {
+                String[] capacityResults = params.get("results");
+                if (capacityResults != null
+                        && capacityResults.length > 0) {
+                    List<String> capacityIds =
+                            new java.util.ArrayList<>();
+                    List<String> capacityTexts =
+                            new java.util.ArrayList<>();
+                    for (int i = 0;
+                            i < capacityResults.length; i++) {
+                        capacityIds.add(String.valueOf(i));
+                        String result = capacityResults[i];
+                        capacityTexts.add(
+                            (result != null ? result : "")
+                                + " capacity slot");
+                    }
+                    evalContext.setActionIds(capacityIds);
+                    evalContext.setActionTexts(
+                        capacityTexts);
+                }
             }
 
             // For CARD_ACTION_CHOICE: parse per-action cardId and blueprintId arrays
