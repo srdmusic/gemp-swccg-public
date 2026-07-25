@@ -59,7 +59,11 @@ final class PullPolicyAdapter {
                         context.getGameState(),
                         context.getPlayerId(),
                         context.getSide(),
-                        new OracleView(context.getDeckOracle(), context.getGameState())));
+                        new OracleView(
+                            context.getDeckOracle(),
+                            context.getGameState()),
+                        objectiveView(
+                            context.getObjectiveAnalyzer())));
     }
 
     static PullTakeCandidateFacts readTakeCandidate(
@@ -204,6 +208,18 @@ final class PullPolicyAdapter {
                 return objective
                         .objectivePullAdvancesRequiredOnTableCard(
                                 game, playerId, source);
+            }
+
+            @Override
+            public boolean objectiveRoutePullVetoBypass(
+                    SwccgGame game, String playerId,
+                    PhysicalCard source, String actionText) {
+                return objective
+                        .isFirstOrderReignsDownloadAction(
+                                source, actionText)
+                        && objective
+                            .hasFirstOrderReignsRouteProgressCandidateInReserve(
+                                game, playerId);
             }
         };
     }

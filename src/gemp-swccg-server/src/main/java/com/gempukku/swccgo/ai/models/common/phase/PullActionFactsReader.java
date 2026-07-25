@@ -99,6 +99,12 @@ public final class PullActionFactsReader {
                     game, playerId,
                     source != null ? source.getTitle() : null);
         }
+
+        default boolean objectiveRoutePullVetoBypass(
+                SwccgGame game, String playerId,
+                PhysicalCard source, String actionText) {
+            return false;
+        }
     }
 
     public interface LateView {
@@ -253,8 +259,16 @@ public final class PullActionFactsReader {
                 && source != null
                 && "209_42".equals(
                     source.getBlueprintId(true));
+        boolean objectiveRoutePullVetoBypass =
+                context != null
+                && context.objective() != null
+                && context.objective()
+                    .objectiveRoutePullVetoBypass(
+                        context.game(), context.playerId(),
+                        source, text);
 
         if (!requiredOnTableCardPullVetoBypass
+                && !objectiveRoutePullVetoBypass
                 && lowReserve) {
             return buildParent(actionId, text, reserveSize, "",
                     memoryValidation, sourceValidation, "?", null, false,
@@ -405,7 +419,8 @@ public final class PullActionFactsReader {
                 sourceCategory, false, cheapestCost, availableForce,
                 deadInterrupt, location, hosts, keyCharacter, context,
                 true, formation, requiredOnTableCardPull,
-                requiredOnTableCardPullVetoBypass);
+                requiredOnTableCardPullVetoBypass,
+                objectiveRoutePullVetoBypass);
     }
 
     private static PullActionFacts.Parent buildParent(
@@ -433,7 +448,7 @@ public final class PullActionFactsReader {
                 sourceCategory, allUnattachable, cheapestCost,
                 availableForce, deadInterrupt, location, hosts,
                 keyCharacter, context, includeLateContext,
-                formation, false, false);
+                formation, false, false, false);
     }
 
     private static PullActionFacts.Parent buildParent(
@@ -456,7 +471,8 @@ public final class PullActionFactsReader {
             boolean includeLateContext,
             FormationAssessment formation,
             boolean requiredOnTableCardPull,
-            boolean requiredOnTableCardPullVetoBypass) {
+            boolean requiredOnTableCardPullVetoBypass,
+            boolean objectiveRoutePullVetoBypass) {
         boolean charactersOrVehiclesInHand = false;
         boolean battlePlausible = false;
         if (includeLateContext && context != null && context.lateView() != null) {
@@ -511,7 +527,8 @@ public final class PullActionFactsReader {
                 formation.state(),
                 formation.reason(),
                 requiredOnTableCardPull,
-                requiredOnTableCardPullVetoBypass);
+                requiredOnTableCardPullVetoBypass,
+                objectiveRoutePullVetoBypass);
     }
 
     private static int safeReserveSize(Context context) {

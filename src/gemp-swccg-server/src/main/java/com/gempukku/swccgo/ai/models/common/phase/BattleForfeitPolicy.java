@@ -140,6 +140,16 @@ public final class BattleForfeitPolicy {
                         "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD";
                 reason = "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD: preserve the sole defender of a terminal-loss location while another legal loss exists";
                 break;
+            case TERMINAL_OBJECTIVE_ACTOR:
+                ruleId =
+                        "BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD";
+                reason = "BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD: do not forfeit the actor whose loss would place the objective out of play while another legal loss exists";
+                break;
+            case LAST_PENDING_TRIGGER_CONTROL_SOURCE:
+                ruleId =
+                        "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD";
+                reason = "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD: preserve the sole control source until the mandatory objective trigger resolves";
+                break;
             default:
                 return result(operations);
         }

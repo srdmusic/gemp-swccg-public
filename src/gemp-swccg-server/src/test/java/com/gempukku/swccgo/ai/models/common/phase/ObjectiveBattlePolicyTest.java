@@ -70,6 +70,67 @@ public class ObjectiveBattlePolicyTest {
                 -2.0f, 3, 3.0f, 7.0f));
     }
 
+    @Test
+    public void armedTerminalObjectiveBattleIsVetoedUnlessClearlySafe() {
+        PolicyResult risky =
+                ObjectiveBattlePolicy
+                    .evaluateTerminalObjectiveHazard(
+                        "battle", true, false, 10.0f);
+
+        assertEquals(1, risky.operations().size());
+        PolicyOperation veto = risky.operations().get(0);
+        assertEquals(
+                ObjectiveBattlePolicy
+                    .TERMINAL_OBJECTIVE_BATTLE_RULE_ID,
+                veto.ruleArmId().id());
+        assertEquals(
+                PolicyOperationKind.HARD_VETO,
+                veto.kind());
+
+        assertEquals(1, ObjectiveBattlePolicy
+                .evaluateTerminalObjectiveHazard(
+                    "battle", true, true, 1.99f)
+                .operations().size());
+        assertEmpty(ObjectiveBattlePolicy
+                .evaluateTerminalObjectiveHazard(
+                    "battle", false, false, -20.0f));
+    }
+
+    @Test
+    public void armedTerminalObjectiveBattleOpensAtSafeMargin() {
+        assertEmpty(ObjectiveBattlePolicy
+                .evaluateTerminalObjectiveHazard(
+                    "battle", true, true, 2.0f));
+    }
+
+    @Test
+    public void battleCannotSpendTheExactObjectiveMoveReserve() {
+        PolicyResult blocked =
+                ObjectiveBattlePolicy
+                    .preserveObjectiveMoveForce(
+                        "battle", 1, 1, 1.0f);
+
+        assertEquals(1, blocked.operations().size());
+        PolicyOperation veto = blocked.operations().get(0);
+        assertEquals(
+                ObjectiveBattlePolicy
+                    .OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID,
+                veto.ruleArmId().id());
+        assertEquals(
+                PolicyOperationKind.HARD_VETO,
+                veto.kind());
+
+        assertEmpty(ObjectiveBattlePolicy
+                .preserveObjectiveMoveForce(
+                    "battle", 1, 2, 1.0f));
+        assertEmpty(ObjectiveBattlePolicy
+                .preserveObjectiveMoveForce(
+                    "battle", 1, 1, 0.0f));
+        assertEmpty(ObjectiveBattlePolicy
+                .preserveObjectiveMoveForce(
+                    "battle", 0, 0, 1.0f));
+    }
+
     private static PolicyResult evaluate(
             boolean exactStructuredPreFlipTarget,
             boolean missingSelfControl,

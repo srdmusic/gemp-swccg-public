@@ -568,11 +568,16 @@ public class MoveEvaluator extends ActionEvaluator {
             }
 
             // Typed actor-gate objectives may require several ordinary
-            // landspeed legs. Claim doctrine only when at least one exact
+            // landspeed or hyperspeed legs. Claim doctrine only when at least one exact
             // closer hop survives both destination and origin safety checks.
+            boolean objectiveLandspeedMove =
+                    actionLower.contains("move using landspeed");
+            boolean objectiveHyperspeedMove =
+                    actionLower.contains("move using hyperspeed");
             if (cardToMove != null && gameState != null && game != null
                     && playerId != null
-                    && actionLower.contains("move using landspeed")) {
+                    && (objectiveLandspeedMove
+                        || objectiveHyperspeedMove)) {
                 try {
                     com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer
                             routeAnalyzer = context.getObjectiveAnalyzer();
@@ -583,18 +588,48 @@ public class MoveEvaluator extends ActionEvaluator {
                     boolean runtimeLocationHop = false;
                     boolean runtimeBlockerChaseHop = false;
                     boolean requiredCardEnablerHop = false;
+                    boolean postFlipPayoffHop = false;
+                    boolean safePostFlipPayoffRetentionHop = false;
+                    boolean terminalEscapeHop = false;
+                    boolean firstOrderDrainPairHop = false;
+                    boolean terminalExposureAtOrigin = false;
+                    boolean firstOrderDrainPairMember = false;
+                    com.gempukku.swccgo.ai.models.common.strategy
+                        .ObjectiveAnalyzer.ObjectivePostFlipPayoffRole
+                        currentPostFlipPayoff =
+                            com.gempukku.swccgo.ai.models.common.strategy
+                                .ObjectiveAnalyzer
+                                .ObjectivePostFlipPayoffRole.NONE;
                     if (routeAnalyzer != null && routeAnalyzer.isAnalyzed()
                             && routeOrigin != null) {
+                        currentPostFlipPayoff =
+                            routeAnalyzer.classifyPostFlipPayoffRoleAt(
+                                game, playerId, cardToMove,
+                                routeOrigin);
+                        terminalExposureAtOrigin =
+                            routeAnalyzer
+                                .isFirstOrderReignsTerminalExposureAt(
+                                    game, playerId,
+                                    cardToMove, routeOrigin);
+                        firstOrderDrainPairMember =
+                            routeAnalyzer
+                                .isFirstOrderReignsDrainPairMemberAtExactPair(
+                                    game, playerId, cardToMove);
                         com.gempukku.swccgo.filters.Filter
-                                legalLandspeedTarget =
-                                com.gempukku.swccgo.filters.Filters
+                                legalObjectiveTarget =
+                                objectiveHyperspeedMove
+                                ? com.gempukku.swccgo.filters.Filters
+                                    .canMoveToUsingHyperspeed(
+                                        playerId, cardToMove,
+                                        false, false, 0.0f)
+                                : com.gempukku.swccgo.filters.Filters
                                     .canMoveToUsingLandspeed(
                                         playerId, cardToMove,
                                         false, false, false, 0.0f, null);
                         for (PhysicalCard routeDestination
                                 : gameState.getLocationsInOrder()) {
                             if (routeDestination == null
-                                    || !legalLandspeedTarget.accepts(
+                                    || !legalObjectiveTarget.accepts(
                                         gameState,
                                         game.getModifiersQuerying(),
                                         routeDestination)) {
@@ -626,11 +661,50 @@ public class MoveEvaluator extends ActionEvaluator {
                                             game, playerId,
                                             cardToMove,
                                             routeDestination);
+                            boolean payoffHop = routeAnalyzer
+                                    .classifyPostFlipPayoffAt(
+                                            game, playerId,
+                                            cardToMove,
+                                            routeDestination)
+                                    != com.gempukku.swccgo.ai.models.common
+                                        .strategy.ObjectiveAnalyzer
+                                        .ObjectivePostFlipPayoffRole.NONE;
+                            boolean terminalEscape =
+                                    terminalExposureAtOrigin
+                                    && !routeAnalyzer
+                                        .isFirstOrderReignsTerminalExposureAt(
+                                            game, playerId,
+                                            cardToMove,
+                                            routeDestination);
+                            boolean drainPairHop = routeAnalyzer
+                                    .advancesFirstOrderReignsDrainPairAt(
+                                        game, playerId,
+                                        cardToMove,
+                                        routeDestination);
+                            boolean retainsCurrentPayoff =
+                                    currentPostFlipPayoff
+                                        != com.gempukku.swccgo.ai.models
+                                            .common.strategy
+                                            .ObjectiveAnalyzer
+                                            .ObjectivePostFlipPayoffRole.NONE
+                                    && !routeAnalyzer
+                                        .wouldDowngradePostFlipPayoffIfMoved(
+                                            game, playerId,
+                                            cardToMove,
+                                            routeDestination);
                             if (!actorRouteHop
                                     && !actorLocationHop
                                     && !blockerChaseHop
                                     && !requiredEnablerHop
-                                    && !mainGeneratorHop) {
+                                    && !mainGeneratorHop
+                                    && !payoffHop
+                                    && !terminalEscape
+                                    && !drainPairHop
+                                    && currentPostFlipPayoff
+                                        == com.gempukku.swccgo.ai.models
+                                            .common.strategy
+                                            .ObjectiveAnalyzer
+                                            .ObjectivePostFlipPayoffRole.NONE) {
                                 continue;
                             }
                             String routeVeto =
@@ -639,7 +713,8 @@ public class MoveEvaluator extends ActionEvaluator {
                                         .vetoMoveDestination(
                                             game, gameState, playerId,
                                             cardToMove, routeDestination);
-                            if (routeVeto == null) {
+                            if (routeVeto == null
+                                    && !terminalEscape) {
                                 routeVeto = com.gempukku.swccgo.ai.models
                                     .common.strategy.FormationSafety
                                     .vetoMoveOrigin(
@@ -647,21 +722,43 @@ public class MoveEvaluator extends ActionEvaluator {
                                         cardToMove, routeOrigin);
                             }
                             if (routeVeto == null) {
-                                safeAdvancingHop = true;
+                                safeAdvancingHop |= actorRouteHop
+                                        || actorLocationHop
+                                        || blockerChaseHop
+                                        || requiredEnablerHop
+                                        || mainGeneratorHop
+                                        || payoffHop;
                                 runtimeLocationHop |=
                                         actorLocationHop;
                                 runtimeBlockerChaseHop |=
                                         blockerChaseHop;
                                 requiredCardEnablerHop |=
                                         requiredEnablerHop;
-                                if (requiredCardEnablerHop) {
+                                postFlipPayoffHop |= payoffHop;
+                                safePostFlipPayoffRetentionHop |=
+                                        retainsCurrentPayoff;
+                                terminalEscapeHop |= terminalEscape;
+                                firstOrderDrainPairHop |= drainPairHop;
+                                if (requiredCardEnablerHop
+                                        && currentPostFlipPayoff
+                                            == com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .ObjectiveAnalyzer
+                                                .ObjectivePostFlipPayoffRole.NONE
+                                        && !terminalExposureAtOrigin
+                                        && !firstOrderDrainPairMember) {
                                     break;
                                 }
                             }
                         }
                     }
                     MoveDestinationPolicy.Contribution objectiveRoute =
-                            requiredCardEnablerHop
+                            postFlipPayoffHop
+                            ? MoveDestinationPolicy
+                                .objectivePostFlipPayoffStart(
+                                    safeAdvancingHop,
+                                    cardToMove.getTitle())
+                            : requiredCardEnablerHop
                             ? MoveDestinationPolicy
                                 .objectiveRequiredCardEnablerStart(
                                     safeAdvancingHop,
@@ -681,7 +778,15 @@ public class MoveEvaluator extends ActionEvaluator {
                                     safeAdvancingHop,
                                     cardToMove.getTitle());
                     if (objectiveRoute.applies()) {
-                        if (requiredCardEnablerHop) {
+                        if (postFlipPayoffHop) {
+                            action.addReasoning(
+                                    objectiveRoute.reason(),
+                                    objectiveRoute.delta(),
+                                    TraceRuleId.of(
+                                        "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_START"),
+                                    TraceDomainId.MOVE,
+                                    TraceOutputKind.BANDED);
+                        } else if (requiredCardEnablerHop) {
                             action.addReasoning(
                                     objectiveRoute.reason(),
                                     objectiveRoute.delta(),
@@ -703,7 +808,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                     TraceOutputKind.BANDED);
                         }
                         ladderClaimR2(
-                                requiredCardEnablerHop
+                                postFlipPayoffHop
+                                    ? "OBJECTIVE POST-FLIP PAYOFF"
+                                    : requiredCardEnablerHop
                                     ? "OBJECTIVE REQUIRED-CARD ENABLER"
                                     : runtimeLocationHop
                                     ? "OBJECTIVE ACTOR LOCATION"
@@ -712,8 +819,81 @@ public class MoveEvaluator extends ActionEvaluator {
                                     : "OBJECTIVE ACTOR ROUTE",
                                 objectiveRoute.delta(), 0.0f, false);
                         logger.warn(
-                                "OBJECTIVE ACTOR MOVE: {} has a safe objective landspeed hop",
-                                cardToMove.getTitle());
+                                "OBJECTIVE ACTOR MOVE: {} has a safe objective {} hop",
+                                cardToMove.getTitle(),
+                                objectiveHyperspeedMove
+                                    ? "hyperspeed" : "landspeed");
+                    }
+                    MoveDestinationPolicy.Contribution payoffHold =
+                            MoveDestinationPolicy
+                                .objectivePostFlipPayoffRetention(
+                                    currentPostFlipPayoff,
+                                    safePostFlipPayoffRetentionHop
+                                        ? currentPostFlipPayoff
+                                        : com.gempukku.swccgo.ai.models
+                                            .common.strategy
+                                            .ObjectiveAnalyzer
+                                            .ObjectivePostFlipPayoffRole.NONE,
+                                    cardToMove.getTitle(),
+                                    "every legal destination");
+                    if (!terminalExposureAtOrigin
+                            && payoffHold.applies()) {
+                        action.addReasoning(
+                                payoffHold.reason(),
+                                payoffHold.delta(),
+                                TraceRuleId.of(
+                                    "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_HOLD"),
+                                TraceDomainId.MOVE,
+                                TraceOutputKind.ORDERING);
+                    }
+                    MoveDestinationPolicy.Contribution terminalEscape =
+                            MoveDestinationPolicy
+                                .objectiveTerminalActorEscapeStart(
+                                    terminalEscapeHop,
+                                    cardToMove.getTitle());
+                    if (terminalEscape.applies()) {
+                        action.addReasoning(
+                                terminalEscape.reason(),
+                                terminalEscape.delta(),
+                                TraceRuleId.of(
+                                    "MOVE.OBJECTIVE.TERMINAL_ACTOR_ESCAPE_START"),
+                                TraceDomainId.MOVE,
+                                TraceOutputKind.BANDED);
+                        ladderClaimR3(
+                                "OBJECTIVE TERMINAL ACTOR ESCAPE");
+                    }
+                    MoveDestinationPolicy.Contribution drainPairStart =
+                            MoveDestinationPolicy
+                                .objectiveFirstOrderDrainPairStart(
+                                    firstOrderDrainPairHop,
+                                    cardToMove.getTitle());
+                    if (drainPairStart.applies()) {
+                        action.addReasoning(
+                                drainPairStart.reason(),
+                                drainPairStart.delta(),
+                                TraceRuleId.of(
+                                    "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_START"),
+                                TraceDomainId.MOVE,
+                                TraceOutputKind.BANDED);
+                        ladderClaimR2(
+                                "OBJECTIVE FIRST ORDER DRAIN PAIR",
+                                drainPairStart.delta(),
+                                1.0f, false);
+                    }
+                    MoveDestinationPolicy.Contribution drainPairHold =
+                            MoveDestinationPolicy
+                                .objectiveFirstOrderDrainPairHold(
+                                    firstOrderDrainPairMember
+                                        && !terminalExposureAtOrigin,
+                                    cardToMove.getTitle(), null);
+                    if (drainPairHold.applies()) {
+                        action.addReasoning(
+                                drainPairHold.reason(),
+                                drainPairHold.delta(),
+                                TraceRuleId.of(
+                                    "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_HOLD"),
+                                TraceDomainId.MOVE,
+                                TraceOutputKind.ORDERING);
                     }
                 } catch (Exception e) {
                     logger.debug(
@@ -1326,10 +1506,19 @@ public class MoveEvaluator extends ActionEvaluator {
                                 (int) postFlipFriendlyPower,
                                 (int) postFlipOpponentPower);
                         }
+                        boolean terminalActorMustEscape =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && gateAnalyzer
+                                    .isFirstOrderReignsTerminalExposureAt(
+                                        game, playerId,
+                                        cardToMove,
+                                        currentLocation);
                         com.gempukku.swccgo.ai.models.common.strategy
                                 .ObjectiveAnalyzer.FlipGateFormationRole
                                 hardLossRole = gateAnalyzer != null
                                 && gateAnalyzer.isAnalyzed()
+                                && !terminalActorMustEscape
                                 ? gateAnalyzer
                                     .classifyGateFormationPieceIfRemoved(
                                         game, playerId, cardToMove)

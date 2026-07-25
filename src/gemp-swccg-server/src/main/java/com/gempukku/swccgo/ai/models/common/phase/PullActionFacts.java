@@ -79,7 +79,8 @@ public final class PullActionFacts {
             FormationState formationState,
             String formationReason,
             boolean requiredOnTableCardPull,
-            boolean requiredOnTableCardPullVetoBypass) {
+            boolean requiredOnTableCardPullVetoBypass,
+            boolean objectiveRoutePullVetoBypass) {
         public Parent {
             Objects.requireNonNull(actionId, "actionId");
             actionText = actionText == null ? "" : actionText;

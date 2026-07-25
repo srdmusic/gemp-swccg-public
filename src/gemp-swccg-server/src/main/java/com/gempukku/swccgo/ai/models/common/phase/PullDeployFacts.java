@@ -15,7 +15,8 @@ public record PullDeployFacts(
         PullOracleView.Validation sourceValidation,
         String sourceTitle,
         boolean allReserveTargetsUnattachableWeapons,
-        boolean starshipOnlyWithoutSpaceLocation) {
+        boolean starshipOnlyWithoutSpaceLocation,
+        boolean objectiveRoutePullVetoBypass) {
     public PullDeployFacts {
         Objects.requireNonNull(actionId, "actionId");
         actionText = actionText == null ? "" : actionText;

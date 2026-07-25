@@ -27,10 +27,15 @@ public final class ObjectiveBattlePolicy {
     public static final String HARD_LOSS_LOCATION_RULE_ID =
             "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_DEFENSE";
     public static final float HARD_LOSS_LOCATION_BONUS = 250.0f;
+    public static final String TERMINAL_OBJECTIVE_BATTLE_RULE_ID =
+            "BATTLE.OBJECTIVE.TERMINAL_ACTOR_LOSS_VETO";
+    public static final String OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID =
+            "BATTLE.OBJECTIVE.MOVE_FORCE_RESERVE";
 
     private static final int MINIMUM_RESERVE = 3;
     private static final float MINIMUM_EFFECTIVE_DIFF = -2.0f;
     private static final float OVERPOWER_MARGIN = 8.0f;
+    private static final float TERMINAL_BATTLE_SAFE_DIFF = 2.0f;
     private static final String PRODUCER = "OBJECTIVE_BATTLE_POLICY";
 
     public record Facts(
@@ -137,6 +142,54 @@ public final class ObjectiveBattlePolicy {
     }
 
     private ObjectiveBattlePolicy() {
+    }
+
+    public static PolicyResult evaluateTerminalObjectiveHazard(
+            String actionId,
+            boolean terminalObjectiveHazard,
+            boolean predictorSafe,
+            float effectiveDiff) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!terminalObjectiveHazard
+                || (predictorSafe
+                    && effectiveDiff
+                        >= TERMINAL_BATTLE_SAFE_DIFF)) {
+            return new PolicyResult(
+                    PRODUCER, List.of());
+        }
+        return new PolicyResult(
+                PRODUCER,
+                List.of(PolicyOperation.hardVeto(
+                    actionId,
+                    TraceRuleId.of(
+                        TERMINAL_OBJECTIVE_BATTLE_RULE_ID),
+                    TraceDomainId.BATTLE_INITIATION,
+                    TraceOutputKind.VETO,
+                    "Do not initiate a risky battle that can place the objective out of play by forfeiting its terminal actor")));
+    }
+
+    public static PolicyResult preserveObjectiveMoveForce(
+            String actionId,
+            int requiredMoveForce,
+            int availableForce,
+            float battleCost) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (requiredMoveForce <= 0
+                || battleCost <= 0
+                || availableForce - battleCost
+                    >= requiredMoveForce) {
+            return new PolicyResult(
+                    PRODUCER, List.of());
+        }
+        return new PolicyResult(
+                PRODUCER,
+                List.of(PolicyOperation.hardVeto(
+                    actionId,
+                    TraceRuleId.of(
+                        OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID),
+                    TraceDomainId.BATTLE_INITIATION,
+                    TraceOutputKind.VETO,
+                    "Preserve the exact Force required for the next objective movement leg")));
     }
 
     public static PolicyResult evaluate(Facts facts) {

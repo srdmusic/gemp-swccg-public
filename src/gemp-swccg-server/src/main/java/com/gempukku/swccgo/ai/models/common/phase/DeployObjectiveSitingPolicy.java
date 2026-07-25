@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
@@ -187,6 +188,97 @@ public final class DeployObjectiveSitingPolicy {
                         TraceOutputKind.BANDED,
                         1200.0f,
                         "Deploy here to defend a live threat to the objective's terminal-loss location"));
+    }
+
+    public static PolicyResult scoreObjectiveLostPileDeploy(
+            String actionId, boolean exactObjectiveAction,
+            boolean hasLegalCandidate) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!exactObjectiveAction) {
+            return new PolicyResult(
+                    "DEPLOY_OBJECTIVE_LOST_PILE_POLICY",
+                    List.of());
+        }
+        if (!hasLegalCandidate) {
+            return single(
+                    "DEPLOY_OBJECTIVE_LOST_PILE_POLICY",
+                    PolicyOperation.hardVeto(
+                        actionId,
+                        TraceRuleId.of(
+                            "DEPLOY.OBJECTIVE.LOST_PILE_NO_LEGAL_CARD"),
+                        TraceDomainId.DEPLOY_SITING,
+                        TraceOutputKind.VETO,
+                        "Do not spend the once-per-turn objective action when Lost Pile has no legal source-defined deploy"));
+        }
+        return single(
+                "DEPLOY_OBJECTIVE_LOST_PILE_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.LOST_PILE_ROUTE",
+                        TraceOutputKind.BANDED,
+                        300.0f,
+                        "Use the objective's legal once-per-turn Lost Pile deploy"));
+    }
+
+    public static PolicyResult scorePostFlipObjectivePayoff(
+            String actionId,
+            ObjectiveAnalyzer.ObjectivePostFlipPayoffRole role) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (role == null
+                || role
+                    == ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.NONE) {
+            return new PolicyResult(
+                    "DEPLOY_POST_FLIP_OBJECTIVE_PAYOFF_POLICY",
+                    List.of());
+        }
+        boolean primary = role
+                == ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.PRIMARY;
+        return single(
+                "DEPLOY_POST_FLIP_OBJECTIVE_PAYOFF_POLICY",
+                add(actionId,
+                        primary
+                            ? "DEPLOY.OBJECTIVE.POST_FLIP_PRIMARY_PAYOFF"
+                            : "DEPLOY.OBJECTIVE.POST_FLIP_SECONDARY_PAYOFF",
+                        TraceOutputKind.BANDED,
+                        primary ? 1200.0f : 700.0f,
+                        primary
+                            ? "Deploy the named actor to activate the objective's primary back-side payoff"
+                            : "Deploy the named actor to activate the objective's secondary back-side payoff"));
+    }
+
+    public static PolicyResult scoreFirstOrderReignsDrainPair(
+            String actionId, boolean completesPair) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!completesPair) {
+            return new PolicyResult(
+                    "DEPLOY_FIRST_ORDER_DRAIN_PAIR_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_FIRST_ORDER_DRAIN_PAIR_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR",
+                        TraceOutputKind.BANDED,
+                        800.0f,
+                        "Deploy the second First Order character to activate the objective's +1 battleground drain"));
+    }
+
+    public static PolicyResult blockTerminalObjectiveExposure(
+            String actionId, boolean terminalExposure) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!terminalExposure) {
+            return new PolicyResult(
+                    "DEPLOY_TERMINAL_OBJECTIVE_EXPOSURE_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_TERMINAL_OBJECTIVE_EXPOSURE_POLICY",
+                PolicyOperation.hardVeto(
+                        actionId,
+                        TraceRuleId.of(
+                                "DEPLOY.OBJECTIVE.TERMINAL_ACTOR_EXPOSURE"),
+                        TraceDomainId.DEPLOY_SITING,
+                        TraceOutputKind.VETO,
+                        "Do not deploy the objective's terminal actor into the exact conjunction that can place the objective out of play"));
     }
 
     public static PolicyResult blockRequiredCardInactivation(

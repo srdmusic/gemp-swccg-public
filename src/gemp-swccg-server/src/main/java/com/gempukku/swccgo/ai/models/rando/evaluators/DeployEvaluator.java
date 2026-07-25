@@ -621,11 +621,29 @@ public class DeployEvaluator extends ActionEvaluator {
 
             // V209 PULL deploy-side guards. The shared policy keeps this evaluator's
             // historical additive veto layer separate from ActionText's parent scorer.
-            boolean reservePull = actionLower.contains("from reserve deck")
-                    || actionLower.contains("[download]");
-            if (reservePull) {
-                String sourceCardId = ctxCardIds != null && i < ctxCardIds.size()
+            String sourceCardId =
+                    ctxCardIds != null && i < ctxCardIds.size()
                         ? ctxCardIds.get(i) : null;
+            boolean firstOrderReignsObjectiveDownload = false;
+            if (sourceCardId != null && gameState != null
+                    && context.getObjectiveAnalyzer() != null) {
+                try {
+                    PhysicalCard sourceCard =
+                            gameState.findCardById(
+                                Integer.parseInt(sourceCardId));
+                    firstOrderReignsObjectiveDownload =
+                            context.getObjectiveAnalyzer()
+                                .isFirstOrderReignsDownloadAction(
+                                    sourceCard, actionText);
+                } catch (NumberFormatException ignored) {
+                    // Non-card source ids cannot be the objective action.
+                }
+            }
+            boolean reservePull =
+                    actionLower.contains("from reserve deck")
+                    || actionLower.contains("[download]")
+                    || firstOrderReignsObjectiveDownload;
+            if (reservePull) {
                 PullDeployPolicy.Evaluation pull = PullDeployPolicy.evaluate(
                         PullPolicyAdapter.readDeploy(
                                 context, actionId, actionText, sourceCardId));
@@ -1470,6 +1488,12 @@ public class DeployEvaluator extends ActionEvaluator {
                             }
                         }
                     }
+                    int firstOrderReignsRouteReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getFirstOrderReignsRouteForceReserve(
+                                    game, playerId, card)
+                            : 0;
                     int objectiveRequiredCardReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -1613,6 +1637,13 @@ public class DeployEvaluator extends ActionEvaluator {
                             == DeployBudgetPolicy.AdapterStep.CONTINUE_ACTION) {
                         actions.add(action);
                         continue;
+                    }
+                    if (cost > 0
+                            && firstOrderReignsRouteReserve > 0
+                            && availableForce - cost
+                                < firstOrderReignsRouteReserve) {
+                        action.hardVeto(
+                            "OBJECTIVE.FIRST_ORDER_REIGNS.RESERVE_7: preserve 7 Force for Supremacy's objective route");
                     }
 
                     boolean obligationMaintenance = false;

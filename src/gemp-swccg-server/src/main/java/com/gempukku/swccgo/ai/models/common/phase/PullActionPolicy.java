@@ -148,6 +148,7 @@ public final class PullActionPolicy {
         boolean hardBlocked = false;
 
         if (!facts.requiredOnTableCardPullVetoBypass()
+                && !facts.objectiveRoutePullVetoBypass()
                 && facts.reserveSize() >= 0
                 && facts.reserveSize() <= 2) {
             operations.add(add(facts.actionId(), "V60-reserve-risk",

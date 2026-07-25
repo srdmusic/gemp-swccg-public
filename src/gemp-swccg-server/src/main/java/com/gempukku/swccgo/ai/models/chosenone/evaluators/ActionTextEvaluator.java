@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
@@ -1428,10 +1429,40 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
+            boolean firstOrderReignsObjectiveDownload = false;
+            boolean firstOrderReignsLostPileDeploy = false;
+            boolean firstOrderReignsLostPileDeployReady = false;
+            if (cardId != null && gameState != null
+                    && context.getObjectiveAnalyzer() != null) {
+                try {
+                    PhysicalCard sourceCard = gameState.findCardById(
+                            Integer.parseInt(cardId));
+                    firstOrderReignsObjectiveDownload =
+                            context.getObjectiveAnalyzer()
+                                .isFirstOrderReignsDownloadAction(
+                                    sourceCard, actionText);
+                    firstOrderReignsLostPileDeploy =
+                            context.getObjectiveAnalyzer()
+                                .isFirstOrderReignsLostPileDeployAction(
+                                    sourceCard, actionText);
+                    firstOrderReignsLostPileDeployReady =
+                            firstOrderReignsLostPileDeploy
+                            && context.getObjectiveAnalyzer()
+                                .hasLegalFirstOrderReignsLostPileDeployCandidate(
+                                    context.getGame(),
+                                    context.getPlayerId(),
+                                    sourceCard);
+                } catch (NumberFormatException ignored) {
+                    // Non-card source ids cannot be the objective action.
+                }
+            }
+
             // ========== Skip ALL Deploy Actions ==========
             // Deploy actions should be handled EXCLUSIVELY by DeployEvaluator.
             if (actionText.equals("Deploy") ||
-                (actionText.startsWith("Deploy ") && !textLower.contains("from"))) {
+                (actionText.startsWith("Deploy ")
+                    && !textLower.contains("from")
+                    && !firstOrderReignsObjectiveDownload)) {
                 // Skip this action - let DeployEvaluator handle it
                 continue;
             }
@@ -4398,12 +4429,21 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // V209 consolidates parent reserve-search guards, phase weighting, objective
             // key-character priority, DeckOracle facts, and forced-here formation safety.
             // Route recognition stays on the stock action text and source card id.
+            else if (firstOrderReignsLostPileDeploy) {
+                applyDeployActionTextPolicy(
+                    action,
+                    DeployObjectiveSitingPolicy
+                        .scoreObjectiveLostPileDeploy(
+                            actionId, true,
+                            firstOrderReignsLostPileDeployReady));
+            }
             else if (textLower.contains("[download]")
                      || (textLower.contains("from reserve deck")
                          && !textLower.contains("shuffle"))
                      || textLower.contains("[upload]")
                      || (textLower.contains("take")
-                         && textLower.contains("into hand"))) {
+                         && textLower.contains("into hand"))
+                     || firstOrderReignsObjectiveDownload) {
                 PullActionPolicy.Evaluation pull = PullActionPolicy.evaluateParent(
                         PullPolicyAdapter.readParent(
                                 context, actionId, actionText, cardId));

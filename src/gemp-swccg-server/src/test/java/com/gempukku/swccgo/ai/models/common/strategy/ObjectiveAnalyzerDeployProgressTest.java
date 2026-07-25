@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
+import com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
@@ -150,10 +151,12 @@ public class ObjectiveAnalyzerDeployProgressTest {
         com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator evaluator =
                 new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator();
         java.lang.reflect.Method resolver = evaluator.getClass().getDeclaredMethod(
-                "findUniqueDeployingCard", GameState.class, String.class, String.class);
+                "findUniqueDeployingCard", DecisionContext.class, GameState.class,
+                String.class, String.class);
         resolver.setAccessible(true);
 
-        assertEquals(null, resolver.invoke(evaluator, gameState, PLAYER_ID, "8_125"));
+        assertEquals(null, resolver.invoke(
+                evaluator, null, gameState, PLAYER_ID, "8_125"));
     }
 
     @Test

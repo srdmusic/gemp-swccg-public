@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -845,6 +846,122 @@ public class MoveDestinationPolicyTest {
                 true, false, false).applies());
         assertFalse(MoveDestinationPolicy.evazanCombo(
                 false, false, true).applies());
+    }
+
+    @Test
+    public void terminalObjectiveExposureIsAnExactHardVeto() {
+        MoveDestinationPolicy.CompanionVeto blocked =
+                MoveDestinationPolicy.terminalObjectiveExposure(true);
+        assertTrue(blocked.hardVeto());
+        assertTrue(blocked.reason().contains(
+                "terminal actor"));
+
+        MoveDestinationPolicy.CompanionVeto allowed =
+                MoveDestinationPolicy.terminalObjectiveExposure(false);
+        assertFalse(allowed.hardVeto());
+    }
+
+    @Test
+    public void postFlipPayoffPreservesPrimaryAndSecondaryOrdering() {
+        MoveDestinationPolicy.Contribution primary =
+                MoveDestinationPolicy
+                    .objectivePostFlipPayoffDestination(
+                        ObjectiveAnalyzer
+                            .ObjectivePostFlipPayoffRole.PRIMARY,
+                        "Kylo Ren", "Crait: Salt Plateau");
+        MoveDestinationPolicy.Contribution secondary =
+                MoveDestinationPolicy
+                    .objectivePostFlipPayoffDestination(
+                        ObjectiveAnalyzer
+                            .ObjectivePostFlipPayoffRole.SECONDARY,
+                        "Kylo Ren", "Crait");
+
+        assertFloat(1200.0f, primary.delta());
+        assertFloat(700.0f, secondary.delta());
+        assertTrue(primary.delta() > secondary.delta());
+        assertFalse(MoveDestinationPolicy
+                .objectivePostFlipPayoffDestination(
+                    ObjectiveAnalyzer
+                        .ObjectivePostFlipPayoffRole.NONE,
+                    "Kylo Ren", "Crait")
+                .applies());
+    }
+
+    @Test
+    public void postFlipPayoffRetentionPenalizesOnlyDowngrades() {
+        MoveDestinationPolicy.Contribution primaryToSecondary =
+                MoveDestinationPolicy
+                    .objectivePostFlipPayoffRetention(
+                        ObjectiveAnalyzer
+                            .ObjectivePostFlipPayoffRole.PRIMARY,
+                        ObjectiveAnalyzer
+                            .ObjectivePostFlipPayoffRole.SECONDARY,
+                        "Kylo Ren", "Crait");
+        MoveDestinationPolicy.Contribution secondaryToNone =
+                MoveDestinationPolicy
+                    .objectivePostFlipPayoffRetention(
+                        ObjectiveAnalyzer
+                            .ObjectivePostFlipPayoffRole.SECONDARY,
+                        ObjectiveAnalyzer
+                            .ObjectivePostFlipPayoffRole.NONE,
+                        "Kylo Ren", "D'Qar");
+
+        assertFloat(-1600.0f, primaryToSecondary.delta());
+        assertFloat(-900.0f, secondaryToNone.delta());
+        assertFalse(MoveDestinationPolicy
+                .objectivePostFlipPayoffRetention(
+                    ObjectiveAnalyzer
+                        .ObjectivePostFlipPayoffRole.PRIMARY,
+                    ObjectiveAnalyzer
+                        .ObjectivePostFlipPayoffRole.PRIMARY,
+                    "Kylo Ren", "Crait: Salt Plateau")
+                .applies());
+        assertFalse(MoveDestinationPolicy
+                .objectivePostFlipPayoffRetention(
+                    ObjectiveAnalyzer
+                        .ObjectivePostFlipPayoffRole.NONE,
+                    ObjectiveAnalyzer
+                        .ObjectivePostFlipPayoffRole.NONE,
+                    "Kylo Ren", "D'Qar")
+                .applies());
+    }
+
+    @Test
+    public void firstOrderDrainPairAndTerminalEscapeBandsStayOrdered() {
+        MoveDestinationPolicy.Contribution pairStart =
+                MoveDestinationPolicy
+                    .objectiveFirstOrderDrainPairStart(
+                        true, "First Order Stormtrooper");
+        MoveDestinationPolicy.Contribution pairDestination =
+                MoveDestinationPolicy
+                    .objectiveFirstOrderDrainPairDestination(
+                        true, "First Order Stormtrooper",
+                        "Crait: Salt Plateau");
+        MoveDestinationPolicy.Contribution pairHold =
+                MoveDestinationPolicy
+                    .objectiveFirstOrderDrainPairHold(
+                        true, "First Order Stormtrooper",
+                        "D'Qar");
+        MoveDestinationPolicy.Contribution escape =
+                MoveDestinationPolicy
+                    .objectiveTerminalActorEscapeStart(
+                        true, "Kylo Ren");
+
+        assertFloat(600.0f, pairStart.delta());
+        assertFloat(800.0f, pairDestination.delta());
+        assertFloat(-900.0f, pairHold.delta());
+        assertFloat(1800.0f, escape.delta());
+        assertTrue(escape.delta()
+                > pairDestination.delta());
+        assertFalse(MoveDestinationPolicy
+                .objectiveFirstOrderDrainPairDestination(
+                    false, "First Order Stormtrooper",
+                    "Crait: Salt Plateau")
+                .applies());
+        assertFalse(MoveDestinationPolicy
+                .objectiveTerminalActorEscapeDestination(
+                    false, "Kylo Ren", "Crait")
+                .applies());
     }
 
     private static PhysicalCard location(

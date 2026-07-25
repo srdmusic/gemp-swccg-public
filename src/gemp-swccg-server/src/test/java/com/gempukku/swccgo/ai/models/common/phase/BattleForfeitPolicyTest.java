@@ -41,6 +41,18 @@ public class BattleForfeitPolicyTest {
                     ObjectiveAnalyzer.FlipGateFormationRole
                         .LAST_FLIP_BACK_BLOCKER,
                     true);
+        PolicyResult terminalActor = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .TERMINAL_OBJECTIVE_ACTOR,
+                    true);
+        PolicyResult pendingTrigger = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_PENDING_TRIGGER_CONTROL_SOURCE,
+                    true);
         PolicyResult surplus = BattleForfeitPolicy
                 .scoreFlipGateFormationProtection(
                     ACTION_ID,
@@ -67,6 +79,16 @@ public class BattleForfeitPolicyTest {
                 op("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
                     -9999.0f,
                     "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the sole flip-back blocker while another legal loss exists",
+                    TraceOutputKind.VETO));
+        assertOperations(terminalActor,
+                op("BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD",
+                    -9999.0f,
+                    "BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD: do not forfeit the actor whose loss would place the objective out of play while another legal loss exists",
+                    TraceOutputKind.VETO));
+        assertOperations(pendingTrigger,
+                op("BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD",
+                    -9999.0f,
+                    "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD: preserve the sole control source until the mandatory objective trigger resolves",
                     TraceOutputKind.VETO));
         assertOperations(surplus);
         assertOperations(unavoidable);

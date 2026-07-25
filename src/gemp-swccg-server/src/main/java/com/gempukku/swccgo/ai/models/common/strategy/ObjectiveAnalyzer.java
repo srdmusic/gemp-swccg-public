@@ -58,6 +58,8 @@ public class ObjectiveAnalyzer {
             "objectiveDockingTransitSourceCardId";
     public static final String DOCKING_TRANSIT_DESTINATION_CARD_ID_EXTRA =
             "objectiveDockingTransitDestinationCardId";
+    public static final String OBJECTIVE_DEPLOYING_CARD_ID_EXTRA =
+            "objectiveDeployingPhysicalCardId";
     private final Logger LOG;
 
     protected ObjectiveAnalyzer(Logger logger) {
@@ -84,6 +86,7 @@ public class ObjectiveAnalyzer {
     // Null unless a loaderEnabled profile carried rules (none do yet → behavior-neutral).
     private List<FlipLocationRule> activeFlipLocationRules = null;
     private List<ActorLocationRule> activeActorLocationRules = null;
+    private List<DynamicLocationRule> activeDynamicLocationRules = null;
     private List<RequiredCardDeployRule>
             activeRequiredCardDeployRules = null;
     private List<RequiredCardRetentionRule>
@@ -92,6 +95,8 @@ public class ObjectiveAnalyzer {
             activeRequiredCardInactivationRules = null;
     private List<HardLossLocationRule>
             activeHardLossLocationRules = null;
+    private List<TerminalForfeitRule>
+            activeTerminalForfeitRules = null;
     // V22.2: Back side / flip-back protection
     private final Set<String> flipBackLocations = new HashSet<>();
     private final Set<String> flipBackLocationFragments = new HashSet<>();
@@ -139,6 +144,7 @@ public class ObjectiveAnalyzer {
     private boolean isMyLord = false;      // title contains "my lord" OR "make it legal" (MLITL)
     private boolean isEndor = false;       // title contains "endor operations" (ENDOR_PLAYBOOK pilot 2026-07-07)
     private boolean isTdigwatt = false;    // title contains "this deal is getting worse all the time"
+    private boolean isFirstOrderReigns = false;
     // ObjectivePlaybook pilot (2026-07-07): the active objective's typed profile, or null. Selected
     // in analyze() when the objective matches a known playbook; consumed via getActivePlaybook().
     private ObjectivePlaybook activePlaybook = null;
@@ -212,6 +218,8 @@ public class ObjectiveAnalyzer {
         LAST_OBJECTIVE_SURVIVAL_ACTOR,
         REQUIRED_CARD_RETENTION_DEFENDER,
         HARD_LOSS_LOCATION_DEFENDER,
+        TERMINAL_OBJECTIVE_ACTOR,
+        LAST_PENDING_TRIGGER_CONTROL_SOURCE,
         NONE
     }
 
@@ -222,6 +230,13 @@ public class ObjectiveAnalyzer {
         REQUIRED_ON_TABLE_CARD,
         REQUIRED_CARD_DEPLOY_ENABLER_LOCATION,
         REQUIRED_CARD_DEPLOY_ENABLER_ACTOR,
+        NONE
+    }
+
+    /** Source-modeled value created by a post-flip actor at a location. */
+    public enum ObjectivePostFlipPayoffRole {
+        PRIMARY,
+        SECONDARY,
         NONE
     }
 
@@ -316,6 +331,10 @@ public class ObjectiveAnalyzer {
             this.isMyLord = titleLowerId.contains("my lord") || titleLowerId.contains("make it legal");
             this.isEndor = titleLowerId.contains("endor operations");
             this.isTdigwatt = titleLowerId.contains("this deal is getting worse all the time");
+            this.isFirstOrderReigns =
+                    titleLowerId.contains("the first order reigns")
+                    || titleLowerId.contains(
+                        "the resistance is doomed");
             // ObjectivePlaybook (2026-07-08): when the objective has a loaderEnabled JSON profile, the ACTIVE
             // playbook is BUILT FROM THE JSON (analyzer = pointer to the data). Otherwise fall back to the
             // compiled statics (My Lord/Endor) — the loaderEnabled=false path. prof/loaderOn reused post-parse
@@ -407,8 +426,13 @@ public class ObjectiveAnalyzer {
             for (int i = 0; i < rule.alternatives.size(); i++) {
                 FlipLocationAlternative alternative = rule.alternatives.get(i);
                 String alternativeId = rule.id + ":" + (i + 1);
-                if (isFlipLocationAlternativeSatisfied(
-                        game, playerId, alternative)) {
+                boolean alternativeSatisfied =
+                        isFirstOrderReignsRouteRule(rule)
+                        ? isFirstOrderReignsHostControlled(
+                            game, playerId)
+                        : isFlipLocationAlternativeSatisfied(
+                            game, playerId, alternative);
+                if (alternativeSatisfied) {
                     satisfied.add(alternativeId);
                 } else {
                     missing.add(alternativeId);
@@ -417,7 +441,10 @@ public class ObjectiveAnalyzer {
 
             boolean anyOf = "anyOf".equals(rule.mode);
             boolean conditionSatisfied =
-                    isShieldMainGeneratorRouteRule(rule)
+                    isFirstOrderReignsRouteRule(rule)
+                    ? isFirstOrderReignsHostControlled(
+                        game, playerId)
+                    : isShieldMainGeneratorRouteRule(rule)
                     ? isShieldMainGeneratorRouteRuleSatisfied(
                         game, playerId)
                     : anyOf
@@ -506,6 +533,13 @@ public class ObjectiveAnalyzer {
                     game, playerId, candidate)) {
                 return ObjectiveProgressCandidateRole
                         .REQUIRED_ACTOR;
+            }
+            ObjectiveProgressCandidateRole firstOrderRole =
+                    classifyFirstOrderReignsProgressCandidate(
+                            game, playerId, candidate);
+            if (firstOrderRole
+                    != ObjectiveProgressCandidateRole.NONE) {
+                return firstOrderRole;
             }
             for (FlipLocationRule rule : activeFlipLocationRules) {
                 if (!isActivePreFlipRule(rule) || isRuleSatisfied(
@@ -604,6 +638,51 @@ public class ObjectiveAnalyzer {
         } catch (Exception e) {
             LOG.debug("Objective progress candidate assessment failed: {}",
                     e.getMessage());
+        }
+        return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    private ObjectiveProgressCandidateRole
+            classifyFirstOrderReignsProgressCandidate(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return ObjectiveProgressCandidateRole.NONE;
+        }
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        if (host == null) {
+            return ObjectiveProgressCandidateRole.NONE;
+        }
+        PhysicalCard deployedSupremacy =
+                getFirstOrderReignsSupremacyOnTable(
+                    game, playerId);
+        if (deployedSupremacy != null) {
+            return isFirstOrderReignsReachableBridgeSystem(
+                        game, playerId, host,
+                        deployedSupremacy, candidate)
+                    ? ObjectiveProgressCandidateRole
+                        .REQUIRED_LOCATION
+                    : ObjectiveProgressCandidateRole.NONE;
+        }
+        if (!hasFirstOrderReignsStagingSystem(
+                    game, playerId, host)) {
+            return isFirstOrderReignsStageSystem(
+                        game, host, candidate, true)
+                    ? ObjectiveProgressCandidateRole
+                        .REQUIRED_LOCATION
+                    : ObjectiveProgressCandidateRole.NONE;
+        }
+        if (!hasFirstOrderReignsSupremacyOnTable(
+                    game, playerId)
+                && isFirstOrderReignsSupremacy(
+                    game, candidate)) {
+            return ObjectiveProgressCandidateRole
+                    .REQUIRED_ACTOR;
         }
         return ObjectiveProgressCandidateRole.NONE;
     }
@@ -2777,6 +2856,10 @@ public class ObjectiveAnalyzer {
                 game, playerId, candidate, location)) {
             return true;
         }
+        if (advancesFirstOrderReignsSupremacyRouteAt(
+                game, playerId, candidate, location)) {
+            return true;
+        }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule) || isRuleSatisfied(
                     game, playerId, rule)) {
@@ -2804,6 +2887,10 @@ public class ObjectiveAnalyzer {
                 || !playerId.equals(candidate.getOwner())
                 || activeFlipLocationRules == null) {
             return false;
+        }
+        if (advancesFirstOrderReignsSupremacyRouteAt(
+                game, playerId, candidate, location)) {
+            return true;
         }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)
@@ -2837,6 +2924,14 @@ public class ObjectiveAnalyzer {
                 || game.getGameState() == null
                 || game.getModifiersQuerying() == null) {
             return false;
+        }
+        if (isFirstOrderReignsSupremacy(
+                    game, candidate)
+                && samePhysicalLocation(
+                    getFirstOrderReignsTrackedFleetHostSystem(
+                        game, playerId),
+                    location)) {
+            return true;
         }
         GameState gameState = game.getGameState();
         for (FlipLocationRule rule : activeFlipLocationRules) {
@@ -3148,7 +3243,9 @@ public class ObjectiveAnalyzer {
     private static boolean isActorToRuntimeLocationAlternative(
             FlipLocationAlternative alternative) {
         return alternative != null
-                && isActorAtRelation(alternative)
+                && (isActorAtRelation(alternative)
+                    || "controlWith".equals(
+                        alternative.relation))
                 && "actorToLocation".equals(alternative.scoreRole)
                 && alternative.actorFilterKey != null
                 && alternative.locationFilterKey != null
@@ -4051,6 +4148,10 @@ public class ObjectiveAnalyzer {
             return isShieldMainGeneratorRouteRuleSatisfied(
                     game, playerId);
         }
+        if (isFirstOrderReignsRouteRule(rule)) {
+            return isFirstOrderReignsHostControlled(
+                    game, playerId);
+        }
         if ("anyOf".equals(rule.mode)) {
             for (FlipLocationAlternative alternative : rule.alternatives) {
                 if (isFlipLocationAlternativeSatisfied(
@@ -4067,6 +4168,755 @@ public class ObjectiveAnalyzer {
             }
         }
         return true;
+    }
+
+    private static boolean isFirstOrderReignsRouteRule(
+            FlipLocationRule rule) {
+        return rule != null
+                && "first-order-reigns-tracked-fleet-control"
+                    .equals(rule.id);
+    }
+
+    public PhysicalCard
+            getFirstOrderReignsTrackedFleetHostSystem(
+                    SwccgGame game, String playerId) {
+        if (!analyzed || !isFirstOrderReigns
+                || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        com.gempukku.swccgo.filters.Filter fleetFilter =
+                resolveFilter("Tracked_Fleet");
+        Collection<PhysicalCard> permanents =
+                game.getGameState()
+                    .getAllPermanentCards();
+        if (fleetFilter == null || permanents == null) {
+            return null;
+        }
+        for (PhysicalCard fleet : permanents) {
+            if (fleet == null
+                    || !playerId.equals(fleet.getOwner())
+                    || fleet.getZone() == null
+                    || !fleet.getZone().isInPlay()
+                    || !isActiveForSpot(
+                        game, fleet, true)
+                    || !fleetFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        fleet)) {
+                continue;
+            }
+            PhysicalCard host = fleet.getAttachedTo();
+            if (host == null) {
+                host = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), fleet);
+            }
+            if (host != null) return host;
+        }
+        return null;
+    }
+
+    public boolean isFirstOrderReignsHostControlled(
+            SwccgGame game, String playerId) {
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        return host != null
+                && game.getModifiersQuerying()
+                    .controlsLocation(
+                        game.getGameState(), host,
+                        playerId);
+    }
+
+    public boolean isFirstOrderReignsSolePendingTriggerControlSource(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!analyzed || isFlipped || !isFirstOrderReigns
+                || game == null || playerId == null
+                || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        try {
+            PhysicalCard host =
+                    getFirstOrderReignsTrackedFleetHostSystem(
+                        game, playerId);
+            if (host == null
+                    || !isFirstOrderReignsHostControlled(
+                        game, playerId)) {
+                return false;
+            }
+            PhysicalCard candidateLocation =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(
+                            game.getGameState(), candidate);
+            return samePhysicalLocation(
+                        candidateLocation, host)
+                    && isSolePresenceSourceAtLocation(
+                        game, playerId, candidate, host);
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Reigns pending control-source assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isFirstOrderReignsRouteOpen(
+            SwccgGame game, String playerId) {
+        return analyzed && isFirstOrderReigns
+                && !isFlipped
+                && getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId) != null
+                && !isFirstOrderReignsHostControlled(
+                    game, playerId);
+    }
+
+    public boolean isFirstOrderReignsDownloadAction(
+            PhysicalCard sourceCard, String actionText) {
+        if (!analyzed || !isFirstOrderReigns
+                || sourceCard == null
+                || actionText == null
+                || !"Deploy Supremacy card or battleground"
+                    .equals(actionText)) {
+            return false;
+        }
+        String blueprintId =
+                sourceCard.getBlueprintId(true);
+        return "225_32".equals(blueprintId)
+                || "225_32_BACK".equals(blueprintId)
+                || "501_60".equals(blueprintId)
+                || "501_60_BACK".equals(blueprintId);
+    }
+
+    public boolean isFirstOrderReignsLostPileDeployAction(
+            PhysicalCard sourceCard, String actionText) {
+        if (!analyzed || !isFlipped || !isFirstOrderReigns
+                || sourceCard == null
+                || !"Deploy card from Lost Pile"
+                    .equals(actionText)) {
+            return false;
+        }
+        String blueprintId =
+                sourceCard.getBlueprintId(true);
+        return "225_32".equals(blueprintId)
+                || "225_32_BACK".equals(blueprintId)
+                || "501_60".equals(blueprintId)
+                || "501_60_BACK".equals(blueprintId);
+    }
+
+    public boolean hasLegalFirstOrderReignsLostPileDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        if (!isFirstOrderReignsLostPileDeployAction(
+                    sourceCard,
+                    "Deploy card from Lost Pile")
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> lostPile =
+                game.getGameState()
+                    .getLostPile(playerId);
+        if (lostPile == null) return false;
+        com.gempukku.swccgo.filters.Filter objectiveFilter =
+                Filters.or(
+                    Filters.and(
+                        Filters.non_unique,
+                        Filters.trooper),
+                    Filters.and(
+                        Filters.non_unique,
+                        Icon.FIRST_ORDER,
+                        Filters.vehicle));
+        com.gempukku.swccgo.filters.Filter deployable =
+                Filters.deployable(
+                    sourceCard, null, false, 0.0f);
+        for (PhysicalCard candidate : lostPile) {
+            if (candidate != null
+                    && playerId.equals(candidate.getOwner())
+                    && objectiveFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        candidate)
+                    && deployable.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasFirstOrderReignsKyloCraitPayoff(
+            SwccgGame game, String playerId) {
+        if (!analyzed || !isFirstOrderReigns || !isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter craitLocation =
+                resolveLocationFilter("Crait_location", playerId);
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (craitLocation == null || locations == null) {
+            return false;
+        }
+        for (PhysicalCard location : locations) {
+            if (location != null
+                    && craitLocation.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                    && relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        "occupyWith", "Kylo", false)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean advancesFirstOrderReignsDrainPairAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        return isFirstOrderReignsDrainPairCandidate(
+                    game, playerId, candidate, destination)
+                && countActiveFirstOrderCharactersAt(
+                    game, playerId, destination, candidate) == 1;
+    }
+
+    public boolean breaksFirstOrderReignsDrainPairIfMoved(
+            SwccgGame game, String playerId,
+            PhysicalCard mover,
+            PhysicalCard destination) {
+        if (!isFirstOrderReignsDrainPairMemberAtExactPair(
+                    game, playerId, mover)
+                || destination == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard origin =
+                game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), mover);
+        return origin != null
+                && !samePhysicalLocation(origin, destination);
+    }
+
+    public boolean isFirstOrderReignsDrainPairMemberAtExactPair(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!hasFirstOrderReignsKyloCraitPayoff(
+                    game, playerId)
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !isActiveForSpot(game, candidate, false)
+                || !Filters.First_Order_character.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+        PhysicalCard origin =
+                game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), candidate);
+        return origin != null
+                && Filters.battleground.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), origin)
+                && countActiveFirstOrderCharactersAt(
+                    game, playerId, origin, null) == 2;
+    }
+
+    private boolean isFirstOrderReignsDrainPairCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!hasFirstOrderReignsKyloCraitPayoff(
+                    game, playerId)
+                || candidate == null || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !Filters.First_Order_character.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)
+                || !Filters.battleground.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), destination)) {
+            return false;
+        }
+        return candidate.getZone() == null
+                || !candidate.getZone().isInPlay()
+                || isActiveForSpot(game, candidate, false);
+    }
+
+    private int countActiveFirstOrderCharactersAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location,
+            PhysicalCard excluded) {
+        if (game == null || playerId == null || location == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return 0;
+        int count = 0;
+        for (PhysicalCard card : permanents) {
+            if (card == null || card == excluded
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(game, card, false)
+                    || !Filters.First_Order_character.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard cardLocation =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(
+                    cardLocation, location)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public boolean hasFirstOrderReignsRouteProgressCandidateInReserve(
+            SwccgGame game, String playerId) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard objective =
+                    findOurObjective(gameState, playerId);
+            if (objective == null) return false;
+            List<PhysicalCard> reserve =
+                    gameState.getReserveDeck(playerId);
+            if (reserve == null) return false;
+            com.gempukku.swccgo.filters.Filter deployable =
+                    Filters.deployable(
+                        objective, null, false, 0.0f);
+            for (PhysicalCard candidate : reserve) {
+                ObjectiveProgressCandidateRole role =
+                        classifyFirstOrderReignsProgressCandidate(
+                            game, playerId, candidate);
+                if ((role
+                        == ObjectiveProgressCandidateRole
+                            .REQUIRED_LOCATION
+                        || role
+                        == ObjectiveProgressCandidateRole
+                            .REQUIRED_ACTOR)
+                        && deployable.accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            candidate)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Reigns route candidate assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean isFirstOrderReignsSupremacy(
+            SwccgGame game, PhysicalCard card) {
+        if (game == null || card == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || card.getBlueprint() == null
+                || card.getBlueprint().getCardCategory()
+                    != CardCategory.STARSHIP) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter filter =
+                resolveFilter("Supremacy");
+        return filter != null && filter.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), card);
+    }
+
+    private boolean isFirstOrderReignsStageSystem(
+            SwccgGame game, PhysicalCard host,
+            PhysicalCard candidate,
+            boolean requireBattleground) {
+        if (game == null || host == null
+                || candidate == null
+                || samePhysicalLocation(host, candidate)
+                || !isFirstOrderReignsEpisodeSevenSystem(
+                    game, candidate, requireBattleground)) {
+            return false;
+        }
+        // Supremacy has hyperspeed 2, so a fresh deployment stage must be
+        // within one ordinary move of the Fleet's current host.
+        return Math.abs(
+                candidate.getParsec() - host.getParsec())
+                <= 2;
+    }
+
+    private boolean isFirstOrderReignsEpisodeSevenSystem(
+            SwccgGame game, PhysicalCard candidate,
+            boolean requireBattleground) {
+        if (game == null || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter filter =
+                resolveLocationFilter(
+                    requireBattleground
+                        ? "Episode_VII_battleground_system"
+                        : "Episode_VII_system",
+                    null);
+        if (filter == null || !filter.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(),
+                candidate)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isFirstOrderReignsReachableBridgeSystem(
+            SwccgGame game, String playerId,
+            PhysicalCard host, PhysicalCard supremacy,
+            PhysicalCard candidate) {
+        if (game == null || playerId == null
+                || host == null || supremacy == null
+                || candidate == null
+                || !isFirstOrderReignsEpisodeSevenSystem(
+                    game, candidate, true)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard origin =
+                game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), supremacy);
+        if (origin == null
+                || Math.abs(candidate.getParsec()
+                        - host.getParsec())
+                    >= Math.abs(origin.getParsec()
+                        - host.getParsec())) {
+            return false;
+        }
+        return Filters.canMoveToUsingHyperspeed(
+                playerId, supremacy,
+                false, true, 0.0f).accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    candidate);
+    }
+
+    private boolean hasFirstOrderReignsStagingSystem(
+            SwccgGame game, String playerId,
+            PhysicalCard host) {
+        if (game == null || playerId == null
+                || host == null
+                || game.getGameState() == null) {
+            return false;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState()
+                    .getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard location : locations) {
+            if (isFirstOrderReignsStageSystem(
+                    game, host, location, false)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasFirstOrderReignsStageCandidateInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard host) {
+        if (game == null || playerId == null
+                || host == null
+                || game.getGameState() == null) {
+            return false;
+        }
+        List<PhysicalCard> reserve =
+                game.getGameState()
+                    .getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard card : reserve) {
+            if (playerId.equals(card.getOwner())
+                    && isFirstOrderReignsStageSystem(
+                        game, host, card, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasFirstOrderReignsSupremacyOnTable(
+            SwccgGame game, String playerId) {
+        return getFirstOrderReignsSupremacyOnTable(
+                game, playerId) != null;
+    }
+
+    private PhysicalCard getFirstOrderReignsSupremacyOnTable(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null
+                || game.getGameState() == null) {
+            return null;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState()
+                    .getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            if (card != null
+                    && playerId.equals(card.getOwner())
+                    && card.getZone() != null
+                    && card.getZone().isInPlay()
+                    && isActiveForSpot(
+                        game, card, true)
+                    && isFirstOrderReignsSupremacy(
+                        game, card)) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private boolean hasFirstOrderReignsSupremacyIn(
+            SwccgGame game, String playerId,
+            Iterable<PhysicalCard> cards,
+            PhysicalCard excluded) {
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card != null && card != excluded
+                    && playerId.equals(card.getOwner())
+                    && isFirstOrderReignsSupremacy(
+                        game, card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int getFirstOrderReignsRouteForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard currentDeployCandidate) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                || isFirstOrderReignsSupremacy(
+                    game, currentDeployCandidate)
+                || game.getGameState() == null) {
+            return 0;
+        }
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        PhysicalCard supremacy =
+                getFirstOrderReignsSupremacyOnTable(
+                    game, playerId);
+        if (supremacy != null) {
+            return getFirstOrderReignsCurrentMoveForceReserve(
+                    game, playerId);
+        }
+        if (!hasFirstOrderReignsStagingSystem(
+                    game, playerId, host)) {
+            return 0;
+        }
+        boolean accessible =
+                hasFirstOrderReignsSupremacyIn(
+                    game, playerId,
+                    game.getGameState().getHand(
+                        playerId), null)
+                || hasFirstOrderReignsSupremacyIn(
+                    game, playerId,
+                    game.getGameState().getReserveDeck(
+                        playerId), null);
+        return accessible ? 7 : 0;
+    }
+
+    public int getFirstOrderReignsCurrentMoveForceReserve(
+            SwccgGame game, String playerId) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)) {
+            return 0;
+        }
+        PhysicalCard supremacy =
+                getFirstOrderReignsSupremacyOnTable(
+                    game, playerId);
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        return supremacy == null ? 0
+                : getFirstOrderReignsNextMoveForceReserve(
+                    game, playerId, supremacy, host);
+    }
+
+    private int getFirstOrderReignsNextMoveForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard supremacy, PhysicalCard host) {
+        if (game == null || playerId == null
+                || supremacy == null || host == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        PhysicalCard origin =
+                game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), supremacy);
+        List<PhysicalCard> locations =
+                game.getGameState()
+                    .getLocationsInOrder();
+        if (origin == null || locations == null) {
+            return 0;
+        }
+        com.gempukku.swccgo.filters.Filter structuralMove =
+                Filters.canMoveToUsingHyperspeed(
+                    playerId, supremacy,
+                    false, true, 0.0f);
+        int originDistance = Math.abs(
+                origin.getParsec() - host.getParsec());
+        int minimum = Integer.MAX_VALUE;
+        for (PhysicalCard destination : locations) {
+            boolean completesRoute =
+                    samePhysicalLocation(
+                        destination, host);
+            if (destination == null
+                    || !completesRoute
+                    && Math.abs(
+                        destination.getParsec()
+                            - host.getParsec())
+                        >= originDistance
+                    || !structuralMove.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        destination)) {
+                continue;
+            }
+            float cost = game.getModifiersQuerying()
+                    .getMoveUsingHyperspeedCost(
+                        game.getGameState(), supremacy,
+                        origin, destination,
+                        false, 0.0f);
+            minimum = Math.min(
+                    minimum,
+                    (int) Math.ceil(cost));
+        }
+        return minimum == Integer.MAX_VALUE
+                ? 0 : minimum;
+    }
+
+    public boolean
+            isPreferredFirstOrderReignsRouteForceLossCandidate(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || !isFirstOrderReignsSupremacy(
+                    game, candidate)
+                || game.getGameState() == null) {
+            return false;
+        }
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        boolean routeCanStage =
+                hasFirstOrderReignsStagingSystem(
+                    game, playerId, host)
+                || hasFirstOrderReignsStageCandidateInReserve(
+                    game, playerId, host);
+        if (!routeCanStage) {
+            return false;
+        }
+        if (candidate.getZone() != null
+                && candidate.getZone().isInPlay()) {
+            return isActiveForSpot(
+                    game, candidate, true);
+        }
+        if (hasFirstOrderReignsSupremacyOnTable(
+                game, playerId)) {
+            return false;
+        }
+        return !hasFirstOrderReignsSupremacyIn(
+                    game, playerId,
+                    game.getGameState().getHand(
+                        playerId), candidate)
+                && !hasFirstOrderReignsSupremacyIn(
+                    game, playerId,
+                    game.getGameState().getReserveDeck(
+                        playerId), candidate);
+    }
+
+    private boolean advancesFirstOrderReignsSupremacyRouteAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                || candidate == null
+                || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || !isFirstOrderReignsSupremacy(
+                    game, candidate)) {
+            return false;
+        }
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        if (host == null) return false;
+
+        PhysicalCard origin =
+                game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), candidate);
+        if (origin == null) {
+            return isFirstOrderReignsStageSystem(
+                    game, host, destination, false);
+        }
+
+        com.gempukku.swccgo.filters.Filter legalMove =
+                Filters.canMoveToUsingHyperspeed(
+                    playerId, candidate,
+                    false, false, 0.0f);
+        if (!legalMove.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(),
+                destination)) {
+            return false;
+        }
+        if (samePhysicalLocation(
+                destination, host)) {
+            return true;
+        }
+        int originDistance = Math.abs(
+                origin.getParsec() - host.getParsec());
+        int destinationDistance = Math.abs(
+                destination.getParsec()
+                    - host.getParsec());
+        return destinationDistance < originDistance;
     }
 
     private boolean isShieldMainGeneratorRouteRule(
@@ -4153,6 +5003,30 @@ public class ObjectiveAnalyzer {
             return false;
         }
 
+        return candidateWouldSatisfyAlternativeAt(
+                game, playerId, candidate, location, alternative);
+    }
+
+    private boolean candidateWouldSatisfyAlternativeAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        if (game == null || playerId == null
+                || candidate == null || location == null
+                || alternative == null
+                || alternative.actorFilterKey == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !locationMatchesAlternative(
+                    game.getGameState(), game, playerId,
+                    location, alternative)
+                || candidate.getZone() != null
+                    && candidate.getZone().isInPlay()
+                    && !isActiveForSpot(
+                        game, candidate,
+                        alternative.includeExcludedFromBattle)) {
+            return false;
+        }
         com.gempukku.swccgo.filters.Filter actorFilter =
                 resolveFilter(alternative.actorFilterKey);
         if (actorFilter == null || !actorFilter.accepts(
@@ -6087,6 +6961,10 @@ public class ObjectiveAnalyzer {
 
     public boolean isObjectiveHardLossDefenseLocation(
             SwccgGame game, String playerId, PhysicalCard location) {
+        if (isFirstOrderReignsTerminalBattleHazardAt(
+                game, playerId, location)) {
+            return true;
+        }
         if (!isObjectiveHardLossLocation(
                     game, playerId, location)) {
             return false;
@@ -6159,6 +7037,343 @@ public class ObjectiveAnalyzer {
         return presenceSource.accepts(
                 game.getGameState(),
                 game.getModifiersQuerying(), candidate);
+    }
+
+    public boolean isFirstOrderReignsTerminalBattleHazardAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        if (!analyzed || !isFirstOrderReigns
+                || !isFlipped || game == null
+                || playerId == null || location == null
+                || activeTerminalForfeitRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState()
+                    .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (TerminalForfeitRule rule
+                : activeTerminalForfeitRules) {
+            if (!isActiveTerminalForfeitRule(rule)) {
+                continue;
+            }
+            com.gempukku.swccgo.filters.Filter locationFilter =
+                    resolveLocationFilter(
+                        rule.locationFilterKey, playerId);
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(rule.actorFilterKey);
+            com.gempukku.swccgo.filters.Filter threatFilter =
+                    resolveFilter(rule.threatCardFilterKey);
+            if (locationFilter == null || actorFilter == null
+                    || threatFilter == null
+                    || !locationFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        location)) {
+                continue;
+            }
+            boolean actorHere = false;
+            boolean threatHere = false;
+            for (PhysicalCard card : permanents) {
+                if (card == null || card.getZone() == null
+                        || !card.getZone().isInPlay()
+                        || !isActiveForSpot(
+                            game, card, true)) {
+                    continue;
+                }
+                PhysicalCard cardLocation =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                game.getGameState(), card);
+                if (!samePhysicalLocation(
+                        cardLocation, location)) {
+                    continue;
+                }
+                if (playerId.equals(card.getOwner())
+                        && actorFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            card)) {
+                    actorHere = true;
+                } else if (!playerId.equals(card.getOwner())
+                        && threatFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            card)) {
+                    threatHere = true;
+                }
+            }
+            if (actorHere && threatHere) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Classifies the payoff this actor would actively provide at one location.
+     * Unlike classifyPostFlipPayoffAt, this remains true when the payoff is
+     * already satisfied so movement can preserve rather than re-score it.
+     */
+    public ObjectivePostFlipPayoffRole classifyPostFlipPayoffRoleAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!analyzed || !isFlipped || game == null
+                || playerId == null || candidate == null
+                || destination == null
+                || activeFlipLocationRules == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || isFirstOrderReignsTerminalExposureAt(
+                    game, playerId, candidate, destination)) {
+            return ObjectivePostFlipPayoffRole.NONE;
+        }
+        ObjectivePostFlipPayoffRole secondary =
+                ObjectivePostFlipPayoffRole.NONE;
+        try {
+            for (FlipLocationRule rule
+                    : activeFlipLocationRules) {
+                if (rule == null
+                        || !"postFlip".equals(rule.phase)
+                        || !"payoff".equals(rule.purpose)
+                        || rule.alternatives == null) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!candidateWouldSatisfyAlternativeAt(
+                            game, playerId, candidate,
+                            destination, alternative)) {
+                        continue;
+                    }
+                    if ("postFlipPrimary".equals(
+                            alternative.scoreRole)) {
+                        return ObjectivePostFlipPayoffRole.PRIMARY;
+                    }
+                    if ("postFlipSecondary".equals(
+                            alternative.scoreRole)) {
+                        secondary =
+                                ObjectivePostFlipPayoffRole.SECONDARY;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Post-flip objective payoff-role assessment failed: {}",
+                    e.getMessage());
+        }
+        return secondary;
+    }
+
+    public boolean wouldDowngradePostFlipPayoffIfMoved(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (game == null || candidate == null
+                || destination == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard origin =
+                game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), candidate);
+        ObjectivePostFlipPayoffRole current =
+                classifyPostFlipPayoffRoleAt(
+                    game, playerId, candidate, origin);
+        ObjectivePostFlipPayoffRole next =
+                classifyPostFlipPayoffRoleAt(
+                    game, playerId, candidate, destination);
+        return postFlipPayoffRank(next)
+                < postFlipPayoffRank(current);
+    }
+
+    private static int postFlipPayoffRank(
+            ObjectivePostFlipPayoffRole role) {
+        if (role == ObjectivePostFlipPayoffRole.PRIMARY) {
+            return 2;
+        }
+        return role == ObjectivePostFlipPayoffRole.SECONDARY
+                ? 1 : 0;
+    }
+
+    public ObjectivePostFlipPayoffRole classifyPostFlipPayoffAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!analyzed || !isFlipped || game == null
+                || playerId == null || candidate == null
+                || destination == null
+                || activeFlipLocationRules == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || isFirstOrderReignsTerminalExposureAt(
+                    game, playerId, candidate, destination)) {
+            return ObjectivePostFlipPayoffRole.NONE;
+        }
+        ObjectivePostFlipPayoffRole secondary =
+                ObjectivePostFlipPayoffRole.NONE;
+        try {
+            for (FlipLocationRule rule
+                    : activeFlipLocationRules) {
+                if (rule == null
+                        || !"postFlip".equals(rule.phase)
+                        || !"payoff".equals(rule.purpose)
+                        || rule.alternatives == null) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!advancesAlternativeAt(
+                            game, playerId, candidate,
+                            destination, alternative)) {
+                        continue;
+                    }
+                    if ("postFlipPrimary".equals(
+                            alternative.scoreRole)) {
+                        return ObjectivePostFlipPayoffRole.PRIMARY;
+                    }
+                    if ("postFlipSecondary".equals(
+                            alternative.scoreRole)) {
+                        secondary =
+                                ObjectivePostFlipPayoffRole.SECONDARY;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Post-flip objective payoff assessment failed: {}",
+                    e.getMessage());
+        }
+        return secondary;
+    }
+
+    public boolean isTerminalObjectiveForfeitActor(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (game == null || playerId == null
+                || candidate == null
+                || game.getGameState() == null
+                || game.getGameState().getBattleState() == null
+                || !game.getGameState().getBattleState()
+                    .isLoser(playerId)
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        PhysicalCard battleLocation =
+                game.getGameState().getBattleState()
+                    .getBattleLocation();
+        if (!isFirstOrderReignsTerminalBattleHazardAt(
+                game, playerId, battleLocation)) {
+            return false;
+        }
+        for (TerminalForfeitRule rule
+                : activeTerminalForfeitRules) {
+            if (!isActiveTerminalForfeitRule(rule)) {
+                continue;
+            }
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(rule.actorFilterKey);
+            if (actorFilter != null
+                    && actorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        candidate)) {
+                PhysicalCard candidateLocation =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                game.getGameState(),
+                                candidate);
+                return samePhysicalLocation(
+                        candidateLocation, battleLocation);
+            }
+        }
+        return false;
+    }
+
+    public boolean isFirstOrderReignsTerminalExposureAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!analyzed || !isFirstOrderReigns
+                || !isFlipped || game == null
+                || playerId == null || candidate == null
+                || destination == null
+                || activeTerminalForfeitRules == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        String opponent =
+                game.getGameState().getOpponent(playerId);
+        for (TerminalForfeitRule rule
+                : activeTerminalForfeitRules) {
+            if (!isActiveTerminalForfeitRule(rule)) {
+                continue;
+            }
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(rule.actorFilterKey);
+            com.gempukku.swccgo.filters.Filter locationFilter =
+                    resolveLocationFilter(
+                        rule.locationFilterKey, playerId);
+            com.gempukku.swccgo.filters.Filter threatFilter =
+                    resolveFilter(rule.threatCardFilterKey);
+            PhysicalCard terminalLocation = destination;
+            if (locationFilter != null
+                    && !locationFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        terminalLocation)) {
+                PhysicalCard destinationHost =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                game.getGameState(),
+                                destination);
+                if (destinationHost != null) {
+                    terminalLocation = destinationHost;
+                }
+            }
+            if (actorFilter != null
+                    && locationFilter != null
+                    && threatFilter != null
+                    && actorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        candidate)
+                    && locationFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        terminalLocation)) {
+                return hasMatchingActorAtLocation(
+                        game, opponent, terminalLocation,
+                        rule.threatCardFilterKey);
+            }
+        }
+        return false;
+    }
+
+    public boolean isFirstOrderReignsTerminalDeploymentHazardAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        return isFirstOrderReignsTerminalExposureAt(
+                game, playerId, candidate, destination);
+    }
+
+    private static boolean isActiveTerminalForfeitRule(
+            TerminalForfeitRule rule) {
+        return rule != null
+                && "postFlip".equals(rule.phase)
+                && "LOST_PILE".equals(rule.destinationZone)
+                && Boolean.TRUE.equals(
+                    rule.requiresBattleLost)
+                && "objectiveOutOfPlay".equals(
+                    rule.outcome);
     }
 
     public boolean isSolePresenceSourceAtObjectiveHardLossLocation(
@@ -6537,6 +7752,11 @@ public class ObjectiveAnalyzer {
             return FlipGateFormationRole.NONE;
         }
 
+        if (isTerminalObjectiveForfeitActor(
+                    game, playerId, candidate)) {
+            return FlipGateFormationRole
+                    .TERMINAL_OBJECTIVE_ACTOR;
+        }
         if (isSolePresenceSourceAtObjectiveHardLossLocation(
                     game, playerId, candidate)) {
             return FlipGateFormationRole
@@ -6569,6 +7789,11 @@ public class ObjectiveAnalyzer {
                     : FlipGateFormationRole.NONE;
         }
 
+        if (isFirstOrderReignsSolePendingTriggerControlSource(
+                    game, playerId, candidate)) {
+            return FlipGateFormationRole
+                    .LAST_PENDING_TRIGGER_CONTROL_SOURCE;
+        }
         FlipGateFormationRole shieldRouteRole =
                 classifyShieldMainGeneratorFormationPieceIfRemoved(
                     game, playerId, candidate);
@@ -7797,6 +9022,7 @@ public class ObjectiveAnalyzer {
         List<RequiredCardInactivationRule>
                 requiredCardInactivationRules;
         List<HardLossLocationRule> hardLossLocationRules;
+        List<TerminalForfeitRule> terminalForfeitRules;
     }
     static final class JsonRoot {
         List<JsonProfile> profiles;
@@ -7827,7 +9053,7 @@ public class ObjectiveAnalyzer {
         String requiredSide;          // LIGHT | DARK | null
         Boolean includeExcludedFromBattle;
         RuleOpponentConstraint opponentConstraint;
-        String scoreRole;             // setupLocation | flipProgress | flipGate | stayFlipped
+        String scoreRole;             // setupLocation | flipProgress | flipGate | stayFlipped | postFlipPrimary | postFlipSecondary
         String sourceText;            // audit only — runtime must not parse this
     }
     static final class ProspectiveActorPair {
@@ -7837,7 +9063,7 @@ public class ObjectiveAnalyzer {
     static final class FlipLocationRule {
         String id;
         String phase;                 // preFlip | postFlip
-        String purpose;               // flip | stayFlipped | flipBack
+        String purpose;               // flip | stayFlipped | flipBack | payoff
         String mode;                  // allOf | anyOf
         List<FlipLocationAlternative> alternatives;
     }
@@ -7856,7 +9082,7 @@ public class ObjectiveAnalyzer {
     }
     static final class DynamicLocationRule {
         String id;
-        String source;                // subjugatedPlanet | renegadePlanet | repSpecies | setupChoice
+        String source;                // subjugatedPlanet | renegadePlanet | repSpecies | setupChoice | attachedCardHost
         String derivedLocationFilterKey;
         String matchingActorFilterKey;
         String sourceText;
@@ -7898,6 +9124,17 @@ public class ObjectiveAnalyzer {
         String defenseLocationFilterKey;
         String threatCardFilterKey;
         String trigger;
+        String outcome;
+        String sourceText;
+    }
+    static final class TerminalForfeitRule {
+        String id;
+        String phase;
+        String actorFilterKey;
+        String locationFilterKey;
+        String threatCardFilterKey;
+        String destinationZone;
+        Boolean requiresBattleLost;
         String outcome;
         String sourceText;
     }
@@ -7997,6 +9234,7 @@ public class ObjectiveAnalyzer {
         // step 3b: store the rules for the filter-based relevance overload (runtime filter eval).
         activeFlipLocationRules = p.flipLocationRules;
         activeActorLocationRules = p.actorLocationRules;
+        activeDynamicLocationRules = p.dynamicLocationRules;
         activeRequiredCardDeployRules =
                 p.requiredCardDeployRules;
         activeRequiredCardRetentionRules =
@@ -8005,6 +9243,8 @@ public class ObjectiveAnalyzer {
                 p.requiredCardInactivationRules;
         activeHardLossLocationRules =
                 p.hardLossLocationRules;
+        activeTerminalForfeitRules =
+                p.terminalForfeitRules;
         hydratedFromJson = true;
         LOG.warn("[ObjectiveAnalyzer] JSON hydrate '{}': locFrags={}, reqCards={}, flipGateSite={}, flipGateIds={}, startLoc={}, startEff={}, startInt={}",
             p.label, flipConditionLocationFragments, requiredCardsOnTable, flipCriticalControlSite,
@@ -8052,6 +9292,18 @@ public class ObjectiveAnalyzer {
             case "Neimoidian":       return com.gempukku.swccgo.filters.Filters.Neimoidian;
             case "Amidala":          return com.gempukku.swccgo.filters.Filters.Amidala;
             case "Vader":             return com.gempukku.swccgo.filters.Filters.Vader;
+            case "Kylo":              return com.gempukku.swccgo.filters.Filters.Kylo;
+            case "Tracked_Fleet":
+                return com.gempukku.swccgo.filters.Filters.Tracked_Fleet;
+            case "Supremacy":
+                return com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.filters.Filters.Supremacy,
+                    com.gempukku.swccgo.filters.Filters.starship);
+            case "Han_Leia_or_Luke":
+                return com.gempukku.swccgo.filters.Filters.or(
+                    com.gempukku.swccgo.filters.Filters.Han,
+                    com.gempukku.swccgo.filters.Filters.Leia,
+                    com.gempukku.swccgo.filters.Filters.Luke);
             case "Jedi_or_Luke":
                 return com.gempukku.swccgo.filters.Filters.or(
                     com.gempukku.swccgo.filters.Filters.Jedi,
@@ -8176,6 +9428,9 @@ public class ObjectiveAnalyzer {
     // flipLocationRules/actorLocationRules scorer; unused until then.
     private com.gempukku.swccgo.filters.Filter resolveLocationFilter(String key, String playerId) {
         if (key == null || key.isEmpty()) return null;
+        com.gempukku.swccgo.filters.Filter dynamic =
+                resolveDynamicLocationFilter(key, playerId);
+        if (dynamic != null) return dynamic;
         switch (key) {
             // DIRECT constants
             case "Endor_location":               return com.gempukku.swccgo.filters.Filters.Endor_location;
@@ -8215,6 +9470,17 @@ public class ObjectiveAnalyzer {
             case "Galactic_Senate":              return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
             case "Rebel_Base_location":          return com.gempukku.swccgo.filters.Filters.Rebel_Base_location;
             case "Wattos_Junkyard":              return com.gempukku.swccgo.filters.Filters.Wattos_Junkyard;
+            case "Crait_Salt_Plateau":           return com.gempukku.swccgo.filters.Filters.Crait_Salt_Plateau;
+            case "Crait_location":               return com.gempukku.swccgo.filters.Filters.Crait_location;
+            case "Episode_VII_battleground_system":
+                return com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.common.Icon.EPISODE_VII,
+                    com.gempukku.swccgo.filters.Filters.battleground,
+                    com.gempukku.swccgo.filters.Filters.system);
+            case "Episode_VII_system":
+                return com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.common.Icon.EPISODE_VII,
+                    com.gempukku.swccgo.filters.Filters.system);
             // ALIAS (schema spelling → runtime constant)
             case "Ahch_To_location":             return com.gempukku.swccgo.filters.Filters.AhchTo_location;
             // COMPOSITE
@@ -8233,6 +9499,74 @@ public class ObjectiveAnalyzer {
                 LOG.warn("[ObjectiveAnalyzer] unknown/dynamic location filter key '{}' — fail-closed (no score).", key);
                 return null;
         }
+    }
+
+    private com.gempukku.swccgo.filters.Filter
+            resolveDynamicLocationFilter(
+                    String key, String playerId) {
+        if (activeDynamicLocationRules == null
+                || playerId == null) {
+            return null;
+        }
+        for (DynamicLocationRule rule
+                : activeDynamicLocationRules) {
+            if (rule == null
+                    || !key.equals(
+                        rule.derivedLocationFilterKey)
+                    || !"attachedCardHost".equals(
+                        rule.source)) {
+                continue;
+            }
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(rule.matchingActorFilterKey);
+            if (actorFilter == null) return null;
+            return new com.gempukku.swccgo.filters.Filter() {
+                @Override
+                public boolean accepts(
+                        GameState gameState,
+                        com.gempukku.swccgo.logic.modifiers.querying
+                            .ModifiersQuerying modifiersQuerying,
+                        PhysicalCard candidate) {
+                    if (gameState == null
+                            || modifiersQuerying == null
+                            || candidate == null) {
+                        return false;
+                    }
+                    Collection<PhysicalCard> permanents =
+                            gameState.getAllPermanentCards();
+                    if (permanents == null) return false;
+                    for (PhysicalCard actor : permanents) {
+                        if (actor == null
+                                || !playerId.equals(
+                                    actor.getOwner())
+                                || actor.getZone() == null
+                                || !actor.getZone().isInPlay()
+                                || gameState.getGame() == null
+                                || !isActiveForSpot(
+                                    gameState.getGame(),
+                                    actor, true)
+                                || !actorFilter.accepts(
+                                    gameState,
+                                    modifiersQuerying, actor)) {
+                            continue;
+                        }
+                        PhysicalCard host =
+                                actor.getAttachedTo();
+                        if (host == null) {
+                            host = modifiersQuerying
+                                .getLocationThatCardIsAt(
+                                    gameState, actor);
+                        }
+                        if (samePhysicalLocation(
+                                host, candidate)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            };
+        }
+        return null;
     }
 
     private static float weight(Map<String, Float> w, String key) {
@@ -9839,7 +11173,12 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId,
             PhysicalCard location) {
         return isShieldMainGeneratorControlContestLocation(
-                game, playerId, location);
+                game, playerId, location)
+                || isFirstOrderReigns
+                    && samePhysicalLocation(
+                        getFirstOrderReignsTrackedFleetHostSystem(
+                            game, playerId),
+                        location);
     }
     public boolean huntDownNeedsVader() { return huntDownNeedsVader; }
     public boolean huntDownFlipBackNoVader() { return huntDownFlipBackNoVader; }
@@ -10061,10 +11400,12 @@ public class ObjectiveAnalyzer {
         hydratedFromJson = false;
         activeFlipLocationRules = null;
         activeActorLocationRules = null;
+        activeDynamicLocationRules = null;
         activeRequiredCardDeployRules = null;
         activeRequiredCardRetentionRules = null;
         activeRequiredCardInactivationRules = null;
         activeHardLossLocationRules = null;
+        activeTerminalForfeitRules = null;
         objectiveTitle = null;
         objectiveBlueprintId = null;
         // V29 UPDATED 2026-07-06: clear stored game text with the rest of the analysis
@@ -10078,6 +11419,7 @@ public class ObjectiveAnalyzer {
         isMyLord = false;
         isEndor = false;
         isTdigwatt = false;
+        isFirstOrderReigns = false;
         activePlaybook = null;
         // V186 CONSOLIDATED: I Want That Map identity + typed steer data
         isWantThatMap = false;

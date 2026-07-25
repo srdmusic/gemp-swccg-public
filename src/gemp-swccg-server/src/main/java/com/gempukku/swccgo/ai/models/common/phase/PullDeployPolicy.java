@@ -33,7 +33,9 @@ public final class PullDeployPolicy {
                     "V60 RESERVE FAIL-STOP: '" + facts.actionText()
                             + "' failed 2x \u2014 stop trying!");
         }
-        if (facts.reserveSize() >= 0 && facts.reserveSize() <= 2) {
+        if (!facts.objectiveRoutePullVetoBypass()
+                && facts.reserveSize() >= 0
+                && facts.reserveSize() <= 2) {
             return stop(operations, facts.actionId(), "V60-reserve-risk", -9999.0f,
                     "V60 RESERVE RISK: " + facts.reserveSize()
                             + " cards in Reserve \u2014 reveal almost the whole deck!");

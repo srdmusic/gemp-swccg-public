@@ -39,7 +39,8 @@ public final class PullDeployFactsReader {
             GameState gameState,
             String playerId,
             Side side,
-            PullOracleView oracle) {
+            PullOracleView oracle,
+            PullActionFactsReader.ObjectiveView objective) {
     }
 
     private PullDeployFactsReader() {
@@ -65,9 +66,32 @@ public final class PullDeployFactsReader {
 
         PullOracleView.Validation memory = unknownValidation();
         PullOracleView.Validation sourceValidation = unknownValidation();
-        if (reserveSize >= 0 && reserveSize <= 2) {
+        boolean lowReserve =
+                reserveSize >= 0 && reserveSize <= 2;
+        boolean objectiveExceptionCanApply =
+                context != null
+                && context.objective() != null
+                && context.game() != null
+                && playerId != null;
+        if (lowReserve && !objectiveExceptionCanApply) {
             return facts(actionId, text, reserveSize, "", "", "",
-                    memory, sourceValidation, "?", false, false);
+                    memory, sourceValidation, "?", false, false,
+                    false);
+        }
+        PhysicalCard source = sourceCard(
+                gameState, sourceCardId);
+        boolean objectiveRoutePullVetoBypass =
+                context != null
+                && context.objective() != null
+                && context.objective()
+                    .objectiveRoutePullVetoBypass(
+                        context.game(), playerId,
+                        source, text);
+        if (!objectiveRoutePullVetoBypass
+                && lowReserve) {
+            return facts(actionId, text, reserveSize, "", "", "",
+                    memory, sourceValidation, "?", false, false,
+                    false);
         }
 
         String namedMissing = "";
@@ -86,7 +110,8 @@ public final class PullDeployFactsReader {
         }
         if (!namedMissing.isEmpty()) {
             return facts(actionId, text, reserveSize, namedMissing, "", "",
-                    memory, sourceValidation, "?", false, false);
+                    memory, sourceValidation, "?", false, false,
+                    objectiveRoutePullVetoBypass);
         }
 
         String genericTypedMiss = "";
@@ -114,16 +139,16 @@ public final class PullDeployFactsReader {
         if (!genericTypedMiss.isEmpty() || !genericUntypedMiss.isEmpty()) {
             return facts(actionId, text, reserveSize, "", genericTypedMiss,
                     genericUntypedMiss, memory, sourceValidation, "?", false,
-                    false);
+                    false, objectiveRoutePullVetoBypass);
         }
 
         memory = memoryValidation(text, oracle);
         if (memory.outcome() == PullOracleView.Outcome.WILL_FAIL) {
             return facts(actionId, text, reserveSize, "", "", "", memory,
-                    sourceValidation, "?", false, false);
+                    sourceValidation, "?", false, false,
+                    objectiveRoutePullVetoBypass);
         }
 
-        PhysicalCard source = sourceCard(gameState, sourceCardId);
         String sourceTitle = sourceTitle(source);
         String sourceText = sourceText(source, context, oracle);
         Zone sourceZone = sourceZone(text, oracle);
@@ -133,7 +158,8 @@ public final class PullDeployFactsReader {
         }
         if (sourceValidation.outcome() == PullOracleView.Outcome.WILL_FAIL) {
             return facts(actionId, text, reserveSize, "", "", "", memory,
-                    sourceValidation, sourceTitle, false, false);
+                    sourceValidation, sourceTitle, false, false,
+                    objectiveRoutePullVetoBypass);
         }
 
         List<String> targets = pullTargets(sourceText, oracle);
@@ -144,7 +170,8 @@ public final class PullDeployFactsReader {
                         oracle, context.game(), playerId, targets);
         if (noWeaponHolder) {
             return facts(actionId, text, reserveSize, "", "", "", memory,
-                    sourceValidation, sourceTitle, true, false);
+                    sourceValidation, sourceTitle, true, false,
+                    objectiveRoutePullVetoBypass);
         }
 
         boolean starshipOnlyNoSpace = sourceValidation.outcome()
@@ -153,7 +180,9 @@ public final class PullDeployFactsReader {
                 && safeStarshipOnlyNoSpace(oracle, sourceText);
 
         return facts(actionId, text, reserveSize, "", "", "", memory,
-                sourceValidation, sourceTitle, false, starshipOnlyNoSpace);
+                sourceValidation, sourceTitle, false,
+                starshipOnlyNoSpace,
+                objectiveRoutePullVetoBypass);
     }
 
     private static PullDeployFacts facts(
@@ -167,12 +196,14 @@ public final class PullDeployFactsReader {
             PullOracleView.Validation sourceValidation,
             String sourceTitle,
             boolean noWeaponHolder,
-            boolean starshipOnlyNoSpace) {
+            boolean starshipOnlyNoSpace,
+            boolean objectiveRoutePullVetoBypass) {
         return new PullDeployFacts(
                 actionId, text, false, reserveSize, namedMissing,
                 genericTypedMiss, genericUntypedMiss, memory,
                 sourceValidation, sourceTitle, noWeaponHolder,
-                starshipOnlyNoSpace);
+                starshipOnlyNoSpace,
+                objectiveRoutePullVetoBypass);
     }
 
     private static String sourceTitle(PhysicalCard source) {

@@ -392,6 +392,7 @@ public class EndorOperationsDecisionPolicyTest {
                 PullActionFacts.FormationState.NONE,
                 "",
                 requiredOnTableCardPull,
+                false,
                 false);
     }
 

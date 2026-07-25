@@ -977,7 +977,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         String plannedTargetName = null;
         String deployingBlueprintId = extractBlueprintFromDecisionText(context.getDecisionText());
         PhysicalCard objectiveProgressDeployingCard = findUniqueDeployingCard(
-            gameState, playerId, deployingBlueprintId);
+            context, gameState, playerId, deployingBlueprintId);
         DeploymentPlan deploymentPlanSnapshot = null;
         DeploymentInstruction plannedDeployInstruction = null;
 
@@ -1251,6 +1251,33 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         action.getActionId(),
                                         objectiveProgressAnalyzer
                                             .advancesObjectiveHardLossDefenseAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scorePostFlipObjectivePayoff(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .classifyPostFlipPayoffAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreFirstOrderReignsDrainPair(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .advancesFirstOrderReignsDrainPairAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .blockTerminalObjectiveExposure(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .isFirstOrderReignsTerminalDeploymentHazardAt(
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location)));
@@ -4405,11 +4432,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         context.getGame(),
                         context.getPlayerId(),
                         physicalCard);
+        boolean preferredFirstOrderReignsRouteCard =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredFirstOrderReignsRouteForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
         if (route == ForceLossPolicy.Route.STANDALONE) {
             myLord = objectiveAnalyzer.getObjectiveTitle() != null
                     && objectiveAnalyzer.isMyLord();
             required = preferredRequiredCard
                     || preferredShieldRoutePackageCard
+                    || preferredFirstOrderReignsRouteCard
                     || candidate.fromHand() && requiredActor;
             pullable = candidate.fromHand() && title != null && !required
                     && !requiredOnTableCard
@@ -4421,6 +4458,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             huntDown = title != null && objectiveAnalyzer.isHuntDownV();
             required = preferredRequiredCard
                     || preferredShieldRoutePackageCard
+                    || preferredFirstOrderReignsRouteCard
                     || requiredActor;
             pullable = title != null && !required
                     && !requiredOnTableCard
@@ -6148,12 +6186,37 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         String title = location.getTitle();
                         action.setDisplayText("Move to " + (title != null ? title : "location"));
 
+                        boolean objectiveTerminalEscapeCandidate =
+                            fsMover != null && fsOrigin != null
+                                && context.getObjectiveAnalyzer() != null
+                                && context.getObjectiveAnalyzer()
+                                    .isFirstOrderReignsTerminalExposureAt(
+                                        game, playerId,
+                                        fsMover, fsOrigin)
+                                && !context.getObjectiveAnalyzer()
+                                    .isFirstOrderReignsTerminalExposureAt(
+                                        game, playerId,
+                                        fsMover, location);
+                        MoveDestinationPolicy.CompanionVeto terminalExposure =
+                            MoveDestinationPolicy.terminalObjectiveExposure(
+                                fsMover != null
+                                    && context.getObjectiveAnalyzer() != null
+                                    && context.getObjectiveAnalyzer()
+                                        .isFirstOrderReignsTerminalExposureAt(
+                                            game, playerId, fsMover, location));
+                        if (terminalExposure.hardVeto()) {
+                            action.hardVeto(terminalExposure.reason());
+                            logger.warn("OBJECTIVE TERMINAL EXPOSURE (move-dest): {}",
+                                terminalExposure.reason());
+                        }
+
                         // FORMATION SAFETY (2026-07-11c): L4 solo-charge + L1 abandon-solo vetoes —
                         // un-outvotable (Codex audit: V32 -300 + V22.2 -120 lost to R2 +6000 here).
                         if (fsMover != null && fsOrigin != null && game != null) {
                             String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
                                 .vetoMoveDestination(game, gameState, playerId, fsMover, location);
                             if (fsV == null && fsOrigin != null
+                                    && !objectiveTerminalEscapeCandidate
                                     && fsOrigin.getCardId() != location.getCardId()) {
                                 fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
                                     .vetoMoveOrigin(game, gameState, playerId, fsMover, fsOrigin);
@@ -6213,6 +6276,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         boolean objectiveActorLocationDestination = false;
                         boolean objectiveRequiredCardEnablerDestination =
                                 false;
+                        com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer.ObjectivePostFlipPayoffRole
+                            objectivePostFlipPayoffDestination =
+                                com.gempukku.swccgo.ai.models.common.strategy
+                                    .ObjectiveAnalyzer
+                                    .ObjectivePostFlipPayoffRole.NONE;
+                        com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer.ObjectivePostFlipPayoffRole
+                            objectivePostFlipPayoffCurrent =
+                                com.gempukku.swccgo.ai.models.common.strategy
+                                    .ObjectiveAnalyzer
+                                    .ObjectivePostFlipPayoffRole.NONE;
+                        com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer.ObjectivePostFlipPayoffRole
+                            objectivePostFlipPayoffAtDestination =
+                                com.gempukku.swccgo.ai.models.common.strategy
+                                    .ObjectiveAnalyzer
+                                    .ObjectivePostFlipPayoffRole.NONE;
+                        boolean objectiveFirstOrderDrainPairDestination =
+                                false;
+                        boolean objectiveFirstOrderDrainPairBreak = false;
+                        boolean objectiveTerminalEscapeDestination =
+                                false;
                         if (fsMover != null && fsOrigin != null
                                 && game != null && playerId != null) {
                             try {
@@ -6241,8 +6327,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     && routeAnalyzer.isAnalyzed()
                                     && routeAnalyzer
                                         .advancesRequiredCardDeployPrerequisiteByMovingTo(
+                                                game, playerId, fsMover,
+                                                location);
+                                objectivePostFlipPayoffDestination =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    ? routeAnalyzer
+                                        .classifyPostFlipPayoffAt(
                                             game, playerId, fsMover,
-                                            location);
+                                            location)
+                                    : com.gempukku.swccgo.ai.models.common
+                                        .strategy.ObjectiveAnalyzer
+                                        .ObjectivePostFlipPayoffRole.NONE;
+                                if (routeAnalyzer != null
+                                        && routeAnalyzer.isAnalyzed()) {
+                                    objectivePostFlipPayoffCurrent =
+                                        routeAnalyzer
+                                            .classifyPostFlipPayoffRoleAt(
+                                                game, playerId,
+                                                fsMover, fsOrigin);
+                                    objectivePostFlipPayoffAtDestination =
+                                        routeAnalyzer
+                                            .classifyPostFlipPayoffRoleAt(
+                                                game, playerId,
+                                                fsMover, location);
+                                }
                                 boolean preservesRuntimeActor =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -6514,6 +6623,52 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         fsMover.getTitle(), title);
                                 }
                                 MoveDestinationPolicy.Contribution
+                                    postFlipPayoff =
+                                        MoveDestinationPolicy
+                                            .objectivePostFlipPayoffDestination(
+                                                objectivePostFlipPayoffDestination,
+                                                fsMover.getTitle(), title);
+                                if (postFlipPayoff.applies()) {
+                                    action.addReasoning(
+                                        postFlipPayoff.reason(),
+                                        postFlipPayoff.delta(),
+                                        TraceRuleId.of(
+                                            objectivePostFlipPayoffDestination
+                                                == com.gempukku.swccgo.ai.models
+                                                    .common.strategy
+                                                    .ObjectiveAnalyzer
+                                                    .ObjectivePostFlipPayoffRole
+                                                    .PRIMARY
+                                                ? "MOVE.OBJECTIVE.POST_FLIP_PRIMARY_PAYOFF"
+                                                : "MOVE.OBJECTIVE.POST_FLIP_SECONDARY_PAYOFF"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.BANDED);
+                                    logger.warn(
+                                        "OBJECTIVE POST-FLIP PAYOFF DEST: {} to {} +{}",
+                                        fsMover.getTitle(), title,
+                                        (int) postFlipPayoff.delta());
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    postFlipPayoffRetention =
+                                        MoveDestinationPolicy
+                                            .objectivePostFlipPayoffRetention(
+                                                objectivePostFlipPayoffCurrent,
+                                                objectivePostFlipPayoffAtDestination,
+                                                fsMover.getTitle(), title);
+                                if (postFlipPayoffRetention.applies()) {
+                                    action.addReasoning(
+                                        postFlipPayoffRetention.reason(),
+                                        postFlipPayoffRetention.delta(),
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_HOLD"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.ORDERING);
+                                    logger.warn(
+                                        "OBJECTIVE POST-FLIP PAYOFF HOLD: {} to {} {}",
+                                        fsMover.getTitle(), title,
+                                        (int) postFlipPayoffRetention.delta());
+                                }
+                                MoveDestinationPolicy.Contribution
                                     objectiveBlockerChase =
                                         MoveDestinationPolicy
                                             .objectiveBlockerChaseDestination(
@@ -6530,6 +6685,84 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             } catch (Exception e) {
                                 logger.debug(
                                     "Objective actor-route destination assessment failed: {}",
+                                    e.getMessage());
+                            }
+                            try {
+                                var firstOrderAnalyzer =
+                                    context.getObjectiveAnalyzer();
+                                if (firstOrderAnalyzer != null
+                                        && firstOrderAnalyzer.isAnalyzed()) {
+                                    boolean terminalAtOrigin =
+                                        firstOrderAnalyzer
+                                            .isFirstOrderReignsTerminalExposureAt(
+                                                game, playerId,
+                                                fsMover, fsOrigin);
+                                    objectiveTerminalEscapeDestination =
+                                        terminalAtOrigin
+                                        && !firstOrderAnalyzer
+                                            .isFirstOrderReignsTerminalExposureAt(
+                                                game, playerId,
+                                                fsMover, location);
+                                    objectiveFirstOrderDrainPairDestination =
+                                        firstOrderAnalyzer
+                                            .advancesFirstOrderReignsDrainPairAt(
+                                                game, playerId,
+                                                fsMover, location);
+                                    objectiveFirstOrderDrainPairBreak =
+                                        !terminalAtOrigin
+                                        && firstOrderAnalyzer
+                                            .breaksFirstOrderReignsDrainPairIfMoved(
+                                                game, playerId,
+                                                fsMover, location);
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    terminalEscape =
+                                        MoveDestinationPolicy
+                                            .objectiveTerminalActorEscapeDestination(
+                                                objectiveTerminalEscapeDestination,
+                                                fsMover.getTitle(), title);
+                                if (terminalEscape.applies()) {
+                                    action.addReasoning(
+                                        terminalEscape.reason(),
+                                        terminalEscape.delta(),
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.TERMINAL_ACTOR_ESCAPE_DESTINATION"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.BANDED);
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    firstOrderDrainPair =
+                                        MoveDestinationPolicy
+                                            .objectiveFirstOrderDrainPairDestination(
+                                                objectiveFirstOrderDrainPairDestination,
+                                                fsMover.getTitle(), title);
+                                if (firstOrderDrainPair.applies()) {
+                                    action.addReasoning(
+                                        firstOrderDrainPair.reason(),
+                                        firstOrderDrainPair.delta(),
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.BANDED);
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    firstOrderDrainPairHold =
+                                        MoveDestinationPolicy
+                                            .objectiveFirstOrderDrainPairHold(
+                                                objectiveFirstOrderDrainPairBreak,
+                                                fsMover.getTitle(), title);
+                                if (firstOrderDrainPairHold.applies()) {
+                                    action.addReasoning(
+                                        firstOrderDrainPairHold.reason(),
+                                        firstOrderDrainPairHold.delta(),
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_HOLD"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.ORDERING);
+                                }
+                            } catch (Exception e) {
+                                logger.debug(
+                                    "First Order objective move-destination assessment failed: {}",
                                     e.getMessage());
                             }
                         }
@@ -7279,7 +7512,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat),
                                                 v156JoinMode && v156DestFriendlyChars > 0,
                                                 objectiveActorRouteDestination
-                                                    || objectiveActorLocationDestination);
+                                                    || objectiveActorLocationDestination
+                                                    || objectiveFirstOrderDrainPairDestination
+                                                    || objectiveTerminalEscapeDestination
+                                                    || objectivePostFlipPayoffDestination
+                                                        != com.gempukku.swccgo.ai.models
+                                                            .common.strategy
+                                                            .ObjectiveAnalyzer
+                                                            .ObjectivePostFlipPayoffRole.NONE);
                                         if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.HIDDEN_PATH_EXEMPT) {
                                             logger.info("V67z HIDDEN PATH {} EXEMPT: {} on Hidden Path — V41 WRONG DIRECTION skipped",
@@ -8903,8 +9143,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     }
 
     private PhysicalCard findUniqueDeployingCard(
-            GameState gameState, String playerId, String blueprintId) {
+            DecisionContext context, GameState gameState,
+            String playerId, String blueprintId) {
         if (gameState == null || playerId == null || blueprintId == null) return null;
+
+        Object selectedPhysicalId = context != null
+                ? context.getExtra(
+                    com.gempukku.swccgo.ai.models.common.strategy
+                        .ObjectiveAnalyzer
+                        .OBJECTIVE_DEPLOYING_CARD_ID_EXTRA)
+                : null;
+        if (selectedPhysicalId != null) {
+            try {
+                PhysicalCard selected = gameState.findCardByPermanentId(
+                        Integer.parseInt(
+                            String.valueOf(selectedPhysicalId)));
+                if (selected != null
+                        && playerId.equals(selected.getOwner())
+                        && blueprintId.equals(
+                            selected.getBlueprintId(true))) {
+                    return selected;
+                }
+            } catch (NumberFormatException ignored) {
+                // Invalid provenance fails into the zone-safe fallback.
+            }
+        }
 
         java.util.Set<PhysicalCard> seen = java.util.Collections.newSetFromMap(
             new java.util.IdentityHashMap<>());
@@ -8912,9 +9175,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         java.util.List<PhysicalCard> handCards = gameState.getHand(playerId);
         java.util.List<PhysicalCard> reserveCards = gameState.getCardPile(
             playerId, com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+        java.util.List<PhysicalCard> lostPileCards =
+                gameState.getLostPile(playerId);
         java.util.List<PhysicalCard> stackedCards = gameState.getAllStackedCards();
         if (handCards != null) candidates.addAll(handCards);
         if (reserveCards != null) candidates.addAll(reserveCards);
+        if (lostPileCards != null) candidates.addAll(lostPileCards);
         if (stackedCards != null) candidates.addAll(stackedCards);
 
         PhysicalCard match = null;

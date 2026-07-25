@@ -138,6 +138,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
     private final Set<String> seenOwnShields = new HashSet<>();
     private String lastPendingDeployType = null;  // Track pending deploy for confirmation
     private Integer pendingMovePhysicalCardId;
+    private Integer pendingObjectiveDeployingCardId;
 
     // Bot stats DAO for record lookups (optional - set via setter)
     private com.gempukku.swccgo.db.BotStatsDAO botStatsDAO;
@@ -1116,6 +1117,50 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
     }
 
+    private void rememberSelectedLostPileDeployCard(
+            DecisionContext context,
+            EvaluatedAction selected) {
+        if (context == null || selected == null
+                || context.getPhase() != Phase.DEPLOY
+                || !"ARBITRARY_CARDS".equals(
+                    context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"choose card to deploy from lost pile"
+                    .equals(context.getDecisionText()
+                        .trim().toLowerCase(Locale.ROOT))) {
+            return;
+        }
+        pendingObjectiveDeployingCardId = null;
+        int index = context.getActionIds().indexOf(
+                selected.getActionId());
+        List<PhysicalCard> lostPile =
+                context.getGameState() != null
+                && context.getPlayerId() != null
+                    ? context.getGameState()
+                        .getLostPile(context.getPlayerId())
+                    : null;
+        List<String> offeredBlueprints =
+                context.getBlueprints();
+        if (index < 0 || lostPile == null
+                || offeredBlueprints == null
+                || index >= lostPile.size()
+                || index >= offeredBlueprints.size()
+                || !("temp" + index).equals(
+                    selected.getActionId())) {
+            return;
+        }
+        PhysicalCard selectedCard = lostPile.get(index);
+        String selectedBlueprint =
+                offeredBlueprints.get(index);
+        if (selectedCard != null
+                && selectedBlueprint != null
+                && selectedBlueprint.equals(
+                    selectedCard.getBlueprintId(true))) {
+            pendingObjectiveDeployingCardId =
+                    selectedCard.getPermanentCardId();
+        }
+    }
+
     /**
      * Try to use the evaluator system for this decision.
      *
@@ -1144,6 +1189,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
         LOG.info("Evaluator decision: {} (score: {})", bestAction.getDisplayText(), bestAction.getScore());
         rememberSelectedMoveCard(evalContext, bestAction);
+        rememberSelectedLostPileDeployCard(
+                evalContext, bestAction);
 
         // === MULTI-SELECT FIX (Steve, 2026-05-31) ===
         // ArbitraryCardsSelectionDecision (and similar multi-select) expects a
@@ -1243,6 +1290,22 @@ public class TheChosenOneAi extends HeuristicAiBase {
                     .MOVER_CARD_ID_EXTRA,
                 pendingMovePhysicalCardId);
             pendingMovePhysicalCardId = null;
+        }
+        if (pendingObjectiveDeployingCardId != null
+                && "CARD_SELECTION".equals(
+                    decisionType.name())
+                && promptLower.contains(
+                    "choose where to deploy")) {
+            evalContext.setExtra(
+                ObjectiveAnalyzer
+                    .OBJECTIVE_DEPLOYING_CARD_ID_EXTRA,
+                pendingObjectiveDeployingCardId);
+            pendingObjectiveDeployingCardId = null;
+        } else if (pendingObjectiveDeployingCardId != null
+                && (phase != Phase.DEPLOY
+                    || decisionType.name()
+                        .contains("ACTION_CHOICE"))) {
+            pendingObjectiveDeployingCardId = null;
         }
         evalContext.setActivationAmountDecision(activationAmountDecision);
 

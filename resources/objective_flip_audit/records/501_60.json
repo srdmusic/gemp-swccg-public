@@ -1,87 +1,114 @@
 {
-  "frontBp": "501_60",
-  "backBp": "501_60_BACK",
-  "side": "DARK",
-  "titleFront": "The First Order Reigns",
-  "titleBack": "The Resistance Is Doomed",
-  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java",
-  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060_BACK.java",
-  "cacheCheck": "NOT_IN_CACHE",
-  "flipToBack": {
-    "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic; note: NOT marked setSingletonTrigger unlike most objectives)",
-    "prose": "Flip if Tracked Fleet is 'blown away' ('annihilated' in card text; engine models it as blown-away state). Playtest card (ExpansionSet.PLAYTESTING, setTestingText).",
-    "expression": {
-      "op": "allOf",
-      "children": [
-        {
-          "req": "canBeFlipped guard",
-          "filter": "(self)",
-          "gameConditions": "GameConditions.canBeFlipped(game, self)",
-          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java:129"
-        },
-        {
-          "req": "blown-away state: a card matching filter is 'blown away' (modifiersQuerying.isBlownAway)",
-          "filter": "Filters.Tracked_Fleet",
-          "gameConditions": "GameConditions.isBlownAway(game, Filters.Tracked_Fleet)",
-          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java:130"
-        }
-      ]
+ "frontBp": "501_60",
+ "backBp": "501_60_BACK",
+ "side": "DARK",
+ "titleFront": "The First Order Reigns",
+ "titleBack": "The Resistance Is Doomed",
+ "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java",
+ "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060_BACK.java",
+ "cacheCheck": "NOT_IN_CACHE",
+ "flipToBack": {
+  "timing": "RequiredGameTextTriggerAction on TriggerConditions.isTableChanged (automatic; note: NOT marked setSingletonTrigger unlike most objectives)",
+  "prose": "Flip if Tracked Fleet is 'blown away' ('annihilated' in card text; engine models it as blown-away state). Playtest card (ExpansionSet.PLAYTESTING, setTestingText). DRIVER (one level up, the actionable flip plan): Tracked Fleet's own REQUIRED trigger annihilates it at start of the owner's turn only if the owner CONTROLS the [EpVII] system it sits on (Card225_034.java:77-90 / twin Card501_061.java); owner may NOT deploy starships there but Supremacy moves there FREE (:67-68); opponent may relocate the fleet up to 3x/game to an [EpVII] system within 3 parsecs (:96-170). So the flip is a control race on a moving host system.",
+  "expression": {
+   "op": "allOf",
+   "children": [
+    {
+     "req": "table changed",
+     "filter": "-",
+     "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java:128"
     },
-    "citations": [
-      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java:126-141"
-    ]
+    {
+     "req": "canBeFlipped guard",
+     "filter": "(self)",
+     "gameConditions": "GameConditions.canBeFlipped(game, self)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java:129"
+    },
+    {
+     "req": "blown-away state: a card matching filter is 'blown away' (modifiersQuerying.isBlownAway)",
+     "filter": "Filters.Tracked_Fleet",
+     "gameConditions": "GameConditions.isBlownAway(game, Filters.Tracked_Fleet)",
+     "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java:130"
+    }
+   ]
   },
-  "flipToFront": {
-    "timing": "NONE",
-    "prose": "The back NEVER flips back to front: Card501_060_BACK.java contains no FlipCardEffect and no flip trigger. Instead the back carries a hard-lose: place Objective out of play if Kylo was just forfeited to Lost Pile from Salt Plateau (where Han, Leia, or Luke present) during a battle you lost.",
-    "expression": null,
-    "citations": [
-      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060_BACK.java:92-127 (required triggers: out-of-play + retrieval cancel only, no flip)"
-    ]
-  },
-  "requirementSemantics": [
-    "flipToBack: blown-away card-state semantics (GameConditions.isBlownAway on Filters.Tracked_Fleet). Not control, occupy, or presence; a one-way state latch achieved by 'annihilating' (blowing away) the owner's own starting Epic Event/target Tracked Fleet.",
-    "flipToFront: none; flip is one-way.",
-    "BACK hard-lose: timing trigger TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.Kylo, Filters.and(Filters.Crait_Salt_Plateau, Filters.wherePresent(self, Filters.or(Filters.Han, Filters.Leia, Filters.Luke)))) AND GameConditions.isDuringBattleLostBy(game, playerId): forfeit-state + battle-outcome semantics.",
-    "BACK retrieval lock: control-with semantics: GameConditions.controlsWith(game, self, playerId, Filters.Crait_Salt_Plateau, Filters.Kylo) gates auto-cancel of opponent Force retrieval (required trigger on isAboutToRetrieveForce).",
-    "BACK drain bonus: occupies-with semantics: OccupiesWithCondition(self, playerId, Filters.Crait_location, Filters.Kylo) plus locations Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.and(Filters.First_Order_character, Filters.with(self, Filters.First_Order_character)))).",
-    "BACK drain lock on opponent: ControlsWithCondition(self, playerId, Filters.Crait_Salt_Plateau, Filters.Kylo) + opponent characterOrPermanentPilotAlone at location."
-  ],
-  "typedIdentities": [
-    "Filters.Tracked_Fleet (flip state target; required start deploy)",
-    "Filters.Dqar_system, Filters.Crait_system, Filters.Crait_Salt_Plateau (required start deploys)",
-    "Filters.or(Filters.Bow_To_The_First_Order, Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Icon.EPISODE_VII))) (owner deploy ban, remainder of game)",
-    "Filters.or(Filters.titleContains(\"Supremacy\"), Filters.and(Icon.EPISODE_VII, Filters.battleground)) (once-per-turn download, front AND back, shared GameTextActionId.THE_FIRST_ORDER_REIGNS__DOWNLOAD_EPISODE_7_BATTLEGROUND)",
-    "Filters.system (front drain-loss cap filter); Filters.Supremacy reset to deploy=7 at Filters.and(Icon.EPISODE_VII, Filters.system)",
-    "Filters.Kylo (persona anchoring all back-side value and the hard-lose)",
-    "Filters.Crait_location (Kylo occupies condition); Filters.Crait_Salt_Plateau (Kylo controls condition; hard-lose site)",
-    "Filters.First_Order_character (paired presence for drain +1)",
-    "Filters.or(Filters.Han, Filters.Leia, Filters.Luke) (hard-lose presence set)",
-    "Filters.and(Filters.non_unique, Filters.trooper) / Filters.and(Filters.non_unique, Icon.FIRST_ORDER, Filters.vehicle) (back Lost Pile deploy)",
-    "Filters.characterOrPermanentPilotAlone (opponent drain lock)"
-  ],
-  "setupAndPullRoutes": [
-    "START OF GAME (front, all required): deploy D'Qar system (Filters.Dqar_system) [Card501_060.java:49-55]; Crait system (Filters.Crait_system) [56-62]; Salt Plateau (Filters.Crait_Salt_Plateau) [63-69]; Tracked Fleet (Filters.Tracked_Fleet) [70-76]",
-    "FRONT+BACK, once per turn (shared action id): deploy from Reserve Deck a card with 'Supremacy' in title or an [Episode VII] battleground: DeployCardFromReserveDeckEffect(Filters.or(Filters.titleContains(\"Supremacy\"), Filters.and(Icon.EPISODE_VII, Filters.battleground)), true) [Card501_060.java:91-111, Card501_060_BACK.java:51-66]",
-    "BACK, once per turn: deploy a non-unique trooper or non-unique [First Order] vehicle from LOST PILE: DeployCardFromLostPileEffect(Filters.or(nonUniqueTrooper, nonUniqueFOVehicle), false), GameTextActionId.THE_RESISTANCE_IS_DOOMED__DOWNLOAD_FIRST_ORDER_VEHICLE_OR_TROOPER [Card501_060_BACK.java:68-87]"
-  ],
-  "otherObligations": [
-    "FRONT after-deployment, REMAINDER OF GAME: owner may not deploy Bow To The First Order or own cards with ability except [Episode VII] cards: MayNotDeployModifier(Filters.or(Filters.Bow_To_The_First_Order, Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Icon.EPISODE_VII))), playerId) [Card501_060.java:81-88]",
-    "FRONT: opponent loses no more than 1 Force from your Force drains at systems: LimitForceLossFromForceDrainModifier(self, Filters.system, 1, opponent) [Card501_060.java:119]",
-    "FRONT: Supremacy is deploy = 7 to [Episode VII] systems: ResetDeployCostToLocationModifier(self, Filters.Supremacy, 7, Filters.and(Icon.EPISODE_VII, Filters.system)) [Card501_060.java:120]",
-    "BACK: while Kylo occupies a Crait location, your Force drains +1 at battlegrounds where you have two First Order characters together [Card501_060_BACK.java:135-138]",
-    "BACK: while Kylo controls Salt Plateau, opponent may not Force drain where their character or permanent pilot is alone [Card501_060_BACK.java:140-143]",
-    "BACK: while Kylo controls Salt Plateau, opponent's Force retrieval is canceled (required trigger on isAboutToRetrieveForce) [Card501_060_BACK.java:114-124]",
-    "BACK hard-lose: place Objective out of play if Kylo just forfeited to Lost Pile from Salt Plateau where Han, Leia, or Luke present, during a battle you lost [Card501_060_BACK.java:97-112]"
-  ],
-  "seedMismatches": [],
-  "profile": {
-    "exists": false,
-    "loaderEnabled": false,
-    "profileGaps": [
-      "No profile exists in src/gemp-swccg-server/src/main/resources/objective_playbooks.json for frontBp 501_60 (playtest set 501 card; also absent from both seed facts files and from card_cache.json).",
-      "If a profile is ever authored: flip law is a blown-away state on Filters.Tracked_Fleet (one-way, no flip-back), key persona is Kylo (Crait location occupy / Salt Plateau control), and the Salt Plateau battle-loss forfeit of Kylo with Han/Leia/Luke present is a hard out-of-play landmine."
-    ]
-  },
-  "proofGate": "SOURCE_VERIFIED"
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060.java:126-141",
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_061.java:77-90 (annihilation driver)"
+  ]
+ },
+ "flipToFront": {
+  "timing": "NONE",
+  "prose": "The back NEVER flips back to front: Card501_060_BACK.java contains no FlipCardEffect and no flip trigger. Instead the back carries a hard-lose: place Objective out of play if Kylo was just forfeited to Lost Pile from Salt Plateau (where Han, Leia, or Luke present) during a battle you lost.",
+  "expression": null,
+  "citations": [
+   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set501/dark/Card501_060_BACK.java:92-127 (required triggers: out-of-play + retrieval cancel only, no flip)"
+  ]
+ },
+ "requirementSemantics": [
+  "flipToBack: blown-away card-state semantics (GameConditions.isBlownAway on Filters.Tracked_Fleet). Not control, occupy, or presence; a one-way state latch achieved by 'annihilating' (blowing away) the owner's own starting Epic Event/target Tracked Fleet.",
+  "flipToFront: none; flip is one-way.",
+  "BACK hard-lose: timing trigger TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.Kylo, Filters.and(Filters.Crait_Salt_Plateau, Filters.wherePresent(self, Filters.or(Filters.Han, Filters.Leia, Filters.Luke)))) AND GameConditions.isDuringBattleLostBy(game, playerId): forfeit-state + battle-outcome semantics.",
+  "BACK retrieval lock: control-with semantics: GameConditions.controlsWith(game, self, playerId, Filters.Crait_Salt_Plateau, Filters.Kylo) gates auto-cancel of opponent Force retrieval (required trigger on isAboutToRetrieveForce).",
+  "BACK drain bonus: occupies-with semantics: OccupiesWithCondition(self, playerId, Filters.Crait_location, Filters.Kylo) plus locations Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.and(Filters.First_Order_character, Filters.with(self, Filters.First_Order_character)))).",
+  "BACK drain lock on opponent: ControlsWithCondition(self, playerId, Filters.Crait_Salt_Plateau, Filters.Kylo) + opponent characterOrPermanentPilotAlone at location.",
+  "flip DRIVER = control race: owner controls Tracked Fleet host [EpVII] system at start of own turn; fleet relocatable 3x by opponent; Supremacy free-move is the control tool; do NOT protect Tracked Fleet (its destruction IS the flip)"
+ ],
+ "typedIdentities": [
+  "Filters.Tracked_Fleet (flip state target; required start deploy)",
+  "Filters.Dqar_system, Filters.Crait_system, Filters.Crait_Salt_Plateau (required start deploys)",
+  "Filters.or(Filters.Bow_To_The_First_Order, Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Icon.EPISODE_VII))) (owner deploy ban, remainder of game)",
+  "Filters.or(Filters.titleContains(\"Supremacy\"), Filters.and(Icon.EPISODE_VII, Filters.battleground)) (once-per-turn download, front AND back, shared GameTextActionId.THE_FIRST_ORDER_REIGNS__DOWNLOAD_EPISODE_7_BATTLEGROUND)",
+  "Filters.system (front drain-loss cap filter); Filters.Supremacy reset to deploy=7 at Filters.and(Icon.EPISODE_VII, Filters.system)",
+  "Filters.Kylo (persona anchoring all back-side value and the hard-lose)",
+  "Filters.Crait_location (Kylo occupies condition); Filters.Crait_Salt_Plateau (Kylo controls condition; hard-lose site)",
+  "Filters.First_Order_character (paired presence for drain +1)",
+  "Filters.or(Filters.Han, Filters.Leia, Filters.Luke) (hard-lose presence set)",
+  "Filters.and(Filters.non_unique, Filters.trooper) / Filters.and(Filters.non_unique, Icon.FIRST_ORDER, Filters.vehicle) (back Lost Pile deploy)",
+  "Filters.characterOrPermanentPilotAlone (opponent drain lock)"
+ ],
+ "setupAndPullRoutes": [
+  "START OF GAME (front, all required): deploy D'Qar system (Filters.Dqar_system) [Card501_060.java:49-55]; Crait system (Filters.Crait_system) [56-62]; Salt Plateau (Filters.Crait_Salt_Plateau) [63-69]; Tracked Fleet (Filters.Tracked_Fleet) [70-76]",
+  "FRONT+BACK, once per turn (shared action id): deploy from Reserve Deck a card with 'Supremacy' in title or an [Episode VII] battleground: DeployCardFromReserveDeckEffect(Filters.or(Filters.titleContains(\"Supremacy\"), Filters.and(Icon.EPISODE_VII, Filters.battleground)), true) [Card501_060.java:91-111, Card501_060_BACK.java:51-66]",
+  "BACK, once per turn: deploy a non-unique trooper or non-unique [First Order] vehicle from LOST PILE: DeployCardFromLostPileEffect(Filters.or(nonUniqueTrooper, nonUniqueFOVehicle), false), GameTextActionId.THE_RESISTANCE_IS_DOOMED__DOWNLOAD_FIRST_ORDER_VEHICLE_OR_TROOPER [Card501_060_BACK.java:68-87]"
+ ],
+ "otherObligations": [
+  "FRONT after-deployment, REMAINDER OF GAME: owner may not deploy Bow To The First Order or own cards with ability except [Episode VII] cards: MayNotDeployModifier(Filters.or(Filters.Bow_To_The_First_Order, Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Icon.EPISODE_VII))), playerId) [Card501_060.java:81-88]",
+  "FRONT: opponent loses no more than 1 Force from your Force drains at systems: LimitForceLossFromForceDrainModifier(self, Filters.system, 1, opponent) [Card501_060.java:119]",
+  "FRONT: Supremacy is deploy = 7 to [Episode VII] systems: ResetDeployCostToLocationModifier(self, Filters.Supremacy, 7, Filters.and(Icon.EPISODE_VII, Filters.system)) [Card501_060.java:120]",
+  "BACK: while Kylo occupies a Crait location, your Force drains +1 at battlegrounds where you have two First Order characters together [Card501_060_BACK.java:135-138]",
+  "BACK: while Kylo controls Salt Plateau, opponent may not Force drain where their character or permanent pilot is alone [Card501_060_BACK.java:140-143]",
+  "BACK: while Kylo controls Salt Plateau, opponent's Force retrieval is canceled (required trigger on isAboutToRetrieveForce) [Card501_060_BACK.java:114-124]",
+  "BACK hard-lose: place Objective out of play if Kylo just forfeited to Lost Pile from Salt Plateau where Han, Leia, or Luke present, during a battle you lost [Card501_060_BACK.java:97-112]"
+ ],
+ "seedMismatches": [],
+ "profile": {
+  "exists": true,
+  "loaderEnabled": true,
+  "profileGaps": [
+   "The actual flip latch remains engine-owned: Tracked Fleet's start-of-owner-turn BlowAwayEffect plus the objective's isTableChanged/canBeFlipped/isBlownAway trigger are not reimplemented by AI.",
+   "The profile's first-order-reigns-tracked-fleet-control rule encodes the preferred Supremacy actor route as controlWith, but ObjectiveAnalyzer.isFirstOrderReignsHostControlled and the rule-ID special case intentionally evaluate the source-law driver as ordinary control by any legal source at the physical Tracked Fleet host.",
+   "The exact 7-Force reserve, Supremacy/Episode-VII download feasibility, Lost Pile trooper/vehicle filter, and exact First Order pair threshold are live typed ObjectiveAnalyzer consumers, not dedicated structured fields in JsonProfile; objectiveNamedLocations is descriptive and is ignored by the Gson runtime loader.",
+   "Back-side retrieval cancellation, drain denial, +1 drain modifier, and objective-out-of-play trigger remain engine-owned outcomes; AI consumes the Kylo/Crait payoff and terminalForfeitRules facts to pursue or avoid their board states."
+  ]
+ },
+ "runtimeOwners": [
+  "Profile fields consumed: blueprintIds 225_32/225_32_BACK/501_60/501_60_BACK; startingLocations; flipLocationRules[first-order-reigns-tracked-fleet-control, first-order-reigns-back-kylo-payoff]; dynamicLocationRules[first-order-reigns-current-tracked-fleet-host]; terminalForfeitRules[first-order-reigns-kylo-salt-plateau-loss].",
+  "ObjectiveAnalyzer route owners: getFirstOrderReignsTrackedFleetHostSystem, isFirstOrderReignsHostControlled, isFirstOrderReignsRouteOpen, isFirstOrderReignsDownloadAction, hasFirstOrderReignsRouteProgressCandidateInReserve, classifyPreFlipProgressCandidate, advancesPreFlipActorAtRuntimeLocation, getFirstOrderReignsRouteForceReserve, getFirstOrderReignsCurrentMoveForceReserve, isPreferredFirstOrderReignsRouteForceLossCandidate, isFirstOrderReignsSolePendingTriggerControlSource.",
+  "ObjectiveAnalyzer back owners: isFirstOrderReignsLostPileDeployAction, hasLegalFirstOrderReignsLostPileDeployCandidate, classifyPostFlipPayoffRoleAt, hasFirstOrderReignsKyloCraitPayoff, advancesFirstOrderReignsDrainPairAt, breaksFirstOrderReignsDrainPairIfMoved, isFirstOrderReignsDrainPairMemberAtExactPair, isFirstOrderReignsTerminalExposureAt, isFirstOrderReignsTerminalDeploymentHazardAt, isFirstOrderReignsTerminalBattleHazardAt, classifyGateFormationPieceIfRemoved.",
+  "Bot consumers: RandoCalAi/TheChosenOneAi Lost-Pile deploying-card provenance; mirrored ActionTextEvaluator, DeployEvaluator, CardSelectionEvaluator, MoveEvaluator; shared DeployObjectiveSitingPolicy, MoveDestinationPolicy, BattleDecisionPolicy, ObjectiveBattlePolicy, ForceLossPolicy, BattleForfeitPolicy.",
+  "Semantic IDs: OBJECTIVE.FIRST_ORDER_REIGNS.RESERVE_7; MOVE.OBJECTIVE.ACTOR_LOCATION_START; MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION; BATTLE.OBJECTIVE.MOVE_FORCE_RESERVE; BATTLE.OBJECTIVE.REQUIRED_LOCATION_CONTEST; DEPLOY.OBJECTIVE.LOST_PILE_ROUTE; DEPLOY.OBJECTIVE.LOST_PILE_NO_LEGAL_CARD; DEPLOY.OBJECTIVE.POST_FLIP_PRIMARY_PAYOFF; DEPLOY.OBJECTIVE.POST_FLIP_SECONDARY_PAYOFF; DEPLOY.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR; DEPLOY.OBJECTIVE.TERMINAL_ACTOR_EXPOSURE; MOVE.OBJECTIVE.POST_FLIP_PAYOFF_START; MOVE.OBJECTIVE.POST_FLIP_PRIMARY_PAYOFF; MOVE.OBJECTIVE.POST_FLIP_SECONDARY_PAYOFF; MOVE.OBJECTIVE.POST_FLIP_PAYOFF_HOLD; MOVE.OBJECTIVE.TERMINAL_ACTOR_ESCAPE_START; MOVE.OBJECTIVE.TERMINAL_ACTOR_ESCAPE_DESTINATION; MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_START; MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR; MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_HOLD; BATTLE.OBJECTIVE.TERMINAL_ACTOR_LOSS_VETO; BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD; BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD; OBJECTIVE CRITICAL."
+ ],
+ "testEvidence": {
+  "nativeEngine": "FirstOrderReignsObjectiveEngineContractTest: 9/0/0/0. bothPrintingsCompleteTheNativeControlBlowAwayAndFlipChain executes the unchanged released and playtest objective/Fleet cards through setup, exact-7 Supremacy deploy, free move to the physical Fleet host, ordinary control, start-of-turn BlowAwayEffect, persistent isBlownAway state, and the objective's native FlipCardEffect. The remaining native tests cover relocation boundaries, contested-host negative, three-relocation cap, Lost Pile legality, Crait/pair modifiers, retrieval/drain lock, and every Salt forfeit conjunct, including independent Han-only, Leia-only, and Luke-only positives.",
+  "candidateChoice": "FirstOrderReignsEvaluatorBehaviorTest: 19/0/0/0 across both bots and both objective printings, including the duplicate-blueprint Lost Pile permanent-ID handoff through the real bot facade latches. FirstOrderReignsActionDecisionParityTest: 5/0/0/0 for equivalent Rando/Chosen One parent and child decisions. These are isolated production-evaluator candidate comparisons for route, reserve, deployment, movement, battle, Force loss, Lost Pile, drain pair, post-flip payoff, terminal escape, terminal forfeit, and pending-trigger forfeit preservation.",
+  "sequence": "FirstOrderReignsObjectiveBehaviorTest: 8/0/0/0. Analyzer state transitions cover dynamic Fleet-host relocation, ordinary-control satisfaction, stage-before-Supremacy ordering, seven-Force reserve, legal strictly-closer paid hops, free final hop, and terminal Kylo destination safety. Pending-trigger forfeit preservation is covered separately by FirstOrderReignsEvaluatorBehaviorTest.pendingTriggerForfeitProtectsOnlyTheSoleController.",
+  "focused": "First Order and directly impacted pull, deploy, move, battle, forfeit, analyzer, and parity suites: 241 tests, 0 failures, 0 errors, 0 skipped.",
+  "regression": "Exact staged-tree full server reactor: 2456 tests, 0 failures, 0 errors, 26 skipped across 318 suites. Earlier completed objective-family gate: 268 tests, 0 failures, 0 errors, 0 skipped.",
+  "limitations": "The native flip chain explicitly chooses legal actions and is not one autonomous Rando-to-engine scenario. Production evaluator comparisons and bot-facade provenance tests prove the AI decisions at each cross-phase boundary.",
+  "packaged": "Clean staged-tree package passed. objective_playbooks.json is 198067 bytes with SHA-256 fae6fa9aa6de99534308ed580be49f6beefc141d001cc07fc496c34d5c0f18b5 in source, the server jar, and web.jar. All 170 compiled top-level and nested classes produced by changed AI sources byte-match target/classes, server jar, and web.jar. Server jar SHA-256: 2b10da4a503a1f3d34d9eb4129983d64cfe2b7af780133e3e171150a014b2177. web.jar SHA-256: 43e72adac05c5891a42cc467e6aa11afddb9aa797e80f659d28c962be985f4fa.",
+  "replay": "No live replay claim. Deterministic unchanged-engine scenarios provide FLIP_OBSERVED without restarting or deploying the live JVM."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }

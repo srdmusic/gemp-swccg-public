@@ -6479,9 +6479,12 @@
     },
     {
       "label": "The First Order Reigns",
+      "loaderEnabled": true,
       "blueprintIds": [
         "225_32",
-        "225_32_BACK"
+        "225_32_BACK",
+        "501_60",
+        "501_60_BACK"
       ],
       "titleFragments": [
         "the first order reigns",
@@ -6492,12 +6495,116 @@
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "211_19"
+          ],
+          "titleFragments": [
+            "d'qar"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "225_15"
+          ],
+          "titleFragments": [
+            "crait"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "225_17"
+          ],
+          "titleFragments": [
+            "crait: salt plateau"
+          ]
+        }
+      ],
       "startingEffects": [],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "first-order-reigns-tracked-fleet-control",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Tracked_Fleet_host_system",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Supremacy",
+              "includeExcludedFromBattle": false,
+              "scoreRole": "actorToLocation",
+              "sourceText": "The actual gate is ordinary control of Tracked Fleet's current Episode VII system at the start of the owner's turn. Supremacy is the objective-provided executable route because it moves to that host for free; another legal control source also satisfies the gate"
+            }
+          ]
+        },
+        {
+          "id": "first-order-reigns-back-kylo-payoff",
+          "phase": "postFlip",
+          "purpose": "payoff",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Crait_Salt_Plateau",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Kylo",
+              "includeExcludedFromBattle": false,
+              "scoreRole": "postFlipPrimary",
+              "sourceText": "While Kylo controls Salt Plateau, cancel opponent Force retrieval and prevent opponent drains where their character or permanent pilot is alone"
+            },
+            {
+              "relation": "occupyWith",
+              "controller": "self",
+              "locationFilterKey": "Crait_location",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Kylo",
+              "includeExcludedFromBattle": false,
+              "scoreRole": "postFlipSecondary",
+              "sourceText": "While Kylo occupies a Crait location, owner Force drains at battlegrounds with two First Order characters are plus one"
+            }
+          ]
+        }
+      ],
+      "dynamicLocationRules": [
+        {
+          "id": "first-order-reigns-current-tracked-fleet-host",
+          "source": "attachedCardHost",
+          "derivedLocationFilterKey": "Tracked_Fleet_host_system",
+          "matchingActorFilterKey": "Tracked_Fleet",
+          "sourceText": "Tracked Fleet starts on D'Qar and the opponent may relocate it up to three times, so the control target is the active owned Fleet card's current attached Episode VII system"
+        }
+      ],
+      "terminalForfeitRules": [
+        {
+          "id": "first-order-reigns-kylo-salt-plateau-loss",
+          "phase": "postFlip",
+          "actorFilterKey": "Kylo",
+          "locationFilterKey": "Crait_Salt_Plateau",
+          "threatCardFilterKey": "Han_Leia_or_Luke",
+          "destinationZone": "LOST_PILE",
+          "requiresBattleLost": true,
+          "outcome": "objectiveOutOfPlay",
+          "sourceText": "Place the objective out of play only if Kylo was just forfeited to Lost Pile from a battle the owner lost at Salt Plateau while Han, Leia, or Luke was present"
+        }
+      ],
       "frontBp": "225_32",
       "backBp": "225_32_BACK",
       "abbreviation": "TFOR",

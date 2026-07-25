@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
@@ -165,6 +166,84 @@ public class DeployObjectiveSitingPolicyTest {
         assertOperation(staging,
                 "DEPLOY.OBJECTIVE.ACTOR_ROUTE_STAGING", 1000.0f);
         assertTrue(staging.delta() > counted);
+        assertTrue(neutral.operations().isEmpty());
+    }
+
+    @Test
+    public void terminalObjectiveExposureIsAnExactHardVeto() {
+        PolicyResult blocked =
+                DeployObjectiveSitingPolicy
+                    .blockTerminalObjectiveExposure(
+                        "a", true);
+        PolicyResult unrelated =
+                DeployObjectiveSitingPolicy
+                    .blockTerminalObjectiveExposure(
+                        "a", false);
+
+        assertEquals(1, blocked.operations().size());
+        PolicyOperation operation =
+                blocked.operations().get(0);
+        assertEquals(
+                "DEPLOY.OBJECTIVE.TERMINAL_ACTOR_EXPOSURE",
+                operation.ruleArmId().id());
+        assertEquals(
+                PolicyOperationKind.HARD_VETO,
+                operation.kind());
+        assertEquals(
+                TraceDomainId.DEPLOY_SITING,
+                operation.domainId());
+        assertTrue(unrelated.operations().isEmpty());
+    }
+
+    @Test
+    public void postFlipPayoffPreservesPrimaryAndSecondaryOrdering() {
+        PolicyOperation primary =
+                DeployObjectiveSitingPolicy
+                    .scorePostFlipObjectivePayoff(
+                        "a",
+                        ObjectiveAnalyzer
+                            .ObjectivePostFlipPayoffRole.PRIMARY)
+                    .operations().get(0);
+        PolicyOperation secondary =
+                DeployObjectiveSitingPolicy
+                    .scorePostFlipObjectivePayoff(
+                        "a",
+                        ObjectiveAnalyzer
+                            .ObjectivePostFlipPayoffRole.SECONDARY)
+                    .operations().get(0);
+
+        assertOperation(
+                primary,
+                "DEPLOY.OBJECTIVE.POST_FLIP_PRIMARY_PAYOFF",
+                1200.0f);
+        assertOperation(
+                secondary,
+                "DEPLOY.OBJECTIVE.POST_FLIP_SECONDARY_PAYOFF",
+                700.0f);
+        assertTrue(primary.delta() > secondary.delta());
+        assertTrue(DeployObjectiveSitingPolicy
+                .scorePostFlipObjectivePayoff(
+                    "a",
+                    ObjectiveAnalyzer
+                        .ObjectivePostFlipPayoffRole.NONE)
+                .operations().isEmpty());
+    }
+
+    @Test
+    public void firstOrderDrainPairScoresOnlyTheThresholdCompletion() {
+        PolicyResult completes =
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsDrainPair(
+                        "a", true);
+        PolicyResult neutral =
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsDrainPair(
+                        "a", false);
+
+        assertOperation(
+                completes.operations().get(0),
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR",
+                800.0f);
         assertTrue(neutral.operations().isEmpty());
     }
 

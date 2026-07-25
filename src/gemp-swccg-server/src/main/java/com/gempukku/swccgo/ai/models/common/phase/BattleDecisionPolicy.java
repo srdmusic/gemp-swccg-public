@@ -602,10 +602,29 @@ public final class BattleDecisionPolicy {
                                     boolean requiredCardControlEnabler = false;
                                     boolean requiredCardRetention = false;
                                     boolean hardLossLocation = false;
+                                    boolean terminalObjectiveHazard = false;
                                     boolean globalObjectiveBlocker = false;
+                                    int objectiveMoveForceReserve = 0;
+                                    int availableObjectiveMoveForce = 0;
+                                    float battleInitiationCost = 0.0f;
                                     try {
                                         ObjectiveAnalyzer objectiveAnalyzer =
                                                 context.getObjectiveAnalyzer();
+                                        objectiveMoveForceReserve =
+                                                objectiveAnalyzer != null
+                                                ? objectiveAnalyzer
+                                                    .getFirstOrderReignsCurrentMoveForceReserve(
+                                                        game, playerId)
+                                                : 0;
+                                        availableObjectiveMoveForce =
+                                                gameState.getForcePileSize(
+                                                    playerId);
+                                        battleInitiationCost =
+                                                game.getModifiersQuerying()
+                                                    .getInitiateBattleCost(
+                                                        gameState,
+                                                        targetLocation,
+                                                        playerId, true);
                                         globalObjectiveBlocker =
                                                 objectiveAnalyzer != null
                                                 && objectiveAnalyzer
@@ -641,6 +660,12 @@ public final class BattleDecisionPolicy {
                                                     .isObjectiveHardLossDefenseLocation(
                                                         game, playerId,
                                                         targetLocation);
+                                        terminalObjectiveHazard =
+                                                objectiveAnalyzer != null
+                                                && objectiveAnalyzer
+                                                    .isFirstOrderReignsTerminalBattleHazardAt(
+                                                        game, playerId,
+                                                        targetLocation);
                                         if (exactStructuredPreFlipTarget
                                                 || requiredCardControlEnabler
                                                 || requiredCardRetention
@@ -670,6 +695,18 @@ public final class BattleDecisionPolicy {
                                             "Objective battle fact read failed: {}",
                                             objectiveBattleEx.getMessage());
                                     }
+                                    action.apply(ObjectiveBattlePolicy
+                                        .evaluateTerminalObjectiveHazard(
+                                            actionId,
+                                            terminalObjectiveHazard,
+                                            predictorSafe,
+                                            weaponEffectiveDiff));
+                                    action.apply(ObjectiveBattlePolicy
+                                        .preserveObjectiveMoveForce(
+                                            actionId,
+                                            objectiveMoveForceReserve,
+                                            availableObjectiveMoveForce,
+                                            battleInitiationCost));
                                     action.apply(ObjectiveBattlePolicy.evaluate(
                                         new ObjectiveBattlePolicy.Facts(
                                             actionId,

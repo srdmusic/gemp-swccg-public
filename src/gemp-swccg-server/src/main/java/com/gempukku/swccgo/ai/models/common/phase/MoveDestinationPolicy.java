@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -110,6 +111,163 @@ public final class MoveDestinationPolicy {
 
     public static Contribution missingSourceLocation() {
         return new Contribution(true, "Card not at a location", -10.0f);
+    }
+
+    public static CompanionVeto terminalObjectiveExposure(
+            boolean terminalExposure) {
+        if (!terminalExposure) return CompanionVeto.none();
+        return new CompanionVeto(
+                true,
+                "Do not move the objective's terminal actor into the exact conjunction that can place the objective out of play");
+    }
+
+    public static Contribution objectivePostFlipPayoffStart(
+            boolean hasSafePayoffHop,
+            String actorTitle) {
+        if (!hasSafePayoffHop) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_START: "
+                        + (actorTitle != null
+                            ? actorTitle : "named actor")
+                        + " has a safe move to activate a back-side objective payoff",
+                600.0f);
+    }
+
+    public static Contribution objectivePostFlipPayoffDestination(
+            ObjectiveAnalyzer.ObjectivePostFlipPayoffRole role,
+            String actorTitle,
+            String destinationTitle) {
+        if (role == null
+                || role
+                    == ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.NONE) {
+            return Contribution.none();
+        }
+        boolean primary = role
+                == ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.PRIMARY;
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.POST_FLIP_"
+                        + (primary ? "PRIMARY" : "SECONDARY")
+                        + "_PAYOFF: "
+                        + (actorTitle != null
+                            ? actorTitle : "named actor")
+                        + " activates a back-side objective payoff at "
+                        + (destinationTitle != null
+                            ? destinationTitle : "this location"),
+                primary ? 1200.0f : 700.0f);
+    }
+
+    public static Contribution objectivePostFlipPayoffRetention(
+            ObjectiveAnalyzer.ObjectivePostFlipPayoffRole currentRole,
+            ObjectiveAnalyzer.ObjectivePostFlipPayoffRole destinationRole,
+            String actorTitle,
+            String destinationTitle) {
+        int currentRank = payoffRank(currentRole);
+        if (currentRank == 0
+                || payoffRank(destinationRole) >= currentRank) {
+            return Contribution.none();
+        }
+        boolean leavingPrimary = currentRole
+                == ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.PRIMARY;
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_HOLD: "
+                        + (actorTitle != null
+                            ? actorTitle : "named actor")
+                        + " would abandon an active "
+                        + (leavingPrimary ? "primary" : "secondary")
+                        + " back-side payoff at "
+                        + (destinationTitle != null
+                            ? destinationTitle : "this destination"),
+                leavingPrimary ? -1600.0f : -900.0f);
+    }
+
+    public static Contribution objectiveTerminalActorEscapeStart(
+            boolean hasSafeEscape,
+            String actorTitle) {
+        if (!hasSafeEscape) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.TERMINAL_ACTOR_ESCAPE_START: "
+                        + (actorTitle != null
+                            ? actorTitle : "terminal actor")
+                        + " has a safe move out of the exact objective-loss conjunction",
+                1800.0f);
+    }
+
+    public static Contribution objectiveTerminalActorEscapeDestination(
+            boolean escapesTerminalExposure,
+            String actorTitle,
+            String destinationTitle) {
+        if (!escapesTerminalExposure) {
+            return Contribution.none();
+        }
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.TERMINAL_ACTOR_ESCAPE_DESTINATION: "
+                        + (actorTitle != null
+                            ? actorTitle : "terminal actor")
+                        + " escapes the objective-loss conjunction via "
+                        + (destinationTitle != null
+                            ? destinationTitle : "this destination"),
+                1800.0f);
+    }
+
+    public static Contribution objectiveFirstOrderDrainPairStart(
+            boolean hasSafePairHop,
+            String actorTitle) {
+        if (!hasSafePairHop) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_START: "
+                        + (actorTitle != null
+                            ? actorTitle : "First Order character")
+                        + " has a safe move that completes the objective's +1 drain pair",
+                600.0f);
+    }
+
+    public static Contribution objectiveFirstOrderDrainPairDestination(
+            boolean completesPair,
+            String actorTitle,
+            String destinationTitle) {
+        if (!completesPair) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR: "
+                        + (actorTitle != null
+                            ? actorTitle : "First Order character")
+                        + " completes the objective's +1 drain pair at "
+                        + (destinationTitle != null
+                            ? destinationTitle : "this battleground"),
+                800.0f);
+    }
+
+    public static Contribution objectiveFirstOrderDrainPairHold(
+            boolean breaksExactPair,
+            String actorTitle,
+            String destinationTitle) {
+        if (!breaksExactPair) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_HOLD: "
+                        + (actorTitle != null
+                            ? actorTitle : "First Order character")
+                        + " would break the objective's active two-character drain pair"
+                        + (destinationTitle != null
+                            ? " by moving to " + destinationTitle : ""),
+                -900.0f);
+    }
+
+    private static int payoffRank(
+            ObjectiveAnalyzer.ObjectivePostFlipPayoffRole role) {
+        if (role
+                == ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.PRIMARY) {
+            return 2;
+        }
+        return role
+                == ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.SECONDARY
+                ? 1 : 0;
     }
 
     public static Contribution objectiveActorRouteStart(

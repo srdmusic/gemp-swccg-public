@@ -231,7 +231,7 @@ public class PullActionTextCharacterizationTest {
                         PullOracleView.Outcome.WASTEFUL, "already satisfied"),
                 new PullOracleView.Validation(
                         PullOracleView.Outcome.WILL_SUCCEED, "starship remains"),
-                "Safe Pull Source", false, true);
+                "Safe Pull Source", false, true, false);
 
         PullDeployPolicy.Evaluation evaluation = PullDeployPolicy.evaluate(facts);
 
@@ -316,7 +316,8 @@ public class PullActionTextCharacterizationTest {
         PullDeployFacts deploy = PullDeployFactsReader.read(
                 "pull", "Deploy from Reserve Deck", "101",
                 new PullDeployFactsReader.Context(
-                        null, gameState, PLAYER, null, oracle));
+                        null, gameState, PLAYER, null, oracle,
+                        null));
 
         assertEquals(2, parent.reserveSize());
         assertEquals(2, deploy.reserveSize());

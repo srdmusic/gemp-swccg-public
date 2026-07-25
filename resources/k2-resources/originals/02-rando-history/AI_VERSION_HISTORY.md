@@ -8538,3 +8538,58 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     pushed; fresh live-game branch firing remains separate. Revert the single Shield
     twin Batch Five commit; Endor Operations Batch Four and all earlier objective-audit commits
     remain independent.
+
+  ==== The First Order Reigns objective behavior Batch Six (2026-07-25) ====
+    Released 225_32/225_32_BACK and playtest 501_60/501_60_BACK share one route. Tracked Fleet
+    begins at D'Qar and the opponent may relocate it up to three times to an Episode VII system
+    within three parsecs. At the start of the owner's turn, Tracked Fleet is annihilated only when
+    the owner controls its current host system. Supremacy deploys for seven to an Episode VII
+    system and moves to Tracked Fleet for free. The objective then flips on the persistent
+    blown-away state. The back never flips front; it instead leaves play only after the complete
+    Kylo, Salt Plateau, lost-battle, Lost Pile forfeit, and Han/Leia/Luke presence conjunction.
+
+    One loader-enabled profile covers all four sides and resolves the physical Tracked Fleet host
+    at decision time. Both bots pursue only an engine-legal Episode VII battleground stage or exact
+    Supremacy, preserve seven Force for Supremacy, reserve the exact paid bridge cost, release the
+    reserve for the free final hop, and choose only a strictly closer legal system. The exact
+    objective download bypasses low-Reserve pull vetoes only when a legal route candidate exists.
+    Battle and Force-loss policies preserve the sole Supremacy while the route remains open.
+    Pending-trigger policy preserves the sole ordinary-control source without protecting Tracked
+    Fleet from the destruction that causes the flip.
+
+    The exact Lost Pile action wins only when a legal non-unique trooper or non-unique First Order
+    vehicle exists, and physical-card provenance survives the card choice into the deployment-site
+    prompt. Kylo treats safe control of Salt Plateau as the primary payoff and another Crait
+    location as the secondary payoff. Dedicated deploy and move rules complete the exact one-to-two
+    First Order character drain pair, hold an exact pair, and release a three-body formation back
+    to two.
+
+    Rando avoids starting or reinforcing the exact Salt Plateau out-of-play conjunction, preserves
+    Kylo during avoidable forfeit, and uses an R3 survival move to escape once the conjunction is
+    armed. That escape overrides only the origin-abandonment veto. A doomed destination still
+    receives the existing Formation Safety hard veto. Safe Kylo at Salt remains held, terminal
+    Kylo beats Pass, exact drain-pair completion is R2 doctrine, an exact pair resists breaking,
+    and three-to-two movement is released.
+
+    Unchanged-engine tests execute both objective printings through Tracked Fleet control,
+    annihilation, and the real flip. They also prove relocation limits, contested-host survival,
+    the three-card relocation cap, Lost Pile eligibility, the Kylo/Crait modifiers, retrieval
+    boundaries, and every Salt Plateau out-of-play conjunct. Production evaluator tests cover the
+    complete pull, deploy, Force, movement, battle, Force-loss, forfeit, post-flip, drain-pair, and
+    terminal-escape decisions for both bots.
+
+    Production edits are limited to shared AI policy/analyzer code, mirrored Rando and Chosen One
+    adapters, and the approved shared objective profile. No engine, game, or card Java changed.
+    Independent static review passed the source, later-veto, score-band, mirror, and scope
+    boundaries. The exact staged tree passed the focused First Order plus shared compatibility
+    gate 241/0/0/0, the earlier completed objective-family gate 268/0/0/0, and the clean full
+    reactor 2456/0/0/26 across 318 suites. Exact normalized parity passed for all five mirrored
+    evaluator pairs. JSON, diff, forbidden-scope, and clean async package gates passed.
+    objective_playbooks.json is 198067 bytes with SHA-256
+    fae6fa9aa6de99534308ed580be49f6beefc141d001cc07fc496c34d5c0f18b5 in source, the server
+    jar, and web.jar. All 170 compiled top-level and nested classes produced by the changed AI
+    sources byte-match target/classes, the server jar, and web.jar. Server jar SHA-256 is
+    2b10da4a503a1f3d34d9eb4129983d64cfe2b7af780133e3e171150a014b2177; web.jar SHA-256 is
+    43e72adac05c5891a42cc467e6aa11afddb9aa797e80f659d28c962be985f4fa.
+    Revert the single First Order Reigns Batch Six commit; Shield twin Batch Five and all earlier
+    objective-audit commits remain independent.
