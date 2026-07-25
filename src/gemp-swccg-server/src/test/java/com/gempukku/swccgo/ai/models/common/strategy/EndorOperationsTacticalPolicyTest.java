@@ -52,7 +52,7 @@ public class EndorOperationsTacticalPolicyTest {
     }
 
     @Test
-    public void reservesAShieldSlotForFundedSamePhaseSpaceOccupation() {
+    public void reservesAShieldSlotWhileTheEndorSpaceRouteRemainsPending() {
         assertTrue(EndorOperationsTacticalPolicy
                 .shouldReserveShieldSlotForBattleOrder(
                         true, false, true, false, true));
@@ -62,6 +62,24 @@ public class EndorOperationsTacticalPolicyTest {
         assertFalse(EndorOperationsTacticalPolicy
                 .shouldReserveShieldSlotForBattleOrder(
                         true, true, true, false, true));
+    }
+
+    @Test
+    public void postFlipPursuesEmptyEndorSystemBeforeAnotherEmptyGroundSite() {
+        assertTrue(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
+                true, true, true, false, 0.0f));
+        assertTrue(EndorOperationsTacticalPolicy
+                .shouldSuppressEmptyEndorGroundEstablish(true, true));
+        assertFalse(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
+                true, false, true, false, 0.0f));
+        assertFalse(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
+                false, true, true, false, 0.0f));
+        assertFalse(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
+                true, true, true, true, 0.0f));
+        assertFalse(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
+                true, true, true, false, 1.0f));
+        assertFalse(EndorOperationsTacticalPolicy
+                .shouldSuppressEmptyEndorGroundEstablish(true, false));
     }
 
     @Test

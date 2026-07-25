@@ -8609,11 +8609,27 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Endor: Bunker's source-verified Endor Shield upload bypasses both false V185 weapon
     classifications and receives +1500 bootstrap priority. Real weapon pulls keep both vetoes.
     Cheap Imperial admirals receive +1200 at the pre-flip Bunker and Boba Fett receives -1200.
-    The Battle Order slot hold is narrow to the replay-proven funded Endor system, Slave I, and
-    Admiral Ozzel sequence. Both bots are mirrored. No engine or card Java changed.
+    After the flip, the exact replay route uses physical Slave I, Symbol Of Fear 201_40 plus
+    the cheapest affordable pilot with positive ability. The selected physical pilot is withheld
+    from optional empty-ground expansion. The package receives +500 and another empty Endor
+    ground-site establish plan is suppressed
+    until the system is occupied. Enemy-held Endor, unfunded routes, and ordinary reinforcement
+    remain unchanged. After exactly two
+    shields, EOP holds slot three while an Endor battleground site is occupied, Endor system is
+    uncontrolled, and physical Battle Order remains stacked under Knowledge And Defense. This
+    no longer requires Slave I and Ozzel to be simultaneously in hand. Once both theaters are
+    occupied, Battle Order scores 280 versus an ordinary shield's 80. Both bots are mirrored.
+    No engine or card Java changed.
 
-    Independent review passed. An isolated clean-clone suite passed 34/0/0/0. Packaging, JVM
-    load, deployment, and live-game firing remain separate gates. Revert the single follow-up
+    Independent review passed. The final focused EOP/shield suite passed 129/0/0/0, including
+    production-path tests for both bots with real blueprint data. Exact physical 201_40 plus
+    3_82 sequencing, aboard identity, package Force shortage, missing ship/pilot, ground-plan
+    release, third-slot hold/release, final Battle Order dominance, and normalized bot parity
+    passed. The sealed web.jar SHA-256 is
+    5bac9c51f2436e475dd18973a766319f56577d5202465a2c104d84b2319e2d6d; the previous jar is
+    preserved as web.jar.pre-eop-space-20260725. The recreated app logged startup complete at
+    2026-07-25T21:51:38Z, entered operational mode, and exposed the exact jar hash inside the
+    container. Fresh live-game branch firing remains separate. Revert the single follow-up
     commit without affecting Endor Operations Batch Four.
 
 ## 2026-07-26: Capture objective family Batch Seven

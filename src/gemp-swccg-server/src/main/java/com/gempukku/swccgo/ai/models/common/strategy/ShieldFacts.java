@@ -7,8 +7,8 @@ import com.gempukku.swccgo.game.state.GameState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Locale;
 import java.util.List;
+import java.util.Locale;
 
 // ═══════════════════════════════════════════════════════════
 // ═══ T2 MOVE #3 (2026-07-06): SHARED SHIELD/OCCUPATION FACTS ═══
@@ -206,8 +206,10 @@ public final class ShieldFacts {
     }
 
     public static boolean shouldReserveEopBattleOrderSlot(
-            SwccgGame game, String playerId) {
-        if (game == null || playerId == null) return false;
+            SwccgGame game, String playerId, PhysicalCard stackedPileSource,
+            int shieldsOnTable) {
+        if (game == null || playerId == null || stackedPileSource == null
+                || shieldsOnTable != 2) return false;
         try {
             GameState gs = game.getGameState();
             if (gs == null) return false;
@@ -218,56 +220,49 @@ public final class ShieldFacts {
                     com.gempukku.swccgo.filters.Filters.or(
                         com.gempukku.swccgo.filters.Filters.title("Endor Operations"),
                         com.gempukku.swccgo.filters.Filters.title("Imperial Outpost"))));
-            boolean battleOrderPlayed =
+            boolean equivalentPlayed =
                 com.gempukku.swccgo.filters.Filters.canSpot(
                     game, null, com.gempukku.swccgo.filters.Filters.and(
-                        com.gempukku.swccgo.filters.Filters.owner(playerId),
-                        com.gempukku.swccgo.filters.Filters.title("Battle Order")));
+                        com.gempukku.swccgo.filters.Filters.in_play,
+                        com.gempukku.swccgo.filters.Filters.or(
+                            com.gempukku.swccgo.filters.Filters.title("Battle Order"),
+                            com.gempukku.swccgo.filters.Filters.title("Battle Plan"))));
             boolean site = com.gempukku.swccgo.filters.Filters.canSpot(
                 game, null, com.gempukku.swccgo.filters.Filters.and(
                     com.gempukku.swccgo.filters.Filters.occupies(playerId),
-                    com.gempukku.swccgo.filters.Filters.battleground_site));
+                    com.gempukku.swccgo.filters.Filters.battleground_site,
+                    com.gempukku.swccgo.filters.Filters.Endor_site));
             boolean system = com.gempukku.swccgo.filters.Filters.canSpot(
                 game, null, com.gempukku.swccgo.filters.Filters.and(
                     com.gempukku.swccgo.filters.Filters.occupies(playerId),
+                    com.gempukku.swccgo.filters.Filters.Endor_system,
                     com.gempukku.swccgo.filters.Filters.battleground_system));
+            String opponent = game.getOpponent(playerId);
+            boolean opponentOccupiesEndor = opponent != null
+                && com.gempukku.swccgo.filters.Filters.canSpot(
+                    game, null, com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.occupies(opponent),
+                        com.gempukku.swccgo.filters.Filters.Endor_system));
             boolean endorSystemOnTable =
                 com.gempukku.swccgo.filters.Filters.canSpot(
                     game, null, com.gempukku.swccgo.filters.Filters.and(
-                        com.gempukku.swccgo.filters.Filters.title("Endor"),
+                        com.gempukku.swccgo.filters.Filters.Endor_system,
                         com.gempukku.swccgo.filters.Filters.battleground_system));
-            int force = gs.getForcePileSize(playerId);
-            int slaveOneCost = Integer.MAX_VALUE;
-            int ozzelCost = Integer.MAX_VALUE;
-            List<PhysicalCard> hand = gs.getHand(playerId);
-            if (hand != null) {
-                for (PhysicalCard card : hand) {
-                    if (card == null || card.getBlueprint() == null) continue;
-                    Float printed = card.getBlueprint().getDeployCost();
-                    int cost = printed == null ? Integer.MAX_VALUE
-                        : (int)Math.ceil(printed);
-                    if (cost > force) continue;
-                    String title = card.getTitle() == null
-                        ? "" : card.getTitle().toLowerCase(Locale.ROOT);
-                    if (title.contains("slave i")) {
-                        slaveOneCost = Math.min(slaveOneCost, cost);
-                    }
-                    if (title.contains("admiral ozzel")) {
-                        ozzelCost = Math.min(ozzelCost, cost);
+            boolean battleOrderStacked = false;
+            List<PhysicalCard> stacked = gs.getStackedCards(stackedPileSource);
+            if (stacked != null) {
+                for (PhysicalCard card : stacked) {
+                    if (card != null && "13_54".equals(card.getBlueprintId(true))) {
+                        battleOrderStacked = true;
+                        break;
                     }
                 }
             }
-            // Replay-scoped legality proof. This exact pair was offered by the
-            // engine for simultaneous deployment to the Endor system. Do not
-            // infer legality from an arbitrary ship plus arbitrary character.
-            boolean fundedSpacePair = endorSystemOnTable
-                && slaveOneCost != Integer.MAX_VALUE
-                && ozzelCost != Integer.MAX_VALUE
-                && slaveOneCost + ozzelCost <= force;
             return EndorOperationsTacticalPolicy
                 .shouldReserveShieldSlotForBattleOrder(
-                    eop, battleOrderPlayed, site, system,
-                    fundedSpacePair);
+                    eop, equivalentPlayed, site, system,
+                    endorSystemOnTable && !opponentOccupiesEndor
+                        && battleOrderStacked);
         } catch (Exception e) {
             LOG.debug("EOP Battle Order reserve scan error: {}", e.getMessage());
             return false;

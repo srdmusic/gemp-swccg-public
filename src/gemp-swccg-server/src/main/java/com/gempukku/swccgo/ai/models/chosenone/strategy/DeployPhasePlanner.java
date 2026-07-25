@@ -281,7 +281,7 @@ public class DeployPhasePlanner {
 
         // Generate ground plans
         List<ScoredPlan> groundPlans = generateGroundPlans(
-            characters, vehicles, categories, forceAfterLocations,
+            characters, vehicles, starships, categories, forceAfterLocations,
             Math.max(0, objectiveFormationForceAfterLocations), groundThreshold,
             allLocations, currentTurn, drainGap);
         allPlans.addAll(groundPlans);
@@ -747,6 +747,7 @@ public class DeployPhasePlanner {
      * Generate ground deployment plans.
      */
     private List<ScoredPlan> generateGroundPlans(List<CardInfo> characters, List<CardInfo> vehicles,
+                                                  List<CardInfo> starships,
                                                   LocationCategories categories, int forceAvailable,
                                                   int objectiveFormationForceAvailable,
                                                   int threshold, List<AiBoardAnalyzer.LocationAnalysis> allLocations,
@@ -756,6 +757,17 @@ public class DeployPhasePlanner {
         // Get ground cards
         List<CardInfo> groundCards = new ArrayList<>(characters);
         groundCards.addAll(vehicles);
+        DeploymentPlan fundedEndorPackage = generateEopEndorSystemPlan(
+                starships,
+                characters.stream().filter(card -> card.isPilot)
+                        .collect(Collectors.toList()),
+                allLocations, forceAvailable, RandoConfig.DEPLOY_THRESHOLD);
+        Integer reservedEndorPilotPermanentId =
+                fundedEndorPackage.getInstructions().stream()
+                    .filter(instruction -> instruction.getAboardShipCardId() != null)
+                    .map(DeploymentInstruction::getCardPermanentCardId)
+                    .filter(Objects::nonNull)
+                    .findFirst().orElse(null);
 
         if (groundCards.isEmpty()) {
             return plans;
@@ -802,14 +814,26 @@ public class DeployPhasePlanner {
         // Plan 3: Establish at uncontested locations
         if (!categories.establishTargets.isEmpty()) {
             DeploymentPlan establishPlan = generateEstablishPlan(
-                groundCards, categories.establishTargets.stream()
+                groundCards.stream()
+                    .filter(card -> reservedEndorPilotPermanentId == null
+                            || card.card.getPermanentCardId()
+                                != reservedEndorPilotPermanentId)
+                    .collect(Collectors.toList()),
+                categories.establishTargets.stream()
                     .filter(AiBoardAnalyzer.LocationAnalysis::isGround)
                     .collect(Collectors.toList()),
                 forceAvailable, threshold, "ground");
             if (!establishPlan.getInstructions().isEmpty()) {
-                float score = scorePlan(establishPlan, allLocations, turn);
-                score += endorPostFlipPlanAdjustment(establishPlan, false, true);
-                plans.add(new ScoredPlan(establishPlan, score, "ground_establish"));
+                if (EndorOperationsTacticalPolicy
+                        .shouldSuppressEmptyEndorGroundEstablish(
+                                !fundedEndorPackage.getInstructions().isEmpty(),
+                                targetsEmptyEndorSite(establishPlan))) {
+                    LOG.warn("EOP SPACE FIRST: suppressing another empty Endor site while Endor system is uncontrolled");
+                } else {
+                    float score = scorePlan(establishPlan, allLocations, turn);
+                    score += endorPostFlipPlanAdjustment(establishPlan, false, true);
+                    plans.add(new ScoredPlan(establishPlan, score, "ground_establish"));
+                }
             }
         }
 
@@ -1047,6 +1071,17 @@ public class DeployPhasePlanner {
             .filter(c -> c.isPilot)
             .collect(Collectors.toList());
 
+        DeploymentPlan endorSystemPlan = generateEopEndorSystemPlan(
+                starships, pilots, allLocations, forceAvailable, threshold);
+        if (!endorSystemPlan.getInstructions().isEmpty()) {
+            float score = scorePlan(endorSystemPlan, allLocations, turn)
+                    + EndorOperationsTacticalPolicy.POST_FLIP_REINFORCE_BONUS;
+            plans.add(new ScoredPlan(
+                    endorSystemPlan, score, "objective_endor_system"));
+            LOG.warn("EOP SPACE FIRST: added funded Endor system package at +{}",
+                    EndorOperationsTacticalPolicy.POST_FLIP_REINFORCE_BONUS);
+        }
+
         // Plan 1: Stop bleeding in space
         List<AiBoardAnalyzer.LocationAnalysis> spaceBleed = categories.bleedLocations.stream()
             .filter(AiBoardAnalyzer.LocationAnalysis::isSpace)
@@ -1113,6 +1148,91 @@ public class DeployPhasePlanner {
         }
 
         return plans;
+    }
+
+    private DeploymentPlan generateEopEndorSystemPlan(
+            List<CardInfo> starships,
+            List<CardInfo> pilots,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations,
+            int forceAvailable,
+            int threshold) {
+        DeploymentPlan plan = new DeploymentPlan(
+                DeployStrategy.ESTABLISH,
+                "EOP: occupy Endor system before further ground expansion");
+        if (!endorSystemOccupationPending(allLocations)) {
+            return plan;
+        }
+        AiBoardAnalyzer.LocationAnalysis endor = allLocations.stream()
+                .filter(loc -> loc != null && loc.isSpace()
+                        && loc.location != null
+                        && "endor".equalsIgnoreCase(loc.location.getTitle())
+                        && loc.theirPower <= 0)
+                .findFirst().orElse(null);
+        if (endor == null) {
+            return plan;
+        }
+        List<CardInfo> legalShips = filterDeployableCards(starships, endor.location)
+                .stream()
+                .filter(ship -> "201_40".equals(ship.blueprintId))
+                .filter(ship -> ship.cost <= forceAvailable)
+                .sorted(Comparator.comparingInt((CardInfo ship) -> ship.cost)
+                        .thenComparing(Comparator.comparingInt(
+                                (CardInfo ship) -> ship.power).reversed()))
+                .collect(Collectors.toList());
+        for (CardInfo ship : legalShips) {
+            CardInfo pilot = null;
+            if (ship.ability <= 0) {
+                pilot = pilots.stream()
+                        .filter(candidate -> candidate.cost + ship.cost <= forceAvailable
+                                && candidate.ability > 0)
+                        .sorted(Comparator.comparingInt(candidate -> candidate.cost))
+                        .findFirst().orElse(null);
+                if (pilot == null) {
+                    continue;
+                }
+            }
+            addCardToPlan(plan, ship.card, endor, 1,
+                    "EOP: deploy ship to control Endor system");
+            if (pilot != null) {
+                addCardToPlan(plan, pilot.card, endor, 2,
+                        "EOP: deploy pilot aboard Endor system ship");
+                DeploymentInstruction pilotInstruction =
+                        plan.getInstructions().get(plan.getInstructions().size() - 1);
+                pilotInstruction.setAboardShipName(ship.name);
+                pilotInstruction.setAboardShipBlueprintId(ship.blueprintId);
+                pilotInstruction.setAboardShipCardId(
+                        String.valueOf(ship.card.getCardId()));
+            }
+            return plan;
+        }
+        return plan;
+    }
+
+    private boolean endorSystemOccupationPending(
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations) {
+        if (objectiveAnalyzer == null || !objectiveAnalyzer.isAnalyzed()
+                || !objectiveAnalyzer.isFlipped()
+                || !EndorOperationsTacticalPolicy.isEndorOperations(
+                        objectiveAnalyzer.getObjectiveBlueprintId(),
+                        objectiveAnalyzer.getObjectiveTitle())) {
+            return false;
+        }
+        AiBoardAnalyzer.LocationAnalysis endor = allLocations.stream()
+                .filter(loc -> loc != null && loc.isSpace()
+                        && loc.location != null
+                        && "endor".equalsIgnoreCase(loc.location.getTitle()))
+                .findFirst().orElse(null);
+        return EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
+                true, true, endor != null,
+                endor != null && endor.weControl(),
+                endor == null ? 0.0f : endor.theirPower);
+    }
+
+    private boolean targetsEmptyEndorSite(DeploymentPlan plan) {
+        return plan.getInstructions().stream()
+                .map(DeploymentInstruction::getTargetLocationName)
+                .filter(Objects::nonNull)
+                .anyMatch(title -> title.toLowerCase(Locale.ROOT).startsWith("endor:"));
     }
 
     /**

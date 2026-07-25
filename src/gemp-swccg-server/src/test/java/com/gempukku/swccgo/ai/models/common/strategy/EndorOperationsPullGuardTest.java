@@ -92,7 +92,7 @@ public class EndorOperationsPullGuardTest {
         PullDeployFacts deployFacts = PullDeployFactsReader.read(
                 "pull", actionText, "101",
                 new PullDeployFactsReader.Context(
-                        game, gameState, PLAYER, Side.DARK, oracle));
+                        game, gameState, PLAYER, Side.DARK, oracle, null));
         PullActionFacts.Parent actionFacts = PullActionFactsReader.readParent(
                 "pull", actionText, "101",
                 new PullActionFactsReader.Context(

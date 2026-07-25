@@ -2824,10 +2824,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // chosenone — both bots now apply V102 (activation cap) and V124 (4th-slot
                 // hard-block) regardless of which stacked-pile source they are running.
                 String stackedPileSourceTitle = null;
+                PhysicalCard stackedPileSource = null;
                 if (cardId != null && gameState != null) {
                     try {
-                        PhysicalCard sourceCard = gameState.findCardById(Integer.parseInt(cardId));
-                        stackedPileSourceTitle = sourceCard != null ? sourceCard.getTitle() : null;
+                        stackedPileSource = gameState.findCardById(Integer.parseInt(cardId));
+                        stackedPileSourceTitle = stackedPileSource != null ? stackedPileSource.getTitle() : null;
                     } catch (Exception ignored) {
                     }
                 }
@@ -2856,9 +2857,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     boolean pacingCap = shieldStrategy != null && !activationCap
                             && shieldStrategy.atPacingCap(turnNumber);
                     boolean reserveEopBattleOrder =
-                            shieldsOnTable >= 2
-                            && ShieldFacts.shouldReserveEopBattleOrderSlot(
-                                context.getGame(), context.getPlayerId());
+                            ShieldFacts.shouldReserveEopBattleOrderSlot(
+                                context.getGame(), context.getPlayerId(),
+                                stackedPileSource, shieldsOnTable);
 
                     controlLedger.register(ShieldPolicy.stackedPileParent(
                             actionId, shieldsOnTable, occupiesBothTheaters,

@@ -61,12 +61,31 @@ public final class EndorOperationsTacticalPolicy {
             boolean battleOrderAlreadyPlayed,
             boolean occupiesBattlegroundSite,
             boolean occupiesBattlegroundSystem,
-            boolean fundedSystemOccupationThisPhase) {
+            boolean battleOrderRouteStillAvailable) {
         return endorOperations
                 && !battleOrderAlreadyPlayed
                 && occupiesBattlegroundSite
                 && !occupiesBattlegroundSystem
-                && fundedSystemOccupationThisPhase;
+                && battleOrderRouteStillAvailable;
+    }
+
+    public static boolean shouldPursueEndorSystem(
+            boolean endorOperations,
+            boolean flipped,
+            boolean endorSystemPresent,
+            boolean controlsEndorSystem,
+            float opponentPowerAtEndor) {
+        return endorOperations
+                && flipped
+                && endorSystemPresent
+                && !controlsEndorSystem
+                && opponentPowerAtEndor <= 0.0f;
+    }
+
+    public static boolean shouldSuppressEmptyEndorGroundEstablish(
+            boolean endorSystemOccupationPending,
+            boolean targetsEmptyEndorSite) {
+        return endorSystemOccupationPending && targetsEmptyEndorSite;
     }
 
     public static float bunkerGarrisonAdjustment(
