@@ -48,7 +48,7 @@ import java.util.List;
 public class Card501_019_BACK extends AbstractObjective {
     public Card501_019_BACK() {
         super(Side.DARK, 7, "The Galaxy Torn Apart", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May immediately retrieve up to 2 Force. While this side up, during your control phase, opponent loses X Force, where X = number of systems you control (limit 3). Once per turn, may deploy a (••• •••) card stacked here as if from hand. If you just lost a battle involving a (••• •••) card, opponent loses 1 Force. If your unique (•) character was just lost, may [upload] a unique (•) character. Flip this card if a [Clone Army] system is on table.");
+        setGameText("May immediately retrieve up to 2 Force. While this side up, during your control phase, opponent loses X Force, where X = number of systems you control (limit 3). Once per turn, may deploy a (••• •••) card stacked here as if from hand. If you just lost a battle involving a (••• •••) card, opponent loses 1 Force. If your unique (•) character was just lost, may [upload] a unique (•) character. Flip this card at the end of turn if your [Clone Army] system is on table.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
         setTestingText("The Galaxy Torn Apart");
     }
@@ -89,7 +89,7 @@ public class Card501_019_BACK extends AbstractObjective {
                     || GameConditions.canSpotLocation(game, systemFilter)) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy a site from Reserve Deck");
-                action.setActionMsg("Deploy Separatist Command Center (or a battleground site related to your [Separatist] or [Clone Army] system) from Reserve Deck");
+                action.setActionMsg("Deploy Invisible Hand: Bridge, Separatist Command Center, or a battleground site related to your [Separatist] or [Clone Army] system from Reserve Deck");
 
                 Filter siteFilter = Filters.none;
                 for(PhysicalCard system: Filters.filterTopLocationsOnTable(game, systemFilter)) {
@@ -101,7 +101,7 @@ public class Card501_019_BACK extends AbstractObjective {
                         new OncePerTurnEffect(action));
                 // Perform result(s)
                 action.appendEffect(
-                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Separatist_Command_Center, Filters.and(Filters.site, siteFilter)), Filters.or(Filters.Separatist_Command_Center, Filters.battleground), true));
+                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Invisible_Hand_Bridge, Filters.Separatist_Command_Center, Filters.and(Filters.site, siteFilter)), Filters.or(Filters.Invisible_Hand_Bridge, Filters.Separatist_Command_Center, Filters.battleground), true));
                 actions.add(action);
             }
         }
@@ -178,7 +178,7 @@ public class Card501_019_BACK extends AbstractObjective {
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_4; //Force loss after a losing battle
         // Check condition(s)
         if (TriggerConditions.lostBattle(game, effectResult, playerId)
-                && GameConditions.canSpot(game, self, Filters.restricted_6)) {
+                && GameConditions.canSpot(game, self, Filters.and(Filters.restricted_6, Filters.participatingInBattle))) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
             // Perform result(s)
@@ -189,9 +189,9 @@ public class Card501_019_BACK extends AbstractObjective {
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_5; //Flip
         // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
+        if (TriggerConditions.isEndOfEachTurn(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.canSpot(game, self, 1, Filters.and(Icon.CLONE_ARMY, Filters.system))) {
+                && GameConditions.canSpot(game, self, 1, Filters.and(Filters.your(playerId), Icon.CLONE_ARMY, Filters.system))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setSingletonTrigger(true);

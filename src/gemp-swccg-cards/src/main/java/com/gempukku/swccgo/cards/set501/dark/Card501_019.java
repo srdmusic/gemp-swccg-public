@@ -40,7 +40,7 @@ public class Card501_019 extends AbstractObjective {
     public Card501_019() {
         super(Side.DARK, 0, "More Systems Will Rally To Our Cause", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Separatist] Geonosis system, a [Clone Army] system, Invisible Hand: Bridge, and Droid Racks. Stack six (••• •••) cards from outside your deck on here. For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. If your [Episode I] system was just converted, raise it to the top. Your (••• •••) cards stacked on Droid Racks may deploy as if from hand. Once per turn, may [download] Separatist Command Center (or a battleground site related to your [Clone Army] or [Separatist] system). Flip this card if no [Clone Army] systems are on table.");
+        setGameText("Deploy [Separatist] Geonosis system, a Geonosis site, a [Clone Army] system, and Droid Racks. Stack six (••• •••) cards from outside your deck on here. For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. If your [Episode I] system was just converted, raise it to the top. Your (••• •••) cards stacked on Droid Racks may deploy as if from hand. Once per turn, may [download] Invisible Hand: Bridge, Separatist Command Center, or a battleground site related to your [Clone Army] or [Separatist] system. Flip this card at the end of turn if your [Clone Army] systems not on table.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
         setTestingText("More Systems Will Rally To Our Cause");
     }
@@ -56,17 +56,17 @@ public class Card501_019 extends AbstractObjective {
                     }
                 });
         action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Geonosis_site, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose a Geonosis site to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
                 new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.CLONE_ARMY, Filters.system), true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose a [Clone Army] system to deploy";
-                    }
-                });
-        action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.Invisible_Hand_Bridge, true, false) {
-                    @Override
-                    public String getChoiceText() {
-                        return "Choose an Invisible Hand: Bridge to deploy";
                     }
                 });
         action.appendRequiredEffect(
@@ -103,7 +103,7 @@ public class Card501_019 extends AbstractObjective {
                     || GameConditions.canSpotLocation(game, systemFilter)) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy a site from Reserve Deck");
-                action.setActionMsg("Deploy Separatist Command Center (or a battleground site related to your [Separatist] or [Clone Army] system) from Reserve Deck");
+                action.setActionMsg("Deploy Invisible Hand: Bridge, Separatist Command Center, or a battleground site related to your [Separatist] or [Clone Army] system from Reserve Deck");
 
                 Filter siteFilter = Filters.none;
                 for(PhysicalCard system: Filters.filterTopLocationsOnTable(game, systemFilter)) {
@@ -115,7 +115,7 @@ public class Card501_019 extends AbstractObjective {
                         new OncePerTurnEffect(action));
                 // Perform result(s)
                 action.appendEffect(
-                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Separatist_Command_Center, Filters.and(Filters.site, siteFilter)), Filters.or(Filters.Separatist_Command_Center, Filters.battleground), true));
+                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Invisible_Hand_Bridge, Filters.Separatist_Command_Center, Filters.and(Filters.site, siteFilter)), Filters.or(Filters.Invisible_Hand_Bridge, Filters.Separatist_Command_Center, Filters.battleground), true));
                 return Collections.singletonList(action);
             }
         }
@@ -125,13 +125,14 @@ public class Card501_019 extends AbstractObjective {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+        String playerId = self.getOwner();
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
+        if (TriggerConditions.isEndOfEachTurn(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.canSpot(game, self, 1, Filters.and(Icon.CLONE_ARMY, Filters.system))) {
+                && !GameConditions.canSpot(game, self, 1, Filters.and(Filters.your(playerId), Icon.CLONE_ARMY, Filters.system))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setSingletonTrigger(true);

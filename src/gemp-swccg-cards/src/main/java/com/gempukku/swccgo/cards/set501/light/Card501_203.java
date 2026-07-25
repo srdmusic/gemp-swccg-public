@@ -35,7 +35,7 @@ public class Card501_203 extends AbstractUsedInterrupt {
     public Card501_203() {
         super(Side.LIGHT, 4, Title.A_New_Hope, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("The heroes of the Rebellion know that where there is life, there is hope.");
-        setGameText("[UPLOAD] Luke (or a Lars) or Leia (or Bail) with printed deploy < 4. OR For remainder of turn, opponent may not cancel battle destiny draws or character weapon destiny draws. OR If your Rebel is in battle alone, draw one battle destiny if unable to otherwise.");
+        setGameText("[Upload] Luke (or a Lars) or Leia (or Bail) with printed deploy < 4. OR For remainder of turn, opponent may not cancel battle destiny draws or character weapon destiny draws. OR If Luke or Leia in battle alone, draw one battle destiny if unable to otherwise.");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_27);
         setTestingText("A New Hope");
     }
@@ -75,23 +75,13 @@ public class Card501_203 extends AbstractUsedInterrupt {
                     protected void performActionResults(Action targetingAction) {
                         protectBattleAndWeaponDestinyDrawsAction.appendEffect(
                                 new AddUntilEndOfTurnModifierEffect(protectBattleAndWeaponDestinyDrawsAction,
-                                        new MayNotCancelBattleDestinyModifier(self, playerId, opponent),
-                                        "Prevents "+opponent+" from canceling "+playerId+"'s battle destiny draws")
+                                        new MayNotCancelBattleDestinyModifier(self, null, opponent),
+                                        "Prevents "+opponent+" from canceling battle destiny draws")
                         );
                         protectBattleAndWeaponDestinyDrawsAction.appendEffect(
                                 new AddUntilEndOfTurnModifierEffect(protectBattleAndWeaponDestinyDrawsAction,
-                                        new MayNotCancelBattleDestinyModifier(self, opponent, opponent),
-                                        "Prevents "+opponent+" from canceling "+opponent+"'s battle destiny draws")
-                        );
-                        protectBattleAndWeaponDestinyDrawsAction.appendEffect(
-                                new AddUntilEndOfTurnModifierEffect(protectBattleAndWeaponDestinyDrawsAction,
-                                        new MayNotCancelWeaponDestinyModifier(self, opponent, Filters.and(Filters.your(self), Filters.character_weapon)),
-                                        "Prevents "+opponent+" from canceling "+playerId+"'s character weapon destiny draws")
-                        );
-                        protectBattleAndWeaponDestinyDrawsAction.appendEffect(
-                                new AddUntilEndOfTurnModifierEffect(protectBattleAndWeaponDestinyDrawsAction,
-                                        new MayNotCancelWeaponDestinyModifier(self, opponent, Filters.and(Filters.opponents(playerId), Filters.character_weapon)),
-                                        "Prevents "+opponent+" from canceling "+opponent+"'s character weapon destiny draws")
+                                        new MayNotCancelWeaponDestinyModifier(self, opponent, Filters.character_weapon),
+                                        "Prevents "+opponent+" from canceling character weapon destiny draws")
                         );
                     }
                 }

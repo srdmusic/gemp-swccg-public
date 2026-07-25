@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card501_023 extends AbstractSystem {
     public Card501_023() {
-        super(Side.DARK, Title.Utapau, 3, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, Title.Utapau, 4, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setLocationDarkSideGameText("If you just initiated a Force drain (or won a battle) at an Utapau site, 'conquer' (flip) Utapau.");
         setLocationLightSideGameText("If you control, Jedi deploy -1 to Utapau sites.");
