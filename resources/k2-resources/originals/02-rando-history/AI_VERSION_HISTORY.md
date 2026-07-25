@@ -8591,5 +8591,11 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     sources byte-match target/classes, the server jar, and web.jar. Server jar SHA-256 is
     2b10da4a503a1f3d34d9eb4129983d64cfe2b7af780133e3e171150a014b2177; web.jar SHA-256 is
     43e72adac05c5891a42cc467e6aa11afddb9aa797e80f659d28c962be985f4fa.
+    Table creation was frozen and the server reported zero tables before restart. The recreated
+    app started at 2026-07-25T19:43:00.531003263Z with restart count 0, and PID 1 loaded the exact
+    recorded web.jar from the bind mount. Host and container jar hashes matched; the live playbook
+    hash matched the packaged source; HTTP returned 200; all four gameplay switches were restored;
+    startup logged no error or exception; and the hall remained at zero tables. Nothing was pushed.
+    Fresh live-game branch firing remains a separate gate.
     Revert the single First Order Reigns Batch Six commit; Shield twin Batch Five and all earlier
     objective-audit commits remain independent.
