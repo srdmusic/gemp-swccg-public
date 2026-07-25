@@ -7,10 +7,12 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -26,6 +28,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardsInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
@@ -78,6 +81,23 @@ public class Card501_207 extends AbstractNormalEffect {
             // Perform result(s)
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.Dagobah_Bog_Clearing, true));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.DO_OR_DO_NOT_WISE_ADVICE__DEPLOY_ANAKINS_LIGHTSABER_FROM_LOST_PILE;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                    && GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            action.setText("Deploy Anakin's Lightsaber from Lost Pile");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromLostPileEffect(action, Filters.Anakins_Lightsaber, false));
             actions.add(action);
         }
 
