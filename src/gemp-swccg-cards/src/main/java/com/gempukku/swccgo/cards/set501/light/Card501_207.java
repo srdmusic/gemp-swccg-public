@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,11 +22,9 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardsInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
@@ -36,7 +33,6 @@ import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesForFreeUsingLandspeedModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
 /**
  * Set: Playtesting
@@ -117,26 +113,6 @@ public class Card501_207 extends AbstractNormalEffect {
             action.appendEffect(
                     new LoseForceEffect(action, playerId, 2, true));
             return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.and(Filters.your(self), Filters.padawan))) {
-            PhysicalCard cardAboutToLeaveTable = ((AboutToLeaveTableResult) effectResult).getCardAboutToLeaveTable();
-            Collection<PhysicalCard> yourCardsAttachedToPadawan = Filters.filterAllOnTable(game, Filters.and(Filters.your(self), Filters.attachedTo(cardAboutToLeaveTable)));
-            if (!yourCardsAttachedToPadawan.isEmpty()) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setText("Lose 1 Force to place cards in Used Pile");
-                // Perform result(s)
-                action.appendEffect(
-                        new LoseForceEffect(action, playerId, 1));
-                action.appendEffect(
-                        new PlaceCardsInUsedPileFromTableEffect(action, yourCardsAttachedToPadawan));
-                return Collections.singletonList(action);
-            }
         }
         return null;
     }
