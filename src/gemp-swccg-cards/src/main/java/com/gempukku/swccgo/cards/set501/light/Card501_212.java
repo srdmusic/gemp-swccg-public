@@ -75,7 +75,7 @@ public class Card501_212 extends AbstractNormalEffect {
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 
         // Check condition(s)
-        if (TriggerConditions.justLost(game, effectResult, opponent, Filters.and(Filters.character, Filters.hasAbility))
+        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(playerId), Filters.character, Filters.hasAbility))
                 && GameConditions.isDuringBattle(game)
                 && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)) {
 
