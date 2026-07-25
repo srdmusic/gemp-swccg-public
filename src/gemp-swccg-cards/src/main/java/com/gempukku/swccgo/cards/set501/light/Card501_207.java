@@ -30,7 +30,6 @@ import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardsInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
@@ -62,8 +61,8 @@ public class Card501_207 extends AbstractNormalEffect {
         Filter dagobahLuke = Filters.and(Icon.DAGOBAH, Filters.Luke, Filters.character);
         modifiers.add(new KeywordModifier(self, dagobahLuke, Keyword.PADAWAN));
         Filter padawansAndYoda = Filters.or(Filters.padawan, Filters.Yoda);
-        modifiers.add(new DeployCostToLocationModifier(self, padawansAndYoda, -1, Filters.not(Filters.Lothal_location)));
         modifiers.add(new ImmuneToTitleModifier(self, padawansAndYoda, Title.Imperial_Barrier));
+        modifiers.add(new ImmuneToTitleModifier(self, padawansAndYoda, Title.Stunning_Leader));
         return modifiers;
     }
 
