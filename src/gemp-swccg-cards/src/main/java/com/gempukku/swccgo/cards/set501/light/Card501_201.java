@@ -56,7 +56,7 @@ public class Card501_201 extends AbstractNormalEffect {
         List<Modifier> modifiers = new LinkedList<>();
         String playerId = self.getOwner();
         modifiers.add(new ResetPersonalForceGenerationModifier(self, 2, self.getOwner()));
-        modifiers.add(new InitiateBattlesForFreeModifier(self, playerId));
+        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.occupiesWith(playerId, self, Filters.and(Filters.Rebel, Filters.with(self, Filters.Rebel))), playerId));
         return modifiers;
     }
 
