@@ -42,6 +42,8 @@ import com.gempukku.swccgo.ai.models.common.phase.SetupFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TargetSelectionFacts;
 import com.gempukku.swccgo.ai.models.common.phase.TargetSelectionPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
@@ -53,6 +55,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -582,6 +585,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     private void applyResponsePolicy(EvaluatedAction action, PolicyResult result) {
         PolicyContributionLedger ledger = new PolicyContributionLedger(
                 "response-cancel-selection-" + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private void applyTdigwattPolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger =
+            new PolicyContributionLedger(
+                "tdigwatt-card-selection-"
+                    + action.getActionId());
         ledger.register(result);
         PolicyOperationAdapter.apply(action, ledger);
     }
@@ -1528,6 +1542,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         String title = location.getTitle();
                         String titleLower = title != null ? title.toLowerCase() : "";
                         action.setDisplayText("Deploy to " + (title != null ? title : "location"));
+                        TdigwattObjectiveFactsReader
+                            .readVirtualDeployProjection(
+                                game, playerId,
+                                objectiveProgressDeployingCard,
+                                location)
+                            .ifPresent(projection ->
+                                applyTdigwattPolicy(
+                                    action,
+                                    TdigwattObjectiveScoringPolicy
+                                        .scoreDeploy(
+                                            action.getActionId(),
+                                            projection.before(),
+                                            projection.after(),
+                                            true)
+                                        .result()));
                         boolean guaranteedCaptureDeployDestination =
                                 applyCaptureDeployDestination(
                                     context,
@@ -6904,6 +6933,76 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     .CandidateMechanism.LANDSPEED);
                         }
 
+                        boolean exactTdigwattLandoDestination =
+                            false;
+                        Integer tdigwattSourceId =
+                            integerExtra(
+                                context,
+                                TdigwattObjectiveFactsReader
+                                    .LANDO_ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA);
+                        Integer tdigwattMoverId =
+                            integerExtra(
+                                context,
+                                TdigwattObjectiveFactsReader
+                                    .LANDO_MOVER_PERMANENT_CARD_ID_EXTRA);
+                        Integer tdigwattDestinationId =
+                            integerExtra(
+                                context,
+                                TdigwattObjectiveFactsReader
+                                    .LANDO_DESTINATION_PERMANENT_CARD_ID_EXTRA);
+                        if (game != null
+                                && playerId != null
+                                && fsMover != null
+                                && tdigwattSourceId != null
+                                && tdigwattMoverId != null
+                                && tdigwattDestinationId != null
+                                && fsMover
+                                    .getPermanentCardId()
+                                    == tdigwattMoverId
+                                && location
+                                    .getPermanentCardId()
+                                    == tdigwattDestinationId) {
+                            PhysicalCard tdigwattSource =
+                                gameState
+                                    .findCardByPermanentId(
+                                        tdigwattSourceId);
+                            var tdigwattRoute =
+                                TdigwattObjectiveFactsReader
+                                    .readUsefulVirtualLandoLandspeedRoute(
+                                        game,
+                                        playerId,
+                                        tdigwattSource,
+                                        TdigwattObjectiveFactsReader
+                                            .Proof.PROVEN);
+                            if (tdigwattRoute.isPresent()
+                                    && tdigwattRoute.get()
+                                        .landoPermanentCardId()
+                                        == tdigwattMoverId
+                                    && tdigwattRoute.get()
+                                        .destinationPermanentCardId()
+                                        == tdigwattDestinationId) {
+                                exactTdigwattLandoDestination =
+                                    true;
+                                applyTdigwattPolicy(
+                                    action,
+                                    TdigwattObjectiveScoringPolicy
+                                        .scoreVirtualLandoDestination(
+                                            new TdigwattObjectiveScoringPolicy
+                                                .LandoDestinationFacts(
+                                                    new TdigwattObjectiveScoringPolicy
+                                                        .LandoActionFacts(
+                                                            cardId,
+                                                            tdigwattRoute
+                                                                .get()
+                                                                .moveFacts(),
+                                                            true,
+                                                            context
+                                                                .getForcePileSize()),
+                                                    true))
+                                        .result());
+                            }
+                        }
+
                         boolean objectiveActorRouteDestination = false;
                         boolean objectiveActorLocationDestination = false;
                         boolean objectiveRequiredCardEnablerDestination =
@@ -7913,7 +8012,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // at his current location (he's redundant) and destination is unoccupied CC site.
                         String moveDecisionText = context.getDecisionText() != null
                             ? context.getDecisionText().toLowerCase() : "";
-                        if (moveDecisionText.contains("lando")) {
+                        if (!exactTdigwattLandoDestination
+                                && moveDecisionText.contains("lando")) {
                             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer moveObjAnalyzer =
                                 context.getObjectiveAnalyzer();
                             boolean bespinPresenceObjective = moveObjAnalyzer != null
@@ -8148,6 +8248,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     || objectiveActorLocationDestination
                                                     || objectiveFirstOrderDrainPairDestination
                                                     || objectiveTerminalEscapeDestination
+                                                    || exactTdigwattLandoDestination
                                                     || objectivePostFlipPayoffDestination
                                                         != com.gempukku.swccgo.ai.models
                                                             .common.strategy
@@ -8827,6 +8928,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         List<String> cardIds = context.getCardIds();
         List<String> blueprints = context.getBlueprints();
         List<String> testingTexts = context.getTestingTexts();  // CARD TITLES from GEMP!
+        PhysicalCard exactTdigwattPullSource =
+                readExactTdigwattPullSource(context);
 
         logger.info("🔍 evaluateTakeIntoHand: {} cards, {} blueprints, {} testingTexts",
                    cardIds != null ? cardIds.size() : 0,
@@ -8888,6 +8991,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 action.setBlueprintId(blueprintId);
             }
 
+            if (exactTdigwattPullSource != null) {
+                PhysicalCard exactCandidate =
+                        findExactReservePullCandidate(
+                                context, cardId, blueprintId);
+                if (exactCandidate != null) {
+                    TdigwattObjectiveFactsReader
+                            .readObjectivePullCandidate(
+                                    game,
+                                    context.getPlayerId(),
+                                    exactTdigwattPullSource,
+                                    exactCandidate)
+                            .ifPresent(facts ->
+                                    applyTdigwattPolicy(
+                                            action,
+                                            TdigwattObjectiveScoringPolicy
+                                                    .scorePullChild(
+                                                        new TdigwattObjectiveScoringPolicy
+                                                            .PullChildFacts(
+                                                                action.getActionId(),
+                                                                facts,
+                                                                true,
+                                                                true))
+                                                    .result()));
+                }
+            }
+
             pullLedger.register(PullTakeCandidatePolicy.evaluate(pullFacts));
             PullDeployCandidatePolicy.Evaluation pullCandidate =
                     PullDeployCandidatePolicy.evaluate(
@@ -8924,6 +9053,135 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         return actions;
+    }
+
+    private PhysicalCard readExactTdigwattPullSource(
+            DecisionContext context) {
+        if (context == null
+                || context.getGame() == null
+                || context.getGameState() == null
+                || !"ARBITRARY_CARDS".equals(
+                        context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"choose card to take into hand".equalsIgnoreCase(
+                        context.getDecisionText().trim())
+                || context.getMin() != 1
+                || context.getMax() != 1) {
+            return null;
+        }
+        try {
+            var identity =
+                    TdigwattObjectiveFactsReader
+                            .readObjectiveIdentity(
+                                    context.getGame(),
+                                    context.getPlayerId());
+            var actionState =
+                    context.getGameState()
+                            .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            if (identity.isEmpty()
+                    || source == null
+                    || source.getPermanentCardId()
+                        != identity.get().physicalCardId()
+                    || !"Take card into hand from Reserve Deck"
+                            .equals(liveAction.getText())) {
+                return null;
+            }
+            GameTextActionId expectedActionId =
+                    identity.get().printing()
+                        == com.gempukku.swccgo.ai.models.common.phase
+                            .TdigwattObjectiveFacts.Printing.CLASSIC
+                    ? GameTextActionId
+                        .THIS_DEAL_IS_GETTING_WORSE_ALL_THE_TIME__UPLOAD_CARD
+                    : GameTextActionId
+                        .THIS_DEAL_IS_GETTING_WORSE_ALL_THE_TIME_V__UPLOAD_CARD;
+            return liveAction.getGameTextActionId()
+                    == expectedActionId ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    static PhysicalCard findExactReservePullCandidate(
+            DecisionContext context,
+            String cardId,
+            String blueprintId) {
+        if (context == null
+                || context.getGameState() == null
+                || context.getPlayerId() == null
+                || blueprintId == null
+                || blueprintId.isBlank()
+                || "inPlay".equals(blueprintId)) {
+            return null;
+        }
+        GameState gameState = context.getGameState();
+        String playerId = context.getPlayerId();
+        if (cardId != null) {
+            try {
+                PhysicalCard exact =
+                        gameState.findCardById(
+                                Integer.parseInt(cardId));
+                if (exact != null
+                        && playerId.equals(exact.getOwner())
+                        && blueprintId.equals(
+                                exact.getBlueprintId(true))) {
+                    return exact;
+                }
+            } catch (NumberFormatException ignored) {
+                // The stock Reserve decision uses strict tempN ordering.
+            }
+        }
+        if (cardId == null || !cardId.startsWith("temp")) {
+            return null;
+        }
+        List<String> offeredCardIds = context.getCardIds();
+        List<String> offeredBlueprints =
+                context.getBlueprints();
+        List<PhysicalCard> reserveCards =
+                gameState.getCardPile(
+                        playerId,
+                        com.gempukku.swccgo.common.Zone
+                                .RESERVE_DECK);
+        if (offeredCardIds == null
+                || offeredBlueprints == null
+                || reserveCards == null
+                || offeredCardIds.size()
+                    != offeredBlueprints.size()
+                || offeredBlueprints.size()
+                    != reserveCards.size()) {
+            return null;
+        }
+        int offeredIndex = -1;
+        for (int index = 0;
+                index < offeredCardIds.size();
+                index++) {
+            PhysicalCard reserveCard =
+                    reserveCards.get(index);
+            if (!("temp" + index).equals(
+                        offeredCardIds.get(index))
+                    || reserveCard == null
+                    || !offeredBlueprints.get(index).equals(
+                            reserveCard.getBlueprintId(true))) {
+                return null;
+            }
+            if (cardId.equals(
+                    offeredCardIds.get(index))) {
+                offeredIndex = index;
+            }
+        }
+        if (offeredIndex < 0) {
+            return null;
+        }
+        PhysicalCard exact =
+                reserveCards.get(offeredIndex);
+        return exact != null
+                && playerId.equals(exact.getOwner())
+                && blueprintId.equals(
+                        exact.getBlueprintId(true))
+                ? exact : null;
     }
 
     /**
@@ -9773,6 +10031,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         try {
             return Integer.valueOf(String.valueOf(value));
         } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Integer integerExtra(
+            DecisionContext context,
+            String key) {
+        if (context == null || key == null) {
+            return null;
+        }
+        Object value = context.getExtra(key);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(
+                String.valueOf(value));
+        } catch (NumberFormatException ignored) {
             return null;
         }
     }

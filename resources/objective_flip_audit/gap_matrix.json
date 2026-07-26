@@ -1,16 +1,16 @@
 {
- "generatedBy": "K-2 Phase A+B merge 2026-07-24; engineClass merge from 33 family dossiers + Codex/evidence-packet results 2026-07-25",
+ "generatedBy": "K-2 Phase A+B merge 2026-07-24; engineClass merge from 33 family dossiers + Codex/evidence-packet results 2026-07-25; TDIGWATT evidence reconciliation 2026-07-26",
  "baselineHead": "192abf72d",
  "counts": {
   "objectives": 66,
   "ABSENT_NO_PROFILE": 8,
-  "ABSENT_DISABLED": 43,
-  "PARTIAL": 14,
+  "ABSENT_DISABLED": 41,
+  "PARTIAL": 16,
   "WRONG": 1,
   "COMPLETE": 0,
-  "engineClass_EXISTING_ENGINE_FIT": 15,
+  "engineClass_EXISTING_ENGINE_FIT": 13,
   "engineClass_NEW_PRIMITIVE": 24,
-  "engineClass_PROVEN_BY_CODEX": 10,
+  "engineClass_PROVEN_BY_CODEX": 12,
   "engineClass_SMALL_SHARED_EXTENSION": 16,
   "engineClass_STUB_NA": 1
  },
@@ -369,15 +369,15 @@
    "frontBp": "109_12",
    "title": "This Deal Is Getting Worse All The Time",
    "side": "DARK",
-   "classification": "ABSENT",
+   "classification": "PARTIAL",
    "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "why": "Exact typed runtime facts now drive parent and child pulls, Dark Deal and classic Cloud City Occupation deployment, classic completion, and safe back-side battle scoring in both bots. The generic profile remains disabled, and no dedicated runtime adapter consumes exact classic flip-back retention margins.",
    "flipLaw": "Flip if Dark Deal on table AND you occupy Bespin system AND you occupy Bespin: Cloud City. All three required.",
    "flipBackLaw": "Flips back if Dark Deal is canceled, OR opponent CONTROLS Bespin system, OR Bespin (system) is 'blown away'. NOTE: losing your own occupation of Bespin/Cloud City does NOT flip it back; only opponent ",
    "profileGaps": 5,
    "seedMismatches": 0,
-   "engineClass": "EXISTING_ENGINE_FIT",
-   "engineClassNote": "isTdigwatt arms already drive flip; wire Dark Deal into requiredCardsOnTable/flipGateCardIds"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven by TdigwattObjectiveFactsReader, TdigwattObjectivePolicy, TdigwattObjectiveScoringPolicy, ThisDealIsGettingWorseObjectiveEngineContractTest, TdigwattObjectivePersistentBoardChainTest, and TdigwattBattleDecisionBehaviorTest; unchanged Card109_012 performs the actual flip."
   },
   {
    "frontBp": "110_4",
@@ -775,15 +775,15 @@
    "frontBp": "226_12",
    "title": "This Deal Is Getting Worse All The Time (V)",
    "side": "DARK",
-   "classification": "ABSENT",
+   "classification": "PARTIAL",
    "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "why": "Exact typed runtime facts now drive printing-isolated pulls, conservative third-control character deployment, paid Lando movement and destination choice, the exact Force reserve, safe back-side battle payoff, and helpful Lando destiny direction in both bots. The generic profile remains disabled, and exact loss or forfeit retention adapters remain unwired.",
    "flipLaw": "Flip if you control at least 3 Bespin locations AND opponent controls fewer than 3 Bespin locations. SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE on both control checks.",
    "flipBackLaw": "Back flips to front if opponent controls MORE Bespin locations than you (strict comparative count of top locations on table).",
    "profileGaps": 5,
    "seedMismatches": 0,
-   "engineClass": "EXISTING_ENGINE_FIT",
-   "engineClassNote": "control-3 Bespin_location + opponent-<3, +1 registry key + flip loaderEnabled true"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven by the TDIGWATT typed reader and policies, VirtualThisDealIsGettingWorseObjectiveEngineContractTest, TdigwattObjectivePersistentBoardChainTest, TdigwattForceBudgetBehaviorTest, TdigwattVirtualDeployBehaviorTest, and TdigwattDestinyAdjustmentBehaviorTest; unchanged Card226_012 performs the actual third-control flip."
   },
   {
    "frontBp": "226_28",

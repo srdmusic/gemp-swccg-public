@@ -34,6 +34,9 @@ import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
@@ -105,6 +108,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             if (decisionText != null) {
                 String dtLower = decisionText.toLowerCase();
                 if (dtLower.contains("capacity slot") || dtLower.contains("choose an option")
+                    || dtLower.contains("choose regular move action")
                     || dtLower.contains("not activated force") || dtLower.contains("have not activated")) {
                     return true;
                 }
@@ -171,6 +175,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
             String textLower = actionText.toLowerCase();
 
             EvaluatedAction action = new EvaluatedAction(actionId, ActionType.UNKNOWN, 0.0f, actionText);
+            boolean exactTdigwattPullAction = false;
+            applyTdigwattDestinyAdjustment(
+                    action, context, actionText);
 
             // ═══════════════════════════════════════════════════════════
             // ═══ REGION: SVC-SAFETY — loop-prevention veto trio (reorg 2026-07-06) ═══
@@ -683,6 +690,131 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             "V168 ALWAYS ACTIVATE: +5000 on '{}'", actionText);
                     default -> { }
                 }
+            }
+
+            PhysicalCard tdigwattActionSource =
+                readTdigwattActionSource(context, cardId);
+            if (tdigwattActionSource == null) {
+                tdigwattActionSource =
+                    readTdigwattPendingActionSource(
+                        context);
+            }
+            PhysicalCard exactTdigwattPullSource =
+                readExactTdigwattPullActionSource(
+                    context, actionId);
+            if ("take card into hand from reserve deck"
+                    .equals(textLower.trim())
+                    && exactTdigwattPullSource != null
+                    && game != null
+                    && context.getPlayerId() != null) {
+                Optional<TdigwattObjectiveFacts.ObjectiveIdentity>
+                    objectiveRead =
+                        TdigwattObjectiveFactsReader
+                            .readObjectiveIdentity(
+                                game,
+                                context.getPlayerId());
+                Optional<List<TdigwattObjectiveFacts.PullFacts>>
+                    reserveRead =
+                        TdigwattObjectiveFactsReader
+                            .readSourceLegalPullCandidatesInReserve(
+                                game,
+                                context.getPlayerId(),
+                                exactTdigwattPullSource);
+                if (objectiveRead.isPresent()
+                        && reserveRead.isPresent()
+                        && exactTdigwattPullSource
+                            .getPermanentCardId()
+                            == objectiveRead.get()
+                                .physicalCardId()) {
+                    exactTdigwattPullAction = true;
+                    TdigwattObjectiveScoringPolicy.Evaluation
+                        tdigwattPull =
+                            TdigwattObjectiveScoringPolicy
+                                .scorePullParent(
+                                    new TdigwattObjectiveScoringPolicy
+                                        .PullParentFacts(
+                                            actionId,
+                                            objectiveRead.get(),
+                                            exactTdigwattPullSource
+                                                .getPermanentCardId(),
+                                            true,
+                                            true,
+                                            reserveRead.get()));
+                    applyTdigwattPolicy(
+                        action, tdigwattPull.result());
+                    if (tdigwattPull.outcome()
+                            == TdigwattObjectiveScoringPolicy
+                                .Outcome
+                                .PULL_PARENT_EXHAUSTED) {
+                        actions.add(action);
+                        continue;
+                    }
+                }
+            }
+
+            if ("have your lando make a regular move"
+                    .equals(textLower.trim())
+                    && tdigwattActionSource != null
+                    && game != null
+                    && context.getPlayerId() != null) {
+                TdigwattObjectiveFactsReader
+                    .readUsefulVirtualLandoLandspeedRoute(
+                        game,
+                        context.getPlayerId(),
+                        tdigwattActionSource,
+                        TdigwattObjectiveFactsReader
+                            .Proof.PROVEN)
+                    .ifPresent(route -> {
+                        action.setActionType(
+                            ActionType.MOVE);
+                        applyTdigwattPolicy(
+                            action,
+                            TdigwattObjectiveScoringPolicy
+                                .scoreVirtualLandoParent(
+                                    new TdigwattObjectiveScoringPolicy
+                                        .LandoActionFacts(
+                                            actionId,
+                                            route.moveFacts(),
+                                            true,
+                                            context
+                                                .getForcePileSize()))
+                                .result());
+                    });
+            }
+
+            if ("move using landspeed"
+                    .equals(textLower.trim())
+                    && context.getDecisionText() != null
+                    && context.getDecisionText()
+                        .trim().toLowerCase(Locale.ROOT)
+                        .contains(
+                            "choose regular move action")
+                    && tdigwattActionSource != null
+                    && game != null
+                    && context.getPlayerId() != null) {
+                TdigwattObjectiveFactsReader
+                    .readUsefulVirtualLandoLandspeedRoute(
+                        game,
+                        context.getPlayerId(),
+                        tdigwattActionSource,
+                        TdigwattObjectiveFactsReader
+                            .Proof.PROVEN)
+                    .ifPresent(route -> {
+                        action.setActionType(
+                            ActionType.MOVE);
+                        applyTdigwattPolicy(
+                            action,
+                            TdigwattObjectiveScoringPolicy
+                                .scoreVirtualLandoParent(
+                                    new TdigwattObjectiveScoringPolicy
+                                        .LandoActionFacts(
+                                            actionId,
+                                            route.moveFacts(),
+                                            true,
+                                            context
+                                                .getForcePileSize()))
+                                .result());
+                    });
             }
 
             // === V116 (Steve, 2026-05-22): GUARANTEED +100 FLOOR FOR RESERVE-DECK PULLS ===
@@ -1864,7 +1996,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== V24: TDIGWATT EXHAUSTED SEARCH GUARD ==========
             // TDIGWATT searches for "Cloud City Occupation, Dark Deal, Vader's Bounty, or Bespin".
             // Once all targets have been pulled, every search fails — stop wasting the action.
-            if (textLower.contains("cloud city occupation") && textLower.contains("dark deal") &&
+            if (!exactTdigwattPullAction
+                    && textLower.contains("cloud city occupation") && textLower.contains("dark deal") &&
                 textLower.contains("bespin")) {
                 com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle tdigOracle = context.getDeckOracle();
                 if (tdigOracle != null && tdigOracle.isAnalyzed()) {
@@ -4713,6 +4846,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
         PolicyOperationAdapter.apply(action, ledger);
     }
 
+    private void applyTdigwattPolicy(
+            EvaluatedAction action,
+            PolicyResult result) {
+        PolicyContributionLedger ledger =
+            new PolicyContributionLedger(
+                "tdigwatt-action-text-"
+                    + action.getActionId());
+        ledger.register(result);
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
     private void applyNamedReserveSourcePolicy(
             EvaluatedAction action,
             PullSpecificActionFacts.ReserveSourceKind sourceKind,
@@ -4755,6 +4899,272 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     .isClassicHuntDownObjective());
         controlLedger.register(ControlDrainAssessment.assess(action.getActionId(), facts));
         PolicyOperationAdapter.apply(action, controlLedger);
+        Optional<TdigwattObjectiveFactsReader
+                .VirtualLandoLandspeedRoute> route =
+            readOfferedTdigwattLandoRoute(context);
+        if (route.isEmpty()
+                || context.getGameState() == null
+                || context.getGame() == null
+                || locationCardId == null) {
+            return;
+        }
+        try {
+            PhysicalCard location =
+                context.getGameState().findCardById(
+                    Integer.parseInt(locationCardId));
+            if (location == null) {
+                return;
+            }
+            float spend =
+                context.getGame().getModifiersQuerying()
+                    .getInitiateForceDrainCost(
+                        context.getGameState(),
+                        location,
+                        context.getPlayerId());
+            if (!Float.isFinite(spend)
+                    || spend < 0.0f) {
+                return;
+            }
+            applyTdigwattPolicy(
+                action,
+                TdigwattObjectiveScoringPolicy
+                    .preserveVirtualLandoControlForce(
+                        new TdigwattObjectiveScoringPolicy
+                            .ControlSpendFacts(
+                                action.getActionId(),
+                                route.get().moveFacts(),
+                                true,
+                                false,
+                                (int) Math.ceil(spend),
+                                context
+                                    .getForcePileSize()))
+                    .result());
+        } catch (Exception e) {
+            logger.debug(
+                "TDIGWATT Lando Force reserve failed open: {}",
+                e.getMessage());
+        }
+    }
+
+    private Optional<TdigwattObjectiveFactsReader
+            .VirtualLandoLandspeedRoute>
+            readOfferedTdigwattLandoRoute(
+                    DecisionContext context) {
+        if (context == null
+                || context.getGame() == null
+                || context.getPlayerId() == null) {
+            return Optional.empty();
+        }
+        List<String> texts =
+            context.getActionTexts();
+        List<String> cardIds =
+            context.getCardIds();
+        for (int i = 0;
+                i < texts.size()
+                    && i < cardIds.size();
+                i++) {
+            String text = texts.get(i);
+            if (text == null
+                    || !"have your lando make a regular move"
+                        .equals(text.trim()
+                            .toLowerCase(
+                                Locale.ROOT))) {
+                continue;
+            }
+            PhysicalCard source =
+                readTdigwattActionSource(
+                    context, cardIds.get(i));
+            if (source != null) {
+                return TdigwattObjectiveFactsReader
+                    .readUsefulVirtualLandoLandspeedRoute(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        source,
+                        TdigwattObjectiveFactsReader
+                            .Proof.PROVEN);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private PhysicalCard readTdigwattActionSource(
+            DecisionContext context,
+            String cardId) {
+        if (context == null
+                || context.getGameState() == null
+                || context.getGame() == null
+                || context.getPlayerId() == null
+                || cardId == null) {
+            return null;
+        }
+        try {
+            PhysicalCard source =
+                context.getGameState().findCardById(
+                    Integer.parseInt(cardId));
+            Optional<TdigwattObjectiveFacts.ObjectiveIdentity>
+                objective =
+                    TdigwattObjectiveFactsReader
+                        .readObjectiveIdentity(
+                            context.getGame(),
+                            context.getPlayerId());
+            return source != null
+                    && objective.isPresent()
+                    && source.getPermanentCardId()
+                        == objective.get()
+                            .physicalCardId()
+                ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readTdigwattPendingActionSource(
+            DecisionContext context) {
+        if (context == null
+                || context.getGameState() == null) {
+            return null;
+        }
+        Object value = context.getExtra(
+            TdigwattObjectiveFactsReader
+                .LANDO_ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA);
+        if (!(value instanceof Integer permanentId)) {
+            return null;
+        }
+        for (PhysicalCard card
+                : context.getGameState()
+                    .getAllPermanentCards()) {
+            if (card != null
+                    && card.getPermanentCardId()
+                        == permanentId) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private PhysicalCard readExactTdigwattPullActionSource(
+            DecisionContext context,
+            String actionId) {
+        if (context == null || actionId == null) {
+            return null;
+        }
+        Object value = context.getExtra(
+                TdigwattObjectiveFactsReader
+                    .PULL_ACTION_SOURCES_EXTRA);
+        if (!(value instanceof Map<?, ?> sources)
+                || !(sources.get(actionId)
+                    instanceof Integer permanentId)) {
+            return null;
+        }
+        return findPermanentCard(
+                context.getGameState(), permanentId);
+    }
+
+    private void applyTdigwattDestinyAdjustment(
+            EvaluatedAction action,
+            DecisionContext context,
+            String actionText) {
+        if (action == null
+                || context == null
+                || context.getGame() == null
+                || context.getGameState() == null
+                || actionText == null) {
+            return;
+        }
+        PhysicalCard source = null;
+        TdigwattObjectiveScoringPolicy
+                .DestinyAdjustmentChoice choice = null;
+        if ("CARD_ACTION_CHOICE".equals(
+                    context.getDecisionType())
+                && "Add or subtract 1 from destiny draw"
+                    .equals(actionText)) {
+            Object value = context.getExtra(
+                    TdigwattObjectiveFactsReader
+                        .DESTINY_ADJUSTMENT_ACTION_SOURCES_EXTRA);
+            if (value instanceof Map<?, ?> sources
+                    && sources.get(action.getActionId())
+                        instanceof Integer permanentId) {
+                source = findPermanentCard(
+                        context.getGameState(),
+                        permanentId);
+                choice = TdigwattObjectiveScoringPolicy
+                        .DestinyAdjustmentChoice.PARENT;
+            }
+        } else if ("MULTIPLE_CHOICE".equals(
+                        context.getDecisionType())
+                && context.getDecisionText() != null
+                && "Choose an option".equals(
+                        context.getDecisionText().trim())
+                && context.getActionIds().equals(
+                        List.of("0", "1"))
+                && context.getActionTexts().equals(
+                        List.of("Add 1", "Subtract 1"))
+                && ("Add 1".equals(actionText)
+                    || "Subtract 1".equals(actionText))) {
+            try {
+                var actionState = context.getGameState()
+                        .getTopGameTextActionState();
+                var liveAction = actionState != null
+                        ? actionState.getGameTextAction()
+                        : null;
+                if (liveAction != null
+                        && liveAction.getGameTextActionId()
+                            == com.gempukku.swccgo.common
+                                .GameTextActionId
+                                .OTHER_CARD_ACTION_3
+                        && "Add or subtract 1 from destiny draw"
+                            .equals(liveAction.getText())) {
+                    source = liveAction.getActionSource();
+                    choice = "Add 1".equals(actionText)
+                        ? TdigwattObjectiveScoringPolicy
+                            .DestinyAdjustmentChoice.ADD_ONE
+                        : TdigwattObjectiveScoringPolicy
+                            .DestinyAdjustmentChoice.SUBTRACT_ONE;
+                }
+            } catch (Exception ignored) {
+                return;
+            }
+        }
+        if (source == null || choice == null) {
+            return;
+        }
+        TdigwattObjectiveScoringPolicy
+                .DestinyAdjustmentChoice exactChoice =
+                    choice;
+        TdigwattObjectiveFactsReader
+                .readLiveDestinyAdjustmentFacts(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        source)
+                .ifPresent(facts ->
+                    applyTdigwattPolicy(
+                        action,
+                        TdigwattObjectiveScoringPolicy
+                            .scoreVirtualLandoDestinyAdjustment(
+                                new TdigwattObjectiveScoringPolicy
+                                    .DestinyAdjustmentScoringFacts(
+                                        action.getActionId(),
+                                        facts,
+                                        true,
+                                        exactChoice))
+                            .result()));
+    }
+
+    private PhysicalCard findPermanentCard(
+            GameState gameState,
+            int permanentId) {
+        if (gameState == null || permanentId <= 0) {
+            return null;
+        }
+        for (PhysicalCard card :
+                gameState.getAllPermanentCards()) {
+            if (card != null
+                    && card.getPermanentCardId()
+                        == permanentId) {
+                return card;
+            }
+        }
+        return null;
     }
 
     private void evaluatePlayCard(EvaluatedAction action, DecisionContext context) {

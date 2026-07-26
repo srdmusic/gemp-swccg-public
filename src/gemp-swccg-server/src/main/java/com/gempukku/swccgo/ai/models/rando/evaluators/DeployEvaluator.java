@@ -31,6 +31,9 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.common.CardCategory;
@@ -3141,11 +3144,126 @@ public class DeployEvaluator extends ActionEvaluator {
                     //
                     // V67aj + nested V67al if(false) block DELETED 2026-07-12 batch 1.5 (V136 §B owns site-stack scoring) — see git history.
 
+                    boolean exactTdigwattEngineDeploy =
+                        false;
+                    if (game != null && gameState != null
+                            && playerId != null
+                            && card != null) {
+                        var tdigwattIdentity =
+                            TdigwattObjectiveFactsReader
+                                .readObjectiveIdentity(
+                                    game, playerId);
+                        TdigwattObjectiveFacts.PullTarget
+                            tdigwattTarget = null;
+                        if (com.gempukku.swccgo.filters
+                                .Filters.Dark_Deal
+                                .accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
+                                    card)) {
+                            tdigwattTarget =
+                                TdigwattObjectiveFacts
+                                    .PullTarget.DARK_DEAL;
+                        } else if (com.gempukku.swccgo.filters
+                                .Filters.Cloud_City_Occupation
+                                .accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
+                                    card)) {
+                            tdigwattTarget =
+                                TdigwattObjectiveFacts
+                                    .PullTarget
+                                    .CLOUD_CITY_OCCUPATION;
+                        }
+                        if (tdigwattIdentity.isPresent()
+                                && tdigwattTarget != null) {
+                            var tdigwattPersistence =
+                                TdigwattObjectiveFactsReader
+                                    .readEngineEffectPersistsAfterDeploy(
+                                        game, playerId, card);
+                            var tdigwattEngine =
+                                TdigwattObjectiveScoringPolicy
+                                    .scoreEngineDeploy(
+                                        new TdigwattObjectiveScoringPolicy
+                                            .EngineDeployFacts(
+                                                actionId,
+                                                tdigwattIdentity
+                                                    .get(),
+                                                tdigwattIdentity
+                                                    .get()
+                                                    .physicalCardId(),
+                                                tdigwattTarget,
+                                                true,
+                                                true,
+                                                tdigwattPersistence
+                                                    .isPresent(),
+                                                tdigwattPersistence
+                                                    .orElse(false)));
+                            applySharedPolicy(
+                                action, decisionId,
+                                actionId,
+                                "deploy-tdigwatt-engine",
+                                tdigwattEngine.result());
+                            exactTdigwattEngineDeploy =
+                                tdigwattPersistence
+                                    .orElse(false)
+                                && (tdigwattTarget
+                                        == TdigwattObjectiveFacts
+                                            .PullTarget.DARK_DEAL
+                                    || tdigwattIdentity.get()
+                                        .printing()
+                                        == TdigwattObjectiveFacts
+                                            .Printing.CLASSIC
+                                        && tdigwattTarget
+                                            == TdigwattObjectiveFacts
+                                                .PullTarget
+                                                .CLOUD_CITY_OCCUPATION);
+
+                            if (tdigwattTarget
+                                    == TdigwattObjectiveFacts
+                                        .PullTarget.DARK_DEAL) {
+                                TdigwattObjectiveFactsReader
+                                    .readClassicFrontState(
+                                        game, playerId)
+                                    .ifPresent(before -> {
+                                        TdigwattObjectiveFacts
+                                            .ClassicState after =
+                                                new TdigwattObjectiveFacts
+                                                    .ClassicState(
+                                                        before
+                                                            .objective(),
+                                                        true,
+                                                        before
+                                                            .darkOccupiesBespinSystem(),
+                                                        before
+                                                            .darkOccupiesBespinCloudCity(),
+                                                        false,
+                                                        before
+                                                            .opponentControlsBespinSystem(),
+                                                        false);
+                                        applySharedPolicy(
+                                            action,
+                                            decisionId,
+                                            actionId,
+                                            "deploy-tdigwatt-flip",
+                                            TdigwattObjectiveScoringPolicy
+                                                .scoreDeploy(
+                                                    actionId,
+                                                    before,
+                                                    after,
+                                                    true)
+                                                .result());
+                                    });
+                            }
+                        }
+                    }
+
                     // === V22.7: CLOUD CITY OCCUPATION GUARD ===
                     // Cloud City Occupation self-cancels if we don't occupy Bespin system.
                     // Don't waste the deploy — block it until we actually occupy Bespin.
                     // Also check Dark Deal (V) which has similar Bespin requirements.
-                    if (cardTitleLower.contains("cloud city occupation") || cardTitleLower.contains("dark deal")) {
+                    if (!exactTdigwattEngineDeploy
+                            && (cardTitleLower.contains("cloud city occupation") || cardTitleLower.contains("dark deal"))) {
                         boolean weOccupyBespin = false;
                         try {
                             String pid = context.getPlayerId();

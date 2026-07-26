@@ -28,6 +28,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
 import com.gempukku.swccgo.ai.models.common.trace.NoOpTraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceCaptureFailure;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
@@ -143,6 +144,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
     private String lastPendingDeployType = null;  // Track pending deploy for confirmation
     private Integer pendingMovePhysicalCardId;
     private Integer pendingMoveActionSourcePermanentCardId;
+    private Integer pendingTdigwattLandoPermanentCardId;
+    private Integer pendingTdigwattActionSourcePermanentCardId;
+    private Integer pendingTdigwattDestinationPermanentCardId;
     private Integer pendingObjectiveDeployingCardId;
     private Integer pendingDeployActionSourcePermanentCardId;
 
@@ -1144,6 +1148,96 @@ public class TheChosenOneAi extends HeuristicAiBase {
         }
     }
 
+    private void rememberSelectedTdigwattLandoMove(
+            DecisionContext context,
+            EvaluatedAction selected,
+            AwaitingDecision parentDecision) {
+        if (context == null || selected == null
+                || context.getDecisionType() == null) {
+            return;
+        }
+        int index = context.getActionIds().indexOf(
+                selected.getActionId());
+        String selectedText = index >= 0
+                && index < context.getActionTexts().size()
+            ? context.getActionTexts().get(index) : "";
+        String normalized = selectedText != null
+            ? selectedText.trim()
+                .toLowerCase(Locale.ROOT) : "";
+
+        if ("MULTIPLE_CHOICE".equals(
+                    context.getDecisionType())
+                && context.getDecisionText() != null
+                && context.getDecisionText()
+                    .trim().toLowerCase(Locale.ROOT)
+                    .contains("choose regular move action")) {
+            if (!"move using landspeed"
+                    .equals(normalized)) {
+                clearPendingTdigwattLandoMove();
+            }
+            return;
+        }
+
+        if (!"CARD_ACTION_CHOICE".equals(
+                    context.getDecisionType())
+                || context.getPhase() != Phase.CONTROL
+                || !"have your lando make a regular move"
+                    .equals(normalized)
+                || currentGame == null
+                || context.getPlayerId() == null) {
+            return;
+        }
+
+        clearPendingTdigwattLandoMove();
+        PhysicalCard source =
+            AiActionSourceProvenance
+                .selectedActionSource(
+                    parentDecision,
+                    selected.getActionId());
+        if (source == null) {
+            return;
+        }
+        TdigwattObjectiveFactsReader
+            .readUsefulVirtualLandoLandspeedRoute(
+                currentGame,
+                context.getPlayerId(),
+                source,
+                TdigwattObjectiveFactsReader
+                    .Proof.PROVEN)
+            .ifPresent(route -> {
+                pendingTdigwattLandoPermanentCardId =
+                    route.landoPermanentCardId();
+                pendingTdigwattActionSourcePermanentCardId =
+                    source.getPermanentCardId();
+                pendingTdigwattDestinationPermanentCardId =
+                    route.destinationPermanentCardId();
+            });
+    }
+
+    private void clearPendingTdigwattLandoMove() {
+        pendingTdigwattLandoPermanentCardId = null;
+        pendingTdigwattActionSourcePermanentCardId = null;
+        pendingTdigwattDestinationPermanentCardId = null;
+    }
+
+    private PhysicalCard findCardByPermanentId(
+            GameState gameState,
+            Integer permanentCardId) {
+        if (gameState == null
+                || permanentCardId == null) {
+            return null;
+        }
+        for (PhysicalCard card
+                : gameState.getAllPermanentCards()) {
+            if (card != null
+                    && card.getPermanentCardId()
+                        == permanentCardId) {
+                return card;
+            }
+        }
+        return null;
+    }
+
     private void rememberSelectedLostPileDeployCard(
             DecisionContext context,
             EvaluatedAction selected) {
@@ -1271,6 +1365,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
         LOG.info("Evaluator decision: {} (score: {})", bestAction.getDisplayText(), bestAction.getScore());
         rememberSelectedMoveCard(
                 evalContext, bestAction, decision);
+        rememberSelectedTdigwattLandoMove(
+                evalContext, bestAction, decision);
         rememberSelectedDeployCard(
                 evalContext, bestAction, decision);
 
@@ -1360,6 +1456,51 @@ public class TheChosenOneAi extends HeuristicAiBase {
         );
         String promptLower = decision.getText() != null
             ? decision.getText().toLowerCase(Locale.ROOT) : "";
+        if (pendingTdigwattLandoPermanentCardId != null
+                || pendingTdigwattActionSourcePermanentCardId
+                    != null
+                || pendingTdigwattDestinationPermanentCardId
+                    != null) {
+            boolean regularMoveChoice =
+                "MULTIPLE_CHOICE".equals(
+                    decisionType.name())
+                && promptLower.contains(
+                    "choose regular move action");
+            boolean moveDestination =
+                "CARD_SELECTION".equals(
+                    decisionType.name())
+                && promptLower.contains(
+                    "choose where to move");
+            if (regularMoveChoice || moveDestination) {
+                evalContext.setExtra(
+                    TdigwattObjectiveFactsReader
+                        .LANDO_ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                    pendingTdigwattActionSourcePermanentCardId);
+                evalContext.setExtra(
+                    TdigwattObjectiveFactsReader
+                        .LANDO_MOVER_PERMANENT_CARD_ID_EXTRA,
+                    pendingTdigwattLandoPermanentCardId);
+                evalContext.setExtra(
+                    TdigwattObjectiveFactsReader
+                        .LANDO_DESTINATION_PERMANENT_CARD_ID_EXTRA,
+                    pendingTdigwattDestinationPermanentCardId);
+                PhysicalCard pendingLando =
+                    findCardByPermanentId(
+                        gameState,
+                        pendingTdigwattLandoPermanentCardId);
+                if (pendingLando != null) {
+                    evalContext.setExtra(
+                        MovePhysicalCardResolver
+                            .MOVER_CARD_ID_EXTRA,
+                        pendingLando.getCardId());
+                }
+                if (moveDestination) {
+                    clearPendingTdigwattLandoMove();
+                }
+            } else {
+                clearPendingTdigwattLandoMove();
+            }
+        }
         if (pendingMovePhysicalCardId != null
                 || pendingMoveActionSourcePermanentCardId != null) {
             if ("CARD_SELECTION".equals(
@@ -1543,6 +1684,53 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 }
             }
 
+            if ("MULTIPLE_CHOICE".equals(
+                    decisionType.name())
+                    && promptLower.contains(
+                        "choose regular move action")) {
+                String[] moveResults =
+                    params.get("results");
+                if (moveResults != null
+                        && moveResults.length > 0) {
+                    List<String> moveIds =
+                        new java.util.ArrayList<>();
+                    List<String> moveTexts =
+                        new java.util.ArrayList<>();
+                    for (int i = 0;
+                            i < moveResults.length; i++) {
+                        moveIds.add(
+                            String.valueOf(i));
+                        moveTexts.add(
+                            moveResults[i] != null
+                                ? moveResults[i] : "");
+                    }
+                    evalContext.setActionIds(moveIds);
+                    evalContext.setActionTexts(
+                        moveTexts);
+                }
+            }
+
+            if ("MULTIPLE_CHOICE".equals(
+                    decisionType.name())
+                    && "choose an option".equals(
+                        promptLower.trim())) {
+                String[] destinyResults =
+                    params.get("results");
+                if (destinyResults != null
+                        && destinyResults.length == 2
+                        && "Add 1".equals(
+                            destinyResults[0])
+                        && "Subtract 1".equals(
+                            destinyResults[1])) {
+                    evalContext.setActionIds(
+                        java.util.List.of("0", "1"));
+                    evalContext.setActionTexts(
+                        java.util.List.of(
+                            destinyResults[0],
+                            destinyResults[1]));
+                }
+            }
+
             // For CARD_ACTION_CHOICE: parse per-action cardId and blueprintId arrays
             // These tell us which card each action is associated with
             if ("CARD_ACTION_CHOICE".equals(decisionType.name())) {
@@ -1678,6 +1866,27 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 LOG.warn("V67ax DPS error (non-fatal, falling through to scoring): {}",
                     e.getMessage());
             }
+        }
+
+        Map<String, Integer> tdigwattDestinySources =
+            TdigwattObjectiveFactsReader
+                .readDestinyAdjustmentActionSources(
+                    decision, currentGame, playerId);
+        if (!tdigwattDestinySources.isEmpty()) {
+            evalContext.setExtra(
+                TdigwattObjectiveFactsReader
+                    .DESTINY_ADJUSTMENT_ACTION_SOURCES_EXTRA,
+                tdigwattDestinySources);
+        }
+        Map<String, Integer> tdigwattPullSources =
+            TdigwattObjectiveFactsReader
+                .readPullActionSources(
+                    decision, currentGame, playerId);
+        if (!tdigwattPullSources.isEmpty()) {
+            evalContext.setExtra(
+                TdigwattObjectiveFactsReader
+                    .PULL_ACTION_SOURCES_EXTRA,
+                tdigwattPullSources);
         }
 
         return evalContext;

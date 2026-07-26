@@ -123,7 +123,7 @@
  ],
  "otherObligations": [
   "Front modifier: your [Cloud City]/[Jabba's Palace]/[Special Edition] characters immune to Goo Nee Tay deploy-cost mods to Bespin locations [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012.java:95-101]",
-  "Back modifiers: Dark Deal immune to Surreptitious Glance; The Planet That It's Farthest From suspended if targeting Bespin; your drains not modifiable by opponent at Bespin locations you control with an Imperial; total battle destiny +2 with alien/Imperial pair in battle (+4 if the alien is an Ugnaught) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:47-60]",
+    "Back modifiers: Dark Deal immune to Surreptitious Glance; The Planet That It's Farthest From suspended if targeting Bespin; your drains not modifiable by opponent at Bespin locations you control with an Imperial; total battle destiny +2 with an alien/Imperial pair in battle. The Java ConditionEvaluator raises this to +4 when any of your Ugnaughts is in battle [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:47-60]",
   "Back: opponent loses 8 Force when you play All Too Easy (required before-trigger) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set109/dark/Card109_012_BACK.java:63-78]",
   "Strategic note (source-derived): maintaining Dark Deal on table and denying opponent control of Bespin system are the ONLY ongoing holds; Bespin blow-away is an external hard flip-back"
  ],
@@ -131,13 +131,53 @@
  "profile": {
   "exists": true,
   "loaderEnabled": false,
+  "runtimeHydration": "The generic objective-playbook profile remains disabled. Exact live 109_12 facts are read by TdigwattObjectiveFactsReader from the active physical objective, Dark Deal, Bespin system, and Bespin: Cloud City.",
   "profileGaps": [
-   "requiredCardsOnTable empty: Dark Deal on table IS a flip-law leg and is not listed",
-   "flipGateCardIds empty: no Dark Deal blueprint ids (e.g. 5_115/223_9 per WIP seed) recorded",
-   "flipGateSite null: true gates Bespin_system + Bespin_Cloud_City only present as objectiveNamedLocations",
-   "pullableCards empty despite the once-per-deploy-phase 4-way upload route",
-   "keyCharacterFilter null: back drain-protection actor Filters.Imperial unrepresented; weights empty"
+   "The disabled generic profile does not currently encode the conjunction of one card-on-table leg and two OCCUPY legs; the typed runtime preserves occupation rather than substituting control.",
+   "The disabled generic profile does not currently encode the three asymmetric back-side event triggers or the sticky-back rule.",
+   "The four-way front upload and back-side alien/Imperial/Ugnaught battle package remain source/card-engine facts outside the disabled generic profile."
   ]
  },
- "proofGate": "SOURCE_VERIFIED"
+ "missingStateCalculation": [
+  "TdigwattObjectiveFactsReader binds the active physical objective to canonical front blueprint 109_12, then reads Dark Deal on table plus Dark occupation of Bespin system and Bespin: Cloud City. TdigwattObjectivePolicy.classicFlipReady requires all three and front-side-up.",
+  "Occupation is read directly with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE. Contested Bespin and Cloud City still satisfy the front law; uncontested control is not substituted.",
+  "On the back, TdigwattObjectivePolicy.classicStableBack checks only Dark Deal just canceled, opponent control of Bespin system, and Bespin just blown away. Losing Dark occupation or non-cancellation removal of Dark Deal does not invent a flip-back."
+ ],
+ "flipPreservation": [
+  "The exact front objective upload parent receives +200 only with physical-source/action-id provenance and a complete source-legal Reserve candidate. Its exact single-card child receives +400; classic back-side uploads, Vader's Bounty, and cross-print candidates remain neutral or rejected.",
+  "Exact engine-offered Dark Deal and classic Cloud City Occupation deploy actions receive +900 only after exact print classification and proof that their source cancellation condition is not already met. Known immediate cancellation is hard-vetoed. When Dark Deal is the final missing front leg, the exact projection also receives the +1200 completion band. The card engine remains the authority for deployment legality.",
+  "Classic 109_12 grants no Lando movement action and receives no virtual Lando Force reserve. The persistent-board chain proves the real Dark Deal deploy spends no Force; the printed 3 is destiny, not a deploy cost.",
+  "On the back, BattleDecisionPolicy adds only the bounded source payoff after existing formation and predictor safety pass: +2 total battle destiny for the owned alien/Imperial pair, or +4 when one of your Ugnaughts participates.",
+  "Existing V21 Force-loss behavior treats Dark Deal as a required classic flip card and selects an ordinary legal loss instead in standalone and combined battle-damage prompts. Off-table Force loss does not alter occupation, so no false TDIGWATT board projection is made.",
+  "The pure retention policy proves the exact forfeit margins that would lose a front occupation leg or create opponent system control on the back. No new production caller for the TDIGWATT-specific scoreForfeit method is claimed by this record."
+ ],
+ "runtimeOwners": [
+  "TdigwattObjectiveFacts, TdigwattObjectiveFactsReader, and TdigwattObjectivePolicy own exact physical identity, front/back source law, printing-specific pull legality, battle facts, and retention margins.",
+  "TdigwattObjectiveScoringPolicy owns bounded semantic contributions and hard-veto boundaries. Mirrored ActionTextEvaluator and CardSelectionEvaluator own the exact parent and child upload decisions; mirrored DeployEvaluator owns exact engine deploy and final-Dark-Deal completion scoring.",
+  "BattleDecisionPolicy owns the safety-gated back-side battle payoff. ObjectiveAnalyzer plus mirrored CardSelectionEvaluator retain the existing V21 required-card Force-loss protection.",
+  "Rando and Chosen One adapters consume the same shared TDIGWATT facts and policy; parity tests compare their scores, reasons, provenance, and selected action ids."
+ ],
+ "contradictions": [
+  "Dark Deal is a mandatory classic flip leg; Cloud City Occupation is an engine card and upload target, not part of the objective's printed flip conjunction.",
+  "Occupy is not control. An opponent at either required location does not prevent the classic front flip while Dark still has presence there.",
+  "Dark Deal's printed 3 is destiny. The native deploy chain proves the deploy itself does not spend three Force.",
+  "Losing occupation after flip is not a flip-back trigger. Dark Deal must be canceled, the opponent must control Bespin system, or Bespin must be blown away.",
+  "Pure deploy/retention arithmetic is not itself gameplay proof. This record names the exact production adapters that consume each live rule and leaves unwired forfeit projection as an explicit boundary."
+ ],
+ "testEvidence": {
+  "positiveAndNegative": [
+   "TdigwattObjectiveFactsTest, TdigwattObjectivePolicyTest, TdigwattObjectiveFactsReaderTest, and TdigwattObjectiveScoringPolicyTest lock exact physical identity, all three front legs, contested occupation, sticky-back boundaries, classic pull isolation, deploy bands, safe battle payoff, and loss/forfeit margins.",
+   "TdigwattObjectiveAiSourceContractTest loads the unchanged 109_12 card sources for both bot facades and proves the classic law is not merged with virtual count semantics.",
+      "TdigwattForceLossBehaviorTest proves both mirrored selectors preserve classic Reserve Deck Dark Deal as REQUIRED/CRITICAL when an ordinary legal loss exists, while emitting no fabricated TDIGWATT board-state projection.",
+      "TdigwattBattleDecisionBehaviorTest flips the real objective, reads the exact alien/Imperial participants, and proves the shared BattleDecisionPolicy adds the +80 objective payoff only when the predictor and formation gates are safe."
+  ],
+  "candidateChoice": [
+   "TdigwattObjectivePersistentBoardChainTest offers the real front upload beside Pass, proves no-arg evaluators and both public bots choose its exact physical parent and temp child, executes the unchanged source effect, and moves Dark Deal from Reserve Deck to hand.",
+   "The same persistent-board test offers the real legal Dark Deal deploy beside Pass after both occupations exist. Both bot paths choose the exact action and destination, retain card provenance, and let the native objective trigger flip."
+  ],
+  "sequence": "ThisDealIsGettingWorseObjectiveEngineContractTest uses unchanged card and engine code to execute canonical setup, prove every positive and missing front leg, prove contested occupation, deploy Dark Deal for the real flip, preserve the sticky back after non-cancellation removal and occupation loss, then exercise all three native flip-back routes: Dark Deal cancellation, opponent control of Bespin system, and an actual Commence Primary Ignition Bespin blow-away.",
+  "parity": "Source facts, pull parent/child, exact Dark Deal deploy, Force-loss choice, and shared battle policy are covered through identical Rando and Chosen One adapters.",
+  "replay": "No live replay, sealed-package, or production-deployment claim. Deterministic unchanged-engine scenarios provide FLIP_OBSERVED and exercise every source-defined flip-back trigger."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }

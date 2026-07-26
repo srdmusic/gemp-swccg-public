@@ -761,6 +761,28 @@ public final class BattleDecisionPolicy {
                                             reserveDeck,
                                             ourPower,
                                             theirPower)));
+                                    var tdigwattBattle =
+                                        TdigwattObjectiveFactsReader
+                                        .readBackSideBattleFactsAtLocation(
+                                            game, playerId,
+                                            targetLocation);
+                                    if (tdigwattBattle.isPresent()) {
+                                        action.apply(
+                                            TdigwattObjectiveScoringPolicy
+                                                .scoreBackSideBattle(
+                                                    new TdigwattObjectiveScoringPolicy
+                                                        .BattleScoringFacts(
+                                                            actionId,
+                                                            tdigwattBattle.get(),
+                                                            true,
+                                                            specificBattle
+                                                                .favorable()
+                                                                && !formationSafetyVeto
+                                                                && predictorSafe,
+                                                            formationSafetyVeto
+                                                                || !predictorSafe))
+                                                .result());
+                                    }
                                     if (captureKind != null) {
                                         action.apply(
                                             CaptureObjectivePolicy
@@ -890,6 +912,26 @@ public final class BattleDecisionPolicy {
                                         } catch (Exception ignored) {
                                             // Unknown cost remains fail-open.
                                         }
+                                    }
+                                    var tdigwattBattle =
+                                        TdigwattObjectiveFactsReader
+                                        .readBackSideBattleFactsAtLocation(
+                                            game, playerId,
+                                            targetLocation);
+                                    if (tdigwattBattle.isPresent()) {
+                                        action.apply(
+                                            TdigwattObjectiveScoringPolicy
+                                                .scoreBackSideBattle(
+                                                    new TdigwattObjectiveScoringPolicy
+                                                        .BattleScoringFacts(
+                                                            actionId,
+                                                            tdigwattBattle.get(),
+                                                            true,
+                                                            !formationSafetyVeto
+                                                                && powerZeroPredictorSafe,
+                                                            formationSafetyVeto
+                                                                || !powerZeroPredictorSafe))
+                                                .result());
                                     }
                                     if (captureKind != null) {
                                         action.apply(

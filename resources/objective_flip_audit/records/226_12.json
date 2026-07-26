@@ -76,7 +76,7 @@
     "Filters.Cloud_City_battleground_site (required start deploy)",
     "Filters.and(Icon.CLOUD_CITY, Filters.Im_Sorry) (required start deploy)",
     "Filters.or(Filters.Admirals_Order, Filters.and(Icon.DEATH_STAR_II, Filters.Executor)) (owner deploy ban, both sides, remainder of game)",
-    "Filters.and(Filters.your(playerId), Filters.Lando, Filters.movableAsRegularMove(...)) (control-phase free move, both sides)",
+    "Filters.and(Filters.your(playerId), Filters.Lando, Filters.movableAsRegularMove(...)) (source-granted control-phase regular move on both sides; current engine movement cost still applies)",
     "Filters.or(Filters.Dark_Deal, Filters.Vaders_Bounty, Filters.and(Icon.SPECIAL_EDITION, Filters.Bespin_system)) (once-per-turn upload, both sides)",
     "Back: Filters.or(Filters.Sense, Filters.Alter) (play ban, both players); Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.Lando, Filters.Lobot))) (drain-bonus protection); Filters.Vader at Filters.Bespin_location (Admiral's Orders text cancel); Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.participatingInBattle))) (total battle destiny +2); Filters.Lobot participatingInBattle (2x destiny tweak)"
   ],
@@ -99,13 +99,55 @@
   "profile": {
     "exists": true,
     "loaderEnabled": false,
+    "runtimeHydration": "The generic objective-playbook profile remains disabled. Exact live 226_12 facts are read by TdigwattObjectiveFactsReader from the active physical objective, both players' controlled Bespin-location counts, and exact source actions.",
     "profileGaps": [
-      "flipGateSite is null: flip law counts Filters.Bespin_location (3 controlled); 'Bespin location' appears in objectiveNamedLocations but nothing marks it as the flip gate, and no count is encoded.",
-      "Opponent-side constraint (opponent < 3 Bespin locations to flip; opponent > you flips back) is not represented; the comparative flip-back semantics have no field.",
-      "pullableCards empty: the once-per-turn upload targets (Dark Deal, Vader's Bounty, [Special Edition] Bespin) are absent; only [SE] Bespin (223_8) appears, and only as a named location.",
-      "requiredCardsOnTable empty: start deploys (Cloud City battleground site, [Cloud City] I'm Sorry) are not represented.",
-      "keyCharacterFilter is null: Lando/Lobot power the back's toolkit (move, drain-bonus protection, destiny tweak) and Vader gates the Admiral's Orders cancel; none represented (arguably acceptable since the flip law itself is pure location control)."
+      "The disabled generic profile does not currently encode Dark controls at least 3 while Light controls fewer than 3, or the comparative back law Light strictly greater than Dark.",
+      "The disabled generic profile does not currently encode the exact [Special Edition] Bespin print gate, the paid source-granted Lando landspeed route, or any-owner Lobot participation.",
+      "Required setup deploys and the back-side Lando/Lobot/Vader battle toolkit remain source/card-engine facts outside the disabled generic profile."
     ]
   },
-  "proofGate": "SOURCE_VERIFIED"
+  "missingStateCalculation": [
+    "TdigwattObjectiveFactsReader binds the active physical objective to canonical front blueprint 226_12 and counts each side's controlled top Bespin locations with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+    "TdigwattObjectivePolicy.virtualFlipReady requires Dark control of at least three and Light control of fewer than three. Two Dark controls are incomplete; three Light controls block even when Dark also has three.",
+    "TdigwattObjectivePolicy.virtualStableBack uses the exact Dark-minus-Light cushion. Every tie is stable; only Light strictly ahead is a flip-back state."
+  ],
+  "flipPreservation": [
+    "The exact front-or-back objective upload parent receives +200 only with physical-source/action-id provenance and a complete source-legal Reserve candidate. Its exact child receives +400. Dark Deal and Vader's Bounty are legal; Bespin is legal only for the [Special Edition] print, proven as 223_8 rather than Cloud City print 5_164.",
+    "The source-granted Lando parent and exact safe destination each receive +600 only for the same physical 226_12, a legal modifier-aware landspeed regular-move route, a useful control advance or protection, sufficient Force, and a formation-safe result. Other regular-move mechanisms remain outside this typed route.",
+    "Control spending that would cross the exact positive Lando move reserve is hard-vetoed. The Battle Order behavior test offers a three-Force drain with exactly three Force, both bots preserve the one-Force Lando route, pay its native cost, reach the third control, and fire the real flip.",
+    "On the back, BattleDecisionPolicy adds only the bounded safe payoff for the owned alien/Imperial pair and/or owned Lando. For the proven native BATTLE_DESTINY path, exact optional-response provenance makes the destiny parent beat Pass, adds 1 to Dark's live draw, subtracts 1 from Light's live draw, rejects the harmful direction, and permits two uses when any participating Lobot is present. Other DestinyType values remain neutral.",
+    "Existing V21 behavior does not call Dark Deal a virtual flip requirement. It protects virtual Dark Deal only as a pullable card in the combined battle-damage route; standalone Reserve Deck loss remains neutral. Off-table Force loss does not alter either control count.",
+    "The exact CardSelection destination caller now consumes a conservative virtual character-deploy control projection and applies +1200 when the offered destination completes the third-control front law. The pure policy separately proves advance and stable-back deploy bands plus exact forfeit margins. No TDIGWATT-specific scoreForfeit production caller is claimed here."
+  ],
+  "runtimeOwners": [
+    "TdigwattObjectiveFacts, TdigwattObjectiveFactsReader, and TdigwattObjectivePolicy own exact physical identity, comparative control counts, conservative character-deploy control projections, print-isolated pull legality, the typed Lando landspeed route facts, battle/destiny facts, and retention margins.",
+    "TdigwattObjectiveScoringPolicy owns bounded semantic contributions and hard-veto boundaries. Mirrored ActionTextEvaluator and CardSelectionEvaluator own exact upload parent/child, virtual deploy completion, Lando parent/destination, control-phase Force reserve, and battle-destiny parent/direction decisions.",
+    "RandoCalAi and TheChosenOneAi retain the exact Lando mover, objective source, and destination across nested movement decisions. Their decision contexts expose exact pull and destiny source-action provenance, and the child evaluators re-check the active top GameTextAction. BattleDecisionPolicy owns the safety-gated back-side battle payoff.",
+    "ObjectiveAnalyzer plus mirrored CardSelectionEvaluator retain existing V21 pullable-card Force-loss behavior. Rando and Chosen One consume the same shared facts and policies."
+  ],
+  "contradictions": [
+    "Virtual 226_12 does not require Dark Deal, Bespin system occupation, or Bespin: Cloud City occupation to flip. Its law is controlled-location counts only.",
+    "The front permits Light to control zero, one, or two Bespin locations. Three blocks. The back uses a different strict comparison and remains stable at every tie.",
+    "The upload requires [Special Edition] Bespin. Card223_008 qualifies; Cloud City print Card5_164 does not.",
+    "The Lando action changes timing, not cost. It is an ordinary regular move with live movement modifiers and is not free.",
+    "Any participating Lobot doubles the Lando adjustment ceiling; ownership is intentionally unscoped by source. Lando still must be yours and participating.",
+    "Pure forfeit arithmetic is not gameplay proof without a production caller. This record leaves that typed route as an explicit wiring gap rather than converting an engine-contract test into an AI claim."
+  ],
+  "testEvidence": {
+    "positiveAndNegative": [
+      "TdigwattObjectiveFactsTest, TdigwattObjectivePolicyTest, TdigwattObjectiveFactsReaderTest, and TdigwattObjectiveScoringPolicyTest lock exact physical identity, all front/back count boundaries, every tie, print-isolated pulls, conservative deploy-control projection, modifier-aware Lando Force reserve, battle payoffs, native battle-destiny direction, safety boundaries, and loss/forfeit margins.",
+      "TdigwattObjectiveAiSourceContractTest loads the unchanged 226_12 sources for both bot facades and proves virtual count semantics never inherit the classic Dark Deal/occupation law.",
+      "TdigwattForceLossBehaviorTest proves virtual Dark Deal is PULLABLE rather than REQUIRED, is protected in the combined battle-damage route, stays neutral in standalone Reserve loss, and creates no false control-count projection."
+    ],
+    "candidateChoice": [
+      "TdigwattObjectivePersistentBoardChainTest offers the real upload and temp-order children. Both public bots choose exact [Special Edition] Bespin 223_8 while the visible Cloud City print 5_164 remains nonselectable and in Reserve Deck.",
+      "The persistent-board and TdigwattForceBudgetBehavior tests offer the real source-granted Lando parent and nested landspeed destination beside Pass and competing Control drains. No-arg and public Rando/Chosen One choose the exact route, preserve the required Force, pay one, retain the other controllers, reach three Dark controls, and fire the native flip.",
+      "TdigwattDestinyAdjustmentBehaviorTest runs a real flipped battle with Lando and Lobot. Both bot paths choose the exact optional parent, Add 1 for Dark and Subtract 1 for Light, and the unchanged engine changes prepared destinies 3 to 4 and 5 to 4.",
+      "TdigwattVirtualDeployBehaviorTest offers both public bots competing legal character deploys, legal Dark Deal (V), and held-site destinations. Both choose Darth Maul, apply the exact TDIGWATT +1200 completion rule only to the empty third Bespin site, spend the native eight-Force deploy cost, reach three Dark controls against zero Light controls, and fire the unchanged objective's real flip."
+    ],
+    "sequence": "VirtualThisDealIsGettingWorseObjectiveEngineContractTest uses unchanged card and engine code to execute both required setup deploys, prove paid Lando moves on both sides of the objective, wait at two controls, flip at three against zero, one, or two Light controls, refuse a three-to-three front flip, keep the back through multiple ties, and flip back only when Light becomes strictly ahead.",
+    "parity": "Exact source facts, pull parent/child, Lando parent/destination, Force-budget veto, back battle payoff, destiny parent/direction, and Force-loss classification are covered through matching Rando and Chosen One paths.",
+    "replay": "No live replay, sealed-package, or production-deployment claim. Deterministic unchanged-engine scenarios provide FLIP_OBSERVED and exercise the source-defined flip-back trigger."
+  },
+  "proofGate": "FLIP_OBSERVED"
 }
