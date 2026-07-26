@@ -87,7 +87,7 @@ public class Card501_207 extends AbstractNormalEffect {
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                     && GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Anakin's Lightsaber from Lost Pile");
             // Update usage limit(s)
             action.appendUsage(
