@@ -17,7 +17,6 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -65,11 +64,10 @@ public class Card501_201 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(playerId);
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter locationFilter = Filters.or(Filters.battleground, Filters.and(Filters.opponents(self), Filters.location));
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupies(game, playerId, 4, locationFilter)) {
+                && GameConditions.occupies(game, playerId, 3, Filters.battleground)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
             // Update usage limit(s)
@@ -89,12 +87,11 @@ public class Card501_201 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(playerId);
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter locationFilter = Filters.or(Filters.battleground, Filters.and(Filters.opponents(self), Filters.location));
 
         // Check condition(s)
         if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupies(game, playerId, 4, locationFilter)) {
+                && GameConditions.occupies(game, playerId, 3, Filters.battleground)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
