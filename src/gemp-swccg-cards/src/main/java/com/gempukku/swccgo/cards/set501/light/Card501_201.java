@@ -11,12 +11,12 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -25,7 +25,6 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ResetPersonalForceGenerationModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -39,7 +38,7 @@ public class Card501_201 extends AbstractNormalEffect {
     public Card501_201() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Commando_Training, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Han's Rebel strike team on the forest moon of Endor was highly trained in the use of blasters and explosives.");
-        setGameText("Deploy on table. Your personal Force generation = 2. You initiate battles for free. During your control phase, if you occupy four battlegrounds and/or opponent's locations, opponent loses 1 Force. You may not deploy characters except Rebels or droids. (Immune to Alter.)");
+        setGameText("If your [Endor], [Set 3], or [Set 9] objective on table, deploy on table. Your personal Force generation = 2. During your control phase, if you occupy three battlegrounds, opponent loses 1 Force. Where you have two Rebels, you initiate battles for free. [Immune to Alter.]");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_27);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
@@ -47,13 +46,16 @@ public class Card501_201 extends AbstractNormalEffect {
     }
 
     @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.or(Icon.ENDOR, Icon.VIRTUAL_SET_3, Icon.VIRTUAL_SET_9), Filters.Objective));
+    }
+
+    @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         String playerId = self.getOwner();
         modifiers.add(new ResetPersonalForceGenerationModifier(self, 2, self.getOwner()));
-        modifiers.add(new InitiateBattlesForFreeModifier(self, playerId));
-        Filter characterFilter = Filters.and(Filters.character, Filters.not(Filters.or(Filters.Rebel, Filters.droid)));
-        modifiers.add(new MayNotDeployModifier(self, characterFilter, playerId));
+        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.occupiesWith(playerId, self, Filters.and(Filters.Rebel, Filters.with(self, Filters.Rebel))), playerId));
         return modifiers;
     }
 
@@ -62,11 +64,10 @@ public class Card501_201 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(playerId);
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter locationFilter = Filters.or(Filters.battleground, Filters.and(Filters.opponents(self), Filters.location));
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupies(game, playerId, 4, locationFilter)) {
+                && GameConditions.occupies(game, playerId, 3, Filters.battleground)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
             // Update usage limit(s)
@@ -86,12 +87,11 @@ public class Card501_201 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(playerId);
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter locationFilter = Filters.or(Filters.battleground, Filters.and(Filters.opponents(self), Filters.location));
 
         // Check condition(s)
         if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupies(game, playerId, 4, locationFilter)) {
+                && GameConditions.occupies(game, playerId, 3, Filters.battleground)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
