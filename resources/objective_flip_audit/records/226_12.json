@@ -147,7 +147,7 @@
     ],
     "sequence": "VirtualThisDealIsGettingWorseObjectiveEngineContractTest uses unchanged card and engine code to execute both required setup deploys, prove paid Lando moves on both sides of the objective, wait at two controls, flip at three against zero, one, or two Light controls, refuse a three-to-three front flip, keep the back through multiple ties, and flip back only when Light becomes strictly ahead.",
     "parity": "Exact source facts, pull parent/child, Lando parent/destination, Force-budget veto, back battle payoff, destiny parent/direction, and Force-loss classification are covered through matching Rando and Chosen One paths.",
-    "replay": "No live replay, sealed-package, or production-deployment claim. Deterministic unchanged-engine scenarios provide FLIP_OBSERVED and exercise the source-defined flip-back trigger."
+    "replay": "Exact TDIGWATT commit 7f2b29067 passed the isolated 2723/0/0/26 reactor and packaged as web.jar 453000db00392ec17637613f81ddb069a8e8f27f8ec0fe3a9ef39a79c0de2ae8. Compatibility aggregate 93f0fd2c0 passed 2735/0/0/26 and deployed after a zero-table freeze as byte-matched web.jar 8c1633ae5a4e32d8320ebdf055ee4bfb42c243516786b2440d6087d2e46fe6de on a fresh healthy JVM. No live replay or post-deployment TDIGWATT branch firing is claimed. Deterministic unchanged-engine scenarios provide FLIP_OBSERVED and exercise the source-defined flip-back trigger."
   },
   "proofGate": "FLIP_OBSERVED"
 }
