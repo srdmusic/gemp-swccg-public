@@ -26,7 +26,6 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ResetPersonalForceGenerationModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -58,8 +57,6 @@ public class Card501_201 extends AbstractNormalEffect {
         String playerId = self.getOwner();
         modifiers.add(new ResetPersonalForceGenerationModifier(self, 2, self.getOwner()));
         modifiers.add(new InitiateBattlesForFreeModifier(self, playerId));
-        Filter characterFilter = Filters.and(Filters.character, Filters.not(Filters.or(Filters.Rebel, Filters.droid)));
-        modifiers.add(new MayNotDeployModifier(self, characterFilter, playerId));
         return modifiers;
     }
 
