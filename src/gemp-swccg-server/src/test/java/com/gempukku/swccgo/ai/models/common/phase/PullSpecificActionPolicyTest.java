@@ -400,6 +400,22 @@ public class PullSpecificActionPolicyTest {
                         "V29.7 PULL FIRST: Retrieve admiral/general into hand before deploying!"));
     }
 
+    @Test
+    public void veersHothUploadVetoesOnlyExactEmptySearch() {
+        assertResult(PullSpecificActionPolicy.scoreVeersHothUpload(
+                new PullSpecificActionFacts.VeersHothUpload(
+                        ACTION_ID, true, false)),
+                expected("V29.7-veers-hoth-upload-empty",
+                        TraceOutputKind.VETO, -2000.0f,
+                        "V29.7 VEERS: No Blizzard 1 or 6th Marker in Reserve Deck, so the reveal would fail"));
+        assertEmpty(PullSpecificActionPolicy.scoreVeersHothUpload(
+                new PullSpecificActionFacts.VeersHothUpload(
+                        ACTION_ID, true, true)));
+        assertEmpty(PullSpecificActionPolicy.scoreVeersHothUpload(
+                new PullSpecificActionFacts.VeersHothUpload(
+                        ACTION_ID, false, false)));
+    }
+
     private static PullSpecificActionFacts.IayfReserve iayf(
             boolean vaderOnTable, boolean reserveMode, boolean lostMode,
             boolean saberInReserve, boolean saberInLost,

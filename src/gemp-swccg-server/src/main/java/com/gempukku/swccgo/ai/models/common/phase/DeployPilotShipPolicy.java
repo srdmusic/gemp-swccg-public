@@ -273,13 +273,19 @@ public final class DeployPilotShipPolicy {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
 
-        if (!facts.character()) {
+        if (!facts.character() && !facts.attachedDeployment()) {
             addAttach(operations, facts.actionId(), "V29-cargo",
                     TraceOutputKind.VETO, -300.0f,
                     "⚠️ DEPLOY TO CARGO BAY = 0 POWER!");
             return new Evaluation(
                     new PolicyResult("DEPLOY_SHIP_BOARDING_POLICY", operations),
                     AdapterStep.CONTINUE_CANDIDATE, null);
+        }
+
+        if (facts.attachedDeployment()) {
+            return new Evaluation(
+                    new PolicyResult("DEPLOY_SHIP_BOARDING_POLICY", operations),
+                    AdapterStep.FALL_THROUGH, null);
         }
 
         if (facts.referencedShipMatchesDestination()) {
@@ -502,7 +508,8 @@ public final class DeployPilotShipPolicy {
     }
 
     public record ShipBoardingFacts(
-            String actionId, boolean character, String matchedShipName,
+            String actionId, boolean character, boolean attachedDeployment,
+            String matchedShipName,
             boolean referencedShipMatchesDestination,
             boolean executorDestination, boolean addsForceDrain) {
         public ShipBoardingFacts {

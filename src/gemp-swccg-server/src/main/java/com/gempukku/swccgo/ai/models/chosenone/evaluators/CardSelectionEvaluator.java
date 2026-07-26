@@ -1308,6 +1308,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         boolean isVehicle = false;
         boolean isCharacter = false;
         boolean isWeapon = false;  // Weapon deployment (deploys ON a character)
+        boolean isAttachedDeployment = false;
         String deployingCardName = "card";
 
         // V29.3: Only use decision text for weapon detection ("as attached" is reliable).
@@ -1317,9 +1318,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         String decisionText = context.getDecisionText() != null ? context.getDecisionText().toLowerCase() : "";
 
         if (decisionText.contains("as attached")) {
-            isWeapon = true;
-            deployingCardName = "weapon";
-            logger.info("Detected WEAPON deployment (as attached)");
+            isAttachedDeployment = true;
+            deployingCardName = "attached card";
+            logger.info("Detected attached-card deployment");
         }
 
         // =====================================================
@@ -1432,6 +1433,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 } else if (detectedCategory == CardCategory.WEAPON) {
                     isWeapon = true;
                     deployingCardName = detectedName != null ? detectedName : "weapon";
+                } else if (isAttachedDeployment) {
+                    deployingCardName = detectedName != null ? detectedName : "attached card";
                 }
             } else {
                 logger.warn("V29.3 CARD TYPE: ALL methods failed for blueprint {} — type unknown!", deployingBlueprintId);
@@ -1498,7 +1501,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         SwccgCardBlueprint boardingDeployBlueprint =
                 objectiveProgressDeployingCard != null
                         ? objectiveProgressDeployingCard.getBlueprint()
-                        : getBlueprintFromId(context, deployingBlueprintId);
+                        : findDeployingBlueprint(
+                            context, gameState, playerId, deployingBlueprintId);
         boolean boardingPilot = boardingDeployBlueprint != null
                 && boardingDeployBlueprint.getCardCategory() == CardCategory.CHARACTER
                 && boardingDeployBlueprint.hasIcon(com.gempukku.swccgo.common.Icon.PILOT);
@@ -1507,7 +1511,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 ? boardingDeployBlueprint.getAbility() : null;
         boolean boardingAssetDestinationOffered = false;
         if (gameState != null) {
-            for (String destinationId : context.getCardIds()) {
+            java.util.List<String> boardingDestinationIds = context.getCardIds();
+            java.util.List<Boolean> boardingSelectable = context.getSelectable();
+            for (int destinationIndex = 0;
+                    destinationIndex < boardingDestinationIds.size();
+                    destinationIndex++) {
+                if (boardingSelectable != null
+                        && destinationIndex < boardingSelectable.size()
+                        && !Boolean.TRUE.equals(
+                            boardingSelectable.get(destinationIndex))) {
+                    continue;
+                }
+                String destinationId =
+                        boardingDestinationIds.get(destinationIndex);
                 try {
                     PhysicalCard destination =
                             gameState.findCardById(Integer.parseInt(destinationId));
@@ -1593,6 +1609,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     location);
                         CardCategory destinationCategory = blueprint != null
                                 ? blueprint.getCardCategory() : null;
+                        boolean destinationIsAsset =
+                                destinationCategory == CardCategory.VEHICLE
+                                || destinationCategory == CardCategory.STARSHIP;
                         applyDeployPilotPolicy(action,
                                 DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
                                         new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
@@ -2178,7 +2197,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             DeployPilotShipPolicy.Evaluation boardingEvaluation =
                                 DeployPilotShipPolicy.evaluateShipBoarding(
                                     new DeployPilotShipPolicy.ShipBoardingFacts(
-                                        action.getActionId(), isCharacter, matchedShipName,
+                                        action.getActionId(), isCharacter,
+                                        isAttachedDeployment, matchedShipName,
                                         gameTextReferencesThisShip, isExecutor, addsForceDrain));
                             applyDeployPilotPolicy(action, boardingEvaluation.result());
 
@@ -2195,7 +2215,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 } else {
                                     logger.info("V29 ABOARD: {} boarding {} (+50)", deployingCardName, title);
                                 }
-                            } else {
+                            } else if (!isAttachedDeployment) {
                                 logger.warn("⚠️ BLOCKING deploy of {} into cargo bay of {} - ships in cargo contribute 0 power!",
                                     deployingCardName, title);
                             }
@@ -2329,6 +2349,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             } catch (Exception e) {
                                 logger.debug("V25 HUNT DOWN: Error checking lightsaber deploy: {}", e.getMessage());
                             }
+                        }
+
+                        applyInvasionPilotDestination(
+                            context, action, deployingBlueprintId, location);
+                        if (destinationIsAsset) {
+                            actions.add(action);
+                            continue;
                         }
 
                         // =====================================================
@@ -3085,77 +3112,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         v212EvazanCsLedger.register(
                             DeploySitingPolicy.evaluateDestination(v212EvazanCsFacts));
                         PolicyOperationAdapter.apply(action, v212EvazanCsLedger);
-
-                        // === V121 (Steve, 2026-05-22): V86 NEIMOIDIAN-PILOT MIRROR (CardSelection) ===
-                        // V86 in DeployEvaluator only fires when actionText contains "aboard",
-                        // " to ", or " on " (V86.1 identifiable-target guard). Generic "Deploy"
-                        // action splits the deploy into action + location-pick; V86 silently
-                        // skips the action step and the location-pick step has no V86 mirror.
-                        // Result: Neimoidian pilots can still land on ground sites when the
-                        // engine routes via "Deploy" → location-pick.
-                        // V121 mirrors: under Invasion objective, if the deploying card is a
-                        // Neimoidian pilot AND a friendly capital ship is on the table, penalize
-                        // any candidate that ISN'T the capital ship.
-                        if (deployingBlueprintId != null && title != null
-                                && gameState != null && context.getGame() != null) {
-                            try {
-                                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v121Obj =
-                                    context.getObjectiveAnalyzer();
-                                // V121 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isInvasion().
-                                if (v121Obj != null && v121Obj.isAnalyzed() && v121Obj.isInvasion()) {
-                                    SwccgCardBlueprint v121DepBp = getBlueprintFromId(context, deployingBlueprintId);
-                                    if (v121DepBp != null) {
-                                        // Need a temp PhysicalCard view for Filters — fall back to
-                                        // blueprint-level Species/Icon checks if no physical card yet.
-                                        boolean v121IsNeimoidian = false;
-                                        boolean v121IsPilot = false;
-                                        try {
-                                            v121IsNeimoidian = v121DepBp.getSpecies() != null
-                                                && v121DepBp.getSpecies() == com.gempukku.swccgo.common.Species.NEIMOIDIAN;
-                                            v121IsPilot = v121DepBp.hasIcon(com.gempukku.swccgo.common.Icon.PILOT);
-                                        } catch (Exception ignore) { /* false */ }
-                                        if (v121IsNeimoidian && v121IsPilot) {
-                                            String v121TitleLower = title.toLowerCase(java.util.Locale.ROOT);
-                                            // Find a friendly capital ship title
-                                            PhysicalCard v121CapShip = null;
-                                            for (PhysicalCard pc : gameState.getAllPermanentCards()) {
-                                                if (pc == null || pc.getBlueprint() == null) continue;
-                                                if (!context.getPlayerId().equals(pc.getOwner())) continue;
-                                                try {
-                                                    if (com.gempukku.swccgo.filters.Filters.capital_starship.accepts(
-                                                            gameState, context.getGame().getModifiersQuerying(), pc)) {
-                                                        v121CapShip = pc;
-                                                        break;
-                                                    }
-                                                } catch (Exception ignore) { /* skip */ }
-                                            }
-                                            if (v121CapShip != null) {
-                                                String v121CapName = v121CapShip.getTitle() != null
-                                                    ? v121CapShip.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                                                boolean v213CorrectCapitalDestination =
-                                                    v121TitleLower.contains(v121CapName);
-                                                PolicyContributionLedger v213ObjectivePilotLedger =
-                                                    new PolicyContributionLedger(
-                                                        "deploy-pilot-v121-" + action.getActionId());
-                                                v213ObjectivePilotLedger.register(
-                                                    DeployPilotShipPolicy.evaluateObjectivePilotDestination(
-                                                        new DeployPilotShipPolicy.ObjectivePilotDestinationFacts(
-                                                            action.getActionId(), true,
-                                                            v121CapShip.getTitle(), title,
-                                                            v213CorrectCapitalDestination)));
-                                                PolicyOperationAdapter.apply(action, v213ObjectivePilotLedger);
-                                                if (!v213CorrectCapitalDestination) {
-                                                    logger.warn("V121 INVASION CS: blocking Neimoidian pilot → {} (not aboard {}) -1500",
-                                                        title, v121CapShip.getTitle());
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (Exception e) {
-                                logger.debug("V121 INVASION CS error: {}", e.getMessage());
-                            }
-                        }
 
                         applyBhbmForceDripUrgency(
                             context, action,
@@ -10153,6 +10109,88 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             match = candidate;
         }
         return match;
+    }
+
+    private void applyInvasionPilotDestination(
+            DecisionContext context, EvaluatedAction action,
+            String deployingBlueprintId, PhysicalCard destination) {
+        if (context == null || action == null || deployingBlueprintId == null
+                || destination == null || destination.getTitle() == null
+                || context.getGameState() == null || context.getGame() == null) {
+            return;
+        }
+        try {
+            com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer analyzer =
+                    context.getObjectiveAnalyzer();
+            if (analyzer == null || !analyzer.isAnalyzed()
+                    || !analyzer.isInvasion()) {
+                return;
+            }
+            SwccgCardBlueprint deployingBlueprint =
+                    findDeployingBlueprint(
+                        context, context.getGameState(),
+                        context.getPlayerId(), deployingBlueprintId);
+            if (deployingBlueprint == null
+                    || deployingBlueprint.getSpecies()
+                        != com.gempukku.swccgo.common.Species.NEIMOIDIAN
+                    || !deployingBlueprint.hasIcon(
+                        com.gempukku.swccgo.common.Icon.PILOT)) {
+                return;
+            }
+            PhysicalCard capitalShip = null;
+            for (PhysicalCard card : context.getGameState()
+                    .getAllPermanentCards()) {
+                if (card == null || card.getBlueprint() == null
+                        || !context.getPlayerId().equals(card.getOwner())) {
+                    continue;
+                }
+                if (com.gempukku.swccgo.filters.Filters.capital_starship.accepts(
+                        context.getGameState(),
+                        context.getGame().getModifiersQuerying(), card)) {
+                    capitalShip = card;
+                    break;
+                }
+            }
+            if (capitalShip == null) {
+                return;
+            }
+            String capitalTitle = capitalShip.getTitle() != null
+                    ? capitalShip.getTitle() : "";
+            boolean correctDestination =
+                    destination.getTitle().toLowerCase(java.util.Locale.ROOT)
+                        .contains(capitalTitle.toLowerCase(java.util.Locale.ROOT));
+            applyDeployPilotPolicy(
+                action,
+                DeployPilotShipPolicy.evaluateObjectivePilotDestination(
+                    new DeployPilotShipPolicy.ObjectivePilotDestinationFacts(
+                        action.getActionId(), true, capitalTitle,
+                        destination.getTitle(), correctDestination)));
+            if (!correctDestination) {
+                logger.warn(
+                    "V121 INVASION CS: blocking Neimoidian pilot → {} (not aboard {}) -1500",
+                    destination.getTitle(), capitalTitle);
+            }
+        } catch (Exception e) {
+            logger.debug("V121 INVASION CS error: {}", e.getMessage());
+        }
+    }
+
+    private SwccgCardBlueprint findDeployingBlueprint(
+            DecisionContext context, GameState gameState,
+            String playerId, String blueprintId) {
+        if (gameState != null && playerId != null && blueprintId != null) {
+            java.util.List<PhysicalCard> handCards = gameState.getHand(playerId);
+            if (handCards != null) {
+                for (PhysicalCard card : handCards) {
+                    if (card != null && card.getBlueprint() != null
+                            && (blueprintId.equals(card.getBlueprintId(true))
+                                || blueprintId.equals(card.getBlueprintId(false)))) {
+                        return card.getBlueprint();
+                    }
+                }
+            }
+        }
+        return getBlueprintFromId(context, blueprintId);
     }
 
     static PhysicalCard findPullCandidate(

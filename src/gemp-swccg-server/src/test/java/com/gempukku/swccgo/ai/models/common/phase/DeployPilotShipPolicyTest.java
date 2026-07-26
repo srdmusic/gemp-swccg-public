@@ -208,7 +208,7 @@ public class DeployPilotShipPolicyTest {
         DeployPilotShipPolicy.Evaluation ordinary =
                 DeployPilotShipPolicy.evaluateShipBoarding(
                         new DeployPilotShipPolicy.ShipBoardingFacts(
-                                "a", true, "executor", true,
+                                "a", true, false, "executor", true,
                                 true, false));
         assertRules(ordinary.result().operations(),
                 new String[]{"V29-ship-reference"}, new float[]{600.0f});
@@ -219,7 +219,7 @@ public class DeployPilotShipPolicyTest {
         DeployPilotShipPolicy.Evaluation drain =
                 DeployPilotShipPolicy.evaluateShipBoarding(
                         new DeployPilotShipPolicy.ShipBoardingFacts(
-                                "a", true, "executor", true,
+                                "a", true, false, "executor", true,
                                 true, true));
         assertRules(drain.result().operations(),
                 new String[]{"V29-ship-reference"}, new float[]{650.0f});
@@ -232,18 +232,18 @@ public class DeployPilotShipPolicyTest {
     public void otherCharacterBoardingBranchesRemainExclusive() {
         assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
                         new DeployPilotShipPolicy.ShipBoardingFacts(
-                                "a", true, "home one", false,
+                                "a", true, false, "home one", false,
                                 true, false)).result().operations(),
                 new String[]{"V29-other-ship-reference"},
                 new float[]{50.0f});
         assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
                         new DeployPilotShipPolicy.ShipBoardingFacts(
-                                "a", true, null, false,
+                                "a", true, false, null, false,
                                 true, false)).result().operations(),
                 new String[]{"V29-executor"}, new float[]{100.0f});
         assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
                         new DeployPilotShipPolicy.ShipBoardingFacts(
-                                "a", true, "", false,
+                                "a", true, false, "", false,
                                 false, false)).result().operations(),
                 new String[]{"V29-character-aboard"}, new float[]{50.0f});
     }
@@ -253,7 +253,7 @@ public class DeployPilotShipPolicyTest {
         DeployPilotShipPolicy.Evaluation cargo =
                 DeployPilotShipPolicy.evaluateShipBoarding(
                         new DeployPilotShipPolicy.ShipBoardingFacts(
-                                "a", false, "", false,
+                                "a", false, false, "", false,
                                 false, false));
 
         assertRules(cargo.result().operations(),
@@ -266,6 +266,19 @@ public class DeployPilotShipPolicyTest {
         assertEquals(DeployPilotShipPolicy.AdapterStep.CONTINUE_CANDIDATE,
                 cargo.adapterStep());
         assertEquals(null, cargo.resetScore());
+    }
+
+    @Test
+    public void legalAttachedCardIsNotMisclassifiedAsCargo() {
+        DeployPilotShipPolicy.Evaluation attachment =
+                DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", false, true, "", false,
+                                false, false));
+
+        assertTrue(attachment.result().operations().isEmpty());
+        assertEquals(DeployPilotShipPolicy.AdapterStep.FALL_THROUGH,
+                attachment.adapterStep());
     }
 
     @Test

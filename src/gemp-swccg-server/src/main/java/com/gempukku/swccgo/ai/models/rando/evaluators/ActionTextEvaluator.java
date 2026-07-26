@@ -2315,6 +2315,52 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 logger.warn("V29.8 SENSE UNCERTAIN BLOCKED: Attempted mutual redraw — massive penalty (-600)");
             }
 
+            // Veers (V) names neither "Reserve Deck" nor its source in the action text.
+            // Validate the exact source/action against the exact card-source filters before
+            // the generic "from reserve" gate below.
+            if ("reveal to deploy 6th marker or blizzard 1".equals(textLower.trim())
+                    && cardId != null && gameState != null) {
+                try {
+                    PhysicalCard source =
+                            gameState.findCardById(Integer.parseInt(cardId));
+                    boolean exactSource = source != null
+                            && "206_11".equals(source.getBlueprintId(true));
+                    boolean targetAvailable = false;
+                    if (exactSource) {
+                        List<PhysicalCard> reserve = gameState.getCardPile(
+                            context.getPlayerId(),
+                            com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+                        if (reserve != null) {
+                            for (PhysicalCard candidate : reserve) {
+                                if (candidate == null) continue;
+                                boolean typedMatch = game != null
+                                    && com.gempukku.swccgo.filters.Filters.or(
+                                        com.gempukku.swccgo.filters.Filters.Blizzard_1,
+                                        com.gempukku.swccgo.filters.Filters.Sixth_Marker)
+                                        .accepts(gameState,
+                                            game.getModifiersQuerying(), candidate);
+                                if (typedMatch) {
+                                    targetAvailable = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    applyPullSpecificActionPolicy(
+                        action,
+                        PullSpecificActionPolicy.scoreVeersHothUpload(
+                            new PullSpecificActionFacts.VeersHothUpload(
+                                actionId, exactSource, targetAvailable)));
+                    if (exactSource && !targetAvailable) {
+                        logger.warn(
+                            "V29.7 VEERS BLOCKED: no Blizzard 1 or 6th Marker in Reserve Deck");
+                    }
+                } catch (Exception e) {
+                    logger.debug("V29.7 VEERS target validation failed open: {}",
+                        e.getMessage());
+                }
+            }
+
             // ========== V29.7: UNIVERSAL RESERVE DECK PULL VALIDATION ==========
             // PROBLEM: Many cards produce GENERIC action texts like "Deploy card from Reserve Deck"
             // or "Take card into hand from Reserve Deck". The V25 checks looked for card names

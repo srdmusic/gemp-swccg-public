@@ -102,6 +102,14 @@ public final class PullSpecificActionFacts {
         }
     }
 
+    public record VeersHothUpload(
+            String actionId, boolean exactSourceAndAction,
+            boolean targetAvailable) {
+        public VeersHothUpload {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
     public record ReserveRisk(String actionId, int reserveSize) {
         public ReserveRisk {
             Objects.requireNonNull(actionId, "actionId");

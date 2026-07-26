@@ -213,6 +213,16 @@ public final class PullSpecificActionPolicy {
                 : empty();
     }
 
+    public static PolicyResult scoreVeersHothUpload(
+            PullSpecificActionFacts.VeersHothUpload facts) {
+        Objects.requireNonNull(facts, "facts");
+        return facts.exactSourceAndAction() && !facts.targetAvailable()
+                ? one(facts.actionId(), "V29.7-veers-hoth-upload-empty",
+                    TraceOutputKind.VETO, -2000.0f,
+                    "V29.7 VEERS: No Blizzard 1 or 6th Marker in Reserve Deck, so the reveal would fail")
+                : empty();
+    }
+
     public static PolicyResult scoreReserveRisk(
             PullSpecificActionFacts.ReserveRisk facts) {
         Objects.requireNonNull(facts, "facts");

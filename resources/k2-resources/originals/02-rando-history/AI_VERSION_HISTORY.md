@@ -8648,3 +8648,15 @@ Boundary math: the Cannon child changes from `50 - 9999 = -9949` to `50 + 50 = 1
 Scope is AI-only, mirrored across Rando and Chosen One. No engine, card Java, objective data, deck library, database, or client code changed.
 
 Verification: focused replay and policy gate `83/0/0/0`; full isolated reactor `2461/0/0/26`; clean async package PASS. Packaged server jar SHA-256 `92faee066fe9fc4be5cc2f5c6fcd033775febf3915dbb1d4e974482a8a443469`; packaged web jar SHA-256 `0d06cd2e20090038b0763d1574185b66c2066009d39960628cf8bb1f064846b7`.
+
+## 2026-07-26: Shield twin pilot-deploy live regression repair
+
+Replay `jpjhvzkjczbx3ctm` exposed a child-prompt regression after the correct parent pilot deploy won. The offered walker inherited site-only Formation Safety, zero-drain, and distribution penalties, so Done beat boarding. Electro-Rangefinder was mistaken for cargo, and Veers repeatedly selected his exact reveal action even when neither Blizzard 1 nor 6th Marker remained in Reserve Deck.
+
+Both bot adapters now resolve the deploying card from hand, consider only selectable asset destinations, complete asset policy before site-only rules, and distinguish attached cards from true cargo and weapons. Ability-below-5 pilots board offered legal vehicles or starships. Ability-5 characters remain free, and a nonselectable walker cannot trigger pilot enforcement.
+
+Exact Veers source `206_11` now validates its exact reveal action against physical Reserve cards using typed Blizzard 1 and Sixth Marker filters. An empty search receives `-2000`; either real typed target keeps the action available; title fragments do not qualify.
+
+The repair preserves Invasion capital-ship handling, weapon-host protection, true cargo behavior, and the existing Shield route. Scope is shared AI policy, mirrored Rando and Chosen One adapters, and AI tests only. No engine, card Java, objective data, deck library, database, or client changed.
+
+Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed clean package PASS. Live `web.jar` SHA-256 `bf94439416ab4afdbc5c0a1b36718edc35040d24ce63039d82e1a7fac5f962de` matched host and running container, HTTP returned 200, the server reached operational mode, and startup contained no real error or exception. Nothing was pushed. Fresh live play remains the final behavior gate.
