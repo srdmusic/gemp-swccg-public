@@ -11,6 +11,7 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -44,6 +45,11 @@ public class Card501_201 extends AbstractNormalEffect {
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
         setTestingText("Commando Training (V)");
+    }
+
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.or(Icon.ENDOR, Icon.VIRTUAL_SET_3, Icon.VIRTUAL_SET_9), Filters.Objective));
     }
 
     @Override
