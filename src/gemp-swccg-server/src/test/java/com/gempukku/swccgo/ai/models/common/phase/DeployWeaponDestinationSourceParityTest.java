@@ -37,8 +37,19 @@ public class DeployWeaponDestinationSourceParityTest {
                 "action.addReasoning(\"V25 HUNT DOWN: DEPLOYING LIGHTSABER"}) {
             assertFalse(retired, source.contains(retired));
         }
-        assertFalse("V274 must not add candidate short-circuiting",
-                source.contains("continue;"));
+        String assetExit =
+                "if (destinationIsAsset) {\n"
+                        + "                            actions.add(action);\n"
+                        + "                            continue;\n"
+                        + "                        }";
+        assertEquals("Only the intentional asset destination exit may short-circuit",
+                1, count(source, "continue;"));
+        assertTrue("Asset destinations must be committed before site-only scoring",
+                source.contains(assetExit));
+        assertTrue("The asset exit must stay after every V274 policy contribution",
+                source.indexOf(assetExit)
+                        > source.lastIndexOf(
+                                "DeployWeaponPolicy.evaluateLightsaberDestination("));
     }
 
     @Test
