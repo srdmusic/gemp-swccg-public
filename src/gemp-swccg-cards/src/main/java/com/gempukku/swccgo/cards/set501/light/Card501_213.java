@@ -36,7 +36,7 @@ public class Card501_213 extends AbstractUsedInterrupt {
     public Card501_213() {
         super(Side.LIGHT, 4, "The Force Will Be With You, Always", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("You can't win Darth. If you strike me down I shall become more powerful than you can possibly imagine.' Obi-Wan's sacrifice gave the Rebels time to escape.");
-        setGameText("If a Jedi 'communing', choose: [Upload] Coruscant: Jedi Temple. OR Draw bottom card of your Force Pile.  OR Once per game, take your just drawn destiny into hand to cancel and redraw that destiny.");
+        setGameText("If a Jedi (except Anakin) 'communing,' choose: [Upload] Coruscant: Jedi Temple. OR Once per game, draw bottom card of your Force Pile. OR Once per game, take your just drawn destiny into hand to cancel and redraw that destiny.");
         addIcons(Icon.VIRTUAL_SET_27);
         setTestingText("The Force Will Be With You, Always");
     }
