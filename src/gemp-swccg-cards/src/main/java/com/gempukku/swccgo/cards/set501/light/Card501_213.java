@@ -36,7 +36,7 @@ public class Card501_213 extends AbstractUsedInterrupt {
     public Card501_213() {
         super(Side.LIGHT, 4, "The Force Will Be With You, Always", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("You can't win Darth. If you strike me down I shall become more powerful than you can possibly imagine.' Obi-Wan's sacrifice gave the Rebels time to escape.");
-        setGameText("If a Jedi 'communing', choose: [Upload] Coruscant: Jedi Temple. OR Draw bottom card of your Force Pile.  OR Once per game, take your just drawn destiny into hand to cancel and redraw that destiny.");
+        setGameText("If a Jedi (except Anakin) 'communing,' choose: [Upload] Coruscant: Jedi Temple. OR Once per game, draw bottom card of your Force Pile. OR Once per game, take your just drawn destiny into hand to cancel and redraw that destiny.");
         addIcons(Icon.VIRTUAL_SET_27);
         setTestingText("The Force Will Be With You, Always");
     }
@@ -44,43 +44,55 @@ public class Card501_213 extends AbstractUsedInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
-        if (GameConditions.canSpot(game, self, Filters.Communing)) {
-            GameTextActionId gameTextActionId = GameTextActionId.THE_FORCE_WILL_BE_WITH_YOU_ALWAYS__UPLOAD_JEDI_TEMPLE;
 
-            if (game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.Jedi)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-                action.setText("Take Jedi Temple into hand from Reserve Deck");
-                action.setActionMsg("Take Coruscant: Jedi Temple into hand from Reserve Deck");
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Coruscant_Jedi_Temple, true));
-                            }
-                        }
-                );
-                actions.add(action);
-            }
+        GameTextActionId gameTextActionId = GameTextActionId.THE_FORCE_WILL_BE_WITH_YOU_ALWAYS__UPLOAD_JEDI_TEMPLE;
 
-            if (GameConditions.hasForcePile(game, playerId)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, GameTextActionId.OTHER_CARD_ACTION_1);
-                action.setText("Draw bottom card of Force Pile");
-                action.setActionMsg("Draw bottom card of Force Pile");
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new DrawCardIntoHandFromBottomOfForcePileEffect(action, playerId));
-                            }
+        // If a non-Anakin Jedi is Communing...
+        if (game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.and(Filters.Jedi, Filters.not(Filters.Anakin)))) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Take Jedi Temple into hand from Reserve Deck");
+            action.setActionMsg("Take Coruscant: Jedi Temple into hand from Reserve Deck");
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Coruscant_Jedi_Temple, true));
                         }
-                );
-                actions.add(action);
-            }
+                    }
+            );
+            actions.add(action);
         }
+
+        gameTextActionId = GameTextActionId.THE_FORCE_WILL_BE_WITH_YOU_ALWAYS__DRAW_BOTTOM_CARD_OF_FORCE_PILE;
+
+        // If a non-Anakin Jedi is Communing...
+        if (game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.and(Filters.Jedi, Filters.not(Filters.Anakin)))
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.hasForcePile(game, playerId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Draw bottom card of Force Pile");
+            action.setActionMsg("Draw bottom card of Force Pile");
+            // Update usage limit(s)
+            action.appendUsage(
+                new OncePerGameEffect(action));
+            // Allow responses
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DrawCardIntoHandFromBottomOfForcePileEffect(action, playerId));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+        
         return actions;
     }
 
@@ -89,7 +101,7 @@ public class Card501_213 extends AbstractUsedInterrupt {
         GameTextActionId gameTextActionId = GameTextActionId.THE_FORCE_WILL_BE_WITH_YOU_ALWAYS__REDRAW_DESTINY;
 
         if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, playerId)
-                && game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.Jedi)
+                && game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.and(Filters.Jedi, Filters.not(Filters.Anakin))) // If a non-Anakin Jedi is Communing...
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)
                 && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
@@ -97,12 +109,13 @@ public class Card501_213 extends AbstractUsedInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Take destiny card into hand and cause re-draw");
             // Update usage limit(s)
+            action.appendUsage(
+                new OncePerGameEffect(action));
+            // Allow responses
             action.allowResponses(
                 new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
-                        action.appendUsage(
-                            new OncePerGameEffect(action));
                         // Perform result(s)
                         action.appendEffect(
                                 new TakeDestinyCardIntoHandEffect(action));
