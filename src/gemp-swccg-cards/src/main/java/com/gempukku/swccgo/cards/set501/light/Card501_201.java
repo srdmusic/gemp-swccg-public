@@ -39,7 +39,7 @@ public class Card501_201 extends AbstractNormalEffect {
     public Card501_201() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Commando_Training, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Han's Rebel strike team on the forest moon of Endor was highly trained in the use of blasters and explosives.");
-        setGameText("Deploy on table. Your personal Force generation = 2. You initiate battles for free. During your control phase, if you occupy four battlegrounds and/or opponent's locations, opponent loses 1 Force. You may not deploy characters except Rebels or droids. (Immune to Alter.)");
+        setGameText("If your [Endor], [Set 3], or [Set 9] objective on table, deploy on table. Your personal Force generation = 2. During your control phase, if you occupy three battlegrounds, opponent loses 1 Force. Where you have two Rebels, you initiate battles for free. [Immune to Alter.]");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_27);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
