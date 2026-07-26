@@ -29,13 +29,21 @@ public class ShieldSourceOwnershipTest {
     @Test
     public void policyIsTheSingleOrderedCandidateAdjustmentOwner() throws IOException {
         String policy = commonPhaseSource("ShieldPolicy.java");
-        String candidate = method(policy,
-                "public static PolicyResult shieldCandidateAdjustments(");
+        String signature =
+                "public static PolicyResult shieldCandidateAdjustments(";
+        int compatibilityOverload = policy.indexOf(signature);
+        String compatibility = method(policy, signature);
+        String candidate = method(
+                policy.substring(compatibilityOverload + signature.length()),
+                signature);
 
-        assertEquals(1, occurrences(policy, "public static PolicyResult shieldCandidateAdjustments("));
+        assertEquals(2, occurrences(policy, signature));
+        assertTrue(compatibility.contains("return shieldCandidateAdjustments("));
         assertFalse(policy.contains("shieldSelectionAdjustments("));
         assertFalse(policy.contains("reserveBattleOrderAdjustments("));
         assertEquals(1, occurrences(candidate, "\"V53-shield-min-turn\""));
+        assertTrue(candidate.indexOf("battleOrderPlanRedundancyGate(")
+                < candidate.indexOf("turnNumber < minTurnToPlay"));
         assertTrue(candidate.indexOf("turnNumber < minTurnToPlay")
                 < candidate.indexOf("shieldsOnTable >= 3"));
         assertTrue(candidate.indexOf("shieldsOnTable >= 3")

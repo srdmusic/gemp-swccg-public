@@ -332,7 +332,9 @@ public class ResponsePolicySourceParityTest {
                 "barrierEvaluation.rememberTarget()",
                 "barrieredTargets.add(targetCardName.toLowerCase())");
         assertInOrder(grab,
-                "catch (Exception e) { /* fall through to name matching */ }",
+                "extractBlueprintFromText(context.getDecisionText())",
+                "CARD_LIBRARY.getSwccgoCardBlueprint(",
+                "targetBlueprint.getSide()",
                 "if (confirmedOwnCard || confirmedOpponentCard)",
                 "ResponsePolicy.scoreGrab(",
                 "return;",

@@ -11,8 +11,12 @@ import java.util.Locale;
  */
 public final class EndorOperationsTacticalPolicy {
     public static final float ENDOR_SHIELD_BOOTSTRAP_BONUS = 1500.0f;
+    public static final float BUNKER_GARRISON_PLAN_BONUS = 3000.0f;
+    public static final float BUNKER_GARRISON_DEPLOY_BONUS = 2500.0f;
     public static final float POST_FLIP_REINFORCE_BONUS = 500.0f;
     public static final float POST_FLIP_SPREAD_PENALTY = -250.0f;
+    private static final String BUNKER_GARRISON_PLAN_PREFIX =
+            "EOP: garrison Endor Bunker";
 
     private EndorOperationsTacticalPolicy() {
     }
@@ -105,6 +109,16 @@ public final class EndorOperationsTacticalPolicy {
             return -1200.0f;
         }
         return 0.0f;
+    }
+
+    public static boolean isBunkerGarrisonPlan(String reason) {
+        return reason != null
+                && reason.startsWith(BUNKER_GARRISON_PLAN_PREFIX);
+    }
+
+    public static String bunkerGarrisonPlanReason() {
+        return BUNKER_GARRISON_PLAN_PREFIX
+                + " with a cheap Imperial admiral before optional deployments";
     }
 
     private static String lower(String value) {

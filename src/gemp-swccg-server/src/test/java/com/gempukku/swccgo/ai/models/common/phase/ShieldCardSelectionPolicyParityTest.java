@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
+import com.gempukku.swccgo.cards.set13.light.Card13_008;
 import com.gempukku.swccgo.cards.set13.dark.Card13_054;
 import com.gempukku.swccgo.cards.set13.dark.Card13_061;
 import com.gempukku.swccgo.cards.set13.dark.Card13_095;
@@ -150,6 +151,36 @@ public class ShieldCardSelectionPolicyParityTest {
     }
 
     @Test
+    public void opponentBattlePlanHardBlocksRedundantBattleOrderAtFourthSlot() {
+        Map<Integer, PhysicalCard> candidates = Map.of(
+                7, card(new Card13_054(), "13_54"));
+        PhysicalCard battlePlan =
+                card(new Card13_008(), "13_8");
+        when(battlePlan.getOwner()).thenReturn("opponent");
+        when(battlePlan.getZone()).thenReturn(
+                Zone.SIDE_OF_TABLE);
+        List<PhysicalCard> table = new java.util.ArrayList<>(
+                threeShieldsOnTable());
+        table.add(battlePlan);
+        GameState gameState = gameState(candidates, table, 3);
+        SwccgGame game = gameWithBothTheaters(gameState);
+
+        EvaluationPair pair = evaluate(
+                gameState, game, "CARD_SELECTION",
+                "Choose a defensive shield",
+                List.of("7"), List.of(), List.of(),
+                new ShieldStrategy(Side.DARK),
+                new ShieldStrategy(Side.DARK));
+
+        var battleOrder = action(pair.rando(), "7");
+        assertTrue(battleOrder.getScore() < -9000.0f);
+        assertReasonOnce(battleOrder.getReasoning(),
+                "BATTLE ORDER/PLAN REDUNDANT");
+        assertNoReasonContaining(
+                battleOrder.getReasoning(), "4TH SLOT BOOST");
+    }
+
+    @Test
     public void blueprintOnlyReserveMenuDiscoversPreferredAcrossMaximumLength() {
         GameState gameState = gameState(Map.of(), threeShieldsOnTable(), 1);
         SwccgGame game = gameWithBothTheaters(gameState);
@@ -286,7 +317,7 @@ public class ShieldCardSelectionPolicyParityTest {
     }
 
     private static List<PhysicalCard> threeShieldsOnTable() {
-        SwccgCardBlueprint blueprint = new Card13_054();
+        SwccgCardBlueprint blueprint = new Card13_061();
         return List.of(shieldOnTable(blueprint), shieldOnTable(blueprint),
                 shieldOnTable(blueprint));
     }

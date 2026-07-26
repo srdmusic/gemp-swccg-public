@@ -46,6 +46,7 @@ import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
@@ -5669,6 +5670,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         // Check deploy plan for a planned pilot for this ship
         String plannedPilotBlueprintId = null;
+        Integer reservedEopGarrisonPermanentId = null;
+        Integer reservedEopGarrisonCurrentId = null;
         DeployPhasePlanner planner = context.getDeployPhasePlanner();
         if (planner != null) {
             DeploymentPlan plan = planner.getCurrentPlan();
@@ -5682,6 +5685,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         logger.info("   📋 Plan says pilot: {} (blueprint={})",
                             instruction.getCardName(), plannedPilotBlueprintId);
                         break;
+                    }
+                    if (EndorOperationsTacticalPolicy
+                            .isBunkerGarrisonPlan(plan.getReason())
+                            && "endor: bunker".equalsIgnoreCase(
+                                instruction.getTargetLocationName())) {
+                        reservedEopGarrisonPermanentId =
+                                instruction.getCardPermanentCardId();
+                        reservedEopGarrisonCurrentId =
+                                instruction.getCardCurrentCardId();
                     }
                 }
             }
@@ -5731,6 +5743,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             boolean plannedPilot = plannedPilotBlueprintId != null
                                 && blueprintId != null
                                 && blueprintId.equals(plannedPilotBlueprintId);
+                            boolean reservedEopBunkerGarrison =
+                                reservedEopGarrisonPermanentId != null
+                                && reservedEopGarrisonCurrentId != null
+                                && reservedEopGarrisonPermanentId
+                                    == card.getPermanentCardId()
+                                && reservedEopGarrisonCurrentId
+                                    == card.getCardId();
                             Float pilotDeployCost = null;
                             Float pilotAbility = null;
                             boolean matchingPilot = false;
@@ -5759,7 +5778,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(
                                     new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
                                         action.getActionId(), shipName, plannedPilot,
-                                        pilotDeployCost, pilotAbility, matchingPilot)));
+                                        pilotDeployCost, pilotAbility, matchingPilot,
+                                        reservedEopBunkerGarrison)));
                             if (plannedPilot) {
                                 logger.info("   ✅ {} is the PLANNED pilot (+200)", title);
                             } else if (matchingPilot) {
@@ -9348,6 +9368,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         context.getGame(), context.getPlayerId());
             shieldLedger.register(ShieldPolicy.unknownBattleOrderGate(
                     cardId, cardTitle, v112OccupiesBoth));
+            shieldLedger.register(
+                    ShieldPolicy.battleOrderPlanRedundancyGate(
+                            cardId, cardTitle,
+                            ShieldFacts
+                                .battleOrderPlanEquivalentOnTable(
+                                    context.getGameState())));
             if (v112IsBattleOrder && !v112OccupiesBoth) {
                 logger.warn("V112 BATTLE ORDER GATE: '{}' blocked - occupiesBothTheaters=false",
                         cardTitle);
@@ -9755,6 +9781,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 shieldLedger.register(ShieldPolicy.shieldCandidateAdjustments(
                         action.getActionId(), cardTitle, shieldScore, minTurnToPlay,
                         turnNumber, shieldsOnTable, fourthSlot, occupiesBoth,
+                        ShieldFacts.battleOrderPlanEquivalentOnTable(
+                            context.getGameState()),
                         ShieldPolicy.CandidateRoute.RESERVE));
                 PolicyOperationAdapter.apply(action, shieldLedger);
                 if (shieldsOnTable >= 3) {
@@ -9970,6 +9998,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     shieldLedger.register(ShieldPolicy.shieldCandidateAdjustments(
                             cardId, title, shieldScore, minTurnToPlay, turnNumber,
                             shieldsOnTable, fourthSlot, occupiesBoth,
+                            ShieldFacts.battleOrderPlanEquivalentOnTable(
+                                context.getGameState()),
                             ShieldPolicy.CandidateRoute.DEDICATED));
                     PolicyOperationAdapter.apply(action, shieldLedger);
 

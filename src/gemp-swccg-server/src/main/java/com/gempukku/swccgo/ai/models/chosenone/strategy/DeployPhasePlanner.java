@@ -772,6 +772,20 @@ public class DeployPhasePlanner {
             return plans;
         }
 
+        DeploymentPlan bunkerGarrisonPlan =
+                generateEopBunkerGarrisonPlan(
+                        characters, allLocations,
+                        objectiveFormationForceAvailable);
+        if (!bunkerGarrisonPlan.getInstructions().isEmpty()) {
+            float score = scorePlan(
+                    bunkerGarrisonPlan, allLocations, turn)
+                    + EndorOperationsTacticalPolicy
+                        .BUNKER_GARRISON_PLAN_BONUS;
+            plans.add(new ScoredPlan(
+                    bunkerGarrisonPlan, score,
+                    "ground_eop_bunker_garrison"));
+        }
+
         // V297: A control-gated actor objective needs a formation, not a sacrificial
         // one-body score. Build the exact actor-plus-buddy plan before generic siting.
         DeploymentPlan flipGateFormation = generateFlipGateFormationPlan(
@@ -1239,8 +1253,76 @@ public class DeployPhasePlanner {
         return plan;
     }
 
+    private DeploymentPlan generateEopBunkerGarrisonPlan(
+            List<CardInfo> characters,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations,
+            int forceAvailable) {
+        DeploymentPlan plan = new DeploymentPlan(
+                DeployStrategy.ESTABLISH,
+                EndorOperationsTacticalPolicy.bunkerGarrisonPlanReason());
+        if (objectiveAnalyzer == null || !objectiveAnalyzer.isAnalyzed()
+                || objectiveAnalyzer.isFlipped()
+                || !EndorOperationsTacticalPolicy.isEndorOperations(
+                        objectiveAnalyzer.getObjectiveBlueprintId(),
+                        objectiveAnalyzer.getObjectiveTitle())
+                || currentGame == null
+                || currentGame.getGameState() == null
+                || currentPlayerId == null
+                || forceAvailable <= 0
+                || hasReadyMissingRequiredCardInHand()) {
+            return plan;
+        }
+        AiBoardAnalyzer.LocationAnalysis bunker = allLocations.stream()
+                .filter(loc -> loc != null && loc.isGround()
+                        && loc.location != null
+                        && "endor: bunker".equalsIgnoreCase(
+                                loc.location.getTitle())
+                        && loc.theirCardCount == 0
+                        && loc.theirAbility <= 0)
+                .findFirst().orElse(null);
+        if (bunker == null) {
+            return plan;
+        }
+        CardInfo garrison =
+                findReservedEopBunkerGarrison(
+                        characters, allLocations);
+        if (garrison == null) {
+            return plan;
+        }
+        Integer exactCost = exactDeployCostAt(
+                garrison.card, bunker.location);
+        if (exactCost == null || exactCost > forceAvailable) {
+            return plan;
+        }
+        addCardToPlan(
+                plan, garrison.card, bunker, 1,
+                "EOP: cheap Imperial admiral holds Bunker while scouts occupy other Endor sites");
+        plan.getInstructions().get(0).setDeployCost(exactCost);
+        return plan;
+    }
+
+    private boolean hasReadyMissingRequiredCardInHand() {
+        List<PhysicalCard> hand =
+                currentGame.getGameState().getHand(currentPlayerId);
+        if (hand == null || hand.isEmpty()) {
+            return false;
+        }
+        for (PhysicalCard card : hand) {
+            if (card != null
+                    && objectiveAnalyzer.isRequiredCardForFlip(card)
+                    && !objectiveAnalyzer.isRequiredCardActiveOnTable(
+                            currentGame, card.getTitle())
+                    && objectiveAnalyzer
+                        .isRequiredOnTableCardPullRouteReady(
+                            currentGame, currentPlayerId, card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private CardInfo findReservedEopBunkerGarrison(
-            List<CardInfo> pilots,
+            List<CardInfo> candidates,
             List<AiBoardAnalyzer.LocationAnalysis> allLocations) {
         AiBoardAnalyzer.LocationAnalysis bunker = allLocations.stream()
                 .filter(loc -> loc != null && loc.location != null
@@ -1259,7 +1341,7 @@ public class DeployPhasePlanner {
         }
         CardInfo best = null;
         int bestCost = Integer.MAX_VALUE;
-        for (CardInfo candidate : pilots) {
+        for (CardInfo candidate : candidates) {
             Integer cost = exactDeployCostAt(
                     candidate.card, bunker.location);
             if (cost == null || cost > 2

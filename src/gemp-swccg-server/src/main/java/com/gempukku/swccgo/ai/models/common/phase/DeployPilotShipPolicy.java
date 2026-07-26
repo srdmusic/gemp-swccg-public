@@ -348,6 +348,15 @@ public final class DeployPilotShipPolicy {
             SimultaneousPilotChoiceFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(3);
+        if (facts.reservedEopBunkerGarrison()) {
+            addAttach(operations, facts.actionId(),
+                    "DEPLOY.EOP.BUNKER_GARRISON_RESERVE",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "EOP BUNKER GARRISON: reserved cheap admiral may not be consumed as a ship pilot");
+            return new PolicyResult(
+                    "DEPLOY_SIMULTANEOUS_PILOT_CHOICE_POLICY",
+                    operations);
+        }
         if (facts.plannedPilot()) {
             addAttach(operations, facts.actionId(), "pilot-plan-match",
                     TraceOutputKind.ORDERING, 200.0f,
@@ -532,7 +541,15 @@ public final class DeployPilotShipPolicy {
 
     public record SimultaneousPilotChoiceFacts(
             String actionId, String shipName, boolean plannedPilot,
-            Float deployCost, Float ability, boolean matchingPilot) {
+            Float deployCost, Float ability, boolean matchingPilot,
+            boolean reservedEopBunkerGarrison) {
+        public SimultaneousPilotChoiceFacts(
+                String actionId, String shipName, boolean plannedPilot,
+                Float deployCost, Float ability, boolean matchingPilot) {
+            this(actionId, shipName, plannedPilot, deployCost, ability,
+                    matchingPilot, false);
+        }
+
         public SimultaneousPilotChoiceFacts {
             Objects.requireNonNull(actionId, "actionId");
             shipName = shipName == null ? "null" : shipName;

@@ -132,6 +132,24 @@ public class DeployPlanPolicyTest {
                 new float[]{100.0f, 25.0f, 25.0f});
     }
 
+    @Test
+    public void eopBunkerGarrisonDominatesObservedShipComboGap() {
+        DeployPlanPolicy.Evaluation evaluation =
+                DeployPlanPolicy.evaluate(
+                        new DeployPlanPolicy.Facts(
+                                "ozzel", true, true, true,
+                                false, true, 1,
+                                false, false, false, false,
+                                false, 3, 8, false, 0,
+                                false, "establish"));
+        assertOperations(evaluation.result().operations(),
+                new String[]{
+                        "deploy-plan-membership",
+                        "deploy-plan-priority",
+                        "DEPLOY.EOP.BUNKER_GARRISON"},
+                new float[]{100.0f, 50.0f, 2500.0f});
+    }
+
     private static DeployPlanPolicy.Facts facts(
             boolean hasPlan, boolean pending, boolean planned, int priority,
             boolean allowExtras, boolean waiting, boolean locationStrategy,

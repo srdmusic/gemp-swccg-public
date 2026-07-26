@@ -368,6 +368,22 @@ public class DeployPilotShipPolicyTest {
                         "a", true, 3.0f, false, false)).operations().isEmpty());
     }
 
+    @Test
+    public void simultaneousPilotCannotConsumeReservedEopBunkerGarrison() {
+        List<PolicyOperation> operations =
+                DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(
+                        new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
+                                "ozzel", "Any ship", false,
+                                2.0f, 2.0f, false, true))
+                        .operations();
+
+        assertRules(operations,
+                new String[]{"DEPLOY.EOP.BUNKER_GARRISON_RESERVE"},
+                new float[]{-9999.0f});
+        assertEquals(TraceOutputKind.VETO,
+                operations.get(0).outputKind());
+    }
+
     private static void assertRules(List<PolicyOperation> operations,
                                     String[] rules, float[] deltas) {
         assertEquals(rules.length, operations.size());

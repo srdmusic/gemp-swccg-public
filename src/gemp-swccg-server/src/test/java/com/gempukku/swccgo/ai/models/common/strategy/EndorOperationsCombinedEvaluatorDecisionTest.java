@@ -92,6 +92,8 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
     private static final int GENERIC_ENDOR_SHIP_ID = 323;
     private static final int GENERIC_ENDOR_PILOT_ID = 324;
     private static final int GENERIC_DEPLOY_DISTRACTOR_ID = 325;
+    private static final int REPLAY_SLAVE_I_ID = 326;
+    private static final int REPLAY_BOBA_FETT_ID = 327;
 
     private static final String OBJECTIVE_BP = "8_167";
     private static final String ENDOR_BP = "8_157";
@@ -120,6 +122,8 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
     private static final String ADMIRAL_OZZEL_BP = "3_82";
     private static final String GENERIC_ENDOR_SHIP_BP = "1_306";
     private static final String GENERIC_ENDOR_PILOT_BP = "1_174";
+    private static final String REPLAY_SLAVE_I_BP = "201_40";
+    private static final String REPLAY_BOBA_FETT_BP = "206_9";
 
     private static final String REQUIRED_PULL_RULE =
             "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD";
@@ -189,6 +193,89 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                             fixture.platform()));
             assertEquals(String.valueOf(BUNKER_ID),
                     winner.outcome().actionId());
+            winners.add(winner.outcome());
+        }
+        assertParity(winners);
+    }
+
+    @Test
+    public void bunkerObligationWinsTopLevelAndReservesOzzelFromPiloting() {
+        List<Outcome> deployWinners = new ArrayList<>();
+        List<Outcome> pilotWinners = new ArrayList<>();
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(bot);
+            PhysicalCard ozzel = card(
+                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID,
+                    Zone.HAND, PLAYER);
+            PhysicalCard ship = card(
+                    REPLAY_SLAVE_I_BP, REPLAY_SLAVE_I_ID,
+                    Zone.HAND, PLAYER);
+            PhysicalCard alternatePilot = card(
+                    REPLAY_BOBA_FETT_BP, REPLAY_BOBA_FETT_ID,
+                    Zone.HAND, PLAYER);
+            fixture.addHand(ozzel);
+            fixture.addHand(ship);
+            fixture.addHand(alternatePilot);
+
+            TracedOutcome deploy =
+                    tracedCombinedWithBunkerGarrisonPlan(
+                            bot, fixture,
+                            Decision.topLevelDeploy(ship, ozzel),
+                            ozzel);
+            assertEquals("deploy-" + ADMIRAL_OZZEL_ID,
+                    deploy.outcome().actionId());
+            assertContains(deploy.outcome(),
+                    "EOP BUNKER GARRISON");
+            deployWinners.add(deploy.outcome());
+
+            TracedOutcome pilot =
+                    tracedCombinedWithBunkerGarrisonPlan(
+                            bot, fixture,
+                            Decision.simultaneousPilotSelection(
+                                    ship, ozzel, alternatePilot),
+                            ozzel);
+            assertEquals(String.valueOf(REPLAY_BOBA_FETT_ID),
+                    pilot.outcome().actionId());
+            pilotWinners.add(pilot.outcome());
+        }
+        assertParity(deployWinners);
+        assertParity(pilotWinners);
+    }
+
+    @Test
+    public void readySecretBaseBeatsOzzelAfterBunkerControlIsReady() {
+        List<Outcome> winners = new ArrayList<>();
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(bot);
+            PhysicalCard ominous = card(
+                    OMINOUS_BP, OMINOUS_ID,
+                    Zone.SIDE_OF_TABLE, PLAYER);
+            PhysicalCard secretBase = card(
+                    SECRET_BASE_V_BP, SECRET_BASE_ID,
+                    Zone.HAND, PLAYER);
+            PhysicalCard ozzel = card(
+                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID,
+                    Zone.HAND, PLAYER);
+            fixture.addActivePermanent(ominous);
+            fixture.addHand(secretBase);
+            fixture.addHand(ozzel);
+            setControls(
+                    fixture, fixture.bunker(), PLAYER, true);
+            when(fixture.modifiers().getDeployCost(
+                    fixture.gameState(), secretBase))
+                    .thenReturn(0.0f);
+            when(fixture.modifiers().getDeployCost(
+                    fixture.gameState(), ozzel))
+                    .thenReturn(2.0f);
+
+            TracedOutcome winner = tracedCombined(
+                    bot, fixture,
+                    Decision.topLevelDeploy(
+                            ozzel, secretBase));
+            assertEquals("deploy-" + SECRET_BASE_ID,
+                    winner.outcome().actionId());
+            assertContains(
+                    winner.outcome(), REQUIRED_DEPLOY_RULE);
             winners.add(winner.outcome());
         }
         assertParity(winners);
@@ -4095,6 +4182,117 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
         return new TracedOutcome(outcome, trace);
     }
 
+    private static TracedOutcome tracedCombinedWithBunkerGarrisonPlan(
+            Bot bot, Fixture fixture, Decision decision,
+            PhysicalCard garrison) {
+        List<String> rawCandidates = !decision.actionIds().isEmpty()
+                ? decision.actionIds() : decision.cardIds();
+        assertTrue(TraceSession.open(
+                bot.name(),
+                "endor-operations-bunker-garrison-decision",
+                decision.type(), decision.text(),
+                rawCandidates, null,
+                List.of("replay-shaped EOP Bunker garrison fixture"),
+                false));
+        Outcome outcome;
+        DecisionTrace trace;
+        try {
+            if (bot == Bot.RANDO) {
+                var context = randoContext(fixture, decision);
+                var plan = new com.gempukku.swccgo.ai.models.rando
+                        .strategy.DeploymentPlan(
+                                com.gempukku.swccgo.ai.models.rando
+                                        .strategy.DeployStrategy.ESTABLISH,
+                                EndorOperationsTacticalPolicy
+                                        .bunkerGarrisonPlanReason());
+                var instruction =
+                        new com.gempukku.swccgo.ai.models.rando.strategy
+                                .DeploymentInstruction(
+                                        garrison.getBlueprintId(true),
+                                        garrison.getTitle(),
+                                        String.valueOf(
+                                                fixture.bunker().getCardId()),
+                                        fixture.bunker().getTitle(),
+                                        1, "hold Endor Bunker");
+                instruction.setCardPermanentCardId(
+                        garrison.getPermanentCardId());
+                instruction.setCardCurrentCardId(
+                        garrison.getCardId());
+                instruction.setDeployCost(2);
+                plan.addInstruction(instruction);
+                context.setDeployPhasePlanner(
+                        new com.gempukku.swccgo.ai.models.rando.strategy
+                                .DeployPhasePlanner() {
+                            @Override
+                            public com.gempukku.swccgo.ai.models.rando.strategy
+                                    .DeploymentPlan createPlan(
+                                            SwccgGame game, String playerId,
+                                            Side side) {
+                                return plan;
+                            }
+
+                            @Override
+                            public com.gempukku.swccgo.ai.models.rando.strategy
+                                    .DeploymentPlan getCurrentPlan() {
+                                return plan;
+                            }
+                        });
+                outcome = outcome(
+                        new com.gempukku.swccgo.ai.models.rando.evaluators
+                                .CombinedEvaluator()
+                                .evaluateDecision(context));
+            } else {
+                var context = chosenContext(fixture, decision);
+                var plan = new com.gempukku.swccgo.ai.models.chosenone
+                        .strategy.DeploymentPlan(
+                                com.gempukku.swccgo.ai.models.chosenone
+                                        .strategy.DeployStrategy.ESTABLISH,
+                                EndorOperationsTacticalPolicy
+                                        .bunkerGarrisonPlanReason());
+                var instruction =
+                        new com.gempukku.swccgo.ai.models.chosenone.strategy
+                                .DeploymentInstruction(
+                                        garrison.getBlueprintId(true),
+                                        garrison.getTitle(),
+                                        String.valueOf(
+                                                fixture.bunker().getCardId()),
+                                        fixture.bunker().getTitle(),
+                                        1, "hold Endor Bunker");
+                instruction.setCardPermanentCardId(
+                        garrison.getPermanentCardId());
+                instruction.setCardCurrentCardId(
+                        garrison.getCardId());
+                instruction.setDeployCost(2);
+                plan.addInstruction(instruction);
+                context.setDeployPhasePlanner(
+                        new com.gempukku.swccgo.ai.models.chosenone.strategy
+                                .DeployPhasePlanner() {
+                            @Override
+                            public com.gempukku.swccgo.ai.models.chosenone
+                                    .strategy.DeploymentPlan createPlan(
+                                            SwccgGame game, String playerId,
+                                            Side side) {
+                                return plan;
+                            }
+
+                            @Override
+                            public com.gempukku.swccgo.ai.models.chosenone
+                                    .strategy.DeploymentPlan getCurrentPlan() {
+                                return plan;
+                            }
+                        });
+                outcome = outcome(
+                        new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                                .CombinedEvaluator()
+                                .evaluateDecision(context));
+            }
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(trace);
+        return new TracedOutcome(outcome, trace);
+    }
+
     private static Outcome moveAdapter(
             Bot bot, Fixture fixture, Decision decision,
             String actionId) {
@@ -5237,6 +5435,27 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     actionIds, actionTexts,
                     cardIds, blueprints, testingTexts,
                     false, 0);
+        }
+
+        private static Decision simultaneousPilotSelection(
+                PhysicalCard ship,
+                PhysicalCard... pilots) {
+            List<String> cardIds = new ArrayList<>();
+            List<String> blueprints = new ArrayList<>();
+            List<String> testingTexts = new ArrayList<>();
+            for (PhysicalCard pilot : pilots) {
+                cardIds.add(String.valueOf(pilot.getCardId()));
+                blueprints.add(pilot.getBlueprintId(true));
+                testingTexts.add(pilot.getTitle());
+            }
+            return new Decision(
+                    "CARD_SELECTION",
+                    "Choose a pilot from hand to simultaneously deploy aboard •"
+                            + ship.getTitle(),
+                    Phase.DEPLOY,
+                    List.of(), List.of(), cardIds,
+                    blueprints, testingTexts,
+                    true, 1);
         }
 
         private static Decision deployBikerScout(

@@ -95,7 +95,8 @@ public final class ShieldPolicy {
 
         String preferred = null;
         FourthSlotTrigger trigger = FourthSlotTrigger.CLOSED;
-        if (facts.occupiesBothTheaters()) {
+        if (facts.occupiesBothTheaters()
+                && !facts.battleOrderPlanEquivalentOnTable()) {
             preferred = side == Side.DARK ? "Battle Order" : "Battle Plan";
             trigger = FourthSlotTrigger.BATTLE_ORDER_PLAN;
         } else if (facts.opponentCanDrainThreePlus()
@@ -222,6 +223,19 @@ public final class ShieldPolicy {
                 "V112 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!");
     }
 
+    public static PolicyResult battleOrderPlanRedundancyGate(
+            String actionId,
+            String cardTitle,
+            boolean equivalentOnTable) {
+        if (!equivalentOnTable || !isBattleOrderOrPlan(cardTitle)) {
+            return result("SHIELD_REDUNDANCY_POLICY", List.of());
+        }
+        return one("SHIELD_REDUNDANCY_POLICY", actionId,
+                "SHIELD.BATTLE_ORDER_PLAN.REDUNDANT",
+                TraceOutputKind.VETO, -9999.0f,
+                "BATTLE ORDER/PLAN REDUNDANT: an equivalent card is already on table");
+    }
+
     public static PolicyResult unknownFourthSlot(String actionId,
                                                  int shieldsOnTable,
                                                  String cardTitle,
@@ -256,9 +270,31 @@ public final class ShieldPolicy {
                                                           FourthSlotPick pick,
                                                           boolean occupiesBothTheaters,
                                                           CandidateRoute route) {
+        return shieldCandidateAdjustments(
+                actionId, cardTitle, shieldScore, minTurnToPlay,
+                turnNumber, shieldsOnTable, pick, occupiesBothTheaters,
+                false, route);
+    }
+
+    public static PolicyResult shieldCandidateAdjustments(String actionId,
+                                                          String cardTitle,
+                                                          float shieldScore,
+                                                          int minTurnToPlay,
+                                                          int turnNumber,
+                                                          int shieldsOnTable,
+                                                          FourthSlotPick pick,
+                                                          boolean occupiesBothTheaters,
+                                                          boolean equivalentOnTable,
+                                                          CandidateRoute route) {
         Objects.requireNonNull(pick, "pick");
         Objects.requireNonNull(route, "route");
         List<PolicyOperation> operations = new ArrayList<>();
+
+        PolicyResult redundancy = battleOrderPlanRedundancyGate(
+                actionId, cardTitle, equivalentOnTable);
+        if (!redundancy.operations().isEmpty()) {
+            return redundancy;
+        }
 
         boolean battleOrderTurnOneException = turnNumber == 1
                 && isBattleOrderOrPlan(cardTitle) && occupiesBothTheaters;

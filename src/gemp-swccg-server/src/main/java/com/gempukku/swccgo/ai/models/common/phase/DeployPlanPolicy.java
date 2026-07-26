@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
@@ -46,6 +47,13 @@ public final class DeployPlanPolicy {
                     operations.add(add(facts.actionId(),
                             "DEPLOY.FORMATION.OBJECTIVE_TIE_BREAK", 25.0f,
                             "Objective formation plan wins deploy ties within 25 points"));
+                }
+                if (facts.eopBunkerGarrisonPlan()) {
+                    operations.add(add(facts.actionId(),
+                            "DEPLOY.EOP.BUNKER_GARRISON",
+                            EndorOperationsTacticalPolicy
+                                    .BUNKER_GARRISON_DEPLOY_BONUS,
+                            "EOP BUNKER GARRISON: deploy the reserved cheap admiral before ship combos"));
                 }
             } else if (!facts.forceAllowExtras()) {
                 if (facts.locationStrategy()) {
@@ -136,12 +144,31 @@ public final class DeployPlanPolicy {
     public record Facts(String actionId, boolean hasPlan,
                         boolean hasPendingInstructions, boolean plannedCard,
                         boolean objectiveFormationPlan,
+                        boolean eopBunkerGarrisonPlan,
                         int instructionPriority, boolean forceAllowExtras,
                         boolean waitingForPlannedCards, boolean locationStrategy,
                         boolean locationCard, boolean tdigwatt,
                         int turnNumber, int availableForce,
                         boolean planComplete, int extraForceBudget,
                         boolean holdBackCard, String strategyValue) {
+        public Facts(
+                String actionId, boolean hasPlan,
+                boolean hasPendingInstructions, boolean plannedCard,
+                boolean objectiveFormationPlan,
+                int instructionPriority, boolean forceAllowExtras,
+                boolean waitingForPlannedCards, boolean locationStrategy,
+                boolean locationCard, boolean tdigwatt,
+                int turnNumber, int availableForce,
+                boolean planComplete, int extraForceBudget,
+                boolean holdBackCard, String strategyValue) {
+            this(actionId, hasPlan, hasPendingInstructions, plannedCard,
+                    objectiveFormationPlan, false, instructionPriority,
+                    forceAllowExtras, waitingForPlannedCards,
+                    locationStrategy, locationCard, tdigwatt, turnNumber,
+                    availableForce, planComplete, extraForceBudget,
+                    holdBackCard, strategyValue);
+        }
+
         public Facts {
             Objects.requireNonNull(actionId, "actionId");
             strategyValue = strategyValue == null ? "" : strategyValue;

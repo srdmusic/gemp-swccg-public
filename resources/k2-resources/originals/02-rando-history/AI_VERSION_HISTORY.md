@@ -8643,6 +8643,41 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     not current behavior proof. Revert the correction commit and the preceding follow-up commits
     without affecting Endor Operations Batch Four.
 
+  ==== Endor Operations live replay correction (2026-07-26): Bunker choice, shield twins, and own-card grab ====
+    Game-history row 72232, Rando replay io5yq6pdslynz79k, and asdf replay
+    fank4i34tjb9zib7 showed Slave I plus Admiral Ozzel deploy to Endor, opponent Battle Plan
+    followed by redundant Rando Battle Order, and Allegations Of Corruption stacking Rando's own
+    You Are Beaten. Ominous Rumors reached Bunker, but no Rando character did, Establish Secret
+    Base remained in hand, and Endor Operations never flipped.
+
+    The prior Bunker destination score was still present but never reached the earlier card-choice
+    contest. Slave I scored 1545 against Ozzel at 255, then Ozzel beat Boba Fett 100 to 90 as the
+    simultaneous pilot. Both planners now build a narrow exact-physical cheap-Imperial-admiral
+    Bunker plan before the flip. Plan selection receives +3000, its selected deploy receives +2500,
+    and the selected physical admiral receives a -9999 simultaneous-pilot reservation. Production
+    logic names no ship, Ozzel, or Boba Fett blueprint.
+
+    The Bunker obligation closes after flip, against any opposing card or ability there, when
+    unaffordable, after an Imperial admiral already garrisons Bunker, or whenever a missing required
+    objective card in hand has a source-structured ready deploy route. This prevents a power-zero
+    opponent from luring a solo admiral into non-control and ensures ready Establish Secret Base
+    deploys immediately. A friendly non-admiral does not close the plan, preserving the intended
+    cheap-admiral-for-mobile-fighter replacement pattern.
+
+    Battle Plan and Battle Order are now treated as table-equivalent twins across unknown, Reserve,
+    and dedicated shield routes. Redundancy receives -9999 before timing and fourth-slot boosts,
+    and the fourth-slot chooser falls through to another justified shield or Pass. Allegations Grab
+    decisions now run after the blocked-response loop safety but before named interrupt branches.
+    The target blueprint comes from the response prompt rather than Allegations' own source id, so
+    a same-side interrupt such as Dark You Are Beaten 5_163 is hard-blocked.
+
+    Production edits are shared AI policy/facts plus mirrored Rando and Chosen One evaluators and
+    planners. No engine, game, card Java, objective data, client, database, deck library, or routing
+    source changed. The focused gate passed 187/0/0/0. The clean full reactor passed 2483/0/0/26
+    across 322 suites. Four mirror pairs, diff, scope, type-by-title, and two independent reviews
+    passed. Packaging, jar-byte proof, JVM load, and fresh live-game firing remain separate gates.
+    Revert this live replay correction commit without affecting the prior EOP correction.
+
 ## 2026-07-26: Capture objective family Batch Seven
 
 There Is Good In Him / I Can Save Him (`9_61/9_61_BACK`) advances by allowing its owner's Death Star II Luke to become captive. An eligible Imperial at Luke's exact physical site supplies the native capture route. Bring Him Before Me / Take Your Father's Place (`9_151/9_151_BACK`) targets Luke by default, with source-supported Leia and Kanan retarget branches, and flips on the target's real captive state. Vader's automatic seizure remains a distinct route with stricter source conditions. Exact original `9_134` Your Destiny supplies the live Vader battleground Force-loss clock, while exact original `9_127` Insignificant Rebellion supplies the projected battle-win payoff. Both backs remain stable only while the source-defined captive-or-present-with-Vader state is true.

@@ -46,32 +46,26 @@ public class ResponseRemainingPolicyAdapterParityTest {
     }
 
     @Test
-    public void mirroredGrabAdaptersPreserveConfirmedBothParseFallbackAndLegacyTotal() {
-        GameState confirmedBothState = grabState("opponent", true, true);
-        var randoBoth = new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
-                .evaluate(randoActionContext(confirmedBothState, List.of("grab"), List.of("Grab interrupt")));
-        var chosenBoth = new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
-                .evaluate(chosenActionContext(confirmedBothState, List.of("grab"), List.of("Grab interrupt")));
-        assertAction(randoBoth.get(0), 30.0f,
+    public void mirroredGrabAdaptersResolvePromptTargetBeforeNamedCardRules() {
+        GameState gameState = baseState("tester");
+        var randoOpponent = new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
+                .evaluate(randoGrabContext(
+                        gameState, "1_109", "Sense", "'Grab' Sense"));
+        var chosenOpponent = new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
+                .evaluate(chosenGrabContext(
+                        gameState, "1_109", "Sense", "'Grab' Sense"));
+        assertAction(randoOpponent.get(0), 30.0f,
                 "V53 GRAB OPPONENT: Confirmed opponent's interrupt — grab it! (+30.0)");
-        assertChosenAction(chosenBoth.get(0), randoBoth.get(0));
+        assertChosenAction(chosenOpponent.get(0), randoOpponent.get(0));
 
-        GameState parseFallbackState = grabState("opponent", false, false);
-        var randoParse = new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
-                .evaluate(randoActionContext(parseFallbackState, List.of("not-a-number"),
-                        List.of("Grab interrupt")));
-        var chosenParse = new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
-                .evaluate(chosenActionContext(parseFallbackState, List.of("not-a-number"),
-                        List.of("Grab interrupt")));
-        assertAction(randoParse.get(0), 30.0f,
-                "Grab unknown card (opponent's turn — likely theirs) (+30.0)");
-        assertChosenAction(chosenParse.get(0), randoParse.get(0));
-
-        GameState ownState = grabState("tester", true, false);
         var randoOwn = new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
-                .evaluate(randoActionContext(ownState, List.of("grab"), List.of("Grab interrupt")));
+                .evaluate(randoGrabContext(
+                        gameState, "5_163", "You Are Beaten",
+                        "'Grab' You Are Beaten"));
         var chosenOwn = new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
-                .evaluate(chosenActionContext(ownState, List.of("grab"), List.of("Grab interrupt")));
+                .evaluate(chosenGrabContext(
+                        gameState, "5_163", "You Are Beaten",
+                        "'Grab' You Are Beaten"));
         assertAction(randoOwn.get(0), -19998.0f,
                 "V53 NEVER GRAB OWN: Grabbing own interrupt is suicide! (-9999.0)");
         assertChosenAction(chosenOwn.get(0), randoOwn.get(0));
@@ -110,21 +104,6 @@ public class ResponseRemainingPolicyAdapterParityTest {
         when(ours.getBlueprint()).thenReturn(ownBlueprint);
         when(gameState.getAllPermanentCards()).thenReturn(List.of(target));
         when(gameState.getCardsAtLocation(location)).thenReturn(List.of(target, ours));
-        return gameState;
-    }
-
-    private static GameState grabState(String currentPlayer, boolean own, boolean opponent) {
-        GameState gameState = baseState(currentPlayer);
-        if (own) {
-            PhysicalCard ownCard = mock(PhysicalCard.class);
-            when(ownCard.getOwner()).thenReturn("tester");
-            when(gameState.findCardById(1)).thenReturn(ownCard);
-        }
-        if (opponent) {
-            PhysicalCard opponentCard = mock(PhysicalCard.class);
-            when(opponentCard.getOwner()).thenReturn("opponent");
-            when(gameState.findCardById(2)).thenReturn(opponentCard);
-        }
         return gameState;
     }
 
@@ -173,6 +152,36 @@ public class ResponseRemainingPolicyAdapterParityTest {
         context.setActionIds(ids);
         context.setActionTexts(texts);
         context.setCardIds(ids.equals(List.of("grab")) ? List.of("1", "2") : ids);
+        return context;
+    }
+
+    private static com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext randoGrabContext(
+            GameState gameState, String targetBlueprint, String targetTitle,
+            String actionText) {
+        var context = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, "tester", "ACTION_CHOICE",
+                "Playing <div class='cardHint' value='" + targetBlueprint
+                        + "'>" + targetTitle + "</div>",
+                "grab-response", Phase.BATTLE);
+        context.setSide(Side.DARK);
+        context.setActionIds(List.of("grab"));
+        context.setActionTexts(List.of(actionText));
+        context.setCardIds(List.of("262"));
+        return context;
+    }
+
+    private static com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext chosenGrabContext(
+            GameState gameState, String targetBlueprint, String targetTitle,
+            String actionText) {
+        var context = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, "tester", "ACTION_CHOICE",
+                "Playing <div class='cardHint' value='" + targetBlueprint
+                        + "'>" + targetTitle + "</div>",
+                "grab-response", Phase.BATTLE);
+        context.setSide(Side.DARK);
+        context.setActionIds(List.of("grab"));
+        context.setActionTexts(List.of(actionText));
+        context.setCardIds(List.of("262"));
         return context;
     }
 

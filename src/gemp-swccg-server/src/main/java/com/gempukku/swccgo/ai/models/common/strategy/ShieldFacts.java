@@ -40,7 +40,21 @@ public final class ShieldFacts {
                                   boolean opponentHasDrainBonus,
                                   int ownBattlegroundCount,
                                   boolean opponentCanDrainThreePlus,
-                                  boolean opponentDrainsNonBattleground) {
+                                  boolean opponentDrainsNonBattleground,
+                                  boolean battleOrderPlanEquivalentOnTable) {
+        public FourthSlotFacts(
+                boolean occupiesBothTheaters,
+                boolean occupiesAnyBattleground,
+                int opponentBattlegroundCount,
+                boolean opponentHasDrainBonus,
+                int ownBattlegroundCount,
+                boolean opponentCanDrainThreePlus,
+                boolean opponentDrainsNonBattleground) {
+            this(occupiesBothTheaters, occupiesAnyBattleground,
+                    opponentBattlegroundCount, opponentHasDrainBonus,
+                    ownBattlegroundCount, opponentCanDrainThreePlus,
+                    opponentDrainsNonBattleground, false);
+        }
     }
 
     /** Collects the board facts used by the closed-by-default fourth shield slot. */
@@ -49,7 +63,7 @@ public final class ShieldFacts {
                                                   String playerId) {
         if (gs == null || game == null || playerId == null) {
             return new FourthSlotFacts(false, false, 0, false,
-                    0, false, false);
+                    0, false, false, false);
         }
 
         boolean bothTheaters = occupiesBothTheaters(game, playerId);
@@ -138,7 +152,33 @@ public final class ShieldFacts {
 
         return new FourthSlotFacts(bothTheaters, anyBattleground,
                 opponentBattlegrounds, opponentHasDrainBonus, ownBattlegrounds,
-                opponentCanDrainThreePlus, opponentDrainsNonBattleground);
+                opponentCanDrainThreePlus, opponentDrainsNonBattleground,
+                battleOrderPlanEquivalentOnTable(gs));
+    }
+
+    public static boolean battleOrderPlanEquivalentOnTable(GameState gs) {
+        if (gs == null) return false;
+        try {
+            List<PhysicalCard> cards = gs.getAllPermanentCards();
+            if (cards == null) return false;
+            for (PhysicalCard card : cards) {
+                if (card == null || card.getZone() == null
+                        || !card.getZone().isInPlay()) {
+                    continue;
+                }
+                String title = card.getTitle();
+                if (title == null) continue;
+                String lower = title.toLowerCase(Locale.ROOT);
+                if (lower.contains("battle order")
+                        || lower.contains("battle plan")) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Battle Order/Plan equivalent scan error: {}",
+                    e.getMessage());
+        }
+        return false;
     }
 
     /**

@@ -46,6 +46,7 @@ public class EndorOperationsEndorSystemPlannerTest {
     private static final String EXTERNAL_PILOT_SHIP_BP = "1_306";
     private static final String ADMIRAL_OZZEL_BP = "3_82";
     private static final String ALTERNATE_PILOT_BP = "1_174";
+    private static final String ESTABLISH_SECRET_BASE_BP = "207_25";
 
     private static final int ENDOR_ID = 101;
     private static final int BUNKER_ID = 102;
@@ -54,9 +55,103 @@ public class EndorOperationsEndorSystemPlannerTest {
     private static final int EXTERNAL_PILOT_SHIP_ID = 202;
     private static final int ADMIRAL_OZZEL_ID = 203;
     private static final int ALTERNATE_PILOT_ID = 204;
+    private static final int ESTABLISH_SECRET_BASE_ID = 205;
 
     private static final SwccgCardBlueprintLibrary CARDS =
             new SwccgCardBlueprintLibrary();
+
+    @Test
+    public void preFlipCheapAdmiralCreatesDominatingExactBunkerPlan()
+            throws Exception {
+        for (Bot bot : Bot.values()) {
+            Harness harness = harness(bot, false);
+            Object ozzelInfo = harness.cardInfo(
+                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID);
+            PhysicalCard ozzel = physicalCard(ozzelInfo);
+            harness.setDeployCost(
+                    ozzel, harness.bunker.location, 2.0f);
+
+            Object plan = invokeBunkerGarrisonPlan(
+                    harness, List.of(ozzelInfo), 2);
+            List<?> instructions = instructions(plan);
+            assertEquals(bot.name(), 1, instructions.size());
+            assertEquals(bot.name(), ADMIRAL_OZZEL_BP,
+                    invokeString(instructions.get(0),
+                            "getCardBlueprintId"));
+            assertEquals(bot.name(), "Endor: Bunker",
+                    invokeString(instructions.get(0),
+                            "getTargetLocationName"));
+            assertEquals(bot.name(), 2,
+                    invokeInt(instructions.get(0), "getDeployCost"));
+
+            Object noSpacePackage = invokeEopPlan(
+                    harness, Collections.emptyList(),
+                    Collections.emptyList(), 2);
+            List<?> groundPlans = invokeGroundPlans(
+                    harness, List.of(ozzelInfo), noSpacePackage,
+                    harness.platform, 2);
+            Object scored = groundPlans.stream()
+                    .filter(candidate -> {
+                        try {
+                            return "ground_eop_bunker_garrison".equals(
+                                    field(candidate, "domain"));
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .findFirst().orElse(null);
+            assertNotNull(bot.name(), scored);
+            float garrisonScore = (Float) field(scored, "score");
+            float bestOtherScore = Float.NEGATIVE_INFINITY;
+            for (Object candidate : groundPlans) {
+                if (candidate == scored) continue;
+                bestOtherScore = Math.max(
+                        bestOtherScore,
+                        (Float) field(candidate, "score"));
+            }
+            assertTrue(bot.name(),
+                    garrisonScore > bestOtherScore);
+        }
+    }
+
+    @Test
+    public void bunkerPlanClosesForEnemyPresenceOrReadyRequiredCard()
+            throws Exception {
+        for (Bot bot : Bot.values()) {
+            Harness harness = harness(bot, false);
+            Object ozzelInfo = harness.cardInfo(
+                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID);
+            PhysicalCard ozzel = physicalCard(ozzelInfo);
+            harness.setDeployCost(
+                    ozzel, harness.bunker.location, 2.0f);
+
+            AiBoardAnalyzer.LocationAnalysis enemyAtBunker = analysis(
+                    harness.bunker.location,
+                    2.0f, 0.0f, 1.0f, 1.0f,
+                    1, 1, true, true, false);
+            Object unsafe = invokeBunkerGarrisonPlan(
+                    harness, List.of(ozzelInfo), 2,
+                    List.of(harness.endor, enemyAtBunker,
+                            harness.platform));
+            assertTrue(bot.name(), instructions(unsafe).isEmpty());
+
+            PhysicalCard establish = card(
+                    ESTABLISH_SECRET_BASE_BP,
+                    ESTABLISH_SECRET_BASE_ID, Zone.HAND);
+            when(harness.gameState.getHand(PLAYER))
+                    .thenReturn(List.of(establish));
+            when(harness.analyzer.isRequiredCardForFlip(
+                    same(establish))).thenReturn(true);
+            when(harness.analyzer
+                    .isRequiredOnTableCardPullRouteReady(
+                            same(harness.game), eq(PLAYER),
+                            same(establish))).thenReturn(true);
+            Object finalCardReady = invokeBunkerGarrisonPlan(
+                    harness, List.of(ozzelInfo), 2);
+            assertTrue(bot.name(),
+                    instructions(finalCardReady).isEmpty());
+        }
+    }
 
     @Test
     public void anyLegalSelfPilotedShipCanOccupyEndorAtExactForce()
@@ -245,6 +340,32 @@ public class EndorOperationsEndorSystemPlannerTest {
                 forceAvailable);
     }
 
+    private static Object invokeBunkerGarrisonPlan(
+            Harness harness,
+            List<?> characters,
+            int forceAvailable) throws Exception {
+        return invokeBunkerGarrisonPlan(
+                harness, characters, forceAvailable,
+                harness.allLocations());
+    }
+
+    private static Object invokeBunkerGarrisonPlan(
+            Harness harness,
+            List<?> characters,
+            int forceAvailable,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations)
+            throws Exception {
+        Method method = harness.planner.getClass().getDeclaredMethod(
+                "generateEopBunkerGarrisonPlan",
+                List.class, List.class, int.class);
+        method.setAccessible(true);
+        return method.invoke(
+                harness.planner,
+                characters,
+                allLocations,
+                forceAvailable);
+    }
+
     private static List<?> invokeGroundPlans(
             Harness harness,
             List<?> characters,
@@ -353,12 +474,17 @@ public class EndorOperationsEndorSystemPlannerTest {
     }
 
     private static Harness harness(Bot bot) throws Exception {
+        return harness(bot, true);
+    }
+
+    private static Harness harness(
+            Bot bot, boolean flipped) throws Exception {
         PhysicalCard endor = card(ENDOR_BP, ENDOR_ID, Zone.LOCATIONS);
         PhysicalCard bunker =
                 card(ENDOR_BUNKER_BP, BUNKER_ID, Zone.LOCATIONS);
         PhysicalCard platform =
                 card(ENDOR_PLATFORM_BP, PLATFORM_ID, Zone.LOCATIONS);
-        Object planner = bot.newPlanner();
+        Object planner = bot.newPlanner(flipped);
         SwccgGame game = mock(SwccgGame.class);
         GameState gameState = mock(GameState.class);
         ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
@@ -373,6 +499,8 @@ public class EndorOperationsEndorSystemPlannerTest {
                 .thenAnswer(invocation ->
                         cardsById.get(invocation.getArgument(0)));
         when(gameState.getCaptivesOfEscort(any(PhysicalCard.class)))
+                .thenReturn(Collections.emptyList());
+        when(gameState.getHand(PLAYER))
                 .thenReturn(Collections.emptyList());
         when(gameState.getCardsAtLocation(any(PhysicalCard.class)))
                 .thenReturn(Collections.emptyList());
@@ -401,9 +529,14 @@ public class EndorOperationsEndorSystemPlannerTest {
 
         setPrivateField(planner, "currentGame", game);
         setPrivateField(planner, "currentPlayerId", PLAYER);
+        ObjectiveAnalyzer analyzer =
+                (ObjectiveAnalyzer) getPrivateField(
+                        planner, "objectiveAnalyzer");
         return new Harness(
                 bot,
                 planner,
+                analyzer,
+                game,
                 gameState,
                 modifiers,
                 cardsById,
@@ -433,6 +566,13 @@ public class EndorOperationsEndorSystemPlannerTest {
         Field field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
         field.set(target, value);
+    }
+
+    private static Object getPrivateField(
+            Object target, String name) throws Exception {
+        Field field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(target);
     }
 
     private static AiBoardAnalyzer.LocationAnalysis analysis(
@@ -487,11 +627,11 @@ public class EndorOperationsEndorSystemPlannerTest {
     private enum Bot {
         RANDO("com.gempukku.swccgo.ai.models.rando.strategy") {
             @Override
-            Object newPlanner() {
+            Object newPlanner(boolean flipped) {
                 var analyzer = mock(
                         com.gempukku.swccgo.ai.models.rando.strategy
                                 .ObjectiveAnalyzer.class);
-                configure(analyzer);
+                configure(analyzer, flipped);
                 var planner =
                         new com.gempukku.swccgo.ai.models.rando.strategy
                                 .DeployPhasePlanner();
@@ -501,11 +641,11 @@ public class EndorOperationsEndorSystemPlannerTest {
         },
         CHOSEN_ONE("com.gempukku.swccgo.ai.models.chosenone.strategy") {
             @Override
-            Object newPlanner() {
+            Object newPlanner(boolean flipped) {
                 var analyzer = mock(
                         com.gempukku.swccgo.ai.models.chosenone.strategy
                                 .ObjectiveAnalyzer.class);
-                configure(analyzer);
+                configure(analyzer, flipped);
                 var planner =
                         new com.gempukku.swccgo.ai.models.chosenone.strategy
                                 .DeployPhasePlanner();
@@ -520,23 +660,28 @@ public class EndorOperationsEndorSystemPlannerTest {
             this.strategyPackage = strategyPackage;
         }
 
-        abstract Object newPlanner();
+        abstract Object newPlanner(boolean flipped);
 
         private static void configure(
                 com.gempukku.swccgo.ai.models.common.strategy
-                        .ObjectiveAnalyzer analyzer) {
+                        .ObjectiveAnalyzer analyzer,
+                boolean flipped) {
             when(analyzer.isAnalyzed()).thenReturn(true);
-            when(analyzer.isFlipped()).thenReturn(true);
+            when(analyzer.isFlipped()).thenReturn(flipped);
             when(analyzer.getObjectiveBlueprintId())
                     .thenReturn(OBJECTIVE_BP);
             when(analyzer.getObjectiveTitle())
-                    .thenReturn("Imperial Outpost");
+                    .thenReturn(flipped
+                            ? "Imperial Outpost"
+                            : "Endor Operations");
         }
     }
 
     private static final class Harness {
         private final Bot bot;
         private final Object planner;
+        private final ObjectiveAnalyzer analyzer;
+        private final SwccgGame game;
         private final GameState gameState;
         private final ModifiersQuerying modifiers;
         private final Map<Integer, PhysicalCard> cardsById;
@@ -547,6 +692,8 @@ public class EndorOperationsEndorSystemPlannerTest {
         private Harness(
                 Bot bot,
                 Object planner,
+                ObjectiveAnalyzer analyzer,
+                SwccgGame game,
                 GameState gameState,
                 ModifiersQuerying modifiers,
                 Map<Integer, PhysicalCard> cardsById,
@@ -555,6 +702,8 @@ public class EndorOperationsEndorSystemPlannerTest {
                 AiBoardAnalyzer.LocationAnalysis platform) {
             this.bot = bot;
             this.planner = planner;
+            this.analyzer = analyzer;
+            this.game = game;
             this.gameState = gameState;
             this.modifiers = modifiers;
             this.cardsById = cardsById;

@@ -98,6 +98,13 @@ public class ShieldPolicyTest {
                 ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN);
         assertPick(Side.LIGHT, nonBattlegroundDrain, "Simple Tricks And Nonsense",
                 ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN);
+
+        ShieldFacts.FourthSlotFacts redundantBattleOrder =
+                new ShieldFacts.FourthSlotFacts(
+                        true, true, 0, true, 3,
+                        true, true, true);
+        assertPick(Side.DARK, redundantBattleOrder, "Resistance",
+                ShieldPolicy.FourthSlotTrigger.DRAIN_CAP);
     }
 
     @Test
@@ -188,8 +195,22 @@ public class ShieldPolicyTest {
         PolicyResult rejectedBase = ShieldPolicy.shieldCandidateAdjustments(
                 "A", "Battle Order", -50.0f, 2, 2, 2, closed(), true,
                 ShieldPolicy.CandidateRoute.DEDICATED);
+        // Consolidated lineage: the Shield twin live-replay repair's global
+        // third-slot reserve (V112) is live law, so a non-live Battle Order
+        // (score not above -50) at two shields is still held. The EOP-era
+        // empty expectation predates that rule.
         assertOperations(rejectedBase,
                 "V112-third-slot-selection", -5000.0f);
+
+        PolicyResult redundant = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", -50.0f, 2, 2, 3,
+                pick("Battle Order"), true, true,
+                ShieldPolicy.CandidateRoute.DEDICATED);
+        assertOperations(redundant,
+                "SHIELD.BATTLE_ORDER_PLAN.REDUNDANT", -9999.0f);
+        assertOperations(ShieldPolicy.battleOrderPlanRedundancyGate(
+                "A", "Battle Order", true),
+                "SHIELD.BATTLE_ORDER_PLAN.REDUNDANT", -9999.0f);
     }
 
     @Test

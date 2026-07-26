@@ -49,6 +49,7 @@ import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
+import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 
@@ -74,6 +75,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
     // Pattern for extracting blueprint ID from action text HTML
     private static final Pattern BLUEPRINT_PATTERN = Pattern.compile("value='([^']+)'");
+    private static final SwccgCardBlueprintLibrary CARD_LIBRARY =
+            new SwccgCardBlueprintLibrary();
 
     // Track barriered targets to avoid playing multiple barriers on same card
     private Set<String> barrieredTargets = new HashSet<>();
@@ -268,6 +271,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
+            }
+
+            if (actionText.contains("Grab")) {
+                evaluateGrab(action, context, actionText);
+                actions.add(action);
+                continue;
             }
 
             var hardLossAnalyzer = context.getObjectiveAnalyzer();
@@ -4448,11 +4457,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 ForceLossPolicy.ActionTextChoice.PLACE_IN_LOST_PILE));
             }
 
-            // ========== Grab ==========
-            else if (actionText.contains("Grab")) {
-                evaluateGrab(action, context, actionText);
-            }
-
             // ========== Break Cover ==========
             else if (actionText.contains("Break cover")) {
                 evaluateBreakCover(action, context, actionText);
@@ -5665,28 +5669,30 @@ public class ActionTextEvaluator extends ActionEvaluator {
     private void evaluateGrab(EvaluatedAction action, DecisionContext context, String actionText) {
         // V53: Grabber shields (Allegations / A Tragedy) must ONLY grab OPPONENT's interrupts.
         // NEVER grab your own interrupts — that's self-sabotage.
-        // Use game state to check card ownership when possible, fall back to name matching.
+        // The action card ID identifies the grabber shield, not the Interrupt
+        // being played. Resolve the target from the response prompt instead.
 
         Side mySide = context.getSide();
-        GameState grabGs = context.getGameState();
         String textLower = actionText.toLowerCase();
 
-        // V53: Try to determine ownership from game state (most reliable)
         boolean confirmedOwnCard = false;
         boolean confirmedOpponentCard = false;
-        if (grabGs != null && context.getPlayerId() != null) {
+        String targetBlueprintId =
+                extractBlueprintFromText(context.getDecisionText());
+        if (targetBlueprintId != null && mySide != null) {
             try {
-                // Check if any card IDs in context belong to us
-                String pid = context.getPlayerId();
-                String oid = grabGs.getOpponent(pid);
-                for (String cardId : context.getCardIds()) {
-                    PhysicalCard grabCard = grabGs.findCardById(Integer.parseInt(cardId));
-                    if (grabCard != null) {
-                        if (pid.equals(grabCard.getOwner())) confirmedOwnCard = true;
-                        if (oid != null && oid.equals(grabCard.getOwner())) confirmedOpponentCard = true;
-                    }
-                }
-            } catch (Exception e) { /* fall through to name matching */ }
+                SwccgCardBlueprint targetBlueprint =
+                        CARD_LIBRARY.getSwccgoCardBlueprint(
+                                targetBlueprintId);
+                Side targetSide = targetBlueprint != null
+                        ? targetBlueprint.getSide() : null;
+                confirmedOwnCard = targetSide == mySide;
+                confirmedOpponentCard = targetSide != null
+                        && targetSide != mySide;
+            } catch (Exception e) {
+                logger.debug("V53 GRAB: target blueprint read failed for {}: {}",
+                        targetBlueprintId, e.getMessage());
+            }
         }
 
         if (confirmedOwnCard || confirmedOpponentCard) {

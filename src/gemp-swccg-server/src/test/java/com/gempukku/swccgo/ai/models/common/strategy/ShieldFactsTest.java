@@ -42,6 +42,19 @@ public class ShieldFactsTest {
     }
 
     @Test
+    public void ordinaryBattlePlanClosesTheBattleOrderRoute() {
+        GameState gameState = mock(GameState.class);
+        PhysicalCard battlePlan = mock(PhysicalCard.class);
+        when(battlePlan.getTitle()).thenReturn("Battle Plan");
+        when(battlePlan.getZone()).thenReturn(Zone.SIDE_OF_TABLE);
+        when(gameState.getAllPermanentCards()).thenReturn(
+                List.of(battlePlan));
+
+        assertTrue(ShieldFacts
+                .battleOrderPlanEquivalentOnTable(gameState));
+    }
+
+    @Test
     public void invasionMakesNabooSystemNonBattlegroundForAiFactsOnEitherFace() {
         for (boolean flipped : new boolean[]{false, true}) {
             GameState gameState = mock(GameState.class);

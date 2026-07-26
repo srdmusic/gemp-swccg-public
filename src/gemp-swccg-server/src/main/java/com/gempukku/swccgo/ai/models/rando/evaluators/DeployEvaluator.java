@@ -36,6 +36,7 @@ import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.common.Phase;
@@ -1585,6 +1586,9 @@ public class DeployEvaluator extends ActionEvaluator {
                         && plan.getReason() != null
                         && plan.getReason().startsWith(
                             "V297 objective flip-gate formation");
+                    boolean eopBunkerGarrisonPlan = plan != null
+                        && EndorOperationsTacticalPolicy
+                            .isBunkerGarrisonPlan(plan.getReason());
                     int objectiveFormationReserve = 0;
                     if (objectiveFormationPlan && plannedDeployActionOffered) {
                         for (DeploymentInstruction instruction : plan.getInstructions()) {
@@ -1636,6 +1640,7 @@ public class DeployEvaluator extends ActionEvaluator {
                             plan != null && !plan.getInstructions().isEmpty(),
                             plannedInstruction != null,
                             objectiveFormationPlan,
+                            eopBunkerGarrisonPlan,
                             plannedInstruction != null
                                 ? plannedInstruction.getPriority() : Integer.MAX_VALUE,
                             plan != null && plan.isForceAllowExtras(),
