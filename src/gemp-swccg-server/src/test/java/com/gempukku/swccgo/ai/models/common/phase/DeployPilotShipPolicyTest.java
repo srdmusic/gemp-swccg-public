@@ -49,27 +49,35 @@ public class DeployPilotShipPolicyTest {
     public void crewPolicyPreservesUnavailableAndUnaffordableReasons() {
         assertRules(DeployPilotShipPolicy.evaluateCrew(
                         new DeployPilotShipPolicy.CrewFacts(
-                                "a", true, false, false, false,
+                                "a", true, false, false, false, false, false,
                                 5, 4, false, "")).operations(),
                 new String[]{"V30-crew-required"}, new float[]{-1500.0f});
         List<PolicyOperation> unaffordable = DeployPilotShipPolicy.evaluateCrew(
                 new DeployPilotShipPolicy.CrewFacts(
-                        "a", true, true, false, false,
+                        "a", true, false, false, true, false, false,
                         5, 4, false, "")).operations();
         assertRules(unaffordable,
                 new String[]{"V30-crew-required"}, new float[]{-1500.0f});
         assertTrue(unaffordable.get(0).reason().contains("unaffordable"));
         assertTrue(DeployPilotShipPolicy.evaluateCrew(
                 new DeployPilotShipPolicy.CrewFacts(
-                        "a", true, true, true, false,
+                        "a", true, false, false, true, true, false,
                         5, 8, false, "")).operations().isEmpty());
+        assertTrue(DeployPilotShipPolicy.evaluateCrew(
+                new DeployPilotShipPolicy.CrewFacts(
+                        "a", true, true, false, false, false, false,
+                        5, 4, false, "")).operations().isEmpty());
+        assertTrue(DeployPilotShipPolicy.evaluateCrew(
+                new DeployPilotShipPolicy.CrewFacts(
+                        "a", true, false, true, true, false, false,
+                        5, 4, false, "")).operations().isEmpty());
     }
 
     @Test
     public void crewPolicyBoostsLowPowerPilotForUnmannedAsset() {
         assertRules(DeployPilotShipPolicy.evaluateCrew(
                         new DeployPilotShipPolicy.CrewFacts(
-                                "a", false, false, false, false,
+                                "a", false, false, false, false, false, false,
                                 0, 0, true, "Blizzard 2")).operations(),
                 new String[]{"V30-crew-unmanned"}, new float[]{400.0f});
     }

@@ -1,13 +1,11 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
-import com.gempukku.swccgo.cards.set3.dark.Card3_082;
 import com.gempukku.swccgo.cards.set8.dark.Card8_157;
 import com.gempukku.swccgo.cards.set8.dark.Card8_166;
 import com.gempukku.swccgo.cards.set8.dark.Card8_167;
 import com.gempukku.swccgo.cards.set13.dark.Card13_054;
 import com.gempukku.swccgo.cards.set13.light.Card13_008;
 import com.gempukku.swccgo.cards.set200.dark.Card200_110;
-import com.gempukku.swccgo.cards.set201.dark.Card201_040;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -33,7 +31,7 @@ public class ShieldFactsEopBattleOrderTest {
     private static final String OPPONENT = "opponent";
 
     @Test
-    public void exactReplayStateReservesThirdSlotWithOzzelDeployedAndSlaveOneInReserve() {
+    public void openEndorRouteReservesSlotFourAfterThreeShields() {
         Fixture fixture = new Fixture();
 
         assertTrue("objective owner", Filters.owner(PLAYER).accepts(
@@ -51,13 +49,14 @@ public class ShieldFactsEopBattleOrderTest {
         assertTrue("Endor system on table", Filters.canSpot(fixture.game, null,
                 Filters.and(Filters.Endor_system, Filters.battleground_system)));
         assertTrue(ShieldFacts.shouldReserveEopBattleOrderSlot(
-                fixture.game, PLAYER, fixture.knowledgeAndDefense, 2));
+                fixture.game, PLAYER, fixture.knowledgeAndDefense, 3));
     }
 
     @Test
     public void everyReservationBoundaryFailsClosed() {
         assertFalse(new Fixture().reserveWithShieldCount(1));
-        assertFalse(new Fixture().reserveWithShieldCount(3));
+        assertFalse(new Fixture().reserveWithShieldCount(2));
+        assertFalse(new Fixture().reserveWithShieldCount(4));
 
         Fixture noObjective = new Fixture();
         noObjective.active.remove(noObjective.objective);
@@ -106,10 +105,6 @@ public class ShieldFactsEopBattleOrderTest {
                 active(new Card8_166(), "8_166", PLAYER, Zone.LOCATIONS);
         private final PhysicalCard endor =
                 active(new Card8_157(), "8_157", PLAYER, Zone.LOCATIONS);
-        private final PhysicalCard ozzel =
-                active(new Card3_082(), "3_82", PLAYER, Zone.AT_LOCATION);
-        private final PhysicalCard slaveOne =
-                card(new Card201_040(), "201_40", PLAYER, Zone.RESERVE_DECK);
         private final PhysicalCard knowledgeAndDefense =
                 active(new Card200_110(), "200_110", PLAYER, Zone.SIDE_OF_TABLE);
         private final PhysicalCard battleOrder =
@@ -123,7 +118,6 @@ public class ShieldFactsEopBattleOrderTest {
             when(game.getOpponent(PLAYER)).thenReturn(OPPONENT);
             when(gameState.getStackedCards(knowledgeAndDefense))
                     .thenReturn(List.of(battleOrder));
-            when(gameState.getReserveDeck(PLAYER)).thenReturn(List.of(slaveOne));
             when(gameState.getHand(PLAYER)).thenReturn(List.of());
 
             when(modifiers.isBattleground(gameState, landingPlatform, null))
@@ -153,7 +147,7 @@ public class ShieldFactsEopBattleOrderTest {
         }
 
         private boolean reserve() {
-            return reserveWithShieldCount(2);
+            return reserveWithShieldCount(3);
         }
 
         private boolean reserveWithShieldCount(int shieldCount) {

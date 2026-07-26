@@ -27,6 +27,7 @@ public class DeploymentInstruction {
     private String aboardShipName;
     private String aboardShipBlueprintId;
     private String aboardShipCardId;
+    private boolean verifiedCrewPackage = false;
 
     // For cards deploying to locations in hand
     private boolean targetLocationPending = false;
@@ -68,6 +69,7 @@ public class DeploymentInstruction {
         this.aboardShipName = other.aboardShipName;
         this.aboardShipBlueprintId = other.aboardShipBlueprintId;
         this.aboardShipCardId = other.aboardShipCardId;
+        this.verifiedCrewPackage = other.verifiedCrewPackage;
         this.targetLocationPending = other.targetLocationPending;
         this.targetLocationBlueprintId = other.targetLocationBlueprintId;
     }
@@ -123,6 +125,9 @@ public class DeploymentInstruction {
 
     public String getAboardShipCardId() { return aboardShipCardId; }
     public void setAboardShipCardId(String aboardShipCardId) { this.aboardShipCardId = aboardShipCardId; }
+
+    public boolean isVerifiedCrewPackage() { return verifiedCrewPackage; }
+    public void setVerifiedCrewPackage(boolean verifiedCrewPackage) { this.verifiedCrewPackage = verifiedCrewPackage; }
 
     public boolean isTargetLocationPending() { return targetLocationPending; }
     public void setTargetLocationPending(boolean targetLocationPending) { this.targetLocationPending = targetLocationPending; }

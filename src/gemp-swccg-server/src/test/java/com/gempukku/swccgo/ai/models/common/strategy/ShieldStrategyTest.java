@@ -69,6 +69,20 @@ public class ShieldStrategyTest {
         assertBits(80.0f, strategy.scoreShield("13_54", "Battle Order", 2));
     }
 
+    @Test
+    public void uselessGesturePrintsUseExactBlueprintAndObjectiveFacts() {
+        ShieldStrategy strategy = new ShieldStrategy(Side.DARK);
+
+        assertBits(-100.0f,
+                strategy.scoreShield("13_51", "A Useless Gesture", 2));
+        assertBits(-10.0f,
+                strategy.scoreShield("223_7", "A Useless Gesture (V)", 2));
+
+        strategy.setOpponentObjective("Watch Your Step");
+        assertBits(250.0f,
+                strategy.scoreShield("223_7", "A Useless Gesture (V)", 2));
+    }
+
     private static void assertBits(float expected, float actual) {
         assertEquals(Float.floatToRawIntBits(expected), Float.floatToRawIntBits(actual));
     }

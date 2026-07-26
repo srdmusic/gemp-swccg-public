@@ -4183,8 +4183,9 @@ public class DeployEvaluator extends ActionEvaluator {
                     // move bonus, no protection, no piloting power — wasted Force.
                     //
                     // Two paths (universal — no card-name hardcoding):
-                    //   (A) Deploying a VEHICLE: soft-block (-1500) if no pilot-capable
-                    //       character in hand AND no candidate pilot on table to crew it.
+                    //   (A) Deploying a VEHICLE/STARSHIP: soft-block (-1500) if it has no
+                    //       permanent pilot, no planner-verified exact crew package, no
+                    //       affordable pilot in hand, and no candidate pilot on table.
                     //       Soft so the engine fallback can still deploy if everything else
                     //       is worse, but Rando strongly prefers pilot-first.
                     //   (B) Deploying a PILOT-CAPABLE character: +400 if Rando has an
@@ -4204,6 +4205,8 @@ public class DeployEvaluator extends ActionEvaluator {
                         try {
                             String vpPlayerId = context.getPlayerId();
                             boolean v213DeployingAsset = false;
+                            boolean v213AssetHasPermanentPilot = false;
+                            boolean v213VerifiedCrewPackage = false;
                             boolean v213PilotInHand = false;
                             boolean v213AffordablePilotInHand = false;
                             boolean v213FreePilotOnTable = false;
@@ -4223,6 +4226,10 @@ public class DeployEvaluator extends ActionEvaluator {
                             // STARSHIP-vs-VEHICLE subtype distinction.
                             if (category == CardCategory.VEHICLE || category == CardCategory.STARSHIP) {
                                 v213DeployingAsset = true;
+                                v213AssetHasPermanentPilot =
+                                    game.getModifiersQuerying().hasPermanentPilot(gameState, card);
+                                v213VerifiedCrewPackage = plannedInstruction != null
+                                    && plannedInstruction.isVerifiedCrewPackage();
                                 // 2026-06-01 AFFORDABILITY EXTENSION (Steve, both losing games):
                                 // "Rando had Walkers and did not put pilots on them. Easy targets
                                 // and some of the walkers were powerless with no pilot." Replay
@@ -4249,9 +4256,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                         hasPilotInHand = true;
                                         // Affordability: can Rando pay for vehicle + this pilot
                                         // this turn? Use base deploy cost; matching-pilot reductions
-                                        // and other modifiers are not modeled here (conservative —
+                                        // and other modifiers are not modeled here (conservative,
                                         // mirrors the existing V35.6 affordability check pattern at
-                                        // line 4840-4846).
+                                        // line 4840-4846). Exact planner-verified packages bypass
+                                        // this legacy estimate through v213VerifiedCrewPackage.
                                         int pilotCost = hc.getBlueprint().getDeployCost() != null
                                             ? hc.getBlueprint().getDeployCost().intValue() : 0;
                                         if (availForce >= vehicleCost + pilotCost) {
@@ -4324,7 +4332,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                 "deploy-crew-v30-" + actionId);
                             v213CrewLedger.register(DeployPilotShipPolicy.evaluateCrew(
                                 new DeployPilotShipPolicy.CrewFacts(
-                                    actionId, v213DeployingAsset, v213PilotInHand,
+                                    actionId, v213DeployingAsset,
+                                    v213AssetHasPermanentPilot,
+                                    v213VerifiedCrewPackage, v213PilotInHand,
                                     v213AffordablePilotInHand, v213FreePilotOnTable,
                                     v213AssetCost, v213AvailableForce,
                                     v213DeployingPilotCandidate, v213UnmannedAssetTitle)));

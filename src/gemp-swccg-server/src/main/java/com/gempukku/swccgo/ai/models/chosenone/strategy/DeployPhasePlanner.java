@@ -14,6 +14,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.filters.Filters;
 
 import org.apache.logging.log4j.Logger;
 
@@ -278,10 +279,16 @@ public class DeployPhasePlanner {
             forceAfterLocations -= loc.cost;
             objectiveFormationForceAfterLocations -= loc.cost;
         }
+        DeploymentPlan endorSystemPlan = generateEopEndorSystemPlan(
+            starships,
+            characters.stream().filter(card -> card.isPilot)
+                .collect(Collectors.toList()),
+            allLocations,
+            Math.max(0, objectiveFormationForceAfterLocations));
 
         // Generate ground plans
         List<ScoredPlan> groundPlans = generateGroundPlans(
-            characters, vehicles, starships, categories, forceAfterLocations,
+            characters, vehicles, endorSystemPlan, categories, forceAfterLocations,
             Math.max(0, objectiveFormationForceAfterLocations), groundThreshold,
             allLocations, currentTurn, drainGap);
         allPlans.addAll(groundPlans);
@@ -289,7 +296,7 @@ public class DeployPhasePlanner {
         // Generate space plans
         List<ScoredPlan> spacePlans = generateSpacePlans(
             starships, characters, categories, forceAfterLocations, spaceThreshold,
-            allLocations, currentTurn, drainGap, game, playerId);
+            allLocations, currentTurn, drainGap, game, playerId, endorSystemPlan);
         allPlans.addAll(spacePlans);
 
         // Generate combined plans (best of ground + space within budget)
@@ -306,6 +313,9 @@ public class DeployPhasePlanner {
             float planScore = isObjectiveFlipGateFormationPlan(bestPlan)
                 ? scoreObjectiveFlipGateFormationPlan(bestPlan, allLocations, currentTurn)
                 : scorePlan(bestPlan, allLocations, currentTurn);
+            if (!allPlans.isEmpty()) {
+                planScore = allPlans.get(0).score;
+            }
             if (planScore < RandoConfig.DEPLOY_EARLY_GAME_THRESHOLD) {
                 LOG.info("📋 EARLY GAME HOLD: plan score {} < threshold {} - holding back",
                     (int)planScore, RandoConfig.DEPLOY_EARLY_GAME_THRESHOLD);
@@ -747,7 +757,7 @@ public class DeployPhasePlanner {
      * Generate ground deployment plans.
      */
     private List<ScoredPlan> generateGroundPlans(List<CardInfo> characters, List<CardInfo> vehicles,
-                                                  List<CardInfo> starships,
+                                                  DeploymentPlan fundedEndorPackage,
                                                   LocationCategories categories, int forceAvailable,
                                                   int objectiveFormationForceAvailable,
                                                   int threshold, List<AiBoardAnalyzer.LocationAnalysis> allLocations,
@@ -757,17 +767,6 @@ public class DeployPhasePlanner {
         // Get ground cards
         List<CardInfo> groundCards = new ArrayList<>(characters);
         groundCards.addAll(vehicles);
-        DeploymentPlan fundedEndorPackage = generateEopEndorSystemPlan(
-                starships,
-                characters.stream().filter(card -> card.isPilot)
-                        .collect(Collectors.toList()),
-                allLocations, forceAvailable, RandoConfig.DEPLOY_THRESHOLD);
-        Integer reservedEndorPilotPermanentId =
-                fundedEndorPackage.getInstructions().stream()
-                    .filter(instruction -> instruction.getAboardShipCardId() != null)
-                    .map(DeploymentInstruction::getCardPermanentCardId)
-                    .filter(Objects::nonNull)
-                    .findFirst().orElse(null);
 
         if (groundCards.isEmpty()) {
             return plans;
@@ -814,11 +813,7 @@ public class DeployPhasePlanner {
         // Plan 3: Establish at uncontested locations
         if (!categories.establishTargets.isEmpty()) {
             DeploymentPlan establishPlan = generateEstablishPlan(
-                groundCards.stream()
-                    .filter(card -> reservedEndorPilotPermanentId == null
-                            || card.card.getPermanentCardId()
-                                != reservedEndorPilotPermanentId)
-                    .collect(Collectors.toList()),
+                groundCards,
                 categories.establishTargets.stream()
                     .filter(AiBoardAnalyzer.LocationAnalysis::isGround)
                     .collect(Collectors.toList()),
@@ -826,7 +821,9 @@ public class DeployPhasePlanner {
             if (!establishPlan.getInstructions().isEmpty()) {
                 if (EndorOperationsTacticalPolicy
                         .shouldSuppressEmptyEndorGroundEstablish(
-                                !fundedEndorPackage.getInstructions().isEmpty(),
+                                occupiesEndorBattlegroundSite(allLocations)
+                                    && fundedEndorPackage != null
+                                    && !fundedEndorPackage.getInstructions().isEmpty(),
                                 targetsEmptyEndorSite(establishPlan))) {
                     LOG.warn("EOP SPACE FIRST: suppressing another empty Endor site while Endor system is uncontrolled");
                 } else {
@@ -1059,7 +1056,8 @@ public class DeployPhasePlanner {
                                                  LocationCategories categories, int forceAvailable,
                                                  int threshold, List<AiBoardAnalyzer.LocationAnalysis> allLocations,
                                                  int turn, DrainGapResult drainGap,
-                                                 SwccgGame game, String playerId) {
+                                                 SwccgGame game, String playerId,
+                                                 DeploymentPlan endorSystemPlan) {
         List<ScoredPlan> plans = new ArrayList<>();
 
         if (starships.isEmpty()) {
@@ -1071,9 +1069,8 @@ public class DeployPhasePlanner {
             .filter(c -> c.isPilot)
             .collect(Collectors.toList());
 
-        DeploymentPlan endorSystemPlan = generateEopEndorSystemPlan(
-                starships, pilots, allLocations, forceAvailable, threshold);
-        if (!endorSystemPlan.getInstructions().isEmpty()) {
+        if (endorSystemPlan != null
+                && !endorSystemPlan.getInstructions().isEmpty()) {
             float score = scorePlan(endorSystemPlan, allLocations, turn)
                     + EndorOperationsTacticalPolicy.POST_FLIP_REINFORCE_BONUS;
             plans.add(new ScoredPlan(
@@ -1154,12 +1151,15 @@ public class DeployPhasePlanner {
             List<CardInfo> starships,
             List<CardInfo> pilots,
             List<AiBoardAnalyzer.LocationAnalysis> allLocations,
-            int forceAvailable,
-            int threshold) {
+            int forceAvailable) {
         DeploymentPlan plan = new DeploymentPlan(
                 DeployStrategy.ESTABLISH,
                 "EOP: occupy Endor system before further ground expansion");
-        if (!endorSystemOccupationPending(allLocations)) {
+        if (!endorSystemOccupationPending(allLocations)
+                || currentGame == null
+                || currentGame.getGameState() == null
+                || currentGame.getModifiersQuerying() == null
+                || currentPlayerId == null) {
             return plan;
         }
         AiBoardAnalyzer.LocationAnalysis endor = allLocations.stream()
@@ -1171,41 +1171,245 @@ public class DeployPhasePlanner {
         if (endor == null) {
             return plan;
         }
-        List<CardInfo> legalShips = filterDeployableCards(starships, endor.location)
-                .stream()
-                .filter(ship -> "201_40".equals(ship.blueprintId))
-                .filter(ship -> ship.cost <= forceAvailable)
-                .sorted(Comparator.comparingInt((CardInfo ship) -> ship.cost)
-                        .thenComparing(Comparator.comparingInt(
-                                (CardInfo ship) -> ship.power).reversed()))
-                .collect(Collectors.toList());
-        for (CardInfo ship : legalShips) {
-            CardInfo pilot = null;
-            if (ship.ability <= 0) {
-                pilot = pilots.stream()
-                        .filter(candidate -> candidate.cost + ship.cost <= forceAvailable
-                                && candidate.ability > 0)
-                        .sorted(Comparator.comparingInt(candidate -> candidate.cost))
-                        .findFirst().orElse(null);
-                if (pilot == null) {
-                    continue;
+        CardInfo reservedBunkerGarrison =
+                findReservedEopBunkerGarrison(pilots, allLocations);
+        EndorSystemPackage best = null;
+        for (CardInfo ship : starships) {
+            Integer soloCost = exactDeployCostAt(ship.card, endor.location);
+            float shipAbility = exactAbility(ship.card, true);
+            if (soloCost != null
+                    && soloCost <= forceAvailable
+                    && shipAbility > 0.0f
+                    && canDeployDirectly(ship.card, endor.location)) {
+                EndorSystemPackage candidate = new EndorSystemPackage(
+                        ship, null, soloCost, shipAbility,
+                        ship.power);
+                if (isBetterEndorSystemPackage(candidate, best)) {
+                    best = candidate;
                 }
             }
-            addCardToPlan(plan, ship.card, endor, 1,
-                    "EOP: deploy ship to control Endor system");
-            if (pilot != null) {
-                addCardToPlan(plan, pilot.card, endor, 2,
-                        "EOP: deploy pilot aboard Endor system ship");
-                DeploymentInstruction pilotInstruction =
-                        plan.getInstructions().get(plan.getInstructions().size() - 1);
-                pilotInstruction.setAboardShipName(ship.name);
-                pilotInstruction.setAboardShipBlueprintId(ship.blueprintId);
-                pilotInstruction.setAboardShipCardId(
-                        String.valueOf(ship.card.getCardId()));
+            for (CardInfo pilot : pilots) {
+                if (reservedBunkerGarrison != null
+                        && isSamePhysicalCard(
+                                pilot.card, reservedBunkerGarrison.card)) {
+                    continue;
+                }
+                float pilotAbility = exactAbility(pilot.card, false);
+                if (pilotAbility <= 0.0f
+                        || !canDeployShipAndPilotTogether(
+                                ship.card, pilot.card, endor.location)) {
+                    continue;
+                }
+                Integer pairCost = exactSimultaneousDeployCost(
+                        ship.card, pilot.card, endor.location);
+                if (pairCost == null || pairCost > forceAvailable) {
+                    continue;
+                }
+                EndorSystemPackage candidate = new EndorSystemPackage(
+                        ship, pilot, pairCost, pilotAbility,
+                        ship.power + pilot.power);
+                if (isBetterEndorSystemPackage(candidate, best)) {
+                    best = candidate;
+                }
             }
+        }
+        if (best == null) {
             return plan;
         }
+
+        addCardToPlan(plan, best.ship.card, endor, 1,
+                "EOP: deploy a legal ship package to occupy Endor system");
+        DeploymentInstruction shipInstruction =
+                plan.getInstructions().get(plan.getInstructions().size() - 1);
+        shipInstruction.setDeployCost(best.cost);
+        shipInstruction.setAbilityContribution(
+                (int) Math.ceil(best.combinedAbility));
+        if (best.pilot != null) {
+            shipInstruction.setVerifiedCrewPackage(true);
+            addCardToPlan(plan, best.pilot.card, endor, 2,
+                    "EOP: deploy the legal pilot aboard the Endor system ship");
+            DeploymentInstruction pilotInstruction =
+                    plan.getInstructions().get(plan.getInstructions().size() - 1);
+            pilotInstruction.setDeployCost(0);
+            pilotInstruction.setAboardShipName(best.ship.name);
+            pilotInstruction.setAboardShipBlueprintId(best.ship.blueprintId);
+            pilotInstruction.setAboardShipCardId(
+                    String.valueOf(best.ship.card.getCardId()));
+        }
         return plan;
+    }
+
+    private CardInfo findReservedEopBunkerGarrison(
+            List<CardInfo> pilots,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations) {
+        AiBoardAnalyzer.LocationAnalysis bunker = allLocations.stream()
+                .filter(loc -> loc != null && loc.location != null
+                        && "endor: bunker".equalsIgnoreCase(
+                                loc.location.getTitle()))
+                .findFirst().orElse(null);
+        if (bunker == null) {
+            return null;
+        }
+        List<PhysicalCard> cardsAtBunker =
+                currentGame.getGameState().getCardsAtLocation(bunker.location);
+        if (cardsAtBunker != null && cardsAtBunker.stream()
+                .anyMatch(card -> currentPlayerId.equals(card.getOwner())
+                        && isImperialAdmiral(card))) {
+            return null;
+        }
+        CardInfo best = null;
+        int bestCost = Integer.MAX_VALUE;
+        for (CardInfo candidate : pilots) {
+            Integer cost = exactDeployCostAt(
+                    candidate.card, bunker.location);
+            if (cost == null || cost > 2
+                    || !isImperialAdmiral(candidate.card)
+                    || !canDeployDirectly(
+                            candidate.card, bunker.location)) {
+                continue;
+            }
+            int permanentId = candidate.card.getPermanentCardId();
+            int bestPermanentId = best == null
+                    ? Integer.MAX_VALUE
+                    : best.card.getPermanentCardId();
+            if (cost < bestCost
+                    || cost == bestCost
+                        && permanentId < bestPermanentId) {
+                best = candidate;
+                bestCost = cost;
+            }
+        }
+        return best;
+    }
+
+    private boolean isSamePhysicalCard(
+            PhysicalCard first, PhysicalCard second) {
+        return first != null && second != null
+                && first.getPermanentCardId()
+                        == second.getPermanentCardId()
+                && first.getCardId() == second.getCardId();
+    }
+
+    private boolean isImperialAdmiral(PhysicalCard card) {
+        try {
+            return Filters.and(Filters.Imperial, Filters.admiral)
+                    .accepts(currentGame.getGameState(),
+                            currentGame.getModifiersQuerying(), card);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean canDeployDirectly(
+            PhysicalCard card, PhysicalCard location) {
+        try {
+            return Filters.deployableToLocation(
+                    card, Filters.sameCardId(location), true, 0.0f)
+                    .accepts(currentGame.getGameState(),
+                            currentGame.getModifiersQuerying(), card);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean canDeployShipAndPilotTogether(
+            PhysicalCard ship,
+            PhysicalCard pilot,
+            PhysicalCard location) {
+        try {
+            GameState gameState = currentGame.getGameState();
+            if (!ship.getBlueprint()
+                    .getValidPilotFilter(
+                            currentPlayerId, currentGame, ship, true)
+                    .accepts(gameState,
+                            currentGame.getModifiersQuerying(), pilot)
+                    || !Filters.hasAvailablePilotCapacity(pilot)
+                    .accepts(gameState,
+                            currentGame.getModifiersQuerying(), ship)) {
+                return false;
+            }
+            return Filters.deployableToLocationSimultaneouslyWith(
+                    ship, pilot, true, 0.0f,
+                    Filters.sameCardId(location), true, 0.0f)
+                    .accepts(gameState,
+                            currentGame.getModifiersQuerying(), ship);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private Integer exactDeployCostAt(
+            PhysicalCard card, PhysicalCard location) {
+        try {
+            float cost = currentGame.getModifiersQuerying().getDeployCost(
+                    currentGame.getGameState(), card, card, location,
+                    false, null, false, 0.0f, null, true);
+            return (int) Math.ceil(Math.max(0.0f, cost));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Integer exactSimultaneousDeployCost(
+            PhysicalCard ship,
+            PhysicalCard pilot,
+            PhysicalCard location) {
+        try {
+            float cost = currentGame.getModifiersQuerying()
+                    .getSimultaneousDeployCost(
+                            currentGame.getGameState(),
+                            ship, ship, false, 0.0f,
+                            pilot, false, 0.0f,
+                            location, null, true);
+            return (int) Math.ceil(Math.max(0.0f, cost));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private float exactAbility(
+            PhysicalCard card, boolean includePermanentPilots) {
+        try {
+            return currentGame.getModifiersQuerying().getAbility(
+                    currentGame.getGameState(), card,
+                    includePermanentPilots);
+        } catch (Exception e) {
+            return 0.0f;
+        }
+    }
+
+    private boolean isBetterEndorSystemPackage(
+            EndorSystemPackage candidate,
+            EndorSystemPackage current) {
+        if (current == null || candidate.cost != current.cost) {
+            return current == null || candidate.cost < current.cost;
+        }
+        int candidateCards = candidate.pilot == null ? 1 : 2;
+        int currentCards = current.pilot == null ? 1 : 2;
+        if (candidateCards != currentCards) {
+            return candidateCards < currentCards;
+        }
+        int abilityOrder = Float.compare(
+                candidate.combinedAbility, current.combinedAbility);
+        if (abilityOrder != 0) {
+            return abilityOrder > 0;
+        }
+        if (candidate.combinedPower != current.combinedPower) {
+            return candidate.combinedPower > current.combinedPower;
+        }
+        int shipOrder = Integer.compare(
+                candidate.ship.card.getPermanentCardId(),
+                current.ship.card.getPermanentCardId());
+        if (shipOrder != 0) {
+            return shipOrder < 0;
+        }
+        int candidatePilotId = candidate.pilot == null
+                ? Integer.MAX_VALUE
+                : candidate.pilot.card.getPermanentCardId();
+        int currentPilotId = current.pilot == null
+                ? Integer.MAX_VALUE
+                : current.pilot.card.getPermanentCardId();
+        return candidatePilotId < currentPilotId;
     }
 
     private boolean endorSystemOccupationPending(
@@ -1233,6 +1437,40 @@ public class DeployPhasePlanner {
                 .map(DeploymentInstruction::getTargetLocationName)
                 .filter(Objects::nonNull)
                 .anyMatch(title -> title.toLowerCase(Locale.ROOT).startsWith("endor:"));
+    }
+
+    private boolean occupiesEndorBattlegroundSite(
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations) {
+        return allLocations.stream()
+                .anyMatch(loc -> loc != null
+                        && loc.isGround()
+                        && loc.isBattleground
+                        && loc.location != null
+                        && loc.location.getTitle() != null
+                        && loc.location.getTitle().toLowerCase(Locale.ROOT)
+                                .startsWith("endor:")
+                        && loc.weControl());
+    }
+
+    private static final class EndorSystemPackage {
+        private final CardInfo ship;
+        private final CardInfo pilot;
+        private final int cost;
+        private final float combinedAbility;
+        private final int combinedPower;
+
+        private EndorSystemPackage(
+                CardInfo ship,
+                CardInfo pilot,
+                int cost,
+                float combinedAbility,
+                int combinedPower) {
+            this.ship = ship;
+            this.pilot = pilot;
+            this.cost = cost;
+            this.combinedAbility = combinedAbility;
+            this.combinedPower = combinedPower;
+        }
     }
 
     /**

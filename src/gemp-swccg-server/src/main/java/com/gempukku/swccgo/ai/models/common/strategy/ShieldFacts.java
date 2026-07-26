@@ -209,7 +209,7 @@ public final class ShieldFacts {
             SwccgGame game, String playerId, PhysicalCard stackedPileSource,
             int shieldsOnTable) {
         if (game == null || playerId == null || stackedPileSource == null
-                || shieldsOnTable != 2) return false;
+                || shieldsOnTable != 3) return false;
         try {
             GameState gs = game.getGameState();
             if (gs == null) return false;

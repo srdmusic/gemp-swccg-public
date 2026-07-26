@@ -8609,28 +8609,39 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Endor: Bunker's source-verified Endor Shield upload bypasses both false V185 weapon
     classifications and receives +1500 bootstrap priority. Real weapon pulls keep both vetoes.
     Cheap Imperial admirals receive +1200 at the pre-flip Bunker and Boba Fett receives -1200.
-    After the flip, the exact replay route uses physical Slave I, Symbol Of Fear 201_40 plus
-    the cheapest affordable pilot with positive ability. The selected physical pilot is withheld
-    from optional empty-ground expansion. The package receives +500 and another empty Endor
-    ground-site establish plan is suppressed
-    until the system is occupied. Enemy-held Endor, unfunded routes, and ordinary reinforcement
-    remain unchanged. After exactly two
-    shields, EOP holds slot three while an Endor battleground site is occupied, Endor system is
-    uncontrolled, and physical Battle Order remains stacked under Knowledge And Defense. This
-    no longer requires Slave I and Ozzel to be simultaneously in hand. Once both theaters are
-    occupied, Battle Order scores 280 versus an ordinary shield's 80. Both bots are mirrored.
-    No engine or card Java changed.
+    Replay 6o1ah8vy1ke9f5e0 corrected the first implementation claim. Ozzel 3_82 did deploy to
+    Endor: Bunker. Slave I 201_40 with Grand Admiral Thrawn happened to occupy Endor system, but
+    that ship is replay evidence only and is not named by the AI. The corrected planner ranks any
+    engine-legal, funded permanent-pilot ship or exact ship-plus-pilot package using target-aware
+    effective cost and exact physical identities. The exact cheap Imperial admiral that can
+    garrison an empty Bunker is reserved from the space package. A viable package receives +500
+    and suppresses only optional extra Endor ground expansion after an Endor battleground site is
+    already controlled. Enemy-held Endor, unfunded routes, and ordinary reinforcement remain
+    unchanged.
 
-    Independent review passed. The final focused EOP/shield suite passed 129/0/0/0, including
-    production-path tests for both bots with real blueprint data. Exact physical 201_40 plus
-    3_82 sequencing, aboard identity, package Force shortage, missing ship/pilot, ground-plan
-    release, third-slot hold/release, final Battle Order dominance, and normalized bot parity
-    passed. The sealed web.jar SHA-256 is
-    5bac9c51f2436e475dd18973a766319f56577d5202465a2c104d84b2319e2d6d; the previous jar is
-    preserved as web.jar.pre-eop-space-20260725. The recreated app logged startup complete at
-    2026-07-25T21:51:38Z, entered operational mode, and exposed the exact jar hash inside the
-    container. Fresh live-game branch firing remains separate. Revert the single follow-up
-    commit without affecting Endor Operations Batch Four.
+    The same replay showed original A Useless Gesture 13_51 consume slot three and Come Here You
+    Big Coward 13_61 consume slot four. Slot three now remains usable. Original A Useless Gesture
+    scores -100; virtual 223_7 scores -10 unless Watch Your Step makes its condition true, when it
+    scores +250. After exactly three shields, EOP holds slot four while an Endor battleground site
+    is occupied, Endor system is open but uncontrolled, and physical Battle Order remains stacked
+    under Knowledge And Defense. Once both theaters are occupied, the hold closes and existing
+    fourth-slot priority selects Battle Order.
+
+    The old V30 -1500 unmanned-ship veto now recognizes engine-reported permanent pilots and
+    planner-verified exact simultaneous crew packages. The exact marker survives the detached
+    assessment copy. The early-turn hold check uses the winning scored plan, so it retains the EOP
+    +500 instead of recomputing and discarding it. Both bots are mirrored. No engine or card Java
+    changed.
+
+    The corrected focused action gate passed 106/0/0/0, including both-bot Ozzel destination,
+    generic crew-package top-level selection, early-plan score retention, V30 boundaries, shield
+    sequence, assessment-copy, and normalized mirror tests. The clean async package passed;
+    web.jar SHA-256 is be048681bbd5c320eaf24edca19ca4750cc7ce229f4911c7fda2699d593e4712
+    with the corrected planner, crew-policy, instruction, and shield classes present. Fresh JVM
+    proof is pending. The earlier web.jar SHA-256
+    5bac9c51f2436e475dd18973a766319f56577d5202465a2c104d84b2319e2d6d is superseded and is
+    not current behavior proof. Revert the correction commit and the preceding follow-up commits
+    without affecting Endor Operations Batch Four.
 
 ## 2026-07-26: Capture objective family Batch Seven
 

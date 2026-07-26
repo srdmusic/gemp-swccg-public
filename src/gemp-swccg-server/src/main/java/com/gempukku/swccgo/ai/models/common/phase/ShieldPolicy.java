@@ -167,7 +167,7 @@ public final class ShieldPolicy {
         if (reserveForBattleOrder) {
             add(operations, actionId, "SHIELDS-EOP-BATTLE-ORDER-RESERVE",
                     TraceOutputKind.ORDERING, -3000.0f,
-                    "EOP SHIELD HOLD: preserve this slot until the funded battleground-system deployment makes Battle Order live");
+                    "EOP SHIELD HOLD: preserve slot four until Endor system occupation makes Battle Order live");
         }
         if (shieldsOnTable >= 3 && !fourthSlot.pursue()) {
             add(operations, actionId, "V124", TraceOutputKind.ORDERING, -3000.0f,

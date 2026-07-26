@@ -147,7 +147,7 @@ public class ShieldStrategy {
             "A Useless Gesture (V)", Arrays.asList("223_7"),
             ShieldCategory.SITUATIONAL_HIGH,
             "Limits Watch Your Step lost pile plays",
-            null, Arrays.asList("watch your step"), 99, 0));
+            null, Arrays.asList("watch your step"), 99, 0, true));
 
         DARK_SHIELDS.put("Do They Have A Code Clearance?", new ShieldInfo(
             "Do They Have A Code Clearance?", Arrays.asList("13_66"),
@@ -592,11 +592,18 @@ public class ShieldStrategy {
         }
         String titleLower = cardTitle != null && !cardTitle.isBlank()
                 ? cardTitle.toLowerCase(Locale.ROOT) : null;
+        // Physical blueprint identity is authoritative. The former one-pass
+        // lookup allowed the earlier key "A Useless Gesture (V)" to fuzzy-match
+        // the original title "A Useless Gesture", incorrectly giving 13_51 the
+        // virtual combo's situational +80 profile instead of its own NEVER -100.
+        if (blueprintId != null && !blueprintId.isBlank()) {
+            return null;
+        }
         if (titleLower == null) {
             return null;
         }
         for (Map.Entry<String, ShieldInfo> entry : shieldDb.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(cardTitle)) {
+            if (entry.getKey().toLowerCase(Locale.ROOT).equals(titleLower)) {
                 return entry.getValue();
             }
         }

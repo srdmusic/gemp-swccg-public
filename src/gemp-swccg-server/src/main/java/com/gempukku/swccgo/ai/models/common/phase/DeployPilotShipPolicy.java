@@ -78,6 +78,8 @@ public final class DeployPilotShipPolicy {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
         if (facts.deployingAsset()
+                && !facts.assetHasPermanentPilot()
+                && !facts.verifiedCrewPackage()
                 && !facts.affordablePilotInHand()
                 && !facts.freePilotOnTable()) {
             String reason = facts.pilotInHand()
@@ -420,6 +422,8 @@ public final class DeployPilotShipPolicy {
     }
 
     public record CrewFacts(String actionId, boolean deployingAsset,
+                            boolean assetHasPermanentPilot,
+                            boolean verifiedCrewPackage,
                             boolean pilotInHand,
                             boolean affordablePilotInHand,
                             boolean freePilotOnTable, int assetCost,

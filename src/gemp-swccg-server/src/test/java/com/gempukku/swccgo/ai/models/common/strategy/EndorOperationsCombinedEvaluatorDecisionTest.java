@@ -88,6 +88,10 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
     private static final int NON_ACTOR_CARRIER_ID = 319;
     private static final int CARRIED_BIKER_SCOUT_ID = 320;
     private static final int DUPLICATE_BIKER_SCOUT_ID = 321;
+    private static final int ADMIRAL_OZZEL_ID = 322;
+    private static final int GENERIC_ENDOR_SHIP_ID = 323;
+    private static final int GENERIC_ENDOR_PILOT_ID = 324;
+    private static final int GENERIC_DEPLOY_DISTRACTOR_ID = 325;
 
     private static final String OBJECTIVE_BP = "8_167";
     private static final String ENDOR_BP = "8_157";
@@ -113,6 +117,9 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
     private static final String BACK_DOOR_BP = "8_159";
     private static final String UNIQUE_BIKER_SCOUT_BP = "8_95";
     private static final String NON_ACTOR_CARRIER_BP = "8_169";
+    private static final String ADMIRAL_OZZEL_BP = "3_82";
+    private static final String GENERIC_ENDOR_SHIP_BP = "1_306";
+    private static final String GENERIC_ENDOR_PILOT_BP = "1_174";
 
     private static final String REQUIRED_PULL_RULE =
             "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD";
@@ -158,6 +165,73 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
 
     private static final SwccgCardBlueprintLibrary CARDS =
             new SwccgCardBlueprintLibrary();
+
+    @Test
+    public void admiralOzzelChoosesBunkerOverLandingPlatform() {
+        List<Outcome> winners = new ArrayList<>();
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(bot);
+            fixture.addReserve(card(
+                    SECRET_BASE_V_BP, SECRET_BASE_ID,
+                    Zone.RESERVE_DECK, PLAYER));
+            PhysicalCard ozzel = card(
+                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID,
+                    Zone.HAND, PLAYER);
+            fixture.addHand(ozzel);
+            when(fixture.modifiers().hasAbility(
+                    fixture.gameState(), ozzel, true))
+                    .thenReturn(true);
+
+            TracedOutcome winner = tracedCombined(
+                    bot, fixture,
+                    Decision.deployCandidate(
+                            ozzel, fixture.bunker(),
+                            fixture.platform()));
+            assertEquals(String.valueOf(BUNKER_ID),
+                    winner.outcome().actionId());
+            winners.add(winner.outcome());
+        }
+        assertParity(winners);
+    }
+
+    @Test
+    public void verifiedGenericEndorCrewPackageBeatsPassAndOffPlanDeploy() {
+        List<Outcome> winners = new ArrayList<>();
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(bot, true);
+            PhysicalCard ship = card(
+                    GENERIC_ENDOR_SHIP_BP, GENERIC_ENDOR_SHIP_ID,
+                    Zone.HAND, PLAYER);
+            PhysicalCard pilot = card(
+                    GENERIC_ENDOR_PILOT_BP, GENERIC_ENDOR_PILOT_ID,
+                    Zone.HAND, PLAYER);
+            PhysicalCard distractor = card(
+                    DISPOSABLE_DROID_BP, GENERIC_DEPLOY_DISTRACTOR_ID,
+                    Zone.HAND, PLAYER);
+            fixture.addHand(ship);
+            fixture.addHand(pilot);
+            fixture.addHand(distractor);
+            when(fixture.gameState().getForcePileSize(PLAYER))
+                    .thenReturn(4);
+            when(fixture.modifiers().getForceAvailableToUse(
+                    fixture.gameState(), PLAYER)).thenReturn(4);
+            when(fixture.modifiers().hasPermanentPilot(
+                    fixture.gameState(), ship)).thenReturn(false);
+
+            TracedOutcome winner = tracedCombinedWithVerifiedCrewPlan(
+                    bot, fixture,
+                    Decision.topLevelDeploy(distractor, ship),
+                    ship, pilot);
+            assertEquals("deploy-" + GENERIC_ENDOR_SHIP_ID,
+                    winner.outcome().actionId());
+            assertContains(winner.outcome(),
+                    "IN DEPLOYMENT PLAN");
+            assertNotContains(winner.outcome(),
+                    "VEHICLE/SHIP NEEDS PILOT");
+            winners.add(winner.outcome());
+        }
+        assertParity(winners);
+    }
 
     @Test
     public void objectiveTutorParentAndChildChooseMissingRequiredEffect() {
@@ -3886,6 +3960,134 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
         DecisionTrace trace;
         try {
             outcome = combined(bot, fixture, decision);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(trace);
+        return new TracedOutcome(outcome, trace);
+    }
+
+    private static TracedOutcome tracedCombinedWithVerifiedCrewPlan(
+            Bot bot, Fixture fixture, Decision decision,
+            PhysicalCard ship, PhysicalCard pilot) {
+        List<String> rawCandidates = decision.actionIds();
+        assertTrue(TraceSession.open(
+                bot.name(),
+                "endor-operations-verified-crew-decision",
+                decision.type(), decision.text(),
+                rawCandidates, null,
+                List.of("focused evaluator fixture"),
+                false));
+        Outcome outcome;
+        DecisionTrace trace;
+        try {
+            if (bot == Bot.RANDO) {
+                var context = randoContext(fixture, decision);
+                var plan = new com.gempukku.swccgo.ai.models.rando
+                        .strategy.DeploymentPlan(
+                                com.gempukku.swccgo.ai.models.rando
+                                        .strategy.DeployStrategy.ESTABLISH,
+                                "EOP: verified generic Endor crew package");
+                var shipInstruction =
+                        new com.gempukku.swccgo.ai.models.rando.strategy
+                                .DeploymentInstruction(
+                                        ship.getBlueprintId(true),
+                                        ship.getTitle(),
+                                        String.valueOf(
+                                                fixture.endor().getCardId()),
+                                        fixture.endor().getTitle(),
+                                        1, "occupy Endor system");
+                shipInstruction.setCardPermanentCardId(
+                        ship.getPermanentCardId());
+                shipInstruction.setCardCurrentCardId(ship.getCardId());
+                shipInstruction.setDeployCost(4);
+                shipInstruction.setVerifiedCrewPackage(true);
+                plan.addInstruction(shipInstruction);
+                var pilotInstruction =
+                        new com.gempukku.swccgo.ai.models.rando.strategy
+                                .DeploymentInstruction(
+                                        pilot.getBlueprintId(true),
+                                        pilot.getTitle(),
+                                        String.valueOf(
+                                                fixture.endor().getCardId()),
+                                        fixture.endor().getTitle(),
+                                        2, "crew Endor system ship");
+                pilotInstruction.setCardPermanentCardId(
+                        pilot.getPermanentCardId());
+                pilotInstruction.setCardCurrentCardId(pilot.getCardId());
+                pilotInstruction.setDeployCost(0);
+                pilotInstruction.setAboardShipCardId(
+                        String.valueOf(ship.getCardId()));
+                plan.addInstruction(pilotInstruction);
+                context.setDeployPhasePlanner(
+                        new com.gempukku.swccgo.ai.models.rando.strategy
+                                .DeployPhasePlanner() {
+                            @Override
+                            public com.gempukku.swccgo.ai.models.rando.strategy
+                                    .DeploymentPlan createPlan(
+                                            SwccgGame game, String playerId,
+                                            Side side) {
+                                return plan;
+                            }
+                        });
+                outcome = outcome(
+                        new com.gempukku.swccgo.ai.models.rando.evaluators
+                                .CombinedEvaluator()
+                                .evaluateDecision(context));
+            } else {
+                var context = chosenContext(fixture, decision);
+                var plan = new com.gempukku.swccgo.ai.models.chosenone
+                        .strategy.DeploymentPlan(
+                                com.gempukku.swccgo.ai.models.chosenone
+                                        .strategy.DeployStrategy.ESTABLISH,
+                                "EOP: verified generic Endor crew package");
+                var shipInstruction =
+                        new com.gempukku.swccgo.ai.models.chosenone.strategy
+                                .DeploymentInstruction(
+                                        ship.getBlueprintId(true),
+                                        ship.getTitle(),
+                                        String.valueOf(
+                                                fixture.endor().getCardId()),
+                                        fixture.endor().getTitle(),
+                                        1, "occupy Endor system");
+                shipInstruction.setCardPermanentCardId(
+                        ship.getPermanentCardId());
+                shipInstruction.setCardCurrentCardId(ship.getCardId());
+                shipInstruction.setDeployCost(4);
+                shipInstruction.setVerifiedCrewPackage(true);
+                plan.addInstruction(shipInstruction);
+                var pilotInstruction =
+                        new com.gempukku.swccgo.ai.models.chosenone.strategy
+                                .DeploymentInstruction(
+                                        pilot.getBlueprintId(true),
+                                        pilot.getTitle(),
+                                        String.valueOf(
+                                                fixture.endor().getCardId()),
+                                        fixture.endor().getTitle(),
+                                        2, "crew Endor system ship");
+                pilotInstruction.setCardPermanentCardId(
+                        pilot.getPermanentCardId());
+                pilotInstruction.setCardCurrentCardId(pilot.getCardId());
+                pilotInstruction.setDeployCost(0);
+                pilotInstruction.setAboardShipCardId(
+                        String.valueOf(ship.getCardId()));
+                plan.addInstruction(pilotInstruction);
+                context.setDeployPhasePlanner(
+                        new com.gempukku.swccgo.ai.models.chosenone.strategy
+                                .DeployPhasePlanner() {
+                            @Override
+                            public com.gempukku.swccgo.ai.models.chosenone
+                                    .strategy.DeploymentPlan createPlan(
+                                            SwccgGame game, String playerId,
+                                            Side side) {
+                                return plan;
+                            }
+                        });
+                outcome = outcome(
+                        new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                                .CombinedEvaluator()
+                                .evaluateDecision(context));
+            }
         } finally {
             trace = TraceSession.close();
         }

@@ -124,9 +124,10 @@ public class ShieldPolicyTest {
     }
 
     @Test
-    public void eopReservesThirdShieldSlotUntilBattleOrderIsLive() {
+    public void eopReservesFourthShieldSlotUntilBattleOrderIsLive() {
         PolicyResult reserved = ShieldPolicy.stackedPileParent(
-                "A", 2, closed(), false, 0, false, 2, true);
+                "A", 3, pick("Come Here You Big Coward"),
+                false, 0, false, 2, true);
         assertOperations(reserved,
                 "SHIELDS-EOP-BATTLE-ORDER-RESERVE", -3000.0f,
                 "SHIELDS-stacked-pile-available", 50.0f);

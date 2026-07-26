@@ -2,10 +2,15 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.ContestStatus;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;
@@ -13,185 +18,202 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class EndorOperationsEndorSystemPlannerTest {
+    private static final String PLAYER = "dark";
     private static final String OBJECTIVE_BP = "8_167";
     private static final String ENDOR_BP = "8_157";
     private static final String ENDOR_BUNKER_BP = "8_160";
-    private static final String CANTINA_BP = "1_290";
-    private static final String SLAVE_I_BP = "201_40";
+    private static final String ENDOR_PLATFORM_BP = "8_166";
+    private static final String SELF_PILOTED_SHIP_BP = "1_303";
+    private static final String EXTERNAL_PILOT_SHIP_BP = "1_306";
     private static final String ADMIRAL_OZZEL_BP = "3_82";
-    private static final String CAPTAIN_LENNOX_BP = "3_84";
-    private static final String DS_61_3_BP = "1_174";
-    private static final String COUNT_DOOKU_BP = "200_76";
-    private static final String TROOPER_DAVIN_FELTH_BP = "2_106";
+    private static final String ALTERNATE_PILOT_BP = "1_174";
 
     private static final int ENDOR_ID = 101;
     private static final int BUNKER_ID = 102;
-    private static final int CANTINA_ID = 103;
-    private static final int SLAVE_I_ID = 201;
-    private static final int ADMIRAL_OZZEL_ID = 202;
-    private static final int CAPTAIN_LENNOX_ID = 204;
-    private static final int DS_61_3_ID = 206;
-    private static final int COUNT_DOOKU_ID = 205;
-    private static final int TROOPER_DAVIN_FELTH_ID = 207;
+    private static final int PLATFORM_ID = 103;
+    private static final int SELF_PILOTED_SHIP_ID = 201;
+    private static final int EXTERNAL_PILOT_SHIP_ID = 202;
+    private static final int ADMIRAL_OZZEL_ID = 203;
+    private static final int ALTERNATE_PILOT_ID = 204;
 
     private static final SwccgCardBlueprintLibrary CARDS =
             new SwccgCardBlueprintLibrary();
 
     @Test
-    public void exactSlaveIPackageUsesAndReservesTheFundedPhysicalPilot()
+    public void anyLegalSelfPilotedShipCanOccupyEndorAtExactForce()
             throws Exception {
         for (Bot bot : Bot.values()) {
             Harness harness = harness(bot);
-            assertTrue(bot.name(), harness.endor.isSpace());
-            assertTrue(bot.name(), invokeEndorSystemOccupationPending(harness));
-            Object slaveI =
-                    harness.cardInfo(SLAVE_I_BP, SLAVE_I_ID);
-            assertEquals(bot.name(), SLAVE_I_BP,
-                    field(slaveI, "blueprintId"));
-            assertEquals(bot.name(), 3, field(slaveI, "cost"));
-            Object packagePlan = invokeEopPlan(
-                    harness,
-                    List.of(slaveI),
-                    List.of(
-                            harness.cardInfo(
-                                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID),
-                            harness.cardInfo(
-                                    CAPTAIN_LENNOX_BP, CAPTAIN_LENNOX_ID)),
-                    5);
+            Object shipInfo = harness.cardInfo(
+                    SELF_PILOTED_SHIP_BP, SELF_PILOTED_SHIP_ID);
+            PhysicalCard ship = physicalCard(shipInfo);
+            harness.setAbility(ship, true, 1.0f);
+            harness.setDeployCost(ship, harness.endor.location, 3.0f);
 
-            List<?> instructions = instructions(packagePlan);
-            assertEquals(bot.name(), 2, instructions.size());
-            Object shipInstruction = instructions.get(0);
-            Object pilotInstruction = instructions.get(1);
-            assertEquals(bot.name(), "Slave I, Symbol Of Fear",
-                    invokeString(shipInstruction, "getCardName"));
-            assertEquals(bot.name(), ADMIRAL_OZZEL_ID,
-                    invokeInt(pilotInstruction, "getCardPermanentCardId"));
-            assertEquals(bot.name(), "Admiral Ozzel",
-                    invokeString(pilotInstruction, "getCardName"));
-            assertEquals(bot.name(), "Slave I, Symbol Of Fear",
-                    invokeString(pilotInstruction, "getAboardShipName"));
-            assertEquals(bot.name(), SLAVE_I_BP,
-                    invokeString(pilotInstruction, "getAboardShipBlueprintId"));
-            assertEquals(bot.name(), String.valueOf(SLAVE_I_ID),
-                    invokeString(pilotInstruction, "getAboardShipCardId"));
-            assertEquals(bot.name(), 1,
-                    invokeInt(shipInstruction, "getPriority"));
-            assertEquals(bot.name(), 2,
-                    invokeInt(pilotInstruction, "getPriority"));
+            Object funded = invokeEopPlan(
+                    harness, List.of(shipInfo), Collections.emptyList(), 3);
+            List<?> instructions = instructions(funded);
+            assertEquals(bot.name(), 1, instructions.size());
+            assertEquals(bot.name(), SELF_PILOTED_SHIP_BP,
+                    invokeString(instructions.get(0), "getCardBlueprintId"));
+            assertEquals(bot.name(), "Endor",
+                    invokeString(instructions.get(0), "getTargetLocationName"));
+            assertEquals(bot.name(), 3,
+                    invokeInt(instructions.get(0), "getDeployCost"));
 
-            List<?> fundedGroundPlans = invokeGroundPlans(
-                    harness,
-                    List.of(
-                            harness.cardInfo(
-                                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID),
-                            harness.cardInfo(
-                                    CAPTAIN_LENNOX_BP, CAPTAIN_LENNOX_ID)),
-                    List.of(harness.cardInfo(SLAVE_I_BP, SLAVE_I_ID)),
-                    harness.cantina,
-                    5);
-            assertFalse(bot.name()
-                            + " must not spend the exact funded Ozzel copy on ground",
-                    hasGroundEstablishPlan(fundedGroundPlans));
-
-            List<?> noShipGroundPlans = invokeGroundPlans(
-                    harness,
-                    List.of(
-                            harness.cardInfo(
-                                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID),
-                            harness.cardInfo(
-                                    CAPTAIN_LENNOX_BP, CAPTAIN_LENNOX_ID)),
-                    Collections.emptyList(),
-                    harness.cantina,
-                    5);
-            assertTrue(bot.name()
-                            + " must restore the same ground formation without a ship package",
-                    hasGroundEstablishPlan(noShipGroundPlans));
-            assertEquals(bot.name(),
-                    List.of("Admiral Ozzel", "Captain Lennox"),
-                    groundEstablishCardNames(noShipGroundPlans));
+            Object shortForce = invokeEopPlan(
+                    harness, List.of(shipInfo), Collections.emptyList(), 2);
+            assertTrue(bot.name(), instructions(shortForce).isEmpty());
         }
     }
 
     @Test
-    public void impossibleSpacePackagesLeaveEndorGroundEstablishAvailable()
+    public void genericCrewPackageKeepsCheapBunkerAdmiralOnGround()
             throws Exception {
         for (Bot bot : Bot.values()) {
             Harness harness = harness(bot);
+            Object shipInfo = harness.cardInfo(
+                    EXTERNAL_PILOT_SHIP_BP, EXTERNAL_PILOT_SHIP_ID);
+            Object ozzelInfo = harness.cardInfo(
+                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID);
+            Object alternateInfo = harness.cardInfo(
+                    ALTERNATE_PILOT_BP, ALTERNATE_PILOT_ID);
+            PhysicalCard ship = physicalCard(shipInfo);
+            PhysicalCard ozzel = physicalCard(ozzelInfo);
+            PhysicalCard alternate = physicalCard(alternateInfo);
 
-            assertNoPackageAndGroundStillAvailable(
+            harness.setAbility(ship, true, 0.0f);
+            harness.setAbility(ozzel, false, 2.0f);
+            harness.setAbility(alternate, false, 2.0f);
+            harness.setDeployCost(
+                    ozzel, harness.bunker.location, 2.0f);
+            harness.setDeployCost(
+                    alternate, harness.bunker.location, 3.0f);
+            harness.setPairCost(
+                    ship, ozzel, harness.endor.location, 4.0f);
+            harness.setPairCost(
+                    ship, alternate, harness.endor.location, 5.0f);
+
+            Object funded = invokeEopPlan(
                     harness,
-                    "no ship",
-                    List.of(
-                            harness.cardInfo(
-                                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID),
-                            harness.cardInfo(
-                                    CAPTAIN_LENNOX_BP, CAPTAIN_LENNOX_ID)),
-                    Collections.emptyList(),
+                    List.of(shipInfo),
+                    List.of(ozzelInfo, alternateInfo),
                     5);
+            List<?> instructions = instructions(funded);
+            assertEquals(bot.name(), 2, instructions.size());
+            assertEquals(bot.name(), EXTERNAL_PILOT_SHIP_BP,
+                    invokeString(instructions.get(0), "getCardBlueprintId"));
+            assertEquals(bot.name(), ALTERNATE_PILOT_BP,
+                    invokeString(instructions.get(1), "getCardBlueprintId"));
+            assertEquals(bot.name(), String.valueOf(EXTERNAL_PILOT_SHIP_ID),
+                    invokeString(instructions.get(1), "getAboardShipCardId"));
 
-            assertNoPackageAndGroundStillAvailable(
+            Object noPackage = invokeEopPlan(
                     harness,
-                    "no pilot",
-                    List.of(
-                            harness.cardInfo(
-                                    COUNT_DOOKU_BP, COUNT_DOOKU_ID),
-                            harness.cardInfo(
-                                    TROOPER_DAVIN_FELTH_BP,
-                                    TROOPER_DAVIN_FELTH_ID)),
-                    List.of(harness.cardInfo(SLAVE_I_BP, SLAVE_I_ID)),
-                    7);
-
-            assertNoPackageAndGroundStillAvailable(
+                    Collections.emptyList(),
+                    List.of(ozzelInfo, alternateInfo),
+                    5);
+            List<?> groundPlans = invokeGroundPlans(
                     harness,
-                    "short Force",
-                    List.of(
-                            harness.cardInfo(
-                                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID),
-                            harness.cardInfo(
-                                    DS_61_3_BP, DS_61_3_ID)),
-                    List.of(harness.cardInfo(SLAVE_I_BP, SLAVE_I_ID)),
-                    2);
+                    List.of(ozzelInfo, alternateInfo),
+                    noPackage,
+                    harness.platform,
+                    5);
+            assertTrue(bot.name(), hasGroundEstablishPlan(groundPlans));
+            assertTrue(bot.name(),
+                    groundEstablishCardNames(groundPlans)
+                            .contains("Admiral Ozzel"));
         }
     }
 
-    private static void assertNoPackageAndGroundStillAvailable(
-            Harness harness,
-            String boundary,
-            List<?> characters,
-            List<?> starships,
-            int forceAvailable) throws Exception {
-        List<Object> pilots = new ArrayList<>();
-        for (Object character : characters) {
-            if ((boolean) field(character, "isPilot")) {
-                pilots.add(character);
-            }
-        }
-        Object packagePlan = invokeEopPlan(
-                harness, starships, pilots, forceAvailable);
-        boolean fundedPackage = !instructions(packagePlan).isEmpty();
-        assertFalse(harness.bot + " " + boundary, fundedPackage);
-        assertFalse(harness.bot + " " + boundary,
-                EndorOperationsTacticalPolicy
-                        .shouldSuppressEmptyEndorGroundEstablish(
-                                fundedPackage, true));
+    @Test
+    public void viableEndorPackageSuppressesOnlyOptionalEndorSpread()
+            throws Exception {
+        for (Bot bot : Bot.values()) {
+            Harness harness = harness(bot);
+            Object shipInfo = harness.cardInfo(
+                    SELF_PILOTED_SHIP_BP, SELF_PILOTED_SHIP_ID);
+            Object ozzelInfo = harness.cardInfo(
+                    ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID);
+            Object alternateInfo = harness.cardInfo(
+                    ALTERNATE_PILOT_BP, ALTERNATE_PILOT_ID);
+            PhysicalCard ship = physicalCard(shipInfo);
+            harness.setAbility(ship, true, 1.0f);
+            harness.setDeployCost(ship, harness.endor.location, 3.0f);
+            Object funded = invokeEopPlan(
+                    harness, List.of(shipInfo), Collections.emptyList(), 3);
 
-        List<?> groundPlans = invokeGroundPlans(
-                harness, characters, starships,
-                harness.endorBunker, forceAvailable);
-        assertTrue(harness.bot + " " + boundary
-                        + " must not suppress Endor ground establishment",
-                hasGroundEstablishPlan(groundPlans));
+            List<?> suppressed = invokeGroundPlans(
+                    harness, List.of(ozzelInfo, alternateInfo), funded,
+                    harness.platform, 5);
+            assertFalse(bot.name(), hasGroundEstablishPlan(suppressed));
+
+            Object noPackage = invokeEopPlan(
+                    harness, Collections.emptyList(),
+                    Collections.emptyList(), 3);
+            List<?> available = invokeGroundPlans(
+                    harness, List.of(ozzelInfo, alternateInfo), noPackage,
+                    harness.platform, 5);
+            assertTrue(bot.name(), hasGroundEstablishPlan(available));
+        }
+    }
+
+    @Test
+    public void unsafeOrUnfundedSpaceRoutesDoNotCreateAPlan()
+            throws Exception {
+        for (Bot bot : Bot.values()) {
+            Harness harness = harness(bot);
+            Object shipInfo = harness.cardInfo(
+                    EXTERNAL_PILOT_SHIP_BP, EXTERNAL_PILOT_SHIP_ID);
+            Object pilotInfo = harness.cardInfo(
+                    ALTERNATE_PILOT_BP, ALTERNATE_PILOT_ID);
+            PhysicalCard ship = physicalCard(shipInfo);
+            PhysicalCard pilot = physicalCard(pilotInfo);
+            harness.setAbility(ship, true, 0.0f);
+            harness.setAbility(pilot, false, 2.0f);
+            harness.setPairCost(
+                    ship, pilot, harness.endor.location, 5.0f);
+
+            assertTrue(bot.name(), instructions(invokeEopPlan(
+                    harness, List.of(shipInfo),
+                    Collections.emptyList(), 5)).isEmpty());
+            assertTrue(bot.name(), instructions(invokeEopPlan(
+                    harness, List.of(shipInfo),
+                    List.of(pilotInfo), 4)).isEmpty());
+
+            harness.blockPairRoute(ship, pilot);
+            assertTrue(bot.name(), instructions(invokeEopPlan(
+                    harness, List.of(shipInfo),
+                    List.of(pilotInfo), 5)).isEmpty());
+
+            AiBoardAnalyzer.LocationAnalysis enemyHeldEndor = analysis(
+                    harness.endor.location,
+                    0.0f, 5.0f, 0.0f, 1.0f,
+                    0, 1, true, false, true);
+            assertTrue(bot.name(), instructions(invokeEopPlan(
+                    harness, List.of(shipInfo), List.of(pilotInfo), 5,
+                    List.of(enemyHeldEndor, harness.bunker,
+                            harness.platform))).isEmpty());
+        }
     }
 
     private static Object invokeEopPlan(
@@ -199,32 +221,34 @@ public class EndorOperationsEndorSystemPlannerTest {
             List<?> starships,
             List<?> pilots,
             int forceAvailable) throws Exception {
+        return invokeEopPlan(
+                harness, starships, pilots, forceAvailable,
+                harness.allLocations());
+    }
+
+    private static Object invokeEopPlan(
+            Harness harness,
+            List<?> starships,
+            List<?> pilots,
+            int forceAvailable,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations)
+            throws Exception {
         Method method = harness.planner.getClass().getDeclaredMethod(
                 "generateEopEndorSystemPlan",
-                List.class, List.class, List.class, int.class, int.class);
+                List.class, List.class, List.class, int.class);
         method.setAccessible(true);
         return method.invoke(
                 harness.planner,
                 starships,
                 pilots,
-                List.of(harness.endor),
-                forceAvailable,
-                4);
-    }
-
-    private static boolean invokeEndorSystemOccupationPending(
-            Harness harness) throws Exception {
-        Method method = harness.planner.getClass().getDeclaredMethod(
-                "endorSystemOccupationPending", List.class);
-        method.setAccessible(true);
-        return (boolean) method.invoke(
-                harness.planner, List.of(harness.endor));
+                allLocations,
+                forceAvailable);
     }
 
     private static List<?> invokeGroundPlans(
             Harness harness,
             List<?> characters,
-            List<?> starships,
+            Object fundedEndorPackage,
             AiBoardAnalyzer.LocationAnalysis target,
             int forceAvailable) throws Exception {
         Class<?> categoriesClass = Class.forName(
@@ -244,11 +268,13 @@ public class EndorOperationsEndorSystemPlannerTest {
         Object drainGap = drainGapClass
                 .getConstructor(int.class, int.class, int.class, List.class)
                 .newInstance(0, 0, 0, Collections.emptyList());
+        Class<?> planClass = Class.forName(
+                harness.bot.strategyPackage + ".DeploymentPlan");
         Method method = harness.planner.getClass().getDeclaredMethod(
                 "generateGroundPlans",
                 List.class,
                 List.class,
-                List.class,
+                planClass,
                 categoriesClass,
                 int.class,
                 int.class,
@@ -261,12 +287,12 @@ public class EndorOperationsEndorSystemPlannerTest {
                 harness.planner,
                 characters,
                 Collections.emptyList(),
-                starships,
+                fundedEndorPackage,
                 categories,
                 forceAvailable,
                 forceAvailable,
                 4,
-                List.of(harness.endor, target),
+                harness.allLocations(),
                 3,
                 drainGap);
     }
@@ -297,6 +323,11 @@ public class EndorOperationsEndorSystemPlannerTest {
         return Collections.emptyList();
     }
 
+    private static PhysicalCard physicalCard(Object cardInfo)
+            throws Exception {
+        return (PhysicalCard) field(cardInfo, "card");
+    }
+
     private static List<?> instructions(Object plan) throws Exception {
         return (List<?>) plan.getClass()
                 .getMethod("getInstructions")
@@ -325,15 +356,83 @@ public class EndorOperationsEndorSystemPlannerTest {
         PhysicalCard endor = card(ENDOR_BP, ENDOR_ID, Zone.LOCATIONS);
         PhysicalCard bunker =
                 card(ENDOR_BUNKER_BP, BUNKER_ID, Zone.LOCATIONS);
-        PhysicalCard cantina =
-                card(CANTINA_BP, CANTINA_ID, Zone.LOCATIONS);
+        PhysicalCard platform =
+                card(ENDOR_PLATFORM_BP, PLATFORM_ID, Zone.LOCATIONS);
         Object planner = bot.newPlanner();
+        SwccgGame game = mock(SwccgGame.class);
+        GameState gameState = mock(GameState.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        Map<Integer, PhysicalCard> cardsById = new HashMap<>();
+        cardsById.put(ENDOR_ID, endor);
+        cardsById.put(BUNKER_ID, bunker);
+        cardsById.put(PLATFORM_ID, platform);
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getGame()).thenReturn(game);
+        when(gameState.findCardByPermanentId(anyInt()))
+                .thenAnswer(invocation ->
+                        cardsById.get(invocation.getArgument(0)));
+        when(gameState.getCaptivesOfEscort(any(PhysicalCard.class)))
+                .thenReturn(Collections.emptyList());
+        when(gameState.getCardsAtLocation(any(PhysicalCard.class)))
+                .thenReturn(Collections.emptyList());
+        when(gameState.getAvailablePilotCapacity(
+                same(modifiers), any(PhysicalCard.class),
+                any(PhysicalCard.class))).thenReturn(1);
+        when(modifiers.hasIcon(
+                same(gameState), any(PhysicalCard.class), any(Icon.class)))
+                .thenAnswer(invocation -> {
+                    PhysicalCard candidate = invocation.getArgument(1);
+                    Icon icon = invocation.getArgument(2);
+                    return candidate != null
+                            && candidate.getBlueprint() != null
+                            && candidate.getBlueprint().hasIcon(icon);
+                });
+        when(modifiers.hasKeyword(
+                same(gameState), any(PhysicalCard.class), any(Keyword.class)))
+                .thenAnswer(invocation -> {
+                    PhysicalCard candidate = invocation.getArgument(1);
+                    Keyword keyword = invocation.getArgument(2);
+                    return candidate != null
+                            && candidate.getBlueprint() != null
+                            && candidate.getBlueprint().hasKeyword(keyword);
+                });
+        setDeployable(modifiers);
+
+        setPrivateField(planner, "currentGame", game);
+        setPrivateField(planner, "currentPlayerId", PLAYER);
         return new Harness(
                 bot,
                 planner,
-                analysis(endor, 0, 0, 0, 0, false, true),
-                analysis(bunker, 0, 0, 0, 1, true, false),
-                analysis(cantina, 0, 0, 0, 1, true, false));
+                gameState,
+                modifiers,
+                cardsById,
+                analysis(endor, 0.0f, 0.0f, 0.0f, 0.0f,
+                        0, 0, true, false, true),
+                analysis(bunker, 2.0f, 0.0f, 1.0f, 0.0f,
+                        1, 0, true, true, false),
+                analysis(platform, 0.0f, 0.0f, 0.0f, 0.0f,
+                        0, 0, true, true, false));
+    }
+
+    private static void setDeployable(ModifiersQuerying modifiers) {
+        when(modifiers.isDeployable(
+                any(), any(), any(), anyBoolean(), any(),
+                anyBoolean(), anyFloat(), any(), any(), any(),
+                any(), any(), anyBoolean(), anyFloat()))
+                .thenReturn(true);
+        when(modifiers.isDeployableToTarget(
+                any(), any(), any(), anyBoolean(), any(),
+                anyBoolean(), anyFloat(), any(), any(), any(),
+                any(), any(), any(), anyBoolean(), anyFloat()))
+                .thenReturn(true);
+    }
+
+    private static void setPrivateField(
+            Object target, String name, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     private static AiBoardAnalyzer.LocationAnalysis analysis(
@@ -341,7 +440,10 @@ public class EndorOperationsEndorSystemPlannerTest {
             float ourPower,
             float theirPower,
             float ourAbility,
-            int theirForceIcons,
+            float theirAbility,
+            int ourCards,
+            int theirCards,
+            boolean battleground,
             boolean site,
             boolean system) {
         return new AiBoardAnalyzer.LocationAnalysis(
@@ -349,13 +451,13 @@ public class EndorOperationsEndorSystemPlannerTest {
                 ourPower,
                 theirPower,
                 ourAbility,
+                theirAbility,
                 0,
-                0,
-                theirForceIcons,
-                0,
-                0,
+                1,
+                ourCards,
+                theirCards,
                 ContestStatus.EMPTY,
-                true,
+                battleground,
                 site,
                 site,
                 site,
@@ -377,6 +479,7 @@ public class EndorOperationsEndorSystemPlannerTest {
         when(card.getTitles()).thenReturn(List.of(blueprint.getTitle()));
         when(card.getPermanentCardId()).thenReturn(cardId);
         when(card.getCardId()).thenReturn(cardId);
+        when(card.getOwner()).thenReturn(PLAYER);
         when(card.getZone()).thenReturn(zone);
         return card;
     }
@@ -434,30 +537,92 @@ public class EndorOperationsEndorSystemPlannerTest {
     private static final class Harness {
         private final Bot bot;
         private final Object planner;
+        private final GameState gameState;
+        private final ModifiersQuerying modifiers;
+        private final Map<Integer, PhysicalCard> cardsById;
         private final AiBoardAnalyzer.LocationAnalysis endor;
-        private final AiBoardAnalyzer.LocationAnalysis endorBunker;
-        private final AiBoardAnalyzer.LocationAnalysis cantina;
+        private final AiBoardAnalyzer.LocationAnalysis bunker;
+        private final AiBoardAnalyzer.LocationAnalysis platform;
 
         private Harness(
                 Bot bot,
                 Object planner,
+                GameState gameState,
+                ModifiersQuerying modifiers,
+                Map<Integer, PhysicalCard> cardsById,
                 AiBoardAnalyzer.LocationAnalysis endor,
-                AiBoardAnalyzer.LocationAnalysis endorBunker,
-                AiBoardAnalyzer.LocationAnalysis cantina) {
+                AiBoardAnalyzer.LocationAnalysis bunker,
+                AiBoardAnalyzer.LocationAnalysis platform) {
             this.bot = bot;
             this.planner = planner;
+            this.gameState = gameState;
+            this.modifiers = modifiers;
+            this.cardsById = cardsById;
             this.endor = endor;
-            this.endorBunker = endorBunker;
-            this.cantina = cantina;
+            this.bunker = bunker;
+            this.platform = platform;
+        }
+
+        private List<AiBoardAnalyzer.LocationAnalysis> allLocations() {
+            return List.of(endor, bunker, platform);
         }
 
         private Object cardInfo(String blueprintId, int cardId)
                 throws Exception {
             Class<?> cardInfoClass =
                     Class.forName(bot.strategyPackage + ".CardInfo");
+            PhysicalCard physicalCard =
+                    card(blueprintId, cardId, Zone.HAND);
+            cardsById.put(cardId, physicalCard);
             return cardInfoClass
                     .getConstructor(PhysicalCard.class)
-                    .newInstance(card(blueprintId, cardId, Zone.HAND));
+                    .newInstance(physicalCard);
+        }
+
+        private void setAbility(
+                PhysicalCard card,
+                boolean includePermanentPilots,
+                float ability) {
+            when(modifiers.getAbility(
+                    same(gameState), same(card),
+                    eq(includePermanentPilots))).thenReturn(ability);
+        }
+
+        private void setDeployCost(
+                PhysicalCard card,
+                PhysicalCard target,
+                float cost) {
+            when(modifiers.getDeployCost(
+                    same(gameState),
+                    same(card), same(card), same(target),
+                    anyBoolean(), isNull(), anyBoolean(),
+                    anyFloat(), isNull(), anyBoolean()))
+                    .thenReturn(cost);
+        }
+
+        private void setPairCost(
+                PhysicalCard ship,
+                PhysicalCard pilot,
+                PhysicalCard target,
+                float cost) {
+            when(modifiers.getSimultaneousDeployCost(
+                    same(gameState),
+                    same(ship), same(ship),
+                    anyBoolean(), anyFloat(),
+                    same(pilot), anyBoolean(), anyFloat(),
+                    same(target), isNull(), anyBoolean()))
+                    .thenReturn(cost);
+        }
+
+        private void blockPairRoute(
+                PhysicalCard ship,
+                PhysicalCard pilot) {
+            when(modifiers.isDeployableToTarget(
+                    same(gameState), same(ship), same(ship),
+                    anyBoolean(), any(), anyBoolean(), anyFloat(),
+                    any(), any(), any(), any(), any(), same(pilot),
+                    anyBoolean(), anyFloat()))
+                    .thenReturn(false);
         }
     }
 }

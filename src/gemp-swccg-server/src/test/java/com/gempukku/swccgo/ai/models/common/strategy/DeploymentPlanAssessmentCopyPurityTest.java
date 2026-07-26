@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -17,6 +18,7 @@ public class DeploymentPlanAssessmentCopyPurityTest {
         com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction original =
             new com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction(
                 "bp-1", "Stormtrooper", "loc-1", "Docking Bay", 1, "reinforce");
+        original.setVerifiedCrewPackage(true);
         plan.addInstruction(original);
 
         com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan copy = plan.assessmentCopy();
@@ -25,7 +27,9 @@ public class DeploymentPlanAssessmentCopyPurityTest {
 
         assertNotSame(plan.getInstructions(), copy.getInstructions());
         assertNotSame(original, copied);
+        assertTrue(copied.isVerifiedCrewPackage());
 
+        copied.setVerifiedCrewPackage(false);
         copied.setCardPermanentCardId(999);
         copied.setCardCurrentCardId(888);
         copied.setCardName("MUTATED");
@@ -38,6 +42,7 @@ public class DeploymentPlanAssessmentCopyPurityTest {
         assertNull(original.getCardCurrentCardId());
         assertEquals("Stormtrooper", original.getCardName());
         assertEquals("loc-1", original.getTargetLocationId());
+        assertTrue(original.isVerifiedCrewPackage());
         assertFalse(plan.isWaitingForPlannedCards());
         assertFalse(plan.isForceAllowExtras());
         assertFalse(plan.getHoldBackCards().contains("copy-only"));
@@ -53,6 +58,7 @@ public class DeploymentPlanAssessmentCopyPurityTest {
         com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentInstruction original =
             new com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentInstruction(
                 "bp-1", "Stormtrooper", "loc-1", "Docking Bay", 1, "reinforce");
+        original.setVerifiedCrewPackage(true);
         plan.addInstruction(original);
 
         com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan copy = plan.assessmentCopy();
@@ -61,7 +67,9 @@ public class DeploymentPlanAssessmentCopyPurityTest {
 
         assertNotSame(plan.getInstructions(), copy.getInstructions());
         assertNotSame(original, copied);
+        assertTrue(copied.isVerifiedCrewPackage());
 
+        copied.setVerifiedCrewPackage(false);
         copied.setCardPermanentCardId(999);
         copied.setCardCurrentCardId(888);
         copied.setCardName("MUTATED");
@@ -74,6 +82,7 @@ public class DeploymentPlanAssessmentCopyPurityTest {
         assertNull(original.getCardCurrentCardId());
         assertEquals("Stormtrooper", original.getCardName());
         assertEquals("loc-1", original.getTargetLocationId());
+        assertTrue(original.isVerifiedCrewPackage());
         assertFalse(plan.isWaitingForPlannedCards());
         assertFalse(plan.isForceAllowExtras());
         assertFalse(plan.getHoldBackCards().contains("copy-only"));
