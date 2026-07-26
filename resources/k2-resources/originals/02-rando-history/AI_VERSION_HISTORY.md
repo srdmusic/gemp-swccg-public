@@ -8674,8 +8674,20 @@ Revert: delete the V67bc EPILOGUE block + NON_BUCKET_EPILOGUE_FLOOR constant and
     Production edits are shared AI policy/facts plus mirrored Rando and Chosen One evaluators and
     planners. No engine, game, card Java, objective data, client, database, deck library, or routing
     source changed. The focused gate passed 187/0/0/0. The clean full reactor passed 2483/0/0/26
-    across 322 suites. Four mirror pairs, diff, scope, type-by-title, and two independent reviews
-    passed. Packaging, jar-byte proof, JVM load, and fresh live-game firing remain separate gates.
+    across 322 suites, and the merged current-objective gate passed 189/0/0/0. Four mirror pairs,
+    diff, scope, type-by-title, and two independent reviews passed. The wider merged reactor ran
+    2689 tests and found one unrelated pre-existing Hidden Base contract assertion in the
+    concurrent objective work; no EOP or impacted-policy test failed.
+
+    The clean async package passed. All 48 changed-source top-level and nested classes byte-match
+    target/classes, the server jar, and web.jar. Server jar SHA-256 is
+    ef297979ed96070e9299bbe8d2b965dcfa4f8993855c5b2b8f11bfc11efa9539; web.jar SHA-256 is
+    1c19a27b0381d832e838a382986ef596f164c5d80cbb0f4e51c9c80d3876d7e0 with all four correction
+    markers present. Deployment waited for zero tables and preserved the prior live Capture jar as
+    web.jar.pre-eop-replay-20260726-fff5396. The recreated app started at
+    2026-07-26T16:46:57.886785088Z with restart count 0. Host and container hashes matched, client
+    and authenticated hall HTTP returned 200, every gameplay-switch post returned 200, and the hall
+    remained at zero tables. Nothing was pushed. Fresh live-game branch firing remains separate.
     Revert this live replay correction commit without affecting the prior EOP correction.
 
 ## 2026-07-26: Capture objective family Batch Seven
